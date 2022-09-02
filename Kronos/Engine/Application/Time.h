@@ -15,6 +15,7 @@ private:
 	static std::chrono::system_clock::time_point currentTime;
 	static std::chrono::duration<float> elapsedSeconds;
 
+public: //TODO: should be private...
 	static void init();
 	static void updateDeltaTime();
 

@@ -4,7 +4,8 @@
 
 class Engine
 {
-private:
+//private:
+public: //TODO: should be private...
 	Window window;
 	Renderer renderer;
 
