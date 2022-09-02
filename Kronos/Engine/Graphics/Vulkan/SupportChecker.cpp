@@ -5,6 +5,7 @@
 
 #include <set>
 #include <string>
+#include <string.h>
 
 std::vector<const char*> SupportChecker::getRequiredExtensions(
 	Window& window, 

@@ -1,6 +1,8 @@
 #include "IndexBuffer.h"
 
 #include "Renderer.h"
+#include <memory.h>
+#include <wchar.h>
 
 void IndexBuffer::createStaticGpuIndexBuffer(const std::vector<uint32_t>& indices)
 {

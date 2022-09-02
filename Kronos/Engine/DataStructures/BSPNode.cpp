@@ -24,22 +24,22 @@ float BSPNode::projectPointOnNormal(const glm::vec3& p, const Plane& plane)
 
 bool BSPNode::isZero(const float& x)
 {
-	// if(abs(x - y) <= epsilon * max(abs(x), abs(y), 1.0f))
-	return std::abs(x) <= COMPARE_SIDE_EPSILON * max(std::abs(x), 1.0f);
+	// if(std::abs(x - y) <= epsilon * std::max(std::abs(x), std::abs(y), 1.0f))
+	return std::abs(x) <= COMPARE_SIDE_EPSILON * std::max(std::abs(x), 1.0f);
 }
 
 bool BSPNode::isLargerThanZero(const float& x)
 {
 	//return x >= -COMPARE_SIDE_EPSILON;
 	
-	return x >= -COMPARE_SIDE_EPSILON * max(abs(x), 1.0f);
+	return x >= -COMPARE_SIDE_EPSILON * std::max(std::abs(x), 1.0f);
 }
 
 bool BSPNode::isLessThanZero(const float& x)
 {
 	//return x <= COMPARE_SIDE_EPSILON;
 
-	return x <= COMPARE_SIDE_EPSILON * max(abs(x), 1.0f);
+	return x <= COMPARE_SIDE_EPSILON * std::max(std::abs(x), 1.0f);
 }
 
 bool BSPNode::inSameHalfSpace(const float& t0, const float& t1)
@@ -412,7 +412,7 @@ void BSPNode::splitMesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& in
 			Log::error("Tries to clip degenerate triangle");
 		}
 
-		// Create max 2 new vertices
+		// Create std::max 2 new vertices
 		uint32_t numNewVerts = 0;
 		uint32_t newTriIndices[2] = { ~0u, ~0u };
 
@@ -430,7 +430,7 @@ void BSPNode::splitMesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& in
 
 				assert(index0 != index1);
 
-				uint64_t edgeIndex = (uint64_t(min(index0, index1)) << 32) | uint64_t(max(index0, index1));
+				uint64_t edgeIndex = (uint64_t(std::min(index0, index1)) << 32) | uint64_t(std::max(index0, index1));
 				if (!createdVertIndex.count(edgeIndex))
 				{
 					// Points
@@ -445,8 +445,8 @@ void BSPNode::splitMesh(std::vector<Vertex>& vertices, std::vector<uint32_t>& in
 						t
 					);
 
-					/*t = max(0.001f, t);
-					t = min(0.999f, t);*/
+					/*t = std::max(0.001f, t);
+					t = std::min(0.999f, t);*/
 
 					/*if (t <= 0.0001f || t >= 0.9999f)
 					{
@@ -651,7 +651,7 @@ void BSPNode::getTreeDepth(uint32_t& value)
 {
 	if (!this->negativeChild && !this->positiveChild)
 	{
-		value = max(value, this->depthLevel);
+		value = std::max(value, this->depthLevel);
 		return;
 	}
 

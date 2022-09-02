@@ -1,6 +1,7 @@
 #include "VertexBuffer.h"
 
 #include "Renderer.h"
+#include <memory.h>
 
 VertexBuffer::VertexBuffer(Renderer& renderer)
 	: Buffer(renderer)

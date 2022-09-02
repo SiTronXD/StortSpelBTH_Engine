@@ -346,3 +346,11 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+Kronos/build/build.ninja
+
+###########################################################
+###########################################################
+###########################################################
+
+Kronos/build/*
+

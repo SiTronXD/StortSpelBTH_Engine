@@ -1,6 +1,11 @@
-#include <iostream>
+#ifdef WIN32
 #include <comdef.h>
+#endif 
+
+#include <iostream>
 #include "Log.h"
+
+
 
 void Log::write(const std::string& message)
 {
@@ -12,6 +17,8 @@ void Log::warning(const std::string& message)
 	std::cout << "[Log Warning]: " << message << std::endl;
 }
 
+#ifdef WIN32
+#include <Windows.h>
 void Log::error(const std::string& errorMessage)
 {
 	// Convert const char* to LPCWSTR
@@ -25,3 +32,9 @@ void Log::error(const std::string& errorMessage)
 
 	delete[] wString;
 }
+#else
+void Log::error(const std::string& message)
+{
+	std::cout << "[Log Error]: " << message << std::endl;
+}
+#endif

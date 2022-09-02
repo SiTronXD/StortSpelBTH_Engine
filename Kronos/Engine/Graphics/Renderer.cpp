@@ -5,6 +5,7 @@
 #include <string>
 #include <set>
 #include <chrono>
+#include <memory.h>
 
 const std::vector<const char*> validationLayers =
 {

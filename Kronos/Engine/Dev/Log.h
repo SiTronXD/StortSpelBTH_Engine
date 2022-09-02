@@ -1,7 +1,9 @@
 #pragma once
 
 #include <string>
+#ifdef WIN32
 #include <Windows.h>
+#endif
 
 class Log
 {
