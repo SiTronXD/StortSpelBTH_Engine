@@ -1,7 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.23)
 project(kronos LANGUAGES CXX )
 
-option(KRONOS_BUILD_EXEC "Build exec to test kronos_engine" OFF) 
+option(KRONOS_BUILD_EXEC "Build exec to test kronos_engine" ON) 
 
 file(GLOB ENGINE_SOURCES CONFIGURE_DEPENDS 
     ${CMAKE_SOURCE_DIR}/Engine/*.cpp
@@ -31,13 +31,15 @@ add_library(
 target_sources(engine PRIVATE ${ENGINE_SOURCES} ${ENGINE_HEADERS})
 target_compile_features(engine PUBLIC cxx_std_20)
 find_package(Vulkan REQUIRED)
-find_package(glfw3 3.3 REQUIRED)
+find_package(glfw3 3.3)
 
 
-
+add_definitions(-DUNICODE -D_UNICODE)
+add_compile_definitions(NOMINMAX)
+add_compile_options("/source-charset:utf-8;/execution-charset:utf-8")
+target_compile_options(engine PRIVATE $<$<CONFIG:Debug>:$<$<CXX_COMPILER_ID:MSVC>:/DEBUG /W4 /Zi /source-charset:utf-8 /execution-charset:utf-8>>)
 target_include_directories(engine PUBLIC ${Vulkan_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/Linking/Include)
-target_link_libraries(engine PUBLIC ${Vulkan_LIBRARIES} glfw )
-
+target_link_libraries(engine PUBLIC ${Vulkan_LIBRARIES} ${CMAKE_CURRENT_LIST_DIR}/Linking/Lib/GLFW/glfw3.lib )
 # add_custom_command(TARGET engine POST_BUILD
 #         COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_RUNTIME_DLLS:engine> $<TARGET_FILE_DIR:engine>
 #         COMMENT "Copying dll-files to location of executable..."
@@ -49,10 +51,15 @@ if(${KRONOS_BUILD_EXEC})
     add_executable(
         engine_demo     
     )
+    target_link_options(engine_demo
+        PRIVATE 
+            $<$<CXX_COMPILER_ID:MSVC>:/subsystem:console>
+    )
     target_sources(engine_demo PRIVATE ${ENGINE_SOURCES} ${ENGINE_HEADERS})
     target_compile_features(engine_demo PUBLIC cxx_std_20)
+    target_compile_options(engine_demo PRIVATE $<$<CONFIG:Debug>:$<$<CXX_COMPILER_ID:MSVC>:/DEBUG /W4 /Zi /source-charset:utf-8 /execution-charset:utf-8>>)
     target_include_directories(engine_demo PUBLIC ${Vulkan_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/Linking/Include)
-    target_link_libraries(engine_demo PUBLIC ${Vulkan_LIBRARIES} glfw )
+    target_link_libraries(engine_demo PUBLIC ${Vulkan_LIBRARIES} ${CMAKE_CURRENT_LIST_DIR}/Linking/Lib/GLFW/glfw3.lib )
 endif()
 
 

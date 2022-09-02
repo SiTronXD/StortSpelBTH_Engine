@@ -353,4 +353,4 @@ Kronos/build/build.ninja
 ###########################################################
 
 Kronos/build/*
-
+Kronos/out/*
