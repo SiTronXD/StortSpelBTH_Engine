@@ -3,7 +3,7 @@
 #include "Engine/DataStructures/BSP.h"
 #include "Engine/Application/Time.h"
 #include "Engine/Application/Input.h"
-int main()
+int main(int argn, char** argv)
 {
 	// Set flags for tracking §CPU memory leaks
 	#ifdef _DEBUG

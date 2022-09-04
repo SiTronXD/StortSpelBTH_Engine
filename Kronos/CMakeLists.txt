@@ -34,8 +34,12 @@ find_package(Vulkan REQUIRED)
 find_package(glfw3 3.3)
 
 
-add_definitions(-DUNICODE -D_UNICODE)
-add_compile_definitions(NOMINMAX)
+#add_definitions(-DUNICODE -D_UNICODE)
+#add_compile_definitions(NOMINMAX)
+target_compile_definitions(engine 
+    PRIVATE 
+        $<$<CXX_COMPILER_ID:MSVC>:UNICODE _UNICODE NOMINMAX>
+)
 add_compile_options("/source-charset:utf-8;/execution-charset:utf-8")
 target_compile_options(engine PRIVATE $<$<CONFIG:Debug>:$<$<CXX_COMPILER_ID:MSVC>:/DEBUG /W4 /Zi /source-charset:utf-8 /execution-charset:utf-8>>)
 target_include_directories(engine PUBLIC ${Vulkan_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/Linking/Include)
@@ -48,18 +52,38 @@ target_link_libraries(engine PUBLIC ${Vulkan_LIBRARIES} ${CMAKE_CURRENT_LIST_DIR
 
 # If we will build the executable for devs to test...
 if(${KRONOS_BUILD_EXEC})
-    add_executable(
-        engine_demo     
-    )
+    
+    add_executable(engine_demo)
+    target_compile_features(engine_demo PUBLIC cxx_std_20)    
+    target_sources(engine_demo PRIVATE Main.cpp ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+
     target_link_options(engine_demo
         PRIVATE 
-            $<$<CXX_COMPILER_ID:MSVC>:/subsystem:console>
+            $<$<CXX_COMPILER_ID:MSVC>:/subsystem:console /NODEFAULTLIB:library>
     )
-    target_sources(engine_demo PRIVATE ${ENGINE_SOURCES} ${ENGINE_HEADERS})
-    target_compile_features(engine_demo PUBLIC cxx_std_20)
-    target_compile_options(engine_demo PRIVATE $<$<CONFIG:Debug>:$<$<CXX_COMPILER_ID:MSVC>:/DEBUG /W4 /Zi /source-charset:utf-8 /execution-charset:utf-8>>)
-    target_include_directories(engine_demo PUBLIC ${Vulkan_INCLUDE_DIR} ${CMAKE_SOURCE_DIR}/Linking/Include)
-    target_link_libraries(engine_demo PUBLIC ${Vulkan_LIBRARIES} ${CMAKE_CURRENT_LIST_DIR}/Linking/Lib/GLFW/glfw3.lib )
+    target_compile_options(engine_demo 
+        PRIVATE 
+            $<$<CONFIG:Debug>:$<$<CXX_COMPILER_ID:MSVC>:/DEBUG /W4 /Zi /source-charset:utf-8 /execution-charset:utf-8>>
+    )
+    target_include_directories(engine_demo 
+        PUBLIC 
+            ${Vulkan_INCLUDE_DIR} 
+            ${CMAKE_SOURCE_DIR}/Linking/Include
+    )
+    target_link_libraries(engine_demo 
+        PUBLIC 
+            ${Vulkan_LIBRARIES} 
+            ${CMAKE_CURRENT_LIST_DIR}/Linking/Lib/GLFW/glfw3.lib 
+    )
+    set_property(TARGET engine_demo 
+        PROPERTY 
+            VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+    
+    target_compile_definitions(engine_demo 
+        PRIVATE 
+            $<$<CXX_COMPILER_ID:MSVC>:UNICODE _UNICODE NOMINMAX>
+    )
+    
 endif()
 
 
