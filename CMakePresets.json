@@ -1,0 +1,87 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 23,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "debug_unix_base",
+            "hidden": true,
+            "displayName": "Configure Debug - unix",
+            "description": "Build in debug mode using Ninja generator",
+            "binaryDir": "build/${presetName}",
+            "generator": "Ninja",
+
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "install/${presetName}",
+                "CMAKE_BUILD_TYPE": "Debug"
+            }            
+        },
+        {
+            "name": "debug_unix_lldb",
+            "displayName": "(lldb) debug_unix",
+            "description": "Build with clang to debug with lldb (Recommended!)",
+            "inherits":[ "debug_unix_base"],
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "clang++"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
+            }
+
+        },
+        {
+            "name": "debug_unix_gdb",
+            "displayName": "(gdb) debug_unix",              
+            "inherits":[ "debug_unix_base"],
+            "description": "Build with g++ to debug with gdb (has problems on some machines, should work with cppdgb)",
+            "cacheVariables": {
+                "CMAKE_CXX_COMPILER": "g++"
+            }            
+        },        
+        {
+            "name": "debug_win32",
+            "displayName": "Configure Debug - win32",
+            "description": "Build in debug mode using windows default generator",
+            "binaryDir": "${sourceDir}/build/${presetName}",
+            "generator": "Visual Studio 17 2022",
+            "cacheVariables": {
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Windows"
+            }
+
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "build debug_win32",
+            "description": "presets for debug",
+            "displayName": "vengine demo",            
+            "configurePreset": "debug_win32"            
+        },
+        {
+            "name": "build_debug_unix_lldb",
+            "description": "presets for debug",
+            "displayName": "vengine demo",
+            "configurePreset": "debug_unix_lldb"      
+                  
+        },
+        {
+            "name": "build_debug_unix_gdb",            
+            "description": "presets for debug",
+            "displayName": "vengine demo",
+            "configurePreset": "debug_unix_gdb"      
+                  
+        }
+    ],
+    "testPresets": []
+}
