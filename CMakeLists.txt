@@ -179,7 +179,10 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         COMMENT "Copying dll-files to location of executable..."
         COMMAND_EXPAND_LISTS
         )
-
+    target_link_options(vengine
+        PRIVATE 
+            $<$<CXX_COMPILER_ID:MSVC>:/subsystem:console /NODEFAULTLIB:library>
+    )
 endif()
 
 message("10")

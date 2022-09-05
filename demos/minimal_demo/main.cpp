@@ -1,4 +1,4 @@
-#include "VulkanRenderer.h" /// Use the 3D_VEngine renderer
+/*#include "VulkanRenderer.h" /// Use the 3D_VEngine renderer
 #include "imgui.h"          /// If Dear ImGui is used
 #include <chrono>
 #include <iostream> 
@@ -27,4 +27,4 @@ int main() {
     myRenderer.cleanup();
  
     return EXIT_SUCCESS;
-}
+}*/

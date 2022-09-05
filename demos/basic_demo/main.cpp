@@ -1,4 +1,4 @@
-#include "VulkanRenderer.h" /// Use the 3D_VEngine renderer
+/*#include "VulkanRenderer.h" /// Use the 3D_VEngine renderer
 #include "imgui.h"          /// If Dear ImGui is used
 #include "glm/common.hpp"   /// If glm math is used 
 #include "SDL2/SDL.h"       /// If SDL events are used
@@ -60,4 +60,4 @@ int main() {
     myRenderer.cleanup();
  
     return EXIT_SUCCESS;
-}
+}*/
