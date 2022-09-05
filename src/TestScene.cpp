@@ -1,4 +1,5 @@
 #include "TestScene.h"
+#include <iostream>
 
 TestScene::TestScene(SceneHandler& sceneHandler)
 	: Scene(sceneHandler)
@@ -8,7 +9,7 @@ TestScene::TestScene(SceneHandler& sceneHandler)
 TestScene::~TestScene()
 {
 }
-#include <iostream>
+
 void TestScene::init()
 {
 	std::cout << "Test scene init" << std::endl;
@@ -16,7 +17,7 @@ void TestScene::init()
 
 void TestScene::update()
 {
-	//std::cout << "Test scene update" << std::endl;
+	std::cout << "Test scene update" << std::endl;
 }
 
 void TestScene::renderUI()
