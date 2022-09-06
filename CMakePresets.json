@@ -50,6 +50,7 @@
             "description": "Build in debug mode using windows default generator",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Visual Studio 17 2022",
+            "installDir": "${sourceDir}/install/${presetName}",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "CMAKE_BUILD_TYPE": "Debug"

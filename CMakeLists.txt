@@ -49,6 +49,8 @@ message("5")
 
 
 
+
+
 # Find Dependencies - CONAN 
 #find_package(SDL2 2.0 REQUIRED)
 find_package(Vulkan REQUIRED)
@@ -198,6 +200,9 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         PRIVATE 
             $<$<CXX_COMPILER_ID:MSVC>:/subsystem:console /NODEFAULTLIB:library>
     )
+        
+    set_target_properties(vengine PROPERTIES  
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
 message("10")
