@@ -359,3 +359,9 @@ deps/imgui/deps/
 deps/tracy/deps/
 deps/assimp/deps/
 deps/vma/deps/
+install/*
+tools/GpuMemDumpVis/*
+tools/vma_dump_out.png
+deps/imgui/cmake/*
+vma_dump.json
+imgui.ini
