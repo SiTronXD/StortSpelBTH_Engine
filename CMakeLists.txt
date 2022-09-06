@@ -143,7 +143,22 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 add_subdirectory(deps/imgui)
-add_subdirectory(deps/assimp)
+
+
+
+
+
+message("before")
+find_package(assimp QUIET)
+message("assimp_found was: " ${assimp_FOUND})
+if(NOT ${assimp_FOUND}) 
+    message("Did not find assimp...")
+    endif()
+    add_subdirectory(deps/assimp)
+message("after")
+
+
+
 add_subdirectory(deps/vma)
 #include(deps/vmamemdump_dependency.cmake)
 add_subdirectory(deps/tracy)
@@ -152,7 +167,7 @@ Set(FETCHCONTENT_QUIET ${PREV_FETCHCONTENT_QUIET})
 
 target_sources(vengine PRIVATE main.cpp ${VENGINE_SOURCES})
 target_include_directories(vengine PUBLIC ${imgui_include_dirs})
-target_include_directories(vengine PUBLIC ${assimp_include_dirs})
+#target_include_directories(vengine PUBLIC ${assimp_include_dirs})
 target_include_directories(vengine PUBLIC ${tracy_include_dirs})
 #target_link_directories(vengine PUBLIC tracy::tracy)
 target_link_directories(vengine PUBLIC ${vma_include_dirs})
@@ -262,7 +277,8 @@ target_link_libraries(
     #${LIBRARIES} 
     ${Vulkan_LIBRARIES}
     #${Vulkan_LIBRARY}
-    assimp::assimp
+    #assimp::assimp
+    assimp::assimp    
     stb::stb
     #vulkan-memory-allocator::vulkan-memory-allocator
     #VulkanMemoryAllocator.dll

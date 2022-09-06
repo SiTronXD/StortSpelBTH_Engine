@@ -12,11 +12,17 @@
             "displayName": "Configure Debug - unix",
             "description": "Build in debug mode using Ninja generator",
             "binaryDir": "build/${presetName}",
+            "installDir": "${sourceDir}/install/${presetName}",
             "generator": "Ninja",
 
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "install/${presetName}",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
                 "CMAKE_BUILD_TYPE": "Debug"
+            },
+            "condition": {
+                "type": "equals",
+                "lhs": "${hostSystemName}",
+                "rhs": "Linux"
             }            
         },
         {
@@ -26,13 +32,8 @@
             "inherits":[ "debug_unix_base"],
             "cacheVariables": {
                 "CMAKE_CXX_COMPILER": "clang++"
-            },
-            "condition": {
-                "type": "equals",
-                "lhs": "${hostSystemName}",
-                "rhs": "Linux"
+                
             }
-
         },
         {
             "name": "debug_unix_gdb",
