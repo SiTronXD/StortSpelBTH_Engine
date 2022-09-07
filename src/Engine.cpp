@@ -12,11 +12,15 @@
 
 #include "Window.h"
 #include "Input.h"
+#include "Time.h"
 #include "VulkanRenderer.h"
 #include "Configurator.h"
 
 #include <chrono>
 #include <functional>
+
+#include "imgui_impl_vulkan.h"
+#include "backends/imgui_impl_vulkan.h"
 
 Engine::Engine()
 {
@@ -35,17 +39,24 @@ void Engine::run(Scene* startScene)
     using namespace vengine_helper::config;
     loadConfIntoMemory(); /// load config data into memory
 
+    Window window;
+    window.initWindow(
+        "Some Program", 
+        DEF<int>(W_WIDTH), 
+        DEF<int>(W_HEIGHT)
+    );
+
     /// Creating Vulkan Renderer Instance
     auto myRenderer = VulkanRenderer();
-    if (myRenderer.init("Some Program") == 1) {
+    if (myRenderer.init(&window, "Some Program") == 1) 
+    {
         std::cout << "EXIT_FAILURE" << std::endl;
-        //return EXIT_FAILURE;
     }
 
+    window.registerResizeEvent(myRenderer.getWindowResized());
 
     double angle = 0.F;
 
-    //int sponzaIndex = myRenderer.createModel("sponza.obj");
     int ghostModelIndex = myRenderer.createModel("ghost.obj");
 
     glm::mat4 correctSize = glm::mat4(1.F);
@@ -63,17 +74,26 @@ void Engine::run(Scene* startScene)
     correctRot = glm::scale(correctRot, glm::vec3(scale, scale, scale));
     myRenderer.updateModel(ghostModelIndex, correctRot);
 
-    auto lastTime = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> deltaTime{};
-
-
-    auto lambda_game_loop = [&](SDL_Events& events)
+    // Game loop
+    while (window.getIsRunning())
     {
+        window.update();
+
+        if (Input::isKeyPressed(Keys::HOME))
+        {
+            std::cout << "Home was pressed! generating vma dump" << "\n";
+            myRenderer.generateVmaDump();
+        }
+
+        //SDL_PollEvent(&event);
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplSDL2_NewFrame(window.sdl_window);
+        ImGui::NewFrame();
+
+        Time::updateDeltaTime();
         this->sceneHandler.update();
 
-        auto time_now = std::chrono::high_resolution_clock::now();
-        deltaTime = time_now - lastTime;
-        lastTime = time_now;
+        // ------------------------------------
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);
@@ -84,7 +104,7 @@ void Engine::run(Scene* startScene)
             open = false;
         ImGui::End();
 
-        angle += 10.0 * deltaTime.count();
+        angle += 10.0 * Time::getDT();
         angle = angle > 360.0 ? 0.0 : angle;
 
         glm::mat<4, 4, double> ghost_model_matrix = correctRot;
@@ -93,14 +113,16 @@ void Engine::run(Scene* startScene)
         ghost_model_matrix = glm::rotate(ghost_model_matrix, glm::radians(angle), glm::vec<3, double>(0.0, 0.0, 1.0));
         sponza_model_matrix = glm::rotate(sponza_model_matrix, glm::radians(angle * 10.0), glm::vec<3, double>(0.0, 1.0, 0.0));
 
-
         myRenderer.updateModel(ghostModelIndex, ghost_model_matrix);
-        //myRenderer.updateModel(sponzaIndex, sponza_model_matrix);
-
+        
+        // ------------------------------------
         this->sceneHandler.updateToNextScene();
-    };
 
-    myRenderer.registerGameLoop(lambda_game_loop);
+        myRenderer.draw();
+#ifndef VENGINE_NO_PROFILING
+        FrameMark;
+#endif
+    }
 
     myRenderer.cleanup();
 }

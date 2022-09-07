@@ -13,5 +13,4 @@ public:
 	// Inherited via Scene
 	virtual void init() override;
 	virtual void update() override;
-	virtual void renderUI() override;
 };

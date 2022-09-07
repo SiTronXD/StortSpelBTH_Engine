@@ -1,9 +1,9 @@
+
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "Utilities.h"
 #include "Window.h"
 #include "imgui.h"              // Need to be included in header
-#include "imgui_impl_sdl.h"     // Need to be included in header
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
@@ -24,7 +24,7 @@ class VulkanRenderer {
 #ifndef VENGINE_NO_PROFILING
     std::vector<TracyVkCtx> tracyContext;
 #endif
-    Window window{};
+    Window* window;
 
     VmaAllocator vma = nullptr;
 
@@ -153,8 +153,6 @@ class VulkanRenderer {
     std::vector<vk::CommandBuffer>   commandBuffers_imgui;
     std::vector<vk::Framebuffer>     frameBuffers_imgui;
 
-    /// - - VMA 
-    void generateVmaDump();
 
     /// - - Tracy
     void registerVkObjectDbgInfo(std::string name, vk::ObjectType type, uint64_t objectHandle);
@@ -262,12 +260,10 @@ private:
     static stbi_uc*    loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );
 
     void rendererGameLoop();
-    void draw();
 
 private: 
     /// Clients Privates 
-    SDL_Events eventBuffer;
-    std::function<void(SDL_Events&)> gameLoopFunction;
+    std::function<void()> gameLoopFunction;
     static void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT &createInfo);
 
 public:
@@ -278,10 +274,16 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int  init(std::string&& windowName);
+    int  init(Window* window, std::string&& windowName);
     int  createModel(const std::string &modelFile);
     void updateModel(int modelIndex, glm::mat4 newModel);
-    void registerGameLoop(std::function<void(SDL_Events&)> gameLoopFunc);
+    void registerGameLoop(std::function<void()> gameLoopFunc);
+    void draw();
     
     void cleanup();
+
+    /// - - VMA 
+    void generateVmaDump();
+
+    bool& getWindowResized() { return this->windowResized; }
 };

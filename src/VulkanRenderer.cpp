@@ -26,15 +26,19 @@
 #include "imgui_impl_vulkan.h"
 #include "backends/imgui_impl_vulkan.h"
 
+#include "Input.h"
+
 using namespace vengine_helper::config;
-int VulkanRenderer::init(std::string&& windowName) {
+int VulkanRenderer::init(Window* window, std::string&& windowName) {
     
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
     
-    this->window.initWindow(windowName, DEF<int>(W_WIDTH), DEF<int>(W_HEIGHT));
-    this->window.registerResizeEvent(windowResized);
+    this->window = window;
+
+    /* this->window.initWindow(windowName, DEF<int>(W_WIDTH), DEF<int>(W_HEIGHT));
+    this->window.registerResizeEvent(windowResized);*/
     try {
         createInstance();       /// Order is important!
 
@@ -214,7 +218,7 @@ void VulkanRenderer::updateModel(int modelIndex, glm::mat4 newModel)
     modelList[modelIndex].setModelMatrix(newModel);
 }
 
-void VulkanRenderer::registerGameLoop(std::function<void(SDL_Events&)> gameLoopFunc)
+void VulkanRenderer::registerGameLoop(std::function<void()> gameLoopFunc)
 {
     this->gameLoopFunction = gameLoopFunc;
     this->rendererGameLoop();
@@ -263,13 +267,13 @@ void VulkanRenderer::createInstance() {
 
     ///Set up extensions Instance to be used
     unsigned int sdlExtensionCount = 0;        /// may require multiple extension  
-	SDL_Vulkan_GetInstanceExtensions(this->window.sdl_window, &sdlExtensionCount, nullptr);
+	SDL_Vulkan_GetInstanceExtensions(this->window->sdl_window, &sdlExtensionCount, nullptr);
     
     ///Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
     std::vector<const char*> sdlExtensions (sdlExtensionCount);    
     
     /// Get SDL Extensions
-    SDL_Vulkan_GetInstanceExtensions(this->window.sdl_window, &sdlExtensionCount, sdlExtensions.data());
+    SDL_Vulkan_GetInstanceExtensions(this->window->sdl_window, &sdlExtensionCount, sdlExtensions.data());
 
     /// Add SDL extensions to vector of extensions    
     for (size_t i = 0; i < sdlExtensionCount; i++) {        
@@ -1073,7 +1077,7 @@ void VulkanRenderer::createSurface() {
     VkSurfaceKHR sdlSurface{};
 
     SDL_bool result = SDL_Vulkan_CreateSurface(
-                            (this->window.sdl_window),
+                            (this->window->sdl_window),
                             this->instance,                                                        
                             &sdlSurface
                             );
@@ -1408,7 +1412,7 @@ vk::Extent2D VulkanRenderer::chooseBestImageResolution(const vk::SurfaceCapabili
         ///IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
         /// - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
         int width=0, height=0;        
-        SDL_GetWindowSize(this->window.sdl_window, &width, &height);
+        SDL_GetWindowSize(this->window->sdl_window, &width, &height);
 
         /// Create a new extent using the current window size
         vk::Extent2D newExtent = {};
@@ -2453,61 +2457,36 @@ stbi_uc* VulkanRenderer::loadTextuerFile(const std::string &filename, int* width
     return image;
     
 }
-#include "Input.h"
+
 void VulkanRenderer::rendererGameLoop()
 {
-    SDL_Event event;  
-    bool quitting = false;
-
-    while (!quitting) 
+    /*while (this->window.getIsRunning()) 
     {
         this->window.update();
 
-        this->eventBuffer.clear();
-        while (SDL_PollEvent(&event) != 0) {    
-            ImGui_ImplSDL2_ProcessEvent(&event);        
-            if (event.type == SDL_QUIT ||  
-            (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(this->window.sdl_window)))
-            {
-                quitting = true;
-            }
-            if(event.type == SDL_KEYDOWN){
-                switch(event.key.keysym.sym){
-                    case SDLK_HOME:
-                        std::cout << "Home was pressed! generating vma dump" << "\n";
-                        this->generateVmaDump();
-                        
-                    default: ;
-                }
-            }
-
-            // Register key press/release
-            if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
-            {
-                Input::setKey(
-                    event.key.keysym.sym,
-                    event.type == SDL_KEYDOWN
-                );
-            }
-
-            this->eventBuffer.emplace_back(event);
+        if (Input::isKeyPressed(Keys::HOME))
+        {
+            std::cout << "Home was pressed! generating vma dump" << "\n";
+            this->generateVmaDump();
         }
+
         //SDL_PollEvent(&event);
         ImGui_ImplVulkan_NewFrame();
         ImGui_ImplSDL2_NewFrame(this->window.sdl_window);
         ImGui::NewFrame();
         
-        this->gameLoopFunction(this->eventBuffer);
+        this->gameLoopFunction();
 
         this->draw(); 
 #ifndef VENGINE_NO_PROFILING
         FrameMark;
 #endif
-    }
+    }*/
     
 }
 
 VulkanRenderer::VulkanRenderer()
+    : window(nullptr)
 {
     loadConfIntoMemory();
 }
@@ -3963,7 +3942,7 @@ void VulkanRenderer::getFrameThumbnailForTracy() //TODO: Update to use vma inste
     int width =0; 
     int height =0;
 
-    SDL_GetWindowSize(this->window.sdl_window, &width, &height);
+    SDL_GetWindowSize(this->window->sdl_window, &width, &height);
     imageCreateInfo.extent.setWidth(static_cast<uint32_t>(width));
     imageCreateInfo.extent.setHeight(static_cast<uint32_t>(height));
     imageCreateInfo.extent.setDepth(uint32_t(1));
@@ -4128,7 +4107,7 @@ void VulkanRenderer::allocateTracyImageMemory()
     int width =0;
     int height =0;
 
-    SDL_GetWindowSize(this->window.sdl_window, &width, &height);
+    SDL_GetWindowSize(this->window->sdl_window, &width, &height);
     this->tracyImage = static_cast<char*>(CustomAlloc((static_cast<long>(height*width*4)) * sizeof(char)));
      
 }
@@ -4223,7 +4202,7 @@ void VulkanRenderer::initImgui()
     
 
     ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForVulkan(this->window.sdl_window);
+    ImGui_ImplSDL2_InitForVulkan(this->window->sdl_window);
 
     ImGui_ImplVulkan_InitInfo imguiInitInfo {};
     imguiInitInfo.Instance = this->instance;

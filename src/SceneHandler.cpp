@@ -1,4 +1,5 @@
 #include "SceneHandler.h"
+#include "Time.h"
 
 SceneHandler::SceneHandler()
 	: scene(nullptr),
@@ -28,7 +29,7 @@ void SceneHandler::updateToNextScene()
 		this->scene = this->nextScene;
 		this->nextScene = nullptr;
 		this->scene->init();
-		//Time::init();
+		Time::init();
 	}
 }
 

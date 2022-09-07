@@ -5,7 +5,8 @@
 #include "Input.h"
 
 Window::Window()
-    : sdl_window(nullptr)
+    : sdl_window(nullptr),
+    isRunning(true)
 {}
 
 void Window::initWindow(const std::string &name, const int width, const int height)
@@ -41,48 +42,40 @@ void Window::update()
 {
     Input::updateLastKeys();
 
-    /*while (SDL_PollEvent(&event) != 0) {
+    SDL_Event event;
+    while (SDL_PollEvent(&event) != 0) {
         ImGui_ImplSDL2_ProcessEvent(&event);
         if (event.type == SDL_QUIT ||
-            (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(this->window.sdl_window)))
+            (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(this->sdl_window)))
         {
-            quitting = true;
+            this->isRunning = false;
         }
-        if (event.type == SDL_KEYDOWN) {
-            switch (event.key.keysym.sym) {
-            case SDLK_HOME:
-                std::cout << "Home was pressed! generating vma dump" << "\n";
-                this->generateVmaDump();
 
-            default:;
-            }
+        // Register key press/release
+        if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+        {
+            Input::setKey(
+                event.key.keysym.sym,
+                event.type == SDL_KEYDOWN
+            );
         }
     }
-
-    for (auto&& event : events) 
-    {
-        if (event.type == SDL_KEYDOWN) {
-            switch (event.key.keysym.sym) {
-            case SDLK_b:
-                std::cout << "Testing thing in loop" << "\n";
-            default:;
-            }
-        }
-    }*/
 }
 
 Window::~Window() {
 
-    //glfwDestroyWindow(glfw_window);
-    SDL_DestroyWindow(sdl_window);
+    SDL_DestroyWindow(this->sdl_window);
 }
 
 ////__attribute__((unused))
-[[maybe_unused]]  
-int resizingEventWatcher(void *data, SDL_Event *event) {
-  if (event->type == SDL_WINDOWEVENT &&
-      event->window.event == SDL_WINDOWEVENT_RESIZED) {
-    *(reinterpret_cast<bool *>(data)) = true;
-  }
-  return 0;
+[[maybe_unused]]
+int resizingEventWatcher(void* data, SDL_Event* event)
+{
+	if (event->type == SDL_WINDOWEVENT &&
+		event->window.event == SDL_WINDOWEVENT_RESIZED)
+	{
+		*(reinterpret_cast<bool*>(data)) = true;
+	}
+
+	return 0;
 }

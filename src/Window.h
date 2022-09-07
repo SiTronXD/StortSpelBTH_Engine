@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include "imgui_impl_sdl.h"     // Need to be included in header
 
 struct SDL_Window;
 union SDL_Event;
@@ -8,6 +9,7 @@ union SDL_Event;
 class Window
 {
 private:
+    bool isRunning;
 
 public:
     SDL_Window * sdl_window;
@@ -22,6 +24,8 @@ public:
     void initWindow(const std::string &name, int width, int height);
     void registerResizeEvent(bool& listener);
     void update();
+
+    const bool& getIsRunning() const { return this->isRunning; }
 };
 
 ////__attribute__((unused))

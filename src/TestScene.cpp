@@ -23,7 +23,3 @@ void TestScene::update()
 		std::cout << "B button!" << std::endl;
 	}
 }
-
-void TestScene::renderUI()
-{
-}
