@@ -1,19 +1,31 @@
 #include "Scene.h"
 #include "SceneHandler.h"
-
-#include "Transform.h"
+#include "UpdateMatricesSystem.hpp"
 
 Scene::Scene(SceneHandler& sceneHandler)
 	: sceneHandler(sceneHandler)
 {
+	this->createSystem<UpdateMatricesSystem>();
 }
 
 Scene::~Scene()
 {
 }
 
-void Scene::updateSystems(float deltaTime)
+void Scene::updateSystems()
 {
+	for (auto it = this->systems.begin(); it != this->systems.end();)
+	{
+		if ((*it)->update(this->reg, 1.0f))
+		{
+			delete (*it);
+			it = this->systems.erase(it);
+		}
+		else
+		{
+			it++;
+		}
+	}
 }
 
 int Scene::getEntityCount() const

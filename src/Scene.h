@@ -1,6 +1,10 @@
 #pragma once
 
+#include "System.hpp"
+#include "Transform.hpp"
+
 #include <entt.hpp>
+#include <vector>
 
 class SceneHandler;
 
@@ -10,6 +14,7 @@ private:
 	SceneHandler& sceneHandler;
 
 	entt::registry reg;
+	std::vector<System*> systems;
 public:
 	Scene(SceneHandler& sceneHandler);
 	virtual ~Scene();
@@ -17,7 +22,7 @@ public:
 	template <typename T, typename ...Args>
 	void createSystem(Args... args);
 
-	void updateSystems(float deltaTime);
+	void updateSystems();
 
 	int getEntityCount() const;
 	bool entityValid(int entity) const;
@@ -48,7 +53,7 @@ public:
 template<typename T, typename ...Args>
 inline void Scene::createSystem(Args ...args)
 {
-	//this->systems.emplace_back(new T(args...));
+	this->systems.emplace_back(new T(args...));
 }
 
 template <typename ...Args>
