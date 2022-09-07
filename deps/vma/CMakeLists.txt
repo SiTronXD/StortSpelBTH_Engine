@@ -8,27 +8,51 @@ list(LENGTH VMA_INITIATED VMA_DIR_EMPTY) # VMA_DIR_EMPTY == 0 if empty...
 #option(VMA_DYNAMIC_VULKAN_FUNCTIONS "" ON)
 
 #if(NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/deps/vma" OR "${VMA_DIR_EMPTY}" EQUAL 0 )    #Add 'OR forceupdate' ... 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/built_vma)
-    file(WRITE ${CMAKE_BINARY_DIR}/built_vma "exists")
-    include(FetchContent)
-    message("vma not found, fetching from github")
+# if(NOT EXISTS ${CMAKE_BINARY_DIR}/built_vma)
+#     file(WRITE ${CMAKE_BINARY_DIR}/built_vma "exists")
+#     include(FetchContent)
+#     message("vma not found, fetching from github")
         
-    #file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/vma)
-    #file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/vma/build)
-    FetchContent_Declare (
-        vma_fetch
-        GIT_REPOSITORY  https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
-        GIT_TAG         v3.0.1        
-        GIT_PROGRESS    TRUE
-        SOURCE_DIR ${PROJECT_SOURCE_DIR}/deps/vma/src
-        #BINARY_DIR ${PROJECT_SOURCE_DIR}/deps/vma/build
-    )
-    FetchContent_MakeAvailable (vma_fetch)
-    #FetchContent_Populate(vma)
-else()
+#     #file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/vma)
+#     #file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/vma/build)
+#     FetchContent_Declare (
+#         vma_fetch
+#         GIT_REPOSITORY  https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+#         GIT_TAG         v3.0.1        
+#         GIT_PROGRESS    TRUE
+#         SOURCE_DIR ${PROJECT_SOURCE_DIR}/deps/vma/src
+#         #BINARY_DIR ${PROJECT_SOURCE_DIR}/deps/vma/build
+#     )
+#     FetchContent_MakeAvailable (vma_fetch)
+#     #FetchContent_Populate(vma)
+# else()
 
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/deps/vma/src)
-endif()    
+#     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/deps/vma/src)
+# endif()    
+
+
+
+include(FetchContent)
+message("vma not found, fetching from github")
+    
+#file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/vma)
+#file(MAKE_DIRECTORY ${PROJECT_SOURCE_DIR}/deps/vma/build)
+FetchContent_Declare (
+    vma_fetch
+    GIT_REPOSITORY  https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git
+    GIT_TAG         v3.0.1        
+    GIT_PROGRESS    TRUE
+    SOURCE_DIR ${PROJECT_SOURCE_DIR}/src
+    #BINARY_DIR ${PROJECT_SOURCE_DIR}/deps/vma/build
+    INSTALL_DIR     install
+    INSTALL_COMMAND ${MAKE_EXECUTABLE} DESTDIR=<INSTALL_DIR>
+    FIND_PACKAGE_ARGS NAMES VulkanMemoryAllocator 
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_LIST_DIR}/install
+)
+FetchContent_MakeAvailable (vma_fetch)
+
+
+
 
 find_package(Vulkan REQUIRED)
 

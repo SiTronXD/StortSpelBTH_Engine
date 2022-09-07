@@ -6,6 +6,8 @@ class TestScene : public Scene
 {
 private:
 	int testEntity;
+	int testEntity2;
+
 public:
 	TestScene(SceneHandler& sceneHandler);
 	virtual ~TestScene();
@@ -13,5 +15,4 @@ public:
 	// Inherited via Scene
 	virtual void init() override;
 	virtual void update() override;
-	virtual void renderUI() override;
 };

@@ -15,5 +15,6 @@ public:
 	void updateToNextScene();
 
 	void setScene(Scene* scene);
+
 	Scene* getScene() const;
 };

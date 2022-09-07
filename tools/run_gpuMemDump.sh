@@ -1,6 +1,6 @@
 #!/bin/bash 
 
-path_to_vma_dump="../build/debug/"
+path_to_vma_dump="../build/debug_unix_lldb/"
 vma_dump_file="${path_to_vma_dump}vma_dump.json"
 vma_out_file="${path_to_vma_dump}vma_dump_out.png"
 printf "$vma_dump_file\n"

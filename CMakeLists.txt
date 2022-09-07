@@ -49,6 +49,8 @@ message("5")
 
 
 
+
+
 # Find Dependencies - CONAN 
 #find_package(SDL2 2.0 REQUIRED)
 find_package(Vulkan REQUIRED)
@@ -143,7 +145,22 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
 endif()
 add_subdirectory(deps/imgui)
-add_subdirectory(deps/assimp)
+
+
+
+
+
+message("before")
+find_package(assimp QUIET)
+message("assimp_found was: " ${assimp_FOUND})
+if(NOT ${assimp_FOUND}) 
+    message("Did not find assimp...")
+    endif()
+    add_subdirectory(deps/assimp)
+message("after")
+
+
+
 add_subdirectory(deps/vma)
 #include(deps/vmamemdump_dependency.cmake)
 add_subdirectory(deps/tracy)
@@ -152,7 +169,7 @@ Set(FETCHCONTENT_QUIET ${PREV_FETCHCONTENT_QUIET})
 
 target_sources(vengine PRIVATE main.cpp ${VENGINE_SOURCES} ${VENGINE_DEPS_DIR}/EnTT/entt.hpp   "src/Transform.hpp"  "src/System.hpp" "src/UpdateMatricesSystem.hpp" )
 target_include_directories(vengine PUBLIC ${imgui_include_dirs})
-target_include_directories(vengine PUBLIC ${assimp_include_dirs})
+#target_include_directories(vengine PUBLIC ${assimp_include_dirs})
 target_include_directories(vengine PUBLIC ${tracy_include_dirs})
 target_include_directories(vengine PUBLIC ${VENGINE_DEPS_DIR}/EnTT)
 #target_link_directories(vengine PUBLIC tracy::tracy)
@@ -184,6 +201,9 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Windows")
         PRIVATE 
             $<$<CXX_COMPILER_ID:MSVC>:/subsystem:console /NODEFAULTLIB:library>
     )
+        
+    set_target_properties(vengine PROPERTIES  
+    VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 endif()
 
 message("10")
@@ -263,7 +283,8 @@ target_link_libraries(
     #${LIBRARIES} 
     ${Vulkan_LIBRARIES}
     #${Vulkan_LIBRARY}
-    assimp::assimp
+    #assimp::assimp
+    assimp::assimp    
     stb::stb
     #vulkan-memory-allocator::vulkan-memory-allocator
     #VulkanMemoryAllocator.dll

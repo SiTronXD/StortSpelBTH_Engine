@@ -8,27 +8,42 @@ list(LENGTH TRACY_INITIATED TRACY_DIR_EMPTY) # TRACY_DIR_EMPTY == 0 if empty...
 option(TRACY_NO_FRAME_IMAGE "" ON)
 
 #if(NOT EXISTS "${CMAKE_CURRENT_LIST_DIR}/deps/tracy" OR "${TRACY_DIR_EMPTY}" EQUAL 0 )    #Add 'OR forceupdate' ... 
-if(NOT EXISTS ${CMAKE_BINARY_DIR}/built_tracy)
-    file(WRITE ${CMAKE_BINARY_DIR}/built_tracy "exists")
-    include(FetchContent)
-    message("tracy not found, fetching from github")
+# if(NOT EXISTS ${CMAKE_BINARY_DIR}/built_tracy)
+#     file(WRITE ${CMAKE_BINARY_DIR}/built_tracy "exists")
+#     include(FetchContent)
+#     message("tracy not found, fetching from github")
         
-    #file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/deps/tracy)
-    #file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/deps/tracy/build)
-    FetchContent_Declare (
-        tracy_fetch
-        GIT_REPOSITORY  https://github.com/wolfpld/tracy.git
-        GIT_TAG         07a56f1        
-        GIT_PROGRESS    TRUE
-        SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/tracy/src
-        #BINARY_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/tracy/build
-    )
-    FetchContent_MakeAvailable (tracy_fetch)
-    #FetchContent_Populate(tracy)
-else()
+#     #file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/deps/tracy)
+#     #file(MAKE_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/deps/tracy/build)
+#     FetchContent_Declare (
+#         tracy_fetch
+#         GIT_REPOSITORY  https://github.com/wolfpld/tracy.git
+#         GIT_TAG         07a56f1        
+#         GIT_PROGRESS    TRUE
+#         SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/tracy/src
+#         #BINARY_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/tracy/build
+#     )
+#     FetchContent_MakeAvailable (tracy_fetch)
+#     #FetchContent_Populate(tracy)
+# else()
 
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/deps/tracy/src)
-endif()    
+#     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/deps/tracy/src)
+#endif()    
+
+include(FetchContent)
+FetchContent_Declare (
+    tracy_fetch
+    GIT_REPOSITORY  https://github.com/wolfpld/tracy.git
+    GIT_TAG         07a56f1        
+    GIT_PROGRESS    TRUE
+    SOURCE_DIR ${CMAKE_CURRENT_LIST_DIR}/src
+    #BINARY_DIR ${CMAKE_CURRENT_LIST_DIR}/deps/tracy/build
+    INSTALL_DIR     install
+    INSTALL_COMMAND ${MAKE_EXECUTABLE} DESTDIR=<INSTALL_DIR>
+    FIND_PACKAGE_ARGS NAMES TracyClient
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${CMAKE_CURRENT_LIST_DIR}/install
+)
+FetchContent_MakeAvailable (tracy_fetch)
 
 
 set(tracy_include_dirs "")

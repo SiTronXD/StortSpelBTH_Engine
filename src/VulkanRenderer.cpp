@@ -26,15 +26,21 @@
 #include "imgui_impl_vulkan.h"
 #include "backends/imgui_impl_vulkan.h"
 
+#include "Input.h"
+#include "Scene.h"
+#include "MeshComponent.hpp"
+
 using namespace vengine_helper::config;
-int VulkanRenderer::init(std::string&& windowName) {
+int VulkanRenderer::init(Window* window, std::string&& windowName) {
     
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
     
-    this->window.initWindow(windowName, DEF<int>(W_WIDTH), DEF<int>(W_HEIGHT));
-    this->window.registerResizeEvent(windowResized);
+    this->window = window;
+
+    /* this->window.initWindow(windowName, DEF<int>(W_WIDTH), DEF<int>(W_HEIGHT));
+    this->window.registerResizeEvent(windowResized);*/
     try {
         createInstance();       /// Order is important!
 
@@ -214,12 +220,6 @@ void VulkanRenderer::updateModel(int modelIndex, glm::mat4 newModel)
     modelList[modelIndex].setModelMatrix(newModel);
 }
 
-void VulkanRenderer::registerGameLoop(std::function<void(SDL_Events&)> gameLoopFunc)
-{
-    this->gameLoopFunction = gameLoopFunc;
-    this->rendererGameLoop();
-}
-
 void VulkanRenderer::generateVmaDump()
 {
     char* vma_dump;
@@ -261,19 +261,13 @@ void VulkanRenderer::createInstance() {
     ///Create vector to hold instance extensions.
     auto instanceExtensions = std::vector<const char*>();
 
-    ///Set up extensions Instance to be used
-    unsigned int sdlExtensionCount = 0;        /// may require multiple extension  
-	SDL_Vulkan_GetInstanceExtensions(this->window.sdl_window, &sdlExtensionCount, nullptr);
-    
-    ///Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
-    std::vector<const char*> sdlExtensions (sdlExtensionCount);    
-    
-    /// Get SDL Extensions
-    SDL_Vulkan_GetInstanceExtensions(this->window.sdl_window, &sdlExtensionCount, sdlExtensions.data());
+    // Get SDL extensions from window
+    std::vector<const char*> windowExtensions;
+    this->window->getVulkanExtensions(windowExtensions);
 
     /// Add SDL extensions to vector of extensions    
-    for (size_t i = 0; i < sdlExtensionCount; i++) {        
-        instanceExtensions.push_back(sdlExtensions[i]);    ///One of these extension should be VK_KHR_surface, this is provided by SDL!
+    for (size_t i = 0; i < windowExtensions.size(); i++) {
+        instanceExtensions.push_back(windowExtensions[i]);    ///One of these extension should be VK_KHR_surface, this is provided by SDL!
     }
 
     ///Check if any of the instance extensions is not supported...
@@ -525,7 +519,7 @@ void VulkanRenderer::cleanup()
     
 }
 
-void VulkanRenderer::draw()
+void VulkanRenderer::draw(Scene* scene)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped;
@@ -583,7 +577,7 @@ void VulkanRenderer::draw()
     }
     
     /// ReRecord the current CommandBuffer! In order to update any Push Constants
-    recordRenderPassCommands_Base(imageIndex);
+    recordRenderPassCommands_Base(scene, imageIndex);
     recordRenderPassCommands_imgui(imageIndex);
     //recordDynamicRenderingCommands(imageIndex); ///TODO: User should be able to set if DynamicRendering or Renderpass should be used
     
@@ -671,6 +665,15 @@ void VulkanRenderer::draw()
 #ifndef VENGINE_NO_PROFILING    
     FrameMarkEnd(draw_frame);
 #endif        
+}
+
+void VulkanRenderer::initMeshes(Scene* scene)
+{
+    auto tView = scene->getSceneReg().view<MeshComponent>();
+    tView.each([this](MeshComponent& meshComponent)
+    {
+        meshComponent.meshID = this->createModel("ghost.obj");
+    });
 }
 
 void VulkanRenderer::getPhysicalDevice() {
@@ -1073,7 +1076,7 @@ void VulkanRenderer::createSurface() {
     VkSurfaceKHR sdlSurface{};
 
     SDL_bool result = SDL_Vulkan_CreateSurface(
-                            (this->window.sdl_window),
+                            (this->window->windowHandle),
                             this->instance,                                                        
                             &sdlSurface
                             );
@@ -1408,8 +1411,7 @@ vk::Extent2D VulkanRenderer::chooseBestImageResolution(const vk::SurfaceCapabili
         ///IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
         /// - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
         int width=0, height=0;        
-        //glfwGetFramebufferSize(this->window.glfw_window, &width, &height);
-        SDL_GetWindowSize(this->window.sdl_window, &width, &height);
+        SDL_GetWindowSize(this->window->windowHandle, &width, &height);
 
         /// Create a new extent using the current window size
         vk::Extent2D newExtent = {};
@@ -2455,46 +2457,8 @@ stbi_uc* VulkanRenderer::loadTextuerFile(const std::string &filename, int* width
     
 }
 
-void VulkanRenderer::rendererGameLoop()
-{
-    SDL_Event event;  
-    bool quitting = false;
-    while (!quitting) {
-        this->eventBuffer.clear();
-        while (SDL_PollEvent(&event) != 0) {    
-            ImGui_ImplSDL2_ProcessEvent(&event);        
-            if (event.type == SDL_QUIT ||  
-            (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(this->window.sdl_window)))
-            {
-                quitting = true;
-            }
-            if(event.type == SDL_KEYDOWN){
-                switch(event.key.keysym.sym){
-                    case SDLK_HOME:
-                        std::cout << "Home was pressed! generating vma dump" << "\n";
-                        this->generateVmaDump();
-                        
-                    default: ;
-                }
-            }
-            this->eventBuffer.emplace_back(event);
-        }
-        //SDL_PollEvent(&event);
-        ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplSDL2_NewFrame(this->window.sdl_window);
-        ImGui::NewFrame();
-        
-        this->gameLoopFunction(this->eventBuffer);
-
-        this->draw(); 
-#ifndef VENGINE_NO_PROFILING
-        FrameMark;
-#endif
-    }
-    
-}
-
 VulkanRenderer::VulkanRenderer()
+    : window(nullptr)
 {
     loadConfIntoMemory();
 }
@@ -3493,7 +3457,7 @@ void VulkanRenderer::recordRenderPassCommands_imgui(uint32_t currentImageIndex)
     this->commandBuffers_imgui[currentImageIndex].end();
 }
 
-void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex) 
+void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex) 
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
@@ -3565,10 +3529,17 @@ void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex)
                 commandBuffers[currentImageIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, this->graphicsPipeline);
                 /// vk::PipelineBindPoint::eGraphics: What Kind of pipeline we are binding...
 
+
                 /// For every Mesh we have
-                for(auto & currModel : modelList)
+                auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
+                tView.each([this, currentImageIndex](Transform& transform, MeshComponent& meshComponent)
                 {
-                    auto modelMatrix= currModel.getModelMatrix();
+                    auto currModel = modelList[meshComponent.meshID];
+
+                    glm::mat4 modelMatrix = transform.matrix;
+
+                    // auto modelMatrix = currModel.getModelMatrix();
+
                     /// "Push" Constants to given Shader Stage Directly (using no Buffer...)
                     this->commandBuffers[currentImageIndex].pushConstants(
                         this->pipelineLayout,
@@ -3653,8 +3624,8 @@ void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex)
                         */
                     }                
 
-                                 
-                }
+
+                });
 
                 /// Start Second Subpass
                 vk::SubpassEndInfo subpassEndInfo;                
@@ -3950,7 +3921,7 @@ void VulkanRenderer::getFrameThumbnailForTracy() //TODO: Update to use vma inste
     int width =0; 
     int height =0;
 
-    SDL_GetWindowSize(this->window.sdl_window, &width, &height);
+    SDL_GetWindowSize(this->window->windowHandle, &width, &height);
     imageCreateInfo.extent.setWidth(static_cast<uint32_t>(width));
     imageCreateInfo.extent.setHeight(static_cast<uint32_t>(height));
     imageCreateInfo.extent.setDepth(uint32_t(1));
@@ -4115,7 +4086,7 @@ void VulkanRenderer::allocateTracyImageMemory()
     int width =0;
     int height =0;
 
-    SDL_GetWindowSize(this->window.sdl_window, &width, &height);
+    SDL_GetWindowSize(this->window->windowHandle, &width, &height);
     this->tracyImage = static_cast<char*>(CustomAlloc((static_cast<long>(height*width*4)) * sizeof(char)));
      
 }
@@ -4210,7 +4181,7 @@ void VulkanRenderer::initImgui()
     
 
     ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForVulkan(this->window.sdl_window);
+    ImGui_ImplSDL2_InitForVulkan(this->window->windowHandle);
 
     ImGui_ImplVulkan_InitInfo imguiInitInfo {};
     imguiInitInfo.Instance = this->instance;
