@@ -13,6 +13,7 @@ SceneHandler::~SceneHandler()
 
 void SceneHandler::update()
 {
+	this->scene->updateSystems();
 	this->scene->update();
 }
 
