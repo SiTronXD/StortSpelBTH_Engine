@@ -5,7 +5,7 @@
 #include "Input.h"
 
 Window::Window()
-    : sdl_window(nullptr),
+    : windowHandle(nullptr),
     isRunning(true)
 {}
 
@@ -19,7 +19,7 @@ void Window::initWindow(const std::string &name, const int width, const int heig
     SDL_Init(SDL_INIT_VIDEO);
 
     ///Configure SDL Window...    
-    this->sdl_window = SDL_CreateWindow(
+    this->windowHandle = SDL_CreateWindow(
         name.c_str(), 
         SDL_WINDOWPOS_CENTERED, 
         SDL_WINDOWPOS_CENTERED, 
@@ -46,7 +46,7 @@ void Window::update()
     while (SDL_PollEvent(&event) != 0) {
         ImGui_ImplSDL2_ProcessEvent(&event);
         if (event.type == SDL_QUIT ||
-            (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(this->sdl_window)))
+            (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(this->windowHandle)))
         {
             this->isRunning = false;
         }
@@ -62,9 +62,30 @@ void Window::update()
     }
 }
 
+void Window::getVulkanExtensions(
+    std::vector<const char*>& outputExtensions)
+{
+    unsigned int sdlExtensionCount = 0;        /// may require multiple extension  
+    SDL_Vulkan_GetInstanceExtensions(
+        this->windowHandle, 
+        &sdlExtensionCount, 
+        nullptr
+    );
+
+    ///Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
+    outputExtensions.resize(sdlExtensionCount);
+
+    /// Get SDL Extensions
+    SDL_Vulkan_GetInstanceExtensions(
+        this->windowHandle, 
+        &sdlExtensionCount, 
+        outputExtensions.data()
+    );
+}
+
 Window::~Window() {
 
-    SDL_DestroyWindow(this->sdl_window);
+    SDL_DestroyWindow(this->windowHandle);
 }
 
 ////__attribute__((unused))

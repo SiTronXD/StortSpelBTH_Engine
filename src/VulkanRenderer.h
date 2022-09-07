@@ -259,8 +259,6 @@ private:
     /// -- Loader Functions
     static stbi_uc*    loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );
 
-    void rendererGameLoop();
-
 private: 
     /// Clients Privates 
     std::function<void()> gameLoopFunction;
@@ -277,7 +275,6 @@ public:
     int  init(Window* window, std::string&& windowName);
     int  createModel(const std::string &modelFile);
     void updateModel(int modelIndex, glm::mat4 newModel);
-    void registerGameLoop(std::function<void()> gameLoopFunc);
     void draw();
     
     void cleanup();

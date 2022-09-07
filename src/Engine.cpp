@@ -87,7 +87,7 @@ void Engine::run(Scene* startScene)
 
         //SDL_PollEvent(&event);
         ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplSDL2_NewFrame(window.sdl_window);
+        ImGui_ImplSDL2_NewFrame(window.windowHandle);
         ImGui::NewFrame();
 
         Time::updateDeltaTime();

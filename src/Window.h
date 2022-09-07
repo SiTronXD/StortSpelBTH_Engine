@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <vector>
 #include "imgui_impl_sdl.h"     // Need to be included in header
 
 struct SDL_Window;
@@ -12,7 +13,7 @@ private:
     bool isRunning;
 
 public:
-    SDL_Window * sdl_window;
+    SDL_Window* windowHandle;
 
     Window();
     Window(Window const& ref) = delete;
@@ -24,6 +25,8 @@ public:
     void initWindow(const std::string &name, int width, int height);
     void registerResizeEvent(bool& listener);
     void update();
+
+    void getVulkanExtensions(std::vector<const char*>& outputExtensions);
 
     const bool& getIsRunning() const { return this->isRunning; }
 };

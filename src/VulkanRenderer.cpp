@@ -218,12 +218,6 @@ void VulkanRenderer::updateModel(int modelIndex, glm::mat4 newModel)
     modelList[modelIndex].setModelMatrix(newModel);
 }
 
-void VulkanRenderer::registerGameLoop(std::function<void()> gameLoopFunc)
-{
-    this->gameLoopFunction = gameLoopFunc;
-    this->rendererGameLoop();
-}
-
 void VulkanRenderer::generateVmaDump()
 {
     char* vma_dump;
@@ -265,19 +259,13 @@ void VulkanRenderer::createInstance() {
     ///Create vector to hold instance extensions.
     auto instanceExtensions = std::vector<const char*>();
 
-    ///Set up extensions Instance to be used
-    unsigned int sdlExtensionCount = 0;        /// may require multiple extension  
-	SDL_Vulkan_GetInstanceExtensions(this->window->sdl_window, &sdlExtensionCount, nullptr);
-    
-    ///Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
-    std::vector<const char*> sdlExtensions (sdlExtensionCount);    
-    
-    /// Get SDL Extensions
-    SDL_Vulkan_GetInstanceExtensions(this->window->sdl_window, &sdlExtensionCount, sdlExtensions.data());
+    // Get SDL extensions from window
+    std::vector<const char*> windowExtensions;
+    this->window->getVulkanExtensions(windowExtensions);
 
     /// Add SDL extensions to vector of extensions    
-    for (size_t i = 0; i < sdlExtensionCount; i++) {        
-        instanceExtensions.push_back(sdlExtensions[i]);    ///One of these extension should be VK_KHR_surface, this is provided by SDL!
+    for (size_t i = 0; i < windowExtensions.size(); i++) {
+        instanceExtensions.push_back(windowExtensions[i]);    ///One of these extension should be VK_KHR_surface, this is provided by SDL!
     }
 
     ///Check if any of the instance extensions is not supported...
@@ -1077,7 +1065,7 @@ void VulkanRenderer::createSurface() {
     VkSurfaceKHR sdlSurface{};
 
     SDL_bool result = SDL_Vulkan_CreateSurface(
-                            (this->window->sdl_window),
+                            (this->window->windowHandle),
                             this->instance,                                                        
                             &sdlSurface
                             );
@@ -1412,7 +1400,7 @@ vk::Extent2D VulkanRenderer::chooseBestImageResolution(const vk::SurfaceCapabili
         ///IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
         /// - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
         int width=0, height=0;        
-        SDL_GetWindowSize(this->window->sdl_window, &width, &height);
+        SDL_GetWindowSize(this->window->windowHandle, &width, &height);
 
         /// Create a new extent using the current window size
         vk::Extent2D newExtent = {};
@@ -2455,33 +2443,6 @@ stbi_uc* VulkanRenderer::loadTextuerFile(const std::string &filename, int* width
     *imageSize = static_cast<uint32_t>((*width) * (*height) * 4); /// width times height gives us size per channel, we have 4 channels! (rgba)
 
     return image;
-    
-}
-
-void VulkanRenderer::rendererGameLoop()
-{
-    /*while (this->window.getIsRunning()) 
-    {
-        this->window.update();
-
-        if (Input::isKeyPressed(Keys::HOME))
-        {
-            std::cout << "Home was pressed! generating vma dump" << "\n";
-            this->generateVmaDump();
-        }
-
-        //SDL_PollEvent(&event);
-        ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplSDL2_NewFrame(this->window.sdl_window);
-        ImGui::NewFrame();
-        
-        this->gameLoopFunction();
-
-        this->draw(); 
-#ifndef VENGINE_NO_PROFILING
-        FrameMark;
-#endif
-    }*/
     
 }
 
@@ -3942,7 +3903,7 @@ void VulkanRenderer::getFrameThumbnailForTracy() //TODO: Update to use vma inste
     int width =0; 
     int height =0;
 
-    SDL_GetWindowSize(this->window->sdl_window, &width, &height);
+    SDL_GetWindowSize(this->window->windowHandle, &width, &height);
     imageCreateInfo.extent.setWidth(static_cast<uint32_t>(width));
     imageCreateInfo.extent.setHeight(static_cast<uint32_t>(height));
     imageCreateInfo.extent.setDepth(uint32_t(1));
@@ -4107,7 +4068,7 @@ void VulkanRenderer::allocateTracyImageMemory()
     int width =0;
     int height =0;
 
-    SDL_GetWindowSize(this->window->sdl_window, &width, &height);
+    SDL_GetWindowSize(this->window->windowHandle, &width, &height);
     this->tracyImage = static_cast<char*>(CustomAlloc((static_cast<long>(height*width*4)) * sizeof(char)));
      
 }
@@ -4202,7 +4163,7 @@ void VulkanRenderer::initImgui()
     
 
     ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForVulkan(this->window->sdl_window);
+    ImGui_ImplSDL2_InitForVulkan(this->window->windowHandle);
 
     ImGui_ImplVulkan_InitInfo imguiInitInfo {};
     imguiInitInfo.Instance = this->instance;
