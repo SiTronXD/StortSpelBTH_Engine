@@ -6,6 +6,8 @@ class TestScene : public Scene
 {
 private:
 	int testEntity;
+	int testEntity2;
+
 public:
 	TestScene(SceneHandler& sceneHandler);
 	virtual ~TestScene();

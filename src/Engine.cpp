@@ -47,17 +47,19 @@ void Engine::run(Scene* startScene)
     );
 
     /// Creating Vulkan Renderer Instance
-    auto myRenderer = VulkanRenderer();
-    if (myRenderer.init(&window, "Some Program") == 1) 
+    auto renderer = VulkanRenderer();
+    if (renderer.init(&window, "Some Program") == 1)
     {
         std::cout << "EXIT_FAILURE" << std::endl;
     }
 
-    window.registerResizeEvent(myRenderer.getWindowResized());
+    window.registerResizeEvent(renderer.getWindowResized());
+
+    renderer.initMeshes(this->sceneHandler.getScene());
 
     double angle = 0.F;
 
-    int ghostModelIndex = myRenderer.createModel("ghost.obj");
+    // int ghostModelIndex = renderer.createModel("ghost.obj");
 
     glm::mat4 correctSize = glm::mat4(1.F);
     float scale = 0.2F;
@@ -67,12 +69,12 @@ void Engine::run(Scene* startScene)
 
     scale = 5.F;
 
-    myRenderer.updateModel(ghostModelIndex, correctRot);
+    /*myRenderer.updateModel(ghostModelIndex, correctRot);
     correctRot = glm::translate(glm::mat4(1.F), glm::vec3(0.F, 10.F, -100.F));
     correctRot = glm::rotate(correctRot, glm::radians(-90.F), glm::vec3(1.F, 0.F, 0.F));
     correctRot = glm::rotate(correctRot, glm::radians(-90.F), glm::vec3(0.F, 0.F, 1.F));
     correctRot = glm::scale(correctRot, glm::vec3(scale, scale, scale));
-    myRenderer.updateModel(ghostModelIndex, correctRot);
+    myRenderer.updateModel(ghostModelIndex, correctRot);*/
 
     // Game loop
     while (window.getIsRunning())
@@ -82,7 +84,7 @@ void Engine::run(Scene* startScene)
         if (Input::isKeyPressed(Keys::HOME))
         {
             std::cout << "Home was pressed! generating vma dump" << "\n";
-            myRenderer.generateVmaDump();
+            renderer.generateVmaDump();
         }
 
         //SDL_PollEvent(&event);
@@ -113,16 +115,16 @@ void Engine::run(Scene* startScene)
         ghost_model_matrix = glm::rotate(ghost_model_matrix, glm::radians(angle), glm::vec<3, double>(0.0, 0.0, 1.0));
         sponza_model_matrix = glm::rotate(sponza_model_matrix, glm::radians(angle * 10.0), glm::vec<3, double>(0.0, 1.0, 0.0));
 
-        myRenderer.updateModel(ghostModelIndex, ghost_model_matrix);
+        // myRenderer.updateModel(ghostModelIndex, ghost_model_matrix);
         
         // ------------------------------------
         this->sceneHandler.updateToNextScene();
 
-        myRenderer.draw();
+        renderer.draw(this->sceneHandler.getScene());
 #ifndef VENGINE_NO_PROFILING
         FrameMark;
 #endif
     }
 
-    myRenderer.cleanup();
+    renderer.cleanup();
 }

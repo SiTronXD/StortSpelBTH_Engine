@@ -15,6 +15,7 @@ private:
 
 	entt::registry reg;
 	std::vector<System*> systems;
+
 public:
 	Scene(SceneHandler& sceneHandler);
 	virtual ~Scene();
@@ -47,6 +48,8 @@ public:
 
 	virtual void init() = 0;
 	virtual void update() = 0;
+
+	inline entt::registry& getSceneReg() { return this->reg; }
 };
 
 template<typename T, typename ...Args>
@@ -88,5 +91,9 @@ void Scene::setComponent(int entity,
 template <typename T>
 void Scene::removeComponent(int entity)
 {
+	// Don't remove transform
+	if (typeid(T) == typeid(Transform))
+	{ return; }
+
 	this->reg.remove<T>((entt::entity)entity);
 }
