@@ -27,6 +27,8 @@
 #include "backends/imgui_impl_vulkan.h"
 
 #include "Input.h"
+#include "Scene.h"
+#include "MeshComponent.hpp"
 
 using namespace vengine_helper::config;
 int VulkanRenderer::init(Window* window, std::string&& windowName) {
@@ -664,22 +666,14 @@ void VulkanRenderer::draw(Scene* scene)
     FrameMarkEnd(draw_frame);
 #endif        
 }
-#include "Scene.h"
-#include "MeshComponent.hpp"
+
 void VulkanRenderer::initMeshes(Scene* scene)
 {
     auto tView = scene->getSceneReg().view<MeshComponent>();
     tView.each([this](MeshComponent& meshComponent)
-        {
-            meshComponent.meshID =
-                this->createModel("ghost.obj");
-
-            glm::mat4 modelMat = glm::translate(glm::mat4(1.F), glm::vec3(0.F, 10.F, -100.F));
-            modelMat = glm::rotate(modelMat, glm::radians(-90.F), glm::vec3(1.F, 0.F, 0.F));
-            //modelMat = glm::rotate(modelMat, glm::radians(-90.F), glm::vec3(0.F, 0.F, 1.F));
-
-            this->updateModel(meshComponent.meshID, modelMat);
-        });
+    {
+        meshComponent.meshID = this->createModel("ghost.obj");
+    });
 }
 
 void VulkanRenderer::getPhysicalDevice() {

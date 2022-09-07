@@ -46,9 +46,6 @@ class Input
 private:
 	friend class Window;
 
-	// TODO: remove this
-	friend class VulkanRenderer;
-
 	static std::map<Keys, bool> keyDown;
 	static std::map<Keys, bool> lastKeyDown;
 	// static bool mouseButtonDown[MAX_NUM_MOUSE_BUTTONS];
