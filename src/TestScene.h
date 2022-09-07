@@ -5,7 +5,7 @@
 class TestScene : public Scene
 {
 private:
-	
+	int testEntity;
 public:
 	TestScene(SceneHandler& sceneHandler);
 	virtual ~TestScene();
