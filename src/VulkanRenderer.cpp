@@ -1408,7 +1408,6 @@ vk::Extent2D VulkanRenderer::chooseBestImageResolution(const vk::SurfaceCapabili
         ///IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
         /// - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
         int width=0, height=0;        
-        //glfwGetFramebufferSize(this->window.glfw_window, &width, &height);
         SDL_GetWindowSize(this->window.sdl_window, &width, &height);
 
         /// Create a new extent using the current window size
@@ -2454,12 +2453,16 @@ stbi_uc* VulkanRenderer::loadTextuerFile(const std::string &filename, int* width
     return image;
     
 }
-
+#include "Input.h"
 void VulkanRenderer::rendererGameLoop()
 {
     SDL_Event event;  
     bool quitting = false;
-    while (!quitting) {
+
+    while (!quitting) 
+    {
+        this->window.update();
+
         this->eventBuffer.clear();
         while (SDL_PollEvent(&event) != 0) {    
             ImGui_ImplSDL2_ProcessEvent(&event);        
@@ -2477,6 +2480,16 @@ void VulkanRenderer::rendererGameLoop()
                     default: ;
                 }
             }
+
+            // Register key press/release
+            if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
+            {
+                Input::setKey(
+                    event.key.keysym.sym,
+                    event.type == SDL_KEYDOWN
+                );
+            }
+
             this->eventBuffer.emplace_back(event);
         }
         //SDL_PollEvent(&event);

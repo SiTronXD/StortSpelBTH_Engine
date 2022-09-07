@@ -10,7 +10,8 @@
 #include "glm/fwd.hpp"
 #include <vector>
 
-#include "VulkanWindow.h"
+#include "Window.h"
+#include "Input.h"
 #include "VulkanRenderer.h"
 #include "Configurator.h"
 
@@ -44,7 +45,7 @@ void Engine::run(Scene* startScene)
 
     double angle = 0.F;
 
-    int sponzaIndex = myRenderer.createModel("sponza.obj");
+    //int sponzaIndex = myRenderer.createModel("sponza.obj");
     int ghostModelIndex = myRenderer.createModel("ghost.obj");
 
     glm::mat4 correctSize = glm::mat4(1.F);
@@ -70,16 +71,6 @@ void Engine::run(Scene* startScene)
     {
         this->sceneHandler.update();
 
-        for (auto&& event : events) {
-            if (event.type == SDL_KEYDOWN) {
-                switch (event.key.keysym.sym) {
-                case SDLK_b:
-                    std::cout << "Testing thing in loop" << "\n";
-                default:;
-                }
-            }
-        }
-
         auto time_now = std::chrono::high_resolution_clock::now();
         deltaTime = time_now - lastTime;
         lastTime = time_now;
@@ -104,7 +95,7 @@ void Engine::run(Scene* startScene)
 
 
         myRenderer.updateModel(ghostModelIndex, ghost_model_matrix);
-        myRenderer.updateModel(sponzaIndex, sponza_model_matrix);
+        //myRenderer.updateModel(sponzaIndex, sponza_model_matrix);
 
         this->sceneHandler.updateToNextScene();
     };

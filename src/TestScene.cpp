@@ -1,5 +1,6 @@
-#include "TestScene.h"
 #include <iostream>
+#include "TestScene.h"
+#include "Input.h"
 
 TestScene::TestScene(SceneHandler& sceneHandler)
 	: Scene(sceneHandler)
@@ -17,7 +18,10 @@ void TestScene::init()
 
 void TestScene::update()
 {
-	std::cout << "Test scene update" << std::endl;
+	if (Input::isKeyDown(Keys::B))
+	{
+		std::cout << "B button!" << std::endl;
+	}
 }
 
 void TestScene::renderUI()

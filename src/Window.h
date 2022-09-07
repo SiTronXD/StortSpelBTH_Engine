@@ -1,24 +1,27 @@
 #pragma once
 
 #include <string>
+
 struct SDL_Window;
 union SDL_Event;
-class VulkanWindow{
+
+class Window
+{
 private:
 
 public:
     SDL_Window * sdl_window;
 
-    VulkanWindow();
-    VulkanWindow(VulkanWindow const &ref)       = delete;
-    VulkanWindow(VulkanWindow &&ref) noexcept   = delete;
-    VulkanWindow& operator=(VulkanWindow const &ref)       = delete;
-    VulkanWindow& operator=(VulkanWindow &&ref) noexcept   = delete;
-    ~VulkanWindow();
+    Window();
+    Window(Window const& ref) = delete;
+    Window(Window&& ref) noexcept = delete;
+    Window& operator=(Window const& ref) = delete;
+    Window& operator=(Window&&ref) noexcept   = delete;
+    ~Window();
 
     void initWindow(const std::string &name, int width, int height);
     void registerResizeEvent(bool& listener);
-
+    void update();
 };
 
 ////__attribute__((unused))

@@ -1,7 +1,7 @@
 #pragma once
 #include <vulkan/vulkan.hpp>
 #include "Utilities.h"
-#include "VulkanWindow.h"
+#include "Window.h"
 #include "imgui.h"              // Need to be included in header
 #include "imgui_impl_sdl.h"     // Need to be included in header
 
@@ -9,11 +9,9 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
-#include "VulkanWindow.h"
 #include "Model.h"
 
 #include "vk_mem_alloc.h"
-//#include "vk_mem_alloc.h"
 #ifndef VENGINE_NO_PROFILING
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyVulkan.hpp"
@@ -26,7 +24,7 @@ class VulkanRenderer {
 #ifndef VENGINE_NO_PROFILING
     std::vector<TracyVkCtx> tracyContext;
 #endif
-    VulkanWindow window{};
+    Window window{};
 
     VmaAllocator vma = nullptr;
 
