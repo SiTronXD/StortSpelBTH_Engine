@@ -17,6 +17,8 @@
 #include "tracy/TracyVulkan.hpp"
 #endif 
 
+class Scene;
+
 #include <functional>
 using stbi_uc = unsigned char;
 using SDL_Events = std::vector<SDL_Event>;
@@ -221,7 +223,7 @@ private:
 
     /// - Record Functions
     void recordRenderPassCommands_imgui(uint32_t currentImageIndex);    /// Using renderpass
-    void recordRenderPassCommands_Base(uint32_t currentImageIndex);    /// Using renderpass
+    void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    /// Using renderpass
     void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
     /// - Get Functions
@@ -275,7 +277,9 @@ public:
     int  init(Window* window, std::string&& windowName);
     int  createModel(const std::string &modelFile);
     void updateModel(int modelIndex, glm::mat4 newModel);
-    void draw();
+    void draw(Scene* scene);
+
+    void initMeshes(Scene* scene);
     
     void cleanup();
 

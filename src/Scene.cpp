@@ -1,6 +1,7 @@
 #include "Scene.h"
 #include "SceneHandler.h"
 #include "UpdateMatricesSystem.hpp"
+#include "Time.h"
 
 Scene::Scene(SceneHandler& sceneHandler)
 	: sceneHandler(sceneHandler)
@@ -16,7 +17,7 @@ void Scene::updateSystems()
 {
 	for (auto it = this->systems.begin(); it != this->systems.end();)
 	{
-		if ((*it)->update(this->reg, 1.0f))
+		if ((*it)->update(this->reg, Time::getDT()))
 		{
 			delete (*it);
 			it = this->systems.erase(it);

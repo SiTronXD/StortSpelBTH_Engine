@@ -517,7 +517,7 @@ void VulkanRenderer::cleanup()
     
 }
 
-void VulkanRenderer::draw()
+void VulkanRenderer::draw(Scene* scene)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped;
@@ -575,7 +575,7 @@ void VulkanRenderer::draw()
     }
     
     /// ReRecord the current CommandBuffer! In order to update any Push Constants
-    recordRenderPassCommands_Base(imageIndex);
+    recordRenderPassCommands_Base(scene, imageIndex);
     recordRenderPassCommands_imgui(imageIndex);
     //recordDynamicRenderingCommands(imageIndex); ///TODO: User should be able to set if DynamicRendering or Renderpass should be used
     
@@ -663,6 +663,23 @@ void VulkanRenderer::draw()
 #ifndef VENGINE_NO_PROFILING    
     FrameMarkEnd(draw_frame);
 #endif        
+}
+#include "Scene.h"
+#include "MeshComponent.hpp"
+void VulkanRenderer::initMeshes(Scene* scene)
+{
+    auto tView = scene->getSceneReg().view<MeshComponent>();
+    tView.each([this](MeshComponent& meshComponent)
+        {
+            meshComponent.meshID =
+                this->createModel("ghost.obj");
+
+            glm::mat4 modelMat = glm::translate(glm::mat4(1.F), glm::vec3(0.F, 10.F, -100.F));
+            modelMat = glm::rotate(modelMat, glm::radians(-90.F), glm::vec3(1.F, 0.F, 0.F));
+            //modelMat = glm::rotate(modelMat, glm::radians(-90.F), glm::vec3(0.F, 0.F, 1.F));
+
+            this->updateModel(meshComponent.meshID, modelMat);
+        });
 }
 
 void VulkanRenderer::getPhysicalDevice() {
@@ -3446,7 +3463,7 @@ void VulkanRenderer::recordRenderPassCommands_imgui(uint32_t currentImageIndex)
     this->commandBuffers_imgui[currentImageIndex].end();
 }
 
-void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex) 
+void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex) 
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
@@ -3518,10 +3535,17 @@ void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex)
                 commandBuffers[currentImageIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, this->graphicsPipeline);
                 /// vk::PipelineBindPoint::eGraphics: What Kind of pipeline we are binding...
 
+
                 /// For every Mesh we have
-                for(auto & currModel : modelList)
+                auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
+                tView.each([this, currentImageIndex](Transform& transform, MeshComponent& meshComponent)
                 {
-                    auto modelMatrix= currModel.getModelMatrix();
+                    auto currModel = modelList[meshComponent.meshID];
+
+                    glm::mat4 modelMatrix = transform.matrix;
+
+                    // auto modelMatrix = currModel.getModelMatrix();
+
                     /// "Push" Constants to given Shader Stage Directly (using no Buffer...)
                     this->commandBuffers[currentImageIndex].pushConstants(
                         this->pipelineLayout,
@@ -3606,8 +3630,8 @@ void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex)
                         */
                     }                
 
-                                 
-                }
+
+                });
 
                 /// Start Second Subpass
                 vk::SubpassEndInfo subpassEndInfo;                
