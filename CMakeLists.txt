@@ -91,7 +91,7 @@ set(CLANG_COMPILE_TIME_OPTIONS_debug
 )
 set(CLANG_COMPILE_TIME_OPTIONS_debugWCallStackProfiling ${CLANG_COMPILE_TIME_OPTIONS_debug})
 set(CLANG_COMPILE_TIME_OPTIONS_release 
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-O3,-msse2 >
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-O3 -msse2 >
     $<$<CXX_COMPILER_ID:MSVC>:/O2>
 )
 
@@ -153,24 +153,44 @@ find_package(assimp QUIET)
 message("assimp_found was: " ${assimp_FOUND})
 if(NOT ${assimp_FOUND}) 
     message("Did not find assimp...")
-    endif()
     add_subdirectory(deps/assimp)
+endif()
 message("after")
 
 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
 
-add_subdirectory(deps/vma)
+
+vengine_find(vengine_vma deps/vengine_vma VulkanMemoryAllocator)
+# message("before")
+# find_package(vengine_vma MODULE QUIET)
+# message("vengine_vma_found was: " ${vengine_vma_FOUND})
+# if(NOT ${vengine_vma_FOUND}) 
+#     message("Did not find vengine_vma...")
+#     add_subdirectory(deps/vma)
+    
+#     set(vengine_vma VulkanMemoryAllocator)
+# else()
+#     set(vengine_vma vengine_vma::vengine_vma)
+# endif()
+    
+# message("after")
+
 #include(deps/vmamemdump_dependency.cmake)
-add_subdirectory(deps/tracy)
+#add_subdirectory(deps/vengine_tracy)
+vengine_find(vengine_tracy deps/vengine_tracy TracyClient)
 #include(deps/tracyprofiler_dependency.cmake)
 Set(FETCHCONTENT_QUIET ${PREV_FETCHCONTENT_QUIET})
+
+if()
+endif()
 
 target_sources(vengine PRIVATE main.cpp ${VENGINE_SOURCES})
 target_include_directories(vengine PUBLIC ${imgui_include_dirs})
 #target_include_directories(vengine PUBLIC ${assimp_include_dirs})
 target_include_directories(vengine PUBLIC ${tracy_include_dirs})
 #target_link_directories(vengine PUBLIC tracy::tracy)
-target_link_directories(vengine PUBLIC ${vma_include_dirs})
+#target_link_directories(vengine PUBLIC ${vma_include_dirs})
 #target_compile_definitions(vengine PUBLIC STB_IMAGE_IMPLEMENTATION STB_IMAGE_RESIZE_IMPLEMENTATION STBI_SSE2)
 #target_link_directories(vengine PUBLIC vulkan-memory-allocator::vulkan-memory-allocator)
 message("9")
@@ -269,7 +289,8 @@ message("13")
 target_link_libraries(
     vengine 
     PUBLIC 
-    TracyClient
+    ${vengine_tracy}
+    #TracyClient
     #tracy::tracy
     imgui_lib 
     ${SDL2_LIBRARIES}
@@ -282,7 +303,8 @@ target_link_libraries(
     stb::stb
     #vulkan-memory-allocator::vulkan-memory-allocator
     #VulkanMemoryAllocator.dll
-    VulkanMemoryAllocator    
+    #VulkanMemoryAllocator    
+    ${vengine_vma}
     #stb_lib
     #${LIBS_DIR}/libassimp.so
     #libpthread.a    # Tracy needs
@@ -321,7 +343,8 @@ build_shaders(vengine ${VENGINE_ASSETS_DIR} ${VENGINE_ASSETS_DIR})
 message("18")
 # In order to create Symbolic Links, add custom command, then a custom target, 
 # lastly after set_exectuable make sure to add_dependencies to the target!
-create_symlink_buildtime(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
+#create_symlink_buildtime(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
+create_symlink_now(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
 message("19")
 
 

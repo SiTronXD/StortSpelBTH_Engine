@@ -33,13 +33,14 @@ endfunction()
 
 # Function to Create a symlink on Build from one directory to another
 function(create_symlink_buildtime FROM_LOCATION TO_LOCATION)
+    message( "start: create symlinks: ${FROM_LOCATION} => ${TO_LOCATION}" )         
     add_custom_command( 
         OUTPUT ${TO_LOCATION}
         POST_BUILD COMMAND ${CMAKE_COMMAND}
             -E create_symlink ${FROM_LOCATION} ${TO_LOCATION} 
         #DEPENDS ${FROM_LOCATION}
         COMMENT "Creating symbolic link ${FROM_LOCATION} => ${TO_LOCATION}"
-        VERBATIM )
+         )
 
 endfunction()
 
@@ -97,3 +98,22 @@ function(install_vengine_helpers INSTALL_LOCATION)
     endif()
     
 endfunction()
+
+
+macro(vengine_find LIBRARY_NAME CMAKELISTS_PATH REAL_LIB_NAME)
+    message(VERBOSE "Beginning vengine_find for ${LIBRARY_NAME}")
+    find_package(${LIBRARY_NAME} MODULE QUIET)
+    message(VERBOSE "vengine_find(${LIBRARY_NAME}) resulted in: " ${vengine_vma_FOUND})
+    
+    if(NOT ${${LIBRARY_NAME}_FOUND}) 
+        message("vengine_find did not find ${LIBRARY_NAME}, building from source!")
+        add_subdirectory(${CMAKELISTS_PATH})
+        
+        set(${LIBRARY_NAME} ${REAL_LIB_NAME})
+    else()
+        set(${LIBRARY_NAME} ${LIBRARY_NAME}::${LIBRARY_NAME})
+    endif()
+
+    message(VERBOSE "leaving vengine_find(${LIBRARY_NAME})")
+
+endmacro()
