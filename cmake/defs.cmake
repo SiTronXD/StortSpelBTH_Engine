@@ -24,7 +24,11 @@ function(setup_vengine_definitions)
 
     # Paths used for Symbolic Link for assets
     set_parentScope(VENGINE_ASSET_LINK_SRC "${VENGINE_ASSETS_DIR}"              )
+    if(${WIN32}) 
+    set_parentScope(VENGINE_ASSET_LINK_DST "${CMAKE_CURRENT_BINARY_DIR}/Debug/assets" )
+    else()
     set_parentScope(VENGINE_ASSET_LINK_DST "${CMAKE_CURRENT_BINARY_DIR}/assets" )
+    endif()
 
     # Directory Structure for assets and deps folder
     set_parentScope(VENGINE_AS_LIB_FOLDER ${CMAKE_CURRENT_BINARY_DIR}/VENGINE_AS_LIB    )
