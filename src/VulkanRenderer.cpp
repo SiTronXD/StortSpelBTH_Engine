@@ -547,6 +547,7 @@ void VulkanRenderer::draw(Scene* scene)
 
     // Get scene camera and update view matrix
     Camera* camera = scene->getMainCamera();
+    bool deleteCamera = false;
     if (camera)
     {
         Transform& transform = scene->getComponent<Transform>(scene->getMainCameraID());
@@ -558,9 +559,10 @@ void VulkanRenderer::draw(Scene* scene)
     }
     else
     {
-        Log::write("No main camera exists!");
+        Log::error("No main camera exists!");
         camera = new Camera((float)this->swapChainExtent.width / (float)this->swapChainExtent.height);
         camera->view = uboViewProjection.view;
+        deleteCamera = true;
     }
 
     unsigned int imageIndex = 0 ;
@@ -602,6 +604,7 @@ void VulkanRenderer::draw(Scene* scene)
     uboViewProjection.view = camera->view;
     uboViewProjection.projection = camera->projection;
     uboViewProjection.projection[1][1] *= -1;
+    if (deleteCamera) { delete camera; }
 
     /// Update the Uniform Buffers
     this->updateUniformBuffers(imageIndex);
