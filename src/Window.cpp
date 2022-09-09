@@ -3,6 +3,7 @@
 #include <SDL2/SDL_vulkan.h>
 #include "tracy/Tracy.hpp"
 #include "Input.h"
+#include "Log.h"
 
 Window::Window()
     : windowHandle(nullptr),
@@ -40,8 +41,9 @@ void Window::registerResizeEvent(bool& listener)
 
 void Window::update()
 {
-    Input::updateLastKeys();
+    Input::update();
 
+    // Update current keys
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
         ImGui_ImplSDL2_ProcessEvent(&event);
@@ -55,11 +57,54 @@ void Window::update()
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
         {
             Input::setKey(
-                event.key.keysym.sym,
+                (Keys) event.key.keysym.sym,
                 event.type == SDL_KEYDOWN
             );
         }
+
+        // Register mouse button press/release
+        if (event.type == SDL_MOUSEBUTTONDOWN || 
+            event.type == SDL_MOUSEBUTTONUP)
+        {
+            Input::setMouseButton(
+                (Mouse) event.button.button,
+                event.type == SDL_MOUSEBUTTONDOWN
+            );
+        }
     }
+
+    // Update mouse position
+    int mouseX = 0;
+    int mouseY = 0;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    Input::setCursor(mouseX, mouseY);
+}
+
+void Window::initImgui()
+{
+    ImGui_ImplSDL2_InitForVulkan(this->windowHandle);
+}
+
+void Window::shutdownImgui()
+{
+    ImGui_ImplSDL2_Shutdown();
+}
+
+void Window::createVulkanSurface(const vk::Instance& instance, vk::SurfaceKHR& outputSurface)
+{
+    VkSurfaceKHR sdlSurface{};
+    SDL_bool result = SDL_Vulkan_CreateSurface(
+        (this->windowHandle),
+        instance,
+        &sdlSurface
+    );
+
+    if (result != SDL_TRUE) 
+    {
+        Log::error("Failed to create (SDL) surface.");
+    }
+
+    outputSurface = sdlSurface;
 }
 
 void Window::getVulkanExtensions(
@@ -81,6 +126,11 @@ void Window::getVulkanExtensions(
         &sdlExtensionCount, 
         outputExtensions.data()
     );
+}
+
+void Window::getSize(int& outputWidth, int& outputHeight)
+{
+    SDL_GetWindowSize(this->windowHandle, &outputWidth, &outputHeight);
 }
 
 Window::~Window() {

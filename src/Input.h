@@ -35,11 +35,12 @@ enum class Keys
 	HOME = SDLK_HOME
 };
 
-/*enum class Mouse
+enum class Mouse
 {
-	LEFT_BUTTON = GLFW_MOUSE_BUTTON_LEFT,
-	RIGHT_BUTTON = GLFW_MOUSE_BUTTON_RIGHT
-};*/
+	LEFT = SDL_BUTTON_LEFT,
+	MIDDLE = SDL_BUTTON_MIDDLE,
+	RIGHT = SDL_BUTTON_RIGHT
+};
 
 class Input
 {
@@ -48,22 +49,28 @@ private:
 
 	static std::map<Keys, bool> keyDown;
 	static std::map<Keys, bool> lastKeyDown;
-	// static bool mouseButtonDown[MAX_NUM_MOUSE_BUTTONS];
 
-	/*static float cursorX;
+	static std::map<Mouse, bool> mouseButtonDown;
+	static std::map<Mouse, bool> lastmouseButtonDown;
+
+	static float cursorX;
 	static float cursorY;
 	static float lastCursorX;
-	static float lastCursorY;*/
+	static float lastCursorY;
 
-	// static void setCursor(const float& newCursorX, const float& newCursorY);
-	static void updateLastKeys();
+	static void setCursor(const float& newCursorX, const float& newCursorY);
+	static void update();
 
-	static void setKey(const SDL_Keycode& keyCode, const bool& value);
+	static void setKey(const Keys& keyCode, const bool& value);
+	static void setMouseButton(const Mouse& mouseButtonCode, const bool& value);
 
 public:
 	static inline bool isKeyDown(const Keys& key) { return Input::keyDown[key]; }
 	static inline bool isKeyPressed(const Keys& key) { return Input::keyDown[key] && !Input::lastKeyDown[key]; }
-	// static inline bool isMouseButtonDown(const Mouse& mouse) { return mouseButtonDown[(int) mouse]; }
-	// static inline const float getMouseDeltaX() { return Input::lastCursorX - Input::cursorX; }
-	// static inline const float getMouseDeltaY() { return Input::lastCursorY - Input::cursorY; }
+	static inline bool isMouseButtonDown(const Mouse& mouse) { return Input::mouseButtonDown[mouse]; }
+	static inline bool isMouseButtonPressed(const Mouse& mouse) { return Input::mouseButtonDown[mouse] && !Input::lastmouseButtonDown[mouse]; }
+	static inline const float& getMouseX() { return Input::cursorX; }
+	static inline const float& getMouseY() { return Input::cursorY; }
+	static inline const float getMouseDeltaX() { return Input::lastCursorX - Input::cursorX; }
+	static inline const float getMouseDeltaY() { return Input::lastCursorY - Input::cursorY; }
 };

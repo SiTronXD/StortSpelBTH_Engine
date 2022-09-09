@@ -1,6 +1,7 @@
 #include <iostream>
 #include "TestScene.h"
 #include "Input.h"
+#include "glm/gtx/string_cast.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "MeshComponent.hpp"
@@ -48,9 +49,10 @@ void TestScene::init()
 #include "Time.h"
 void TestScene::update()
 {
-	if (Input::isKeyDown(Keys::B))
+	if (Input::isMouseButtonPressed(Mouse::RIGHT))
 	{
-		std::cout << "B button!" << std::endl;
+		std::cout << "(" << Input::getMouseX() << " " << 
+			Input::getMouseY() << ")" << std::endl;
 	}
 
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);

@@ -21,7 +21,6 @@ class Scene;
 
 #include <functional>
 using stbi_uc = unsigned char;
-using SDL_Events = std::vector<SDL_Event>;
 class VulkanRenderer {
 #ifndef VENGINE_NO_PROFILING
     std::vector<TracyVkCtx> tracyContext;
