@@ -15,8 +15,6 @@
 #include <vector>
 #include <limits>               /// Used to get the Max value of a uint32_t
 #include <algorithm>            /// Used for std::clamp...
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_vulkan.h>
 #include "stb_image.h"
 
 #include "assimp/Importer.hpp"
@@ -408,7 +406,7 @@ void VulkanRenderer::cleanup()
     vkDeviceWaitIdle(mainDevice.logicalDevice); /// Dont destroy semaphores before they are done
     
     ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
+    this->window->shutdownImgui();
     ImGui::DestroyContext();
 
     this->mainDevice.logicalDevice.destroyRenderPass(this->renderPass_imgui);
@@ -1398,7 +1396,7 @@ vk::Extent2D VulkanRenderer::chooseBestImageResolution(const vk::SurfaceCapabili
         ///IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
         /// - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
         int width=0, height=0;        
-        SDL_GetWindowSize(this->window->windowHandle, &width, &height);
+        this->window->getSize(width, height);
 
         /// Create a new extent using the current window size
         vk::Extent2D newExtent = {};
@@ -3907,8 +3905,8 @@ void VulkanRenderer::getFrameThumbnailForTracy() //TODO: Update to use vma inste
     
     int width =0; 
     int height =0;
+    this->window->getSize(width, height);
 
-    SDL_GetWindowSize(this->window->windowHandle, &width, &height);
     imageCreateInfo.extent.setWidth(static_cast<uint32_t>(width));
     imageCreateInfo.extent.setHeight(static_cast<uint32_t>(height));
     imageCreateInfo.extent.setDepth(uint32_t(1));
@@ -4073,7 +4071,7 @@ void VulkanRenderer::allocateTracyImageMemory()
     int width =0;
     int height =0;
 
-    SDL_GetWindowSize(this->window->windowHandle, &width, &height);
+    this->window->getSize(width, height);
     this->tracyImage = static_cast<char*>(CustomAlloc((static_cast<long>(height*width*4)) * sizeof(char)));
      
 }
@@ -4168,7 +4166,7 @@ void VulkanRenderer::initImgui()
     
 
     ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForVulkan(this->window->windowHandle);
+    this->window->initImgui();
 
     ImGui_ImplVulkan_InitInfo imguiInitInfo {};
     imguiInitInfo.Instance = this->instance;

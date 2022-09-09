@@ -63,7 +63,17 @@ void Window::update()
     }
 }
 
-void Window::createVulkanSurface(const VkInstance& instance, vk::SurfaceKHR& outputSurface)
+void Window::initImgui()
+{
+    ImGui_ImplSDL2_InitForVulkan(this->windowHandle);
+}
+
+void Window::shutdownImgui()
+{
+    ImGui_ImplSDL2_Shutdown();
+}
+
+void Window::createVulkanSurface(const vk::Instance& instance, vk::SurfaceKHR& outputSurface)
 {
     VkSurfaceKHR sdlSurface{};
     SDL_bool result = SDL_Vulkan_CreateSurface(
@@ -99,6 +109,11 @@ void Window::getVulkanExtensions(
         &sdlExtensionCount, 
         outputExtensions.data()
     );
+}
+
+void Window::getSize(int& outputWidth, int& outputHeight)
+{
+    SDL_GetWindowSize(this->windowHandle, &outputWidth, &outputHeight);
 }
 
 Window::~Window() {

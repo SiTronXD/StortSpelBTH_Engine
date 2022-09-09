@@ -2,8 +2,13 @@
 
 #include <string>
 #include <vector>
-#include <vulkan/vulkan.hpp>
 #include "imgui_impl_sdl.h"     // Need to be included in header
+
+namespace vk
+{
+    class Instance;
+    class SurfaceKHR;
+};
 
 struct SDL_Window;
 union SDL_Event;
@@ -27,8 +32,12 @@ public:
     void registerResizeEvent(bool& listener);
     void update();
 
-    void createVulkanSurface(const VkInstance& instance, vk::SurfaceKHR& outputSurface);
+    void initImgui();
+    void shutdownImgui();
+
+    void createVulkanSurface(const vk::Instance& instance, vk::SurfaceKHR& outputSurface);
     void getVulkanExtensions(std::vector<const char*>& outputExtensions);
+    void getSize(int& outputWidth, int& outputHeight);
 
     const bool& getIsRunning() const { return this->isRunning; }
 };
