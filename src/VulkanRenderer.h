@@ -1,5 +1,7 @@
 
 #pragma once
+#define NOMINMAX
+
 #include <vulkan/vulkan.hpp>
 #include "Utilities.h"
 #include "Window.h"
@@ -18,6 +20,7 @@
 #endif 
 
 class Scene;
+class Camera;
 
 #include <functional>
 using stbi_uc = unsigned char;
@@ -182,7 +185,7 @@ private:
     void setupDebugMessenger();
     void createSurface();
     void createSwapChain();
-    void reCreateSwapChain();    
+    void reCreateSwapChain(Camera* camera);    
     void createRenderPass_Base();
     void createRenderPass_Imgui();
     void createDescriptorSetLayout();
