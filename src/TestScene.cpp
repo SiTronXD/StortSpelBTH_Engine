@@ -51,7 +51,8 @@ void TestScene::update()
 {
 	if (Input::isKeyDown(Keys::B))
 	{
-		std::cout << "B button!" << std::endl;
+		std::cout << "(" << Input::getMouseX() << " " << 
+			Input::getMouseY() << ")" << std::endl;
 	}
 
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);

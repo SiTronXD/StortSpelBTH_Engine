@@ -43,6 +43,7 @@ void Window::update()
 {
     Input::updateLastKeys();
 
+    // Update current keys
     SDL_Event event;
     while (SDL_PollEvent(&event) != 0) {
         ImGui_ImplSDL2_ProcessEvent(&event);
@@ -61,6 +62,12 @@ void Window::update()
             );
         }
     }
+
+    // Update mouse position
+    int mouseX = 0;
+    int mouseY = 0;
+    SDL_GetMouseState(&mouseX, &mouseY);
+    Input::setCursor(mouseX, mouseY);
 }
 
 void Window::initImgui()
