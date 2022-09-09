@@ -1,6 +1,7 @@
-
 #pragma once
-#include <vulkan/vulkan.hpp>
+
+#include "PhysicalDevice.h"
+
 #include "Utilities.h"
 #include "Window.h"
 #include "imgui.h"              // Need to be included in header
@@ -10,12 +11,6 @@
 #include "glm/fwd.hpp"
 
 #include "Model.h"
-
-#include "vk_mem_alloc.h"
-#ifndef VENGINE_NO_PROFILING
-#include "tracy/Tracy.hpp"
-#include "tracy/TracyVulkan.hpp"
-#endif 
 
 class Scene;
 
@@ -49,16 +44,17 @@ class VulkanRenderer {
     vk::DispatchLoaderDynamic dynamicDispatch;
     vk::DebugUtilsMessengerEXT debugMessenger{}; /// used to handle callback from errors based on the validation Layer (??)
     VkDebugReportCallbackEXT debugReport{};
-    struct {
-        vk::PhysicalDevice physicalDevice;
-        vk::Device         logicalDevice;
-    } mainDevice{};
-    QueueFamilyIndices    QueueFamilies;
+    
+    PhysicalDevice physicalDevice;
+    vk::Device         logicalDevice;
+
+    QueueFamilyIndices queueFamilies{};
     vk::Queue             graphicsQueue{};      /// Also acts as the TransferQueue 
     vk::Queue             presentationQueue{};
     vk::SurfaceKHR        surface{};            ///Images will be displayed through a surface, which GLFW will read from
     vk::SwapchainKHR      swapChain = VK_NULL_HANDLE;
 
+    SwapChainDetails swapChainDetails{};
     std::vector<SwapChainImage>  swapChainImages;         /// We store ALL our SwapChain images here... to have access to them
     std::vector<vk::Framebuffer>   swapChainFrameBuffers;
     std::vector<vk::CommandBuffer> commandBuffers;
@@ -225,28 +221,16 @@ private:
     void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    /// Using renderpass
     void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
-    /// - Get Functions
-    void getPhysicalDevice();
-
-    /// - Allocate Functions
-    void allocateDynamicBufferTransferSpace();
-
     /// - Support Functions
     /// -- Checker Functions
     static bool checkInstanceExtensionSupport(std::vector<const char*>* checkExtensions);
     static bool checkDeviceExtensionSupport(vk::PhysicalDevice device);
-    bool checkDeviceSuitable(vk::PhysicalDevice device);
-
-
-    /// -- Getter Functions
-    QueueFamilyIndices getQueueFamilies(vk::PhysicalDevice device);
-    SwapChainDetails   getSwapChainDetails(vk::PhysicalDevice device);
-
+    
     /// -- Choose Functions
     static vk::SurfaceFormat2KHR chooseBestSurfaceFormat(const std::vector<vk::SurfaceFormat2KHR> &formats );
     static vk::PresentModeKHR    chooseBestPresentationMode(const std::vector<vk::PresentModeKHR> &presentationModes);
     vk::Extent2D                 chooseBestImageResolution(const vk::SurfaceCapabilities2KHR & surfaceCapabilities);    
-    [[nodiscard]] vk::Format     chooseSupportedFormat(const std::vector<vk::Format> &formats, vk::ImageTiling tiling, vk::FormatFeatureFlagBits featureFlags) const;
+    [[nodiscard]] vk::Format     chooseSupportedFormat(const std::vector<vk::Format> &formats, vk::ImageTiling tiling, vk::FormatFeatureFlagBits featureFlags);
 
     /// -- Create Functions    
     [[nodiscard]]vk::Image         createImage(createImageData &&imageData,  const std::string &imageDescription) ;
