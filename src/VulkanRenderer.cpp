@@ -1073,20 +1073,7 @@ void VulkanRenderer::createSurface() {
 
     ///Using SDL to create WindowSurface, to make it cross platform
     ///Creates a surface create info struct configured for how SDL handles windows.    
-    VkSurfaceKHR sdlSurface{};
-
-    SDL_bool result = SDL_Vulkan_CreateSurface(
-                            (this->window->windowHandle),
-                            this->instance,                                                        
-                            &sdlSurface
-                            );
-    
-    this->surface = sdlSurface;
-    
-    if (result != SDL_TRUE ) {
-        throw std::runtime_error("Failed to create (GLFW) surface.");
-    }
-    
+    this->window->createVulkanSurface(this->instance, this->surface);
 }
 
 void VulkanRenderer::createSwapChain() {

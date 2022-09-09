@@ -3,6 +3,7 @@
 #include <SDL2/SDL_vulkan.h>
 #include "tracy/Tracy.hpp"
 #include "Input.h"
+#include "Log.h"
 
 Window::Window()
     : windowHandle(nullptr),
@@ -60,6 +61,23 @@ void Window::update()
             );
         }
     }
+}
+
+void Window::createVulkanSurface(const VkInstance& instance, vk::SurfaceKHR& outputSurface)
+{
+    VkSurfaceKHR sdlSurface{};
+    SDL_bool result = SDL_Vulkan_CreateSurface(
+        (this->windowHandle),
+        instance,
+        &sdlSurface
+    );
+
+    if (result != SDL_TRUE) 
+    {
+        Log::error("Failed to create (SDL) surface.");
+    }
+
+    outputSurface = sdlSurface;
 }
 
 void Window::getVulkanExtensions(
