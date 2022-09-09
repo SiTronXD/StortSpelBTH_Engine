@@ -13,11 +13,9 @@
 int main(int argc, char* argv[])
 {
     // Set flags for tracking CPU memory leaks
-#ifdef WIN32
-#ifdef _DEBUG
+#if defined(WIN32) && defined(_DEBUG)
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif // _DEBUG
-#endif
+#endif // WIN32 && _DEBUG
 
     {
         Engine engine;
