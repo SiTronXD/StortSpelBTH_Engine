@@ -3,6 +3,11 @@
 #include "UpdateMatricesSystem.hpp"
 #include "Time.h"
 
+void Scene::switchScene(Scene* nextScene)
+{
+	this->sceneHandler.setScene(nextScene);
+}
+
 Scene::Scene(SceneHandler& sceneHandler)
 	: sceneHandler(sceneHandler)
 {
@@ -11,6 +16,11 @@ Scene::Scene(SceneHandler& sceneHandler)
 
 Scene::~Scene()
 {
+	for (size_t i = 0; i < this->systems.size(); ++i)
+	{
+		delete this->systems[i];
+	}
+	this->systems.clear();
 }
 
 void Scene::updateSystems()

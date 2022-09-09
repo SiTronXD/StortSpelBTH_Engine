@@ -16,6 +16,11 @@ private:
 	entt::registry reg;
 	std::vector<System*> systems;
 
+protected:
+	void switchScene(Scene* nextScene);
+
+	inline SceneHandler& getSceneHandler() { return this->sceneHandler; }
+
 public:
 	Scene(SceneHandler& sceneHandler);
 	virtual ~Scene();
