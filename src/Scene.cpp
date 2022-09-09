@@ -13,6 +13,23 @@ Scene::~Scene()
 {
 }
 
+Camera* Scene::getMainCamera()
+{
+	Camera* cam = nullptr;
+	if (this->entityValid(this->mainCamera)) { cam = &this->getComponent<Camera>(this->mainCamera); }
+	return cam;
+}
+
+int Scene::getMainCameraID()
+{
+	return this->mainCamera;
+}
+
+void Scene::setMainCamera(int entity)
+{
+	if (this->hasComponents<Camera>(entity)) { this->mainCamera = entity; }
+}
+
 void Scene::updateSystems()
 {
 	for (auto it = this->systems.begin(); it != this->systems.end();)

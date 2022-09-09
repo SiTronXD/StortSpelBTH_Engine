@@ -27,6 +27,7 @@
 #include "Input.h"
 #include "Scene.h"
 #include "MeshComponent.hpp"
+#include "Log.h"
 
 using namespace vengine_helper::config;
 int VulkanRenderer::init(Window* window, std::string&& windowName) {
@@ -544,6 +545,24 @@ void VulkanRenderer::draw(Scene* scene)
         if(result != vk::Result::eSuccess) {throw std::runtime_error("Failed to wait for all fences!");}        
     }
 
+    // Get scene camera and update view matrix
+    Camera* camera = scene->getMainCamera();
+    if (camera)
+    {
+        Transform& transform = scene->getComponent<Transform>(scene->getMainCameraID());
+        camera->view = glm::lookAt(
+            transform.position,
+            transform.position + transform.forward(),
+            transform.up()
+        );
+    }
+    else
+    {
+        Log::write("No main camera exists!");
+        camera = new Camera((float)this->swapChainExtent.width / (float)this->swapChainExtent.height);
+        camera->view = uboViewProjection.view;
+    }
+
     unsigned int imageIndex = 0 ;
     {
         #ifndef VENGINE_NO_PROFILING
@@ -562,7 +581,7 @@ void VulkanRenderer::draw(Scene* scene)
             VK_NULL_HANDLE                          /// The Fence to signal, when it's available to be used...(??)
         );
         if(result == vk::Result::eErrorOutOfDateKHR){
-            reCreateSwapChain();    
+            reCreateSwapChain(camera);    
             return;
         }
         else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) {throw std::runtime_error("Failed to AcquireNextImage!");}
@@ -573,12 +592,17 @@ void VulkanRenderer::draw(Scene* scene)
             &this->drawFences[currentFrame]);
         if(result != vk::Result::eSuccess) {throw std::runtime_error("Failed to reset fences!");}
     }
-    
+
     /// ReRecord the current CommandBuffer! In order to update any Push Constants
     recordRenderPassCommands_Base(scene, imageIndex);
     recordRenderPassCommands_imgui(imageIndex);
     //recordDynamicRenderingCommands(imageIndex); ///TODO: User should be able to set if DynamicRendering or Renderpass should be used
     
+    // Set view and projection in ubo
+    uboViewProjection.view = camera->view;
+    uboViewProjection.projection = camera->projection;
+    uboViewProjection.projection[1][1] *= -1;
+
     /// Update the Uniform Buffers
     this->updateUniformBuffers(imageIndex);
 
@@ -647,7 +671,7 @@ void VulkanRenderer::draw(Scene* scene)
         if (resultvk == vk::Result::eErrorOutOfDateKHR || resultvk == vk::Result::eSuboptimalKHR || this->windowResized )
         {
             this->windowResized = false;       
-            reCreateSwapChain();
+            reCreateSwapChain(camera);
         }
         else if(resultvk != vk::Result::eSuccess) {throw std::runtime_error("Failed to present Image!");}
     }
@@ -1230,7 +1254,7 @@ void VulkanRenderer::createSwapChain() {
     }
 }
 
-void VulkanRenderer::reCreateSwapChain()
+void VulkanRenderer::reCreateSwapChain(Camera* camera)
 {
     vkDeviceWaitIdle(this->mainDevice.logicalDevice);
     
@@ -1254,7 +1278,10 @@ void VulkanRenderer::reCreateSwapChain()
     this->createDescriptorSets();
     this->createInputDescriptorSets();
 
-    this->updateUBO_camera_Projection();
+    //this->updateUBO_camera_Projection();
+    camera->aspectRatio = (float)swapChainExtent.width / (float)swapChainExtent.height;
+    camera->projection = glm::perspective(camera->fov, camera->aspectRatio, 0.1f, 100.0f);
+    camera->invProjection = glm::inverse(camera->projection);
 }
 
 void VulkanRenderer::cleanupSwapChain()

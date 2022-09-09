@@ -2,6 +2,7 @@
 
 #include "System.hpp"
 #include "Transform.hpp"
+#include "Camera.hpp"
 
 #include <entt.hpp>
 #include <vector>
@@ -15,10 +16,15 @@ private:
 
 	entt::registry reg;
 	std::vector<System*> systems;
+	int mainCamera;
 
 public:
 	Scene(SceneHandler& sceneHandler);
 	virtual ~Scene();
+
+	Camera* getMainCamera();
+	int getMainCameraID();
+	void setMainCamera(int entity);
 
 	template <typename T, typename ...Args>
 	void createSystem(Args... args);
