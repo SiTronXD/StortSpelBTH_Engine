@@ -3,14 +3,24 @@
 #include "UpdateMatricesSystem.hpp"
 #include "Time.h"
 
-Scene::Scene(SceneHandler& sceneHandler)
-	: sceneHandler(sceneHandler)
+void Scene::switchScene(Scene* nextScene)
+{
+	this->sceneHandler->setScene(nextScene);
+}
+
+Scene::Scene()
+	: sceneHandler(nullptr)
 {
 	this->createSystem<UpdateMatricesSystem>();
 }
 
 Scene::~Scene()
 {
+	for (size_t i = 0; i < this->systems.size(); ++i)
+	{
+		delete this->systems[i];
+	}
+	this->systems.clear();
 }
 
 Camera* Scene::getMainCamera()
@@ -68,4 +78,9 @@ bool Scene::removeEntity(int entity)
 	bool valid = this->entityValid(entity);
 	if (valid) { this->reg.destroy((entt::entity)entity); }
 	return valid;
+}
+
+void Scene::setSceneHandler(SceneHandler& sceneHandler)
+{
+	this->sceneHandler = &sceneHandler;
 }

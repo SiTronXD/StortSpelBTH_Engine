@@ -167,7 +167,7 @@ add_subdirectory(deps/tracy)
 #include(deps/tracyprofiler_dependency.cmake)
 Set(FETCHCONTENT_QUIET ${PREV_FETCHCONTENT_QUIET})
 
-target_sources(vengine PRIVATE main.cpp ${VENGINE_SOURCES} ${VENGINE_DEPS_DIR}/EnTT/entt.hpp   "src/Transform.hpp"  "src/System.hpp" "src/UpdateMatricesSystem.hpp" )
+target_sources(vengine PRIVATE main.cpp ${VENGINE_SOURCES} ${VENGINE_DEPS_DIR}/EnTT/entt.hpp   "src/Transform.hpp"  "src/System.hpp" "src/UpdateMatricesSystem.hpp"  "src/TestScene2.cpp")
 target_include_directories(vengine PUBLIC ${imgui_include_dirs})
 #target_include_directories(vengine PUBLIC ${assimp_include_dirs})
 target_include_directories(vengine PUBLIC ${tracy_include_dirs})

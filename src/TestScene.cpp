@@ -7,9 +7,11 @@
 #include "MeshComponent.hpp"
 #include "Log.h"
 #include "Configurator.h"
+#include "Time.h"
+#include "TestScene2.h"
 
-TestScene::TestScene(SceneHandler& sceneHandler)
-	: Scene(sceneHandler)
+TestScene::TestScene()
+	: testEntity(-1), testEntity2(-1)
 {
 }
 
@@ -53,13 +55,12 @@ void TestScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
 }
-#include "Time.h"
+
 void TestScene::update()
 {
 	if (Input::isMouseButtonPressed(Mouse::RIGHT))
 	{
-		std::cout << "(" << Input::getMouseX() << " " << 
-			Input::getMouseY() << ")" << std::endl;
+		this->switchScene(new TestScene2());
 	}
 
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
