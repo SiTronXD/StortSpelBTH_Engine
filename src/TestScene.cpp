@@ -49,7 +49,7 @@ void TestScene::init()
 #include "Time.h"
 void TestScene::update()
 {
-	if (Input::isKeyDown(Keys::B))
+	if (Input::isMouseButtonPressed(Mouse::RIGHT))
 	{
 		std::cout << "(" << Input::getMouseX() << " " << 
 			Input::getMouseY() << ")" << std::endl;

@@ -41,7 +41,7 @@ void Window::registerResizeEvent(bool& listener)
 
 void Window::update()
 {
-    Input::updateLastKeys();
+    Input::update();
 
     // Update current keys
     SDL_Event event;
@@ -57,8 +57,18 @@ void Window::update()
         if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP)
         {
             Input::setKey(
-                event.key.keysym.sym,
+                (Keys) event.key.keysym.sym,
                 event.type == SDL_KEYDOWN
+            );
+        }
+
+        // Register mouse button press/release
+        if (event.type == SDL_MOUSEBUTTONDOWN || 
+            event.type == SDL_MOUSEBUTTONUP)
+        {
+            Input::setMouseButton(
+                (Mouse) event.button.button,
+                event.type == SDL_MOUSEBUTTONDOWN
             );
         }
     }

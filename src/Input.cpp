@@ -3,7 +3,8 @@
 
 std::map<Keys, bool> Input::keyDown;
 std::map<Keys, bool> Input::lastKeyDown;
-// bool Input::mouseButtonDown[MAX_NUM_MOUSE_BUTTONS]{};
+std::map<Mouse, bool> Input::mouseButtonDown;
+std::map<Mouse, bool> Input::lastmouseButtonDown;
 
 float Input::cursorX = 0.0f;
 float Input::cursorY = 0.0f;
@@ -21,34 +22,70 @@ void Input::setCursor(const float& newCursorX, const float& newCursorY)
 	Input::cursorY = newCursorY;
 }
 
-void Input::updateLastKeys()
+void Input::update()
 {
+	// Last keys
 	for (auto const& [key, val] : Input::keyDown)
 	{
 		Input::lastKeyDown[key] = val;
 	}
+
+	// Last mouse buttons
+	for (auto const& [mouse, val] : Input::mouseButtonDown)
+	{
+		Input::lastmouseButtonDown[mouse] = val;
+	}
 }
 
-void Input::setKey(const SDL_Keycode& keyCode, const bool& value)
+void Input::setKey(const Keys& keyCode, const bool& value)
 {
 	// Set value
-	if (Input::keyDown.count((Keys)keyCode))
+	if (Input::keyDown.count(keyCode))
 	{
-		Input::keyDown[(Keys)keyCode] = value;
+		Input::keyDown[keyCode] = value;
 	}
 	// Insert new element
 	else
 	{
+		// Current
 		Input::keyDown.insert(
 			std::pair<Keys, bool>(
-				(Keys)keyCode,
+				keyCode,
 				value
 			)
 		);
 
+		// Last
 		Input::lastKeyDown.insert(
 			std::pair<Keys, bool>(
-				(Keys)keyCode,
+				keyCode,
+				!value
+			)
+		);
+	}
+}
+
+void Input::setMouseButton(const Mouse& mouseButtonCode, const bool& value)
+{
+	// Set value
+	if (Input::mouseButtonDown.count(mouseButtonCode))
+	{
+		Input::mouseButtonDown[mouseButtonCode] = value;
+	}
+	else
+	{
+		// Current
+		Input::mouseButtonDown.insert(
+			std::pair<Mouse, bool>(
+				mouseButtonCode,
+				value
+			)
+		);
+
+		// Last
+		Input::lastmouseButtonDown.insert(
+			std::pair<Mouse, bool>(
+				mouseButtonCode,
 				!value
 			)
 		);
