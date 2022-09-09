@@ -3055,7 +3055,7 @@ void VulkanRenderer::updateUBO_camera_Projection()
                             (float)swapChainExtent.width/(float)swapChainExtent.height,         /// Setting up the Aspect Ratio
                             DEF<float>(CAM_NP),                                              /// The Near Plane
                             DEF<float>(CAM_FP));                                             /// The Far Plane
-    uboViewProjection.projection[1][1] *= -1;     /// Since GLM is made for OpenGL and OpenGL uses RightHanded system; Positive Y is considered the Up dir
+    //uboViewProjection.projection[1][1] *= -1;     /// Since GLM is made for OpenGL and OpenGL uses RightHanded system; Positive Y is considered the Up dir
 }
 
 void VulkanRenderer::updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
@@ -3253,9 +3253,9 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                         */
                         vk::Viewport viewport{};
                         viewport.x = 0.0f;
-                        viewport.y = 0.0f;
+                        viewport.y = (float) swapChainExtent.height;
                         viewport.width = (float) swapChainExtent.width;
-                        viewport.height = (float) swapChainExtent.height;
+                        viewport.height = -((float) swapChainExtent.height);
                         viewport.minDepth = 0.0f;
                         viewport.maxDepth = 1.0f;
                         this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
