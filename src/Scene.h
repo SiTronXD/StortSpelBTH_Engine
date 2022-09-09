@@ -11,13 +11,16 @@ class SceneHandler;
 class Scene
 {
 private:
-	SceneHandler& sceneHandler;
+	SceneHandler* sceneHandler;
 
 	entt::registry reg;
 	std::vector<System*> systems;
 
+protected:
+	void switchScene(Scene* nextScene);
+
 public:
-	Scene(SceneHandler& sceneHandler);
+	Scene();
 	virtual ~Scene();
 
 	template <typename T, typename ...Args>
@@ -50,6 +53,8 @@ public:
 	virtual void update() = 0;
 
 	inline entt::registry& getSceneReg() { return this->reg; }
+
+	void setSceneHandler(SceneHandler& sceneHandler);
 };
 
 template<typename T, typename ...Args>

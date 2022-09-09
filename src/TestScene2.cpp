@@ -1,39 +1,23 @@
 #include <iostream>
-#include "TestScene.h"
+#include "TestScene2.h"
 #include "Input.h"
 #include "glm/gtx/string_cast.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "MeshComponent.hpp"
 #include "Time.h"
-#include "TestScene2.h"
 
-TestScene::TestScene()
-	: testEntity(-1), testEntity2(-1)
+TestScene2::TestScene2()
 {
 }
 
-TestScene::~TestScene()
+TestScene2::~TestScene2()
 {
 }
 
-void TestScene::init()
+void TestScene2::init()
 {
-	std::cout << "Test scene init" << std::endl;
-
-	// Create entity (already has transform)
-	this->testEntity = this->createEntity();
-
-	// Transform component
-	Transform& transform = this->getComponent<Transform>(this->testEntity);
-	transform.position = glm::vec3(0.F, 10.F, -100.F);
-	transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-	transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
-
-	// Mesh component
-	this->setComponent<MeshComponent>(this->testEntity);
-	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
-
+	std::cout << "Test scene 2 init" << std::endl;
 
 	// Create entity2 (already has transform)
 	this->testEntity2 = this->createEntity();
@@ -49,11 +33,12 @@ void TestScene::init()
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
 }
 
-void TestScene::update()
+void TestScene2::update()
 {
 	if (Input::isMouseButtonPressed(Mouse::RIGHT))
 	{
-		this->switchScene(new TestScene2());
+		std::cout << "(" << Input::getMouseX() << " " << 
+			Input::getMouseY() << ")" << std::endl;
 	}
 
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
