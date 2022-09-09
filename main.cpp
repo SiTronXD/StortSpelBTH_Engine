@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 
     {
         Engine engine;
-        engine.run(new TestScene(engine.sceneHandler)); 
+        engine.run(new TestScene()); 
     }
 
     _CrtDumpMemoryLeaks();

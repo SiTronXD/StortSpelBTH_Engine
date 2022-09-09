@@ -7,8 +7,7 @@
 #include "MeshComponent.hpp"
 #include "Time.h"
 
-TestScene2::TestScene2(SceneHandler& sceneHandler)
-	: Scene(sceneHandler)
+TestScene2::TestScene2()
 {
 }
 

@@ -40,6 +40,7 @@ void SceneHandler::setScene(Scene* scene)
 	if (this->nextScene == nullptr)
 	{
 		this->nextScene = scene;
+		this->nextScene->setSceneHandler(*this);
 	}
 }
 

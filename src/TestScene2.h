@@ -8,7 +8,7 @@ private:
 	int testEntity2;
 
 public:
-	TestScene2(SceneHandler& sceneHandler);
+	TestScene2();
 	virtual ~TestScene2();
 
 	// Inherited via Scene

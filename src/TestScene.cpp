@@ -5,10 +5,11 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "MeshComponent.hpp"
+#include "Time.h"
 #include "TestScene2.h"
 
-TestScene::TestScene(SceneHandler& sceneHandler)
-	: Scene(sceneHandler)
+TestScene::TestScene()
+	: testEntity(-1), testEntity2(-1)
 {
 }
 
@@ -47,12 +48,12 @@ void TestScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
 }
-#include "Time.h"
+
 void TestScene::update()
 {
 	if (Input::isMouseButtonPressed(Mouse::RIGHT))
 	{
-		this->switchScene(new TestScene2(this->getSceneHandler()));
+		this->switchScene(new TestScene2());
 	}
 
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
