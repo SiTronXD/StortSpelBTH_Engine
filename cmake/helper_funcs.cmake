@@ -100,7 +100,7 @@ function(install_vengine_helpers INSTALL_LOCATION)
 endfunction()
 
 
-macro(vengine_find LIBRARY_NAME CMAKELISTS_PATH REAL_LIB_NAME)
+macro(vengine_find_module LIBRARY_NAME CMAKELISTS_PATH REAL_LIB_NAME)
     message(VERBOSE "Beginning vengine_find for ${LIBRARY_NAME}")
     find_package(${LIBRARY_NAME} MODULE QUIET)
     message(VERBOSE "vengine_find(${LIBRARY_NAME}) resulted in: " ${vengine_vma_FOUND})
@@ -115,5 +115,21 @@ macro(vengine_find LIBRARY_NAME CMAKELISTS_PATH REAL_LIB_NAME)
     endif()
 
     message(VERBOSE "leaving vengine_find(${LIBRARY_NAME})")
+
+endmacro()
+
+macro(vengine_find_pkg LIBRARY_NAME CMAKELISTS_PATH)
+    message(VERBOSE "Beginning vengine_cmake_find for ${LIBRARY_NAME}")
+    find_package(${LIBRARY_NAME} QUIET)
+    message(VERBOSE "vengine_cmake_find(${LIBRARY_NAME}) resulted in: " ${vengine_vma_FOUND})
+    
+    if(NOT ${${LIBRARY_NAME}_FOUND}) 
+        message("vengine_cmake_find did not find ${LIBRARY_NAME}, building from source!")
+        add_subdirectory(${CMAKELISTS_PATH})    
+    else()
+
+    endif()
+
+    message(VERBOSE "leaving vengine_cmake_find(${LIBRARY_NAME})")
 
 endmacro()
