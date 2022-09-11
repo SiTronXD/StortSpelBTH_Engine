@@ -20,6 +20,9 @@ else()
     message("Install Ccache to get faster build times!")
 endif()
 
+# Tell cmake to look for modules in our cmake folder 
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
+
 # Setting up all definitions used within the cmake-files...
 setup_vengine_definitions()
 
@@ -163,6 +166,29 @@ target_include_directories(vengine
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends
 ) 
 
+# Find system dependencies 
+find_package(Vulkan REQUIRED)
+
+# Setup Conan, fetch required dependencies
+setup_conan_dependencies()
+
+
+#External Dependencies - fetched from github
+add_subdirectory(deps/assimp)
+add_subdirectory(deps/vengine_vma)
+add_subdirectory(deps/vengine_tracy)
+#add_subdirectory(deps/imgui) # TODO: This should be safe to remove now...
+
+#External Dependencies - fetched through conan
+target_link_libraries(vengine PUBLIC stb::stb)
+target_link_libraries(vengine PUBLIC glm::glm)
+target_link_libraries(vengine PUBLIC SDL2::SDL2)
+
+# setup the include directories for all external dependencies 
+target_include_directories(vengine PUBLIC ${imgui_include_dirs})
+target_include_directories(vengine PUBLIC ${tracy_include_dirs})
+target_include_directories(vengine PUBLIC ${vma_include_dirs})
+target_include_directories(vengine PUBLIC ${assimp_include_dirs})
 
 message("before")
 find_package(assimp QUIET)
