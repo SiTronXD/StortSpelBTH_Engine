@@ -3,7 +3,7 @@
 #include "Utilities.h"
 #include "VulkanWindow.h"
 #include "imgui.h"              // Need to be included in header
-#include "imgui_impl_sdl.h"     // Need to be included in header
+#include "backends/imgui_impl_sdl.h"     // Need to be included in header
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"

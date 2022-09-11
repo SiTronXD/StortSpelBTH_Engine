@@ -23,7 +23,6 @@
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
 
-#include "imgui_impl_vulkan.h"
 #include "backends/imgui_impl_vulkan.h"
 
 using namespace vengine_helper::config;
