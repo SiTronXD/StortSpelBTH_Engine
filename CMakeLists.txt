@@ -17,7 +17,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 
 # Use CCACHE if it exists
-# find_program(CCACHE_PROGRAM ccache)
+find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
     # Compile with CCache if available to speed up compilation
     set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}") # TODO: Do not override "CMAKE_*" variables, it could've been declare before or after this... hmm?
