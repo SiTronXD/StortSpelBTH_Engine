@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 
 find_library(
     VENGINE_TRACY_LIBRARY
-    NAMES tracy TracyClient
+    NAMES tracy TracyClient TracyClientd
     HINTS ${PROJECT_SOURCE_DIR}/install/
     PATH_SUFFIXES  lib  bin  build/Release  build/Debug
 )

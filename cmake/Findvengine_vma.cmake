@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.21)
 
 find_library(
     VMA_LIBRARY
-    NAMES vma VulkanMemoryAllocator
+    NAMES vma VulkanMemoryAllocator VulkanMemoryAllocatord
     HINTS ${PROJECT_SOURCE_DIR}/install/
     PATH_SUFFIXES  lib  bin  build/Release  build/Debug
 )
