@@ -283,17 +283,14 @@ set_property(TARGET vengine PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E ti
 # setup_assimp()  #include assimp
 
 target_compile_features(vengine PUBLIC cxx_std_20)
-message("11")
-set_target_properties(vengine PROPERTIES
-                #CXX_STANDARD ${CPP_LANGUANGE_STANDARD}
+set_target_properties(vengine PROPERTIES                
                 CXX_EXTENSIONS OFF                      # is this good?...
-                EXPORT_COMPILE_COMMANDS ${VENGINE_USE_COMPILE_COMMANDS} 
-                INTERPROCEDURAL_OPTIMIZATION TRUE       # Will do link time optimizations if available
+                EXPORT_COMPILE_COMMANDS ON 
+                #INTERPROCEDURAL_OPTIMIZATION TRUE       # Will do link time optimizations if available
                 LINK_WHAT_YOU_USE TRUE                  # Warns if something unncessary is linked                             
                 CMAKE_CXX_INCLUDE_WHAT_YOU_USE TRUE     # Checks if a source file is used, if not then its not included...
                 ) 
-                message("12")
-                
+                                
 # Setup Different Compiler options and Definitions for different build types...
 target_compile_options(vengine PRIVATE "$<$<CONFIG:Debug>:${CLANG_COMPILE_TIME_OPTIONS_debug}>")
 target_compile_options(vengine PRIVATE "$<$<CONFIG:Release>:${CLANG_COMPILE_TIME_OPTIONS_release}>")
