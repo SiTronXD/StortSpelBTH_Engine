@@ -7,10 +7,9 @@
 
 #include <cstdlib>
 
-#include <assimp/aabb.h>
 #include "tracy/Tracy.hpp"
-#include "src/Engine.h"
-#include "src/TestScene.h"
+#include "Engine.hpp"
+#include "TestScene.hpp"
 
 
 int main(int argc, char* argv[])
