@@ -1,5 +1,5 @@
-#include "Mesh.h"
-#include "Utilities.h"
+#include "Mesh.hpp"
+#include "Utilities.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>

@@ -1,5 +1,5 @@
 #pragma once
-#include "Mesh.h"
+#include "Mesh.hpp"
 #include <vector>
 #include "glm/glm.hpp"
 #include <map>

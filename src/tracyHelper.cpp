@@ -1,9 +1,9 @@
-#include "tracyHelper.h" 
+#include "tracyHelper.hpp" 
 
 
 #ifndef VENGINE_NO_PROFILING    
 #include "tracy/Tracy.hpp"
-#include "VulkanRenderer.h"
+#include "VulkanRenderer.hpp"
 
 VulkanRenderer* ref;
 

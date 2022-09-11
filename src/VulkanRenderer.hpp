@@ -3,15 +3,15 @@
 #define NOMINMAX
 
 #include <vulkan/vulkan.hpp>
-#include "Utilities.h"
-#include "Window.h"
+#include "Utilities.hpp"
+#include "Window.hpp"
 #include "imgui.h"              // Need to be included in header
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
-#include "Model.h"
+#include "Model.hpp"
 
 #include "vk_mem_alloc.h"
 #ifndef VENGINE_NO_PROFILING

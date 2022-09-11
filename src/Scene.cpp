@@ -1,7 +1,7 @@
-#include "Scene.h"
-#include "SceneHandler.h"
+#include "Scene.hpp"
+#include "SceneHandler.hpp"
 #include "UpdateMatricesSystem.hpp"
-#include "Time.h"
+#include "Time.hpp"
 
 void Scene::switchScene(Scene* nextScene)
 {

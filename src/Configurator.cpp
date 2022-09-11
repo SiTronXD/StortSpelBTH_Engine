@@ -1,4 +1,4 @@
-#include "Configurator.h"
+#include "Configurator.hpp"
 #include <iostream>
 #include <algorithm>
 #include <string>

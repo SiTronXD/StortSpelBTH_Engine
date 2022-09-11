@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.23)
 project(venginee
         VERSION 0.0.1
         DESCRIPTION "A toy cross platform renderer made with Vulkan"
-        LANGUAGES CXX
+        LANGUAGES CXX C
+        
 )
 include(cmake/defs.cmake)
 include(cmake/helper_funcs.cmake)
@@ -70,8 +71,13 @@ endif()
 FILE(GLOB_RECURSE VENGINE_SOURCES CONFIGURE_DEPENDS
     ${VENGINE_SOURCE_DIR}/*.cpp 
     ${VENGINE_SOURCE_DIR}/*.h 
+    ${VENGINE_SOURCE_DIR}/*.hpp
 )
-
+# all the source files
+FILE(GLOB_RECURSE VENGINE_HEADERS CONFIGURE_DEPENDS    
+    ${VENGINE_SOURCE_DIR}/*.h 
+    ${VENGINE_SOURCE_DIR}/*.hpp 
+)
 
 
 # All imgui sources and headers
@@ -97,7 +103,7 @@ add_library(vengine SHARED  )
 add_library(vengine::vengine ALIAS vengine )
 
 target_include_directories(vengine 
-    PUBLIC 
+    PUBLIC        
     ${VENGINE_SOURCE_DIR}            
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends
@@ -165,9 +171,8 @@ endif()
 # measure compiletime
 set_property(TARGET vengine PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time") 
 
-
-target_compile_features(vengine PUBLIC cxx_std_20)
-set_target_properties(vengine PROPERTIES                
+set_target_properties(vengine PROPERTIES            
+                CXX_STANDARD 20                         # OBS! To use features from 11 and onward. Only use .hpp as header files...
                 CXX_EXTENSIONS OFF                      # is this good?...
                 EXPORT_COMPILE_COMMANDS ON 
                 #INTERPROCEDURAL_OPTIMIZATION TRUE       # Will do link time optimizations if available
