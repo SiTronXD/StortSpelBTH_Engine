@@ -139,13 +139,17 @@ setup_conan_dependencies(vengine)
 #External Dependencies 
 Set(PREV_FETCHCONTENT_QUIET ${FETCHCONTENT_QUIET})
 
-Set(FETCHCONTENT_QUIET FALSE)
-if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
-  message(VERBOSE "Windows environment detected, overriding default symbol visibility to `visible` instead of `hidden`")
-  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-endif()
-add_subdirectory(deps/imgui)
+# All imgui sources and headers
+FILE(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/*.cpp        
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_vulkan.cpp        
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_sdl.cpp)
 
+FILE(GLOB IMGUI_HEADERS CONFIGURE_DEPENDS            
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_vulkan.h            
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_sdl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/*.h
+)
 
 
  # Add vengine target as shared library
@@ -155,6 +159,8 @@ add_library(vengine::vengine ALIAS vengine )
 target_include_directories(vengine 
     PUBLIC 
     ${VENGINE_SOURCE_DIR}
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends
 ) 
 
 
@@ -186,6 +192,8 @@ vengine_find(vengine_vma deps/vengine_vma VulkanMemoryAllocator)
     
 # Add the vengine sources + imgui sources to the vengine target
 target_sources(vengine PRIVATE ${VENGINE_SOURCES} 
+    ${IMGUI_HEADERS}    
+    ${IMGUI_SOURCES}
     )
 
 #include(deps/vmamemdump_dependency.cmake)
@@ -307,7 +315,6 @@ target_link_libraries(
     ${vengine_tracy}
     #TracyClient
     #tracy::tracy
-    imgui_lib 
     ${SDL2_LIBRARIES}
     PRIVATE
     #${LIBRARIES} 
