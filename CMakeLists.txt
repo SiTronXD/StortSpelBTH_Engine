@@ -331,35 +331,20 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:DebugWCallStackProfiling>
 target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_COMPILE_TIME_DEFINITIONS_debug}>" ) 
 # NOTE! STB_IMAGE_IMPLEMENTATION  <-- Cant be used here! for some reason!
 
-message("13")
+# Link all libraries to vengine target
 target_link_libraries(
     vengine 
     PUBLIC 
+    #imgui_lib
     ${vengine_tracy}
-    #TracyClient
-    #tracy::tracy
+    ${vengine_imgui}
     ${SDL2_LIBRARIES}
     PRIVATE
-    #${LIBRARIES} 
     ${Vulkan_LIBRARIES}
-    #${Vulkan_LIBRARY}
-    #assimp::assimp
-    assimp::assimp    
+    assimp::assimp
     stb::stb
-    #vulkan-memory-allocator::vulkan-memory-allocator
-    #VulkanMemoryAllocator.dll
-    #VulkanMemoryAllocator    
     ${vengine_vma}
-    #stb_lib
-    #${LIBS_DIR}/libassimp.so
-    #libpthread.a    # Tracy needs
-    #libdl.a         # Tracy needs
-    #VulkanMemoryAllocator
 )
-message("14")
-
-
-
 
 # Make a target for generation of symbolic links, so we know when creation of it is needed
 add_custom_target(generate_symbolic_links ALL DEPENDS ${VENGINE_ASSET_LINK_DST})
