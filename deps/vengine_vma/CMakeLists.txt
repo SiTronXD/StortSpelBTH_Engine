@@ -23,7 +23,11 @@ find_package(Vulkan REQUIRED)
 target_link_libraries(VulkanMemoryAllocator PRIVATE ${Vulkan_LIBRARIES})
 target_include_directories(VulkanMemoryAllocator PUBLIC ${Vulkan_INCLUDE_DIR})
 
-target_compile_options(VulkanMemoryAllocator PUBLIC $<$<CXX_COMPILER_ID:Clang>:-Wno-nullability-extension>) #supress WMA warnings...
+#supress WMA warnings...
+target_compile_options(VulkanMemoryAllocator 
+    PUBLIC 
+    $<$<CXX_COMPILER_ID:Clang>:-Wno-nullability-extension>
+    $<$<CXX_COMPILER_ID:MSVC>:/w> ) 
 
 set(vma_include_dirs "")
 list(APPEND vma_include_dirs ${vma_fetch_SOURCE_DIR}/include)
