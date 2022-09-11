@@ -393,3 +393,6 @@ message("19")
 
 
 
+
+# setting up the required asset folder structure for the user
+copy_assets_structure()
