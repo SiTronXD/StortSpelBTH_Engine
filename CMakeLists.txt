@@ -148,6 +148,14 @@ add_subdirectory(deps/imgui)
 
 
 
+ # Add vengine target as shared library
+add_library(vengine SHARED  )
+add_library(vengine::vengine ALIAS vengine )
+
+target_include_directories(vengine 
+    PUBLIC 
+    ${VENGINE_SOURCE_DIR}
+) 
 
 
 message("before")
@@ -176,7 +184,9 @@ vengine_find(vengine_vma deps/vengine_vma VulkanMemoryAllocator)
 #     set(vengine_vma vengine_vma::vengine_vma)
 # endif()
     
-# message("after")
+# Add the vengine sources + imgui sources to the vengine target
+target_sources(vengine PRIVATE ${VENGINE_SOURCES} 
+    )
 
 #include(deps/vmamemdump_dependency.cmake)
 #add_subdirectory(deps/vengine_tracy)
