@@ -209,6 +209,20 @@ target_link_libraries(
     ${vengine_vma}
 )
 
+# Build demo, for developers
+add_executable(vengine_demo
+    main.cpp
+)
+set_target_properties(vengine_demo PROPERTIES            
+                CXX_STANDARD 20                         # OBS! To use features from 11 and onward. Only use .hpp as header files...
+                CXX_EXTENSIONS OFF                      # is this good?...
+                EXPORT_COMPILE_COMMANDS ON 
+                #INTERPROCEDURAL_OPTIMIZATION TRUE       # Will do link time optimizations if available
+                LINK_WHAT_YOU_USE TRUE                  # Warns if something unncessary is linked                             
+                CMAKE_CXX_INCLUDE_WHAT_YOU_USE TRUE     # Checks if a source file is used, if not then its not included...
+                ) 
+target_link_libraries(vengine_demo PUBLIC vengine)
+
 # Make a target for generation of symbolic links, so we know when creation of it is needed
 add_custom_target(generate_symbolic_links ALL DEPENDS ${VENGINE_ASSET_LINK_DST})
 
