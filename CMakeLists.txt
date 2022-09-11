@@ -374,7 +374,14 @@ message("18")
 # In order to create Symbolic Links, add custom command, then a custom target, 
 # lastly after set_exectuable make sure to add_dependencies to the target!
 #create_symlink_buildtime(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
-create_symlink_now(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
+if(${WIN32})
+    add_custom_command(TARGET vengine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${VENGINE_ASSET_LINK_SRC} $<TARGET_FILE_DIR:vengine>/assets         
+        COMMENT "Creating symbolic link ${VENGINE_ASSET_LINK_SRC} => $<TARGET_FILE_DIR:vengine>"        
+        COMMAND_EXPAND_LISTS
+        )    
+else()
+    create_symlink_now(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
 message("19")
 
 
