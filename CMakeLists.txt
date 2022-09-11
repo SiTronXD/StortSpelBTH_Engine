@@ -388,7 +388,7 @@ if(${WIN32})
         )    
 else()
     create_symlink_now(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
-message("19")
+endif()
 
 
 
