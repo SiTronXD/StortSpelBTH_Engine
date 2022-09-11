@@ -31,7 +31,8 @@
             "inherits":[ "debug_unix_base"],
             "cacheVariables": {
                 "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",                
+                "VENGINE_USE_PROFILING": true
                 
             }
         },     
