@@ -15,8 +15,6 @@
 #include <vector>
 #include <limits>               /// Used to get the Max value of a uint32_t
 #include <algorithm>            /// Used for std::clamp...
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_vulkan.h>
 #include "stb_image.h"
 
 #include "assimp/Importer.hpp"
@@ -25,15 +23,22 @@
 
 #include "backends/imgui_impl_vulkan.h"
 
+#include "Input.h"
+#include "Scene.h"
+#include "MeshComponent.hpp"
+#include "Log.h"
+
 using namespace vengine_helper::config;
-int VulkanRenderer::init(std::string&& windowName) {
+int VulkanRenderer::init(Window* window, std::string&& windowName) {
     
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
     
-    this->window.initWindow(windowName, DEF<int>(W_WIDTH), DEF<int>(W_HEIGHT));
-    this->window.registerResizeEvent(windowResized);
+    this->window = window;
+
+    /* this->window.initWindow(windowName, DEF<int>(W_WIDTH), DEF<int>(W_HEIGHT));
+    this->window.registerResizeEvent(windowResized);*/
     try {
         createInstance();       /// Order is important!
 
@@ -213,12 +218,6 @@ void VulkanRenderer::updateModel(int modelIndex, glm::mat4 newModel)
     modelList[modelIndex].setModelMatrix(newModel);
 }
 
-void VulkanRenderer::registerGameLoop(std::function<void(SDL_Events&)> gameLoopFunc)
-{
-    this->gameLoopFunction = gameLoopFunc;
-    this->rendererGameLoop();
-}
-
 void VulkanRenderer::generateVmaDump()
 {
     char* vma_dump;
@@ -260,19 +259,13 @@ void VulkanRenderer::createInstance() {
     ///Create vector to hold instance extensions.
     auto instanceExtensions = std::vector<const char*>();
 
-    ///Set up extensions Instance to be used
-    unsigned int sdlExtensionCount = 0;        /// may require multiple extension  
-	SDL_Vulkan_GetInstanceExtensions(this->window.sdl_window, &sdlExtensionCount, nullptr);
-    
-    ///Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
-    std::vector<const char*> sdlExtensions (sdlExtensionCount);    
-    
-    /// Get SDL Extensions
-    SDL_Vulkan_GetInstanceExtensions(this->window.sdl_window, &sdlExtensionCount, sdlExtensions.data());
+    // Get SDL extensions from window
+    std::vector<const char*> windowExtensions;
+    this->window->getVulkanExtensions(windowExtensions);
 
     /// Add SDL extensions to vector of extensions    
-    for (size_t i = 0; i < sdlExtensionCount; i++) {        
-        instanceExtensions.push_back(sdlExtensions[i]);    ///One of these extension should be VK_KHR_surface, this is provided by SDL!
+    for (size_t i = 0; i < windowExtensions.size(); i++) {
+        instanceExtensions.push_back(windowExtensions[i]);    ///One of these extension should be VK_KHR_surface, this is provided by SDL!
     }
 
     ///Check if any of the instance extensions is not supported...
@@ -413,7 +406,7 @@ void VulkanRenderer::cleanup()
     vkDeviceWaitIdle(mainDevice.logicalDevice); /// Dont destroy semaphores before they are done
     
     ImGui_ImplVulkan_Shutdown();
-    ImGui_ImplSDL2_Shutdown();
+    this->window->shutdownImgui();
     ImGui::DestroyContext();
 
     this->mainDevice.logicalDevice.destroyRenderPass(this->renderPass_imgui);
@@ -524,7 +517,7 @@ void VulkanRenderer::cleanup()
     
 }
 
-void VulkanRenderer::draw()
+void VulkanRenderer::draw(Scene* scene)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped;
@@ -551,6 +544,26 @@ void VulkanRenderer::draw()
         if(result != vk::Result::eSuccess) {throw std::runtime_error("Failed to wait for all fences!");}        
     }
 
+    // Get scene camera and update view matrix
+    Camera* camera = scene->getMainCamera();
+    bool deleteCamera = false;
+    if (camera)
+    {
+        Transform& transform = scene->getComponent<Transform>(scene->getMainCameraID());
+        camera->view = glm::lookAt(
+            transform.position,
+            transform.position + transform.forward(),
+            transform.up()
+        );
+    }
+    else
+    {
+        Log::error("No main camera exists!");
+        camera = new Camera((float)this->swapChainExtent.width / (float)this->swapChainExtent.height);
+        camera->view = uboViewProjection.view;
+        deleteCamera = true;
+    }
+
     unsigned int imageIndex = 0 ;
     {
         #ifndef VENGINE_NO_PROFILING
@@ -569,7 +582,7 @@ void VulkanRenderer::draw()
             VK_NULL_HANDLE                          /// The Fence to signal, when it's available to be used...(??)
         );
         if(result == vk::Result::eErrorOutOfDateKHR){
-            reCreateSwapChain();    
+            reCreateSwapChain(camera);    
             return;
         }
         else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) {throw std::runtime_error("Failed to AcquireNextImage!");}
@@ -580,12 +593,18 @@ void VulkanRenderer::draw()
             &this->drawFences[currentFrame]);
         if(result != vk::Result::eSuccess) {throw std::runtime_error("Failed to reset fences!");}
     }
-    
+
     /// ReRecord the current CommandBuffer! In order to update any Push Constants
-    recordRenderPassCommands_Base(imageIndex);
+    recordRenderPassCommands_Base(scene, imageIndex);
     recordRenderPassCommands_imgui(imageIndex);
     //recordDynamicRenderingCommands(imageIndex); ///TODO: User should be able to set if DynamicRendering or Renderpass should be used
     
+    // Set view and projection in ubo
+    uboViewProjection.view = camera->view;
+    uboViewProjection.projection = camera->projection;
+    uboViewProjection.projection[1][1] *= -1;
+    if (deleteCamera) { delete camera; }
+
     /// Update the Uniform Buffers
     this->updateUniformBuffers(imageIndex);
 
@@ -654,7 +673,7 @@ void VulkanRenderer::draw()
         if (resultvk == vk::Result::eErrorOutOfDateKHR || resultvk == vk::Result::eSuboptimalKHR || this->windowResized )
         {
             this->windowResized = false;       
-            reCreateSwapChain();
+            reCreateSwapChain(camera);
         }
         else if(resultvk != vk::Result::eSuccess) {throw std::runtime_error("Failed to present Image!");}
     }
@@ -670,6 +689,15 @@ void VulkanRenderer::draw()
 #ifndef VENGINE_NO_PROFILING    
     FrameMarkEnd(draw_frame);
 #endif        
+}
+
+void VulkanRenderer::initMeshes(Scene* scene)
+{
+    auto tView = scene->getSceneReg().view<MeshComponent>();
+    tView.each([this](MeshComponent& meshComponent)
+    {
+        meshComponent.meshID = this->createModel("ghost.obj");
+    });
 }
 
 void VulkanRenderer::getPhysicalDevice() {
@@ -1069,20 +1097,7 @@ void VulkanRenderer::createSurface() {
 
     ///Using SDL to create WindowSurface, to make it cross platform
     ///Creates a surface create info struct configured for how SDL handles windows.    
-    VkSurfaceKHR sdlSurface{};
-
-    SDL_bool result = SDL_Vulkan_CreateSurface(
-                            (this->window.sdl_window),
-                            this->instance,                                                        
-                            &sdlSurface
-                            );
-    
-    this->surface = sdlSurface;
-    
-    if (result != SDL_TRUE ) {
-        throw std::runtime_error("Failed to create (GLFW) surface.");
-    }
-    
+    this->window->createVulkanSurface(this->instance, this->surface);
 }
 
 void VulkanRenderer::createSwapChain() {
@@ -1241,7 +1256,7 @@ void VulkanRenderer::createSwapChain() {
     }
 }
 
-void VulkanRenderer::reCreateSwapChain()
+void VulkanRenderer::reCreateSwapChain(Camera* camera)
 {
     vkDeviceWaitIdle(this->mainDevice.logicalDevice);
     
@@ -1265,7 +1280,10 @@ void VulkanRenderer::reCreateSwapChain()
     this->createDescriptorSets();
     this->createInputDescriptorSets();
 
-    this->updateUBO_camera_Projection();
+    //this->updateUBO_camera_Projection();
+    camera->aspectRatio = (float)swapChainExtent.width / (float)swapChainExtent.height;
+    camera->projection = glm::perspective(camera->fov, camera->aspectRatio, 0.1f, 100.0f);
+    camera->invProjection = glm::inverse(camera->projection);
 }
 
 void VulkanRenderer::cleanupSwapChain()
@@ -1407,8 +1425,7 @@ vk::Extent2D VulkanRenderer::chooseBestImageResolution(const vk::SurfaceCapabili
         ///IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
         /// - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
         int width=0, height=0;        
-        //glfwGetFramebufferSize(this->window.glfw_window, &width, &height);
-        SDL_GetWindowSize(this->window.sdl_window, &width, &height);
+        this->window->getSize(width, height);
 
         /// Create a new extent using the current window size
         vk::Extent2D newExtent = {};
@@ -2454,46 +2471,8 @@ stbi_uc* VulkanRenderer::loadTextuerFile(const std::string &filename, int* width
     
 }
 
-void VulkanRenderer::rendererGameLoop()
-{
-    SDL_Event event;  
-    bool quitting = false;
-    while (!quitting) {
-        this->eventBuffer.clear();
-        while (SDL_PollEvent(&event) != 0) {    
-            ImGui_ImplSDL2_ProcessEvent(&event);        
-            if (event.type == SDL_QUIT ||  
-            (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE && event.window.windowID == SDL_GetWindowID(this->window.sdl_window)))
-            {
-                quitting = true;
-            }
-            if(event.type == SDL_KEYDOWN){
-                switch(event.key.keysym.sym){
-                    case SDLK_HOME:
-                        std::cout << "Home was pressed! generating vma dump" << "\n";
-                        this->generateVmaDump();
-                        
-                    default: ;
-                }
-            }
-            this->eventBuffer.emplace_back(event);
-        }
-        //SDL_PollEvent(&event);
-        ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplSDL2_NewFrame(this->window.sdl_window);
-        ImGui::NewFrame();
-        
-        this->gameLoopFunction(this->eventBuffer);
-
-        this->draw(); 
-#ifndef VENGINE_NO_PROFILING
-        FrameMark;
-#endif
-    }
-    
-}
-
 VulkanRenderer::VulkanRenderer()
+    : window(nullptr)
 {
     loadConfIntoMemory();
 }
@@ -3492,7 +3471,7 @@ void VulkanRenderer::recordRenderPassCommands_imgui(uint32_t currentImageIndex)
     this->commandBuffers_imgui[currentImageIndex].end();
 }
 
-void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex) 
+void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex) 
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
@@ -3564,10 +3543,17 @@ void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex)
                 commandBuffers[currentImageIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, this->graphicsPipeline);
                 /// vk::PipelineBindPoint::eGraphics: What Kind of pipeline we are binding...
 
+
                 /// For every Mesh we have
-                for(auto & currModel : modelList)
+                auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
+                tView.each([this, currentImageIndex](Transform& transform, MeshComponent& meshComponent)
                 {
-                    auto modelMatrix= currModel.getModelMatrix();
+                    auto currModel = modelList[meshComponent.meshID];
+
+                    glm::mat4 modelMatrix = transform.matrix;
+
+                    // auto modelMatrix = currModel.getModelMatrix();
+
                     /// "Push" Constants to given Shader Stage Directly (using no Buffer...)
                     this->commandBuffers[currentImageIndex].pushConstants(
                         this->pipelineLayout,
@@ -3652,8 +3638,8 @@ void VulkanRenderer::recordRenderPassCommands_Base(uint32_t currentImageIndex)
                         */
                     }                
 
-                                 
-                }
+
+                });
 
                 /// Start Second Subpass
                 vk::SubpassEndInfo subpassEndInfo;                
@@ -3948,8 +3934,8 @@ void VulkanRenderer::getFrameThumbnailForTracy() //TODO: Update to use vma inste
     
     int width =0; 
     int height =0;
+    this->window->getSize(width, height);
 
-    SDL_GetWindowSize(this->window.sdl_window, &width, &height);
     imageCreateInfo.extent.setWidth(static_cast<uint32_t>(width));
     imageCreateInfo.extent.setHeight(static_cast<uint32_t>(height));
     imageCreateInfo.extent.setDepth(uint32_t(1));
@@ -4114,7 +4100,7 @@ void VulkanRenderer::allocateTracyImageMemory()
     int width =0;
     int height =0;
 
-    SDL_GetWindowSize(this->window.sdl_window, &width, &height);
+    this->window->getSize(width, height);
     this->tracyImage = static_cast<char*>(CustomAlloc((static_cast<long>(height*width*4)) * sizeof(char)));
      
 }
@@ -4209,7 +4195,7 @@ void VulkanRenderer::initImgui()
     
 
     ImGui::StyleColorsDark();
-    ImGui_ImplSDL2_InitForVulkan(this->window.sdl_window);
+    this->window->initImgui();
 
     ImGui_ImplVulkan_InitInfo imguiInitInfo {};
     imguiInitInfo.Instance = this->instance;

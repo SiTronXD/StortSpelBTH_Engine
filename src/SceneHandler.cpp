@@ -1,4 +1,6 @@
 #include "SceneHandler.h"
+#include "Time.h"
+#include "VulkanRenderer.h"
 
 SceneHandler::SceneHandler()
 	: scene(nullptr),
@@ -12,6 +14,7 @@ SceneHandler::~SceneHandler()
 
 void SceneHandler::update()
 {
+	this->scene->updateSystems();
 	this->scene->update();
 }
 
@@ -28,7 +31,7 @@ void SceneHandler::updateToNextScene()
 		this->scene = this->nextScene;
 		this->nextScene = nullptr;
 		this->scene->init();
-		//Time::init();
+		Time::init();
 	}
 }
 
@@ -37,6 +40,7 @@ void SceneHandler::setScene(Scene* scene)
 	if (this->nextScene == nullptr)
 	{
 		this->nextScene = scene;
+		this->nextScene->setSceneHandler(*this);
 	}
 }
 

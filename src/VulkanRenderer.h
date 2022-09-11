@@ -1,32 +1,34 @@
+
 #pragma once
+#define NOMINMAX
+
 #include <vulkan/vulkan.hpp>
 #include "Utilities.h"
-#include "VulkanWindow.h"
+#include "Window.h"
 #include "imgui.h"              // Need to be included in header
-#include "backends/imgui_impl_sdl.h"     // Need to be included in header
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
-#include "VulkanWindow.h"
 #include "Model.h"
 
 #include "vk_mem_alloc.h"
-//#include "vk_mem_alloc.h"
 #ifndef VENGINE_NO_PROFILING
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyVulkan.hpp"
 #endif 
 
+class Scene;
+class Camera;
+
 #include <functional>
 using stbi_uc = unsigned char;
-using SDL_Events = std::vector<SDL_Event>;
 class VulkanRenderer {
 #ifndef VENGINE_NO_PROFILING
     std::vector<TracyVkCtx> tracyContext;
 #endif
-    VulkanWindow window{};
+    Window* window;
 
     VmaAllocator vma = nullptr;
 
@@ -155,8 +157,6 @@ class VulkanRenderer {
     std::vector<vk::CommandBuffer>   commandBuffers_imgui;
     std::vector<vk::Framebuffer>     frameBuffers_imgui;
 
-    /// - - VMA 
-    void generateVmaDump();
 
     /// - - Tracy
     void registerVkObjectDbgInfo(std::string name, vk::ObjectType type, uint64_t objectHandle);
@@ -185,7 +185,7 @@ private:
     void setupDebugMessenger();
     void createSurface();
     void createSwapChain();
-    void reCreateSwapChain();    
+    void reCreateSwapChain(Camera* camera);    
     void createRenderPass_Base();
     void createRenderPass_Imgui();
     void createDescriptorSetLayout();
@@ -225,7 +225,7 @@ private:
 
     /// - Record Functions
     void recordRenderPassCommands_imgui(uint32_t currentImageIndex);    /// Using renderpass
-    void recordRenderPassCommands_Base(uint32_t currentImageIndex);    /// Using renderpass
+    void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    /// Using renderpass
     void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
     /// - Get Functions
@@ -263,13 +263,9 @@ private:
     /// -- Loader Functions
     static stbi_uc*    loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );
 
-    void rendererGameLoop();
-    void draw();
-
 private: 
     /// Clients Privates 
-    SDL_Events eventBuffer;
-    std::function<void(SDL_Events&)> gameLoopFunction;
+    std::function<void()> gameLoopFunction;
     static void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT &createInfo);
 
 public:
@@ -280,10 +276,17 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int  init(std::string&& windowName);
+    int  init(Window* window, std::string&& windowName);
     int  createModel(const std::string &modelFile);
     void updateModel(int modelIndex, glm::mat4 newModel);
-    void registerGameLoop(std::function<void(SDL_Events&)> gameLoopFunc);
+    void draw(Scene* scene);
+
+    void initMeshes(Scene* scene);
     
     void cleanup();
+
+    /// - - VMA 
+    void generateVmaDump();
+
+    bool& getWindowResized() { return this->windowResized; }
 };
