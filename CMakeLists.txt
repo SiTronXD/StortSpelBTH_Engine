@@ -86,6 +86,11 @@ FILE(GLOB IMGUI_HEADERS CONFIGURE_DEPENDS
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/*.h
 )
 
+# Add EnTT headers 
+FILE(GLOB ENTT_HEADERS CONFIGURE_DEPENDS            
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/entt.hpp
+)
+
 
  # Add vengine target as shared library
 add_library(vengine SHARED  )
@@ -94,9 +99,9 @@ add_library(vengine::vengine ALIAS vengine )
 target_include_directories(vengine 
     PUBLIC 
     ${VENGINE_SOURCE_DIR}
-    #${IMGUI_HEADERS}   
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT
 ) 
 
 # Find system dependencies 
@@ -105,12 +110,10 @@ find_package(Vulkan REQUIRED)
 # Setup Conan, fetch required dependencies
 setup_conan_dependencies()
 
-
 #External Dependencies - fetched from github
 add_subdirectory(deps/assimp)
 add_subdirectory(deps/vengine_vma)
 add_subdirectory(deps/vengine_tracy)
-#add_subdirectory(deps/imgui) # TODO: This should be safe to remove now...
 
 #External Dependencies - fetched through conan
 target_link_libraries(vengine PUBLIC stb::stb)
@@ -123,16 +126,12 @@ target_include_directories(vengine PUBLIC ${tracy_include_dirs})
 target_include_directories(vengine PUBLIC ${vma_include_dirs})
 target_include_directories(vengine PUBLIC ${assimp_include_dirs})
 
-
-
-
 # Add the vengine sources + imgui sources to the vengine target
 target_sources(vengine PRIVATE ${VENGINE_SOURCES} 
     ${IMGUI_HEADERS}    
     ${IMGUI_SOURCES}
+    ${ENTT_HEADERS}
     )
-
-
 
 # Linker Options 
 target_link_options(vengine
