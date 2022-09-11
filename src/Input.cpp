@@ -1,5 +1,5 @@
-#include "Input.h"
-// #include "../Dev/Log.h"
+#include "Input.hpp"
+// #include "../Dev/Log.hpp"
 
 std::map<Keys, bool> Input::keyDown;
 std::map<Keys, bool> Input::lastKeyDown;

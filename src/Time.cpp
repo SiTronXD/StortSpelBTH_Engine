@@ -1,4 +1,4 @@
-#include "Time.h"
+#include "Time.hpp"
 
 float Time::deltaTime = 0.0f;
 float Time::timeSinceStart = 0.0f;

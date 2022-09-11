@@ -1,14 +1,14 @@
 #include <iostream>
-#include "TestScene.h"
-#include "Input.h"
+#include "TestScene.hpp"
+#include "Input.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "MeshComponent.hpp"
-#include "Log.h"
-#include "Configurator.h"
-#include "Time.h"
-#include "TestScene2.h"
+#include "Log.hpp"
+#include "Configurator.hpp"
+#include "Time.hpp"
+#include "TestScene2.hpp"
 
 TestScene::TestScene()
 	: testEntity(-1), testEntity2(-1)

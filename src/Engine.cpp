@@ -1,4 +1,4 @@
-#include "Engine.h"
+#include "Engine.hpp"
 
 #include <vulkan/vulkan.hpp>
 
@@ -10,11 +10,11 @@
 #include "glm/fwd.hpp"
 #include <vector>
 
-#include "Window.h"
-#include "Input.h"
-#include "Time.h"
-#include "VulkanRenderer.h"
-#include "Configurator.h"
+#include "Window.hpp"
+#include "Input.hpp"
+#include "Time.hpp"
+#include "VulkanRenderer.hpp"
+#include "Configurator.hpp"
 
 #include <chrono>
 #include <functional>

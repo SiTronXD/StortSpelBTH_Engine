@@ -1,9 +1,9 @@
-#include "Window.h"
+#include "Window.hpp"
 #include <vulkan/vulkan.hpp>
 #include <SDL2/SDL_vulkan.h>
 #include "tracy/Tracy.hpp"
-#include "Input.h"
-#include "Log.h"
+#include "Input.hpp"
+#include "Log.hpp"
 
 Window::Window()
     : windowHandle(nullptr),

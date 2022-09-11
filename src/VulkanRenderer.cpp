@@ -1,10 +1,10 @@
-#include "VulkanRenderer.h"
-#include "Utilities.h"
+#include "VulkanRenderer.hpp"
+#include "Utilities.hpp"
 #include "assimp/Importer.hpp"
-#include "defs.h"
-#include "VulkanValidation.h"
-#include "tracyHelper.h"
-#include "Configurator.h"
+#include "defs.hpp"
+#include "VulkanValidation.hpp"
+#include "tracyHelper.hpp"
+#include "Configurator.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -21,13 +21,12 @@
 #include "assimp/scene.h"
 #include "assimp/postprocess.h"
 
-#include "imgui_impl_vulkan.h"
 #include "backends/imgui_impl_vulkan.h"
 
-#include "Input.h"
-#include "Scene.h"
+#include "Input.hpp"
+#include "Scene.hpp"
 #include "MeshComponent.hpp"
-#include "Log.h"
+#include "Log.hpp"
 
 using namespace vengine_helper::config;
 int VulkanRenderer::init(Window* window, std::string&& windowName) {
