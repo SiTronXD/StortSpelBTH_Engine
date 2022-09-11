@@ -10,6 +10,12 @@ include(cmake/vengine_helpers.cmake)
 include(cmake/program_dependencies.cmake)
 include(cmake/setup_conan.cmake)
 
+# Windows fix for creating a lib...
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+  message(VERBOSE "Windows environment detected, overriding default symbol visibility to `visible` instead of `hidden`")
+  set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+endif()
+
 # Use CCACHE if it exists
 # find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
