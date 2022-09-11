@@ -98,7 +98,7 @@ add_library(vengine::vengine ALIAS vengine )
 
 target_include_directories(vengine 
     PUBLIC 
-    ${VENGINE_SOURCE_DIR}
+    #${VENGINE_SOURCE_DIR}
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends
     ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT
