@@ -87,14 +87,14 @@ find_package(Vulkan REQUIRED)
 
 # Preparing compile options flags and definitions
 set(CLANG_COMPILE_TIME_OPTIONS_debug 
-    $<$<CXX_COMPILER_ID:Clang,AppleClang>:-msse2 -glldb -Wall -Wextra -Wpedantic -fno-omit-frame-pointer>
+    $<$<CXX_COMPILER_ID:Clang,AppleClang>:-msse2 -glldb -Wall -Wextra -Wpedantic -fno-omit-frame-pointer -fPIC>
     $<$<CXX_COMPILER_ID:GNU>:-msse2 -g -Wall -Wextra -fno-omit-frame-pointer>
-    $<$<CXX_COMPILER_ID:MSVC>:/DEBUG /W4 /Zi>
+    $<$<CXX_COMPILER_ID:MSVC>:/DEBUG /W4 /Zi /MD>
 )
 set(CLANG_COMPILE_TIME_OPTIONS_debugWCallStackProfiling ${CLANG_COMPILE_TIME_OPTIONS_debug})
 set(CLANG_COMPILE_TIME_OPTIONS_release 
-    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-O3 -msse2 >
-    $<$<CXX_COMPILER_ID:MSVC>:/O2>
+    $<$<CXX_COMPILER_ID:GNU,Clang,AppleClang>:-O3 -msse2 -fPIC>
+    $<$<CXX_COMPILER_ID:MSVC>:/O2 /MD>
 )
 
 message("6")
