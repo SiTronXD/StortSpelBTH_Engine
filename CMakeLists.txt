@@ -121,6 +121,10 @@ add_subdirectory(deps/assimp)
 add_subdirectory(deps/vengine_vma)
 add_subdirectory(deps/vengine_tracy)
 
+if(${VENGINE_USE_PROFILING})
+set(vengine_tracy TracyClient) 
+endif()
+
 #External Dependencies - fetched through conan
 target_link_libraries(vengine PUBLIC stb::stb)
 target_link_libraries(vengine PUBLIC glm::glm)
@@ -198,7 +202,7 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_CO
 target_link_libraries(
     vengine 
     PUBLIC 
-    #imgui_lib
+    #imgui_lib    
     ${vengine_tracy}
     ${vengine_imgui}
     ${SDL2_LIBRARIES}
