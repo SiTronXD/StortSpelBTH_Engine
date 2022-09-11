@@ -52,9 +52,9 @@
             "description": "Build in debug mode using windows default generator",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Visual Studio 17 2022",
-            "installDir": "${sourceDir}/install/${presetName}",
+            "installDir": "${sourceDir}/install",
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install",
                 "CMAKE_BUILD_TYPE": "Debug"
                 
             },
@@ -71,14 +71,14 @@
             "name": "build debug_win32",
             "description": "presets for debug",
             "displayName": "vengine demo",            
-            "configurePreset": "debug_win32"            
+            "configurePreset": "debug_win32",
+            "verbose": true
         },
         {
             "name": "build debug_unix_lldb",
             "description": "presets for debug",
             "displayName": "vengine demo",
-            "configurePreset": "debug_unix_lldb",
-            "verbose": true
+            "configurePreset": "debug_unix_lldb"        
                   
         },
         {
