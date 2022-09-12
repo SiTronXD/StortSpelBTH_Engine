@@ -101,7 +101,7 @@ FILE(GLOB ENTT_HEADERS CONFIGURE_DEPENDS
  # Add vengine target as shared library
 # add_library(vengine SHARED  )
 # add_library(vengine::vengine ALIAS vengine )
-add_executable(vengine main.cpp "src/Swapchain.cpp")
+add_executable(vengine main.cpp "src/Swapchain.cpp" "src/Texture.cpp")
 
 target_include_directories(vengine 
     PUBLIC        

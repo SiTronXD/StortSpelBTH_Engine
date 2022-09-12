@@ -17,6 +17,7 @@
 #include <algorithm>            // Used for std::clamp...
 #include "stb_image.h"
 #include "VulkanDbg.hpp"
+#include "Texture.hpp"
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
@@ -50,7 +51,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
             this->instance,
             this->surface,
             this->queueFamilies,
-            this->swapChainDetails
+            this->swapchain.getDetails()
         );
 
         // Create logical device
@@ -90,25 +91,29 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
 
         setupDebugMessenger();  // Used when we use Validation Layers to trigger errors/warnings/etc.
 
-        this->swapchain.createSwapchain();
+        this->swapchain.createSwapchain(
+            *this->window,
+            this->device,
+            this->surface,
+            this->queueFamilies
+        );
         
         this->createColorBufferImage_Base();
 
         this->createDepthBufferImage();
 
-        createRenderPass_Base();
-        createRenderPass_Imgui();
-        createDescriptorSetLayout();
+        this->createRenderPass_Base();
+        this->createRenderPass_Imgui();
+        this->createDescriptorSetLayout();
         
         this->createPushConstantRange();
 
-        createGraphicsPipeline_Base();                     // Creates pipeline used with RenderPasses...        
-        //this->createDynamicRenderingGraphicsPipeline(); // Creates pipeline used for Dynamic Rendering
+        this->createGraphicsPipeline_Base();
         
-        this->swapchain.createFramebuffers();
-        createCommandPool();
+        this->swapchain.createFramebuffers(this->renderPass_base);
+        this->createCommandPool();
         
-        createCommandBuffers(); 
+        this->createCommandBuffers();
 
         this->createTextureSampler();
         
@@ -138,12 +143,12 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
 
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
-        createTexture("missing_texture.png");
+        this->createTexture("missing_texture.png");
 
 #ifndef VENGINE_NO_PROFILING
-        initTracy();        
+        this->initTracy();
 #endif
-        initImgui();
+        this->initImgui();
     }
     catch(std::runtime_error &e)
     {
@@ -159,7 +164,7 @@ void VulkanRenderer::updateModel(int modelIndex, glm::mat4 newModel)
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    modelList[modelIndex].setModelMatrix(newModel);
+    this->modelList[modelIndex].setModelMatrix(newModel);
 }
 
 void VulkanRenderer::generateVmaDump()
@@ -516,14 +521,13 @@ void VulkanRenderer::reCreateSwapChain(Camera* camera)
     cleanupRenderBass_Base();  
 
     // createSwapChain();
-    this->swapchain.recreateSwapchain();
+    this->swapchain.recreateSwapchain(this->renderPass_base);
     createColorBufferImage_Base();
     createDepthBufferImage();    
     createRenderPass_Base();
     createRenderPass_Imgui();
 
     // createFrameBuffers();
-    this->swapchain.createFramebuffers();
     createFramebuffer_imgui();
 
     this->createDescriptorSets();
@@ -569,44 +573,6 @@ void VulkanRenderer::cleanupRenderBass_Base()
     this->getVkDevice().destroyRenderPass(this->renderPass_base);
 }
 
-vk::Extent2D VulkanRenderer::chooseBestImageResolution(const vk::SurfaceCapabilities2KHR &surfaceCapabilities) {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Since the extents width and height are represented with uint32_t values.
-    // Thus we want to make sure that the uin32_t value can represent the size of our surface (??).
-
-    // The default currentExtent.width value of a surface will be the size of the created window...
-    // - This is set by the glfwCreateWindowSurface function...
-    // - NOTE: the surfaces currentExtent.width/height can change, and then it will not be equal to the window size(??)
-    if (surfaceCapabilities.surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
-        //IF the current Extent does not vary, then the value will be the same as the windows currentExtent...
-        // - This will be the case if the currentExtent.width/height is NOT equal to the maximum value of a uint32_t...
-        return surfaceCapabilities.surfaceCapabilities.currentExtent;
-    } else {
-        //IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
-        // - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
-        int width=0, height=0;        
-        this->window->getSize(width, height);
-
-        // Create a new extent using the current window size
-        vk::Extent2D newExtent = {};
-        newExtent.height = static_cast<uint32_t>(height);     // glfw uses int, but VkExtent2D uses uint32_t...
-        newExtent.width  = static_cast<uint32_t>(width);
-
-        // Make sure that height/width fetched from the glfw_window is within the max/min height/width of our surface
-        // - Do this by clamping the new height and width
-        newExtent.width = std::clamp(newExtent.width,
-                                     surfaceCapabilities.surfaceCapabilities.minImageExtent.width,
-                                     surfaceCapabilities.surfaceCapabilities.maxImageExtent.width);
-        newExtent.height = std::clamp(newExtent.height,
-                                      surfaceCapabilities.surfaceCapabilities.minImageExtent.height,
-                                      surfaceCapabilities.surfaceCapabilities.maxImageExtent.height);
-
-        return newExtent;
-    }
-}
-
 vk::Format VulkanRenderer::chooseSupportedFormat(
     const std::vector<vk::Format> &formats, 
     vk::ImageTiling tiling, 
@@ -617,8 +583,8 @@ vk::Format VulkanRenderer::chooseSupportedFormat(
 #endif
     bool is_optimal = false;
     bool is_linear = false;
+
     // Loop through the options and pick the best suitable one...
-  
     for(auto format : formats)
     {
         // Get Properties for a given format on this device
@@ -631,7 +597,7 @@ vk::Format VulkanRenderer::chooseSupportedFormat(
                     (properties.formatProperties.optimalTilingFeatures & featureFlags) == featureFlags); // Checks if the device has the requested OptimalTilingFeatures
 
         // Depending on choice of Tiling, check different features requirments
-        if( is_linear || is_optimal)
+        if(is_linear || is_optimal)
         {
             return format;
         }
@@ -673,38 +639,6 @@ vk::Image VulkanRenderer::createImage(createImageData &&imageData, const std::st
     }
 
     return image;
-}
-
-vk::ImageView VulkanRenderer::createImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Creating a ImageView is similar to how we have the Physical Device and from that create a Logical Device...
-    vk::ImageViewCreateInfo viewCreateInfo;
-
-    viewCreateInfo.setImage(image);                           // Image to create view for
-    viewCreateInfo.setViewType(vk::ImageViewType::e2D);                           // Type of Image (1D, 2D, 3D, Cube, etc)
-    viewCreateInfo.setFormat(format);                             // format of Image Data    
-    viewCreateInfo.setComponents(vk::ComponentMapping( // Allows remapping of rgba components to other rgba values!, Identity means they represent themselves
-        vk::ComponentSwizzle::eIdentity,    // r
-        vk::ComponentSwizzle::eIdentity,    // g
-        vk::ComponentSwizzle::eIdentity,    // b
-        vk::ComponentSwizzle::eIdentity     // a
-    ));
-    
-    // Subresources allow the view to view only a Part of a image!
-    viewCreateInfo.subresourceRange.aspectMask      = aspectFlags;      // Which aspect of image to view (e.g. COLOR_BIT for view)
-    /*! Possible aspectMask values are defined with: is vk::ImageAspectFlagBits ...
-     * - The 'regular' one is vk::ImageAspectFlagBits::eColor, used for images...
-     * */
-    viewCreateInfo.subresourceRange.baseMipLevel    = 0;                // Which part of the image to view start view from, (a Image can have multiple Mip and Array Layers)...
-    viewCreateInfo.subresourceRange.levelCount      = 1;                // How many MipMap levels to view, we only view 1 and that will be the "0" referred to by baseMipLevel
-    viewCreateInfo.subresourceRange.baseArrayLayer  = 0;                // Which BaseArrayLayer to start from, we pick the first: 0
-    viewCreateInfo.subresourceRange.layerCount      = 1;                // How many layers to check from the baseArrayLayer... (i.e. only view the first layer, layer 0...)
-
-    // Create image view and Return it
-    return this->getVkDevice().createImageView(viewCreateInfo);
 }
 
 void VulkanRenderer::createGraphicsPipeline_Base() 
@@ -1302,7 +1236,12 @@ void VulkanRenderer::createColorBufferImage_Base()
         );
 
         // Creation of Color Buffer Image View
-        this->colorBufferImageView[i] = createImageView(this->colorBufferImage[i], this->colorFormat, vk::ImageAspectFlagBits::eColor);
+        this->colorBufferImageView[i] = Texture::createImageView(
+            this->device,
+            this->colorBufferImage[i], 
+            this->colorFormat, 
+            vk::ImageAspectFlagBits::eColor
+        );
         VulkanDbg::registerVkObjectDbgInfo("colorBufferImageView["+std::to_string(i)+"]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->colorBufferImageView[i])));
         VulkanDbg::registerVkObjectDbgInfo("colorBufferImage["+std::to_string(i)+"]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->colorBufferImage[i])));
     }
@@ -1347,7 +1286,12 @@ void VulkanRenderer::createDepthBufferImage()
             );
 
         // Create Depth Buffer Image View
-        this->depthBufferImageView[i] = createImageView(this->depthBufferImage[i], depthFormat, vk::ImageAspectFlagBits::eDepth);        
+        this->depthBufferImageView[i] = Texture::createImageView(
+            this->device,
+            this->depthBufferImage[i], 
+            depthFormat, 
+            vk::ImageAspectFlagBits::eDepth
+        );
         VulkanDbg::registerVkObjectDbgInfo("depthBufferImageView["+std::to_string(i)+"]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->depthBufferImageView[i])));
         VulkanDbg::registerVkObjectDbgInfo("depthBufferImage["+std::to_string(i)+"]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->depthBufferImage[i])));
     }
@@ -1471,10 +1415,12 @@ int VulkanRenderer::createTexture(const std::string &filename)
     int textureImageLoc = createTextureImage(filename);
 
     // Create Image View
-    vk::ImageView imageView = createImageView(
+    vk::ImageView imageView = Texture::createImageView(
+        this->device,
         this->textureImages[textureImageLoc],   // The location of the Image in our textureImages vector
         vk::Format::eR8G8B8A8Unorm,               // Format for rgba 
-        vk::ImageAspectFlagBits::eColor);             // Image is used for color presentation (??)
+        vk::ImageAspectFlagBits::eColor
+    );
 
     // Add the Image View to our vector with Image views
     this->textureImageViews.push_back(imageView);
@@ -1918,7 +1864,7 @@ void VulkanRenderer::createCommandBuffers()
 #endif
 
     // Resize command buffer count to have one for each framebuffer
-    // TODO: replace with frames in flight
+    // TODO: replace size with frames in flight
     commandBuffers.resize(this->swapchain.getNumImages());
 
     vk::CommandBufferAllocateInfo cbAllocInfo;
@@ -2118,17 +2064,18 @@ void VulkanRenderer::createDescriptorPool()
 void VulkanRenderer::allocateDescriptorSets()
 {
     // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    // TODO: replace size with frames in flight
-    descriptorSets.resize(this->swapchain.getNumImages()); // Since we have a uniform buffer per images, better use size of swapchainImages!
+    this->descriptorSets.resize(this->viewProjection_uniformBuffer.size()); // Since we have a uniform buffer per images, better use size of swapchainImages!
 
     // Copy our DescriptorSetLayout so we have one per Image (one per UniformBuffer)
-    std::vector<vk::DescriptorSetLayout> descriptorSetLayouts(swapChainImages.size(),this->descriptorSetLayout);
+    std::vector<vk::DescriptorSetLayout> descriptorSetLayouts(
+        this->descriptorSets.size(),
+        this->descriptorSetLayout
+    );
 
     // Descriptor Set Allocation Info
     vk::DescriptorSetAllocateInfo setAllocInfo;
     setAllocInfo.setDescriptorPool(this->descriptorPool);                                   // Pool to allocate descriptors (Set?) from   
-    setAllocInfo.setDescriptorSetCount(static_cast<uint32_t>(this->swapChainImages.size()));// One Descriptor set per Image 
-                                                                                        /// (Same as uniformBuffers since we have One uniformBuffer per Image...)
+    setAllocInfo.setDescriptorSetCount(static_cast<uint32_t>(this->descriptorSets.size()));
     setAllocInfo.setPSetLayouts(descriptorSetLayouts.data());                               // Layouts to use to allocate sets (1:1 relationship)
 
     // Allocate all descriptor sets
@@ -2191,28 +2138,28 @@ void VulkanRenderer::createInputDescriptorSets()
     ZoneScoped; //:NOLINT
 #endif
     // Resize array to hold Descriptor Set for each Swap Chain image
-    this->inputDescriptorSets.resize(swapChainImages.size());
+    // TODO: replace size with frames in flight
+    this->inputDescriptorSets.resize(this->swapchain.getNumImages());
 
     // Fill vector of layouts ready for set creation
-    std::vector<vk::DescriptorSetLayout> inputSetLayouts(this->swapChainImages.size(), this->inputSetLayout);
+    std::vector<vk::DescriptorSetLayout> inputSetLayouts(
+        this->inputDescriptorSets.size(),
+        this->inputSetLayout
+    );
 
     // Input Attachment Descriptor Set Allocation Info
     vk::DescriptorSetAllocateInfo inputSetAllocInfo;
     inputSetAllocInfo.setDescriptorPool(this->inputDescriptorPool);
-    inputSetAllocInfo.setDescriptorSetCount(static_cast<uint32_t>(swapChainImages.size())); // One descriptor per image in swapchain
+    inputSetAllocInfo.setDescriptorSetCount(static_cast<uint32_t>(this->inputDescriptorSets.size()));
     inputSetAllocInfo.setPSetLayouts(inputSetLayouts.data());    
 
     // Allocate Descriptor Sets
     this->inputDescriptorSets = this->getVkDevice().allocateDescriptorSets(inputSetAllocInfo);  
 
-    for(size_t i = 0; i < swapChainImages.size();i++)
+    for(size_t i = 0; i < this->inputDescriptorSets.size(); i++)
     {
-        //VulkanDbg::registerVkObjectDbgInfo("DescriptorSet["+std::to_string(i)+"]  InputAttachment", VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64_t>(this->inputDescriptorSets[i]));
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorSet["+std::to_string(i)+"] InputAttachment", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->inputDescriptorSets[i])));
-    }
+        VulkanDbg::registerVkObjectDbgInfo("DescriptorSet[" + std::to_string(i) + "] InputAttachment", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->inputDescriptorSets[i])));
 
-    for(size_t i = 0; i < swapChainImages.size(); i++)
-    {
         // Color Attachment Descriptor
         vk::DescriptorImageInfo colorAttachmentDescriptor;
         colorAttachmentDescriptor.setImageLayout(vk::ImageLayout::eReadOnlyOptimal);   // Layout of the Image when it will be Read from! (This is what we've setup the second subpass to expect...)
@@ -2306,7 +2253,6 @@ void VulkanRenderer::updateUniformBuffers(uint32_t imageIndex)
     void * data = nullptr;
     
     vmaMapMemory(this->vma, this->viewProjection_uniformBufferMemory[imageIndex], &data);
-    //memcpy(this->viewProjection_uniformBufferMemory_info[imageIndex].pMappedData, &uboViewProjection, sizeof(UboViewProjection));
     memcpy(data, &uboViewProjection, sizeof(UboViewProjection));
     vmaUnmapMemory(this->vma, this->viewProjection_uniformBufferMemory[imageIndex]);
 }
@@ -2319,7 +2265,6 @@ void VulkanRenderer::updateUBO_camera_Projection()
                             (float)this->swapchain.getWidth()/(float)swapchain.getHeight(),         // Setting up the Aspect Ratio
                             DEF<float>(CAM_NP),                                              // The Near Plane
                             DEF<float>(CAM_FP));                                             // The Far Plane
-    //uboViewProjection.projection[1][1] *= -1;     // Since GLM is made for OpenGL and OpenGL uses RightHanded system; Positive Y is considered the Up dir
 }
 
 void VulkanRenderer::updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
@@ -2418,7 +2363,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
 
     // The only changes we do per commandbuffer is to change the swapChainFrameBuffer a renderPass should point to...
-    renderPassBeginInfo.setFramebuffer(swapChainFrameBuffers[currentImageIndex]);
+    renderPassBeginInfo.setFramebuffer(this->swapchain.getVkFramebuffer(currentImageIndex));
 
     vk::SubpassBeginInfoKHR subpassBeginInfo;
     subpassBeginInfo.setContents(vk::SubpassContents::eInline);
@@ -2443,10 +2388,11 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
             commandBuffers[currentImageIndex].beginRenderPass2(renderPassBeginInfo, subpassBeginInfo);            
 
                 // Bind Pipeline to be used in render pass
-                commandBuffers[currentImageIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, this->graphicsPipeline);
-                // vk::PipelineBindPoint::eGraphics: What Kind of pipeline we are binding...
-
-
+                commandBuffers[currentImageIndex].bindPipeline(
+                    vk::PipelineBindPoint::eGraphics, 
+                    this->graphicsPipeline
+                );
+                
                 // For every Mesh we have
                 auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
                 tView.each([this, currentImageIndex](Transform& transform, MeshComponent& meshComponent)
@@ -2503,10 +2449,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                             0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
                             nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
 
-                        /*//Left for Reference, (This was the two last parameters of vkCmdBindDescriptorSets function)
-                            1,                               // Dynamic Offset Count; 
-                            &dynamicUniformBuffer_offset);    // Dynamic Offset
-                        */
+                        
                         vk::Viewport viewport{};
                         viewport.x = 0.0f;
                         viewport.y = (float) swapchain.getHeight();
@@ -2549,19 +2492,19 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                 );
 
 
-                  vk::Viewport viewport{};
-                    viewport.x = 0.0f;
-                    viewport.y = 0.0f;
-                    viewport.width = (float) this->swapchain.getWidth();
-                    viewport.height = (float) swapchain.getHeight();
-                    viewport.minDepth = 0.0f;
-                    viewport.maxDepth = 1.0f;
-                    this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
+                vk::Viewport viewport{};
+                viewport.x = 0.0f;
+                viewport.y = 0.0f;
+                viewport.width = (float) this->swapchain.getWidth();
+                viewport.height = (float) swapchain.getHeight();
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+                this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
 
-                    vk::Rect2D scissor{};
-                    scissor.offset = vk::Offset2D{0, 0};
-                    scissor.extent = swapchain.getVkExtent();
-                    this->commandBuffers[currentImageIndex].setScissor( 0, 1, &scissor);
+                vk::Rect2D scissor{};
+                scissor.offset = vk::Offset2D{0, 0};
+                scissor.extent = swapchain.getVkExtent();
+                this->commandBuffers[currentImageIndex].setScissor( 0, 1, &scissor);
 
             
                 this->commandBuffers[currentImageIndex].draw(
@@ -2601,7 +2544,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
     static const vk::ClearColorValue  clear_Plum (std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
 
     vk::RenderingAttachmentInfo color_attachment_info;         
-    color_attachment_info.imageView = this->swapChainImages[currentImageIndex].imageView;
+    color_attachment_info.imageView = this->swapchain.getImage(currentImageIndex).imageView;
     color_attachment_info.setImageLayout(vk::ImageLayout::eAttachmentOptimal);
     color_attachment_info.setLoadOp(vk::AttachmentLoadOp::eClear);
     color_attachment_info.setStoreOp(vk::AttachmentStoreOp::eStore);
@@ -2643,7 +2586,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
         vengine_helper::insertImageMemoryBarrier(
         createImageBarrierData{
             .cmdBuffer = commandBuffers[currentImageIndex],
-            .image = this->swapChainImages[currentImageIndex].image,            
+            .image = this->swapchain.getImage(currentImageIndex).image,
             .srcAccessMask = vk::AccessFlags2(),
             .dstAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
             .oldLayout = vk::ImageLayout::eUndefined,
@@ -2732,11 +2675,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
                                         modelPart.second.indexBuffer, 
                                         0,
                                         vk::IndexType::eUint32);
-                                    
-                                /*  // Left for Reference, we dont use Dynamic Uniform Buffers for our Model anymore...                                    
-                                    // Dynamic Uniform Buffer Offset Amount
-                                    uint32_t dynamicUniformBuffer_offset = static_cast<uint32_t>(modelUniformAlignment) * j; // Will give us the correct position in the memory!
-                                */
+
                                     // We're going to bind Two descriptorSets! put them in array...
                                     std::array<vk::DescriptorSet,2> descriptorSetGroup{
                                         this->descriptorSets[currentImageIndex],                // Use the descriptor set for the Image                            
@@ -2777,8 +2716,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
         vengine_helper::insertImageMemoryBarrier(
         createImageBarrierData{
             .cmdBuffer = commandBuffers[currentImageIndex],
-            .image = this->swapchainImages[currentImageIndex].image,
-            //.image = this->colorBufferImage[this->currentFrame],
+            .image = this->swapchain.getImage(currentImageIndex).image,
             .srcAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
             .dstAccessMask = vk::AccessFlags2(),
             .oldLayout = vk::ImageLayout::eColorAttachmentOptimal,
@@ -3068,12 +3006,22 @@ void VulkanRenderer::initImgui()
     std::vector<vk::ImageView> attachment;    
     attachment.resize(1);
 
-    commandPools_imgui.resize(this->swapChainImages.size());
-    commandBuffers_imgui.resize(this->swapChainImages.size());
-    frameBuffers_imgui.resize(this->swapChainImages.size());
-    for(size_t i = 0; i < this->swapChainImages.size(); i++){
-        createCommandPool(this->commandPools_imgui[i], vk::CommandPoolCreateFlagBits::eResetCommandBuffer, std::string("commandPools_imgui["+std::to_string(i)+"]"));
-        createCommandBuffer(this->commandBuffers_imgui[i], this->commandPools_imgui[i], std::string("commandBuffers_imgui["+std::to_string(i)+"]"));        
+    // TODO: replace size with frames in flight
+    this->commandPools_imgui.resize(this->swapchain.getNumImages());
+    this->commandBuffers_imgui.resize(this->swapchain.getNumImages());
+    this->frameBuffers_imgui.resize(this->swapchain.getNumImages());
+    for(size_t i = 0; i < this->commandPools_imgui.size(); i++)
+    {
+        createCommandPool(
+            this->commandPools_imgui[i], 
+            vk::CommandPoolCreateFlagBits::eResetCommandBuffer, 
+            std::string("commandPools_imgui["+std::to_string(i)+"]")
+        );
+        createCommandBuffer(
+            this->commandBuffers_imgui[i], 
+            this->commandPools_imgui[i], 
+            std::string("commandBuffers_imgui["+std::to_string(i)+"]")
+        );
     }
     this->createFramebuffer_imgui();
 
@@ -3107,16 +3055,24 @@ void VulkanRenderer::createFramebuffer_imgui()
 {
     std::vector<vk::ImageView> attachment;    
     attachment.resize(1);
-    frameBuffers_imgui.resize(this->swapChainImages.size());
-    for(size_t i = 0; i < this->swapChainImages.size(); i++){        
-        attachment[0] = this->swapChainImages[i].imageView; //TODO: Check if this is rightt?...
-        createFrameBuffer(this->frameBuffers_imgui[i], attachment, this->renderPass_imgui, this->swapchain.getVkExtent(), std::string("frameBuffers_imgui["+std::to_string(i)+"]"));
+    this->frameBuffers_imgui.resize(this->commandPools_imgui.size());
+    for(size_t i = 0; i < this->frameBuffers_imgui.size(); i++)
+    {        
+        attachment[0] = this->swapchain.getImage(i).imageView; // TODO: Check if this is rightt?...
+        createFrameBuffer(
+            this->frameBuffers_imgui[i], 
+            attachment, 
+            this->renderPass_imgui, 
+            this->swapchain.getVkExtent(), 
+            std::string("frameBuffers_imgui["+std::to_string(i)+"]")
+        );
     }
 }
 
 void VulkanRenderer::cleanupFramebuffer_imgui()
 {
-    for (auto framebuffer: this->frameBuffers_imgui) {
+    for (auto framebuffer: this->frameBuffers_imgui) 
+    {
         this->getVkDevice().destroyFramebuffer(framebuffer);        
     }
 }

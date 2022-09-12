@@ -87,14 +87,9 @@ class VulkanRenderer {
     std::vector<vk::DescriptorSet> samplerDescriptorSets; /// To be used for our texture Samplers! (need one per Texture)
                                                         //// NOTE; There will NOT be one samplerDescriptionSet per image!... It will be One per Texture!
 
-    std::vector<vk::Buffer>       viewProjection_uniformBuffer;
-    //std::vector<vk::DeviceMemory> viewProjection_uniformBufferMemory;
+    std::vector<vk::Buffer> viewProjection_uniformBuffer;
     std::vector<VmaAllocation> viewProjection_uniformBufferMemory;
     std::vector<VmaAllocationInfo> viewProjection_uniformBufferMemory_info;
-
-    std::vector<vk::Buffer>       model_dynamicUniformBuffer;
-    //std::vector<vk::DeviceMemory> model_dynamicUniformBufferMemory;
-    std::vector<VmaAllocation> model_dynamicUniformBufferMemory;
 
     // - Assets    
 
@@ -205,12 +200,10 @@ private:
     void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
     /// -- Choose Functions
-    vk::Extent2D                 chooseBestImageResolution(const vk::SurfaceCapabilities2KHR & surfaceCapabilities);    
-    [[nodiscard]] vk::Format     chooseSupportedFormat(const std::vector<vk::Format> &formats, vk::ImageTiling tiling, vk::FormatFeatureFlagBits featureFlags);
+    [[nodiscard]] vk::Format chooseSupportedFormat(const std::vector<vk::Format> &formats, vk::ImageTiling tiling, vk::FormatFeatureFlagBits featureFlags);
 
     /// -- Create Functions    
     [[nodiscard]]vk::Image createImage(createImageData &&imageData,  const std::string &imageDescription);
-    vk::ImageView createImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags);
     [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);
 
     int createTextureImage(const std::string &filename);

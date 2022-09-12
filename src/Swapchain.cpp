@@ -1,6 +1,8 @@
 #include "Swapchain.hpp"
 #include "VulkanDbg.hpp"
 #include "Device.hpp"
+#include "Window.hpp"
+#include "Texture.hpp"
 
 vk::SurfaceFormat2KHR Swapchain::chooseBestSurfaceFormat(
     const std::vector<vk::SurfaceFormat2KHR >& formats)
@@ -67,6 +69,47 @@ vk::PresentModeKHR Swapchain::chooseBestPresentationMode(const std::vector<vk::P
     return vk::PresentModeKHR::eFifo;
 }
 
+vk::Extent2D Swapchain::chooseBestImageResolution(
+    const vk::SurfaceCapabilities2KHR& surfaceCapabilities) 
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+    // Since the extents width and height are represented with uint32_t values.
+    // Thus we want to make sure that the uin32_t value can represent the size of our surface (??).
+
+    // The default currentExtent.width value of a surface will be the size of the created window...
+    // - This is set by the glfwCreateWindowSurface function...
+    // - NOTE: the surfaces currentExtent.width/height can change, and then it will not be equal to the window size(??)
+    if (surfaceCapabilities.surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+        //IF the current Extent does not vary, then the value will be the same as the windows currentExtent...
+        // - This will be the case if the currentExtent.width/height is NOT equal to the maximum value of a uint32_t...
+        return surfaceCapabilities.surfaceCapabilities.currentExtent;
+    }
+    else {
+        //IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
+        // - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
+        int width = 0, height = 0;
+        this->window->getSize(width, height);
+
+        // Create a new extent using the current window size
+        vk::Extent2D newExtent = {};
+        newExtent.height = static_cast<uint32_t>(height);     // glfw uses int, but VkExtent2D uses uint32_t...
+        newExtent.width = static_cast<uint32_t>(width);
+
+        // Make sure that height/width fetched from the glfw_window is within the max/min height/width of our surface
+        // - Do this by clamping the new height and width
+        newExtent.width = std::clamp(newExtent.width,
+            surfaceCapabilities.surfaceCapabilities.minImageExtent.width,
+            surfaceCapabilities.surfaceCapabilities.maxImageExtent.width);
+        newExtent.height = std::clamp(newExtent.height,
+            surfaceCapabilities.surfaceCapabilities.minImageExtent.height,
+            surfaceCapabilities.surfaceCapabilities.maxImageExtent.height);
+
+        return newExtent;
+    }
+}
+
 void Swapchain::recreateCleanup()
 {
     for (auto image : this->swapchainImages) {
@@ -82,7 +125,10 @@ void Swapchain::recreateCleanup()
 
 Swapchain::Swapchain()
     : swapchain(VK_NULL_HANDLE),
-    device(nullptr)
+    window(nullptr),
+    device(nullptr),
+    surface(nullptr),
+    queueFamilies(nullptr)
 {
 }
 
@@ -90,13 +136,20 @@ Swapchain::~Swapchain()
 {
 }
 
-void Swapchain::createSwapchain(Device& device)
+void Swapchain::createSwapchain(
+    Window& window,
+    Device& device, 
+    vk::SurfaceKHR& surface,
+    QueueFamilyIndices& queueFamilies)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
 
+    this->window = &window;
     this->device = &device;
+    this->surface = &surface;
+    this->queueFamilies = &queueFamilies;
 
     // Store Old Swapchain, if it exists
     vk::SwapchainKHR oldSwapchain = this->swapchain;
@@ -110,7 +163,7 @@ void Swapchain::createSwapchain(Device& device)
     vk::PresentModeKHR presentationMode = 
         this->chooseBestPresentationMode(this->swapchainDetails.presentationMode);
 
-    // - 3. Chose Swap Chain image Resolution
+    // - 3. Choose Swap Chain image Resolution
     vk::Extent2D imageExtent = 
         this->chooseBestImageResolution(this->swapchainDetails.surfaceCapabilities);
 
@@ -141,7 +194,7 @@ void Swapchain::createSwapchain(Device& device)
 
     //Create the SwapChain Create Info!
     vk::SwapchainCreateInfoKHR  swapChainCreateInfo = {};
-    swapChainCreateInfo.setSurface(this->surface);
+    swapChainCreateInfo.setSurface(surface);
     swapChainCreateInfo.setImageFormat(surfaceFormat.surfaceFormat.format);
     swapChainCreateInfo.setImageColorSpace(surfaceFormat.surfaceFormat.colorSpace);
     swapChainCreateInfo.setPresentMode(presentationMode);
@@ -176,18 +229,18 @@ void Swapchain::createSwapchain(Device& device)
 
      // We pick mode based on if the GraphicsQueue and PresentationQueue is the same queue...
      //TODO: the QueueFamilyIndices should be stored somewhere rather than fetched again...
-    std::array<uint32_t, 2> queueFamilies
+    std::array<uint32_t, 2> queueFamilyArray
     { 
-        static_cast<uint32_t>(this->queueFamilies.graphicsFamily),
-        static_cast<uint32_t>(this->queueFamilies.presentationFamily) 
+        static_cast<uint32_t>(queueFamilies.graphicsFamily),
+        static_cast<uint32_t>(queueFamilies.presentationFamily) 
     };
 
     // If Graphics and Presentation families are different, then SwapChain must let images be shared between families!
-    if (this->queueFamilies.graphicsFamily != this->queueFamilies.presentationFamily) {
+    if (queueFamilies.graphicsFamily != queueFamilies.presentationFamily) {
 
         swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eConcurrent);   // Use Concurrent mode if more than 1 family is using the swapchain
         swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t(2));                            // How many different queue families will use the swapchain
-        swapChainCreateInfo.setPQueueFamilyIndices(queueFamilies.data());         // Array containing the queues that will share images
+        swapChainCreateInfo.setPQueueFamilyIndices(queueFamilyArray.data());         // Array containing the queues that will share images
     }
     else {
         swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eExclusive);    // Use Exclusive mode if only one Queue Family uses the SwapChain...
@@ -204,18 +257,11 @@ void Swapchain::createSwapchain(Device& device)
 
     // Create The SwapChain!    
     this->swapchain = this->device->getVkDevice().createSwapchainKHR(swapChainCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("Swapchain", vk::ObjectType::eSwapchainKHR, reinterpret_cast<uint64_t>(vk::SwapchainKHR::CType(this->swapChain)));
-
-    /*! REMEMBER:
-     * All of Vulkans functions labeled with "Create" creates something that will need to be destroyed! ...
-     * */
+    VulkanDbg::registerVkObjectDbgInfo("Swapchain", vk::ObjectType::eSwapchainKHR, reinterpret_cast<uint64_t>(vk::SwapchainKHR::CType(this->swapchain)));
 
      // Store both the VkExtent2D and VKFormat, so they can easily be used later...
-    this->swapchainImageFormat = surfaceFormat.surfaceFormat.format; // We need this to create a ImageView...
-    this->swapchainExtent = imageExtent;          // We need this to create a ImageView...
-    /*! ImageView is the interface which we manage image through. (interface to the image... sort of (??))
-     * - With an ImageView we can View the Image...
-     * */
+    this->swapchainImageFormat = surfaceFormat.surfaceFormat.format;
+    this->swapchainExtent = imageExtent;
 
      // Get all Images from the SwapChain and store them in our swapChainImages Vector...
     std::vector<vk::Image> images = 
@@ -229,7 +275,8 @@ void Swapchain::createSwapchain(Device& device)
         swapChainImage.image = image;
 
         // Create the Image View
-        swapChainImage.imageView = createImageView(
+        swapChainImage.imageView = Texture::createImageView(
+            *this->device,
             image, 
             this->swapchainImageFormat, 
             vk::ImageAspectFlagBits::eColor
@@ -247,7 +294,7 @@ void Swapchain::createSwapchain(Device& device)
     }
 }
 
-void Swapchain::createFramebuffers()
+void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -265,7 +312,7 @@ void Swapchain::createFramebuffers()
         };
 
         vk::FramebufferCreateInfo framebufferCreateInfo;
-        framebufferCreateInfo.setRenderPass(renderPass_base);                                      // Render pass layout the framebuyfffeer will be used with
+        framebufferCreateInfo.setRenderPass(renderPass);                                      // Render pass layout the framebuyfffeer will be used with
         framebufferCreateInfo.setAttachmentCount(static_cast<uint32_t>(attachments.size()));
         framebufferCreateInfo.setPAttachments(attachments.data());                            // List of attatchemnts (1:1 with render pass)
         framebufferCreateInfo.setWidth(this->swapchainExtent.width);
@@ -273,12 +320,16 @@ void Swapchain::createFramebuffers()
         framebufferCreateInfo.setLayers(uint32_t(1));
 
         this->swapchainFrameBuffers[i] = device->getVkDevice().createFramebuffer(framebufferCreateInfo);
-        VulkanDbg::registerVkObjectDbgInfo("SwapchainFramebuffer[" + std::to_string(i) + "]", vk::ObjectType::eFramebuffer, reinterpret_cast<uint64_t>(vk::Framebuffer::CType(this->swapChainFrameBuffers[i])));
+        VulkanDbg::registerVkObjectDbgInfo("SwapchainFramebuffer[" + std::to_string(i) + "]", vk::ObjectType::eFramebuffer, reinterpret_cast<uint64_t>(vk::Framebuffer::CType(this->swapchainFrameBuffers[i])));
     }
 }
 
-void Swapchain::recreateSwapchain()
+void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
 {
+    this->recreateCleanup();
+
+    this->createSwapchain(*this->window, *this->device, *this->surface, *this->queueFamilies);
+    this->createFramebuffers(renderPass);
 }
 
 void Swapchain::cleanup()
