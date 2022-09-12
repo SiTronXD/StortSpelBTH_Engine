@@ -56,7 +56,8 @@
             "installDir": "${sourceDir}/install",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug",
+		"VENGINE_DEV_MODE": true
                 
             },
             "condition": {
