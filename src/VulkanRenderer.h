@@ -1,8 +1,7 @@
 #pragma once
 
-#include "PhysicalDevice.h"
+#include "Device.h"
 
-#include "Utilities.h"
 #include "Window.h"
 #include "imgui.h"              // Need to be included in header
 
@@ -46,7 +45,7 @@ class VulkanRenderer {
     VkDebugReportCallbackEXT debugReport{};
     
     PhysicalDevice physicalDevice;
-    vk::Device         logicalDevice;
+    Device device;
 
     QueueFamilyIndices queueFamilies{};
     vk::Queue             graphicsQueue{};      /// Also acts as the TransferQueue 
@@ -152,8 +151,6 @@ class VulkanRenderer {
 
 
     /// - - Tracy
-    void registerVkObjectDbgInfo(std::string name, vk::ObjectType type, uint64_t objectHandle);
-
 #ifndef VENGINE_NO_PROFILING    
     void initTracy();
     void allocateTracyImageMemory();
@@ -174,7 +171,6 @@ private:
     ///Vulkan Functions
     /// - Create functions
     void createInstance();
-    void createLogicalDevice();
     void setupDebugMessenger();
     void createSurface();
     void createSwapChain();
@@ -233,9 +229,9 @@ private:
     [[nodiscard]] vk::Format     chooseSupportedFormat(const std::vector<vk::Format> &formats, vk::ImageTiling tiling, vk::FormatFeatureFlagBits featureFlags);
 
     /// -- Create Functions    
-    [[nodiscard]]vk::Image         createImage(createImageData &&imageData,  const std::string &imageDescription) ;
-    vk::ImageView     createImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags) const;
-    [[nodiscard]] vk::ShaderModule  createShaderModule(const std::vector<char> &code) const;
+    [[nodiscard]]vk::Image createImage(createImageData &&imageData,  const std::string &imageDescription);
+    vk::ImageView createImageView(vk::Image image, vk::Format format, vk::ImageAspectFlags aspectFlags);
+    [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);
 
     int createTextureImage(const std::string &filename);
     int createTexture(const std::string &filename);
@@ -243,6 +239,8 @@ private:
 
     /// -- Loader Functions
     static stbi_uc*    loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );
+
+    inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
 private: 
     /// Clients Privates 
