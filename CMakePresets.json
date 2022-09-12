@@ -12,12 +12,11 @@
             "displayName": "Configure Debug - unix",
             "description": "Build in debug mode using Ninja generator",
             "binaryDir": "build/${presetName}",
-            "installDir": "${sourceDir}/install/${presetName}",
+            "installDir": "${sourceDir}/install",
             "generator": "Ninja",
 
-            "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_BUILD_TYPE": "Debug"
+            "cacheVariables": {                
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install"                
             },
             "condition": {
                 "type": "equals",
@@ -27,63 +26,93 @@
         },
         {
             "name": "debug_unix_lldb",
-            "displayName": "(lldb) debug_unix",
-            "description": "Build with clang to debug with lldb (Recommended!)",
+            "displayName": "debug_unix",
+            "description": "Build with clang to debug with lldb",
             "inherits":[ "debug_unix_base"],
             "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "clang++"
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_TYPE": "Debug",                
+                "VENGINE_USE_PROFILING": true
                 
             }
-        },
+        },     
         {
-            "name": "debug_unix_gdb",
-            "displayName": "(gdb) debug_unix",              
+            "name": "release_unix_lldb",
+            "displayName": "release_unix",
+            "description": "Build with clang to release with lldb",
             "inherits":[ "debug_unix_base"],
-            "description": "Build with g++ to debug with gdb (has problems on some machines, should work with cppdgb)",
             "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "g++"
-            }            
-        },        
+                "CMAKE_CXX_COMPILER": "clang++",
+                "CMAKE_BUILD_TYPE": "Release"
+                
+            }
+        },   
         {
             "name": "debug_win32",
             "displayName": "Configure Debug - win32",
-            "description": "Build in debug mode using windows default generator",
+            "description": "Build vengine libs in debug mode using windows default generator",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Visual Studio 17 2022",
-            "installDir": "${sourceDir}/install/${presetName}",
+            "installDir": "${sourceDir}/install",
             "cacheVariables": {
-                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install/${presetName}",
-                "CMAKE_BUILD_TYPE": "Debug"
+                "CMAKE_INSTALL_PREFIX": "${sourceDir}/install",
+                "CMAKE_BUILD_TYPE": "Debug",
+		"VENGINE_DEV_MODE": true
+                
             },
             "condition": {
                 "type": "equals",
                 "lhs": "${hostSystemName}",
                 "rhs": "Windows"
             }
-
         }
+        
     ],
     "buildPresets": [
         {
+            "name": "build dev debug win32",
+            "targets" :  [
+                "vengine",
+                "vengine_demo"
+            ],
+            "description": "presets for dev debug",
+            "displayName": "vengine lib + demo",            
+            "configurePreset": "debug_win32",
+            "verbose": true
+        },
+        {
             "name": "build debug_win32",
             "description": "presets for debug",
-            "displayName": "vengine demo",            
-            "configurePreset": "debug_win32"            
+            "displayName": "vengine lib",            
+            "configurePreset": "debug_win32",
+            "targets" :  [
+                "vengine"              
+            ],
+            "verbose": true
         },
         {
-            "name": "build_debug_unix_lldb",
+            "name": "build debug_unix_lldb",
             "description": "presets for debug",
-            "displayName": "vengine demo",
-            "configurePreset": "debug_unix_lldb"      
+            "targets" :  [
+                "vengine",
+                "vengine_demo"
+            ],
+            "displayName": "vengine lib",
+            "configurePreset": "debug_unix_lldb"        
                   
         },
         {
-            "name": "build_debug_unix_gdb",            
-            "description": "presets for debug",
-            "displayName": "vengine demo",
-            "configurePreset": "debug_unix_gdb"      
+            "name": "build release_unix_lldb",
+            "description": "presets for release",
+            "targets" :  [
+                "vengine",
+                "vengine_demo"
+            ],
+            "displayName": "vengine lib",
+            "configurePreset": "release_unix_lldb"            
                   
         }
+
     ],
     "testPresets": []
 }

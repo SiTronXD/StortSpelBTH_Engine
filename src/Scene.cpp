@@ -1,7 +1,7 @@
-#include "Scene.h"
-#include "SceneHandler.h"
+#include "Scene.hpp"
+#include "SceneHandler.hpp"
 #include "UpdateMatricesSystem.hpp"
-#include "Time.h"
+#include "Time.hpp"
 
 void Scene::switchScene(Scene* nextScene)
 {
@@ -21,6 +21,23 @@ Scene::~Scene()
 		delete this->systems[i];
 	}
 	this->systems.clear();
+}
+
+Camera* Scene::getMainCamera()
+{
+	Camera* cam = nullptr;
+	if (this->entityValid(this->mainCamera)) { cam = &this->getComponent<Camera>(this->mainCamera); }
+	return cam;
+}
+
+int Scene::getMainCameraID()
+{
+	return this->mainCamera;
+}
+
+void Scene::setMainCamera(int entity)
+{
+	if (this->hasComponents<Camera>(entity)) { this->mainCamera = entity; }
 }
 
 void Scene::updateSystems()

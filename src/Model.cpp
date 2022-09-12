@@ -1,4 +1,4 @@
-#include "Model.h"
+#include "Model.hpp"
 #include "tracy/Tracy.hpp"
 #include <utility>
 #include <stack>

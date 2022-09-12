@@ -1,5 +1,6 @@
 
-macro(setup_conan_dependencies IN_TARGET) # Use macro, to make sure it's applied to the callee
+#macro(setup_conan_dependencies IN_TARGET) # Use macro, to make sure it's applied to the callee
+macro(setup_conan_dependencies ) # Use macro, to make sure it's applied to the callee
 
     include(${CMAKE_CURRENT_BINARY_DIR}/conan.cmake)
 
@@ -41,7 +42,7 @@ macro(setup_conan_dependencies IN_TARGET) # Use macro, to make sure it's applied
     if(NOT TARGET glm::glm)
         add_library(glm::glm ALIAS glm)
     endif()
-    target_link_libraries(${IN_TARGET} PUBLIC glm::glm)
+    #target_link_libraries(${IN_TARGET} PUBLIC glm::glm)
 
     # Installing stb 
     find_package(stb QUIET)
@@ -60,8 +61,8 @@ macro(setup_conan_dependencies IN_TARGET) # Use macro, to make sure it's applied
     if(NOT TARGET stb::stb)
         add_library(stb::stb ALIAS stb)
     endif()
-    target_link_libraries(${IN_TARGET} PUBLIC stb::stb)
-
+    #target_link_libraries(${IN_TARGET} PUBLIC stb::stb)
+    
     # find_package(tracy QUIET)
     # if(NOT tracy_FOUND)    
     #     option(TRACY_NO_FRAME_IMAGE "" ON)
@@ -111,7 +112,8 @@ macro(setup_conan_dependencies IN_TARGET) # Use macro, to make sure it's applied
     if(NOT TARGET SDL2::SDL2)
         add_library(SDL2::SDL2 ALIAS SDL2)
     endif()
-
-    target_link_libraries(${IN_TARGET} PUBLIC SDL2::SDL2)
+    
+    #target_link_libraries(${IN_TARGET} PUBLIC SDL2::SDL2)
+    
 
 endmacro(setup_conan_dependencies)

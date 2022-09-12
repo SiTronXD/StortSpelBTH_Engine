@@ -1,11 +1,11 @@
 #include <iostream>
-#include "TestScene2.h"
-#include "Input.h"
+#include "TestScene2.hpp"
+#include "Input.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "MeshComponent.hpp"
-#include "Time.h"
+#include "Time.hpp"
 
 TestScene2::TestScene2()
 {
