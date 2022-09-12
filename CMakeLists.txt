@@ -261,7 +261,12 @@ if(${WIN32})
         COMMAND ${CMAKE_COMMAND} -E create_symlink ${VENGINE_ASSET_LINK_SRC} $<TARGET_FILE_DIR:vengine>/assets         
         COMMENT "Creating symbolic link ${VENGINE_ASSET_LINK_SRC} => $<TARGET_FILE_DIR:vengine>"        
         COMMAND_EXPAND_LISTS
-        )    
+        )
+    add_custom_command(TARGET vengine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E create_symlink ${VENGINE_ASSET_LINK_SRC} ${CMAKE_CURRENT_LIST_DIR}/build/debug_win32/assets         
+        COMMENT "Creating symbolic link ${VENGINE_ASSET_LINK_SRC} => ${CMAKE_CURRENT_LIST_DIR}/build/debug_win32/assets"        
+        COMMAND_EXPAND_LISTS
+        ) 
 else()
     create_symlink_now(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
 endif()

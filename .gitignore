@@ -365,3 +365,6 @@ tools/vma_dump_out.png
 deps/imgui/cmake/*
 vma_dump.json
 imgui.ini
+deps/imgui/src/
+deps/tracy/src/
+deps/vma/src/
