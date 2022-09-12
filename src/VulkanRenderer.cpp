@@ -90,7 +90,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
 
         setupDebugMessenger();  // Used when we use Validation Layers to trigger errors/warnings/etc.
 
-        createSwapChain();
+        this->swapchain.createSwapchain();
         
         this->createColorBufferImage_Base();
 
@@ -105,7 +105,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         createGraphicsPipeline_Base();                     // Creates pipeline used with RenderPasses...        
         //this->createDynamicRenderingGraphicsPipeline(); // Creates pipeline used for Dynamic Rendering
         
-        createFrameBuffers();
+        this->swapchain.createFramebuffers();
         createCommandPool();
         
         createCommandBuffers(); 
@@ -172,36 +172,6 @@ void VulkanRenderer::generateVmaDump()
     
 }
 
-bool VulkanRenderer::checkDeviceExtensionSupport(vk::PhysicalDevice device) {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Fetch the Physical Device Extension properties...
-    std::vector<vk::ExtensionProperties> device_extensionProperties = device.enumerateDeviceExtensionProperties();
-
-    // Return false if Physical Device does not support any Extensions
-    if (device_extensionProperties.empty()) {
-        return false;
-    }
-
-    // Make sure all requested extensions exists on the Physical Device
-    for (const auto &requested_extensionProperty : deviceExtensions ) {            
-
-        bool required_extension_exists = false;
-        for (const auto &device_extensionProperty : device_extensionProperties ) {  
-            if (strcmp(requested_extensionProperty, device_extensionProperty.extensionName) == 0) {
-                required_extension_exists = true;
-                break;
-            }
-        }
-        if (!required_extension_exists) {
-            return false;
-        }
-    }
-
-    return true;
-}
- 
 void VulkanRenderer::cleanup()
 {
 #ifndef VENGINE_NO_PROFILING
@@ -277,7 +247,7 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyDescriptorPool(this->descriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->descriptorSetLayout);
 
-    for(size_t i = 0; i < this->swapChainImages.size(); i++)
+    for(size_t i = 0; i < this->swapchain.getNumImages(); i++)
     {
         this->getVkDevice().destroyBuffer(this->viewProjection_uniformBuffer[i]);
         vmaFreeMemory(this->vma, this->viewProjection_uniformBufferMemory[i]);
@@ -290,12 +260,8 @@ void VulkanRenderer::cleanup()
         this->getVkDevice().destroyFence(this->drawFences[i]);        
     }
 
-    this->getVkDevice().destroyCommandPool(graphicsCommandPool);
-    for (auto framebuffer: this->swapChainFrameBuffers) 
-    {
-        this->getVkDevice().destroyFramebuffer(framebuffer);    
-    }
-
+    this->getVkDevice().destroyCommandPool(this->graphicsCommandPool);
+    
     this->getVkDevice().destroyPipelineCache(this->graphics_pipelineCache);
     this->getVkDevice().destroyPipeline(this->secondGraphicsPipeline);
     this->getVkDevice().destroyPipelineLayout(this->secondPipelineLayout);
@@ -304,11 +270,8 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyPipelineLayout(this->pipelineLayout);
     this->getVkDevice().destroyRenderPass(this->renderPass_base);
 
-    for (auto image : swapChainImages) 
-    {
-        getVkDevice().destroyImageView(image.imageView);
-    }
-    this->getVkDevice().destroySwapchainKHR(this->swapChain);
+    this->swapchain.cleanup();
+
     this->instance.destroy(this->surface); //NOTE: No warnings/errors if we run this line... Is it useless? Mayber gets destroyed by SDL?
     
     vmaDestroyAllocator(this->vma);
@@ -368,7 +331,7 @@ void VulkanRenderer::draw(Scene* scene)
     else
     {
         Log::error("No main camera exists!");
-        camera = new Camera((float)this->swapChainExtent.width / (float)this->swapChainExtent.height);
+        camera = new Camera((float)this->swapchain.getWidth() / (float)this->swapchain.getHeight());
         camera->view = uboViewProjection.view;
         deleteCamera = true;
     }
@@ -384,7 +347,7 @@ void VulkanRenderer::draw(Scene* scene)
         vk::Result result{};
         // Retrieve the Index of the image to be displayed.
         std::tie(result, imageIndex) = this->getVkDevice().acquireNextImageKHR( 
-            this->swapChain,
+            this->swapchain.getVkSwapchain(),
             std::numeric_limits<uint64_t>::max(),   // How long to wait before the Image is retrieved, crash if reached. 
                                                     /// We dont want to use a timeout, so we make it as big as possible.
             this->imageAvailable[currentFrame],     // The Semaphore to signal, when it's available to be used!
@@ -473,7 +436,7 @@ void VulkanRenderer::draw(Scene* scene)
         presentInfo.setWaitSemaphoreCount(uint32_t (1));
         presentInfo.setPWaitSemaphores(&this->renderFinished[currentFrame]);  // Semaphore to Wait on before Presenting
         presentInfo.setSwapchainCount(uint32_t (1));    
-        presentInfo.setPSwapchains(&this->swapChain);                         // Swapchain to present the image to
+        presentInfo.setPSwapchains(&this->swapchain.getVkSwapchain());                         // Swapchain to present the image to
         presentInfo.setPImageIndices(&imageIndex);                            // Index of images in swapchains to present                
 
         // Submit the image to the presentation Queue
@@ -540,145 +503,6 @@ void VulkanRenderer::createSurface()
     this->window->createVulkanSurface(this->instance, this->surface);
 }
 
-void VulkanRenderer::createSwapChain() {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    // Store Old Swapchain, if it exists
-    vk::SwapchainKHR oldSwapchain = this->swapChain;
-
-    //Find 'optimal' surface values for our swapChain
-    // - 1. Choose best surface Format
-    vk::SurfaceFormat2KHR  surfaceFormat = this->chooseBestSurfaceFormat(swapChainDetails.Format);
-
-    // - 2. Choose best presentation Mode
-    vk::PresentModeKHR presentationMode = this->chooseBestPresentationMode(swapChainDetails.presentationMode);
-
-    // - 3. Chose Swap Chain image Resolution
-    vk::Extent2D imageExtent = this->chooseBestImageResolution(swapChainDetails.surfaceCapabilities);
-
-    // --- PREPARE DATA FOR SwapChainCreateInfo ... ---
-    // Minimum number of images our swapChain should use.
-    // - By setting the minImageCount to 1 more image than the amount defined in surfaceCapabilities we enable Triple Buffering!
-    // - NOTE: we store the 'minImageCount+1' in a variable, we need to check that 'minImageCount+1' is not more than 'maxImageCount'!
-    uint32_t imageCount = std::clamp(swapChainDetails.surfaceCapabilities.surfaceCapabilities.minImageCount + 1,
-                                     swapChainDetails.surfaceCapabilities.surfaceCapabilities.minImageCount,
-                                     swapChainDetails.surfaceCapabilities.surfaceCapabilities.maxImageCount );
-
-    if (imageCount == 0) 
-    {
-        // if swapChainDetails.surfaceCapabilities.maxImageCount was 0 then imageCount will now be 0 too.
-        // This CAN happen IF there is no limit on how many images we can store in the SwapChain.
-        // - i.e. maxImageCount == 0, then there is no maxImageCount!
-        //imageCount    = swapChainDetails.surfaceCapabilities.minImageCount + 1; //!! Nope
-        imageCount    = swapChainDetails.surfaceCapabilities.surfaceCapabilities.maxImageCount; // (??)
-        /*! We use the max image count if we can, the clamping we did *Seems* to ensure that we don't get a imageCount is not 0...
-         * I'm not sure if I'm missing something... this seems redundant.
-         * Could I just :
-         *  imageCount = (maxImageCount != 0) ? maxImageCount : minImageCount +1 ;
-         *
-         * Also... Do I always want to use the MaxImageCount just because I can? Or is minImageCount + X a better choice...
-         * */
-    }
-
-    //Create the SwapChain Create Info!
-    vk::SwapchainCreateInfoKHR  swapChainCreateInfo = {};
-    swapChainCreateInfo.setSurface(this->surface);
-    swapChainCreateInfo.setImageFormat(surfaceFormat.surfaceFormat.format);
-    swapChainCreateInfo.setImageColorSpace(surfaceFormat.surfaceFormat.colorSpace);
-    swapChainCreateInfo.setPresentMode(presentationMode);
-    swapChainCreateInfo.setImageExtent(imageExtent);
-    swapChainCreateInfo.setMinImageCount(uint32_t (imageCount));    
-    swapChainCreateInfo.setImageArrayLayers(uint32_t (1));                                    // Numbers of layers for each image in chain
-    swapChainCreateInfo.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment              // What 'Attachment' are drawn to the image
-                                                | vk::ImageUsageFlagBits::eTransferSrc);    // Tells us we want to be able to use the image, if we want to take a screenshot etc...    
-
-    /*! The imageUsage defines how the image is intended to be used, there's a couple different options.
-     * - vk::ImageUsageFlagBits::eColorAttachment        : Used for Images with colors (??)
-     * NOTE: Generally always vk::ImageUsageFlagBits::eColorAttachment...
-     *       This is because the SwapChain is used to present images to the screen,
-     *       if we wanted to draw a depthBuffer onto the screen, then we could specify another imageUsage flag... (??)
-     * */
-    swapChainCreateInfo.preTransform       =  swapChainDetails.surfaceCapabilities.surfaceCapabilities.currentTransform;
-    swapChainCreateInfo.compositeAlpha    = vk::CompositeAlphaFlagBitsKHR::eOpaque;    // Draw as is, opaque...
-    swapChainCreateInfo.clipped          = VK_TRUE;                              // dont draw not visible parts of window
-
-      //! -- THE TWO DIFFERENT QUEUES - Graphics queue and Presentation Queue --
-      /*! The Graphics Queue      : will draw the images contained in our swapChain
-       *  The Presentation Queue  : will present the images to the surface (i.e. screen/window)
-       *
-       *  There are 2 Different modes the swapChain can interact with these Queues;
-       *  - Exclusive interaction     : A unique Image from the SwapChain can only be interacted with one queue at the same time
-       *  - Concurrent interaction    : A unique Image from the SwapChain can only be interacted with multiple queues at the same time
-       *
-       *  NOTE: Concurrent interaction is typically slower (for 2 reasons)!
-       *  - The Concurrent mode have more overhead
-       *  - IF the GraphicsQueue AND PresentationQueue is the SAME queue, then there is no need for multiple queues to interact with the image...
-       * */
-
-     // We pick mode based on if the GraphicsQueue and PresentationQueue is the same queue...
-     //TODO: the QueueFamilyIndices should be stored somewhere rather than fetched again...
-    std::array<uint32_t ,2> queueFamilies {static_cast<uint32_t>(this->queueFamilies.graphicsFamily),       // Array of QueueIndices...
-                                           static_cast<uint32_t>(this->queueFamilies.presentationFamily)};
-
-    // If Graphics and Presentation families are different, then SwapChain must let images be shared between families!
-    if (this->queueFamilies.graphicsFamily != this->queueFamilies.presentationFamily) {
-        
-        swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eConcurrent);   // Use Concurrent mode if more than 1 family is using the swapchain
-        swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t (2));                            // How many different queue families will use the swapchain
-        swapChainCreateInfo.setPQueueFamilyIndices(queueFamilies.data());         // Array containing the queues that will share images
-    } else {        
-        swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eExclusive);    // Use Exclusive mode if only one Queue Family uses the SwapChain...
-        swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t (0));        // Note; this is the default value
-        swapChainCreateInfo.setPQueueFamilyIndices(nullptr);  // Note; this is the default value
-    }
-    
-
-    /*! If we want to create a new SwapChain, this would be needed when for example resizing the window.
-     *  with the oldSwapchain we can pass the old swapChains responsibility to the new SwapChain...
-     * */
-    // IF old swapChain been destroyed and this one replaces it, then link old one to quickly hand over responsibilities...
-    swapChainCreateInfo.setOldSwapchain(oldSwapchain); // VK_NULL_HANDLE on initialization, previous all other times...
-
-    //Create The SwapChain!    
-    this->swapChain = this->getVkDevice().createSwapchainKHR(swapChainCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("Swapchain", vk::ObjectType::eSwapchainKHR, reinterpret_cast<uint64_t>(vk::SwapchainKHR::CType(this->swapChain)));
-
-    /*! REMEMBER:
-     * All of Vulkans functions labeled with "Create" creates something that will need to be destroyed! ...
-     * */
-
-    // Store both the VkExtent2D and VKFormat, so they can easily be used later...
-    swapChainImageFormat    = surfaceFormat.surfaceFormat.format; // We need this to create a ImageView...
-    swapChainExtent         = imageExtent;          // We need this to create a ImageView...
-    /*! ImageView is the interface which we manage image through. (interface to the image... sort of (??))
-     * - With an ImageView we can View the Image...
-     * */
-
-    // Get all Images from the SwapChain and store them in our swapChainImages Vector...
-    std::vector<vk::Image> images = this->getVkDevice().getSwapchainImagesKHR(this->swapChain);
-
-    uint32_t index = 0;
-    for(vk::Image image : images ) {
-        // Copy the Image Handle ...
-        SwapChainImage swapChainImage = {};
-        swapChainImage.image     = image;
-
-        // Create the Image View
-        swapChainImage.imageView = createImageView(image,swapChainImageFormat, vk::ImageAspectFlagBits::eColor);
-        VulkanDbg::registerVkObjectDbgInfo("Swapchain_ImageView["+std::to_string(index)+"]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(swapChainImage.imageView)));
-        VulkanDbg::registerVkObjectDbgInfo("Swapchain_Image["+std::to_string(index)+"]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(swapChainImage.image)));
-
-        index++;
-        this->swapChainImages.push_back(swapChainImage);
-    }
-    
-    if(oldSwapchain){
-        this->getVkDevice().destroySwapchainKHR(oldSwapchain);
-    }
-}
-
 void VulkanRenderer::reCreateSwapChain(Camera* camera)
 {
     vkDeviceWaitIdle(this->getVkDevice());
@@ -687,39 +511,28 @@ void VulkanRenderer::reCreateSwapChain(Camera* camera)
     cleanupFramebuffer_imgui();    
     cleanColorBufferImage_Base();
     cleanDepthBufferImage();
-    cleanupSwapChain();
+    // cleanupSwapChain();
     cleanupRenderBass_Imgui();  
     cleanupRenderBass_Base();  
 
-    createSwapChain();
+    // createSwapChain();
+    this->swapchain.recreateSwapchain();
     createColorBufferImage_Base();
     createDepthBufferImage();    
     createRenderPass_Base();
     createRenderPass_Imgui();
 
-    createFrameBuffers();
+    // createFrameBuffers();
+    this->swapchain.createFramebuffers();
     createFramebuffer_imgui();
 
     this->createDescriptorSets();
     this->createInputDescriptorSets();
 
     //this->updateUBO_camera_Projection();
-    camera->aspectRatio = (float)swapChainExtent.width / (float)swapChainExtent.height;
+    camera->aspectRatio = (float)this->swapchain.getWidth() / (float)swapchain.getHeight();
     camera->projection = glm::perspective(camera->fov, camera->aspectRatio, 0.1f, 100.0f);
     camera->invProjection = glm::inverse(camera->projection);
-}
-
-void VulkanRenderer::cleanupSwapChain()
-{
-    for (auto image : swapChainImages) {
-        getVkDevice().destroyImageView(image.imageView);
-    }
-    swapChainImages.resize(0);
-
-    for (auto framebuffer: this->swapChainFrameBuffers) {
-        this->getVkDevice().destroyFramebuffer(framebuffer);        
-    }
-    this->swapChainFrameBuffers.resize(0);
 }
 
 void VulkanRenderer::cleanColorBufferImage_Base()
@@ -754,57 +567,6 @@ void VulkanRenderer::cleanupRenderBass_Imgui()
 void VulkanRenderer::cleanupRenderBass_Base()
 {
     this->getVkDevice().destroyRenderPass(this->renderPass_base);
-}
-
-vk::SurfaceFormat2KHR VulkanRenderer::chooseBestSurfaceFormat(const std::vector<vk::SurfaceFormat2KHR > & formats) {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // "Best" format is subjective.
-    // - Format        : vk::Format::eR8G8B8A8Unorm <-- RGBA, all 8 bits (??)
-    // -- vk::Format::eB8G8R8A8Unorm is also a possible option... used as 'backup'... (Will be used either if the other choice doesn't exist or this is listed before...
-    // - Color Space   : vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear
-
-    // If the only format in the list is undefined; This means ALL formats are supported!
-    if (formats.size() == 1 && formats[0].surfaceFormat.format == vk::Format::eUndefined) {
-        return vk::SurfaceFormat2KHR(vk::SurfaceFormatKHR({vk::Format::eR8G8B8A8Unorm,vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear}));
-    }
-
-    // If some formats are unavailable, check if the requested formats exist (i.e. vk::Format::eR8G8B8A8Unorm)
-    for (const auto &format : formats) {
-
-        if ((format.surfaceFormat.format == vk::Format::eR8G8B8A8Unorm || format.surfaceFormat.format == vk::Format::eB8G8R8A8Unorm) &&
-            format.surfaceFormat.colorSpace == vk::ColorSpaceKHR::eVkColorspaceSrgbNonlinear) 
-        {
-            return format;
-        }
-    }
-    
-    // If no 'best format' is found, then we return the first format...This is however very unlikely
-    return formats[0];
-}
-
-vk::PresentModeKHR VulkanRenderer::chooseBestPresentationMode(const std::vector<vk::PresentModeKHR> &presentationModes) {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-return vk::PresentModeKHR::eImmediate;
-    // "Best" PresentationMode is subjective. Here we pick 'VSYNC'...
-    std::vector<vk::PresentModeKHR> priorityList{ // The different types we setttle with, first = highset priority
-         vk::PresentModeKHR::eMailbox,
-         vk::PresentModeKHR::eImmediate,
-         vk::PresentModeKHR::eFifo
-    }; 
-
-    for(auto prioritized_mode : priorityList){
-
-        if (std::find(presentationModes.begin(),presentationModes.end(), prioritized_mode) != presentationModes.end()){
-            return prioritized_mode;
-        }
-    }
-
-    // If Mailbox Mode does not exist, use FIFO since it always should be available...
-    return vk::PresentModeKHR::eFifo;
 }
 
 vk::Extent2D VulkanRenderer::chooseBestImageResolution(const vk::SurfaceCapabilities2KHR &surfaceCapabilities) {
@@ -1029,14 +791,14 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     vk::Viewport viewport;    
     viewport.setX(0.0F);        // x start coordinate
     viewport.setY(0.0F);        // y start coordinate
-    viewport.setWidth(static_cast<float>(swapChainExtent.width));       // width of viewport
-    viewport.setHeight(static_cast<float>(swapChainExtent.height));     // height of viewport
+    viewport.setWidth(static_cast<float>(this->swapchain.getWidth()));       // width of viewport
+    viewport.setHeight(static_cast<float>(this->swapchain.getHeight()));     // height of viewport
     viewport.setMinDepth(0.0F);     // min framebuffer depth
     viewport.setMaxDepth(1.0F);     // max framebuffer depth
     //create a scissor info struct
     vk::Rect2D scissor;
     scissor.offset = vk::Offset2D{0, 0};                            // Offset to use Region from
-    scissor.extent = swapChainExtent;                   // Extent to sdescribe region to use, starting at offset
+    scissor.extent = this->swapchain.getVkExtent();                   // Extent to sdescribe region to use, starting at offset
 
     vk::PipelineViewportStateCreateInfo viewportStateCreateInfo = {};
     viewportStateCreateInfo.setViewportCount(uint32_t(1));
@@ -1351,14 +1113,14 @@ void VulkanRenderer::createGraphicsPipeline_DynamicRendering() //NOLINT:
     vk::Viewport viewport;    
     viewport.setX(0.0F);        // x start coordinate
     viewport.setY(0.0F);        // y start coordinate
-    viewport.setWidth(static_cast<float>(swapChainExtent.width));       // width of viewport
-    viewport.setHeight(static_cast<float>(swapChainExtent.height));     // height of viewport
+    viewport.setWidth(static_cast<float>(this->swapchain.getWidth()));       // width of viewport
+    viewport.setHeight(static_cast<float>(swapchain.getHeight()));     // height of viewport
     viewport.setMinDepth(0.0F);     // min framebuffer depth
     viewport.setMaxDepth(1.0F);     // max framebuffer depth
     //create a scissor info struct
     vk::Rect2D scissor;
     scissor.offset = vk::Offset2D{0, 0};                            // Offset to use Region from
-    scissor.extent = swapChainExtent;                   // Extent to sdescribe region to use, starting at offset
+    scissor.extent = this->swapchain.getVkExtent();                   // Extent to sdescribe region to use, starting at offset
 
     vk::PipelineViewportStateCreateInfo viewportStateCreateInfo = {};
     viewportStateCreateInfo.setViewportCount(uint32_t(1));
@@ -1447,7 +1209,7 @@ void VulkanRenderer::createGraphicsPipeline_DynamicRendering() //NOLINT:
     // --- Dynamic Rendering ---
     vk::PipelineRenderingCreateInfo pipelineRenderingCreateInfo{};
     pipelineRenderingCreateInfo.setColorAttachmentCount(uint32_t (1));
-    pipelineRenderingCreateInfo.setColorAttachmentFormats(this->swapChainImageFormat);
+    pipelineRenderingCreateInfo.setColorAttachmentFormats(this->swapchain.getVkFormat());
     pipelineRenderingCreateInfo.setDepthAttachmentFormat(this->depthFormat);
     pipelineRenderingCreateInfo.setStencilAttachmentFormat(this->depthFormat);
 
@@ -1511,9 +1273,9 @@ void VulkanRenderer::createColorBufferImage_Base()
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    this->colorBufferImage.resize(swapChainImages.size());
-    this->colorBufferImageMemory.resize(swapChainImages.size());
-    this->colorBufferImageView.resize(swapChainImages.size());
+    this->colorBufferImage.resize(this->swapchain.getNumImages());
+    this->colorBufferImageMemory.resize(this->swapchain.getNumImages());
+    this->colorBufferImageView.resize(this->swapchain.getNumImages());
 
     // Get supported formats for Color Attachment
     const std::vector<vk::Format> formats {vk::Format::eR8G8B8A8Unorm};
@@ -1522,12 +1284,12 @@ void VulkanRenderer::createColorBufferImage_Base()
         vk::ImageTiling::eOptimal, 
         vk::FormatFeatureFlagBits::eColorAttachment);        
 
-    for(size_t i = 0; i < this->swapChainImages.size(); i++)
+    for(size_t i = 0; i < this->swapchain.getNumImages(); i++)
     {
         colorBufferImage[i] = createImage(
             {
-                .width = this->swapChainExtent.width,
-                .height = this->swapChainExtent.height,
+                .width = this->swapchain.getWidth(),
+                .height = this->swapchain.getHeight(),
                 .format = this->colorFormat,
                 .tiling = vk::ImageTiling::eOptimal,
                 .useFlags = vk::ImageUsageFlagBits::eColorAttachment     // Image will be used as a Color Attachment
@@ -1544,7 +1306,6 @@ void VulkanRenderer::createColorBufferImage_Base()
         VulkanDbg::registerVkObjectDbgInfo("colorBufferImageView["+std::to_string(i)+"]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->colorBufferImageView[i])));
         VulkanDbg::registerVkObjectDbgInfo("colorBufferImage["+std::to_string(i)+"]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->colorBufferImage[i])));
     }
-
 }
 
 void VulkanRenderer::createDepthBufferImage()
@@ -1552,9 +1313,9 @@ void VulkanRenderer::createDepthBufferImage()
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    this->depthBufferImage.resize(swapChainImages.size());
-    this->depthBufferImageMemory.resize(swapChainImages.size());
-    this->depthBufferImageView.resize(swapChainImages.size());
+    this->depthBufferImage.resize(this->swapchain.getNumImages());
+    this->depthBufferImageMemory.resize(this->swapchain.getNumImages());
+    this->depthBufferImageView.resize(this->swapchain.getNumImages());
 
 
     // Get supported VkFormat for the DepthBuffer
@@ -1568,13 +1329,13 @@ void VulkanRenderer::createDepthBufferImage()
         vk::FormatFeatureFlagBits::eDepthStencilAttachment); // Make sure the Format supports the Depth Stencil Attatchment Bit....
     
     // Create one DepthBuffer per Image in the SwapChain
-    for(size_t i = 0; i < swapChainImages.size(); i++)
+    for(size_t i = 0; i < this->swapchain.getNumImages(); i++)
     {
         // Create Depth Buffer Image
         this->depthBufferImage[i] = createImage(
             {
-                .width = this->swapChainExtent.width, 
-                .height = this->swapChainExtent.height, 
+                .width = this->swapchain.getWidth(), 
+                .height = this->swapchain.getHeight(), 
                 .format = this->depthFormat, 
                 .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
                 .useFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment     // Image will be used as a Depth Stencil
@@ -1931,7 +1692,7 @@ void VulkanRenderer::createRenderPass_Base()
 
     // Color Attachment SwapChain
     vk::AttachmentDescription2 swapchainColorAttachment{};
-    swapchainColorAttachment.setFormat(swapChainImageFormat);              // Format to use for attachgment
+    swapchainColorAttachment.setFormat(this->swapchain.getVkFormat());              // Format to use for attachgment
     swapchainColorAttachment.setSamples(vk::SampleCountFlagBits::e1);            // Number of samples to write for multisampling
     swapchainColorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);       // Descripbes what to do with attachment before rendeing
     swapchainColorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);     // Describes what to do with Attachment after rendering
@@ -2001,7 +1762,7 @@ void VulkanRenderer::createRenderPass_Base()
 void VulkanRenderer::createRenderPass_Imgui()
 {
     vk::AttachmentDescription2 attachment{};
-    attachment.setFormat(this->swapChainImageFormat);
+    attachment.setFormat(this->swapchain.getVkFormat());
     attachment.setSamples(vk::SampleCountFlagBits::e1);
     attachment.setLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
@@ -2132,37 +1893,6 @@ void VulkanRenderer::createPushConstantRange()
     this->pushConstantRange.setSize(sizeof(ModelMatrix));                 // Size of the Data being passed
 }
 
-void VulkanRenderer::createFrameBuffers() 
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Resize framebuffer count to equal swap chain image count
-    swapChainFrameBuffers.resize(swapChainImages.size());
-
-    // Create a framebuffer for each swap chain image
-    for (size_t i = 0; i < swapChainFrameBuffers.size();i++) {
-
-        std::array<vk::ImageView, 3> attachments = {
-                swapChainImages[i].imageView,   // Attatchment on index 0 of array : swapchain image
-                this->colorBufferImageView[i],   // Attachement on index 1 of array : color
-                this->depthBufferImageView[i]  // Attatchment on index 2 of array : depth
-        };
-
-        vk::FramebufferCreateInfo framebufferCreateInfo;
-        framebufferCreateInfo.setRenderPass(renderPass_base);                                      // Render pass layout the framebuyfffeer will be used with
-        framebufferCreateInfo.setAttachmentCount(static_cast<uint32_t>(attachments.size()));
-        framebufferCreateInfo.setPAttachments(attachments.data());                            // List of attatchemnts (1:1 with render pass)
-        framebufferCreateInfo.setWidth(swapChainExtent.width);
-        framebufferCreateInfo.setHeight( swapChainExtent.height);
-        framebufferCreateInfo.setLayers(uint32_t (1));
-
-        this->swapChainFrameBuffers[i] = getVkDevice().createFramebuffer(framebufferCreateInfo);        
-        VulkanDbg::registerVkObjectDbgInfo("SwapchainFramebuffer["+std::to_string(i)+"]", vk::ObjectType::eFramebuffer, reinterpret_cast<uint64_t>(vk::Framebuffer::CType(this->swapChainFrameBuffers[i])));
-
-    }
-}
-
 void VulkanRenderer::createCommandPool()
  {
 #ifndef VENGINE_NO_PROFILING
@@ -2188,7 +1918,8 @@ void VulkanRenderer::createCommandBuffers()
 #endif
 
     // Resize command buffer count to have one for each framebuffer
-    commandBuffers.resize(swapChainFrameBuffers.size());
+    // TODO: replace with frames in flight
+    commandBuffers.resize(this->swapchain.getNumImages());
 
     vk::CommandBufferAllocateInfo cbAllocInfo;
     cbAllocInfo.setCommandPool(graphicsCommandPool);
@@ -2198,11 +1929,10 @@ void VulkanRenderer::createCommandBuffers()
     // Allocate command Buffers and place handles in array of buffers
     this->commandBuffers = this->getVkDevice().allocateCommandBuffers(cbAllocInfo);
 
-    for(size_t i = 0; i < swapChainFrameBuffers.size(); i++)
+    for(size_t i = 0; i < this->commandBuffers.size(); i++)
     {
         VulkanDbg::registerVkObjectDbgInfo("Graphics CommandBuffer["+std::to_string(i)+"]", vk::ObjectType::eCommandBuffer, reinterpret_cast<uint64_t>(vk::CommandBuffer::CType(this->commandBuffers[i])));
     }
-
 }
 
 void VulkanRenderer::createSynchronisation()
@@ -2272,12 +2002,13 @@ void VulkanRenderer::createUniformBuffers()
     vk::DeviceSize viewProjection_buffer_size = sizeof(UboViewProjection);
 
     // One uniform buffer for each image ( and by extension, command buffer)
-    viewProjection_uniformBuffer.resize(swapChainImages.size());        // Resize to have as many ViewProjection buffers as images in swapchain
-    viewProjection_uniformBufferMemory.resize(swapChainImages.size());    
-    viewProjection_uniformBufferMemory_info.resize(swapChainImages.size());    
+    // TODO: replace size with frames in flight
+    this->viewProjection_uniformBuffer.resize(this->swapchain.getNumImages());        // Resize to have as many ViewProjection buffers as images in swapchain
+    this->viewProjection_uniformBufferMemory.resize(this->swapchain.getNumImages());
+    this->viewProjection_uniformBufferMemory_info.resize(this->swapchain.getNumImages());
 
     // Create Uniform Buffers 
-    for(size_t i = 0; i < swapChainImages.size(); i++)
+    for(size_t i = 0; i < this->viewProjection_uniformBuffer.size(); i++)
     {
         // Create regular Uniform Buffers
         vengine_helper::createBuffer(
@@ -2316,16 +2047,15 @@ void VulkanRenderer::createDescriptorPool()
     viewProjection_poolSize.setType(vk::DescriptorType::eUniformBuffer);                                     // Descriptors in Set will be of Type Uniform Buffer    
     viewProjection_poolSize.setDescriptorCount(static_cast<uint32_t>(viewProjection_uniformBuffer.size())); // How many Descriptors we want, we want One uniformBuffer so we its only the size of our uniformBuffer
 
-    std::vector<vk::DescriptorPoolSize> descriptorPoolSizes{
+    std::vector<vk::DescriptorPoolSize> descriptorPoolSizes
+    {
         viewProjection_poolSize
-        // Left for Reference; we dont use Dynamic Uniform Buffers for our Model Matrix anymore.
-        //,model_poolSize 
-        
     };
 
     // Data to create Descriptor Pool
+    // TODO: replace size with frames in flight
     vk::DescriptorPoolCreateInfo poolCreateInfo{};
-    poolCreateInfo.setMaxSets(static_cast<uint32_t>(swapChainImages.size()));             // Max Nr Of descriptor Sets that can be created from the pool, 
+    poolCreateInfo.setMaxSets(this->swapchain.getNumImages());             // Max Nr Of descriptor Sets that can be created from the pool, 
                                                                                         /// Same as the number of buffers / images we have. 
     poolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(descriptorPoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
     poolCreateInfo.setPPoolSizes(descriptorPoolSizes.data());                          // PoolSizes to create the Descriptor Pool with
@@ -2373,8 +2103,9 @@ void VulkanRenderer::createDescriptorPool()
     };
 
     // Create Input attachment pool
+    // TODO: replace size with frames in flight
     vk::DescriptorPoolCreateInfo inputPoolCreateInfo {};
-    inputPoolCreateInfo.setMaxSets(static_cast<uint32_t>(swapChainImages.size()));
+    inputPoolCreateInfo.setMaxSets(this->swapchain.getNumImages());
     inputPoolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(inputPoolSizes.size()));
     inputPoolCreateInfo.setPPoolSizes(inputPoolSizes.data());
     inputPoolCreateInfo.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet); // In order to be able to free this set later (recreate swapchain)
@@ -2384,9 +2115,11 @@ void VulkanRenderer::createDescriptorPool()
 
 }
 
-void VulkanRenderer::allocateDescriptorSets(){
+void VulkanRenderer::allocateDescriptorSets()
+{
     // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    descriptorSets.resize(swapChainImages.size()); // Since we have a uniform buffer per images, better use size of swapchainImages!
+    // TODO: replace size with frames in flight
+    descriptorSets.resize(this->swapchain.getNumImages()); // Since we have a uniform buffer per images, better use size of swapchainImages!
 
     // Copy our DescriptorSetLayout so we have one per Image (one per UniformBuffer)
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts(swapChainImages.size(),this->descriptorSetLayout);
@@ -2408,16 +2141,17 @@ void VulkanRenderer::createDescriptorSets()
     ZoneScoped; //:NOLINT
 #endif
     // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    descriptorSets.resize(swapChainImages.size()); // Since we have a uniform buffer per images, better use size of swapchainImages!
+    // TODO: replace size with frames in flight
+    descriptorSets.resize(this->swapchain.getNumImages()); // Since we have a uniform buffer per images, better use size of swapchainImages!
 
     
-    for(size_t i = 0; i < swapChainImages.size();i++)
+    for(size_t i = 0; i < descriptorSets.size(); i++)
     {
         VulkanDbg::registerVkObjectDbgInfo("DescriptorSet["+std::to_string(i)+"]  UniformBuffer", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->descriptorSets[i])));
     }
 
     // Update all of the Descriptor Set buffer binding
-    for(size_t i = 0; i < this->swapChainImages.size(); i++)
+    for(size_t i = 0; i < this->descriptorSets.size(); i++)
     {
         // - VIEW PROJECTION DESCRIPTOR - 
         // Describe the Buffer info and Data offset Info
@@ -2437,10 +2171,9 @@ void VulkanRenderer::createDescriptorSets()
         viewProjection_setWrite.setPBufferInfo(&viewProjection_BufferInfo); 
 
         // List of descriptorSetWrites
-        std::vector<vk::WriteDescriptorSet> descriptorSetWrites{
+        std::vector<vk::WriteDescriptorSet> descriptorSetWrites
+        {
             viewProjection_setWrite
-            // Left for Reference; we dont use Dynamic Uniform Buffers for our Model Matrix anymore.
-            //,model_setWrite
         };
 
         // Update the Descriptor Set with new buffer/binding info
@@ -2583,7 +2316,7 @@ void VulkanRenderer::updateUBO_camera_Projection()
     using namespace vengine_helper::config;
     uboViewProjection.projection  = glm::perspective(                               // View Angle in the y-axis
                             glm::radians(DEF<float>(CAM_FOV)),                               // View Angle in the y-axis
-                            (float)swapChainExtent.width/(float)swapChainExtent.height,         // Setting up the Aspect Ratio
+                            (float)this->swapchain.getWidth()/(float)swapchain.getHeight(),         // Setting up the Aspect Ratio
                             DEF<float>(CAM_NP),                                              // The Near Plane
                             DEF<float>(CAM_FP));                                             // The Far Plane
     //uboViewProjection.projection[1][1] *= -1;     // Since GLM is made for OpenGL and OpenGL uses RightHanded system; Positive Y is considered the Up dir
@@ -2616,7 +2349,7 @@ void VulkanRenderer::recordRenderPassCommands_imgui(uint32_t currentImageIndex)
     vk::SubpassBeginInfo subpassBeginInfo;
     subpassBeginInfo.setContents(vk::SubpassContents::eInline);
     renderPassBeginInfo.setRenderPass(this->renderPass_imgui);
-    renderPassBeginInfo.renderArea.setExtent(this->swapChainExtent);
+    renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));
     renderPassBeginInfo.setFramebuffer(this->frameBuffers_imgui[currentImageIndex]);
     renderPassBeginInfo.setPClearValues(&clearValue);         // List of clear values
@@ -2627,15 +2360,15 @@ void VulkanRenderer::recordRenderPassCommands_imgui(uint32_t currentImageIndex)
     vk::Viewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
-    viewport.width = (float) swapChainExtent.width;
-    viewport.height = (float) swapChainExtent.height;
+    viewport.width = (float) this->swapchain.getWidth();
+    viewport.height = (float) swapchain.getHeight();
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     this->commandBuffers_imgui[currentImageIndex].setViewport(0, 1, &viewport);
 
     vk::Rect2D scissor{};
     scissor.offset = vk::Offset2D{0, 0};
-    scissor.extent = swapChainExtent;
+    scissor.extent = this->swapchain.getVkExtent();
     this->commandBuffers_imgui[currentImageIndex].setScissor( 0, 1, &scissor);
 
     ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), this->commandBuffers_imgui[currentImageIndex]);
@@ -2660,7 +2393,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
     vk::RenderPassBeginInfo renderPassBeginInfo;
     renderPassBeginInfo.setRenderPass(this->renderPass_base);                      // Render Pass to Begin
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
-    renderPassBeginInfo.renderArea.setExtent(this->swapChainExtent);          // Size of region to run render pass on (starting at offset)
+    renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());          // Size of region to run render pass on (starting at offset)
      
     static const vk::ClearColorValue  clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
     static const vk::ClearColorValue  clear_Plum (std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
@@ -2776,16 +2509,16 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                         */
                         vk::Viewport viewport{};
                         viewport.x = 0.0f;
-                        viewport.y = (float) swapChainExtent.height;
-                        viewport.width = (float) swapChainExtent.width;
-                        viewport.height = -((float) swapChainExtent.height);
+                        viewport.y = (float) swapchain.getHeight();
+                        viewport.width = (float) this->swapchain.getWidth();
+                        viewport.height = -((float) swapchain.getHeight());
                         viewport.minDepth = 0.0f;
                         viewport.maxDepth = 1.0f;
                         this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
 
                         vk::Rect2D scissor{};
                         scissor.offset = vk::Offset2D{0, 0};
-                        scissor.extent = swapChainExtent;
+                        scissor.extent = this->swapchain.getVkExtent();
                         this->commandBuffers[currentImageIndex].setScissor( 0, 1, &scissor);
                         // Execute Pipeline!
                         this->commandBuffers[currentImageIndex].drawIndexed(                            
@@ -2819,15 +2552,15 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                   vk::Viewport viewport{};
                     viewport.x = 0.0f;
                     viewport.y = 0.0f;
-                    viewport.width = (float) swapChainExtent.width;
-                    viewport.height = (float) swapChainExtent.height;
+                    viewport.width = (float) this->swapchain.getWidth();
+                    viewport.height = (float) swapchain.getHeight();
                     viewport.minDepth = 0.0f;
                     viewport.maxDepth = 1.0f;
                     this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
 
                     vk::Rect2D scissor{};
                     scissor.offset = vk::Offset2D{0, 0};
-                    scissor.extent = swapChainExtent;
+                    scissor.extent = swapchain.getVkExtent();
                     this->commandBuffers[currentImageIndex].setScissor( 0, 1, &scissor);
 
             
@@ -2888,7 +2621,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
     
     vk::RenderingInfo renderingInfo{};
     renderingInfo.setFlags(vk::RenderingFlags());
-    renderingInfo.setRenderArea({ vk::Offset2D(0, 0),  this->swapChainExtent});
+    renderingInfo.setRenderArea({ vk::Offset2D(0, 0),  this->swapchain.getVkExtent()});
     renderingInfo.setLayerCount(uint32_t (1));    
     renderingInfo.setColorAttachmentCount(uint32_t (1));
     renderingInfo.setPColorAttachments(&color_attachment_info);
@@ -3044,7 +2777,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
         vengine_helper::insertImageMemoryBarrier(
         createImageBarrierData{
             .cmdBuffer = commandBuffers[currentImageIndex],
-            .image = this->swapChainImages[currentImageIndex].image,
+            .image = this->swapchainImages[currentImageIndex].image,
             //.image = this->colorBufferImage[this->currentFrame],
             .srcAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
             .dstAccessMask = vk::AccessFlags2(),
@@ -3377,7 +3110,7 @@ void VulkanRenderer::createFramebuffer_imgui()
     frameBuffers_imgui.resize(this->swapChainImages.size());
     for(size_t i = 0; i < this->swapChainImages.size(); i++){        
         attachment[0] = this->swapChainImages[i].imageView; //TODO: Check if this is rightt?...
-        createFrameBuffer(this->frameBuffers_imgui[i], attachment, this->renderPass_imgui, this->swapChainExtent, std::string("frameBuffers_imgui["+std::to_string(i)+"]"));
+        createFrameBuffer(this->frameBuffers_imgui[i], attachment, this->renderPass_imgui, this->swapchain.getVkExtent(), std::string("frameBuffers_imgui["+std::to_string(i)+"]"));
     }
 }
 

@@ -5,6 +5,7 @@
 #include "VulkanInstance.hpp"
 #include "Device.hpp"
 #include "Window.hpp"
+#include "Swapchain.hpp"
 
 #include <vulkan/vulkan.hpp>
 #include "Utilities.hpp"
@@ -58,11 +59,9 @@ class VulkanRenderer {
     vk::Queue             graphicsQueue{};      /// Also acts as the TransferQueue 
     vk::Queue             presentationQueue{};
     vk::SurfaceKHR        surface{};            ///Images will be displayed through a surface, which GLFW will read from
-    vk::SwapchainKHR      swapChain = VK_NULL_HANDLE;
+    
 
-    SwapChainDetails swapChainDetails{};
-    std::vector<SwapChainImage>  swapChainImages;         /// We store ALL our SwapChain images here... to have access to them
-    std::vector<vk::Framebuffer>   swapChainFrameBuffers;
+    Swapchain swapchain;
     std::vector<vk::CommandBuffer> commandBuffers;
     
     std::vector<vk::Image>        colorBufferImage;
@@ -71,7 +70,6 @@ class VulkanRenderer {
     vk::Format                  colorFormat{};
 
     std::vector<vk::Image>        depthBufferImage;
-    //std::vector<vk::DeviceMemory> depthBufferImageMemory;
     std::vector<VmaAllocation> depthBufferImageMemory;
     std::vector<vk::ImageView>    depthBufferImageView;
     vk::Format                    depthFormat{};
@@ -107,20 +105,12 @@ class VulkanRenderer {
     std::vector<VmaAllocation> textureImageMemory;
     std::vector<vk::ImageView>    textureImageViews;
 
-
-    /// Left for Refernce; We do not use Dynamic Uniform Buffer for our Model Matrix, instead we use Push Constants...
-    ///vk::DeviceSize    minUniformBufferOffset;
-    ///size_t          modelUniformAlignment;
-    ///Model*          modelTransferSpace;
-
     /// - Pipeline
     vk::Pipeline       graphicsPipeline{};
     vk::PipelineCache  graphics_pipelineCache = nullptr;
     vk::PipelineLayout pipelineLayout{};
     vk::RenderPass     renderPass_base{};
     vk::RenderPass     renderPass_imgui{};
-
-    
 
     vk::Pipeline       secondGraphicsPipeline{};
     vk::PipelineLayout secondPipelineLayout{}; 
@@ -133,8 +123,6 @@ class VulkanRenderer {
 
     /// - Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
-    vk::Format            swapChainImageFormat{};
-    vk::Extent2D          swapChainExtent{};         /// Surface Extent...    
 
     /// - Synchronisation 
     std::vector<vk::Semaphore> imageAvailable;
@@ -173,10 +161,8 @@ private:
 
     ///Vulkan Functions
     /// - Create functions
-    void createInstance();
     void setupDebugMessenger();
     void createSurface();
-    void createSwapChain();
     void reCreateSwapChain(Camera* camera);    
     void createRenderPass_Base();
     void createRenderPass_Imgui();
@@ -186,8 +172,7 @@ private:
     void createGraphicsPipeline_Imgui();
     void createGraphicsPipeline_DynamicRendering();
     void createColorBufferImage_Base();    
-    void createDepthBufferImage();    
-    void createFrameBuffers();
+    void createDepthBufferImage();
     void createCommandPool();   //TODO: Deprecate! 
     void createCommandBuffers(); //TODO: Deprecate!  //Allocate Command Buffers from Command pool...
     void createSynchronisation();
@@ -200,7 +185,6 @@ private:
     void createInputDescriptorSets();
 
     // Cleanup 
-    void cleanupSwapChain();
     void cleanColorBufferImage_Base();
     void cleanDepthBufferImage();
     void cleanupRenderBass_Imgui();
@@ -220,14 +204,7 @@ private:
     void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    /// Using renderpass
     void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
-    /// - Support Functions
-    /// -- Checker Functions
-    static bool checkInstanceExtensionSupport(std::vector<const char*>* checkExtensions);
-    static bool checkDeviceExtensionSupport(vk::PhysicalDevice device);
-    
     /// -- Choose Functions
-    static vk::SurfaceFormat2KHR chooseBestSurfaceFormat(const std::vector<vk::SurfaceFormat2KHR> &formats );
-    static vk::PresentModeKHR    chooseBestPresentationMode(const std::vector<vk::PresentModeKHR> &presentationModes);
     vk::Extent2D                 chooseBestImageResolution(const vk::SurfaceCapabilities2KHR & surfaceCapabilities);    
     [[nodiscard]] vk::Format     chooseSupportedFormat(const std::vector<vk::Format> &formats, vk::ImageTiling tiling, vk::FormatFeatureFlagBits featureFlags);
 

@@ -82,7 +82,8 @@ bool PhysicalDevice::checkDeviceExtensionSupport(
     }
 
     // Make sure all requested extensions exists on the Physical Device
-    for (const auto& requested_extensionProperty : deviceExtensions) {
+    for (const auto& requested_extensionProperty : deviceExtensions) 
+    {
 
         bool required_extension_exists = false;
         for (const auto& device_extensionProperty : deviceExtensionProperties)
