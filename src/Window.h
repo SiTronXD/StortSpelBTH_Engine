@@ -4,9 +4,10 @@
 #include <vector>
 #include "imgui_impl_sdl.h"     // Need to be included in header
 
+class Instance;
+
 namespace vk
 {
-    class Instance;
     class SurfaceKHR;
 };
 
@@ -35,7 +36,7 @@ public:
     void initImgui();
     void shutdownImgui();
 
-    void createVulkanSurface(const vk::Instance& instance, vk::SurfaceKHR& outputSurface);
+    void createVulkanSurface(Instance& instance, vk::SurfaceKHR& outputSurface);
     void getVulkanExtensions(std::vector<const char*>& outputExtensions);
     void getSize(int& outputWidth, int& outputHeight);
 

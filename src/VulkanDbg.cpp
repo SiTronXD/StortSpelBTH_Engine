@@ -1,13 +1,14 @@
 #include "VulkanDbg.h"
-
+#include "VulkanValidation.h"
+#include "Instance.h"
 #include "Device.h"
 
-vk::Instance VulkanDbg::instance = {};
+Instance* VulkanDbg::instance = nullptr;
 Device* VulkanDbg::device = nullptr;
 
-void VulkanDbg::init(const vk::Instance& instance, Device& device)
+void VulkanDbg::init(Instance& instance, Device& device)
 {
-    VulkanDbg::instance = instance;
+    VulkanDbg::instance = &instance;
     VulkanDbg::device = &device;
 }
 
@@ -24,10 +25,35 @@ void VulkanDbg::registerVkObjectDbgInfo(
     objInfo.setObjectHandle(objectHandle); //NOLINT: reinterpret cast is ok here...
     objInfo.setPNext(nullptr);
 
-    auto pfnSetDebugUtilsObjectNameEXT = (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(VulkanDbg::instance, "vkSetDebugUtilsObjectNameEXT"); //(!!)
+    auto pfnSetDebugUtilsObjectNameEXT = 
+        (PFN_vkSetDebugUtilsObjectNameEXT) vkGetInstanceProcAddr(
+            VulkanDbg::instance->getVkInstance(), 
+            "vkSetDebugUtilsObjectNameEXT"
+        ); //(!!)
 
     auto temp = VkDebugUtilsObjectNameInfoEXT(objInfo);
     pfnSetDebugUtilsObjectNameEXT(VulkanDbg::device->getVkDevice(), &temp); //(!!)
 
 #endif  
+}
+
+void VulkanDbg::populateDebugMessengerCreateInfo(
+    vk::DebugUtilsMessengerCreateInfoEXT& createInfo)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
+    createInfo.messageSeverity
+        = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
+        | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
+        | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+
+    createInfo.messageType
+        = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
+        | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
+        | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
+
+    createInfo.setPfnUserCallback(debugCallback);
+    createInfo.pUserData = nullptr;
 }

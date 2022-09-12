@@ -39,7 +39,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
     this->window = window;
 
     try {
-        createInstance();       // Order is important!
+        this->instance.createInstance(*this->window);
 
         // - Will create a Instance that checks if we have all needed extensions
         // -- for Example if GLFW window surface has support
@@ -81,7 +81,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         VmaAllocatorCreateInfo vmaAllocatorCreateInfo{};
         vmaAllocatorCreateInfo.device = this->getVkDevice();
         vmaAllocatorCreateInfo.physicalDevice = this->physicalDevice.getVkPhysicalDevice();
-        vmaAllocatorCreateInfo.instance = this->instance;
+        vmaAllocatorCreateInfo.instance = this->instance.getVkInstance();
         vmaAllocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
         if(vmaCreateAllocator(&vmaAllocatorCreateInfo, &this->vma) != VK_SUCCESS)
         {
@@ -172,140 +172,6 @@ void VulkanRenderer::generateVmaDump()
     
 }
 
-
-void VulkanRenderer::createInstance() {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    //Check if in debug mode and if we can use the Vulkan Validation Layers...
-    if (isValidationLayersEnabled() && !Validation::checkValidationLayerSupport()) {
-        throw std::runtime_error("Tried to use a non-available validation layer...");
-    }
-
-#ifndef NDEBUG
-    if(!isValidationLayersEnabled()){
-        std::cout << "Warning! in Debug mode, but programmatic warnings are disabled!\n";
-    }
-#endif
-    //VkApplication info is used by VkInstanceCreateInfo, its info about the application we're making
-    //This is used by developers, for things like debugging ...
-    vk::ApplicationInfo appInfo = {};
-    appInfo.setPApplicationName("My Vulkan App");               // Custom Name of the application
-    appInfo.setApplicationVersion(VK_MAKE_VERSION(1,0,0));      // Description of which version this is of our program
-    appInfo.setPEngineName("My Cool Engine");                   // Name of the used Engine
-    appInfo.setEngineVersion(VK_MAKE_VERSION(1,0,0));           // Description of which version this is of the Engine    
-    appInfo.setApiVersion(VK_API_VERSION_1_3);                  // Version of the Vulkan API that we are using!
-    
-    //Creation information for a vk instance (vulkan instance)
-    vk::InstanceCreateInfo createInfo({},&appInfo);
-
-    //Create vector to hold instance extensions.
-    auto instanceExtensions = std::vector<const char*>();
-
-    // Get SDL extensions from window
-    std::vector<const char*> windowExtensions;
-    this->window->getVulkanExtensions(windowExtensions);
-
-    // Add SDL extensions to vector of extensions    
-    for (size_t i = 0; i < windowExtensions.size(); i++) {
-        instanceExtensions.push_back(windowExtensions[i]);    //One of these extension should be VK_KHR_surface, this is provided by SDL!
-    }
-
-    //Check if any of the instance extensions is not supported...
-    if (!checkInstanceExtensionSupport(&instanceExtensions)) {
-        throw std::runtime_error("vk::Instance does not support at least one of the required extension!");
-    }
-
-    if (isValidationLayersEnabled()) {
-        // When we use Validation Layers we want add a extension in order to get Message Callback...
-        instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);        
-    }
-    
-#ifdef DEBUG
-    instanceExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);        
-#endif 
-    //instanceExtensions.push_back(VK_KHR_GET_SURFACE_CAPABILITIES_2_EXTENSION_NAME); (!!)
-
-    instanceExtensions.insert(instanceExtensions.end(), extraInstanceExtensions.begin(), extraInstanceExtensions.end());
-
-    //We add the Extensions to the createInfo,
-    //Note: we use static_cast to convert the size_t (returned from size) to uint32_t,
-    //      this is to avoid problems with different implementations...
-    createInfo.setEnabledExtensionCount(static_cast<uint32_t>(instanceExtensions.size()));
-    createInfo.setPpEnabledExtensionNames(instanceExtensions.data());
-
-    if (isValidationLayersEnabled()) {
-        // The validation layers are defined in my VulkanValidation.h file.
-        createInfo.setEnabledLayerCount(static_cast<uint32_t>(validationLayers.size()));
-        createInfo.setPpEnabledLayerNames(validationLayers.data()); 
-
-    } else {
-        createInfo.setEnabledLayerCount(uint32_t(0));       // Set to zero, right now we do not want any validation layers        
-        createInfo.setPpEnabledLayerNames(nullptr);         // since we don't use validation layer right now
-    }
-    
-    vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-    
-    vk::ValidationFeaturesEXT validationFeatures{};
-    std::vector<vk::ValidationFeatureEnableEXT> disabledValidationFeatures{};
-    std::vector<vk::ValidationFeatureEnableEXT> enabledValidationFeatures{ // TODO: extract to a cfg file for easy configuration
-        vk::ValidationFeatureEnableEXT::eBestPractices,
-        vk::ValidationFeatureEnableEXT::eDebugPrintf,
-        vk::ValidationFeatureEnableEXT::eSynchronizationValidation,
-        vk::ValidationFeatureEnableEXT::eGpuAssisted,
-        vk::ValidationFeatureEnableEXT::eGpuAssistedReserveBindingSlot,
-    };
-
-    //Enable Debugging in createInstance function (special Case...)
-    if (isValidationLayersEnabled()) {        
-        populateDebugMessengerCreateInfo(debugCreateInfo);
-        
-        std::vector<vk::ExtensionProperties> layerProperties = vk::enumerateInstanceExtensionProperties();
-                
-        validationFeatures.setDisabledValidationFeatureCount(0);
-        validationFeatures.setPDisabledValidationFeatures(nullptr);
-        validationFeatures.setEnabledValidationFeatureCount(static_cast<uint32_t>(enabledValidationFeatures.size()));
-        validationFeatures.setPEnabledValidationFeatures(enabledValidationFeatures.data());
-        
-        debugCreateInfo.setPNext(&validationFeatures);
-        createInfo.setPNext((vk::DebugUtilsMessengerCreateInfoEXT*) &debugCreateInfo);
-    }else{
-        createInfo.setPNext(nullptr);
-    }
-
-    //Create the instance!
-    //this->instance = vk::createInstanceUnique(createInfo); (!!)        
-    this->instance = vk::createInstance(createInfo);
-    
-}
-
-
-bool VulkanRenderer::checkInstanceExtensionSupport(std::vector<const char *>* checkExtensions) {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    // Fetch the instance extensions properties...
-    std::vector<vk::ExtensionProperties> extensions = vk::enumerateInstanceExtensionProperties();
-
-    //Check if the given extensions is in the list of valid extensions
-    for (auto &checkExtension : *checkExtensions) {
-        bool hasExtension = false;
-        for (auto &extension : extensions) {
-            if (strcmp(checkExtension, extension.extensionName ) == 0) {
-                hasExtension = true;
-                break;
-            }
-        }
-        if (!hasExtension) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
 bool VulkanRenderer::checkDeviceExtensionSupport(vk::PhysicalDevice device) {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -356,20 +222,20 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyRenderPass(this->renderPass_imgui);
     this->getVkDevice().destroyDescriptorPool(this->descriptorPool_imgui);
     
-    for(auto& imgui_cmd_pool : this->commandPools_imgui){
+    for(auto& imgui_cmd_pool : this->commandPools_imgui)
+    {
         this->getVkDevice().destroyCommandPool(imgui_cmd_pool);
     }    
-    for(auto& imgui_framebuffer : this->frameBuffers_imgui){
+    for(auto& imgui_framebuffer : this->frameBuffers_imgui)
+    {
         this->getVkDevice().destroyFramebuffer(imgui_framebuffer);
     }
-
-    // Left as Refence; we dont use a Dynamic Uniform Buffer to update the Model Matrix anymore
-    //free(modelTransferSpace); // Free the memory allocated with aligned_alloc     
 
 #ifndef VENGINE_NO_PROFILING
     CustomFree(this->tracyImage);
 
-    for(size_t i = 0 ; i < this->swapChainImages.size(); i++){
+    for(size_t i = 0 ; i < this->swapChainImages.size(); i++)
+    {
         TracyVkDestroy(this->tracyContext[i]);
     }
 #endif
@@ -387,10 +253,10 @@ void VulkanRenderer::cleanup()
 
     this->getVkDevice().destroySampler(this->textureSampler);
 
-    for(size_t i = 0; i < this->textureImages.size();i++){
+    for(size_t i = 0; i < this->textureImages.size();i++)
+    {
         this->getVkDevice().destroyImageView(this->textureImageViews[i]);
         this->getVkDevice().destroyImage(this->textureImages[i]);
-        //this->getVkDevice().freeMemory(this->textureImageMemory[i]);
         vmaFreeMemory(this->vma,this->textureImageMemory[i]);
     }
 
@@ -398,7 +264,6 @@ void VulkanRenderer::cleanup()
     {
         this->getVkDevice().destroyImageView(this->depthBufferImageView[i]);
         this->getVkDevice().destroyImage(this->depthBufferImage[i]);
-        //this->getVkDevice().freeMemory(this->depthBufferImageMemory[i]);
         vmaFreeMemory(this->vma,this->depthBufferImageMemory[i]);
     }
 
@@ -406,34 +271,29 @@ void VulkanRenderer::cleanup()
     {
         this->getVkDevice().destroyImageView(this->colorBufferImageView[i]);
         this->getVkDevice().destroyImage(this->colorBufferImage[i]);
-        //this->getVkDevice().freeMemory(this->colorBufferImageMemory[i]);
         vmaFreeMemory(this->vma,this->colorBufferImageMemory[i]);
     }
 
     this->getVkDevice().destroyDescriptorPool(this->descriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->descriptorSetLayout);
 
-    for(size_t i = 0; i < this->swapChainImages.size();i++){
+    for(size_t i = 0; i < this->swapChainImages.size(); i++)
+    {
         this->getVkDevice().destroyBuffer(this->viewProjection_uniformBuffer[i]);
-        //this->getVkDevice().freeMemory(this->viewProjection_uniformBufferMemory[i]);
         vmaFreeMemory(this->vma, this->viewProjection_uniformBufferMemory[i]);
-
-/*      // Left as Refence; we dont use a Dynamic Uniform Buffer to update the Model Matrix anymore
-        vkDestroyBuffer(this->getVkDevice(), this->model_dynamicUniformBuffer[i], nullptr);
-        vkFreeMemory(this->getVkDevice(), this->model_dynamicUniformBufferMemory[i], nullptr);
-*/
     }
 
-    for(int i = 0; i < MAX_FRAME_DRAWS; i++){
+    for(int i = 0; i < MAX_FRAME_DRAWS; i++)
+    {
         this->getVkDevice().destroySemaphore(this->renderFinished[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
         this->getVkDevice().destroyFence(this->drawFences[i]);        
     }
 
     this->getVkDevice().destroyCommandPool(graphicsCommandPool);
-    for (auto framebuffer: this->swapChainFrameBuffers) {
-        this->getVkDevice().destroyFramebuffer(framebuffer);
-        
+    for (auto framebuffer: this->swapChainFrameBuffers) 
+    {
+        this->getVkDevice().destroyFramebuffer(framebuffer);    
     }
 
     this->getVkDevice().destroyPipelineCache(this->graphics_pipelineCache);
@@ -443,22 +303,27 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyPipeline(this->graphicsPipeline);
     this->getVkDevice().destroyPipelineLayout(this->pipelineLayout);
     this->getVkDevice().destroyRenderPass(this->renderPass_base);
-    for (auto image : swapChainImages) {
+
+    for (auto image : swapChainImages) 
+    {
         getVkDevice().destroyImageView(image.imageView);
     }
     this->getVkDevice().destroySwapchainKHR(this->swapChain);
     this->instance.destroy(this->surface); //NOTE: No warnings/errors if we run this line... Is it useless? Mayber gets destroyed by SDL?
-
+    
     vmaDestroyAllocator(this->vma);
 
     this->device.cleanup();
 
-    if (isValidationLayersEnabled()) {
-        this->instance.destroyDebugUtilsMessengerEXT(this->debugMessenger,nullptr, this->dynamicDispatch);
+    if (isValidationLayersEnabled())
+    {
+        this->instance.getVkInstance().destroyDebugUtilsMessengerEXT(
+            this->debugMessenger,
+            nullptr,
+            this->dynamicDispatch
+        );
     }
-
-    //this->instance->destroy();   // <- I think this gets taken care of by the destructor... maybe? 
-    
+    this->instance.cleanup();
 }
 
 void VulkanRenderer::draw(Scene* scene)
@@ -618,39 +483,29 @@ void VulkanRenderer::initMeshes(Scene* scene)
     });
 }
 
-void VulkanRenderer::setupDebugMessenger() {
-    if(!isValidationLayersEnabled()){return;}
+void VulkanRenderer::setupDebugMessenger() 
+{
+    if(!isValidationLayersEnabled())
+    { return; }
 
     // In this function we define what sort of message we want to receive...
     vk::DebugUtilsMessengerCreateInfoEXT createInfo{};
-    populateDebugMessengerCreateInfo(createInfo);
+    VulkanDbg::populateDebugMessengerCreateInfo(createInfo);
     
-    auto result = this->instance.createDebugUtilsMessengerEXT(&createInfo,nullptr,&this->debugMessenger, dynamicDispatch);
-    if (result != vk::Result::eSuccess) {
+    auto result = 
+        this->instance.getVkInstance().createDebugUtilsMessengerEXT(
+            &createInfo, 
+            nullptr, 
+            &this->debugMessenger, 
+            this->dynamicDispatch);
+    if (result != vk::Result::eSuccess) 
+    {
         throw std::runtime_error("Failed to create Debug Messenger!");
     }
 }
 
-void VulkanRenderer::populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT &createInfo) {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    createInfo.messageSeverity
-        = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
-                | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
-                | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
-
-    createInfo.messageType
-         = vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral
-                 | vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation
-                 | vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
-
-    createInfo.setPfnUserCallback(debugCallback)  ;
-    createInfo.pUserData = nullptr;
-}
-
-void VulkanRenderer::createSurface() {
+void VulkanRenderer::createSurface() 
+{
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
@@ -1902,7 +1757,10 @@ int VulkanRenderer::createModel(const std::string& modelFile)
         | aiProcess_JoinIdenticalVertices   // Saves memory by making sure no dublicate vertices exists
         );
 
-    if(scene == nullptr){throw std::runtime_error("Failed to load model ("+modelFile+")");}
+    if(scene == nullptr)
+    {
+        throw std::runtime_error("Failed to load model ("+modelFile+")");
+    }
 
     // Get vector of all materials 
     std::vector<std::string> textureNames = Model::loadMaterials(scene);
@@ -2527,7 +2385,6 @@ void VulkanRenderer::createDescriptorSets()
     
     for(size_t i = 0; i < swapChainImages.size();i++)
     {
-        //VulkanDbg::registerVkObjectDbgInfo("DescriptorSet["+std::to_string(i)+"]  UniformBuffer", VK_OBJECT_TYPE_DESCRIPTOR_SET, reinterpret_cast<uint64_t>(this->descriptorSets[i]));
         VulkanDbg::registerVkObjectDbgInfo("DescriptorSet["+std::to_string(i)+"]  UniformBuffer", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->descriptorSets[i])));
     }
 
@@ -2869,11 +2726,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                             modelPart.second.indexBuffer, 
                             0,
                             vk::IndexType::eUint32);
-                        
-                    /*  // Left for Reference, we dont use Dynamic Uniform Buffers for our Model anymore...                                    
-                        // Dynamic Uniform Buffer Offset Amount
-                        uint32_t dynamicUniformBuffer_offset = static_cast<uint32_t>(modelUniformAlignment) * j; // Will give us the correct position in the memory!
-                    */
+                      
                         // We're going to bind Two descriptorSets! put them in array...
                         std::array<vk::DescriptorSet,2> descriptorSetGroup{
                             this->descriptorSets[currentImageIndex],                // Use the descriptor set for the Image                            
@@ -3435,7 +3288,7 @@ void VulkanRenderer::initImgui()
     this->window->initImgui();
 
     ImGui_ImplVulkan_InitInfo imguiInitInfo {};
-    imguiInitInfo.Instance = this->instance;
+    imguiInitInfo.Instance = this->instance.getVkInstance();
     imguiInitInfo.PhysicalDevice = this->physicalDevice.getVkPhysicalDevice();
     imguiInitInfo.Device = this->getVkDevice();
     imguiInitInfo.QueueFamily = this->queueFamilies.graphicsFamily;

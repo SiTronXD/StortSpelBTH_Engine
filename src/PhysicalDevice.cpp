@@ -1,6 +1,7 @@
 #include "PhysicalDevice.h"
 #include "Utilities.h"
 #include "Log.h"
+#include "Instance.h"
 
 void PhysicalDevice::getSwapchainDetails(
     const vk::PhysicalDevice& physDevice,
@@ -156,7 +157,7 @@ PhysicalDevice::~PhysicalDevice()
 }
 
 void PhysicalDevice::pickPhysicalDevice(
-    vk::Instance& instance,
+    Instance& instance,
     vk::SurfaceKHR& surface,
     QueueFamilyIndices& outputQueueFamilies,
     SwapChainDetails& outputSwapChainDetails)
@@ -166,7 +167,7 @@ void PhysicalDevice::pickPhysicalDevice(
 #endif
 
     // We need to pick which of the systems physical device to be used; Integrated GPU, One of Multiple GPU, External GPU... etc
-    auto allPhysicalDevices = instance.enumeratePhysicalDevices();
+    auto allPhysicalDevices = instance.getVkInstance().enumeratePhysicalDevices();
 
     // Check if any devices where available, if none then we dont have support for vulkan...
     if (allPhysicalDevices.empty())

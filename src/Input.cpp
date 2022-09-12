@@ -6,12 +6,12 @@ std::map<Keys, bool> Input::lastKeyDown;
 std::map<Mouse, bool> Input::mouseButtonDown;
 std::map<Mouse, bool> Input::lastmouseButtonDown;
 
-float Input::cursorX = 0.0f;
-float Input::cursorY = 0.0f;
-float Input::lastCursorX = 0.0f;
-float Input::lastCursorY = 0.0f;
+int Input::cursorX = 0.0f;
+int Input::cursorY = 0.0f;
+int Input::lastCursorX = 0.0f;
+int Input::lastCursorY = 0.0f;
 
-void Input::setCursor(const float& newCursorX, const float& newCursorY)
+void Input::setCursor(const int& newCursorX, const int& newCursorY)
 {
 	// Update last position
 	Input::lastCursorX = Input::cursorX;

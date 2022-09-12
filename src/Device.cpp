@@ -2,6 +2,7 @@
 
 #include "Device.h"
 #include "VulkanDbg.h"
+#include "Instance.h"
 
 Device::Device()
 {
@@ -12,7 +13,7 @@ Device::~Device()
 }
 
 void Device::createDevice(
-    vk::Instance& instance,
+    Instance& instance,
     PhysicalDevice& physicalDevice, 
     QueueFamilyIndices& queueFamilies,
     
@@ -80,7 +81,11 @@ void Device::createDevice(
     this->device = physicalDevice.getVkPhysicalDevice().createDevice(deviceCreateInfo);
 
     // Setup Dynamic Dispatch, in order to use device extensions        
-    outputDynamicDispatch = vk::DispatchLoaderDynamic(instance, vkGetInstanceProcAddr, this->device);
+    outputDynamicDispatch = vk::DispatchLoaderDynamic(
+        instance.getVkInstance(), 
+        vkGetInstanceProcAddr, 
+        this->device
+    );
 
     // Queues are Created at the same time as the device...
     // So we want handle to queues:

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Instance.h"
 #include "Device.h"
 
 #include "Window.h"
@@ -30,16 +31,16 @@ class VulkanRenderer {
     //std::vector<Mesh> meshes;
 
     /// Scene Settings
-    struct UboViewProjection { /// Model View Projection struct
+    struct UboViewProjection 
+    {
         glm::mat4 projection;   /// How the Camera Views the world (Ortographic or Perspective)
         glm::mat4 view;         /// Where our Camera is viewing from and the direction it is viewing        
-    }uboViewProjection{};
+    } uboViewProjection{};
 
     ///Vulkan Components
     /// - Main
     
-    //vk::UniqueInstance               instance{}; /// The Core of Vulkan Program, gives access to the GPU
-    vk::Instance               instance{}; /// The Core of Vulkan Program, gives access to the GPU
+    Instance instance;
     vk::DispatchLoaderDynamic dynamicDispatch;
     vk::DebugUtilsMessengerEXT debugMessenger{}; /// used to handle callback from errors based on the validation Layer (??)
     VkDebugReportCallbackEXT debugReport{};
@@ -57,12 +58,8 @@ class VulkanRenderer {
     std::vector<SwapChainImage>  swapChainImages;         /// We store ALL our SwapChain images here... to have access to them
     std::vector<vk::Framebuffer>   swapChainFrameBuffers;
     std::vector<vk::CommandBuffer> commandBuffers;
-    /*! The Swapchain image, Framebuffer and Commandbuffers are all 1:1,
-     *  i.e. sweapChainImage[1] will only be used by swapChainFrameBuffers[1] which will only be used by commandBuffers[1]
-     * */
-
+    
     std::vector<vk::Image>        colorBufferImage;
-    //std::vector<vk::DeviceMemory> colorBufferImageMemory;
     std::vector<VmaAllocation> colorBufferImageMemory;
     std::vector<vk::ImageView>    colorBufferImageView;
     vk::Format                  colorFormat{};
@@ -245,7 +242,6 @@ private:
 private: 
     /// Clients Privates 
     std::function<void()> gameLoopFunction;
-    static void populateDebugMessengerCreateInfo(vk::DebugUtilsMessengerCreateInfoEXT &createInfo);
 
 public:
     VulkanRenderer();

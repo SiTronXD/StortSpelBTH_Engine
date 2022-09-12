@@ -3,17 +3,18 @@
 #include <string>
 #include "TempPCH.h"
 
+class Instance;
 class Device;
 
 class VulkanDbg
 {
 private:
-    static vk::Instance instance;
+    static Instance* instance;
     static Device* device;
 
 public:
     static void init(
-        const vk::Instance& instance,
+        Instance& instance,
         Device& device
     );
 
@@ -22,4 +23,6 @@ public:
         vk::ObjectType type, 
         uint64_t objectHandle);
 
+    static void populateDebugMessengerCreateInfo(
+        vk::DebugUtilsMessengerCreateInfoEXT& createInfo);
 };

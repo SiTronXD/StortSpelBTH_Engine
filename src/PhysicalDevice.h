@@ -2,6 +2,8 @@
 
 #include "TempPCH.h"
 
+class Instance;
+
 struct SwapChainDetails;
 struct QueueFamilyIndices;
 
@@ -31,7 +33,7 @@ public:
 	~PhysicalDevice();
 
 	void pickPhysicalDevice(
-		vk::Instance& instance, 
+		Instance& instance, 
 		vk::SurfaceKHR& surface,
 		QueueFamilyIndices& outputQueueFamilies,
 		SwapChainDetails& outputSwapChainDetails);

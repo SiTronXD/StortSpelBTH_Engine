@@ -2,6 +2,8 @@
 
 #include "PhysicalDevice.h"
 
+class Instance;
+
 class Device
 {
 private:
@@ -12,7 +14,7 @@ public:
 	~Device();
 
 	void createDevice(
-		vk::Instance& instance,
+		Instance& instance,
 		PhysicalDevice& physicalDevice, 
 		QueueFamilyIndices& queueFamilies,
 		
