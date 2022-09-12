@@ -1,8 +1,8 @@
 #pragma once
 
-#include "TempPCH.h"
+#include "TempPCH.hpp"
 
-class Instance;
+class VulkanInstance;
 
 struct SwapChainDetails;
 struct QueueFamilyIndices;
@@ -33,7 +33,7 @@ public:
 	~PhysicalDevice();
 
 	void pickPhysicalDevice(
-		Instance& instance, 
+		VulkanInstance& instance,
 		vk::SurfaceKHR& surface,
 		QueueFamilyIndices& outputQueueFamilies,
 		SwapChainDetails& outputSwapChainDetails);

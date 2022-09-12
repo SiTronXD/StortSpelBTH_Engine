@@ -1,10 +1,10 @@
 #pragma once
 
-#include "TempPCH.h"
+#include "TempPCH.hpp"
 
 class Window;
 
-class Instance
+class VulkanInstance
 {
 private:
 	vk::Instance instance;
@@ -13,8 +13,8 @@ private:
 		std::vector<const char*>* checkExtensions);
 
 public:
-	Instance();
-	~Instance();
+	VulkanInstance();
+	~VulkanInstance();
 
 	void createInstance(Window& window);
 

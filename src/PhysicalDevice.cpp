@@ -1,7 +1,7 @@
-#include "PhysicalDevice.h"
-#include "Utilities.h"
-#include "Log.h"
-#include "Instance.h"
+#include "PhysicalDevice.hpp"
+#include "Utilities.hpp"
+#include "Log.hpp"
+#include "VulkanInstance.hpp"
 
 void PhysicalDevice::getSwapchainDetails(
     const vk::PhysicalDevice& physDevice,
@@ -157,7 +157,7 @@ PhysicalDevice::~PhysicalDevice()
 }
 
 void PhysicalDevice::pickPhysicalDevice(
-    Instance& instance,
+    VulkanInstance& instance,
     vk::SurfaceKHR& surface,
     QueueFamilyIndices& outputQueueFamilies,
     SwapChainDetails& outputSwapChainDetails)

@@ -1,8 +1,8 @@
 #include <set>
 
-#include "Device.h"
-#include "VulkanDbg.h"
-#include "Instance.h"
+#include "Device.hpp"
+#include "VulkanDbg.hpp"
+#include "VulkanInstance.hpp"
 
 Device::Device()
 {
@@ -13,7 +13,7 @@ Device::~Device()
 }
 
 void Device::createDevice(
-    Instance& instance,
+    VulkanInstance& instance,
     PhysicalDevice& physicalDevice, 
     QueueFamilyIndices& queueFamilies,
     

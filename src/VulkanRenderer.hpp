@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Instance.h"
-#include "Device.h"
-
-#include "Window.h"
 #define NOMINMAX
+
+#include "VulkanInstance.hpp"
+#include "Device.hpp"
+#include "Window.hpp"
 
 #include <vulkan/vulkan.hpp>
 #include "Utilities.hpp"
@@ -46,7 +46,7 @@ class VulkanRenderer {
     ///Vulkan Components
     /// - Main
     
-    Instance instance;
+    VulkanInstance instance;
     vk::DispatchLoaderDynamic dynamicDispatch;
     vk::DebugUtilsMessengerEXT debugMessenger{}; /// used to handle callback from errors based on the validation Layer (??)
     VkDebugReportCallbackEXT debugReport{};

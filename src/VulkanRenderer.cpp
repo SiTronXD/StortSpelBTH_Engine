@@ -16,7 +16,7 @@
 #include <limits>               // Used to get the Max value of a uint32_t
 #include <algorithm>            // Used for std::clamp...
 #include "stb_image.h"
-#include "VulkanDbg.h"
+#include "VulkanDbg.hpp"
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
@@ -411,7 +411,6 @@ void VulkanRenderer::draw(Scene* scene)
     // Set view and projection in ubo
     uboViewProjection.view = camera->view;
     uboViewProjection.projection = camera->projection;
-    uboViewProjection.projection[1][1] *= -1;
     if (deleteCamera) { delete camera; }
 
     /// Update the Uniform Buffers

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "PhysicalDevice.h"
+#include "PhysicalDevice.hpp"
 
-class Instance;
+class VulkanInstance;
 
 class Device
 {
@@ -14,7 +14,7 @@ public:
 	~Device();
 
 	void createDevice(
-		Instance& instance,
+		VulkanInstance& instance,
 		PhysicalDevice& physicalDevice, 
 		QueueFamilyIndices& queueFamilies,
 		

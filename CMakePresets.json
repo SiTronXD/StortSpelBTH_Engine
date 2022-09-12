@@ -56,8 +56,7 @@
             "installDir": "${sourceDir}/install",
             "cacheVariables": {
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install",
-                "CMAKE_BUILD_TYPE": "Debug",
-		"VENGINE_DEV_MODE": true
+                "CMAKE_BUILD_TYPE": "Debug"
                 
             },
             "condition": {
@@ -72,8 +71,7 @@
         {
             "name": "build dev debug win32",
             "targets" :  [
-                "vengine",
-                "vengine_demo"
+                "vengine"
             ],
             "description": "presets for dev debug",
             "displayName": "vengine lib + demo",            

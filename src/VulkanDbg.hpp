@@ -1,20 +1,20 @@
 #pragma once
 
 #include <string>
-#include "TempPCH.h"
+#include "TempPCH.hpp"
 
-class Instance;
+class VulkanInstance;
 class Device;
 
 class VulkanDbg
 {
 private:
-    static Instance* instance;
+    static VulkanInstance* instance;
     static Device* device;
 
 public:
     static void init(
-        Instance& instance,
+        VulkanInstance& instance,
         Device& device
     );
 

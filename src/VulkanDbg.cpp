@@ -1,12 +1,12 @@
-#include "VulkanDbg.h"
-#include "VulkanValidation.h"
-#include "Instance.h"
-#include "Device.h"
+#include "VulkanDbg.hpp"
+#include "VulkanValidation.hpp"
+#include "VulkanInstance.hpp"
+#include "Device.hpp"
 
-Instance* VulkanDbg::instance = nullptr;
+VulkanInstance* VulkanDbg::instance = nullptr;
 Device* VulkanDbg::device = nullptr;
 
-void VulkanDbg::init(Instance& instance, Device& device)
+void VulkanDbg::init(VulkanInstance& instance, Device& device)
 {
     VulkanDbg::instance = &instance;
     VulkanDbg::device = &device;

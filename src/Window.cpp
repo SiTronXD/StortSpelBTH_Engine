@@ -2,11 +2,11 @@
 #include <vulkan/vulkan.hpp>
 #include <SDL2/SDL_vulkan.h>
 
-#include "Window.h"
+#include "Window.hpp"
 #include "tracy/Tracy.hpp"
-#include "Input.h"
-#include "Log.h"
-#include "Instance.h"
+#include "Input.hpp"
+#include "Log.hpp"
+#include "VulkanInstance.hpp"
 
 Window::Window()
     : windowHandle(nullptr),
@@ -97,7 +97,7 @@ void Window::shutdownImgui()
 }
 
 void Window::createVulkanSurface(
-    Instance& instance, 
+    VulkanInstance& instance,
     vk::SurfaceKHR& outputSurface)
 {
     VkSurfaceKHR sdlSurface{};

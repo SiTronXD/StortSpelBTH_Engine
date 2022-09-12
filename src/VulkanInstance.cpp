@@ -1,10 +1,10 @@
-#include "Instance.h"
+#include "VulkanInstance.hpp"
 
-#include "Window.h"
-#include "VulkanValidation.h"
-#include "VulkanDbg.h"
+#include "Window.hpp"
+#include "VulkanValidation.hpp"
+#include "VulkanDbg.hpp"
 
-bool Instance::checkInstanceExtensionSupport(
+bool VulkanInstance::checkInstanceExtensionSupport(
     std::vector<const char*>* checkExtensions)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -36,15 +36,15 @@ bool Instance::checkInstanceExtensionSupport(
     return true;
 }
 
-Instance::Instance()
+VulkanInstance::VulkanInstance()
 {
 }
 
-Instance::~Instance()
+VulkanInstance::~VulkanInstance()
 {
 }
 
-void Instance::createInstance(Window& window)
+void VulkanInstance::createInstance(Window& window)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -162,12 +162,12 @@ void Instance::createInstance(Window& window)
     this->instance = vk::createInstance(createInfo);
 }
 
-void Instance::destroy(vk::SurfaceKHR& surface)
+void VulkanInstance::destroy(vk::SurfaceKHR& surface)
 {
     this->instance.destroy(surface);
 }
 
-void Instance::cleanup()
+void VulkanInstance::cleanup()
 {
     this->instance.destroy();   // <- I think this gets taken care of by the destructor... maybe? 
 }

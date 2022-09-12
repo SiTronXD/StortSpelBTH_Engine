@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Utilities.h"
+#include "Utilities.hpp"
 
 #include "vk_mem_alloc.h"
 #ifndef VENGINE_NO_PROFILING
