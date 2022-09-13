@@ -1,0 +1,21 @@
+[submodule "deps/assimp/src"]
+	path = deps/assimp/src
+	url = https://github.com/lr222gw/assimp.git
+[submodule "deps/imgui/src"]
+	path = deps/imgui/src
+	url = https://github.com/lr222gw/imgui.git
+[submodule "deps/tracy/src"]
+	path = deps/tracy/src
+	url = https://github.com/lr222gw/tracy.git
+[submodule "deps/EnTT/src"]
+	path = deps/EnTT/src
+	url = https://github.com/lr222gw/entt.git
+[submodule "deps/vma/src"]
+	path = deps/vma/src
+	url = https://github.com/lr222gw/VulkanMemoryAllocator.git
+[submodule "deps/stb/src"]
+	path = deps/stb/src
+	url = https://github.com/lr222gw/stb.git
+[submodule "deps/glm/src"]
+	path = deps/glm/src
+	url = https://github.com/lr222gw/glm.git
