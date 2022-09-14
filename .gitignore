@@ -355,16 +355,11 @@ Kronos/build/build.ninja
 build/
 *.spv
 
-deps/imgui/deps/
-deps/tracy/deps/
-deps/assimp/deps/
-deps/vma/deps/
 install/*
 tools/GpuMemDumpVis/*
 tools/vma_dump_out.png
 deps/imgui/cmake/*
 vma_dump.json
 imgui.ini
-deps/imgui/src/
-deps/tracy/src/
-deps/vma/src/
+
+/deps/assimp/int/assimp.tlog

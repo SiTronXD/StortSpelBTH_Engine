@@ -16,7 +16,7 @@ void TracyHelper::toggleTracyThumbnail(uint32_t idx, int32_t val) //:NOLINT: Can
 void TracyHelper::registerTracyParameterFunctions() 
 {
   TracyParameterSetup(0, "Use Screenshot", true, 0);
-  TracyParameterRegister(toggleTracyThumbnail);
+  //TracyParameterRegister(toggleTracyThumbnail);
 }
 
 void TracyHelper::setVulkanRenderReference(VulkanRenderer *_ref) { 

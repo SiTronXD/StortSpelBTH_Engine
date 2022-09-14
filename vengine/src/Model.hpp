@@ -4,7 +4,6 @@
 #include "glm/glm.hpp"
 #include <map>
 
-
 struct aiScene;
 struct aiMesh;
 
