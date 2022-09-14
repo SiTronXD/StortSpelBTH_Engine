@@ -98,6 +98,18 @@
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Configuration)\int\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Distribution|x64'">
+    <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Configuration)\int\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
+    <IntDir>$(SolutionDir)build\$(Configuration)\int\</IntDir>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -149,12 +161,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)deps\sdl\include\SDL2\;$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include\;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)deps\vma\lib\;$(SolutionDir)deps\sdl\lib\;$(SolutionDir)deps\tracy\lib\;$(SolutionDir)deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -167,14 +179,14 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)deps\sdl\include\SDL2\;$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include\;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)deps\vma\lib\;$(SolutionDir)deps\sdl\lib\;$(SolutionDir)deps\tracy\lib\;$(SolutionDir)deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
@@ -187,19 +199,23 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)deps\sdl\include\SDL2\;$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include\;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)deps\vma\lib\;$(SolutionDir)deps\sdl\lib\;$(SolutionDir)deps\tracy\lib\;$(SolutionDir)deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\TestDemoScene.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\TestDemoScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

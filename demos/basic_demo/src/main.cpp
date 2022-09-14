@@ -8,8 +8,7 @@
 #include <cstdlib>
 
 #include "vengine.h"
-#include "tracy/Tracy.hpp"
-
+#include "TestDemoScene.h"
 
 int main(int argc, char* argv[])
 {
@@ -20,7 +19,7 @@ int main(int argc, char* argv[])
 
     {
         Engine engine;
-        engine.run(new TestScene()); 
+        engine.run(new TestDemoScene()); 
     }
 #if defined(WIN32) && defined(_DEBUG)
     _CrtDumpMemoryLeaks();
