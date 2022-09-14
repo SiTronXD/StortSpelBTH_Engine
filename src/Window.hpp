@@ -19,6 +19,8 @@ class Window
 private:
     bool isRunning;
 
+    std::string titleName;
+
 public:
     SDL_Window* windowHandle;
 
@@ -41,6 +43,8 @@ public:
     void getSize(int& outputWidth, int& outputHeight);
 
     const bool& getIsRunning() const { return this->isRunning; }
+
+    inline const std::string& getTitleName() { return this->titleName; }
 };
 
 ////__attribute__((unused))

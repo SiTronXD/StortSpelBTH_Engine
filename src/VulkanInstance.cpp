@@ -66,9 +66,9 @@ void VulkanInstance::createInstance(Window& window)
     // VkApplication info is used by VkInstanceCreateInfo, its info about the application we're making
     // This is used by developers, for things like debugging ...
     vk::ApplicationInfo appInfo = {};
-    appInfo.setPApplicationName("My Vulkan App");               // Custom Name of the application
+    appInfo.setPApplicationName(window.getTitleName().c_str());               // Custom Name of the application
     appInfo.setApplicationVersion(VK_MAKE_VERSION(1, 0, 0));      // Description of which version this is of our program
-    appInfo.setPEngineName("My Cool Engine");                   // Name of the used Engine
+    appInfo.setPEngineName("Vengine");                   // Name of the used Engine
     appInfo.setEngineVersion(VK_MAKE_VERSION(1, 0, 0));           // Description of which version this is of the Engine    
     appInfo.setApiVersion(VK_API_VERSION_1_3);                  // Version of the Vulkan API that we are using!
 

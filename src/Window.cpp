@@ -22,12 +22,14 @@ void Window::initWindow(
     ZoneScoped; //:NOLINT
 #endif
 
+    this->titleName = name;
+
     ///Initializes sdl window
     SDL_Init(SDL_INIT_VIDEO);
 
     ///Configure SDL Window...    
     this->windowHandle = SDL_CreateWindow(
-        name.c_str(), 
+        this->titleName.c_str(),
         SDL_WINDOWPOS_CENTERED, 
         SDL_WINDOWPOS_CENTERED, 
         width, 
