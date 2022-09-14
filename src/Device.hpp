@@ -3,6 +3,7 @@
 #include "PhysicalDevice.hpp"
 
 class VulkanInstance;
+class QueueFamilies;
 
 class Device
 {
@@ -16,12 +17,10 @@ public:
 	void createDevice(
 		VulkanInstance& instance,
 		PhysicalDevice& physicalDevice, 
-		QueueFamilyIndices& queueFamilies,
+		QueueFamilies& outputQueueFamilies,
 		
-		// TODO: remove these
-		vk::DispatchLoaderDynamic& outputDynamicDispatch,
-		vk::Queue& outputGraphicsQueue,
-		vk::Queue& outputPresentationQueue);
+		// TODO: remove this
+		vk::DispatchLoaderDynamic& outputDynamicDispatch);
 
 	void cleanup();
 

@@ -3,6 +3,7 @@
 #include "Device.hpp"
 #include "VulkanDbg.hpp"
 #include "VulkanInstance.hpp"
+#include "QueueFamilies.hpp"
 
 Device::Device()
 {
@@ -15,16 +16,17 @@ Device::~Device()
 void Device::createDevice(
     VulkanInstance& instance,
     PhysicalDevice& physicalDevice, 
-    QueueFamilyIndices& queueFamilies,
+    QueueFamilies& outputQueueFamilies,
     
-    // TODO: remove these
-    vk::DispatchLoaderDynamic& outputDynamicDispatch,
-    vk::Queue& outputGraphicsQueue,
-    vk::Queue& outputPresentationQueue)
+    // TODO: remove this
+    vk::DispatchLoaderDynamic& outputDynamicDispatch)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
+
+    int32_t graphicsQueueIndex = outputQueueFamilies.getGraphicsIndex();
+    int32_t presentQueueIndex = outputQueueFamilies.getPresentIndex();
 
     // Using a vector to store all the queueCreateInfo structs for each QueueFamily...
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
@@ -33,8 +35,8 @@ void Device::createDevice(
     // When using a set we can represent 1 index for each QueueFamily without risk of adding the same queueFamily index multiple times!
     std::set<int32_t> queueFamilyIndices
     {
-        queueFamilies.graphicsFamily,
-        queueFamilies.presentationFamily    // This could be the same Queue Family as the GraphicsQueue Family! thus, we use a set!
+        graphicsQueueIndex,
+        presentQueueIndex    // This could be the same Queue Family as the GraphicsQueue Family! thus, we use a set!
     };
 
     float priority = 1.F;
@@ -44,7 +46,7 @@ void Device::createDevice(
     {
 
         vk::DeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.setQueueFamilyIndex(queueFamilies.graphicsFamily);         // The index of the family to create Graphics queue from
+        queueCreateInfo.setQueueFamilyIndex(graphicsQueueIndex);         // The index of the family to create Graphics queue from
         queueCreateInfo.setQueueCount(uint32_t(1));
 
         // We can create Multiple Queues, and thus this is how we decide what Queue to prioritize...        
@@ -90,15 +92,15 @@ void Device::createDevice(
     // Queues are Created at the same time as the device...
     // So we want handle to queues:
     vk::DeviceQueueInfo2 graphicsQueueInfo;
-    graphicsQueueInfo.setQueueFamilyIndex(static_cast<uint32_t>(queueFamilies.graphicsFamily));
+    graphicsQueueInfo.setQueueFamilyIndex(static_cast<uint32_t>(graphicsQueueIndex));
     graphicsQueueInfo.setQueueIndex(uint32_t(0));
-    outputGraphicsQueue = this->device.getQueue2(graphicsQueueInfo);
+    outputQueueFamilies.setGraphicsQueue(this->device.getQueue2(graphicsQueueInfo));
 
     // Add another handle to let the Logical Device handle PresentationQueue... (??)
     vk::DeviceQueueInfo2 presentationQueueInfo;
-    presentationQueueInfo.setQueueFamilyIndex(static_cast<uint32_t>(queueFamilies.presentationFamily));
+    presentationQueueInfo.setQueueFamilyIndex(static_cast<uint32_t>(presentQueueIndex));
     presentationQueueInfo.setQueueIndex(uint32_t(0));        // Will be positioned at the Queue index 0 for This particular family... (??)
-    outputPresentationQueue = this->device.getQueue2(presentationQueueInfo);
+    outputQueueFamilies.setPresentQueue(this->device.getQueue2(presentationQueueInfo));
 }
 
 void Device::cleanup()

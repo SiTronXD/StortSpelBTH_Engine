@@ -6,6 +6,7 @@
 class Window;
 class PhysicalDevice;
 class Device;
+class QueueFamilies;
 
 class Swapchain
 {
@@ -33,7 +34,7 @@ private:
 	PhysicalDevice* physicalDevice;
 	Device* device;
 	vk::SurfaceKHR* surface;
-	QueueFamilyIndices* queueFamilies;
+	QueueFamilies* queueFamilies;
 	VmaAllocator* vma;
 
 	vk::SurfaceFormat2KHR chooseBestSurfaceFormat(
@@ -57,7 +58,7 @@ public:
 		PhysicalDevice& physicalDevice,
 		Device& device,
 		vk::SurfaceKHR& surface,
-		QueueFamilyIndices& queueFamilies,
+		QueueFamilies& queueFamilies,
 		VmaAllocator& vma);
 	void createFramebuffers(
 		vk::RenderPass& renderPass);

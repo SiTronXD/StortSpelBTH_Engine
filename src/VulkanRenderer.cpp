@@ -50,7 +50,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         this->physicalDevice.pickPhysicalDevice(
             this->instance,
             this->surface,
-            this->queueFamilies,
+            this->queueFamilies.getIndices(),
             this->swapchain.getDetails()
         );
 
@@ -60,10 +60,8 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
             this->physicalDevice, 
             this->queueFamilies,
 
-            // TODO: remove these
-            this->dynamicDispatch,
-            this->graphicsQueue,
-            this->presentationQueue
+            // TODO: remove this
+            this->dynamicDispatch
         );
 
         VulkanDbg::init(
@@ -72,8 +70,8 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         );
 
         VulkanDbg::registerVkObjectDbgInfo("Logical Device", vk::ObjectType::eDevice, reinterpret_cast<uint64_t>(vk::Device::CType(this->getVkDevice())));
-        VulkanDbg::registerVkObjectDbgInfo("Graphics Queue", vk::ObjectType::eQueue, reinterpret_cast<uint64_t>(vk::Queue::CType(this->graphicsQueue)));
-        VulkanDbg::registerVkObjectDbgInfo("Presentation Queue", vk::ObjectType::eQueue, reinterpret_cast<uint64_t>(vk::Queue::CType(this->presentationQueue))); // TODO: might be problematic.. since it can be same as Graphics Queue
+        VulkanDbg::registerVkObjectDbgInfo("Graphics Queue", vk::ObjectType::eQueue, reinterpret_cast<uint64_t>(vk::Queue::CType(this->queueFamilies.getGraphicsQueue())));
+        VulkanDbg::registerVkObjectDbgInfo("Presentation Queue", vk::ObjectType::eQueue, reinterpret_cast<uint64_t>(vk::Queue::CType(this->queueFamilies.getPresentQueue()))); // TODO: might be problematic.. since it can be same as Graphics Queue
              
         VulkanDbg::registerVkObjectDbgInfo("Surface",vk::ObjectType::eSurfaceKHR, reinterpret_cast<uint64_t>(vk::SurfaceKHR::CType(this->surface)));                
         VulkanDbg::registerVkObjectDbgInfo("PhysicalDevice",vk::ObjectType::ePhysicalDevice, reinterpret_cast<uint64_t>(vk::PhysicalDevice::CType(this->physicalDevice.getVkPhysicalDevice())));                
@@ -130,15 +128,6 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         this->updateUBO_camera_view(
             glm::vec3(DEF<float>(CAM_EYE_X),DEF<float>(CAM_EYE_Y),DEF<float>(CAM_EYE_Z)),
             glm::vec3(DEF<float>(CAM_TARGET_X),DEF<float>(CAM_TARGET_Y), DEF<float>(CAM_TARGET_Z)));
-
-        //Change: The MVP is now uboViewProjection, now we store the Model Matrix in the Mesh Class!                             
-        // uboViewProjection.model       =                         // Model Matrix defines where the object is located in the World
-        //                     glm::mat4(1.F);       // Identity Matrix; means the model location will remain 
-
-
-        // Inverting the Y-Coordinate on our Projection Matrix so GLM will work with Vulkan!        
-                                        // However Vulkan uses LeftHanded, so it inverts the Y Coordinate ; Positive Y is considered Down dir
-
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
         this->createTexture("missing_texture.png");
@@ -294,7 +283,7 @@ void VulkanRenderer::draw(Scene* scene)
         
         //TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
         // Wait for The Fence to be signaled from last Draw for this currrent Frame; 
-        /// This will freeze the CPU operations here and wait for the Fence to open
+        // This will freeze the CPU operations here and wait for the Fence to open
         vk::Bool32 waitForAllFences = VK_TRUE;
 
         auto result = this->getVkDevice().waitForFences(
@@ -338,7 +327,7 @@ void VulkanRenderer::draw(Scene* scene)
         std::tie(result, imageIndex) = this->getVkDevice().acquireNextImageKHR( 
             this->swapchain.getVkSwapchain(),
             std::numeric_limits<uint64_t>::max(),   // How long to wait before the Image is retrieved, crash if reached. 
-                                                    /// We dont want to use a timeout, so we make it as big as possible.
+                                                    // We dont want to use a timeout, so we make it as big as possible.
             this->imageAvailable[currentFrame],     // The Semaphore to signal, when it's available to be used!
             VK_NULL_HANDLE                          // The Fence to signal, when it's available to be used...(??)
         );
@@ -365,7 +354,7 @@ void VulkanRenderer::draw(Scene* scene)
     uboViewProjection.projection = camera->projection;
     if (deleteCamera) { delete camera; }
 
-    /// Update the Uniform Buffers
+    // Update the Uniform Buffers
     this->updateUniformBuffers(imageIndex);
 
     {
@@ -398,17 +387,20 @@ void VulkanRenderer::draw(Scene* scene)
         
         vk::SubmitInfo2 submitInfo {};      
         submitInfo.setWaitSemaphoreInfoCount(uint32_t(1));
-        //!!!submitInfo.setWaitSemaphoreInfos(const vk::ArrayProxyNoTemporaries<const vk::SemaphoreSubmitInfo> &waitSemaphoreInfos_)
+        // !!!submitInfo.setWaitSemaphoreInfos(const vk::ArrayProxyNoTemporaries<const vk::SemaphoreSubmitInfo> &waitSemaphoreInfos_)
         submitInfo.setPWaitSemaphoreInfos(&wait_semaphoreSubmitInfo); // Pointer to the semaphore to wait on.
         submitInfo.setCommandBufferInfoCount(commandBufferSubmitInfos.size()); 
         submitInfo.setPCommandBufferInfos(commandBufferSubmitInfos.data()); // Pointer to the CommandBuffer to execute
         submitInfo.setSignalSemaphoreInfoCount(uint32_t(1));
         submitInfo.setPSignalSemaphoreInfos(&signal_semaphoreSubmitInfo);// Semaphore that will be signaled when 
-                                                                        /// CommandBuffer is finished
+                                                                        // CommandBuffer is finished
 
 
-        //Submit The CommandBuffers to the Queue to begin drawing to the framebuffers
-        this->graphicsQueue.submit2(submitInfo,drawFences[currentFrame]); /// drawing, signal this Fence to open!
+        // Submit The CommandBuffers to the Queue to begin drawing to the framebuffers
+        this->queueFamilies.getGraphicsQueue().submit2(
+            submitInfo, 
+            drawFences[currentFrame]
+        ); // drawing, signal this Fence to open!
     }
         if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
@@ -429,7 +421,8 @@ void VulkanRenderer::draw(Scene* scene)
         presentInfo.setPImageIndices(&imageIndex);                            // Index of images in swapchains to present                
 
         // Submit the image to the presentation Queue
-        vk::Result resultvk = this->presentationQueue.presentKHR(&presentInfo);
+        vk::Result resultvk = 
+            this->queueFamilies.getPresentQueue().presentKHR(&presentInfo);
         if (resultvk == vk::Result::eErrorOutOfDateKHR || resultvk == vk::Result::eSuboptimalKHR || this->windowResized )
         {
             this->windowResized = false;       
@@ -568,7 +561,7 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     // -- FIXED SHADER STAGE CONFIGURATIONS -- 
 
     // How the data for a single vertex (including info such as position, colour, texture coords, normals, etc)
-    /// is as a whole.
+    // is as a whole.
     vk::VertexInputBindingDescription bindingDescription;
     bindingDescription.setBinding(uint32_t (0));                 // Can bind multiple streams of data, this defines which one.
     bindingDescription.setStride(sizeof(Vertex));    // Size of a single Vertex Object
@@ -648,7 +641,7 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     rasterizationStateCreateInfo.setLineWidth(1.F);                  // how thiock lines should be when drawn (other than 1 requires device features...)
     rasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eBack);  // Which face of tri to cull
     rasterizationStateCreateInfo.setFrontFace(vk::FrontFace::eCounterClockwise);// Since our Projection matrix now has a inverted Y-axis (GLM is right handed, but vulkan is left handed)
-                                                                    /// winding order to determine which side is front
+                                                                    // winding order to determine which side is front
     rasterizationStateCreateInfo.setDepthBiasEnable(VK_FALSE);        // Wether to add depthbiaoas to fragments (to remove shadowacne...)
 
     // --- MULTISAMPLING ---
@@ -682,7 +675,7 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     // --- PIPELINE LAYOUT ---
 
     // We have two Descriptor Set Layouts, 
-    /// One for View and Projection matrices Uniform Buffer, and the other one for the texture sampler!
+    // One for View and Projection matrices Uniform Buffer, and the other one for the texture sampler!
     std::array<vk::DescriptorSetLayout, 2> descriptorSetLayouts{
         this->descriptorSetLayout,
         this->samplerDescriptorSetLayout
@@ -738,10 +731,10 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     this->getVkDevice().destroyShaderModule(fragmentShaderModule);
 
 
-    ////////////////////////////////
-    ////////////////////////////////
-    ////////////////////////////////
-    ////////////////////////////////
+    //////////////////////
+    //////////////////////
+    //////////////////////
+    //////////////////////
     
     // - CREATE SECOND PASS PIPELINE - 
     // second Pass Shaders
@@ -890,7 +883,7 @@ void VulkanRenderer::createGraphicsPipeline_DynamicRendering() //NOLINT:
     // -- FIXED SHADER STAGE CONFIGURATIONS -- 
 
     // How the data for a single vertex (including info such as position, colour, texture coords, normals, etc)
-    /// is as a whole.
+    // is as a whole.
     vk::VertexInputBindingDescription bindingDescription;
     bindingDescription.setBinding(uint32_t (0));                 // Can bind multiple streams of data, this defines which one.
     bindingDescription.setStride(sizeof(Vertex));    // Size of a single Vertex Object
@@ -971,7 +964,7 @@ void VulkanRenderer::createGraphicsPipeline_DynamicRendering() //NOLINT:
     rasterizationStateCreateInfo.setLineWidth(1.F);                  // how thiock lines should be when drawn (other than 1 requires device features...)
     rasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eBack);  // Which face of tri to cull
     rasterizationStateCreateInfo.setFrontFace(vk::FrontFace::eCounterClockwise);// Since our Projection matrix now has a inverted Y-axis (GLM is right handed, but vulkan is left handed)
-                                                                    /// winding order to determine which side is front
+                                                                    // winding order to determine which side is front
     rasterizationStateCreateInfo.setDepthBiasEnable(VK_FALSE);        // Wether to add depthbiaoas to fragments (to remove shadowacne...)
 
     // --- MULTISAMPLING ---
@@ -1005,7 +998,7 @@ void VulkanRenderer::createGraphicsPipeline_DynamicRendering() //NOLINT:
     // --- PIPELINE LAYOUT ---
 
     // We have two Descriptor Set Layouts, 
-    /// One for View and Projection matrices Uniform Buffer, and the other one for the texture sampler!
+    // One for View and Projection matrices Uniform Buffer, and the other one for the texture sampler!
     std::array<vk::DescriptorSetLayout, 2> descriptorSetLayouts
     {
         this->descriptorSetLayout,
@@ -1131,7 +1124,6 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
             .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
                                 | VMA_ALLOCATION_CREATE_MAPPED_BIT,
             .buffer = &imageStagingBuffer, 
-            //.bufferMemory = &imageStagingBufferMemory,
             .bufferMemory = &imageStagingBufferMemory,
             .allocationInfo = &allocInfo,
             .vma = &vma
@@ -1173,16 +1165,30 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
 
     // - COPY THE DATA TO THE IMAGE -
     // Transition image to be in the DST, needed by the Copy Operation (Copy assumes/needs image Layout to be in vk::ImageLayout::eTransferDstOptimal state)
-    vengine_helper::transitionImageLayout(this->getVkDevice(), this->graphicsQueue, this->graphicsCommandPool, 
+    vengine_helper::transitionImageLayout(
+        this->getVkDevice(), 
+        this->queueFamilies.getGraphicsQueue(),
+        this->graphicsCommandPool, 
         texImage,                               // Image to transition the layout on
         vk::ImageLayout::eUndefined,              // Image Layout to transition the image from
         vk::ImageLayout::eTransferDstOptimal);  // Image Layout to transition the image to
 
     // Copy Data to image
-    vengine_helper::copyImageBuffer(this->getVkDevice(), this->graphicsQueue, this->graphicsCommandPool, imageStagingBuffer, texImage, width, height);
+    vengine_helper::copyImageBuffer(
+        this->getVkDevice(), 
+        this->queueFamilies.getGraphicsQueue(),
+        this->graphicsCommandPool, 
+        imageStagingBuffer, 
+        texImage, 
+        width, 
+        height
+    );
 
     // Transition iamge to be shader readable for shader usage
-    vengine_helper::transitionImageLayout(this->getVkDevice(), this->graphicsQueue, this->graphicsCommandPool, 
+    vengine_helper::transitionImageLayout(
+        this->getVkDevice(), 
+        this->queueFamilies.getGraphicsQueue(),
+        this->graphicsCommandPool, 
         texImage,
         vk::ImageLayout::eTransferDstOptimal,       // Image layout to transition the image from; this is the same as we transition the image too before we copied buffer!
         vk::ImageLayout::eShaderReadOnlyOptimal);  // Image Layout to transition the image to; in order for the Fragment Shader to read it!         
@@ -1315,7 +1321,7 @@ int VulkanRenderer::createModel(const std::string& modelFile)
         &this->vma,
         this->physicalDevice.getVkPhysicalDevice(), 
         this->getVkDevice(), 
-        this->graphicsQueue, 
+        this->queueFamilies.getGraphicsQueue(),
         this->graphicsCommandPool, 
         scene, 
         matToTexture
@@ -1326,7 +1332,7 @@ int VulkanRenderer::createModel(const std::string& modelFile)
         &this->vma,
         this->physicalDevice.getVkPhysicalDevice(), 
         this->getVkDevice(), 
-        this->graphicsQueue, 
+        this->queueFamilies.getGraphicsQueue(),
         this->graphicsCommandPool,
         modelMeshes
     );
@@ -1473,7 +1479,8 @@ void VulkanRenderer::createRenderPass_Base()
     subpassDependencies[0].setDependencyFlags(vk::DependencyFlagBits::eByRegion);
 
     // Vector with the Attatchments
-    std::array<vk::AttachmentDescription2,3> attatchments{
+    std::array<vk::AttachmentDescription2,3> attachments
+    {
         swapchainColorAttachment,   // Attachment on index 0 of array : SwapChain Color
         colorAttachment,            // Attachment on index 1 of array : Color (input to SubPass 2)
         depthAttatchment            // Attachment on index 2 of array : Depth (input to SubPass 2)
@@ -1481,8 +1488,8 @@ void VulkanRenderer::createRenderPass_Base()
 
     //Create info for render pass
     vk::RenderPassCreateInfo2 renderPassCreateInfo;
-    renderPassCreateInfo.setAttachmentCount(static_cast<uint32_t>(attatchments.size()));
-    renderPassCreateInfo.setPAttachments(attatchments.data());
+    renderPassCreateInfo.setAttachmentCount(static_cast<uint32_t>(attachments.size()));
+    renderPassCreateInfo.setPAttachments(attachments.data());
     renderPassCreateInfo.setSubpassCount(static_cast<uint32_t>(subPasses.size()));
     renderPassCreateInfo.setPSubpasses(subPasses.data());
     renderPassCreateInfo.setDependencyCount(static_cast<uint32_t> (subpassDependencies.size()));
@@ -1636,9 +1643,10 @@ void VulkanRenderer::createCommandPool()
 
     vk::CommandPoolCreateInfo poolInfo = {};
     poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);   // Enables us to reset our CommandBuffers 
-                                                                        /// if they were allocated from this CommandPool!
-                                                                        /// To make use of this feature you also have to activate in during Recording! (??)
-    poolInfo.queueFamilyIndex = this->queueFamilies.graphicsFamily;      // Queue family type that buffers from this command pool wil luse
+                                                                        // if they were allocated from this CommandPool!
+                                                                        // To make use of this feature you also have to activate in during Recording! (??)
+    poolInfo.queueFamilyIndex = 
+        this->queueFamilies.getGraphicsIndex();      // Queue family type that buffers from this command pool will use
 
     // Create a graphics Queue Family Command Pool
     this->graphicsCommandPool = this->getVkDevice().createCommandPool(poolInfo);
@@ -1757,7 +1765,6 @@ void VulkanRenderer::createUniformBuffers()
                 .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
                                 | VMA_ALLOCATION_CREATE_MAPPED_BIT,
                 .buffer         = &this->viewProjection_uniformBuffer[i], 
-                //.bufferMemory   = &this->viewProjection_uniformBufferMemory[i],
                 .bufferMemory   = &this->viewProjection_uniformBufferMemory[i],
                 .allocationInfo   = &this->viewProjection_uniformBufferMemory_info[i],
                 .vma = &vma
@@ -1791,7 +1798,7 @@ void VulkanRenderer::createDescriptorPool()
     // TODO: replace size with frames in flight
     vk::DescriptorPoolCreateInfo poolCreateInfo{};
     poolCreateInfo.setMaxSets(this->swapchain.getNumImages());             // Max Nr Of descriptor Sets that can be created from the pool, 
-                                                                                        /// Same as the number of buffers / images we have. 
+                                                                                        // Same as the number of buffers / images we have. 
     poolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(descriptorPoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
     poolCreateInfo.setPPoolSizes(descriptorPoolSizes.data());                          // PoolSizes to create the Descriptor Pool with
 
@@ -1802,9 +1809,9 @@ void VulkanRenderer::createDescriptorPool()
     // Texture Sampler Pool
     vk::DescriptorPoolSize samplerPoolSize{};
     samplerPoolSize.setType(vk::DescriptorType::eCombinedImageSampler);       // This descriptor pool will have descriptors for Image and Sampler combined    
-                                                                            /// NOTE; Should be treated as seperate Concepts! but this will be enough...
+                                                                            // NOTE; Should be treated as seperate Concepts! but this will be enough...
     samplerPoolSize.setDescriptorCount(MAX_OBJECTS);                          // There will be as many Descriptor Sets as there are Objects...
-                                                                            ///NOTE; This WILL limit us to only have ONE texture per Object...
+                                                                            //NOTE; This WILL limit us to only have ONE texture per Object...
 
     vk::DescriptorPoolCreateInfo samplerPoolCreateInfo{};
     samplerPoolCreateInfo.setMaxSets(MAX_OBJECTS); 
@@ -1894,7 +1901,7 @@ void VulkanRenderer::createDescriptorSets()
         vk::DescriptorBufferInfo viewProjection_BufferInfo; 
         viewProjection_BufferInfo.setBuffer(this->viewProjection_uniformBuffer[i]);// Buffer to get the Data from
         viewProjection_BufferInfo.setOffset(0);                                    // Position Of start of Data; 
-                                                                                 /// Offset from the start (0), since we want to write all data
+                                                                                 // Offset from the start (0), since we want to write all data
         viewProjection_BufferInfo.setRange(sizeof(UboViewProjection));             // Size of data ... 
 
         // Data to describe the connection between Binding and Uniform Buffer
@@ -1998,7 +2005,7 @@ void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::Command
 {
     vk::CommandPoolCreateInfo commandPoolCreateInfo; 
     commandPoolCreateInfo.setFlags(flags);
-    commandPoolCreateInfo.setQueueFamilyIndex(this->queueFamilies.graphicsFamily);
+    commandPoolCreateInfo.setQueueFamilyIndex(this->queueFamilies.getGraphicsIndex());
     commandPool = this->getVkDevice().createCommandPool(commandPoolCreateInfo);
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(commandPool)));
 
@@ -2134,10 +2141,10 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
 
     std::array<vk::ClearValue, 3> clearValues = {        // Clear values consists of a VkClearColorValue and a VkClearDepthStencilValue
 
-            vk::ClearValue(                              /// of type VkClearColorValue 
+            vk::ClearValue(                              // of type VkClearColorValue 
                 vk::ClearColorValue{ clear_black}     // Clear Value for Attachment 0
             ),  
-            vk::ClearValue(                              /// of type VkClearColorValue 
+            vk::ClearValue(                              // of type VkClearColorValue 
                 vk::ClearColorValue{clear_Plum}     // Clear Value for Attachment 1
             ),            
             vk::ClearValue(                              // Clear Value for Attachment 2
@@ -2197,7 +2204,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                         this->pipelineLayout,
                         vk::ShaderStageFlagBits::eVertex,   // Stage to push the Push Constant to.
                         uint32_t(0),                        // Offset of Push Constants to update; 
-                                                            /// Offset into the Push Constant Block (if more values are used (??))
+                                                            // Offset into the Push Constant Block (if more values are used (??))
                         sizeof(modelMatrix),                // Size of data being pushed
                         &modelMatrix                        // Actual data being pushed (can also be an array)
                     );
@@ -2437,7 +2444,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
                                 this->pipelineLayout,
                                 vk::ShaderStageFlagBits::eVertex,   // Stage to push the Push Constant to.
                                 uint32_t(0),                        // Offset of Push Constants to update; 
-                                                                    /// Offset into the Push Constant Block (if more values are used (??))
+                                                                    // Offset into the Push Constant Block (if more values are used (??))
                                 sizeof(modelMatrix),                // Size of data being pushed
                                 &modelMatrix                        // Actual data being pushed (can also be an array)
                             );
@@ -2479,11 +2486,6 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
                                         descriptorSetGroup.data(),                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
                                         0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
                                         nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
-
-                                    /*//Left for Reference, (This was the two last parameters of vkCmdBindDescriptorSets function)
-                                        1,                               // Dynamic Offset Count; 
-                                        &dynamicUniformBuffer_offset);    // Dynamic Offset
-                                    */
 
                                     // Execute Pipeline!
                                     this->commandBuffers[currentImageIndex].drawIndexed(                            
@@ -2779,8 +2781,8 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.Instance = this->instance.getVkInstance();
     imguiInitInfo.PhysicalDevice = this->physicalDevice.getVkPhysicalDevice();
     imguiInitInfo.Device = this->getVkDevice();
-    imguiInitInfo.QueueFamily = this->queueFamilies.graphicsFamily;
-    imguiInitInfo.Queue = this->graphicsQueue;
+    imguiInitInfo.QueueFamily = this->queueFamilies.getGraphicsIndex();
+    imguiInitInfo.Queue = this->queueFamilies.getGraphicsQueue();
     //imguiInitInfo.PipelineCache = this->graphics_pipelineCache;
     imguiInitInfo.PipelineCache = VK_NULL_HANDLE;  //TODO: Imgui Pipeline Should have its own Cache! 
     imguiInitInfo.DescriptorPool = this->descriptorPool_imgui;
@@ -2829,8 +2831,12 @@ void VulkanRenderer::initImgui()
     vk::SubmitInfo end_info = {};        
     end_info.commandBufferCount = 1;
     end_info.pCommandBuffers = &commandBuffers_imgui[0];
-        
-    vk::Result result = this->graphicsQueue.submit(1, &end_info, VK_NULL_HANDLE);
+    vk::Result result = 
+        this->queueFamilies.getGraphicsQueue().submit(
+            1, 
+            &end_info, 
+            VK_NULL_HANDLE
+        );
     if(result != vk::Result::eSuccess){
         throw std::runtime_error("Failed to submit imgui fonts to graphics queue...");
     }

@@ -2,6 +2,7 @@
 #include "VulkanDbg.hpp"
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
+#include "QueueFamilies.hpp"
 #include "Window.hpp"
 #include "Texture.hpp"
 
@@ -166,7 +167,7 @@ void Swapchain::createColorBuffer()
                 .tiling = vk::ImageTiling::eOptimal,
                 .useFlags = vk::ImageUsageFlagBits::eColorAttachment     // Image will be used as a Color Attachment
                             | vk::ImageUsageFlagBits::eInputAttachment, // This will be an Input Attachemnt, recieved by a subpass
-                /// TODO:; Not optimal for normal offscreen rendering, since we can only handle info for a current pixel/fragment
+                // TODO:; Not optimal for normal offscreen rendering, since we can only handle info for a current pixel/fragment
                 .property = vk::MemoryPropertyFlagBits::eDeviceLocal,     // Image will only be handled by the GPU
                 .imageMemory = &this->colorBufferImageMemory[i]
             },
@@ -256,7 +257,7 @@ void Swapchain::createSwapchain(
     PhysicalDevice& physicalDevice,
     Device& device,
     vk::SurfaceKHR& surface,
-    QueueFamilyIndices& queueFamilies,
+    QueueFamilies& queueFamilies,
     VmaAllocator& vma)
 {
     {
@@ -334,35 +335,24 @@ void Swapchain::createSwapchain(
         swapChainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;    // Draw as is, opaque...
         swapChainCreateInfo.clipped = VK_TRUE;                              // dont draw not visible parts of window
 
-        //! -- THE TWO DIFFERENT QUEUES - Graphics queue and Presentation Queue --
-        /*! The Graphics Queue      : will draw the images contained in our swapChain
-         *  The Presentation Queue  : will present the images to the surface (i.e. screen/window)
-         *
-         *  There are 2 Different modes the swapChain can interact with these Queues;
-         *  - Exclusive interaction     : A unique Image from the SwapChain can only be interacted with one queue at the same time
-         *  - Concurrent interaction    : A unique Image from the SwapChain can only be interacted with multiple queues at the same time
-         *
-         *  NOTE: Concurrent interaction is typically slower (for 2 reasons)!
-         *  - The Concurrent mode have more overhead
-         *  - IF the GraphicsQueue AND PresentationQueue is the SAME queue, then there is no need for multiple queues to interact with the image...
-         * */
-
          // We pick mode based on if the GraphicsQueue and PresentationQueue is the same queue...
-         //TODO: the QueueFamilyIndices should be stored somewhere rather than fetched again...
+        int32_t graphicsQueueIndex = queueFamilies.getGraphicsIndex();
+        int32_t presentQueueIndex = queueFamilies.getPresentIndex();
         std::array<uint32_t, 2> queueFamilyArray
         {
-            static_cast<uint32_t>(queueFamilies.graphicsFamily),
-            static_cast<uint32_t>(queueFamilies.presentationFamily)
+            static_cast<uint32_t>(graphicsQueueIndex),
+            static_cast<uint32_t>(presentQueueIndex)
         };
 
         // If Graphics and Presentation families are different, then SwapChain must let images be shared between families!
-        if (queueFamilies.graphicsFamily != queueFamilies.presentationFamily) {
-
+        if (graphicsQueueIndex != presentQueueIndex) 
+        {
             swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eConcurrent);   // Use Concurrent mode if more than 1 family is using the swapchain
             swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t(2));                            // How many different queue families will use the swapchain
             swapChainCreateInfo.setPQueueFamilyIndices(queueFamilyArray.data());         // Array containing the queues that will share images
         }
-        else {
+        else 
+        {
             swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eExclusive);    // Use Exclusive mode if only one Queue Family uses the SwapChain...
             swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t(0));        // Note; this is the default value
             swapChainCreateInfo.setPQueueFamilyIndices(nullptr);  // Note; this is the default value

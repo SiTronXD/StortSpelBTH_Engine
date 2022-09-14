@@ -6,13 +6,11 @@
 #include "Device.hpp"
 #include "Window.hpp"
 #include "Swapchain.hpp"
+#include "QueueFamilies.hpp"
 
-#include <vulkan/vulkan.hpp>
-#include "Utilities.hpp"
 #include "Window.hpp"
 #include "imgui.h"              // Need to be included in header
 
-#include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
@@ -54,13 +52,10 @@ class VulkanRenderer {
     
     PhysicalDevice physicalDevice;
     Device device;
+    QueueFamilies queueFamilies;
 
-    QueueFamilyIndices queueFamilies{};
-    vk::Queue             graphicsQueue{};      /// Also acts as the TransferQueue 
-    vk::Queue             presentationQueue{};
     vk::SurfaceKHR        surface{};            ///Images will be displayed through a surface, which GLFW will read from
     
-
     Swapchain swapchain;
     std::vector<vk::CommandBuffer> commandBuffers;
     
