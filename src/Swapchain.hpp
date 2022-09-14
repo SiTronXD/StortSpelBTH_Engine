@@ -14,7 +14,8 @@ private:
 	vk::SwapchainKHR swapchain;
 
 	SwapChainDetails swapchainDetails{};
-	std::vector<SwapChainImage> swapchainImages;         // We store ALL our SwapChain images here... to have access to them
+	std::vector<vk::Image> swapchainImages;
+	std::vector<vk::ImageView> swapchainImageViews;
 	std::vector<vk::Framebuffer> swapchainFrameBuffers;
 
 	vk::Format swapchainImageFormat{};
@@ -74,9 +75,10 @@ public:
 	inline size_t getNumColorBufferImages() { return this->colorBufferImage.size(); }
 	inline size_t getNumDepthBufferImages() { return this->depthBufferImage.size(); }
 	inline SwapChainDetails& getDetails() { return this->swapchainDetails; }
-	inline SwapChainImage& getImage(const uint32_t& index) { return this->swapchainImages[index]; }
+	inline vk::Image& getImage(const uint32_t& index) { return this->swapchainImages[index]; }
 	inline vk::Image& getColorBufferImage(const uint32_t& index) { return this->colorBufferImage[index]; }
 	inline vk::Image& getDepthBufferImage(const uint32_t& index) { return this->depthBufferImage[index]; }
+	inline vk::ImageView& getImageView(const uint32_t& index) { return this->swapchainImageViews[index]; }
 	inline vk::ImageView& getColorBufferImageView(const uint32_t& index) { return this->colorBufferImageView[index]; }
 	inline vk::ImageView& getDepthBufferImageView(const uint32_t& index) { return this->depthBufferImageView[index]; }
 	inline vk::SwapchainKHR& getVkSwapchain() { return this->swapchain; }

@@ -79,12 +79,6 @@ struct SwapChainDetails {
     }
 };
 
-struct SwapChainImage {
-    vk::Image     image;
-    vk::ImageView imageView;
-
-};
-
 struct createImageData{
     uint32_t width;
     uint32_t height; 

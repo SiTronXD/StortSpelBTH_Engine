@@ -112,33 +112,6 @@ vk::Extent2D Swapchain::chooseBestImageResolution(
     }
 }
 
-void Swapchain::recreateCleanup()
-{
-    for (auto image : this->swapchainImages) {
-        device->getVkDevice().destroyImageView(image.imageView);
-    }
-    this->swapchainImages.resize(0);
-
-    for (auto framebuffer : this->swapchainFrameBuffers) {
-        this->device->getVkDevice().destroyFramebuffer(framebuffer);
-    }
-    this->swapchainFrameBuffers.resize(0);
-
-    for (size_t i = 0; i < this->depthBufferImage.size(); i++)
-    {
-        this->device->getVkDevice().destroyImageView(this->depthBufferImageView[i]);
-        this->device->getVkDevice().destroyImage(this->depthBufferImage[i]);
-        vmaFreeMemory(*this->vma, this->depthBufferImageMemory[i]);
-    }
-
-    for (size_t i = 0; i < this->colorBufferImage.size(); i++)
-    {
-        this->device->getVkDevice().destroyImageView(this->colorBufferImageView[i]);
-        this->device->getVkDevice().destroyImage(this->colorBufferImage[i]);
-        vmaFreeMemory(*this->vma, this->colorBufferImageMemory[i]);
-    }
-}
-
 void Swapchain::createColorBuffer()
 {
 #ifndef VENGINE_NO_PROFILING
@@ -374,28 +347,21 @@ void Swapchain::createSwapchain(
         this->swapchainExtent = imageExtent;
 
         // Get all Images from the SwapChain and store them in our swapChainImages Vector...
-        std::vector<vk::Image> images =
+        this->swapchainImages =
             this->device->getVkDevice().getSwapchainImagesKHR(this->swapchain);
 
-        uint32_t index = 0;
-        for (vk::Image image : images)
+        this->swapchainImageViews.resize(this->swapchainImages.size());
+        for (size_t i = 0; i < this->swapchainImages.size(); ++i)
         {
-            // Copy the Image Handle ...
-            SwapChainImage swapChainImage = {};
-            swapChainImage.image = image;
-
             // Create the Image View
-            swapChainImage.imageView = Texture::createImageView(
+            this->swapchainImageViews[i] = Texture::createImageView(
                 *this->device,
-                image,
+                this->swapchainImages[i],
                 this->swapchainImageFormat,
                 vk::ImageAspectFlagBits::eColor
             );
-            VulkanDbg::registerVkObjectDbgInfo("Swapchain_ImageView[" + std::to_string(index) + "]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(swapChainImage.imageView)));
-            VulkanDbg::registerVkObjectDbgInfo("Swapchain_Image[" + std::to_string(index) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(swapChainImage.image)));
-
-            index++;
-            this->swapchainImages.push_back(swapChainImage);
+            VulkanDbg::registerVkObjectDbgInfo("Swapchain_ImageView[" + std::to_string(i) + "]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->swapchainImageViews[i])));
+            VulkanDbg::registerVkObjectDbgInfo("Swapchain_Image[" + std::to_string(i) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->swapchainImages[i])));
         }
 
         if (oldSwapchain)
@@ -421,7 +387,7 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
 
         std::array<vk::ImageView, 3> attachments = 
         {
-                this->swapchainImages[i].imageView,   // Attatchment on index 0 of array : swapchain image
+                this->swapchainImageViews[i],   // Attatchment on index 0 of array : swapchain image
                 this->colorBufferImageView[i],   // Attachement on index 1 of array : color
                 this->depthBufferImageView[i]  // Attatchment on index 2 of array : depth
         };
@@ -441,7 +407,7 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
 
 void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
 {
-    this->recreateCleanup();
+    this->cleanup();
 
     this->createSwapchain(
         *this->window, 
@@ -460,7 +426,36 @@ void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
 
 void Swapchain::cleanup()
 {
-    this->recreateCleanup();
+    // Color
+    for (size_t i = 0; i < this->colorBufferImage.size(); i++)
+    {
+        this->device->getVkDevice().destroyImageView(this->colorBufferImageView[i]);
+        this->device->getVkDevice().destroyImage(this->colorBufferImage[i]);
+        vmaFreeMemory(*this->vma, this->colorBufferImageMemory[i]);
+    }
 
+    // Depth
+    for (size_t i = 0; i < this->depthBufferImage.size(); i++)
+    {
+        this->device->getVkDevice().destroyImageView(this->depthBufferImageView[i]);
+        this->device->getVkDevice().destroyImage(this->depthBufferImage[i]);
+        vmaFreeMemory(*this->vma, this->depthBufferImageMemory[i]);
+    }
+
+    // Swapchain image views
+    for (auto views : this->swapchainImageViews)
+    {
+        device->getVkDevice().destroyImageView(views);
+    }
+    this->swapchainImages.resize(0);
+
+    // Swapchain
     this->device->getVkDevice().destroySwapchainKHR(this->swapchain);
+
+    // Framebuffers
+    for (auto framebuffer : this->swapchainFrameBuffers)
+    {
+        this->device->getVkDevice().destroyFramebuffer(framebuffer);
+    }
+    this->swapchainFrameBuffers.resize(0);
 }

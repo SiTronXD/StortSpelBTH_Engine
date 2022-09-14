@@ -2081,13 +2081,14 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
     renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());          // Size of region to run render pass on (starting at offset)
      
-    static const vk::ClearColorValue  clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
-    static const vk::ClearColorValue  clear_Plum (std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
+    static const vk::ClearColorValue clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
+    static const vk::ClearColorValue clear_Plum(std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
 
-    std::array<vk::ClearValue, 3> clearValues = {        // Clear values consists of a VkClearColorValue and a VkClearDepthStencilValue
+    std::array<vk::ClearValue, 3> clearValues = 
+    {        // Clear values consists of a VkClearColorValue and a VkClearDepthStencilValue
 
             vk::ClearValue(                              // of type VkClearColorValue 
-                vk::ClearColorValue{ clear_black}     // Clear Value for Attachment 0
+                vk::ClearColorValue{clear_black}     // Clear Value for Attachment 0
             ),  
             vk::ClearValue(                              // of type VkClearColorValue 
                 vk::ClearColorValue{clear_Plum}     // Clear Value for Attachment 1
@@ -2260,11 +2261,8 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
             
             // End Render Pass!
             this->commandBuffers[currentImageIndex].endRenderPass2(subpassEndInfo);
-            /*!CMD in a function means that the function is something that is being recorded!
-                * */
+            
 
-            static const vk::ClearColorValue  clear_black(std::array<float, 4> {1.F, 0.F, 0.F, 1.F});
-            static const vk::ClearValue  clearValue{ clear_black };
             vk::RenderPassBeginInfo renderPassBeginInfo{};
             vk::SubpassBeginInfo subpassBeginInfo;
             subpassBeginInfo.setContents(vk::SubpassContents::eInline);
@@ -2272,7 +2270,6 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
             renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());
             renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));
             renderPassBeginInfo.setFramebuffer(this->frameBuffers_imgui[currentImageIndex]);
-            //renderPassBeginInfo.setPClearValues(&clearValue);         // List of clear values
             renderPassBeginInfo.setClearValueCount(uint32_t(0));
 
             this->commandBuffers[currentImageIndex].beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
@@ -2321,7 +2318,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
     static const vk::ClearColorValue  clear_Plum (std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
 
     vk::RenderingAttachmentInfo color_attachment_info;         
-    color_attachment_info.imageView = this->swapchain.getImage(currentImageIndex).imageView;
+    color_attachment_info.imageView = this->swapchain.getImageView(currentImageIndex);
     color_attachment_info.setImageLayout(vk::ImageLayout::eAttachmentOptimal);
     color_attachment_info.setLoadOp(vk::AttachmentLoadOp::eClear);
     color_attachment_info.setStoreOp(vk::AttachmentStoreOp::eStore);
@@ -2363,7 +2360,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
         vengine_helper::insertImageMemoryBarrier(
         createImageBarrierData{
             .cmdBuffer = commandBuffers[currentImageIndex],
-            .image = this->swapchain.getImage(currentImageIndex).image,
+            .image = this->swapchain.getImage(currentImageIndex),
             .srcAccessMask = vk::AccessFlags2(),
             .dstAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
             .oldLayout = vk::ImageLayout::eUndefined,
@@ -2491,7 +2488,7 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
         vengine_helper::insertImageMemoryBarrier(
         createImageBarrierData{
             .cmdBuffer = commandBuffers[currentImageIndex],
-            .image = this->swapchain.getImage(currentImageIndex).image,
+            .image = this->swapchain.getImage(currentImageIndex),
             .srcAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
             .dstAccessMask = vk::AccessFlags2(),
             .oldLayout = vk::ImageLayout::eColorAttachmentOptimal,
@@ -2821,7 +2818,7 @@ void VulkanRenderer::createFramebuffer_imgui()
     this->frameBuffers_imgui.resize(this->commandBuffers.size());
     for(size_t i = 0; i < this->frameBuffers_imgui.size(); i++)
     {        
-        attachment[0] = this->swapchain.getImage(i).imageView; // TODO: Check if this is rightt?...
+        attachment[0] = this->swapchain.getImageView(i); 
         createFrameBuffer(
             this->frameBuffers_imgui[i], 
             attachment, 
