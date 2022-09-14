@@ -1,5 +1,6 @@
 #include "Swapchain.hpp"
 #include "VulkanDbg.hpp"
+#include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "Window.hpp"
 #include "Texture.hpp"
@@ -121,6 +122,119 @@ void Swapchain::recreateCleanup()
         this->device->getVkDevice().destroyFramebuffer(framebuffer);
     }
     this->swapchainFrameBuffers.resize(0);
+
+    for (size_t i = 0; i < this->depthBufferImage.size(); i++)
+    {
+        this->device->getVkDevice().destroyImageView(this->depthBufferImageView[i]);
+        this->device->getVkDevice().destroyImage(this->depthBufferImage[i]);
+        vmaFreeMemory(*this->vma, this->depthBufferImageMemory[i]);
+    }
+
+    for (size_t i = 0; i < this->colorBufferImage.size(); i++)
+    {
+        this->device->getVkDevice().destroyImageView(this->colorBufferImageView[i]);
+        this->device->getVkDevice().destroyImage(this->colorBufferImage[i]);
+        vmaFreeMemory(*this->vma, this->colorBufferImageMemory[i]);
+    }
+}
+
+void Swapchain::createColorBuffer()
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+    this->colorBufferImage.resize(this->getNumImages());
+    this->colorBufferImageMemory.resize(this->getNumImages());
+    this->colorBufferImageView.resize(this->getNumImages());
+
+    // Get supported formats for Color Attachment
+    const std::vector<vk::Format> formats{ vk::Format::eR8G8B8A8Unorm };
+    this->colorFormat = Texture::chooseSupportedFormat(
+        *this->physicalDevice,
+        formats,
+        vk::ImageTiling::eOptimal,
+        vk::FormatFeatureFlagBits::eColorAttachment);
+
+    for (size_t i = 0; i < this->colorBufferImage.size(); i++)
+    {
+        colorBufferImage[i] = Texture::createImage(
+            *this->vma,
+            {
+                .width = this->getWidth(),
+                .height = this->getHeight(),
+                .format = this->colorFormat,
+                .tiling = vk::ImageTiling::eOptimal,
+                .useFlags = vk::ImageUsageFlagBits::eColorAttachment     // Image will be used as a Color Attachment
+                            | vk::ImageUsageFlagBits::eInputAttachment, // This will be an Input Attachemnt, recieved by a subpass
+                /// TODO:; Not optimal for normal offscreen rendering, since we can only handle info for a current pixel/fragment
+                .property = vk::MemoryPropertyFlagBits::eDeviceLocal,     // Image will only be handled by the GPU
+                .imageMemory = &this->colorBufferImageMemory[i]
+            },
+            "ColorBufferImage"
+        );
+
+        // Creation of Color Buffer Image View
+        this->colorBufferImageView[i] = Texture::createImageView(
+            *this->device,
+            this->colorBufferImage[i],
+            this->colorFormat,
+            vk::ImageAspectFlagBits::eColor
+        );
+        VulkanDbg::registerVkObjectDbgInfo("colorBufferImageView[" + std::to_string(i) + "]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->colorBufferImageView[i])));
+        VulkanDbg::registerVkObjectDbgInfo("colorBufferImage[" + std::to_string(i) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->colorBufferImage[i])));
+    }
+}
+
+void Swapchain::createDepthBuffer()
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+    this->depthBufferImage.resize(this->getNumImages());
+    this->depthBufferImageMemory.resize(this->getNumImages());
+    this->depthBufferImageView.resize(this->getNumImages());
+
+
+    // Get supported VkFormat for the DepthBuffer
+    this->depthFormat = Texture::chooseSupportedFormat(
+        *this->physicalDevice,
+        {  //Atleast one of these should be available...
+            vk::Format::eD32SfloatS8Uint,   // First  Choice: Supported format should be using depth value of 32 bits and using StencilBuffer 8Bits (??)
+            vk::Format::eD32Sfloat,           // Second Choice: Supported format shoudl be using depth value of 32 bits
+            vk::Format::eD24UnormS8Uint     // third  Choice: Supported format shoudl be using depth value of 24 bits and using StencilBuffer 8Bits (??)
+        },
+        vk::ImageTiling::eOptimal,                         // We want to use the Optimal Tiling
+        vk::FormatFeatureFlagBits::eDepthStencilAttachment); // Make sure the Format supports the Depth Stencil Attatchment Bit....
+
+    // Create one DepthBuffer per Image in the SwapChain
+    for (size_t i = 0; i < this->depthBufferImage.size(); i++)
+    {
+        // Create Depth Buffer Image
+        this->depthBufferImage[i] = Texture::createImage(
+            *this->vma,
+            {
+                .width = this->getWidth(),
+                .height = this->getHeight(),
+                .format = this->depthFormat,
+                .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
+                .useFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment     // Image will be used as a Depth Stencil
+                            | vk::ImageUsageFlagBits::eInputAttachment,
+                .property = vk::MemoryPropertyFlagBits::eDeviceLocal,            // Image is local to the device, it will not be changed by the HOST (CPU)
+                .imageMemory = &this->depthBufferImageMemory[i]
+            },
+            "depthBufferImage"
+        );
+
+        // Create Depth Buffer Image View
+        this->depthBufferImageView[i] = Texture::createImageView(
+            *this->device,
+            this->depthBufferImage[i],
+            depthFormat,
+            vk::ImageAspectFlagBits::eDepth
+        );
+        VulkanDbg::registerVkObjectDbgInfo("depthBufferImageView[" + std::to_string(i) + "]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->depthBufferImageView[i])));
+        VulkanDbg::registerVkObjectDbgInfo("depthBufferImage[" + std::to_string(i) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->depthBufferImage[i])));
+    }
 }
 
 Swapchain::Swapchain()
@@ -128,7 +242,8 @@ Swapchain::Swapchain()
     window(nullptr),
     device(nullptr),
     surface(nullptr),
-    queueFamilies(nullptr)
+    queueFamilies(nullptr),
+    vma(nullptr)
 {
 }
 
@@ -138,160 +253,169 @@ Swapchain::~Swapchain()
 
 void Swapchain::createSwapchain(
     Window& window,
-    Device& device, 
+    PhysicalDevice& physicalDevice,
+    Device& device,
     vk::SurfaceKHR& surface,
-    QueueFamilyIndices& queueFamilies)
+    QueueFamilyIndices& queueFamilies,
+    VmaAllocator& vma)
 {
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    this->window = &window;
-    this->device = &device;
-    this->surface = &surface;
-    this->queueFamilies = &queueFamilies;
-
-    // Store Old Swapchain, if it exists
-    vk::SwapchainKHR oldSwapchain = this->swapchain;
-
-    //Find 'optimal' surface values for our swapChain
-    // - 1. Choose best surface Format
-    vk::SurfaceFormat2KHR  surfaceFormat = 
-        this->chooseBestSurfaceFormat(this->swapchainDetails.Format);
-
-    // - 2. Choose best presentation Mode
-    vk::PresentModeKHR presentationMode = 
-        this->chooseBestPresentationMode(this->swapchainDetails.presentationMode);
-
-    // - 3. Choose Swap Chain image Resolution
-    vk::Extent2D imageExtent = 
-        this->chooseBestImageResolution(this->swapchainDetails.surfaceCapabilities);
-
-    // --- PREPARE DATA FOR SwapChainCreateInfo ... ---
-    // Minimum number of images our swapChain should use.
-    // - By setting the minImageCount to 1 more image than the amount defined in surfaceCapabilities we enable Triple Buffering!
-    // - NOTE: we store the 'minImageCount+1' in a variable, we need to check that 'minImageCount+1' is not more than 'maxImageCount'!
-    uint32_t imageCount = std::clamp(
-        this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.minImageCount + 1,
-        this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.minImageCount,
-        this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.maxImageCount);
-
-    if (imageCount == 0)
     {
-        // if swapChainDetails.surfaceCapabilities.maxImageCount was 0 then imageCount will now be 0 too.
-        // This CAN happen IF there is no limit on how many images we can store in the SwapChain.
-        // - i.e. maxImageCount == 0, then there is no maxImageCount!
-        //imageCount    = swapChainDetails.surfaceCapabilities.minImageCount + 1; //!! Nope
-        imageCount = this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.maxImageCount; // (??)
-        /*! We use the max image count if we can, the clamping we did *Seems* to ensure that we don't get a imageCount is not 0...
-         * I'm not sure if I'm missing something... this seems redundant.
-         * Could I just :
-         *  imageCount = (maxImageCount != 0) ? maxImageCount : minImageCount +1 ;
-         *
-         * Also... Do I always want to use the MaxImageCount just because I can? Or is minImageCount + X a better choice...
+    #ifndef VENGINE_NO_PROFILING
+        ZoneScoped; //:NOLINT
+    #endif
+
+        this->window = &window;
+        this->physicalDevice = &physicalDevice;
+        this->device = &device;
+        this->surface = &surface;
+        this->queueFamilies = &queueFamilies;
+        this->vma = &vma;
+
+        // Store Old Swapchain, if it exists
+        vk::SwapchainKHR oldSwapchain = this->swapchain;
+
+        //Find 'optimal' surface values for our swapChain
+        // - 1. Choose best surface Format
+        vk::SurfaceFormat2KHR  surfaceFormat =
+            this->chooseBestSurfaceFormat(this->swapchainDetails.Format);
+
+        // - 2. Choose best presentation Mode
+        vk::PresentModeKHR presentationMode =
+            this->chooseBestPresentationMode(this->swapchainDetails.presentationMode);
+
+        // - 3. Choose Swap Chain image Resolution
+        vk::Extent2D imageExtent =
+            this->chooseBestImageResolution(this->swapchainDetails.surfaceCapabilities);
+
+        // --- PREPARE DATA FOR SwapChainCreateInfo ... ---
+        // Minimum number of images our swapChain should use.
+        // - By setting the minImageCount to 1 more image than the amount defined in surfaceCapabilities we enable Triple Buffering!
+        // - NOTE: we store the 'minImageCount+1' in a variable, we need to check that 'minImageCount+1' is not more than 'maxImageCount'!
+        uint32_t imageCount = std::clamp(
+            this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.minImageCount + 1,
+            this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.minImageCount,
+            this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.maxImageCount);
+
+        if (imageCount == 0)
+        {
+            // if swapChainDetails.surfaceCapabilities.maxImageCount was 0 then imageCount will now be 0 too.
+            // This CAN happen IF there is no limit on how many images we can store in the SwapChain.
+            // - i.e. maxImageCount == 0, then there is no maxImageCount!
+            //imageCount    = swapChainDetails.surfaceCapabilities.minImageCount + 1; //!! Nope
+            imageCount = this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.maxImageCount; // (??)
+            /*! We use the max image count if we can, the clamping we did *Seems* to ensure that we don't get a imageCount is not 0...
+             * I'm not sure if I'm missing something... this seems redundant.
+             * Could I just :
+             *  imageCount = (maxImageCount != 0) ? maxImageCount : minImageCount +1 ;
+             *
+             * Also... Do I always want to use the MaxImageCount just because I can? Or is minImageCount + X a better choice...
+             * */
+        }
+
+        //Create the SwapChain Create Info!
+        vk::SwapchainCreateInfoKHR  swapChainCreateInfo = {};
+        swapChainCreateInfo.setSurface(surface);
+        swapChainCreateInfo.setImageFormat(surfaceFormat.surfaceFormat.format);
+        swapChainCreateInfo.setImageColorSpace(surfaceFormat.surfaceFormat.colorSpace);
+        swapChainCreateInfo.setPresentMode(presentationMode);
+        swapChainCreateInfo.setImageExtent(imageExtent);
+        swapChainCreateInfo.setMinImageCount(uint32_t(imageCount));
+        swapChainCreateInfo.setImageArrayLayers(uint32_t(1));                                    // Numbers of layers for each image in chain
+        swapChainCreateInfo.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment              // What 'Attachment' are drawn to the image
+            | vk::ImageUsageFlagBits::eTransferSrc);    // Tells us we want to be able to use the image, if we want to take a screenshot etc...    
+
+        /*! The imageUsage defines how the image is intended to be used, there's a couple different options.
+         * - vk::ImageUsageFlagBits::eColorAttachment        : Used for Images with colors (??)
+         * NOTE: Generally always vk::ImageUsageFlagBits::eColorAttachment...
+         *       This is because the SwapChain is used to present images to the screen,
+         *       if we wanted to draw a depthBuffer onto the screen, then we could specify another imageUsage flag... (??)
          * */
+        swapChainCreateInfo.preTransform = this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.currentTransform;
+        swapChainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;    // Draw as is, opaque...
+        swapChainCreateInfo.clipped = VK_TRUE;                              // dont draw not visible parts of window
+
+        //! -- THE TWO DIFFERENT QUEUES - Graphics queue and Presentation Queue --
+        /*! The Graphics Queue      : will draw the images contained in our swapChain
+         *  The Presentation Queue  : will present the images to the surface (i.e. screen/window)
+         *
+         *  There are 2 Different modes the swapChain can interact with these Queues;
+         *  - Exclusive interaction     : A unique Image from the SwapChain can only be interacted with one queue at the same time
+         *  - Concurrent interaction    : A unique Image from the SwapChain can only be interacted with multiple queues at the same time
+         *
+         *  NOTE: Concurrent interaction is typically slower (for 2 reasons)!
+         *  - The Concurrent mode have more overhead
+         *  - IF the GraphicsQueue AND PresentationQueue is the SAME queue, then there is no need for multiple queues to interact with the image...
+         * */
+
+         // We pick mode based on if the GraphicsQueue and PresentationQueue is the same queue...
+         //TODO: the QueueFamilyIndices should be stored somewhere rather than fetched again...
+        std::array<uint32_t, 2> queueFamilyArray
+        {
+            static_cast<uint32_t>(queueFamilies.graphicsFamily),
+            static_cast<uint32_t>(queueFamilies.presentationFamily)
+        };
+
+        // If Graphics and Presentation families are different, then SwapChain must let images be shared between families!
+        if (queueFamilies.graphicsFamily != queueFamilies.presentationFamily) {
+
+            swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eConcurrent);   // Use Concurrent mode if more than 1 family is using the swapchain
+            swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t(2));                            // How many different queue families will use the swapchain
+            swapChainCreateInfo.setPQueueFamilyIndices(queueFamilyArray.data());         // Array containing the queues that will share images
+        }
+        else {
+            swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eExclusive);    // Use Exclusive mode if only one Queue Family uses the SwapChain...
+            swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t(0));        // Note; this is the default value
+            swapChainCreateInfo.setPQueueFamilyIndices(nullptr);  // Note; this is the default value
+        }
+
+
+        /*! If we want to create a new SwapChain, this would be needed when for example resizing the window.
+         *  with the oldSwapchain we can pass the old swapChains responsibility to the new SwapChain...
+         * */
+         // IF old swapChain been destroyed and this one replaces it, then link old one to quickly hand over responsibilities...
+        swapChainCreateInfo.setOldSwapchain(oldSwapchain); // VK_NULL_HANDLE on initialization, previous all other times...
+
+        // Create The SwapChain!    
+        this->swapchain = this->device->getVkDevice().createSwapchainKHR(swapChainCreateInfo);
+        VulkanDbg::registerVkObjectDbgInfo("Swapchain", vk::ObjectType::eSwapchainKHR, reinterpret_cast<uint64_t>(vk::SwapchainKHR::CType(this->swapchain)));
+
+        // Store both the VkExtent2D and VKFormat, so they can easily be used later...
+        this->swapchainImageFormat = surfaceFormat.surfaceFormat.format;
+        this->swapchainExtent = imageExtent;
+
+        // Get all Images from the SwapChain and store them in our swapChainImages Vector...
+        std::vector<vk::Image> images =
+            this->device->getVkDevice().getSwapchainImagesKHR(this->swapchain);
+
+        uint32_t index = 0;
+        for (vk::Image image : images)
+        {
+            // Copy the Image Handle ...
+            SwapChainImage swapChainImage = {};
+            swapChainImage.image = image;
+
+            // Create the Image View
+            swapChainImage.imageView = Texture::createImageView(
+                *this->device,
+                image,
+                this->swapchainImageFormat,
+                vk::ImageAspectFlagBits::eColor
+            );
+            VulkanDbg::registerVkObjectDbgInfo("Swapchain_ImageView[" + std::to_string(index) + "]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(swapChainImage.imageView)));
+            VulkanDbg::registerVkObjectDbgInfo("Swapchain_Image[" + std::to_string(index) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(swapChainImage.image)));
+
+            index++;
+            this->swapchainImages.push_back(swapChainImage);
+        }
+
+        if (oldSwapchain)
+        {
+            this->device->getVkDevice().destroySwapchainKHR(oldSwapchain);
+        }
     }
 
-    //Create the SwapChain Create Info!
-    vk::SwapchainCreateInfoKHR  swapChainCreateInfo = {};
-    swapChainCreateInfo.setSurface(surface);
-    swapChainCreateInfo.setImageFormat(surfaceFormat.surfaceFormat.format);
-    swapChainCreateInfo.setImageColorSpace(surfaceFormat.surfaceFormat.colorSpace);
-    swapChainCreateInfo.setPresentMode(presentationMode);
-    swapChainCreateInfo.setImageExtent(imageExtent);
-    swapChainCreateInfo.setMinImageCount(uint32_t(imageCount));
-    swapChainCreateInfo.setImageArrayLayers(uint32_t(1));                                    // Numbers of layers for each image in chain
-    swapChainCreateInfo.setImageUsage(vk::ImageUsageFlagBits::eColorAttachment              // What 'Attachment' are drawn to the image
-        | vk::ImageUsageFlagBits::eTransferSrc);    // Tells us we want to be able to use the image, if we want to take a screenshot etc...    
-
-    /*! The imageUsage defines how the image is intended to be used, there's a couple different options.
-     * - vk::ImageUsageFlagBits::eColorAttachment        : Used for Images with colors (??)
-     * NOTE: Generally always vk::ImageUsageFlagBits::eColorAttachment...
-     *       This is because the SwapChain is used to present images to the screen,
-     *       if we wanted to draw a depthBuffer onto the screen, then we could specify another imageUsage flag... (??)
-     * */
-    swapChainCreateInfo.preTransform = this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.currentTransform;
-    swapChainCreateInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;    // Draw as is, opaque...
-    swapChainCreateInfo.clipped = VK_TRUE;                              // dont draw not visible parts of window
-
-    //! -- THE TWO DIFFERENT QUEUES - Graphics queue and Presentation Queue --
-    /*! The Graphics Queue      : will draw the images contained in our swapChain
-     *  The Presentation Queue  : will present the images to the surface (i.e. screen/window)
-     *
-     *  There are 2 Different modes the swapChain can interact with these Queues;
-     *  - Exclusive interaction     : A unique Image from the SwapChain can only be interacted with one queue at the same time
-     *  - Concurrent interaction    : A unique Image from the SwapChain can only be interacted with multiple queues at the same time
-     *
-     *  NOTE: Concurrent interaction is typically slower (for 2 reasons)!
-     *  - The Concurrent mode have more overhead
-     *  - IF the GraphicsQueue AND PresentationQueue is the SAME queue, then there is no need for multiple queues to interact with the image...
-     * */
-
-     // We pick mode based on if the GraphicsQueue and PresentationQueue is the same queue...
-     //TODO: the QueueFamilyIndices should be stored somewhere rather than fetched again...
-    std::array<uint32_t, 2> queueFamilyArray
-    { 
-        static_cast<uint32_t>(queueFamilies.graphicsFamily),
-        static_cast<uint32_t>(queueFamilies.presentationFamily) 
-    };
-
-    // If Graphics and Presentation families are different, then SwapChain must let images be shared between families!
-    if (queueFamilies.graphicsFamily != queueFamilies.presentationFamily) {
-
-        swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eConcurrent);   // Use Concurrent mode if more than 1 family is using the swapchain
-        swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t(2));                            // How many different queue families will use the swapchain
-        swapChainCreateInfo.setPQueueFamilyIndices(queueFamilyArray.data());         // Array containing the queues that will share images
-    }
-    else {
-        swapChainCreateInfo.setImageSharingMode(vk::SharingMode::eExclusive);    // Use Exclusive mode if only one Queue Family uses the SwapChain...
-        swapChainCreateInfo.setQueueFamilyIndexCount(uint32_t(0));        // Note; this is the default value
-        swapChainCreateInfo.setPQueueFamilyIndices(nullptr);  // Note; this is the default value
-    }
-
-
-    /*! If we want to create a new SwapChain, this would be needed when for example resizing the window.
-     *  with the oldSwapchain we can pass the old swapChains responsibility to the new SwapChain...
-     * */
-     // IF old swapChain been destroyed and this one replaces it, then link old one to quickly hand over responsibilities...
-    swapChainCreateInfo.setOldSwapchain(oldSwapchain); // VK_NULL_HANDLE on initialization, previous all other times...
-
-    // Create The SwapChain!    
-    this->swapchain = this->device->getVkDevice().createSwapchainKHR(swapChainCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("Swapchain", vk::ObjectType::eSwapchainKHR, reinterpret_cast<uint64_t>(vk::SwapchainKHR::CType(this->swapchain)));
-
-     // Store both the VkExtent2D and VKFormat, so they can easily be used later...
-    this->swapchainImageFormat = surfaceFormat.surfaceFormat.format;
-    this->swapchainExtent = imageExtent;
-
-     // Get all Images from the SwapChain and store them in our swapChainImages Vector...
-    std::vector<vk::Image> images = 
-        this->device->getVkDevice().getSwapchainImagesKHR(this->swapchain);
-
-    uint32_t index = 0;
-    for (vk::Image image : images) 
-    {
-        // Copy the Image Handle ...
-        SwapChainImage swapChainImage = {};
-        swapChainImage.image = image;
-
-        // Create the Image View
-        swapChainImage.imageView = Texture::createImageView(
-            *this->device,
-            image, 
-            this->swapchainImageFormat, 
-            vk::ImageAspectFlagBits::eColor
-        );
-        VulkanDbg::registerVkObjectDbgInfo("Swapchain_ImageView[" + std::to_string(index) + "]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(swapChainImage.imageView)));
-        VulkanDbg::registerVkObjectDbgInfo("Swapchain_Image[" + std::to_string(index) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(swapChainImage.image)));
-
-        index++;
-        this->swapchainImages.push_back(swapChainImage);
-    }
-
-    if (oldSwapchain) 
-    {
-        this->device->getVkDevice().destroySwapchainKHR(oldSwapchain);
-    }
+    this->createColorBuffer();
+    this->createDepthBuffer();
 }
 
 void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
@@ -305,7 +429,8 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
     // Create a framebuffer for each swap chain image
     for (size_t i = 0; i < this->swapchainFrameBuffers.size(); i++) {
 
-        std::array<vk::ImageView, 3> attachments = {
+        std::array<vk::ImageView, 3> attachments = 
+        {
                 this->swapchainImages[i].imageView,   // Attatchment on index 0 of array : swapchain image
                 this->colorBufferImageView[i],   // Attachement on index 1 of array : color
                 this->depthBufferImageView[i]  // Attatchment on index 2 of array : depth
@@ -328,7 +453,18 @@ void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
 {
     this->recreateCleanup();
 
-    this->createSwapchain(*this->window, *this->device, *this->surface, *this->queueFamilies);
+    this->createSwapchain(
+        *this->window, 
+        *this->physicalDevice,
+        *this->device, 
+        *this->surface, 
+        *this->queueFamilies,
+        *this->vma
+    );
+
+    this->createColorBuffer();
+    this->createDepthBuffer();
+
     this->createFramebuffers(renderPass);
 }
 

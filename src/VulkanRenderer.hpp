@@ -64,16 +64,6 @@ class VulkanRenderer {
     Swapchain swapchain;
     std::vector<vk::CommandBuffer> commandBuffers;
     
-    std::vector<vk::Image>        colorBufferImage;
-    std::vector<VmaAllocation> colorBufferImageMemory;
-    std::vector<vk::ImageView>    colorBufferImageView;
-    vk::Format                  colorFormat{};
-
-    std::vector<vk::Image>        depthBufferImage;
-    std::vector<VmaAllocation> depthBufferImageMemory;
-    std::vector<vk::ImageView>    depthBufferImageView;
-    vk::Format                    depthFormat{};
-
     vk::Sampler       textureSampler{}; /// Sampler used to sample images in order to present (??)
 
     /// - Descriptors
@@ -166,8 +156,6 @@ private:
     void createGraphicsPipeline_Base();
     void createGraphicsPipeline_Imgui();
     void createGraphicsPipeline_DynamicRendering();
-    void createColorBufferImage_Base();    
-    void createDepthBufferImage();
     void createCommandPool();   //TODO: Deprecate! 
     void createCommandBuffers(); //TODO: Deprecate!  //Allocate Command Buffers from Command pool...
     void createSynchronisation();
@@ -180,8 +168,6 @@ private:
     void createInputDescriptorSets();
 
     // Cleanup 
-    void cleanColorBufferImage_Base();
-    void cleanDepthBufferImage();
     void cleanupRenderBass_Imgui();
     void cleanupRenderBass_Base(); //TODO
 
@@ -199,11 +185,7 @@ private:
     void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    /// Using renderpass
     void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
-    /// -- Choose Functions
-    [[nodiscard]] vk::Format chooseSupportedFormat(const std::vector<vk::Format> &formats, vk::ImageTiling tiling, vk::FormatFeatureFlagBits featureFlags);
-
     /// -- Create Functions    
-    [[nodiscard]]vk::Image createImage(createImageData &&imageData,  const std::string &imageDescription);
     [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);
 
     int createTextureImage(const std::string &filename);
