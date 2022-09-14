@@ -75,7 +75,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
              
         VulkanDbg::registerVkObjectDbgInfo("Surface",vk::ObjectType::eSurfaceKHR, reinterpret_cast<uint64_t>(vk::SurfaceKHR::CType(this->surface)));                
         VulkanDbg::registerVkObjectDbgInfo("PhysicalDevice",vk::ObjectType::ePhysicalDevice, reinterpret_cast<uint64_t>(vk::PhysicalDevice::CType(this->physicalDevice.getVkPhysicalDevice())));                
-        VulkanDbg::registerVkObjectDbgInfo("getVkDevice()",vk::ObjectType::eDevice, reinterpret_cast<uint64_t>(vk::Device::CType(this->getVkDevice())));
+        VulkanDbg::registerVkObjectDbgInfo("Logical Device",vk::ObjectType::eDevice, reinterpret_cast<uint64_t>(vk::Device::CType(this->getVkDevice())));
 
         VmaAllocatorCreateInfo vmaAllocatorCreateInfo{};
         vmaAllocatorCreateInfo.device = this->getVkDevice();
@@ -175,24 +175,17 @@ void VulkanRenderer::cleanup()
 #endif
     
     //Wait until no actions is run on device...
-    vkDeviceWaitIdle(this->getVkDevice()); // Dont destroy semaphores before they are done
+    this->device.waitIdle(); // Dont destroy semaphores before they are done
     
     ImGui_ImplVulkan_Shutdown();
     this->window->shutdownImgui();
     ImGui::DestroyContext();
 
+    this->cleanupFramebuffer_imgui();
+
     this->getVkDevice().destroyRenderPass(this->renderPass_imgui);
     this->getVkDevice().destroyDescriptorPool(this->descriptorPool_imgui);
     
-    for(auto& imgui_cmd_pool : this->commandPools_imgui)
-    {
-        this->getVkDevice().destroyCommandPool(imgui_cmd_pool);
-    }    
-    for(auto& imgui_framebuffer : this->frameBuffers_imgui)
-    {
-        this->getVkDevice().destroyFramebuffer(imgui_framebuffer);
-    }
-
 #ifndef VENGINE_NO_PROFILING
     CustomFree(this->tracyImage);
 
@@ -231,7 +224,7 @@ void VulkanRenderer::cleanup()
         vmaFreeMemory(this->vma, this->viewProjection_uniformBufferMemory[i]);
     }
 
-    for(int i = 0; i < MAX_FRAME_DRAWS; i++)
+    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         this->getVkDevice().destroySemaphore(this->renderFinished[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
@@ -346,7 +339,7 @@ void VulkanRenderer::draw(Scene* scene)
     
     // ReRecord the current CommandBuffer! In order to update any Push Constants
     recordRenderPassCommands_Base(scene, imageIndex);
-    recordRenderPassCommands_imgui(imageIndex);
+    // recordRenderPassCommands_imgui(imageIndex);
     //recordDynamicRenderingCommands(imageIndex); //TODO: User should be able to set if DynamicRendering or Renderpass should be used
     
     // Set view and projection in ubo
@@ -381,8 +374,8 @@ void VulkanRenderer::draw(Scene* scene)
         signal_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
 
         std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos{
-            vk::CommandBufferSubmitInfo{this->commandBuffers[imageIndex]},
-            vk::CommandBufferSubmitInfo{this->commandBuffers_imgui[imageIndex]}
+            vk::CommandBufferSubmitInfo{this->commandBuffers[imageIndex]}
+            //vk::CommandBufferSubmitInfo{this->commandBuffers_imgui[imageIndex]}
         };        
         
         vk::SubmitInfo2 submitInfo {};      
@@ -437,7 +430,7 @@ void VulkanRenderer::draw(Scene* scene)
     }
 #endif
     // Update current Frame for next draw!
-    this->currentFrame = (this->currentFrame + 1) % MAX_FRAME_DRAWS;    
+    this->currentFrame = (this->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     
 #ifndef VENGINE_NO_PROFILING    
     FrameMarkEnd(draw_frame);
@@ -487,7 +480,7 @@ void VulkanRenderer::createSurface()
 
 void VulkanRenderer::reCreateSwapChain(Camera* camera)
 {
-    vkDeviceWaitIdle(this->getVkDevice());
+    this->device.waitIdle();
     
     this->getVkDevice().freeDescriptorSets(this->inputDescriptorPool,this->inputDescriptorSets);
     cleanupFramebuffer_imgui();    
@@ -1684,9 +1677,9 @@ void VulkanRenderer::createSynchronisation()
     ZoneScoped; //:NOLINT
 #endif
     // Create Semaphores for each Transition a Image can be in
-    imageAvailable.resize(MAX_FRAME_DRAWS);
-    renderFinished.resize(MAX_FRAME_DRAWS);
-    drawFences.resize(MAX_FRAME_DRAWS);
+    imageAvailable.resize(MAX_FRAMES_IN_FLIGHT);
+    renderFinished.resize(MAX_FRAMES_IN_FLIGHT);
+    drawFences.resize(MAX_FRAMES_IN_FLIGHT);
 
     //  Semaphore Creation information
     vk::SemaphoreCreateInfo semaphoreCreateInfo; 
@@ -1696,7 +1689,7 @@ void VulkanRenderer::createSynchronisation()
     vk::FenceCreateInfo fenceCreateInfo;
     fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);           // Make sure the Fence is initially open!
 
-    for(int i = 0; i < MAX_FRAME_DRAWS; i++){
+    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
 
         this->imageAvailable[i] = getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore imageAvailable["+std::to_string(i)+"]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->imageAvailable[i])));
@@ -1726,7 +1719,7 @@ void VulkanRenderer::createTextureSampler()
     samplerCreateInfo.setMipmapMode(vk::SamplerMipmapMode::eLinear);           // How the mipmap mode will switch between the mipmap images (interpolate between images), (we dont use it, but we set it up)
     samplerCreateInfo.setMipLodBias(0.F);                                     // Level of detail bias for mip level...
     samplerCreateInfo.setMinLod(0.F);                                     // Minimum level of Detail to pick mip level
-    samplerCreateInfo.setMaxLod(0.F);                                     // Maxiumum level of Detail to pick mip level
+    samplerCreateInfo.setMaxLod(VK_LOD_CLAMP_NONE);                                     // Maxiumum level of Detail to pick mip level
     samplerCreateInfo.setAnisotropyEnable(VK_TRUE);                           // Enable Anisotropy; take into account the angle of a surface is being viewed from and decide details based on that (??)
     //samplerCreateInfo.setAnisotropyEnable(VK_FALSE);                           // Disable Anisotropy; Cause Performance Issues according to validation... 
                                                                             // TODO: Check how anisotrophy can be used without causing validation errors... ? 
@@ -2071,54 +2064,6 @@ void VulkanRenderer::updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm:
                             up);            // Up    : Up direction 
 }
 
-void VulkanRenderer::recordRenderPassCommands_imgui(uint32_t currentImageIndex)
-{
-    #ifndef VENGINE_NO_PROFILING
-    //ZoneScoped; //:NOLINT     
-    ZoneTransient(recordRenderPassCommands_imgui_zone1,  true); //:NOLINT   
-    #endif
-
-    this->getVkDevice().resetCommandPool(this->commandPools_imgui[currentImageIndex]);
-
-    vk::CommandBufferBeginInfo commandBufferBeginInfo{};
-    commandBufferBeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-    this->commandBuffers_imgui[currentImageIndex].begin(commandBufferBeginInfo);
-
-    static const vk::ClearColorValue  clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});  
-    static const vk::ClearValue  clearValue {clear_black};  
-    vk::RenderPassBeginInfo renderPassBeginInfo{};
-    vk::SubpassBeginInfo subpassBeginInfo;
-    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-    renderPassBeginInfo.setRenderPass(this->renderPass_imgui);
-    renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());
-    renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));
-    renderPassBeginInfo.setFramebuffer(this->frameBuffers_imgui[currentImageIndex]);
-    renderPassBeginInfo.setPClearValues(&clearValue);         // List of clear values
-    renderPassBeginInfo.setClearValueCount(uint32_t(1));
-
-    this->commandBuffers_imgui[currentImageIndex].beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
-
-    vk::Viewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float) this->swapchain.getWidth();
-    viewport.height = (float) swapchain.getHeight();
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    this->commandBuffers_imgui[currentImageIndex].setViewport(0, 1, &viewport);
-
-    vk::Rect2D scissor{};
-    scissor.offset = vk::Offset2D{0, 0};
-    scissor.extent = this->swapchain.getVkExtent();
-    this->commandBuffers_imgui[currentImageIndex].setScissor( 0, 1, &scissor);
-
-    ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), this->commandBuffers_imgui[currentImageIndex]);
-
-    vk::SubpassEndInfo imgui_subpassEndInfo;                            
-    commandBuffers_imgui[currentImageIndex].endRenderPass2(imgui_subpassEndInfo);
-    this->commandBuffers_imgui[currentImageIndex].end();
-}
-
 void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex) 
 {
 #ifndef VENGINE_NO_PROFILING
@@ -2275,7 +2220,10 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                 vk::SubpassEndInfo subpassEndInfo;                
                 commandBuffers[currentImageIndex].nextSubpass2(subpassBeginInfo,subpassEndInfo);
 
-                this->commandBuffers[currentImageIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, this->secondGraphicsPipeline);
+                this->commandBuffers[currentImageIndex].bindPipeline(
+                    vk::PipelineBindPoint::eGraphics, 
+                    this->secondGraphicsPipeline
+                );
 
                 this->commandBuffers[currentImageIndex].bindDescriptorSets(
                     vk::PipelineBindPoint::eGraphics,
@@ -2311,9 +2259,42 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
 
             
             // End Render Pass!
-            commandBuffers[currentImageIndex].endRenderPass2(subpassEndInfo);
+            this->commandBuffers[currentImageIndex].endRenderPass2(subpassEndInfo);
             /*!CMD in a function means that the function is something that is being recorded!
                 * */
+
+            static const vk::ClearColorValue  clear_black(std::array<float, 4> {1.F, 0.F, 0.F, 1.F});
+            static const vk::ClearValue  clearValue{ clear_black };
+            vk::RenderPassBeginInfo renderPassBeginInfo{};
+            vk::SubpassBeginInfo subpassBeginInfo;
+            subpassBeginInfo.setContents(vk::SubpassContents::eInline);
+            renderPassBeginInfo.setRenderPass(this->renderPass_imgui);
+            renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());
+            renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));
+            renderPassBeginInfo.setFramebuffer(this->frameBuffers_imgui[currentImageIndex]);
+            //renderPassBeginInfo.setPClearValues(&clearValue);         // List of clear values
+            renderPassBeginInfo.setClearValueCount(uint32_t(0));
+
+            this->commandBuffers[currentImageIndex].beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
+
+            viewport = vk::Viewport{};
+            viewport.x = 0.0f;
+            viewport.y = 0.0f;
+            viewport.width = (float)this->swapchain.getWidth();
+            viewport.height = (float)swapchain.getHeight();
+            viewport.minDepth = 0.0f;
+            viewport.maxDepth = 1.0f;
+            this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
+
+            scissor = vk::Rect2D{};
+            scissor.offset = vk::Offset2D{ 0, 0 };
+            scissor.extent = this->swapchain.getVkExtent();
+            this->commandBuffers[currentImageIndex].setScissor(0, 1, &scissor);
+
+            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), this->commandBuffers[currentImageIndex]);
+
+            vk::SubpassEndInfo imgui_subpassEndInfo;
+            this->commandBuffers[currentImageIndex].endRenderPass2(imgui_subpassEndInfo);
         }
         #pragma endregion commandBufferRecording
         
@@ -2421,7 +2402,10 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
             commandBuffers[currentImageIndex].beginRendering(renderingInfo);
 
                 // Bind Pipeline to be used in the DynamicRendering command
-                commandBuffers[currentImageIndex].bindPipeline(vk::PipelineBindPoint::eGraphics, this->graphicsPipeline);
+                commandBuffers[currentImageIndex].bindPipeline(
+                    vk::PipelineBindPoint::eGraphics, 
+                    this->graphicsPipeline
+                );
 
                 #pragma region commandBufferRecording
                 {
@@ -2797,51 +2781,35 @@ void VulkanRenderer::initImgui()
     std::vector<vk::ImageView> attachment;    
     attachment.resize(1);
 
-    // TODO: replace size with frames in flight
-    this->commandPools_imgui.resize(this->swapchain.getNumImages());
-    this->commandBuffers_imgui.resize(this->swapchain.getNumImages());
-    this->frameBuffers_imgui.resize(this->swapchain.getNumImages());
-    for(size_t i = 0; i < this->commandPools_imgui.size(); i++)
-    {
-        createCommandPool(
-            this->commandPools_imgui[i], 
-            vk::CommandPoolCreateFlagBits::eResetCommandBuffer, 
-            std::string("commandPools_imgui["+std::to_string(i)+"]")
-        );
-        createCommandBuffer(
-            this->commandBuffers_imgui[i], 
-            this->commandPools_imgui[i], 
-            std::string("commandBuffers_imgui["+std::to_string(i)+"]")
-        );
-    }
     this->createFramebuffer_imgui();
 
-    this->getVkDevice().resetCommandPool(commandPools_imgui[0]);
+    // Upload imgui font
+    this->getVkDevice().resetCommandPool(this->graphicsCommandPool);
     
     VkCommandBufferBeginInfo begin_info = {};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    commandBuffers_imgui[0].begin(begin_info);
+    this->commandBuffers[0].begin(begin_info);
     
+    ImGui_ImplVulkan_CreateFontsTexture(this->commandBuffers[0]);
 
-    ImGui_ImplVulkan_CreateFontsTexture(commandBuffers_imgui[0]);
-
-    commandBuffers_imgui[0].end();
+    this->commandBuffers[0].end();
     
     vk::SubmitInfo end_info = {};        
     end_info.commandBufferCount = 1;
-    end_info.pCommandBuffers = &commandBuffers_imgui[0];
+    end_info.pCommandBuffers = &this->commandBuffers[0];
     vk::Result result = 
         this->queueFamilies.getGraphicsQueue().submit(
             1, 
             &end_info, 
             VK_NULL_HANDLE
         );
-    if(result != vk::Result::eSuccess){
+    if(result != vk::Result::eSuccess)
+    {
         throw std::runtime_error("Failed to submit imgui fonts to graphics queue...");
     }
 
-    this->getVkDevice().waitIdle();
+    this->device.waitIdle();
 
     ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
@@ -2850,7 +2818,7 @@ void VulkanRenderer::createFramebuffer_imgui()
 {
     std::vector<vk::ImageView> attachment;    
     attachment.resize(1);
-    this->frameBuffers_imgui.resize(this->commandPools_imgui.size());
+    this->frameBuffers_imgui.resize(this->commandBuffers.size());
     for(size_t i = 0; i < this->frameBuffers_imgui.size(); i++)
     {        
         attachment[0] = this->swapchain.getImage(i).imageView; // TODO: Check if this is rightt?...

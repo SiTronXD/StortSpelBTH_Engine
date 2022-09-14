@@ -17,8 +17,8 @@ using VmaAllocationCreateFlags = VkFlags;
 
 const int MAX_OBJECTS = 250; /// Maximum number of objects to allocate memory for
 
-const int MAX_FRAME_DRAWS = 2; /// Should be Atleast one less than we have in our SwapChain!
-//const int MAX_FRAME_DRAWS = 3; /// Should be Atleast one less than we have in our SwapChain!
+const int MAX_FRAMES_IN_FLIGHT = 2; 
+//const int MAX_FRAME_DRAWS = 3; 
 
 /// Defines all the Device Extensions to be used
 constexpr std::array<const char *, 2> deviceExtensions = {

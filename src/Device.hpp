@@ -22,6 +22,7 @@ public:
 		// TODO: remove this
 		vk::DispatchLoaderDynamic& outputDynamicDispatch);
 
+	void waitIdle();
 	void cleanup();
 
 	inline vk::Device& getVkDevice() { return this->device; }

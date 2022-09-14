@@ -115,10 +115,8 @@ class VulkanRenderer {
     void initImgui();
     void createFramebuffer_imgui();
     void cleanupFramebuffer_imgui();
-    vk::DescriptorPool  descriptorPool_imgui;
-    std::vector<vk::CommandPool>     commandPools_imgui;
-    std::vector<vk::CommandBuffer>   commandBuffers_imgui;
-    std::vector<vk::Framebuffer>     frameBuffers_imgui;
+    vk::DescriptorPool descriptorPool_imgui;
+    std::vector<vk::Framebuffer> frameBuffers_imgui;
 
 
     /// - - Tracy
@@ -176,8 +174,7 @@ private:
     void updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm::vec3 up = glm::vec3(0.F,1.F,0.F));
 
     /// - Record Functions
-    void recordRenderPassCommands_imgui(uint32_t currentImageIndex);    /// Using renderpass
-    void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    /// Using renderpass
+    void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    // Using renderpass
     void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
     /// -- Create Functions    

@@ -103,6 +103,11 @@ void Device::createDevice(
     outputQueueFamilies.setPresentQueue(this->device.getQueue2(presentationQueueInfo));
 }
 
+void Device::waitIdle()
+{
+    this->device.waitIdle();
+}
+
 void Device::cleanup()
 {
     this->device.destroy();
