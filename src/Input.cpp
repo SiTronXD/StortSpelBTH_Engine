@@ -6,10 +6,10 @@ std::map<Keys, bool> Input::lastKeyDown;
 std::map<Mouse, bool> Input::mouseButtonDown;
 std::map<Mouse, bool> Input::lastmouseButtonDown;
 
-int Input::cursorX = 0.0f;
-int Input::cursorY = 0.0f;
-int Input::lastCursorX = 0.0f;
-int Input::lastCursorY = 0.0f;
+int Input::cursorX = 0.0;
+int Input::cursorY = 0.0;
+int Input::lastCursorX = 0.0;
+int Input::lastCursorY = 0.0;
 
 void Input::setCursor(const int& newCursorX, const int& newCursorY)
 {
