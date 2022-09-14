@@ -4,9 +4,10 @@
 #include <vector>
 #include "imgui_impl_sdl.h"     // Need to be included in header
 
+class VulkanInstance;
+
 namespace vk
 {
-    class Instance;
     class SurfaceKHR;
 };
 
@@ -17,6 +18,8 @@ class Window
 {
 private:
     bool isRunning;
+
+    std::string titleName;
 
 public:
     SDL_Window* windowHandle;
@@ -35,11 +38,13 @@ public:
     void initImgui();
     void shutdownImgui();
 
-    void createVulkanSurface(const vk::Instance& instance, vk::SurfaceKHR& outputSurface);
+    void createVulkanSurface(VulkanInstance& instance, vk::SurfaceKHR& outputSurface);
     void getVulkanExtensions(std::vector<const char*>& outputExtensions);
     void getSize(int& outputWidth, int& outputHeight);
 
     const bool& getIsRunning() const { return this->isRunning; }
+
+    inline const std::string& getTitleName() { return this->titleName; }
 };
 
 ////__attribute__((unused))

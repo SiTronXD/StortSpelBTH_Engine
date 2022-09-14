@@ -1,27 +1,35 @@
 #include "Window.hpp"
 #include <vulkan/vulkan.hpp>
 #include <SDL2/SDL_vulkan.h>
+
+#include "Window.hpp"
 #include "tracy/Tracy.hpp"
 #include "Input.hpp"
 #include "Log.hpp"
+#include "VulkanInstance.hpp"
 
 Window::Window()
     : windowHandle(nullptr),
     isRunning(true)
 {}
 
-void Window::initWindow(const std::string &name, const int width, const int height)
+void Window::initWindow(
+    const std::string &name, 
+    const int width, 
+    const int height)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
+
+    this->titleName = name;
 
     ///Initializes sdl window
     SDL_Init(SDL_INIT_VIDEO);
 
     ///Configure SDL Window...    
     this->windowHandle = SDL_CreateWindow(
-        name.c_str(), 
+        this->titleName.c_str(),
         SDL_WINDOWPOS_CENTERED, 
         SDL_WINDOWPOS_CENTERED, 
         width, 
@@ -90,12 +98,14 @@ void Window::shutdownImgui()
     ImGui_ImplSDL2_Shutdown();
 }
 
-void Window::createVulkanSurface(const vk::Instance& instance, vk::SurfaceKHR& outputSurface)
+void Window::createVulkanSurface(
+    VulkanInstance& instance,
+    vk::SurfaceKHR& outputSurface)
 {
     VkSurfaceKHR sdlSurface{};
     SDL_bool result = SDL_Vulkan_CreateSurface(
         (this->windowHandle),
-        instance,
+        instance.getVkInstance(),
         &sdlSurface
     );
 

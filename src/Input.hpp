@@ -53,12 +53,12 @@ private:
 	static std::map<Mouse, bool> mouseButtonDown;
 	static std::map<Mouse, bool> lastmouseButtonDown;
 
-	static float cursorX;
-	static float cursorY;
-	static float lastCursorX;
-	static float lastCursorY;
+	static int cursorX;
+	static int cursorY;
+	static int lastCursorX;
+	static int lastCursorY;
 
-	static void setCursor(const float& newCursorX, const float& newCursorY);
+	static void setCursor(const int& newCursorX, const int& newCursorY);
 	static void update();
 
 	static void setKey(const Keys& keyCode, const bool& value);
@@ -69,8 +69,8 @@ public:
 	static inline bool isKeyPressed(const Keys& key) { return Input::keyDown[key] && !Input::lastKeyDown[key]; }
 	static inline bool isMouseButtonDown(const Mouse& mouse) { return Input::mouseButtonDown[mouse]; }
 	static inline bool isMouseButtonPressed(const Mouse& mouse) { return Input::mouseButtonDown[mouse] && !Input::lastmouseButtonDown[mouse]; }
-	static inline const float& getMouseX() { return Input::cursorX; }
-	static inline const float& getMouseY() { return Input::cursorY; }
-	static inline const float getMouseDeltaX() { return Input::lastCursorX - Input::cursorX; }
-	static inline const float getMouseDeltaY() { return Input::lastCursorY - Input::cursorY; }
+	static inline const int& getMouseX() { return Input::cursorX; }
+	static inline const int& getMouseY() { return Input::cursorY; }
+	static inline const int getMouseDeltaX() { return Input::lastCursorX - Input::cursorX; }
+	static inline const int getMouseDeltaY() { return Input::lastCursorY - Input::cursorY; }
 };

@@ -782,8 +782,8 @@ static void ImGui_ImplVulkan_CreateFontSampler(VkDevice device, const VkAllocati
     info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
     info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    info.minLod = -1000;
-    info.maxLod = 1000;
+    info.minLod = 0;
+    info.maxLod = VK_LOD_CLAMP_NONE;
     info.maxAnisotropy = 1.0f;
     VkResult err = vkCreateSampler(device, &info, allocator, &bd->FontSampler);
     check_vk_result(err);
@@ -955,8 +955,8 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
         info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
         info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-        info.minLod = -1000;
-        info.maxLod = 1000;
+        info.minLod = 0;
+        info.maxLod = VK_LOD_CLAMP_NONE;
         info.maxAnisotropy = 1.0f;
         err = vkCreateSampler(v->Device, &info, v->Allocator, &bd->FontSampler);
         check_vk_result(err);

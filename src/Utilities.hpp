@@ -17,8 +17,8 @@ using VmaAllocationCreateFlags = VkFlags;
 
 const int MAX_OBJECTS = 250; /// Maximum number of objects to allocate memory for
 
-const int MAX_FRAME_DRAWS = 2; /// Should be Atleast one less than we have in our SwapChain!
-//const int MAX_FRAME_DRAWS = 3; /// Should be Atleast one less than we have in our SwapChain!
+const int MAX_FRAMES_IN_FLIGHT = 2; 
+//const int MAX_FRAME_DRAWS = 3; 
 
 /// Defines all the Device Extensions to be used
 constexpr std::array<const char *, 2> deviceExtensions = {
@@ -45,10 +45,11 @@ struct Vertex
 };
 
 /// Indices (locations) of Queue Families (if they exists at all...)
-struct QueueFamilyIndices {
+struct QueueFamilyIndices 
+{
     /// Note! Both the GraphicsFamily and PresentationFamily queue might be the same QueueFamily!
     /// - Presentation is actually a Feature of a Queue Family, rather than being a seperate Queue Family Type...!
-    int32_t graphicsFamily = -1 ;       /// Location of the Graphics Queue Family!
+    int32_t graphicsFamily = -1 ;
     int32_t presentationFamily = -1;
 
     ///Check if Queue Families are valid... (Invalid Families will have -1 as value...)
@@ -76,12 +77,6 @@ struct SwapChainDetails {
     bool isValid() const{
         return !Format.empty() && !presentationMode.empty();
     }
-};
-
-struct SwapChainImage {
-    vk::Image     image;
-    vk::ImageView imageView;
-
 };
 
 struct createImageData{

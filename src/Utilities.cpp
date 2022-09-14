@@ -29,8 +29,9 @@ namespace vengine_helper{
         /// this will tell us how big the file is, after we know that we will move the pointer to the beginning...
 
         ///Check if filestream successfully open...
-        if(!file.is_open()){
-            throw std::runtime_error("Failed to open a file");
+        if(!file.is_open())
+        {
+            throw std::runtime_error("Failed to open a file: " + filename);
         }
         
         
