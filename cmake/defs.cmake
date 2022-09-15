@@ -17,7 +17,7 @@ function(setup_vengine_definitions)
     # Vengine Path Constants
     set_parentScope(VENGINE_ASSETS_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/assets       )
     set_parentScope(VENGINE_DEPS_DIR            ${CMAKE_CURRENT_SOURCE_DIR}/deps         )
-    set_parentScope(VENGINE_SOURCE_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/src          )
+    set_parentScope(VENGINE_SOURCE_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/vengine/src  )
     set_parentScope(VENGINE_TESTS_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/test_src     )
     set_parentScope(VENGINE_LIBS_DIR            ${VENGINE_DEPS_DIR}/lib                  )
     set_parentScope(VENGINE_INCLUDES_DIR        ${VENGINE_DEPS_DIR}/include              )

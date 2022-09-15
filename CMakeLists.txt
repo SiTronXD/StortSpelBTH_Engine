@@ -175,8 +175,6 @@ if( NOT (VENGINE_USE_GIT_SUBMODULES))
 else() # Use Git Submodules
     message("Using Git Submodules for dependencies!") 
 
-    include(cmake/setup_submodule_dependencies.cmake)
-
     option(TRACY_ENABLE "" ON)    
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src)
