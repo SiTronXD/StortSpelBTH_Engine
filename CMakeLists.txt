@@ -126,12 +126,8 @@ else()
 endif()
 
 # Add vengine target as shared library
-# add_library(vengine SHARED  )
-# add_library(vengine::vengine ALIAS vengine )
-add_executable(vengine    
-    demos/basic_demo/src/main.cpp 
-    demos/basic_demo/src/TestDemoScene.h
-    demos/basic_demo/src/TestDemoScene.cpp)
+add_library(vengine SHARED  )
+add_library(vengine::vengine ALIAS vengine )
 
 target_include_directories(vengine 
     PUBLIC        
@@ -278,19 +274,33 @@ target_link_libraries(
     ${vengine_vma}
 )
 
+# Sources for executable demo
+FILE(GLOB VENGINE_DEMO_SOURCES CONFIGURE_DEPENDS            
+    demos/basic_demo/src/*.cpp    
+    demos/basic_demo/src/*.hpp
+    demos/basic_demo/src/*.h
+)
+
 # Build demo, for developers
-# add_executable(vengine_demo
-#     main.cpp
-# )
-# set_target_properties(vengine_demo PROPERTIES            
-#                 CXX_STANDARD 20                         # OBS! To use features from 11 and onward. Only use .hpp as header files...
-#                 CXX_EXTENSIONS OFF                      # is this good?...
-#                 EXPORT_COMPILE_COMMANDS ON 
-#                 #INTERPROCEDURAL_OPTIMIZATION TRUE       # Will do link time optimizations if available
-#                 LINK_WHAT_YOU_USE TRUE                  # Warns if something unncessary is linked                             
-#                 CMAKE_CXX_INCLUDE_WHAT_YOU_USE TRUE     # Checks if a source file is used, if not then its not included...
-#                 ) 
-# target_link_libraries(vengine_demo PUBLIC vengine)
+add_executable(vengine_demo
+    ${VENGINE_DEMO_SOURCES}
+)
+set_target_properties(vengine_demo PROPERTIES            
+                CXX_STANDARD 20                         # OBS! To use features from 11 and onward. Only use .hpp as header files...
+                CXX_EXTENSIONS OFF                      # is this good?...
+                EXPORT_COMPILE_COMMANDS ON 
+                #INTERPROCEDURAL_OPTIMIZATION TRUE       # Will do link time optimizations if available
+                LINK_WHAT_YOU_USE TRUE                  # Warns if something unncessary is linked                             
+                CMAKE_CXX_INCLUDE_WHAT_YOU_USE TRUE     # Checks if a source file is used, if not then its not included...
+                ) 
+target_link_libraries(vengine_demo PUBLIC vengine)
+target_include_directories(vengine_demo PRIVATE ${VENGINE_SOURCE_DIR}/../)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src/include)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src)
 
 # Make a target for generation of symbolic links, so we know when creation of it is needed
 add_custom_target(generate_symbolic_links ALL DEPENDS ${VENGINE_ASSET_LINK_DST})
