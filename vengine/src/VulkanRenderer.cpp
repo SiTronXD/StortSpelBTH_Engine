@@ -189,9 +189,9 @@ void VulkanRenderer::cleanup()
 #ifndef VENGINE_NO_PROFILING
     CustomFree(this->tracyImage);
 
-    for(size_t i = 0 ; i < this->swapChainImages.size(); i++)
+    for(auto &tracy_context : this->tracyContext)
     {
-        TracyVkDestroy(this->tracyContext[i]);
+        TracyVkDestroy(tracy_context);
     }
 #endif
 
@@ -2689,20 +2689,20 @@ void VulkanRenderer::initTracy()
 {
     #ifndef VENGINE_NO_PROFILING
     // Tracy stuff
-    allocateTracyImageMemory();
+    //allocateTracyImageMemory();
     vk::DynamicLoader dl; 
     auto pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT = dl.getProcAddress<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
 
     auto pfnvkGetCalibratedTimestampsEXT = dl.getProcAddress<PFN_vkGetCalibratedTimestampsEXT>("vkGetCalibratedTimestampsEXT");
 
     // Create Tracy Vulkan Context
-    this->tracyContext.resize(this->swapChainImages.size());
-    for(size_t i = 0 ; i < this->swapChainImages.size(); i++){
+    this->tracyContext.resize(this->swapchain.getNumImages());
+    for(size_t i = 0 ; i < this->swapchain.getNumImages(); i++){
         
         this->tracyContext[i] = TracyVkContextCalibrated(
             this->physicalDevice.getVkPhysicalDevice(),
-            this->getVkDevice(), 
-            this->graphicsQueue, 
+            this->getVkDevice(),             
+            this->queueFamilies.getGraphicsQueue(),
             commandBuffers[i],
             pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
             pfnvkGetCalibratedTimestampsEXT
