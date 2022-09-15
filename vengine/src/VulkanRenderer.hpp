@@ -122,8 +122,6 @@ class VulkanRenderer {
     /// - - Tracy
 #ifndef VENGINE_NO_PROFILING    
     void initTracy();
-    void allocateTracyImageMemory();
-    void getFrameThumbnailForTracy();
     //// - - Tracy  Callbacks
     bool TracyThumbnail_bool = false;
 #endif

@@ -189,9 +189,9 @@ void VulkanRenderer::cleanup()
 #ifndef VENGINE_NO_PROFILING
     CustomFree(this->tracyImage);
 
-    for(size_t i = 0 ; i < this->swapChainImages.size(); i++)
+    for(auto &tracy_context : this->tracyContext)
     {
-        TracyVkDestroy(this->tracyContext[i]);
+        TracyVkDestroy(tracy_context);
     }
 #endif
 
@@ -424,11 +424,6 @@ void VulkanRenderer::draw(Scene* scene)
         else if(resultvk != vk::Result::eSuccess) {throw std::runtime_error("Failed to present Image!");}
     }
 
-#ifndef VENGINE_NO_PROFILING 
-    if(this->TracyThumbnail_bool){
-        getFrameThumbnailForTracy();
-    }
-#endif
     // Update current Frame for next draw!
     this->currentFrame = (this->currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     
@@ -2514,195 +2509,24 @@ void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex)
 
 
 #ifndef VENGINE_NO_PROFILING 
-void VulkanRenderer::getFrameThumbnailForTracy() //TODO: Update to use vma instead of regular deviceMemory...
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif   
-    assert(false && "Please fix The usage of insertImageMemoryBarrier before trying to use this function...");
-    vk::Image srcImage = this->swapChainImages[this->currentFrame].image;
-    vk::ImageCreateInfo imageCreateInfo{};    
-    imageCreateInfo.setImageType(vk::ImageType::e2D);
-    imageCreateInfo.setFormat(vk::Format::eR8G8B8A8Unorm);      
-    
-    int width =0; 
-    int height =0;
-    this->window->getSize(width, height);
-
-    imageCreateInfo.extent.setWidth(static_cast<uint32_t>(width));
-    imageCreateInfo.extent.setHeight(static_cast<uint32_t>(height));
-    imageCreateInfo.extent.setDepth(uint32_t(1));
-    imageCreateInfo.setArrayLayers(uint32_t(1));
-    imageCreateInfo.setMipLevels(uint32_t (1));
-    imageCreateInfo.setInitialLayout(vk::ImageLayout::eUndefined);
-    imageCreateInfo.setSamples(vk::SampleCountFlagBits::e1);
-    imageCreateInfo.setTiling(vk::ImageTiling::eLinear);   // Linear so we can read it (??)
-    imageCreateInfo.setUsage(vk::ImageUsageFlagBits::eTransferDst);
-
-    vk::Image dstImage;
-    dstImage = this->getVkDevice().createImage(imageCreateInfo);
-
-    vk::MemoryRequirements2 memoryRequirments;
-    vk::MemoryAllocateInfo memoryAllocateInfo;
-    vk::DeviceMemory dstImageMemory;
-    memoryRequirments = this->getVkDevice().getImageMemoryRequirements2(dstImage);
-    memoryAllocateInfo.setAllocationSize( memoryRequirments.memoryRequirements.size);
-
-    memoryAllocateInfo.setMemoryTypeIndex( vengine_helper::findMemoryTypeIndex(
-        this->physicalDevice.getVkPhysicalDevice(),
-        memoryRequirments.memoryRequirements.memoryTypeBits, 
-        vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent));
-    
-    dstImageMemory = this->getVkDevice().allocateMemory(memoryAllocateInfo);
-
-    vk::BindImageMemoryInfoKHR bindImageMemoryInfo;
-    bindImageMemoryInfo.setImage(dstImage);
-    bindImageMemoryInfo.setMemory(dstImageMemory);
-    bindImageMemoryInfo.setMemoryOffset(0);
-    this->getVkDevice().bindImageMemory2(bindImageMemoryInfo);
-
-    vk::CommandBuffer copyCmd = vengine_helper::beginCommandBuffer(this->getVkDevice(), this->graphicsCommandPool);
-    vengine_helper::insertImageMemoryBarrier(
-        {
-            .cmdBuffer     = copyCmd, 
-            .image         = dstImage, 
-            .srcAccessMask = vk::AccessFlagBits2::eNone,
-            .dstAccessMask = vk::AccessFlagBits2::eTransferWrite, 
-            .oldLayout     = vk::ImageLayout::eUndefined, 
-            .newLayout     = vk::ImageLayout::eTransferDstOptimal
-        }
-        );
-        
-    vengine_helper::insertImageMemoryBarrier(
-        {
-            .cmdBuffer     = copyCmd, 
-            .image         = srcImage, 
-            .srcAccessMask = vk::AccessFlagBits2::eMemoryRead,
-            .dstAccessMask = vk::AccessFlagBits2::eTransferRead, 
-            .oldLayout     = vk::ImageLayout::ePresentSrcKHR, 
-            .newLayout     = vk::ImageLayout::eTransferSrcOptimal
-        }
-        );
-
-    vk::ImageCopy imageCopyRegion;
-    imageCopyRegion.srcSubresource.setAspectMask(vk::ImageAspectFlagBits::eColor);
-    imageCopyRegion.srcSubresource.setLayerCount(uint32_t (1));
-    imageCopyRegion.dstSubresource.setAspectMask(vk::ImageAspectFlagBits::eColor);
-    imageCopyRegion.dstSubresource.setLayerCount(uint32_t(1));
-    imageCopyRegion.extent.setWidth(static_cast<uint32_t>(width));
-    imageCopyRegion.extent.setHeight(static_cast<uint32_t>(height));
-    imageCopyRegion.extent.setDepth(uint32_t (1));
-
-    vengine_helper::insertImageMemoryBarrier(
-        {
-            .cmdBuffer     = copyCmd, 
-            .image         = dstImage, 
-            .srcAccessMask = vk::AccessFlagBits2::eTransferWrite,
-            .dstAccessMask = vk::AccessFlagBits2::eMemoryRead, 
-            .oldLayout     = vk::ImageLayout::eTransferDstOptimal,
-            .newLayout     = vk::ImageLayout::eGeneral
-        });
-
-
-    vengine_helper::insertImageMemoryBarrier(
-        {
-            .cmdBuffer     = copyCmd, 
-            .image         = srcImage, 
-            .srcAccessMask = vk::AccessFlagBits2::eTransferRead, 
-            .dstAccessMask = vk::AccessFlagBits2::eMemoryRead,
-            .oldLayout     = vk::ImageLayout::eTransferSrcOptimal, 
-            .newLayout     = vk::ImageLayout::ePresentSrcKHR
-        });
-
-    vengine_helper::endAndSubmitCommandBufferWithFences(
-        this->getVkDevice(), 
-        this->graphicsCommandPool, 
-        this->graphicsQueue, 
-        copyCmd);
-    
-    vk::ImageSubresource subResource {vk::ImageAspectFlagBits::eColor, 0,0};
-    vk::SubresourceLayout subResourceLayout{};
-
-    subResourceLayout = this->getVkDevice().getImageSubresourceLayout(
-        dstImage,
-        subResource
-    );
-    
-    const unsigned char* data = nullptr;
-
-    data = (const unsigned char*)this->getVkDevice().mapMemory(
-        dstImageMemory,
-        0,
-        VK_WHOLE_SIZE,
-        vk::MemoryMapFlags()
-    );
-    
-    if(false){ //NOLINT: TODO: this code is left for reference... might be removed when tracy recieves frame images properly...
-        data += subResourceLayout.offset;
-
-        int c = 0;    
-        for(uint32_t i = 0; i < static_cast<uint32_t>(height); i++)
-        {            
-            auto *row = (unsigned int*)data;
-            for(uint32_t j = 0; j < width; j++)
-            { 
-                ((this->tracyImage))[c++] = *(((char*)row + 2));
-                ((this->tracyImage))[c++] = *(((char*)row + 1));
-                ((this->tracyImage))[c++] = *(((char*)row));        
-                ((this->tracyImage))[c++] = *(((char*)row + 3));  
-                
-                row++;
-            }
-
-            data += subResourceLayout.rowPitch;
-        }
-
-        FrameImage(tracyImage,width,height,0,false);
-    }
-    else
-    {
-        FrameImage(data,width,height,0,false);
-    }
-    
-    this->getVkDevice().unmapMemory(dstImageMemory);
-    this->getVkDevice().freeMemory(dstImageMemory);
-    this->getVkDevice().destroyImage(dstImage);
-
-}
-#endif
-#ifndef VENGINE_NO_PROFILING 
-void VulkanRenderer::allocateTracyImageMemory()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    int width =0;
-    int height =0;
-
-    this->window->getSize(width, height);
-    this->tracyImage = static_cast<char*>(CustomAlloc((static_cast<long>(height*width*4)) * sizeof(char)));
-     
-}
-#endif
-#ifndef VENGINE_NO_PROFILING 
 void VulkanRenderer::initTracy()
 {
     #ifndef VENGINE_NO_PROFILING
     // Tracy stuff
-    allocateTracyImageMemory();
+    //allocateTracyImageMemory();
     vk::DynamicLoader dl; 
     auto pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT = dl.getProcAddress<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
 
     auto pfnvkGetCalibratedTimestampsEXT = dl.getProcAddress<PFN_vkGetCalibratedTimestampsEXT>("vkGetCalibratedTimestampsEXT");
 
     // Create Tracy Vulkan Context
-    this->tracyContext.resize(this->swapChainImages.size());
-    for(size_t i = 0 ; i < this->swapChainImages.size(); i++){
+    this->tracyContext.resize(this->swapchain.getNumImages());
+    for(size_t i = 0 ; i < this->swapchain.getNumImages(); i++){
         
         this->tracyContext[i] = TracyVkContextCalibrated(
             this->physicalDevice.getVkPhysicalDevice(),
-            this->getVkDevice(), 
-            this->graphicsQueue, 
+            this->getVkDevice(),             
+            this->queueFamilies.getGraphicsQueue(),
             commandBuffers[i],
             pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
             pfnvkGetCalibratedTimestampsEXT
