@@ -65,8 +65,6 @@ else()
     set(CLANG_COMPILE_TIME_OPTIONS_library ${CLANG_COMPILE_TIME_OPTIONS_release})
 endif()
 
-
-
 # all the source files
 FILE(GLOB_RECURSE VENGINE_SOURCES CONFIGURE_DEPENDS
     ${VENGINE_SOURCE_DIR}/*.cpp 
@@ -80,65 +78,135 @@ FILE(GLOB_RECURSE VENGINE_HEADERS CONFIGURE_DEPENDS
 )
 
 
-# All imgui sources and headers
-FILE(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/*.cpp        
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_vulkan.cpp        
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_sdl.cpp)
+# Disable Fetching dependencies with conan and cmake FetchContent...
+set(VENGINE_USE_GIT_SUBMODULES TRUE)
+if(NOT (VENGINE_USE_GIT_SUBMODULES))
+    # All imgui sources and headers
+    FILE(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/*.cpp        
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_vulkan.cpp        
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_sdl.cpp)
 
-FILE(GLOB IMGUI_HEADERS CONFIGURE_DEPENDS            
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_vulkan.h            
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_sdl.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/*.h
-)
+    FILE(GLOB IMGUI_HEADERS CONFIGURE_DEPENDS            
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_vulkan.h            
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends/imgui_impl_sdl.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/*.h
+    )
+    # Add EnTT headers 
+    FILE(GLOB ENTT_HEADERS CONFIGURE_DEPENDS            
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/entt.hpp
+    )
+else()
+    # All imgui sources and headers
+    FILE(GLOB IMGUI_SOURCES CONFIGURE_DEPENDS
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/src/*.cpp        
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/src/backends/imgui_impl_vulkan.cpp        
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/src/backends/imgui_impl_sdl.cpp)
 
-# Add EnTT headers 
-FILE(GLOB ENTT_HEADERS CONFIGURE_DEPENDS            
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/entt.hpp
-)
+    FILE(GLOB IMGUI_HEADERS CONFIGURE_DEPENDS            
+        ${CMAKE_CURRENT_SOURCE_DIVENGINE_USE_GIT_SUBMODULES}/deps/imgui/src/backends/imgui_impl_vulkan.h            
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/src/backends/imgui_impl_sdl.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/src/*.h
+    )
+    # Add EnTT headers 
+    FILE(GLOB ENTT_HEADERS CONFIGURE_DEPENDS            
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt/entt.hpp
+    )
+    # Add stb headers 
+    FILE(GLOB STB_HEADERS CONFIGURE_DEPENDS            
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb_image.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h #?
+    )
+    # Add stb headers 
+    FILE(GLOB STB_HEADERS CONFIGURE_DEPENDS            
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb_image.h
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h #?
+    )
 
+endif()
 
- # Add vengine target as shared library
+# Add vengine target as shared library
 # add_library(vengine SHARED  )
 # add_library(vengine::vengine ALIAS vengine )
-add_executable(vengine main.cpp "src/Swapchain.cpp" "src/Texture.cpp" "src/QueueFamilies.cpp")
+add_executable(vengine    
+    demos/basic_demo/src/main.cpp 
+    demos/basic_demo/src/TestDemoScene.h
+    demos/basic_demo/src/TestDemoScene.cpp)
 
 target_include_directories(vengine 
     PUBLIC        
 #    ${VENGINE_SOURCE_DIR}            
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/backends
-    ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT
-) 
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/imgui/src/backends
+    ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include) 
 
 # Find system dependencies 
 find_package(Vulkan REQUIRED)
 
-# Setup Conan, fetch required dependencies
-setup_conan_dependencies()
 
-#External Dependencies - fetched from github
-add_subdirectory(deps/assimp)
-add_subdirectory(deps/vengine_vma)
-add_subdirectory(deps/vengine_tracy)
+if( NOT (VENGINE_USE_GIT_SUBMODULES))
+    message("Using Cmake FetchContent and Conan for dependencies!") 
 
-if(${VENGINE_USE_PROFILING})
-set(vengine_tracy TracyClient) 
+    # Setup Conan, fetch required dependencies
+    setup_conan_dependencies()
+
+    #External Dependencies - fetched from github
+    add_subdirectory(deps/assimp)
+    add_subdirectory(deps/vma)
+    add_subdirectory(deps/tracy)
+
+    if(${VENGINE_USE_PROFILING})
+        set(vengine_tracy TracyClient) 
+    endif()
+
+    #External Dependencies - fetched through conan
+    target_link_libraries(vengine PUBLIC stb::stb)
+    target_link_libraries(vengine PUBLIC glm::glm)
+    target_link_libraries(vengine PUBLIC SDL2::SDL2)
+
+    # setup the include directories for all external dependencies 
+    target_include_directories(vengine PUBLIC ${imgui_include_dirs})
+    target_include_directories(vengine PUBLIC ${tracy_include_dirs})
+    target_include_directories(vengine PUBLIC ${vma_include_dirs})
+    target_include_directories(vengine PUBLIC ${assimp_include_dirs})
+
+    set(vengine_stb "stb::stb")
+
+else() # Use Git Submodules
+    message("Using Git Submodules for dependencies!") 
+
+    include(cmake/setup_submodule_dependencies.cmake)
+
+    option(TRACY_ENABLE "" ON)    
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src)
+    #Sdl should be installed through systems own package manager...
+
+    
+    target_include_directories(vengine PRIVATE ${VENGINE_SOURCE_DIR}/../)
+    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src/include)
+    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
+    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
+    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
+    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt)
+    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src)
+
+    find_package(SDL2 REQUIRED)
+    target_include_directories(vengine PRIVATE ${SDL2_INCLUDE_DIRS})
+
+    
+    #set(vengine_vma VulkanMemoryAllocator) 
+    set(vengine_stb "") #part of sources, no need to use as lib...
+
+
 endif()
 
-#External Dependencies - fetched through conan
-target_link_libraries(vengine PUBLIC stb::stb)
-target_link_libraries(vengine PUBLIC glm::glm)
-target_link_libraries(vengine PUBLIC SDL2::SDL2)
-
-# setup the include directories for all external dependencies 
-target_include_directories(vengine PUBLIC ${imgui_include_dirs})
-target_include_directories(vengine PUBLIC ${tracy_include_dirs})
-target_include_directories(vengine PUBLIC ${vma_include_dirs})
-target_include_directories(vengine PUBLIC ${assimp_include_dirs})
-
 # Add the vengine sources + imgui sources to the vengine target
-target_sources(vengine PRIVATE ${VENGINE_SOURCES} 
+target_sources(vengine PRIVATE 
+    
+    ${VENGINE_SOURCES} 
     ${IMGUI_HEADERS}    
     ${IMGUI_SOURCES}
     ${ENTT_HEADERS}
@@ -202,15 +270,13 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_CO
 # Link all libraries to vengine target
 target_link_libraries(
     vengine 
-    PUBLIC 
-    #imgui_lib    
+    PUBLIC
     ${vengine_tracy}
-    ${vengine_imgui}
     ${SDL2_LIBRARIES}
     PRIVATE
     ${Vulkan_LIBRARIES}
     assimp::assimp
-    stb::stb
+    ${vengine_stb}
     ${vengine_vma}
 )
 
