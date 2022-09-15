@@ -363,3 +363,4 @@ vma_dump.json
 imgui.ini
 
 /deps/assimp/int/assimp.tlog
+vulkan_validations.txt
