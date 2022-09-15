@@ -7,7 +7,6 @@ namespace TracyHelper{
 
     void setVulkanRenderReference(VulkanRenderer *_ref);        
     VulkanRenderer *getVulkanRenderReference();
-    void toggleTracyThumbnail(uint32_t idx, int32_t val);
     void registerTracyParameterFunctions();
 }
 #endif
