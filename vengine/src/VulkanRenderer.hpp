@@ -158,6 +158,9 @@ private:
     void allocateDescriptorSets();
     void createInputDescriptorSets();
 
+    /// ResourceManager
+    void initResourceManager();
+
     // Cleanup 
     void cleanupRenderBass_Imgui();
     void cleanupRenderBass_Base(); //TODO

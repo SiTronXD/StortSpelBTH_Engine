@@ -6,3 +6,4 @@
 #include "src/MeshComponent.hpp"
 #include "src/Log.hpp"
 #include "src/Time.hpp"
+#include "src/ResourceManager.hpp" //TODO: Discuss if Subsystem ResourceManager should be exposed to user

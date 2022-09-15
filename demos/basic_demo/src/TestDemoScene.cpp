@@ -18,6 +18,9 @@ void TestDemoScene::init()
 {
 	std::cout << "Test scene init" << std::endl;
 
+    // TODO: REMOVE ME! Trying out ResourceManager here...    
+    ResourceManager::addMesh("ghost.obj");
+
 	// Camera
 	int camEntity = this->createEntity();
 	this->setComponent<Camera>(camEntity, 1.0f);

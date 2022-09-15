@@ -30,13 +30,27 @@
 #include "MeshComponent.hpp"
 #include "Log.hpp"
 
+#include "ResourceManager.hpp" // TODO: Remove, this is just for testing the ResourceManager
+
+
+#include "MeshLoader.hpp"
+//TODO: This is for testing, final implementation is not decided...
+void VulkanRenderer::initResourceManager()
+{
+    MeshLoader::device              = &this->device.getVkDevice();
+    MeshLoader::vma                 = &this->vma;
+    MeshLoader::physicalDevice      = &this->physicalDevice.getVkPhysicalDevice();    
+    MeshLoader::transferQueue       = &this->queueFamilies.getGraphicsQueue();
+    MeshLoader::transferCommandPool = &this->graphicsCommandPool;
+}
+
 using namespace vengine_helper::config;
 int VulkanRenderer::init(Window* window, std::string&& windowName) {
     
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
-#endif
-    
+#endif        
+
     this->window = window;
 
     try {
@@ -136,6 +150,10 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         this->initTracy();
 #endif
         this->initImgui();
+
+        //TODO: This is for testing, final implementation is not decided...
+        this->initResourceManager();
+
     }
     catch(std::runtime_error &e)
     {
