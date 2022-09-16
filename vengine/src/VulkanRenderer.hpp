@@ -71,13 +71,12 @@ class VulkanRenderer
     vk::PushConstantRange pushConstantRange{};      
 
     std::vector<vk::DescriptorSet> descriptorSets;        /// To be used with our View and Projection matrices
-    std::vector<vk::DescriptorSet> inputDescriptorSets;   /// To be used by Subpasses; input attachment descriptors...
     std::vector<vk::DescriptorSet> samplerDescriptorSets; /// To be used for our texture Samplers! (need one per Texture)
                                                         //// NOTE; There will NOT be one samplerDescriptionSet per image!... It will be One per Texture!
 
-    std::vector<vk::Buffer> viewProjection_uniformBuffer;
-    std::vector<VmaAllocation> viewProjection_uniformBufferMemory;
-    std::vector<VmaAllocationInfo> viewProjection_uniformBufferMemory_info;
+    std::vector<vk::Buffer> viewProjectionUniformBuffer;
+    std::vector<VmaAllocation> viewProjectionUniformBufferMemory;
+    std::vector<VmaAllocationInfo> viewProjectionUniformBufferMemoryInfo;
 
     // - Assets    
 
@@ -101,7 +100,6 @@ class VulkanRenderer
     /// - Pools
     vk::CommandPool    graphicsCommandPool{};           /// Command pool that only is used for graphics command...
     vk::DescriptorPool descriptorPool{};
-    vk::DescriptorPool inputDescriptorPool{};           /// used by Subpasses for input Attachments
     vk::DescriptorPool samplerDescriptorPool{};
 
     /// - Utilities
@@ -158,7 +156,6 @@ private:
     void createDescriptorPool();
     void createDescriptorSets();
     void allocateDescriptorSets();
-    void createInputDescriptorSets();
 
     // Cleanup 
     void cleanupRenderBass_Imgui();
@@ -167,7 +164,7 @@ private:
     /// Newer Create functions! 
     void createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name);
     void createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::CommandPool& commandPool, std::string&& name);
-    void createFrameBuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
+    void createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
 
     void updateUniformBuffers();
     void updateUBO_camera_Projection();
@@ -175,7 +172,6 @@ private:
 
     /// - Record Functions
     void recordRenderPassCommands_Base(Scene* scene, uint32_t imageIndex);    // Using renderpass
-    void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
     /// -- Create Functions    
     [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);

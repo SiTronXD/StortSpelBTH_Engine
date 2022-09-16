@@ -126,8 +126,6 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         this->allocateDescriptorSets();
         this->createDescriptorSets();
         
-        this->createInputDescriptorSets();
-
         this->createSynchronisation();        
 
         this->updateUBO_camera_Projection(); //TODO: Allow for more cameras! 
@@ -206,7 +204,6 @@ void VulkanRenderer::cleanup()
         i.destroyMeshModel();
     }
 
-    this->getVkDevice().destroyDescriptorPool(this->inputDescriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->inputSetLayout);
 
     this->getVkDevice().destroyDescriptorPool(this->samplerDescriptorPool);
@@ -224,10 +221,10 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyDescriptorPool(this->descriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->descriptorSetLayout);
 
-    for(size_t i = 0; i < this->viewProjection_uniformBuffer.size(); i++)
+    for(size_t i = 0; i < this->viewProjectionUniformBuffer.size(); i++)
     {
-        this->getVkDevice().destroyBuffer(this->viewProjection_uniformBuffer[i]);
-        vmaFreeMemory(this->vma, this->viewProjection_uniformBufferMemory[i]);
+        this->getVkDevice().destroyBuffer(this->viewProjectionUniformBuffer[i]);
+        vmaFreeMemory(this->vma, this->viewProjectionUniformBufferMemory[i]);
     }
 
     for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -487,8 +484,8 @@ void VulkanRenderer::createSurface()
     ZoneScoped; //:NOLINT
 #endif
 
-    //Using SDL to create WindowSurface, to make it cross platform
-    //Creates a surface create info struct configured for how SDL handles windows.    
+    // Using SDL to create WindowSurface, to make it cross platform
+    // Creates a surface create info struct configured for how SDL handles windows.    
     this->window->createVulkanSurface(this->instance, this->surface);
 }
 
@@ -496,17 +493,12 @@ void VulkanRenderer::recreateSwapchain(Camera* camera)
 {
     this->device.waitIdle();
     
-    this->getVkDevice().freeDescriptorSets(
-        this->inputDescriptorPool, 
-        this->inputDescriptorSets
-    );
     cleanupFramebuffer_imgui();
 
     this->swapchain.recreateSwapchain(this->renderPass_base);
     createFramebuffer_imgui();
 
     this->createDescriptorSets();
-    this->createInputDescriptorSets();
 
     ImGui_ImplVulkan_SetMinImageCount(this->swapchain.getNumMinimumImages());
 
@@ -737,6 +729,8 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     this->getVkDevice().destroyShaderModule(vertexShaderModule);
     this->getVkDevice().destroyShaderModule(fragmentShaderModule);
 
+
+    return;
 
     //////////////////////
     //////////////////////
@@ -1391,108 +1385,62 @@ void VulkanRenderer::createRenderPass_Base()
 #endif
 
     // Array of our subPasses    
-    std::array<vk::SubpassDescription2, 2> subPasses {};     
+    // std::array<vk::SubpassDescription2, 2> subPasses {};
+    std::array<vk::SubpassDescription2, 1> subPasses{};
 
-    // - ATTATCHMENTS - 
-    // SUBPASS 1 ATTACHMENTS (Input attachments) and ATTACHMENT REFERENCES
-
-    // Color Attachment (Input)
+    // Color Attachment
     vk::AttachmentDescription2 colorAttachment {};
-    colorAttachment.setFormat(this->swapchain.getVkColorFormat());        
-        
+    colorAttachment.setFormat(this->swapchain.getVkFormat());
     colorAttachment.setSamples(vk::SampleCountFlagBits::e1);
     colorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);      // When we start the renderpass, first thing to do is to clear since there is no values in it yet
     colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore); // How to store it after the RenderPass; We dont care! But we do care what happens after the first SubPass! (not handled here)
     colorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     colorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
     colorAttachment.setInitialLayout(vk::ImageLayout::eUndefined);        // We dont care what the image layout is when we start. But we do care about what layout it is when it enter the first SubPass! (not handled here)
-    //colorAttachment.setFinalLayout(vk::ImageLayout::eAttachmentOptimal); // Should be the same value as it was after the subpass finishes (??)
     colorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); //(!!) Should be the same value as it was after the subpass finishes (??)
 
-    
+    // Depth Attatchment
+    vk::AttachmentDescription2 depthAttachment{};
+    depthAttachment.setFormat(this->swapchain.getVkDepthFormat());
+    depthAttachment.setSamples(vk::SampleCountFlagBits::e1);
+    depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);      // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
+    depthAttachment.setStoreOp(vk::AttachmentStoreOp::eDontCare); // Whenever it's used, we dont care what happens with the data... (we dont present it or anything)
+    depthAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);  // Even though the Stencil i present, we dont plan to use it. so we dont care    
+    depthAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);     // Even though the Stencil i present, we dont plan to use it. so we dont care
+    depthAttachment.setInitialLayout(vk::ImageLayout::eUndefined);        // We don't care how the image layout is initially, so let it be undefined
+    depthAttachment.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // Final layout should be Optimal for Depth Stencil attachment!
 
-    // Depth Attatchment Of Render Pass 
-    vk::AttachmentDescription2 depthAttatchment{};
-    depthAttatchment.setFormat(this->swapchain.getVkDepthFormat());
-    depthAttatchment.setSamples(vk::SampleCountFlagBits::e1);
-    depthAttatchment.setLoadOp(vk::AttachmentLoadOp::eClear);      // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
-    depthAttatchment.setStoreOp(vk::AttachmentStoreOp::eDontCare); // Whenever it's used, we dont care what happens with the data... (we dont present it or anything)
-    depthAttatchment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);  // Even though the Stencil i present, we dont plan to use it. so we dont care    
-    depthAttatchment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);     // Even though the Stencil i present, we dont plan to use it. so we dont care
-    depthAttatchment.setInitialLayout(vk::ImageLayout::eUndefined);        // We don't care how the image layout is initially, so let it be undefined
-    depthAttatchment.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // Final layout should be Optimal for Depth Stencil attachment!
-
-    // Color Attachment (input) Reference
+    // Color attachment reference
     vk::AttachmentReference2 colorAttachmentReference {};    
-    colorAttachmentReference.setAttachment(uint32_t(1));            // Match the number/ID of the Attachment to the index of the FrameBuffer!
+    colorAttachmentReference.setAttachment(uint32_t(0));            // Match the number/ID of the Attachment to the index of the FrameBuffer!
     colorAttachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal); // The Layout the Subpass must be in! 
 
-    // Depth Attachment (input) Reference
+    // Depth attachment reference
     vk::AttachmentReference2 depthAttachmentReference {};
-    depthAttachmentReference.setAttachment(uint32_t(2)); 
+    depthAttachmentReference.setAttachment(uint32_t(1)); 
     depthAttachmentReference.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // The layout the subpass must be in! Should be same as 'final layout'(??)
 
-    // Setup Subpass 1
+    // Setup Subpass 0
     subPasses[0].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics); 
     subPasses[0].setColorAttachmentCount(uint32_t(1)); 
     subPasses[0].setPColorAttachments(&colorAttachmentReference); 
     subPasses[0].setPDepthStencilAttachment(&depthAttachmentReference); 
 
-    // SUBPASS 2 ATTACHMENTS and ATTACHMENT REFERENCES
-
-    // Color Attachment SwapChain
-    vk::AttachmentDescription2 swapchainColorAttachment{};
-    swapchainColorAttachment.setFormat(this->swapchain.getVkFormat());              // Format to use for attachgment
-    swapchainColorAttachment.setSamples(vk::SampleCountFlagBits::e1);            // Number of samples to write for multisampling
-    swapchainColorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);       // Descripbes what to do with attachment before rendeing
-    swapchainColorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);     // Describes what to do with Attachment after rendering
-    swapchainColorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);     // Describes what to do with stencil before rendering
-    swapchainColorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);   // Describes what to do with stencil affter rendering
-
-    // Framebuffer data will be stored as an image, but images can be given different data layouts
-    // to give optimal usefor certain operations
-    swapchainColorAttachment.setInitialLayout(vk::ImageLayout::eUndefined);      // image data layout before render pass starts
-    //swapchainColorAttachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);  // Image data layout after render pass (to change to)
-    swapchainColorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);  // edit: After adding Imgui, this renderpass will no longer be the presenting one, thus we change final layout! 
-
-    vk::AttachmentReference2 swapchainColorAttachmentReference = {};
-    swapchainColorAttachmentReference.setAttachment(uint32_t(0));                                       // Attatchment on index 0 of array
-    swapchainColorAttachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    // Create two more Attachment References; These describes what the subpass will take input from
-    std::array<vk::AttachmentReference2,2 > inputReferences{};
-    inputReferences[0].setAttachment(uint32_t(1));                                        // The Attachment index (Color Input)
-    inputReferences[0].setLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // reuse the attachment (1), make sure it's uses SHADER_READ_ONLY_OPTIMAL layout!
-    inputReferences[0].setAspectMask(vk::ImageAspectFlagBits::eColor);//(!!)
-    inputReferences[0].setPNext(nullptr); //(!!)(??)
-    inputReferences[1].setAttachment(uint32_t(2));                                        // The Attachment index (Depth Input)
-    inputReferences[1].setAspectMask(vk::ImageAspectFlagBits::eDepth);//(!!)    
-    inputReferences[1].setLayout(vk::ImageLayout::eReadOnlyOptimal); // reuse the attachment (2), make sure it's uses SHADER_READ_ONLY_OPTIMAL layout!
-    inputReferences[1].setPNext(nullptr); //(!!)(??)
-
-    // Setup Subpass 2
-    subPasses[1].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics); 
-    subPasses[1].setColorAttachmentCount(uint32_t(1)); 
-    subPasses[1].setPColorAttachments(&swapchainColorAttachmentReference); 
-    subPasses[1].setInputAttachmentCount(static_cast<uint32_t>(inputReferences.size()));    // How many Inputs Subpass 2 will have
-    subPasses[1].setPInputAttachments(inputReferences.data());                           // The Input Attachments References Subpass 2 will use
-    
-    // Replacing all subpass dependencies with this results in no errors/warnings. But I dont know if it is correct... Seems to be the same if subpassDependency[0] and [2] are removed from the code above...
+    // Override the first implicit subpass
     std::array<vk::SubpassDependency2, 1> subpassDependencies{};
-    subpassDependencies[0].setSrcSubpass(0);
-    subpassDependencies[0].setDstSubpass(1);
-    subpassDependencies[0].setSrcStageMask(vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests);
-    subpassDependencies[0].setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader);
-    subpassDependencies[0].setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
-    subpassDependencies[0].setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
+    subpassDependencies[0].setSrcSubpass(VK_SUBPASS_EXTERNAL);
+    subpassDependencies[0].setDstSubpass(0);
+    subpassDependencies[0].setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests);
+    subpassDependencies[0].setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests);
+    subpassDependencies[0].setSrcAccessMask(vk::AccessFlagBits::eNone);
+    subpassDependencies[0].setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
     subpassDependencies[0].setDependencyFlags(vk::DependencyFlagBits::eByRegion);
 
     // Vector with the Attatchments
-    std::array<vk::AttachmentDescription2,3> attachments
+    std::array<vk::AttachmentDescription2, 2> attachments
     {
-        swapchainColorAttachment,   // Attachment on index 0 of array : SwapChain Color
-        colorAttachment,            // Attachment on index 1 of array : Color (input to SubPass 2)
-        depthAttatchment            // Attachment on index 2 of array : Depth (input to SubPass 2)
+        colorAttachment,
+        depthAttachment
     };
 
     //Create info for render pass
@@ -1507,7 +1455,6 @@ void VulkanRenderer::createRenderPass_Base()
     this->renderPass_base = this->getVkDevice().createRenderPass2(renderPassCreateInfo);
 
     VulkanDbg::registerVkObjectDbgInfo("The RenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass_base)));
-    
 }
 
 void VulkanRenderer::createRenderPass_Imgui()
@@ -1520,8 +1467,6 @@ void VulkanRenderer::createRenderPass_Imgui()
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal);
-    //attachment.setInitialLayout(vk::ImageLayout::eUndefined);
-    
     attachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
 
     vk::AttachmentReference2 attachment_reference{};
@@ -1749,16 +1694,16 @@ void VulkanRenderer::createUniformBuffers()
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    // viewProjection_UniformBuffer size will be size of the view and Projection Members (will offset to access)
+    // viewProjectionUniformBuffer size will be size of the view and Projection Members (will offset to access)
     vk::DeviceSize viewProjection_buffer_size = sizeof(UboViewProjection);
 
     // One uniform buffer for each image ( and by extension, command buffer)
-    this->viewProjection_uniformBuffer.resize(MAX_FRAMES_IN_FLIGHT);        // Resize to have as many ViewProjection buffers as frames in flight
-    this->viewProjection_uniformBufferMemory.resize(MAX_FRAMES_IN_FLIGHT);
-    this->viewProjection_uniformBufferMemory_info.resize(MAX_FRAMES_IN_FLIGHT);
+    this->viewProjectionUniformBuffer.resize(MAX_FRAMES_IN_FLIGHT);        // Resize to have as many ViewProjection buffers as frames in flight
+    this->viewProjectionUniformBufferMemory.resize(MAX_FRAMES_IN_FLIGHT);
+    this->viewProjectionUniformBufferMemoryInfo.resize(MAX_FRAMES_IN_FLIGHT);
 
     // Create Uniform Buffers 
-    for(size_t i = 0; i < this->viewProjection_uniformBuffer.size(); i++)
+    for(size_t i = 0; i < this->viewProjectionUniformBuffer.size(); i++)
     {
         // Create regular Uniform Buffers
         vengine_helper::createBuffer(
@@ -1771,13 +1716,13 @@ void VulkanRenderer::createUniformBuffers()
                 //                     | vk::MemoryPropertyFlagBits::eHostCoherent,     // So we don't have to flush the data constantly...
                 .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
                                 | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-                .buffer         = &this->viewProjection_uniformBuffer[i], 
-                .bufferMemory   = &this->viewProjection_uniformBufferMemory[i],
-                .allocationInfo   = &this->viewProjection_uniformBufferMemory_info[i],
+                .buffer         = &this->viewProjectionUniformBuffer[i], 
+                .bufferMemory   = &this->viewProjectionUniformBufferMemory[i],
+                .allocationInfo   = &this->viewProjectionUniformBufferMemoryInfo[i],
                 .vma = &vma
             });
 
-        VulkanDbg::registerVkObjectDbgInfo("ViewProjection UniformBuffer["+std::to_string(i)+"]", vk::ObjectType::eBuffer, reinterpret_cast<uint64_t>(vk::Buffer::CType(this->viewProjection_uniformBuffer[i])));
+        VulkanDbg::registerVkObjectDbgInfo("ViewProjection UniformBuffer["+std::to_string(i)+"]", vk::ObjectType::eBuffer, reinterpret_cast<uint64_t>(vk::Buffer::CType(this->viewProjectionUniformBuffer[i])));
     }
 
 }
@@ -1832,40 +1777,12 @@ void VulkanRenderer::createDescriptorPool()
 
     this->samplerDescriptorPool = this->getVkDevice().createDescriptorPool(samplerPoolCreateInfo);
     VulkanDbg::registerVkObjectDbgInfo("DescriptorPool ImageSampler ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->samplerDescriptorPool)));
-
-
-    // - CREATE INPUT ATTTACHMENT DESCRIPTOR POOL -
-    // Color Attachment Pool Size
-    vk::DescriptorPoolSize colorInputPoolSize{};
-    colorInputPoolSize.setType(vk::DescriptorType::eInputAttachment);   // Will be used by a Subpass as a Input Attachment... (??) 
-    colorInputPoolSize.setDescriptorCount(MAX_FRAMES_IN_FLIGHT);        // One Descriptor per colorBufferImageView
-
-    // Depth attachment Pool Size
-    vk::DescriptorPoolSize depthInputPoolSize{};
-    depthInputPoolSize.setType(vk::DescriptorType::eInputAttachment);   // Will be used by a Subpass as a Input Attachment... (??) 
-    depthInputPoolSize.setDescriptorCount(MAX_FRAMES_IN_FLIGHT);        // One Descriptor per depthBufferImageView
-
-    std::array<vk::DescriptorPoolSize, 2> inputPoolSizes 
-    {
-        colorInputPoolSize,
-        depthInputPoolSize
-    };
-
-    // Create Input attachment pool
-    vk::DescriptorPoolCreateInfo inputPoolCreateInfo {};
-    inputPoolCreateInfo.setMaxSets(this->swapchain.getNumImages());
-    inputPoolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(inputPoolSizes.size()));
-    inputPoolCreateInfo.setPPoolSizes(inputPoolSizes.data());
-    inputPoolCreateInfo.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet); // In order to be able to free this set later (recreate swapchain)
-
-    this->inputDescriptorPool = this->getVkDevice().createDescriptorPool(inputPoolCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool InputAttachment ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->inputDescriptorPool)));
 }
 
 void VulkanRenderer::allocateDescriptorSets()
 {
     // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    this->descriptorSets.resize(this->viewProjection_uniformBuffer.size()); // Since we have a uniform buffer per images, better use size of swapchainImages!
+    this->descriptorSets.resize(this->viewProjectionUniformBuffer.size()); // Since we have a uniform buffer per images, better use size of swapchainImages!
 
     // Copy our DescriptorSetLayout so we have one per Image (one per UniformBuffer)
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts(
@@ -1901,7 +1818,7 @@ void VulkanRenderer::createDescriptorSets()
         // - VIEW PROJECTION DESCRIPTOR - 
         // Describe the Buffer info and Data offset Info
         vk::DescriptorBufferInfo viewProjection_BufferInfo; 
-        viewProjection_BufferInfo.setBuffer(this->viewProjection_uniformBuffer[i]);// Buffer to get the Data from
+        viewProjection_BufferInfo.setBuffer(this->viewProjectionUniformBuffer[i]);// Buffer to get the Data from
         viewProjection_BufferInfo.setOffset(0);                                    // Position Of start of Data; 
                                                                                  // Offset from the start (0), since we want to write all data
         viewProjection_BufferInfo.setRange(sizeof(UboViewProjection));             // Size of data ... 
@@ -1930,78 +1847,6 @@ void VulkanRenderer::createDescriptorSets()
 
 }
 
-void VulkanRenderer::createInputDescriptorSets()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Resize array to hold Descriptor Set for each frame in flight
-    this->inputDescriptorSets.resize(this->swapchain.getNumColorBufferImages());
-
-    // Fill vector of layouts ready for set creation
-    std::vector<vk::DescriptorSetLayout> inputSetLayouts(
-        this->inputDescriptorSets.size(),
-        this->inputSetLayout
-    );
-
-    // Input Attachment Descriptor Set Allocation Info
-    vk::DescriptorSetAllocateInfo inputSetAllocInfo;
-    inputSetAllocInfo.setDescriptorPool(this->inputDescriptorPool);
-    inputSetAllocInfo.setDescriptorSetCount(static_cast<uint32_t>(this->inputDescriptorSets.size()));
-    inputSetAllocInfo.setPSetLayouts(inputSetLayouts.data());    
-
-    // Allocate Descriptor Sets
-    this->inputDescriptorSets = this->getVkDevice().allocateDescriptorSets(inputSetAllocInfo);  
-
-    for(size_t i = 0; i < this->inputDescriptorSets.size(); i++)
-    {
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorSet[" + std::to_string(i) + "] InputAttachment", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->inputDescriptorSets[i])));
-
-        // Color Attachment Descriptor
-        vk::DescriptorImageInfo colorAttachmentDescriptor;
-        colorAttachmentDescriptor.setImageLayout(vk::ImageLayout::eReadOnlyOptimal);   // Layout of the Image when it will be Read from! (This is what we've setup the second subpass to expect...)
-        colorAttachmentDescriptor.setImageView(this->swapchain.getColorBufferImageView(i));
-        colorAttachmentDescriptor.setSampler(VK_NULL_HANDLE);                             // A Subpass Input Attachment can't have a sampler! 
-
-        // Color Attachment Descriptor Write
-        vk::WriteDescriptorSet colorWrite;
-        colorWrite.setDstSet(this->inputDescriptorSets[i]);
-        colorWrite.setDstBinding(uint32_t (0)); 
-        colorWrite.setDstArrayElement(uint32_t (0));
-        colorWrite.setDescriptorType(vk::DescriptorType::eInputAttachment);
-        colorWrite.setDescriptorCount(uint32_t(1));
-        colorWrite.setPImageInfo(&colorAttachmentDescriptor);
-
-        
-        // Depth Attachment Descriptor
-        vk::DescriptorImageInfo depthAttachmentDescriptor;
-        depthAttachmentDescriptor.setImageLayout(vk::ImageLayout::eReadOnlyOptimal);   // Layout of the Image when it will be Read from! (This is what we've setup the second subpass to expect...)
-        depthAttachmentDescriptor.setImageView(this->swapchain.getDepthBufferImageView(i));
-        depthAttachmentDescriptor.setSampler(VK_NULL_HANDLE);                             // A Subpass Input Attachment can't have a sampler! 
-
-        // Depth Attachment Descriptor Write
-        vk::WriteDescriptorSet depthWrite;
-        depthWrite.setDstSet(this->inputDescriptorSets[i]);
-        depthWrite.setDstBinding(uint32_t (1)); 
-        depthWrite.setDstArrayElement(uint32_t (0));
-        depthWrite.setDescriptorType(vk::DescriptorType::eInputAttachment);
-        depthWrite.setDescriptorCount(uint32_t (1));
-        depthWrite.setPImageInfo(&depthAttachmentDescriptor);
-
-        // List of the Input Descriptor Sets Writes 
-        std::array<vk::WriteDescriptorSet,2> inputDescriptorSetWrites{
-            colorWrite,
-            depthWrite
-        };
-
-        this->getVkDevice().updateDescriptorSets(
-            inputDescriptorSetWrites,
-            0
-        );
-    }
-    
-}
-
 void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")
 {
     vk::CommandPoolCreateInfo commandPoolCreateInfo; 
@@ -2025,7 +1870,7 @@ void VulkanRenderer::createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::Co
     //TODO: automatic trash collection    
 }
 
-void VulkanRenderer::createFrameBuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name = "NoName")
+void VulkanRenderer::createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name = "NoName")
 {
     vk::FramebufferCreateInfo framebufferCreateInfo{};
     framebufferCreateInfo.setRenderPass(renderPass);
@@ -2051,13 +1896,13 @@ void VulkanRenderer::updateUniformBuffers()
     
     vmaMapMemory(
         this->vma, 
-        this->viewProjection_uniformBufferMemory[this->currentFrame], 
+        this->viewProjectionUniformBufferMemory[this->currentFrame], 
         &data
     );
     memcpy(data, &this->uboViewProjection, sizeof(UboViewProjection));
     vmaUnmapMemory(
         this->vma, 
-        this->viewProjection_uniformBufferMemory[this->currentFrame]
+        this->viewProjectionUniformBufferMemory[this->currentFrame]
     );
 }
 
@@ -2099,16 +1944,12 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
     static const vk::ClearColorValue clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
     static const vk::ClearColorValue clear_Plum(std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
 
-    std::array<vk::ClearValue, 3> clearValues = 
-    {        // Clear values consists of a VkClearColorValue and a VkClearDepthStencilValue
-
+    std::array<vk::ClearValue, 2> clearValues = 
+    {
             vk::ClearValue(                              // of type VkClearColorValue 
-                vk::ClearColorValue{clear_black}     // Clear Value for Attachment 0
+                vk::ClearColorValue{clear_Plum}     // Clear Value for Attachment 0
             ),  
-            vk::ClearValue(                              // of type VkClearColorValue 
-                vk::ClearColorValue{clear_Plum}     // Clear Value for Attachment 1
-            ),            
-            vk::ClearValue(                              // Clear Value for Attachment 2
+            vk::ClearValue(                              // Clear Value for Attachment 1
                 vk::ClearDepthStencilValue(
                     1.F,    // depth
                     0       // stencil
@@ -2147,6 +1988,20 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
             currentCommandBuffer.beginRenderPass2(renderPassBeginInfo, subpassBeginInfo);
+
+                vk::Viewport viewport{};
+                viewport.x = 0.0f;
+                viewport.y = (float)swapchain.getHeight();
+                viewport.width = (float)this->swapchain.getWidth();
+                viewport.height = -((float)swapchain.getHeight());
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+                currentCommandBuffer.setViewport(0, 1, &viewport);
+
+                vk::Rect2D scissor{};
+                scissor.offset = vk::Offset2D{ 0, 0 };
+                scissor.extent = this->swapchain.getVkExtent();
+                currentCommandBuffer.setScissor(0, 1, &scissor);
 
                 // Bind Pipeline to be used in render pass
                 currentCommandBuffer.bindPipeline(
@@ -2210,19 +2065,6 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
                             nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
 
                         
-                        vk::Viewport viewport{};
-                        viewport.x = 0.0f;
-                        viewport.y = (float) swapchain.getHeight();
-                        viewport.width = (float) this->swapchain.getWidth();
-                        viewport.height = -((float) swapchain.getHeight());
-                        viewport.minDepth = 0.0f;
-                        viewport.maxDepth = 1.0f;
-                        this->commandBuffers[this->currentFrame].setViewport(0, 1, &viewport);
-
-                        vk::Rect2D scissor{};
-                        scissor.offset = vk::Offset2D{0, 0};
-                        scissor.extent = this->swapchain.getVkExtent();
-                        currentCommandBuffer.setScissor( 0, 1, &scissor);
                         // Execute Pipeline!
                         currentCommandBuffer.drawIndexed(
                             modelPart.second.indexCount,  // Number of vertices to draw (nr of indexes)
@@ -2230,10 +2072,10 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
                             0,                          // Start at index 0
                             0,                          // Vertex offset is 0, i.e. no offset! 
                             0);                         // We Draw Only one Instance, so first will be 0...
-                    }                
-
-
+                    }
                 });
+
+                /*
 
                 // Start Second Subpass
                 vk::SubpassEndInfo subpassEndInfo;                
@@ -2275,9 +2117,10 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
                     1,
                     0,
                     0);
-
+                */
             
             // End Render Pass!
+            vk::SubpassEndInfo subpassEndInfo;
             currentCommandBuffer.endRenderPass2(subpassEndInfo);
             
             // Begin second render pass
@@ -2326,214 +2169,6 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
     // Stop recording to a command buffer
     currentCommandBuffer.end();
 }
-
-void VulkanRenderer::recordDynamicRenderingCommands(uint32_t currentImageIndex) 
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Information about how to begin each Command Buffer...
-    vk::CommandBufferBeginInfo bufferBeginInfo;
-    bufferBeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);    
-     
-    static const vk::ClearColorValue  clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
-    static const vk::ClearColorValue  clear_Plum (std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
-
-    vk::RenderingAttachmentInfo color_attachment_info;         
-    color_attachment_info.imageView = this->swapchain.getImageView(currentImageIndex);
-    color_attachment_info.setImageLayout(vk::ImageLayout::eAttachmentOptimal);
-    color_attachment_info.setLoadOp(vk::AttachmentLoadOp::eClear);
-    color_attachment_info.setStoreOp(vk::AttachmentStoreOp::eStore);
-    color_attachment_info.clearValue = clear_black;
-
-    vk::RenderingAttachmentInfo depth_attachment_info;         
-    depth_attachment_info.imageView = this->swapchain.getDepthBufferImageView(currentImageIndex);
-    depth_attachment_info.setImageLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-    depth_attachment_info.setLoadOp(vk::AttachmentLoadOp::eClear);
-    depth_attachment_info.setStoreOp(vk::AttachmentStoreOp::eStore);
-    depth_attachment_info.clearValue = vk::ClearValue(                              
-                vk::ClearDepthStencilValue(
-                    1.F,        // depth
-                    0       // stencil
-                )
-            );
-    
-    vk::RenderingInfo renderingInfo{};
-    renderingInfo.setFlags(vk::RenderingFlags());
-    renderingInfo.setRenderArea({ vk::Offset2D(0, 0),  this->swapchain.getVkExtent()});
-    renderingInfo.setLayerCount(uint32_t (1));    
-    renderingInfo.setColorAttachmentCount(uint32_t (1));
-    renderingInfo.setPColorAttachments(&color_attachment_info);
-    renderingInfo.setPDepthAttachment(&depth_attachment_info);
-    renderingInfo.setPStencilAttachment(&depth_attachment_info);
-
-    vk::SubpassBeginInfoKHR subpassBeginInfo;
-    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-    
-    // Start recording commands to commandBuffer!
-    commandBuffers[currentImageIndex].begin(bufferBeginInfo);    
-    {   // Scope for Tracy Vulkan Zone...
-    #ifndef VENGINE_NO_PROFILING
-        TracyVkZone(
-            this->tracyContext[currentImageIndex],
-            this->commandBuffers[currentImageIndex],"Render Record Commands");
-    #endif 
-
-        vengine_helper::insertImageMemoryBarrier(
-        createImageBarrierData{
-            .cmdBuffer = commandBuffers[currentImageIndex],
-            .image = this->swapchain.getImage(currentImageIndex),
-            .srcAccessMask = vk::AccessFlags2(),
-            .dstAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
-            .oldLayout = vk::ImageLayout::eUndefined,
-            .newLayout = vk::ImageLayout::eColorAttachmentOptimal,
-            .srcStageMask = vk::PipelineStageFlagBits2::eTopOfPipe,
-            .dstStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            .imageSubresourceRange = vk::ImageSubresourceRange{
-                vk::ImageAspectFlagBits::eColor, 
-                0,
-                1,
-                0,
-                1}
-            }
-        );
-
-        vengine_helper::insertImageMemoryBarrier(
-            createImageBarrierData{
-                .cmdBuffer = commandBuffers[currentImageIndex],
-                .image = this->swapchain.getDepthBufferImage(currentImageIndex),
-                .srcAccessMask = vk::AccessFlags2(),
-                .dstAccessMask = vk::AccessFlagBits2::eDepthStencilAttachmentWrite,
-                .oldLayout = vk::ImageLayout::eUndefined,
-                .newLayout = vk::ImageLayout::eDepthAttachmentOptimal,
-                .srcStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-                .dstStageMask = vk::PipelineStageFlagBits2::eEarlyFragmentTests | vk::PipelineStageFlagBits2::eLateFragmentTests,
-                .imageSubresourceRange = vk::ImageSubresourceRange{
-                    vk::ImageAspectFlagBits::eDepth | vk::ImageAspectFlagBits::eStencil, 
-                    0,
-                    1,
-                    0,
-                    1}
-            }
-        );
-            
-            // Begin DynamicRendering!      
-            commandBuffers[currentImageIndex].beginRendering(renderingInfo);
-
-                // Bind Pipeline to be used in the DynamicRendering command
-                commandBuffers[currentImageIndex].bindPipeline(
-                    vk::PipelineBindPoint::eGraphics, 
-                    this->graphicsPipeline
-                );
-
-                #pragma region commandBufferRecording
-                {
-                    #ifndef VENGINE_NO_PROFILING
-                    ZoneNamedN(loop_all_models, "loop_all_models", true);
-                    #endif 
-                
-                    // For every Mesh we have
-                    for(auto & currModel : modelList)
-                    {
-                        {
-                            #ifndef VENGINE_NO_PROFILING
-                            ZoneNamedN(loop_per_model, "loop_per_model", true);
-                            #endif 
-
-                            auto modelMatrix= currModel.getModelMatrix();
-
-                            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                            this->commandBuffers[currentImageIndex].pushConstants(
-                                this->pipelineLayout,
-                                vk::ShaderStageFlagBits::eVertex,   // Stage to push the Push Constant to.
-                                uint32_t(0),                        // Offset of Push Constants to update; 
-                                                                    // Offset into the Push Constant Block (if more values are used (??))
-                                sizeof(modelMatrix),                // Size of data being pushed
-                                &modelMatrix                        // Actual data being pushed (can also be an array)
-                            );
-
-                            for(auto& modelPart : currModel.getModelParts())
-                            {
-                                {
-                                    #ifndef VENGINE_NO_PROFILING
-                                    ZoneNamedN(loop_per_model_part, "loop_per_model_part", true);
-                                    #endif 
-                                    // -- BINDING VERTEX BUFFERS --                                    
-                                    std::array<vk::Buffer,1> vertexBuffer = { modelPart.second.vertexBuffer};                // Buffers to bind
-                                    std::array<vk::DeviceSize,1> offsets  = {0};                                           // Offsets into buffers being bound
-                                    commandBuffers[currentImageIndex].bindVertexBuffers2(
-                                        uint32_t(0),
-                                        uint32_t(1),
-                                        vertexBuffer.data(),
-                                        offsets.data(),
-                                        nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
-                                        nullptr         //NOTE: Could also be a pointer to an array of buffer strides
-                                    );
-                                    // Bind Mesh Index Buffer; Define the Index Buffer that decides how to draw the Vertex Buffers
-                                    commandBuffers[currentImageIndex].bindIndexBuffer(
-                                        modelPart.second.indexBuffer, 
-                                        0,
-                                        vk::IndexType::eUint32);
-
-                                    // We're going to bind Two descriptorSets! put them in array...
-                                    std::array<vk::DescriptorSet,2> descriptorSetGroup{
-                                        this->descriptorSets[currentImageIndex],                // Use the descriptor set for the Image                            
-                                        this->samplerDescriptorSets[ modelPart.second.textureID]   // Use the Texture which the current mesh has
-                                    };
-                                    // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
-                                    this->commandBuffers[currentImageIndex].bindDescriptorSets(
-                                        vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
-                                        this->pipelineLayout,            // The Pipeline Layout that describes how the data will be accessed in our shaders
-                                        0,                               // Which Set is the first we want to use? We want to use the First set (thus 0)
-                                        static_cast<uint32_t>(descriptorSetGroup.size()),// How many Descriptor Sets where going to go through? DescriptorSet for View and Projection, and one for Texture
-                                        descriptorSetGroup.data(),                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
-                                        0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
-                                        nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
-
-                                    // Execute Pipeline!
-                                    this->commandBuffers[currentImageIndex].drawIndexed(                            
-                                        modelPart.second.indexCount,  // Number of vertices to draw (nr of indexes)
-                                        1,                          // We're drawing only one instance
-                                        0,                          // Start at index 0
-                                        0,                          // Vertex offset is 0, i.e. no offset! 
-                                        0);                         // We Draw Only one Instance, so first will be 0...
-                                }
-                            }
-                        }                                               
-                    }
-                }
-
-            // End DynamicRendering!            
-            commandBuffers[currentImageIndex].endRendering();
-
-        #pragma endregion commandBufferRecording
-        vengine_helper::insertImageMemoryBarrier(
-        createImageBarrierData{
-            .cmdBuffer = commandBuffers[currentImageIndex],
-            .image = this->swapchain.getImage(currentImageIndex),
-            .srcAccessMask = vk::AccessFlagBits2::eColorAttachmentWrite,
-            .dstAccessMask = vk::AccessFlags2(),
-            .oldLayout = vk::ImageLayout::eColorAttachmentOptimal,
-            .newLayout = vk::ImageLayout::ePresentSrcKHR,
-            .srcStageMask = vk::PipelineStageFlagBits2::eColorAttachmentOutput,
-            .dstStageMask = vk::PipelineStageFlagBits2::eBottomOfPipe,
-            .imageSubresourceRange = vk::ImageSubresourceRange{
-            vk::ImageAspectFlagBits::eColor, 
-            0,
-            1,
-            0,
-            1}        
-            }
-        );
-        #ifndef VENGINE_NO_PROFILING
-        TracyVkCollect(this->tracyContext[currentImageIndex], this->commandBuffers[currentImageIndex]);
-        #endif 
-            
-    }
-    // Stop recording to a command buffer
-    commandBuffers[currentImageIndex].end();
-}
-
 
 #ifndef VENGINE_NO_PROFILING 
 void VulkanRenderer::initTracy()
@@ -2669,7 +2304,7 @@ void VulkanRenderer::createFramebuffer_imgui()
     for(size_t i = 0; i < this->frameBuffers_imgui.size(); i++)
     {        
         attachment[0] = this->swapchain.getImageView(i); 
-        createFrameBuffer(
+        this->createFramebuffer(
             this->frameBuffers_imgui[i], 
             attachment, 
             this->renderPass_imgui, 

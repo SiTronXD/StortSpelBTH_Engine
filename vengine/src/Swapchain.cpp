@@ -113,53 +113,6 @@ vk::Extent2D Swapchain::chooseBestImageResolution(
     }
 }
 
-void Swapchain::createColorBuffer()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    this->colorBufferImage.resize(this->getNumImages());
-    this->colorBufferImageMemory.resize(this->getNumImages());
-    this->colorBufferImageView.resize(this->getNumImages());
-
-    // Get supported formats for Color Attachment
-    const std::vector<vk::Format> formats{ vk::Format::eR8G8B8A8Unorm };
-    this->colorFormat = Texture::chooseSupportedFormat(
-        *this->physicalDevice,
-        formats,
-        vk::ImageTiling::eOptimal,
-        vk::FormatFeatureFlagBits::eColorAttachment);
-
-    for (size_t i = 0; i < this->colorBufferImage.size(); i++)
-    {
-        colorBufferImage[i] = Texture::createImage(
-            *this->vma,
-            {
-                .width = this->getWidth(),
-                .height = this->getHeight(),
-                .format = this->colorFormat,
-                .tiling = vk::ImageTiling::eOptimal,
-                .useFlags = vk::ImageUsageFlagBits::eColorAttachment     // Image will be used as a Color Attachment
-                            | vk::ImageUsageFlagBits::eInputAttachment, // This will be an Input Attachemnt, recieved by a subpass
-                // TODO:; Not optimal for normal offscreen rendering, since we can only handle info for a current pixel/fragment
-                .property = vk::MemoryPropertyFlagBits::eDeviceLocal,     // Image will only be handled by the GPU
-                .imageMemory = &this->colorBufferImageMemory[i]
-            },
-            "ColorBufferImage"
-        );
-
-        // Creation of Color Buffer Image View
-        this->colorBufferImageView[i] = Texture::createImageView(
-            *this->device,
-            this->colorBufferImage[i],
-            this->colorFormat,
-            vk::ImageAspectFlagBits::eColor
-        );
-        VulkanDbg::registerVkObjectDbgInfo("colorBufferImageView[" + std::to_string(i) + "]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->colorBufferImageView[i])));
-        VulkanDbg::registerVkObjectDbgInfo("colorBufferImage[" + std::to_string(i) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->colorBufferImage[i])));
-    }
-}
-
 void Swapchain::createDepthBuffer()
 {
 #ifndef VENGINE_NO_PROFILING
@@ -383,7 +336,6 @@ void Swapchain::createSwapchain(
         }
     }
 
-    this->createColorBuffer();
     this->createDepthBuffer();
 }
 
@@ -396,13 +348,12 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
     this->swapchainFrameBuffers.resize(this->getNumImages());
 
     // Create a framebuffer for each swap chain image
-    for (size_t i = 0; i < this->swapchainFrameBuffers.size(); i++) {
-
-        std::array<vk::ImageView, 3> attachments = 
+    for (size_t i = 0; i < this->swapchainFrameBuffers.size(); i++) 
+    {
+        std::array<vk::ImageView, 2> attachments = 
         {
-                this->swapchainImageViews[i],   // Attatchment on index 0 of array : swapchain image
-                this->colorBufferImageView[i],   // Attachement on index 1 of array : color
-                this->depthBufferImageView[i]  // Attatchment on index 2 of array : depth
+                this->swapchainImageViews[i],
+                this->depthBufferImageView[i]
         };
 
         vk::FramebufferCreateInfo framebufferCreateInfo;
@@ -467,14 +418,6 @@ void Swapchain::getDetails(
 
 void Swapchain::cleanup(bool destroySwapchain)
 {
-    // Color
-    for (size_t i = 0; i < this->colorBufferImage.size(); i++)
-    {
-        this->device->getVkDevice().destroyImageView(this->colorBufferImageView[i]);
-        this->device->getVkDevice().destroyImage(this->colorBufferImage[i]);
-        vmaFreeMemory(*this->vma, this->colorBufferImageMemory[i]);
-    }
-
     // Depth
     for (size_t i = 0; i < this->depthBufferImage.size(); i++)
     {
