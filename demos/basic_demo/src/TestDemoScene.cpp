@@ -5,6 +5,9 @@
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
 
+
+
+
 TestDemoScene::TestDemoScene()
 	: testEntity(-1), testEntity2(-1)
 {
@@ -17,6 +20,9 @@ TestDemoScene::~TestDemoScene()
 void TestDemoScene::init()
 {
 	std::cout << "Test scene init" << std::endl;
+
+	
+
 
 	// Camera
 	int camEntity = this->createEntity();
@@ -49,6 +55,12 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
+
+
+	//Room layout testing
+	initRooms(*this, rooms);
+
+	traverseRooms(*this, rooms);
 }
 
 void TestDemoScene::update()

@@ -212,9 +212,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Randomizer.cpp" />
+    <ClCompile Include="src\Room.cpp" />
     <ClCompile Include="src\TestDemoScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Randomizer.hpp" />
+    <ClInclude Include="src\Room.hpp" />
     <ClInclude Include="src\TestDemoScene.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -7,6 +7,8 @@
 
 #include <cstdlib>
 
+#include <ctime>
+
 #include "vengine.h"
 #include "TestDemoScene.h"
 
@@ -18,6 +20,8 @@ int main(int argc, char* argv[])
 #endif // WIN32 && _DEBUG
 
     {
+        srand((unsigned int)time(NULL));
+
         Engine engine;
         engine.run(new TestDemoScene()); 
     }
