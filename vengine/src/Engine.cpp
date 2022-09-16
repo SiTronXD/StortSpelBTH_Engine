@@ -95,6 +95,16 @@ void Engine::run(Scene* startScene)
         Time::updateDeltaTime();
         this->sceneHandler.update();
         this->networkHandler.updateNetWork();
+        //DEBUG FOR SIMON/////////////////////
+        if (Input::isKeyPressed(Keys::M)) {
+            this->networkHandler.createServer();
+        }
+        if (Input::isKeyPressed(Keys::N)) {
+            this->networkHandler.createClient("penismanen");
+            this->networkHandler.connectClient("192.168.1.104");
+        }
+
+        ///////////////////////////////////////
 
         // ------------------------------------
 

@@ -51,7 +51,9 @@ void NetWorkHandler::deleteServer()
 
 Client* NetWorkHandler::createClient(std::string name)
 {
-	client = new Client(name);
+	if (client == nullptr) {
+		client = new Client(name);
+	}
 	return client;
 }
 
