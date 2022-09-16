@@ -21,6 +21,7 @@ Scene::~Scene()
 		delete this->systems[i];
 	}
 	this->systems.clear();
+	this->reg.clear();
 }
 
 Camera* Scene::getMainCamera()

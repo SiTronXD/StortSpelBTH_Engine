@@ -125,7 +125,7 @@ namespace vengine_helper{
     
     ////__attribute__((unused))
 [[maybe_unused]]  // To remove annoying warning... this function is used in another translation unit...
-    std::vector<char> readShaderFile(const std::string &filename);
+    std::vector<char> readShaderFile(const std::string& basePath, const std::string &filename);
 
     ////__attribute__((unused))
 [[maybe_unused]]  // To remove annoying warning... this function is                        

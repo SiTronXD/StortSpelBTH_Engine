@@ -10,6 +10,7 @@ SceneHandler::SceneHandler()
 SceneHandler::~SceneHandler()
 {
 	delete this->scene;
+	if (this->nextScene != nullptr) { delete this->nextScene; }
 }
 
 void SceneHandler::update()

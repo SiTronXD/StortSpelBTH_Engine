@@ -25,6 +25,9 @@ class VulkanRenderer {
 #ifndef VENGINE_NO_PROFILING
     std::vector<TracyVkCtx> tracyContext;
 #endif
+
+    std::string assetPath; // TODO: Move to ResourceHandler when added
+
     Window* window;
 
     VmaAllocator vma = nullptr;
