@@ -57,8 +57,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         this->physicalDevice.pickPhysicalDevice(
             this->instance,
             this->surface,
-            this->queueFamilies.getIndices(),
-            this->swapchain.getDetails()
+            this->queueFamilies.getIndices()
         );
 
         // Create logical device
@@ -252,6 +251,7 @@ void VulkanRenderer::cleanup()
 
     this->instance.destroy(this->surface); //NOTE: No warnings/errors if we run this line... Is it useless? Mayber gets destroyed by SDL?
     
+    this->generateVmaDump();
     vmaDestroyAllocator(this->vma);
 
     this->device.cleanup();
@@ -335,7 +335,7 @@ void VulkanRenderer::draw(Scene* scene)
             VK_NULL_HANDLE                          // The Fence to signal, when it's available to be used...(??)
         );
         if(result == vk::Result::eErrorOutOfDateKHR){
-            reCreateSwapChain(camera);    
+            this->recreateSwapchain(camera);    
             return;
         }
         else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) 
@@ -435,7 +435,7 @@ void VulkanRenderer::draw(Scene* scene)
         if (resultvk == vk::Result::eErrorOutOfDateKHR || resultvk == vk::Result::eSuboptimalKHR || this->windowResized )
         {
             this->windowResized = false;       
-            reCreateSwapChain(camera);
+            this->recreateSwapchain(camera);
         }
         else if(resultvk != vk::Result::eSuccess) 
         {
@@ -492,29 +492,26 @@ void VulkanRenderer::createSurface()
     this->window->createVulkanSurface(this->instance, this->surface);
 }
 
-void VulkanRenderer::reCreateSwapChain(Camera* camera)
+void VulkanRenderer::recreateSwapchain(Camera* camera)
 {
     this->device.waitIdle();
     
-    this->getVkDevice().freeDescriptorSets(this->inputDescriptorPool,this->inputDescriptorSets);
-    cleanupFramebuffer_imgui();    
-    // cleanupSwapChain();
-    cleanupRenderBass_Imgui();  
-    cleanupRenderBass_Base();  
+    this->getVkDevice().freeDescriptorSets(
+        this->inputDescriptorPool, 
+        this->inputDescriptorSets
+    );
+    cleanupFramebuffer_imgui();
 
-    // createSwapChain();
     this->swapchain.recreateSwapchain(this->renderPass_base);
-    createRenderPass_Base();
-    createRenderPass_Imgui();
-
-    // createFrameBuffers();
     createFramebuffer_imgui();
 
     this->createDescriptorSets();
     this->createInputDescriptorSets();
 
-    //this->updateUBO_camera_Projection();
-    camera->aspectRatio = (float)this->swapchain.getWidth() / (float)swapchain.getHeight();
+    ImGui_ImplVulkan_SetMinImageCount(this->swapchain.getNumMinimumImages());
+
+    // Take new aspect ratio into account for the camera
+    camera->aspectRatio = (float) this->swapchain.getWidth() / (float)swapchain.getHeight();
     camera->projection = glm::perspective(camera->fov, camera->aspectRatio, 0.1f, 100.0f);
     camera->invProjection = glm::inverse(camera->projection);
 }
@@ -2621,8 +2618,8 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.PipelineCache = VK_NULL_HANDLE;  //TODO: Imgui Pipeline Should have its own Cache! 
     imguiInitInfo.DescriptorPool = this->descriptorPool_imgui;
     imguiInitInfo.Subpass = 0; 
-    imguiInitInfo.MinImageCount = this->swapchain.getNumMinimumImages(); //TODO: Expose this information (available when createing the swapchain) and use it here
-    imguiInitInfo.ImageCount = this->swapchain.getNumImages();    //TODO: Expose this information (available when createing the swapchain) and use it here
+    imguiInitInfo.MinImageCount = this->swapchain.getNumMinimumImages();
+    imguiInitInfo.ImageCount = this->swapchain.getNumImages();
     imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT; //TODO: check correctness    
     imguiInitInfo.Allocator = nullptr;    //TODO: Can/should I pass in something VMA related here?
     imguiInitInfo.CheckVkResultFn = checkVkResult;

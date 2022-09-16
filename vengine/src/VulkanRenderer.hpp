@@ -142,7 +142,7 @@ private:
     /// - Create functions
     void setupDebugMessenger();
     void createSurface();
-    void reCreateSwapChain(Camera* camera);    
+    void recreateSwapchain(Camera* camera);
     void createRenderPass_Base();
     void createRenderPass_Imgui();
     void createDescriptorSetLayout();

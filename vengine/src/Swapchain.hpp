@@ -13,7 +13,7 @@ class Swapchain
 private:
 	vk::SwapchainKHR swapchain;
 
-	SwapChainDetails swapchainDetails{};
+	SwapchainDetails swapchainDetails{};
 	std::vector<vk::Image> swapchainImages;
 	std::vector<vk::ImageView> swapchainImageViews;
 	std::vector<vk::Framebuffer> swapchainFrameBuffers;
@@ -66,7 +66,12 @@ public:
 	void recreateSwapchain(
 		vk::RenderPass& renderPass);
 
-	void cleanup();
+	static void getDetails(
+		vk::PhysicalDevice& physDevice,
+		vk::SurfaceKHR& surface,
+		SwapchainDetails& outputDetails);
+
+	void cleanup(bool destroySwapchain = true);
 
 	inline const uint32_t& getWidth() { return this->swapchainExtent.width; }
 	inline const uint32_t& getHeight() { return this->swapchainExtent.height; }
@@ -74,7 +79,6 @@ public:
 	inline size_t getNumImages() { return this->swapchainImages.size(); }
 	inline size_t getNumColorBufferImages() { return this->colorBufferImage.size(); }
 	inline size_t getNumDepthBufferImages() { return this->depthBufferImage.size(); }
-	inline SwapChainDetails& getDetails() { return this->swapchainDetails; }
 	inline vk::Image& getImage(const uint32_t& index) { return this->swapchainImages[index]; }
 	inline vk::Image& getColorBufferImage(const uint32_t& index) { return this->colorBufferImage[index]; }
 	inline vk::Image& getDepthBufferImage(const uint32_t& index) { return this->depthBufferImage[index]; }

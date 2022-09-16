@@ -56,7 +56,8 @@ struct QueueFamilyIndices
 };
 
 /// Defines what kind of surface we can create with our given surface
-struct SwapChainDetails {
+struct SwapchainDetails 
+{
     vk::SurfaceCapabilities2KHR surfaceCapabilities;       /// Surface Properties, Image size/extent
     /*!Describes Information about what the surface can handle:
      * - minImageCount/maxImageCount         : defines the min/max amount of image our surface can handle

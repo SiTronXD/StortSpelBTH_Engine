@@ -215,10 +215,12 @@ void Swapchain::createDepthBuffer()
 Swapchain::Swapchain()
     : swapchain(VK_NULL_HANDLE),
     window(nullptr),
+    physicalDevice(nullptr),
     device(nullptr),
     surface(nullptr),
     queueFamilies(nullptr),
-    vma(nullptr)
+    vma(nullptr),
+    numMinimumImages(0)
 {
 }
 
@@ -245,6 +247,12 @@ void Swapchain::createSwapchain(
         this->surface = &surface;
         this->queueFamilies = &queueFamilies;
         this->vma = &vma;
+
+        Swapchain::getDetails(
+            this->physicalDevice->getVkPhysicalDevice(),
+            *this->surface,
+            this->swapchainDetails
+        );
 
         // Store Old Swapchain, if it exists
         vk::SwapchainKHR oldSwapchain = this->swapchain;
@@ -412,7 +420,7 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
 
 void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
 {
-    this->cleanup();
+    this->cleanup(false);
 
     this->createSwapchain(
         *this->window, 
@@ -423,13 +431,41 @@ void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
         *this->vma
     );
 
-    this->createColorBuffer();
-    this->createDepthBuffer();
-
     this->createFramebuffers(renderPass);
 }
 
-void Swapchain::cleanup()
+void Swapchain::getDetails(
+    vk::PhysicalDevice& physDevice, 
+    vk::SurfaceKHR& surface, 
+    SwapchainDetails& outputDetails)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+    outputDetails = {};
+
+    // Surface capabilities
+    vk::PhysicalDeviceSurfaceInfo2KHR physicalDeviceSurfaceInfo{};
+    physicalDeviceSurfaceInfo.setSurface(surface);
+    outputDetails.surfaceCapabilities =
+        physDevice.getSurfaceCapabilities2KHR(
+            physicalDeviceSurfaceInfo
+        );
+
+    // Formats
+    outputDetails.Format =
+        physDevice.getSurfaceFormats2KHR(
+            physicalDeviceSurfaceInfo
+        );
+
+    // Presentation modes
+    outputDetails.presentationMode =
+        physDevice.getSurfacePresentModesKHR(
+            surface
+        );
+}
+
+void Swapchain::cleanup(bool destroySwapchain)
 {
     // Color
     for (size_t i = 0; i < this->colorBufferImage.size(); i++)
@@ -448,14 +484,20 @@ void Swapchain::cleanup()
     }
 
     // Swapchain image views
-    for (auto views : this->swapchainImageViews)
+    for (auto view : this->swapchainImageViews)
     {
-        device->getVkDevice().destroyImageView(views);
+        this->device->getVkDevice().destroyImageView(view);
     }
+    this->swapchainImageViews.resize(0);
+
+    // The swapchain destruction will destroy the swapchain images
     this->swapchainImages.resize(0);
 
     // Swapchain
-    this->device->getVkDevice().destroySwapchainKHR(this->swapchain);
+    if (destroySwapchain)
+    {
+        this->device->getVkDevice().destroySwapchainKHR(this->swapchain);
+    }
 
     // Framebuffers
     for (auto framebuffer : this->swapchainFrameBuffers)
