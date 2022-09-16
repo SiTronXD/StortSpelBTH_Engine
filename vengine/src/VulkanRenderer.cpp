@@ -549,9 +549,10 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     
     // Put shader stage creation infos into array
     // graphics pipeline creation info requires array of shader stage creates
-    std::array<vk::PipelineShaderStageCreateInfo, 2> pipelineShaderStageCreateInfos {
-            vertexShaderStageCreateInfo,
-            fragmentShaderPipelineCreatInfo
+    std::array<vk::PipelineShaderStageCreateInfo, 2> pipelineShaderStageCreateInfos 
+    {
+        vertexShaderStageCreateInfo,
+        fragmentShaderPipelineCreatInfo
     };
 
     // -- FIXED SHADER STAGE CONFIGURATIONS -- 

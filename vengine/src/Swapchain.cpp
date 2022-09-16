@@ -1,3 +1,5 @@
+#include <string>
+
 #include "Swapchain.hpp"
 #include "VulkanDbg.hpp"
 #include "PhysicalDevice.hpp"
@@ -43,32 +45,38 @@ vk::SurfaceFormat2KHR Swapchain::chooseBestSurfaceFormat(
         }
     }
 
+    Log::error("Could not find a suitable surface format.");
+
     // If no 'best format' is found, then we return the first format...This is however very unlikely
     return formats[0];
 }
 
-vk::PresentModeKHR Swapchain::chooseBestPresentationMode(const std::vector<vk::PresentModeKHR>& presentationModes) {
+vk::PresentModeKHR Swapchain::chooseBestPresentationMode(
+    const std::vector<vk::PresentModeKHR>& presentationModes) 
+{
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    return vk::PresentModeKHR::eImmediate;
-    // "Best" PresentationMode is subjective. Here we pick 'VSYNC'...
-    std::vector<vk::PresentModeKHR> priorityList{ // The different types we setttle with, first = highset priority
+    
+    // The different types we setttle with, first = highest priority
+    std::vector<vk::PresentModeKHR> priorityList
+    { 
          vk::PresentModeKHR::eMailbox,
          vk::PresentModeKHR::eImmediate,
          vk::PresentModeKHR::eFifo
     };
 
-    for (auto prioritized_mode : priorityList) 
+    for (auto mode : priorityList) 
     {
-
-        if (std::find(presentationModes.begin(), presentationModes.end(), prioritized_mode) != presentationModes.end()) 
+        if (std::find(presentationModes.begin(), presentationModes.end(), mode) != presentationModes.end())
         {
-            return prioritized_mode;
+            Log::write("Chosen swapchain presentation mode: " + std::to_string((int) mode));
+
+            return mode;
         }
     }
 
-    // If Mailbox Mode does not exist, use FIFO since it always should be available...
+    // Use FIFO as a last resort since it's always guaranteed to be available
     return vk::PresentModeKHR::eFifo;
 }
 
@@ -84,12 +92,14 @@ vk::Extent2D Swapchain::chooseBestImageResolution(
     // The default currentExtent.width value of a surface will be the size of the created window...
     // - This is set by the glfwCreateWindowSurface function...
     // - NOTE: the surfaces currentExtent.width/height can change, and then it will not be equal to the window size(??)
-    if (surfaceCapabilities.surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+    if (surfaceCapabilities.surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
+    {
         //IF the current Extent does not vary, then the value will be the same as the windows currentExtent...
         // - This will be the case if the currentExtent.width/height is NOT equal to the maximum value of a uint32_t...
         return surfaceCapabilities.surfaceCapabilities.currentExtent;
     }
-    else {
+    else 
+    {
         //IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
         // - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
         int width = 0, height = 0;
@@ -121,7 +131,6 @@ void Swapchain::createDepthBuffer()
     this->depthBufferImage.resize(this->getNumImages());
     this->depthBufferImageMemory.resize(this->getNumImages());
     this->depthBufferImageView.resize(this->getNumImages());
-
 
     // Get supported VkFormat for the DepthBuffer
     this->depthFormat = Texture::chooseSupportedFormat(
