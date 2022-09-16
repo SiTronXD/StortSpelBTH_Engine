@@ -3,6 +3,7 @@
 #include <vector>
 #include <thread>
 #include "NetworkEnumAndDefines.h"
+#include "ServerGame.h"
 
 struct clientInfo {
 	clientInfo(std::string name) {
@@ -57,11 +58,16 @@ private:
 	sf::UdpSocket udpSocket;
 	sf::TcpListener listener;
 
+	
+
 	std::vector<sf::Packet> clientToServerPacketTcp; //packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketTcp;
 
 	std::vector<sf::Packet> clientToServerPacketUdp; //packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketUdp;
+
+
+	ServerGame sGame;
 
 	//help functions
 	template <typename T>

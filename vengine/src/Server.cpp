@@ -257,12 +257,12 @@ void Server::handlePacketFromUser(int ClientID, bool tcp)
 {
 	//tcp
 	int gameEvent;
+	float packetHelper1;
+	int packetHelper2;
 	if (tcp) {
 		while (!clientToServerPacketTcp[ClientID].endOfPacket()) {
 
 			clientToServerPacketTcp[ClientID] >> gameEvent;
-			float packetHelper1;
-			int packetHelper2;
 			switch (gameEvent) {
 			case GameEvents::EMPTY:
 				break;
@@ -311,8 +311,18 @@ void Server::handlePacketFromUser(int ClientID, bool tcp)
 				break;
 			case GameEvents::UpdatePlayerPos:
 				std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
-				g
-				clientToServerPacketUdp[ClientID] >> clients[ClientID]->Position[0] >> clients[ClientID]->Position[1] >> clients[ClientID]->Position[2];
+				clientToServerPacketUdp[ClientID] >> packetHelper1;
+				sGame.getServerPlayers()[ClientID].position.x;
+				clientToServerPacketUdp[ClientID] >> packetHelper1;
+				sGame.getServerPlayers()[ClientID].position.y;
+				clientToServerPacketUdp[ClientID] >> packetHelper1;
+				sGame.getServerPlayers()[ClientID].position.z;
+				clientToServerPacketUdp[ClientID] >> packetHelper1;
+				sGame.getServerPlayers()[ClientID].rotation.x;
+				clientToServerPacketUdp[ClientID] >> packetHelper1;
+				sGame.getServerPlayers()[ClientID].rotation.y;
+				clientToServerPacketUdp[ClientID] >> packetHelper1;
+				sGame.getServerPlayers()[ClientID].rotation.z;
 			}
 		}
 	}
@@ -321,12 +331,13 @@ void Server::handlePacketFromUser(int ClientID, bool tcp)
 
 void Server::createUDPPacketToClient(int clientID, sf::Packet& packet)
 {
-	;
 	packet << GameEvents::UpdatePlayerPos << (int)clients.size();
 	//get all player position
 	for (int i = 0; i < clients.size(); i++) {
 		if (i != clientID) {
-			//packet << clients[i]->Position[0] << clients[i]->Position[1] << clients[i]->Position[2];
+			packet << 
+				sGame.getServerPlayers()[clientID].position.x << sGame.getServerPlayers()[clientID].position.y << sGame.getServerPlayers()[clientID].position.z << 
+				sGame.getServerPlayers()[clientID].rotation.x << sGame.getServerPlayers()[clientID].rotation.y << sGame.getServerPlayers()[clientID].rotation.z;
 		}
 	}
 

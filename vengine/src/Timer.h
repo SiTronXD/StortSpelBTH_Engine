@@ -21,7 +21,7 @@ public:
 	void ChangeTimeFlow(float multiplier);
 
 	//return deltaTime with a multiplier
-	const inline float& getDT() { return deltaTime * multiplier; };
+	const inline float getDT() { return deltaTime * multiplier; };
 	//return the real deltaTime
 	const inline float& getRealDT() { return deltaTime; };
 };

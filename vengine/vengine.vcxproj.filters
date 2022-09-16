@@ -156,6 +156,9 @@
     <ClInclude Include="src\Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\ServerGame.h">
+      <Filter>Header Files\NetWork</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Configurator.cpp">
@@ -257,9 +260,6 @@
     <ClCompile Include="src\VulkanInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\NetworkHandler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="src\Server.cpp">
       <Filter>Source Files\Network</Filter>
     </ClCompile>
@@ -268,6 +268,12 @@
     </ClCompile>
     <ClCompile Include="src\Client.cpp">
       <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NetworkHandler.cpp">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\ServerGame.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

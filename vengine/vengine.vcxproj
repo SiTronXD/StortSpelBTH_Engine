@@ -252,6 +252,7 @@
     <ClInclude Include="src\Scene.hpp" />
     <ClInclude Include="src\SceneHandler.hpp" />
     <ClInclude Include="src\Server.h" />
+    <ClInclude Include="src\ServerGame.h" />
     <ClInclude Include="src\Swapchain.hpp" />
     <ClInclude Include="src\System.hpp" />
     <ClInclude Include="src\TempPCH.hpp" />
@@ -294,6 +295,7 @@
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\SceneHandler.cpp" />
     <ClCompile Include="src\Server.cpp" />
+    <ClCompile Include="src\ServerGame.cpp" />
     <ClCompile Include="src\stb.cpp" />
     <ClCompile Include="src\Swapchain.cpp" />
     <ClCompile Include="src\TestScene.cpp" />
