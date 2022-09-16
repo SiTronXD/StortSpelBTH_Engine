@@ -94,9 +94,6 @@ class VulkanRenderer
     vk::RenderPass     renderPass_base{};
     vk::RenderPass     renderPass_imgui{};
 
-    vk::Pipeline       secondGraphicsPipeline{};
-    vk::PipelineLayout secondPipelineLayout{}; 
-
     /// - Pools
     vk::CommandPool    graphicsCommandPool{};           /// Command pool that only is used for graphics command...
     vk::DescriptorPool descriptorPool{};

@@ -237,8 +237,6 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyCommandPool(this->graphicsCommandPool);
     
     this->getVkDevice().destroyPipelineCache(this->graphics_pipelineCache);
-    this->getVkDevice().destroyPipeline(this->secondGraphicsPipeline);
-    this->getVkDevice().destroyPipelineLayout(this->secondPipelineLayout);
 
     this->getVkDevice().destroyPipeline(this->graphicsPipeline);
     this->getVkDevice().destroyPipelineLayout(this->pipelineLayout);
@@ -729,76 +727,6 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     //Destroy Shader Moduels, no longer needed after pipeline created
     this->getVkDevice().destroyShaderModule(vertexShaderModule);
     this->getVkDevice().destroyShaderModule(fragmentShaderModule);
-
-
-    return;
-
-    //////////////////////
-    //////////////////////
-    //////////////////////
-    //////////////////////
-    
-    // - CREATE SECOND PASS PIPELINE - 
-    // second Pass Shaders
-    auto secondVertexShaderCode     = vengine_helper::readShaderFile("second.vert.spv");
-    auto secondFragmentShaderCode     = vengine_helper::readShaderFile("second.frag.spv");    
-
-    // Build Shaders
-    vk::ShaderModule secondVertexShaderModule = createShaderModule(secondVertexShaderCode);
-    vk::ShaderModule secondFragmentShaderModule = createShaderModule(secondFragmentShaderCode);
-    VulkanDbg::registerVkObjectDbgInfo("ShaderModule Second_VertexShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(secondVertexShaderModule)));
-    VulkanDbg::registerVkObjectDbgInfo("ShaderModule Second_fragmentShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(secondFragmentShaderModule)));
-
-    // --- SHADER STAGE CREATION INFORMATION ---
-    // Vertex Stage Creation Information
-    vertexShaderStageCreateInfo.module = secondVertexShaderModule;                              // Shader Modual to be used by Stage
-
-    // Fragment Stage Creation Information    
-    fragmentShaderPipelineCreatInfo.module = secondFragmentShaderModule;                        // Shader Module used by stage    
-
-    // Put shader stage creation infos into array
-    // graphics pipeline creation info requires array of shader stage creates
-    std::array<vk::PipelineShaderStageCreateInfo,2> secondPipelineShaderStageCreateInfos = {
-            vertexShaderStageCreateInfo,
-            fragmentShaderPipelineCreatInfo
-    };
-    
-     // -- VERTEX INPUT --
-    vertexInputCreateInfo.setVertexBindingDescriptionCount(uint32_t(0));
-    vertexInputCreateInfo.setPVertexBindingDescriptions(nullptr);
-    vertexInputCreateInfo.setVertexAttributeDescriptionCount(uint32_t (0));
-    vertexInputCreateInfo.setPVertexAttributeDescriptions(nullptr);  
-
-    // --- DEPTH STENCIL TESING ---
-    depthStencilCreateInfo.setDepthWriteEnable(VK_FALSE);             // DISABLE writing to Depth Buffer; To make sure it replaces old values
-
-    // Create New pipeline Layout
-    vk::PipelineLayoutCreateInfo secondPipelineLayoutCreateInfo{};
-    secondPipelineLayoutCreateInfo.setSetLayoutCount(uint32_t (1));
-    secondPipelineLayoutCreateInfo.setPSetLayouts(&this->inputSetLayout);
-    secondPipelineLayoutCreateInfo.setPushConstantRangeCount(uint32_t (0));
-    secondPipelineLayoutCreateInfo.setPPushConstantRanges(nullptr);
-    // createPipelineLayout
-    this->secondPipelineLayout = this->getVkDevice().createPipelineLayout(secondPipelineLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("VkPipelineLayout Second_GraphicsPipelineLayout", vk::ObjectType::ePipelineLayout, reinterpret_cast<uint64_t>(vk::PipelineLayout::CType(this->secondPipelineLayout)));
-    
-     // -- GRAPHICS PIPELINE CREATION --
-    pipelineCreateInfo.setPStages(secondPipelineShaderStageCreateInfos.data());                // List of Shader stages
-    pipelineCreateInfo.setLayout(this->secondPipelineLayout);                      // Pipeline layout pipeline should use
-    pipelineCreateInfo.setSubpass(uint32_t (1));                                             // Use Subpass 2 (index 1...)
-
-    // Create Graphics Pipeline
-    std::tie(result, this->secondGraphicsPipeline) = this->getVkDevice().createGraphicsPipeline(nullptr, pipelineCreateInfo);
-    if(result != vk::Result::eSuccess)
-    {
-        Log::error("Could not create Second Pipeline");
-    }
-    VulkanDbg::registerVkObjectDbgInfo("VkPipeline Second_GraphicsPipeline", vk::ObjectType::ePipeline, reinterpret_cast<uint64_t>(vk::Pipeline::CType(this->secondGraphicsPipeline)));
-
-    //Destroy Second Shader Moduels, no longer needed after pipeline created
-    this->getVkDevice().destroyShaderModule(secondVertexShaderModule);
-    this->getVkDevice().destroyShaderModule(secondFragmentShaderModule);
-
 }
 
 void VulkanRenderer::createGraphicsPipeline_DynamicRendering() //NOLINT: 
@@ -2076,50 +2004,6 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
                     }
                 });
 
-                /*
-
-                // Start Second Subpass
-                vk::SubpassEndInfo subpassEndInfo;                
-                currentCommandBuffer.nextSubpass2(subpassBeginInfo,subpassEndInfo);
-
-                currentCommandBuffer.bindPipeline(
-                    vk::PipelineBindPoint::eGraphics, 
-                    this->secondGraphicsPipeline
-                );
-
-                currentCommandBuffer.bindDescriptorSets(
-                    vk::PipelineBindPoint::eGraphics,
-                    this->secondPipelineLayout,
-                    uint32_t(0),
-                    uint32_t(1),
-                    &this->inputDescriptorSets[imageIndex],
-                    uint32_t(0),
-                    nullptr
-                );
-
-
-                vk::Viewport viewport{};
-                viewport.x = 0.0f;
-                viewport.y = 0.0f;
-                viewport.width = (float) this->swapchain.getWidth();
-                viewport.height = (float) swapchain.getHeight();
-                viewport.minDepth = 0.0f;
-                viewport.maxDepth = 1.0f;
-                currentCommandBuffer.setViewport(0, 1, &viewport);
-
-                vk::Rect2D scissor{};
-                scissor.offset = vk::Offset2D{0, 0};
-                scissor.extent = swapchain.getVkExtent();
-                currentCommandBuffer.setScissor( 0, 1, &scissor);
-
-            
-                currentCommandBuffer.draw(
-                    3,      // We will draw a Triangle, so we only want to draw 3 vertices
-                    1,
-                    0,
-                    0);
-                */
-            
             // End Render Pass!
             vk::SubpassEndInfo subpassEndInfo;
             currentCommandBuffer.endRenderPass2(subpassEndInfo);
