@@ -20,6 +20,7 @@ private:
 
 	vk::Format swapchainImageFormat{};
 	vk::Extent2D swapchainExtent{};
+	uint32_t numMinimumImages;
 
 	std::vector<vk::Image> colorBufferImage;
 	std::vector<VmaAllocation> colorBufferImageMemory;
@@ -45,8 +46,6 @@ private:
 	vk::Extent2D chooseBestImageResolution(
 		const vk::SurfaceCapabilities2KHR& surfaceCapabilities);
 
-	void recreateCleanup();
-
 	void createColorBuffer();
 	void createDepthBuffer();
 
@@ -69,8 +68,9 @@ public:
 
 	void cleanup();
 
-	inline uint32_t getWidth() { return this->swapchainExtent.width; }
-	inline uint32_t getHeight() { return this->swapchainExtent.height; }
+	inline const uint32_t& getWidth() { return this->swapchainExtent.width; }
+	inline const uint32_t& getHeight() { return this->swapchainExtent.height; }
+	inline const uint32_t& getNumMinimumImages() { return this->numMinimumImages; }
 	inline size_t getNumImages() { return this->swapchainImages.size(); }
 	inline size_t getNumColorBufferImages() { return this->colorBufferImage.size(); }
 	inline size_t getNumDepthBufferImages() { return this->depthBufferImage.size(); }

@@ -17,9 +17,6 @@ using VmaAllocationCreateFlags = VkFlags;
 
 const int MAX_OBJECTS = 250; /// Maximum number of objects to allocate memory for
 
-const int MAX_FRAMES_IN_FLIGHT = 2; 
-//const int MAX_FRAME_DRAWS = 3; 
-
 /// Defines all the Device Extensions to be used
 constexpr std::array<const char *, 2> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,

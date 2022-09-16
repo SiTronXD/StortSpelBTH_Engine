@@ -5,6 +5,7 @@
 #include "QueueFamilies.hpp"
 #include "Window.hpp"
 #include "Texture.hpp"
+#include "Log.hpp"
 
 vk::SurfaceFormat2KHR Swapchain::chooseBestSurfaceFormat(
     const std::vector<vk::SurfaceFormat2KHR >& formats)
@@ -261,6 +262,8 @@ void Swapchain::createSwapchain(
         vk::Extent2D imageExtent =
             this->chooseBestImageResolution(this->swapchainDetails.surfaceCapabilities);
 
+        this->numMinimumImages = this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.minImageCount;
+
         // --- PREPARE DATA FOR SwapChainCreateInfo ... ---
         // Minimum number of images our swapChain should use.
         // - By setting the minImageCount to 1 more image than the amount defined in surfaceCapabilities we enable Triple Buffering!
@@ -284,6 +287,8 @@ void Swapchain::createSwapchain(
              *
              * Also... Do I always want to use the MaxImageCount just because I can? Or is minImageCount + X a better choice...
              * */
+
+            Log::warning("Swapchain image count was set to 0.");
         }
 
         //Create the SwapChain Create Info!

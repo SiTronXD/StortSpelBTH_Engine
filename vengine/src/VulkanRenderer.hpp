@@ -21,10 +21,13 @@ class Camera;
 
 #include <functional>
 using stbi_uc = unsigned char;
-class VulkanRenderer {
+class VulkanRenderer 
+{
 #ifndef VENGINE_NO_PROFILING
     std::vector<TracyVkCtx> tracyContext;
 #endif
+    const int MAX_FRAMES_IN_FLIGHT = 3;
+
     Window* window;
 
     VmaAllocator vma = nullptr;
@@ -145,7 +148,6 @@ private:
     void createDescriptorSetLayout();
     void createPushConstantRange();
     void createGraphicsPipeline_Base();
-    void createGraphicsPipeline_Imgui();
     void createGraphicsPipeline_DynamicRendering();
     void createCommandPool();   //TODO: Deprecate! 
     void createCommandBuffers(); //TODO: Deprecate!  //Allocate Command Buffers from Command pool...
@@ -167,12 +169,12 @@ private:
     void createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::CommandPool& commandPool, std::string&& name);
     void createFrameBuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
 
-    void updateUniformBuffers(uint32_t imageIndex);
+    void updateUniformBuffers();
     void updateUBO_camera_Projection();
     void updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm::vec3 up = glm::vec3(0.F,1.F,0.F));
 
     /// - Record Functions
-    void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    // Using renderpass
+    void recordRenderPassCommands_Base(Scene* scene, uint32_t imageIndex);    // Using renderpass
     void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
     /// -- Create Functions    
@@ -180,7 +182,7 @@ private:
 
     int createTextureImage(const std::string &filename);
     int createTexture(const std::string &filename);
-    int createTextureDescriptor(vk::ImageView textureImage);
+    int createSamplerDescriptor(vk::ImageView textureImage);
 
     /// -- Loader Functions
     static stbi_uc*    loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );
