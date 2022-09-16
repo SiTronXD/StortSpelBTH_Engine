@@ -37,7 +37,7 @@ void Engine::run(Scene* startScene)
     this->sceneHandler.updateToNextScene();
 
     using namespace vengine_helper::config;
-    loadConfIntoMemory(); /// load config data into memory
+    loadConfIntoMemory(); // load config data into memory
 
     Window window;
     window.initWindow(
@@ -45,8 +45,8 @@ void Engine::run(Scene* startScene)
         DEF<int>(W_WIDTH), 
         DEF<int>(W_HEIGHT)
     );
-
-    /// Creating Vulkan Renderer Instance
+    
+    // Creating Vulkan Renderer Instance
     auto renderer = VulkanRenderer();
     if (renderer.init(&window, "Some Program") == 1)
     {

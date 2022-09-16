@@ -39,15 +39,16 @@ static void checkVkResult(VkResult err)
 }
 
 using namespace vengine_helper::config;
-int VulkanRenderer::init(Window* window, std::string&& windowName) {
-    
+int VulkanRenderer::init(Window* window, std::string&& windowName) 
+{    
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
     
     this->window = window;
 
-    try {
+    try 
+    {
         this->instance.createInstance(*this->window);
 
         // Create the surface
@@ -84,9 +85,9 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         VulkanDbg::registerVkObjectDbgInfo("Logical Device",vk::ObjectType::eDevice, reinterpret_cast<uint64_t>(vk::Device::CType(this->getVkDevice())));
 
         VmaAllocatorCreateInfo vmaAllocatorCreateInfo{};
-        vmaAllocatorCreateInfo.device = this->getVkDevice();
-        vmaAllocatorCreateInfo.physicalDevice = this->physicalDevice.getVkPhysicalDevice();
         vmaAllocatorCreateInfo.instance = this->instance.getVkInstance();
+        vmaAllocatorCreateInfo.physicalDevice = this->physicalDevice.getVkPhysicalDevice();
+        vmaAllocatorCreateInfo.device = this->getVkDevice();
         vmaAllocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
         if(vmaCreateAllocator(&vmaAllocatorCreateInfo, &this->vma) != VK_SUCCESS)
         {
@@ -103,7 +104,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
             this->queueFamilies,
             this->vma
         );
-        
+
         this->createRenderPass_Base();
         this->createRenderPass_Imgui();
         this->createDescriptorSetLayout();
@@ -114,7 +115,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         
         this->swapchain.createFramebuffers(this->renderPass_base);
         this->createCommandPool();
-        
+
         this->createCommandBuffers();
 
         this->createTextureSampler();
@@ -138,7 +139,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
 
 #ifndef VENGINE_NO_PROFILING
         this->initTracy();
-#endif
+#endif  
         this->initImgui();
     }
     catch(std::runtime_error &e)
@@ -160,12 +161,13 @@ void VulkanRenderer::updateModel(int modelIndex, glm::mat4 newModel)
 
 void VulkanRenderer::generateVmaDump()
 {
+    Log::error("generateVmaDump() is causing a memory leak at the moment :(");
+
     char* vma_dump;
-    vmaBuildStatsString(this->vma,&vma_dump,VK_TRUE);
+    vmaBuildStatsString(this->vma, &vma_dump, VK_TRUE);
     std::ofstream file("vma_dump.json");
     file << vma_dump << std::endl;
     file.close();
-    
 }
 
 void VulkanRenderer::cleanup()
@@ -227,7 +229,7 @@ void VulkanRenderer::cleanup()
         vmaFreeMemory(this->vma, this->viewProjectionUniformBufferMemory[i]);
     }
 
-    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         this->getVkDevice().destroySemaphore(this->renderFinished[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
@@ -246,7 +248,6 @@ void VulkanRenderer::cleanup()
 
     this->instance.destroy(this->surface); //NOTE: No warnings/errors if we run this line... Is it useless? Mayber gets destroyed by SDL?
     
-    this->generateVmaDump();
     vmaDestroyAllocator(this->vma);
 
     this->device.cleanup();
@@ -2113,19 +2114,16 @@ void VulkanRenderer::initImgui()
 	pool_info.pPoolSizes = pool_sizes;
 
 	this->descriptorPool_imgui = this->getVkDevice().createDescriptorPool(pool_info, nullptr);
-	
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();    
+    
+    IMGUI_CHECKVERSION(); 
+    ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     
     io.ConfigWindowsResizeFromEdges = true;
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     
-
     ImGui::StyleColorsDark();
     this->window->initImgui();
 
@@ -2144,9 +2142,6 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.Allocator = nullptr;    //TODO: Can/should I pass in something VMA related here?
     imguiInitInfo.CheckVkResultFn = checkVkResult;
     ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPass_imgui);
-
-    std::vector<vk::ImageView> attachment;    
-    attachment.resize(1);
 
     this->createFramebuffer_imgui();
 
