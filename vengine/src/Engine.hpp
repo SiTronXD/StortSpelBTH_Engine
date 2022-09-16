@@ -1,6 +1,7 @@
 #pragma once
 
 #include "SceneHandler.hpp"
+#include "NetworkHandler.h"
 
 class Engine
 {
@@ -13,5 +14,6 @@ public:
 	void run(Scene* startScene);
 
 	SceneHandler sceneHandler;
+	NetWorkHandler networkHandler;
 };
 

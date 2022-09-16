@@ -15,7 +15,8 @@ int serverMain(bool &shutDownServer) {
 
 NetWorkHandler::NetWorkHandler()
 {
-	fx = fy = fz = fa = fb = fc = ix = iy = iz = ia = ib = ic = 0;
+	fx = fy = fz = fa = fb = fc = 0.f;
+	ix = iy = iz = ia = ib = ic = 0;
 	shutDownServer = false;
 	client = nullptr;
 	serverThread = nullptr;

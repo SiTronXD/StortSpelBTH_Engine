@@ -58,11 +58,9 @@ private:
 	sf::UdpSocket udpSocket;
 	sf::TcpListener listener;
 
-	
-
 	std::vector<sf::Packet> clientToServerPacketTcp; //packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketTcp;
-
+	
 	std::vector<sf::Packet> clientToServerPacketUdp; //packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketUdp;
 

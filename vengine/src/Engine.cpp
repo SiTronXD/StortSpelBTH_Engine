@@ -15,7 +15,6 @@
 #include "Time.hpp"
 #include "VulkanRenderer.hpp"
 #include "Configurator.hpp"
-#include "NetworkHandler.h"
 
 #include <chrono>
 #include <functional>
@@ -95,6 +94,7 @@ void Engine::run(Scene* startScene)
 
         Time::updateDeltaTime();
         this->sceneHandler.update();
+        this->networkHandler.updateNetWork();
 
         // ------------------------------------
 

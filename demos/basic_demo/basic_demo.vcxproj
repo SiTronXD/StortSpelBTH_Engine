@@ -161,13 +161,13 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps\sdl\include\SDL2\;$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include\;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)deps\sdl\include\SDL2\;$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include\;$(SolutionDir)vengine\;$(SolutionDir)deps\SFMLNetwork\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)deps\vma\lib\;$(SolutionDir)deps\sdl\lib\;$(SolutionDir)deps\tracy\lib\;$(SolutionDir)deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;sfml-network-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)deps\vma\lib\;$(SolutionDir)deps\sdl\lib\;$(SolutionDir)deps\tracy\lib\;$(SolutionDir)deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(SolutionDir)build\$(Configuration)\;$(SolutionDir)deps\SFMLNetwork\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
