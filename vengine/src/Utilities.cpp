@@ -11,12 +11,8 @@
 #include <vector>
 #include <fstream>
 
-
-
-
-
-namespace vengine_helper{
-
+namespace vengine_helper
+{
     //////__attribute__((unused))
 [[maybe_unused]]  // To remove annoying warning... this function is used in another translation unit...
     std::vector<char> readFile(const std::string &filename) {

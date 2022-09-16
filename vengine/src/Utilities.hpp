@@ -17,9 +17,6 @@ using VmaAllocationCreateFlags = VkFlags;
 
 const int MAX_OBJECTS = 250; /// Maximum number of objects to allocate memory for
 
-const int MAX_FRAMES_IN_FLIGHT = 2; 
-//const int MAX_FRAME_DRAWS = 3; 
-
 /// Defines all the Device Extensions to be used
 constexpr std::array<const char *, 2> deviceExtensions = {
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
@@ -59,7 +56,8 @@ struct QueueFamilyIndices
 };
 
 /// Defines what kind of surface we can create with our given surface
-struct SwapChainDetails {
+struct SwapchainDetails 
+{
     vk::SurfaceCapabilities2KHR surfaceCapabilities;       /// Surface Properties, Image size/extent
     /*!Describes Information about what the surface can handle:
      * - minImageCount/maxImageCount         : defines the min/max amount of image our surface can handle

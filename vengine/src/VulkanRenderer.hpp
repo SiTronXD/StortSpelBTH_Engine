@@ -21,10 +21,13 @@ class Camera;
 
 #include <functional>
 using stbi_uc = unsigned char;
-class VulkanRenderer {
+class VulkanRenderer 
+{
 #ifndef VENGINE_NO_PROFILING
     std::vector<TracyVkCtx> tracyContext;
 #endif
+    const int MAX_FRAMES_IN_FLIGHT = 3;
+
     Window* window;
 
     VmaAllocator vma = nullptr;
@@ -68,13 +71,12 @@ class VulkanRenderer {
     vk::PushConstantRange pushConstantRange{};      
 
     std::vector<vk::DescriptorSet> descriptorSets;        /// To be used with our View and Projection matrices
-    std::vector<vk::DescriptorSet> inputDescriptorSets;   /// To be used by Subpasses; input attachment descriptors...
     std::vector<vk::DescriptorSet> samplerDescriptorSets; /// To be used for our texture Samplers! (need one per Texture)
                                                         //// NOTE; There will NOT be one samplerDescriptionSet per image!... It will be One per Texture!
 
-    std::vector<vk::Buffer> viewProjection_uniformBuffer;
-    std::vector<VmaAllocation> viewProjection_uniformBufferMemory;
-    std::vector<VmaAllocationInfo> viewProjection_uniformBufferMemory_info;
+    std::vector<vk::Buffer> viewProjectionUniformBuffer;
+    std::vector<VmaAllocation> viewProjectionUniformBufferMemory;
+    std::vector<VmaAllocationInfo> viewProjectionUniformBufferMemoryInfo;
 
     // - Assets    
 
@@ -92,13 +94,9 @@ class VulkanRenderer {
     vk::RenderPass     renderPass_base{};
     vk::RenderPass     renderPass_imgui{};
 
-    vk::Pipeline       secondGraphicsPipeline{};
-    vk::PipelineLayout secondPipelineLayout{}; 
-
     /// - Pools
     vk::CommandPool    graphicsCommandPool{};           /// Command pool that only is used for graphics command...
     vk::DescriptorPool descriptorPool{};
-    vk::DescriptorPool inputDescriptorPool{};           /// used by Subpasses for input Attachments
     vk::DescriptorPool samplerDescriptorPool{};
 
     /// - Utilities
@@ -139,13 +137,12 @@ private:
     /// - Create functions
     void setupDebugMessenger();
     void createSurface();
-    void reCreateSwapChain(Camera* camera);    
+    void recreateSwapchain(Camera* camera);
     void createRenderPass_Base();
     void createRenderPass_Imgui();
     void createDescriptorSetLayout();
     void createPushConstantRange();
     void createGraphicsPipeline_Base();
-    void createGraphicsPipeline_Imgui();
     void createGraphicsPipeline_DynamicRendering();
     void createCommandPool();   //TODO: Deprecate! 
     void createCommandBuffers(); //TODO: Deprecate!  //Allocate Command Buffers from Command pool...
@@ -156,7 +153,6 @@ private:
     void createDescriptorPool();
     void createDescriptorSets();
     void allocateDescriptorSets();
-    void createInputDescriptorSets();
 
     // Cleanup 
     void cleanupRenderBass_Imgui();
@@ -165,22 +161,21 @@ private:
     /// Newer Create functions! 
     void createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name);
     void createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::CommandPool& commandPool, std::string&& name);
-    void createFrameBuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
+    void createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
 
-    void updateUniformBuffers(uint32_t imageIndex);
+    void updateUniformBuffers();
     void updateUBO_camera_Projection();
     void updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm::vec3 up = glm::vec3(0.F,1.F,0.F));
 
     /// - Record Functions
-    void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    // Using renderpass
-    void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
+    void recordRenderPassCommands_Base(Scene* scene, uint32_t imageIndex);    // Using renderpass
 
     /// -- Create Functions    
     [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);
 
     int createTextureImage(const std::string &filename);
     int createTexture(const std::string &filename);
-    int createTextureDescriptor(vk::ImageView textureImage);
+    int createSamplerDescriptor(vk::ImageView textureImage);
 
     /// -- Loader Functions
     static stbi_uc*    loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );

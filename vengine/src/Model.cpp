@@ -247,7 +247,7 @@ void Model::setModelMatrix(glm::mat4 newModel)
     this->modelMatrix = newModel;
 }
 
-void Model::destroryMeshModel()
+void Model::destroyMeshModel()
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT

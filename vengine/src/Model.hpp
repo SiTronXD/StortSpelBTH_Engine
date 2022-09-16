@@ -38,7 +38,7 @@ public:
     glm::mat4 getModelMatrix();
     void setModelMatrix(glm::mat4 newModel);
 
-    void destroryMeshModel();
+    void destroyMeshModel();
 
     static std::vector<std::string> loadMaterials(const aiScene* scene);
     static std::vector<Mesh> getMeshesFromNodeTree(VmaAllocator *vma, VkPhysicalDevice newPhysicalDevice, VkDevice newDevice, VkQueue transferQueue, VkCommandPool transferCommandPool, const aiScene * scene, const std::vector<int>& matToTex);    
