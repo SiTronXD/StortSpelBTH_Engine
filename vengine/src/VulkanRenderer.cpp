@@ -353,10 +353,6 @@ void VulkanRenderer::draw(Scene* scene)
         }
     }
     
-    // ReRecord the current CommandBuffer! In order to update any Push Constants
-    recordRenderPassCommands_Base(scene, imageIndex);
-    //recordDynamicRenderingCommands(imageIndex); 
-    
     // Set view and projection in ubo
     uboViewProjection.view = camera->view;
     uboViewProjection.projection = camera->projection;
@@ -365,6 +361,10 @@ void VulkanRenderer::draw(Scene* scene)
     // Update the Uniform Buffers
     this->updateUniformBuffers();
 
+    // ReRecord the current CommandBuffer! In order to update any Push Constants
+    recordRenderPassCommands_Base(scene, imageIndex);
+    //recordDynamicRenderingCommands(imageIndex); 
+    
     // Submit to graphics queue
     {
         #ifndef VENGINE_NO_PROFILING
