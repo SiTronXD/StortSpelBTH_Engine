@@ -15,6 +15,7 @@
 #include "Time.hpp"
 #include "VulkanRenderer.hpp"
 #include "Configurator.hpp"
+#include "NetworkHandler.h"
 
 #include <chrono>
 #include <functional>

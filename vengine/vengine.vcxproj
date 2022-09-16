@@ -164,7 +164,7 @@
       <PreprocessorDefinitions>VENGINE_NO_PROFILING;_DEBUG;_CONSOLE;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;TRACY_ENABLE;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(VULKAN_SDK)\Include\;$(ProjectDir)..\deps\SFMLNetwork\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
@@ -173,8 +173,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(ProjectDir)..\deps\SFMLNetwork\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;sfml-network-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -186,7 +186,7 @@
       <PreprocessorDefinitions>VENGINE_NO_PROFILING;NDEBUG;_CONSOLE;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;TRACY_ENABLE;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(VULKAN_SDK)\Include\;$(ProjectDir)..\deps\SFMLNetwork\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
     </ClCompile>
     <Link>
@@ -198,8 +198,8 @@
       <AdditionalDependencies>assimp-vc143-mt.lib;TracyClient.lib;VulkanMemoryAllocator.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(ProjectDir)..\deps\SFMLNetwork\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;sfml-network.lib;sfml-system.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Distribution|x64'">
@@ -235,6 +235,7 @@
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="src\Application.hpp" />
     <ClInclude Include="src\Camera.hpp" />
+    <ClInclude Include="src\Client.h" />
     <ClInclude Include="src\Configurator.hpp" />
     <ClInclude Include="src\defs.hpp" />
     <ClInclude Include="src\Device.hpp" />
@@ -244,10 +245,13 @@
     <ClInclude Include="src\Mesh.hpp" />
     <ClInclude Include="src\MeshComponent.hpp" />
     <ClInclude Include="src\Model.hpp" />
+    <ClInclude Include="src\NetworkEnumAndDefines.h" />
+    <ClInclude Include="src\NetworkHandler.h" />
     <ClInclude Include="src\PhysicalDevice.hpp" />
     <ClInclude Include="src\QueueFamilies.hpp" />
     <ClInclude Include="src\Scene.hpp" />
     <ClInclude Include="src\SceneHandler.hpp" />
+    <ClInclude Include="src\Server.h" />
     <ClInclude Include="src\Swapchain.hpp" />
     <ClInclude Include="src\System.hpp" />
     <ClInclude Include="src\TempPCH.hpp" />
@@ -255,6 +259,7 @@
     <ClInclude Include="src\TestScene2.hpp" />
     <ClInclude Include="src\Texture.hpp" />
     <ClInclude Include="src\Time.hpp" />
+    <ClInclude Include="src\Timer.h" />
     <ClInclude Include="src\tracyHelper.hpp" />
     <ClInclude Include="src\Transform.hpp" />
     <ClInclude Include="src\UpdateMatricesSystem.hpp" />
@@ -274,6 +279,7 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\Client.cpp" />
     <ClCompile Include="src\Configurator.cpp" />
     <ClCompile Include="src\defs.cpp" />
     <ClCompile Include="src\Device.cpp" />
@@ -282,16 +288,19 @@
     <ClCompile Include="src\Log.cpp" />
     <ClCompile Include="src\Mesh.cpp" />
     <ClCompile Include="src\Model.cpp" />
+    <ClCompile Include="src\NetworkHandler.cpp" />
     <ClCompile Include="src\PhysicalDevice.cpp" />
     <ClCompile Include="src\QueueFamilies.cpp" />
     <ClCompile Include="src\Scene.cpp" />
     <ClCompile Include="src\SceneHandler.cpp" />
+    <ClCompile Include="src\Server.cpp" />
     <ClCompile Include="src\stb.cpp" />
     <ClCompile Include="src\Swapchain.cpp" />
     <ClCompile Include="src\TestScene.cpp" />
     <ClCompile Include="src\TestScene2.cpp" />
     <ClCompile Include="src\Texture.cpp" />
     <ClCompile Include="src\Time.cpp" />
+    <ClCompile Include="src\Timer.cpp" />
     <ClCompile Include="src\TracyClient.cpp" />
     <ClCompile Include="src\tracyHelper.cpp" />
     <ClCompile Include="src\Utilities.cpp" />

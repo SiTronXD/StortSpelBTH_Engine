@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\NetWork">
+      <UniqueIdentifier>{544514c8-9f22-472c-b689-55575a724abc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Network">
+      <UniqueIdentifier>{2265214b-711e-4cd8-8640-a84393d1fce1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vengine.h">
@@ -135,6 +141,21 @@
     <ClInclude Include="src\VulkanInstance.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\NetworkHandler.h">
+      <Filter>Header Files\NetWork</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Server.h">
+      <Filter>Header Files\NetWork</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Client.h">
+      <Filter>Header Files\NetWork</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NetworkEnumAndDefines.h">
+      <Filter>Header Files\NetWork</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Timer.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Configurator.cpp">
@@ -235,6 +256,18 @@
     </ClCompile>
     <ClCompile Include="src\VulkanInstance.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NetworkHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Server.cpp">
+      <Filter>Source Files\Network</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\Client.cpp">
+      <Filter>Source Files\Network</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
