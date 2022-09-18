@@ -100,19 +100,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Configuration)\int\</IntDir>
+    <IntDir>$(SolutionDir)build\$(Configuration)\b-demo-int\</IntDir>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Distribution|x64'">
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Configuration)\int\</IntDir>
+    <IntDir>$(SolutionDir)build\$(Configuration)\b-demo-int\</IntDir>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Configuration)\int\</IntDir>
+    <IntDir>$(SolutionDir)build\$(Configuration)\b-demo-int\</IntDir>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
   </PropertyGroup>
@@ -167,13 +167,13 @@
       <PreprocessorDefinitions>_CONSOLE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps\sdl\include\SDL2\;$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include\;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vengine\%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)deps\vma\lib\;$(SolutionDir)deps\sdl\lib\;$(SolutionDir)deps\tracy\lib\;$(SolutionDir)deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
       <Command>
@@ -193,15 +193,15 @@ call compile_shaders.bat</Command>
       <PreprocessorDefinitions>WIN32;_CONSOLE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps\sdl\include\SDL2\;$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include\;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vengine\%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)deps\vma\lib\;$(SolutionDir)deps\sdl\lib\;$(SolutionDir)deps\tracy\lib\;$(SolutionDir)deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
       <Command>
@@ -221,15 +221,15 @@ call compile_shaders.bat</Command>
       <PreprocessorDefinitions>WIN32;_CONSOLE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)deps\sdl\include\SDL2\;$(SolutionDir)deps\assimp\include\;$(SolutionDir)deps\assimp\src\include\;$(SolutionDir)deps\EnTT\src\single_include\entt\;$(SolutionDir)deps\glm\src\;$(SolutionDir)deps\imgui\src\backends\;$(SolutionDir)deps\imgui\src\;$(SolutionDir)deps\vma\src\include\;$(SolutionDir)deps\tracy\src\public\;$(SolutionDir)deps\stb\src\;$(SolutionDir)deps\sdl\include\;$(VULKAN_SDK)\Include\;$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vengine\%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;vengine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)deps\vma\lib\;$(SolutionDir)deps\sdl\lib\;$(SolutionDir)deps\tracy\lib\;$(SolutionDir)deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vengine.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)build\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <CustomBuildStep>
       <Command>
@@ -246,6 +246,11 @@ call compile_shaders.bat</Command>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\TestDemoScene.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\vengine\vengine.vcxproj">
+      <Project>{5183abad-3d6d-4833-8316-9e2d1dc83d1f}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
