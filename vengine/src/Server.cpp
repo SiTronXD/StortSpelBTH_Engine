@@ -341,8 +341,8 @@ void Server::createUDPPacketToClient(int clientID, sf::Packet& packet)
 	for (int i = 0; i < clients.size(); i++) {
 		if (i != clientID) {
 			packet << 
-				sGame.getServerPlayers()[clientID].position.x << sGame.getServerPlayers()[clientID].position.y << sGame.getServerPlayers()[clientID].position.z << 
-				sGame.getServerPlayers()[clientID].rotation.x << sGame.getServerPlayers()[clientID].rotation.y << sGame.getServerPlayers()[clientID].rotation.z;
+				sGame.getServerPlayers()[i].position.x << sGame.getServerPlayers()[i].position.y << sGame.getServerPlayers()[i].position.z << 
+				sGame.getServerPlayers()[i].rotation.x << sGame.getServerPlayers()[i].rotation.y << sGame.getServerPlayers()[i].rotation.z;
 		}
 	}
 
