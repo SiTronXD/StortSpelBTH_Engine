@@ -13,6 +13,7 @@ public:
 	void update(float dt);
 
 	bool hasStarted();
+	void starting();
 	int getNumberOfPlayers();
 	void disconnect();
 
@@ -33,7 +34,7 @@ private:
 
 	std::string serverIP;
 	bool connected;
-	StartingEnum starting;
+	StartingEnum m_starting;
 	float currentTimeToSendDataToServer;
 	float timeToSendDataToServer;
 	sf::Packet tcpPacketSend;

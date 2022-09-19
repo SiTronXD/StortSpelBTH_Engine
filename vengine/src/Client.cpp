@@ -3,7 +3,7 @@
 
 Client::Client(std::string name)
 {
-	starting = StartingEnum::Start;
+	m_starting = StartingEnum::Start;
 	connected = false;
 	currentTimeToSendDataToServer = 0;
 	timeToSendDataToServer = ServerUpdateRate;
@@ -74,7 +74,12 @@ void Client::update(float dt)
 
 bool Client::hasStarted()
 {
-	return this->starting == StartingEnum::Running;
+	return this->m_starting == StartingEnum::Running;
+}
+
+void Client::starting()
+{
+	this->m_starting = StartingEnum::Running;
 }
 
 int Client::getNumberOfPlayers()
@@ -127,7 +132,7 @@ void Client::sendDataToServer()
 	this->tcpSocket.send(tcpPacketSend);
 
 	//if we have started we send our position to the server
-	if (starting == StartingEnum::Running)
+	if (m_starting == StartingEnum::Running)
 	{
 		this->udpSocket.send(udpPacketSend, this->serverIP, UDP_PORT_SERVER);
 	}

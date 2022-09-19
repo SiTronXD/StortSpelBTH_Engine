@@ -91,6 +91,9 @@ void NetworkHandler::updateNetWork()
 		if (gameEvent == GameEvents::DISCONNECT) {
 			this->disconnectClient();
 		}
+		else if (gameEvent == GameEvents::START) {
+			client->starting();
+		}
 		else if (gameEvent == GameEvents::PlayerJoined) {
 			otherPlayers.push_back(sceneHandler->getScene()->createEntity());
 			sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1]);
