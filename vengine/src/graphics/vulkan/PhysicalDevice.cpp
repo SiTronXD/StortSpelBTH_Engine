@@ -2,7 +2,7 @@
 #include "VulkanInstance.hpp"
 #include "Swapchain.hpp"
 #include "../Utilities.hpp"
-#include "../../Dev/Log.hpp"
+#include "../../dev/Log.hpp"
 
 bool PhysicalDevice::checkPhysicalDeviceSuitability(
     vk::PhysicalDevice& physDevice, 
