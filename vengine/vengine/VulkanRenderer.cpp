@@ -37,9 +37,6 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
     ZoneScoped; //:NOLINT
 #endif
 
-    std::wstring wstr = VENGINE_ASSET_PATH;
-    this->assetPath = std::string(wstr.begin(), wstr.end());
-
     this->window = window;
 
     try {
@@ -519,8 +516,8 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     ZoneScoped; //:NOLINT
 #endif
     // read in SPIR-V code of shaders
-    auto vertexShaderCode = vengine_helper::readShaderFile(this->assetPath, "shader.vert.spv");
-    auto fragShaderCode = vengine_helper::readShaderFile(this->assetPath, "shader.frag.spv");
+    auto vertexShaderCode = vengine_helper::readShaderFile("shader.vert.spv");
+    auto fragShaderCode = vengine_helper::readShaderFile("shader.frag.spv");
 
     // Build Shader Modules to link to Graphics Pipeline
     // Create Shader Modules
@@ -729,8 +726,8 @@ void VulkanRenderer::createGraphicsPipeline_Base()
     
     // - CREATE SECOND PASS PIPELINE - 
     // second Pass Shaders
-    auto secondVertexShaderCode     = vengine_helper::readShaderFile(this->assetPath, "second.vert.spv");
-    auto secondFragmentShaderCode     = vengine_helper::readShaderFile(this->assetPath, "second.frag.spv");
+    auto secondVertexShaderCode = vengine_helper::readShaderFile("second.vert.spv");
+    auto secondFragmentShaderCode = vengine_helper::readShaderFile("second.frag.spv");
 
     // Build Shaders
     vk::ShaderModule secondVertexShaderModule = createShaderModule(secondVertexShaderCode);
@@ -841,8 +838,8 @@ void VulkanRenderer::createGraphicsPipeline_DynamicRendering() //NOLINT:
 
 	{
     // read in SPIR-V code of shaders
-    auto vertexShaderCode = vengine_helper::readShaderFile(this->assetPath, "shader.vert.spv");
-    auto fragShaderCode = vengine_helper::readShaderFile(this->assetPath, "shader.frag.spv");
+    auto vertexShaderCode = vengine_helper::readShaderFile("shader.vert.spv");
+    auto fragShaderCode = vengine_helper::readShaderFile("shader.frag.spv");
 
     // Build Shader Modules to link to Graphics Pipeline
     // Create Shader Modules
@@ -1277,7 +1274,7 @@ int VulkanRenderer::createModel(const std::string& modelFile)
     // Import Model Scene
     Assimp::Importer importer;
     const aiScene* scene = importer.ReadFile(
-        (this->assetPath + DEF<std::string>(P_MODELS) + modelFile).c_str(),
+        (DEF<std::string>(P_MODELS) + modelFile).c_str(),
         aiProcess_Triangulate               // Ensures that ALL objects will be represented as Triangles
         | aiProcess_FlipUVs                 // Flips the texture UV values, to be same as how we use them
         | aiProcess_JoinIdenticalVertices   // Saves memory by making sure no dublicate vertices exists

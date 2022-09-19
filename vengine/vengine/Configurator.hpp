@@ -3,7 +3,6 @@
 #include <map>
 #include <any>
 
-
 // #define def_rule(name, type) vengine_helper::config::DEF<type>(name)
 // #define CAMERA_FOV def_rule("camera_fov",float)
 
@@ -25,7 +24,6 @@ constexpr std::string_view P_SHADERS    = "path_shaders" ;
 constexpr std::string_view SAMPL_MAX_ANISOSTROPY    = "max_anisotropy" ;
 constexpr std::string_view USE_BUILTIN_VALIDATION   = "use_builtin_validation_layers" ;
 
-
 namespace vengine_helper::config::defaults
 {       
     const float CAMERA_FOV  = 45.F;    
@@ -39,10 +37,10 @@ namespace vengine_helper::config::defaults
     const float CAM_TARGET_Z= 0.F ;
     const int W_WIDTH  = 800;    
     const int W_HEIGHT = 600;    
-    const std::string P_ASSETS      = "assets/" ;           //:NOLINT: Nothing but const std::string works as intended...
-    const std::string P_MODELS      = "assets/models/";     //:NOLINT:
-    const std::string P_TEXTURES    = "assets/textures/";   //:NOLINT:
-    const std::string P_SHADERS     = "assets/shaders/";    //:NOLINT:
+    const std::string P_ASSETS = "assets-vengine/";     //:NOLINT: Nothing but const std::string works as intended...
+    const std::string P_MODELS = "";     //:NOLINT:
+    const std::string P_TEXTURES = "";   //:NOLINT:
+    const std::string P_SHADERS = "";    //:NOLINT:
     const float SAMPL_MAX_ANISOSTROPY = 16.F ;
     const bool USE_BUILTIN_VALIDATION = false ;
 
@@ -89,29 +87,18 @@ namespace vengine_helper::config
     extern configHolder conf;
 }
 
-
 namespace vengine_helper::config
 {    
     void loadConfIntoMemory();
     float camera_fov();
-
-    // template<typename T>
-    // T DEF(std::string&& name)
-    // {
-    //     std::cout << std::any_cast<T>(conf.rules.find(name)->second.value) << std::endl;
-    //     return std::any_cast<T>(conf.rules.find(name)->second.value);
-    // }
         
     template<typename T >
     T DEF(std::string_view name)
     {
-        //std::cout << std::any_cast<T>(conf.rules.find(name)->second.value) << std::endl;
         return std::any_cast<T>(conf.rules.find(name)->second.value);
     }
 
     template<typename T>
     T get_rule_val(std::string&& ruleName);
-
-
 }
 

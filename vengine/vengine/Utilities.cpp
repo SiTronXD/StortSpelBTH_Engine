@@ -44,12 +44,12 @@ namespace vengine_helper{
         return fileBuffer;
     }
 
-    std::vector<char> readShaderFile(const std::string& basePath, const std::string &filename) {
+    std::vector<char> readShaderFile(const std::string &filename) {
         #ifndef VENGINE_NO_PROFILING
             ZoneScoped; //:NOLINT
         #endif
         using namespace vengine_helper::config;
-        return readFile(basePath + DEF<std::string>(P_SHADERS) + filename);
+        return readFile(DEF<std::string>(P_SHADERS) + filename);
     }
     ////__attribute__((unused))
 [[maybe_unused]]  // To remove annoying warning... this function is                            

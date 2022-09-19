@@ -167,7 +167,7 @@
       <PreprocessorDefinitions>_CONSOLE;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)vengine\%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -180,7 +180,8 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>cd $(ProjectDir)assets\shaders\
+      <Command>mklink /D "$(SolutionDir)vengine\assetsEngine" "$(ProjectDir)"
+cd $(ProjectDir)assets\shaders\
 call compile_shaders.bat</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -193,7 +194,7 @@ call compile_shaders.bat</Command>
       <PreprocessorDefinitions>WIN32;_CONSOLE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)vengine\%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -208,7 +209,8 @@ call compile_shaders.bat</Command>
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>cd $(ProjectDir)assets\shaders\
+      <Command>mklink /D "$(SolutionDir)vengine\assetsEngine" "$(ProjectDir)"
+cd $(ProjectDir)assets\shaders\
 call compile_shaders.bat</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -221,7 +223,7 @@ call compile_shaders.bat</Command>
       <PreprocessorDefinitions>WIN32;_CONSOLE;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)vengine\%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -236,7 +238,8 @@ call compile_shaders.bat</Command>
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>cd $(ProjectDir)assets\shaders\
+      <Command>mklink /D "$(SolutionDir)vengine\assetsEngine" "$(ProjectDir)"
+cd $(ProjectDir)assets\shaders\
 call compile_shaders.bat</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
