@@ -1,9 +1,9 @@
 #include "VulkanInstance.hpp"
 
-#include "Window.hpp"
+#include "../../Application/Window.hpp"
+#include "../../Dev/Log.hpp"
 #include "VulkanValidation.hpp"
 #include "VulkanDbg.hpp"
-#include "Log.hpp"
 
 bool VulkanInstance::checkInstanceExtensionSupport(
     std::vector<const char*>* checkExtensions)

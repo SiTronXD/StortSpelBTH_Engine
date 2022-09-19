@@ -18,70 +18,70 @@
     <ClInclude Include="vengine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Camera.hpp">
+    <ClInclude Include="src\Components\Camera.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Configurator.hpp">
+    <ClInclude Include="src\Loaders\Configurator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\defs.hpp">
+    <ClInclude Include="src\Dev\defs.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Engine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Input.hpp">
+    <ClInclude Include="src\Application\Input.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Log.hpp">
+    <ClInclude Include="src\Dev\Log.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Mesh.hpp">
+    <ClInclude Include="src\Graphics\Mesh.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\MeshComponent.hpp">
+    <ClInclude Include="src\Components\MeshComponent.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Model.hpp">
+    <ClInclude Include="src\Graphics\Model.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Scene.hpp">
+    <ClInclude Include="src\Application\Scene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\SceneHandler.hpp">
+    <ClInclude Include="src\Application\SceneHandler.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\System.hpp">
+    <ClInclude Include="src\Systems\System.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\TestScene.hpp">
+    <ClInclude Include="src\Test\TestScene.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\TestScene2.hpp">
+    <ClInclude Include="src\Test\TestScene2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Time.hpp">
+    <ClInclude Include="src\Application\Time.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\tracyHelper.hpp">
+    <ClInclude Include="src\Dev\tracyHelper.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Transform.hpp">
+    <ClInclude Include="src\Components\Transform.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\UpdateMatricesSystem.hpp">
+    <ClInclude Include="src\Systems\UpdateMatricesSystem.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Utilities.hpp">
+    <ClInclude Include="src\Graphics\Utilities.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\VulkanRenderer.hpp">
+    <ClInclude Include="src\Graphics\VulkanRenderer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\VulkanValidation.hpp">
+    <ClInclude Include="src\Graphics\Vulkan\VulkanValidation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Window.hpp">
+    <ClInclude Include="src\Application\Window.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="imgui\backends\imgui_impl_sdl.h">
@@ -108,87 +108,84 @@
     <ClInclude Include="imgui\backends\imgui_impl_vulkan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Device.hpp">
+    <ClInclude Include="src\Graphics\Vulkan\Device.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Application.hpp">
+    <ClInclude Include="src\Graphics\Vulkan\PhysicalDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\PhysicalDevice.hpp">
+    <ClInclude Include="src\Graphics\Vulkan\QueueFamilies.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\QueueFamilies.hpp">
+    <ClInclude Include="src\Graphics\Vulkan\Swapchain.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Swapchain.hpp">
+    <ClInclude Include="src\Graphics\TempPCH.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\TempPCH.hpp">
+    <ClInclude Include="src\Graphics\Texture.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Texture.hpp">
+    <ClInclude Include="src\Graphics\Vulkan\VulkanDbg.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\VulkanDbg.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\VulkanInstance.hpp">
+    <ClInclude Include="src\Graphics\Vulkan\VulkanInstance.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Configurator.cpp">
+    <ClCompile Include="src\Loaders\Configurator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\defs.cpp">
+    <ClCompile Include="src\Dev\defs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Input.cpp">
+    <ClCompile Include="src\Application\Input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Log.cpp">
+    <ClCompile Include="src\Dev\Log.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Mesh.cpp">
+    <ClCompile Include="src\Graphics\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Model.cpp">
+    <ClCompile Include="src\Graphics\Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Scene.cpp">
+    <ClCompile Include="src\Application\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\SceneHandler.cpp">
+    <ClCompile Include="src\Application\SceneHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\stb.cpp">
+    <ClCompile Include="src\Graphics\stb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\TestScene.cpp">
+    <ClCompile Include="src\Test\TestScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\TestScene2.cpp">
+    <ClCompile Include="src\Test\TestScene2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Time.cpp">
+    <ClCompile Include="src\Application\Time.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\tracyHelper.cpp">
+    <ClCompile Include="src\Dev\tracyHelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Utilities.cpp">
+    <ClCompile Include="src\Graphics\Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VulkanRenderer.cpp">
+    <ClCompile Include="src\Graphics\VulkanRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VulkanValidation.cpp">
+    <ClCompile Include="src\Graphics\Vulkan\VulkanValidation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Window.cpp">
+    <ClCompile Include="src\Application\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -212,28 +209,28 @@
     <ClCompile Include="imgui\backends\imgui_impl_sdl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\TracyClient.cpp">
+    <ClCompile Include="src\Dev\TracyClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Device.cpp">
+    <ClCompile Include="src\Graphics\Vulkan\Device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\PhysicalDevice.cpp">
+    <ClCompile Include="src\Graphics\Vulkan\PhysicalDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\QueueFamilies.cpp">
+    <ClCompile Include="src\Graphics\Vulkan\QueueFamilies.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Swapchain.cpp">
+    <ClCompile Include="src\Graphics\Vulkan\Swapchain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Texture.cpp">
+    <ClCompile Include="src\Graphics\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VulkanDbg.cpp">
+    <ClCompile Include="src\Graphics\Vulkan\VulkanDbg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\VulkanInstance.cpp">
+    <ClCompile Include="src\Graphics\Vulkan\VulkanInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
