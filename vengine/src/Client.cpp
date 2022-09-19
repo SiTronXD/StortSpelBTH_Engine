@@ -95,9 +95,24 @@ void Client::disconnect()
 	udpSocket.unbind();
 }
 
-void Client::sendEvent(GameEvents event)
+
+void Client::sendTCPEvent(TCPPacketEvent eventTCP)
 {
-	this->tcpPacketSend << event;
+	
+	this->tcpPacketSend << eventTCP.gameEvent;
+	for (int i = 0; i < eventTCP.nrOfInts; i++) {
+		this->tcpPacketSend << eventTCP.ints[i];
+	}
+	for (int i = 0; i < eventTCP.floats.size(); i++) {
+		this->tcpPacketSend << eventTCP.ints[i];
+	}
+}
+
+void Client::sendUDPEvent(GameEvents gameEvent, glm::vec3 pos, glm::vec3 rot)
+{
+	sf::Packet p;
+	p << gameEvent << pos.x << pos.y << pos.z << rot.x << rot.y << rot.z;
+	udpPacketSend = p;
 }
 
 sf::Packet& Client::getTcpPacket()

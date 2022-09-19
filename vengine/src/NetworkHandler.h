@@ -21,6 +21,9 @@ public:
 	void disconnectClient();
 
 	void updateNetWork();
+	void sendTCPDataToClient(TCPPacketEvent tcpP);
+	//little cheating here but only one event from client to server via udp
+	void sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot);
 private:
 
 	std::thread* serverThread;

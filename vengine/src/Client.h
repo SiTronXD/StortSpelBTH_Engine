@@ -17,7 +17,9 @@ public:
 	void disconnect();
 
 	//send events
-	void sendEvent(GameEvents event);
+	void sendTCPEvent(TCPPacketEvent eventTCP);
+	//only exist one udp event from client to server
+	void sendUDPEvent(GameEvents gameEvent, glm::vec3 pos, glm::vec3 rot);
 	sf::Packet& getTcpPacket();
 
 	sf::Packet getTCPDataFromServer();
@@ -39,6 +41,7 @@ private:
 
 	void sendDataToServer();
 	void cleanPackageAndGameEvents();
+
 
 
 	std::string name;

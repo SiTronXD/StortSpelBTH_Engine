@@ -94,7 +94,6 @@ void NetworkHandler::updateNetWork()
 		else if (gameEvent == GameEvents::PlayerJoined) {
 			otherPlayers.push_back(sceneHandler->getScene()->createEntity());
 			sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1]);
-			//sceneHandler->getScene()->setComponent<name>(players[players.size() - 1]);
 		}
 		else if (gameEvent == GameEvents::SpawnEnemy) {
 			//ix = what type of enemy
@@ -133,7 +132,12 @@ void NetworkHandler::updateNetWork()
 			//don't know how this should be implemented right now
 		}
 		else if (gameEvent == GameEvents::GAMEDATA) {
-			//don't know how this should be implemented right now
+			cTCPP >> ix;//nrOfPlayers;
+			cTCPP >> iy;//seed nr;
+			for (int i = 0; i < ix - 1; i++) {
+				otherPlayers.push_back(sceneHandler->getScene()->createEntity());
+				sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1]);
+			}
 		}
 		else if (gameEvent == GameEvents::PlayerDied) {
 			//don't know how this should be implemented right now
@@ -171,9 +175,21 @@ void NetworkHandler::updateNetWork()
 		
 }
 
+void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
+{
+	client->sendTCPEvent(tcpP);
+}
+
+void NetworkHandler::sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot)
+{
+	client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
+}
+
+
+
 void NetworkHandler::disconnectClient()
 {
-	//client->disconnect();
+	client->disconnect();
 }
 
 

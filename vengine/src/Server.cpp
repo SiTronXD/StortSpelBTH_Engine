@@ -26,9 +26,13 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 			std::cout << "Server: " << client[client.size() - 1]->name << " joined the lobby" << std::endl;
 			client[client.size() - 1]->clientTcpSocket.setBlocking(false);
 
+			//send game data to clients
+
+
 			//create a new client that is ready
 			client.resize(client.size() + 1);
 			client[client.size() - 1] = new clientInfo("");
+			
 		}
 		//if we have a client try to recv "start" and start the game
 		if (client.size() > 0) {
