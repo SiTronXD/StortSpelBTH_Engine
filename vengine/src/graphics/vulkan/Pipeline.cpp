@@ -2,7 +2,7 @@
 
 #include "Device.hpp"
 #include "VulkanDbg.hpp"
-#include "../../Dev/Log.hpp"
+#include "../../dev/Log.hpp"
 
 Pipeline::Pipeline()
 	: device(nullptr)

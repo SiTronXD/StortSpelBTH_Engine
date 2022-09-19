@@ -252,6 +252,7 @@
     <ClInclude Include="src\graphics\VulkanRenderer.hpp" />
     <ClInclude Include="src\graphics\vulkan\Device.hpp" />
     <ClInclude Include="src\graphics\vulkan\PhysicalDevice.hpp" />
+    <ClInclude Include="src\graphics\vulkan\Pipeline.hpp" />
     <ClInclude Include="src\graphics\vulkan\QueueFamilies.hpp" />
     <ClInclude Include="src\graphics\vulkan\Swapchain.hpp" />
     <ClInclude Include="src\graphics\vulkan\VulkanDbg.hpp" />
@@ -290,6 +291,7 @@
     <ClCompile Include="src\graphics\VulkanRenderer.cpp" />
     <ClCompile Include="src\graphics\vulkan\Device.cpp" />
     <ClCompile Include="src\graphics\vulkan\PhysicalDevice.cpp" />
+    <ClCompile Include="src\graphics\vulkan\Pipeline.cpp" />
     <ClCompile Include="src\graphics\vulkan\QueueFamilies.cpp" />
     <ClCompile Include="src\graphics\vulkan\Swapchain.cpp" />
     <ClCompile Include="src\graphics\vulkan\VulkanDbg.cpp" />
