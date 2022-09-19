@@ -108,6 +108,7 @@ void Server::start()
 	startPacket << GameEvents::START << GameEvents::GAMEDATA << (int)clients.size() << 1174;
 	for (int i = 0; i < clients.size(); i++) {
 		clients[i]->clientTcpSocket.send(startPacket);
+		sGame.createPlayer();
 	}
 
 	udpSocket.setBlocking(false);
