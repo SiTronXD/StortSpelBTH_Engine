@@ -157,7 +157,10 @@ void NetworkHandler::updateNetWork()
 				//fxyz position, fabc rotation
 				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
 				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i]);
-				transform.position = glm::vec3(fx, fy, fz);
+				//transform.position = glm::vec3(fx, fy, fz);
+				transform.position.x = fx;
+				transform.position.y = fy;
+				transform.position.z = fz;
 				transform.rotation = glm::vec3(fa, fb, fc);
 			}
 		}
