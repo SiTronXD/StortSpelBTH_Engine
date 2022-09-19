@@ -335,9 +335,9 @@ void Server::handlePacketFromUser(int ClientID, bool tcp)
 
 void Server::createUDPPacketToClient(int clientID, sf::Packet& packet)
 {
-	packet << GameEvents::UpdatePlayerPos << (int)clients.size();
+	packet << GameEvents::UpdatePlayerPos << (int)clients.size() - 1;
 	//get all player position
-	for (int i = 0; i < clients.size(); i++) {
+	for (int i = 0; i < clients.size() - 1; i++) {
 		if (i != clientID) {
 			packet << 
 				sGame.getServerPlayers()[clientID].position.x << sGame.getServerPlayers()[clientID].position.y << sGame.getServerPlayers()[clientID].position.z << 
