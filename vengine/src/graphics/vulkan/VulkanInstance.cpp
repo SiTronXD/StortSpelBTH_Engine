@@ -1,7 +1,7 @@
 #include "VulkanInstance.hpp"
 
-#include "../../Application/Window.hpp"
-#include "../../Dev/Log.hpp"
+#include "../../application/Window.hpp"
+#include "../../dev/Log.hpp"
 #include "VulkanValidation.hpp"
 #include "VulkanDbg.hpp"
 

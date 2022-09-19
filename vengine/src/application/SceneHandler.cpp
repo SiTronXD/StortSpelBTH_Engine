@@ -1,6 +1,6 @@
 #include "SceneHandler.hpp"
 #include "Time.hpp"
-#include "../Graphics/VulkanRenderer.hpp"
+#include "../graphics/VulkanRenderer.hpp"
 
 SceneHandler::SceneHandler()
 	: scene(nullptr),

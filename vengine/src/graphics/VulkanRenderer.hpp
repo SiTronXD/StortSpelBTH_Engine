@@ -2,12 +2,12 @@
 
 #define NOMINMAX
 
-#include "Vulkan/VulkanInstance.hpp"
-#include "Vulkan/Device.hpp"
-#include "Vulkan/Swapchain.hpp"
-#include "Vulkan/QueueFamilies.hpp"
+#include "vulkan/VulkanInstance.hpp"
+#include "vulkan/Device.hpp"
+#include "vulkan/Swapchain.hpp"
+#include "vulkan/QueueFamilies.hpp"
 
-#include "../Application/Window.hpp"
+#include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
 
 #include "glm/gtc/matrix_transform.hpp"

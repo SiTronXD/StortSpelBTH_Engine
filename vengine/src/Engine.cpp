@@ -10,11 +10,11 @@
 #include "glm/fwd.hpp"
 #include <vector>
 
-#include "Application/Window.hpp"
-#include "Application/Input.hpp"
-#include "Application/Time.hpp"
-#include "Graphics/VulkanRenderer.hpp"
-#include "Loaders/Configurator.hpp"
+#include "application/Window.hpp"
+#include "application/Input.hpp"
+#include "application/Time.hpp"
+#include "graphics/VulkanRenderer.hpp"
+#include "loaders/Configurator.hpp"
 
 #include <chrono>
 #include <functional>

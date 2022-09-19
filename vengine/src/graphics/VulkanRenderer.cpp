@@ -1,11 +1,11 @@
 #include "VulkanRenderer.hpp"
 #include "Utilities.hpp"
 #include "assimp/Importer.hpp"
-#include "Vulkan/VulkanValidation.hpp"
-#include "Vulkan/VulkanDbg.hpp"
-#include "../Dev/defs.hpp"
-#include "../Dev/tracyHelper.hpp"
-#include "../Loaders/Configurator.hpp"
+#include "vulkan/VulkanValidation.hpp"
+#include "vulkan/VulkanDbg.hpp"
+#include "../dev/defs.hpp"
+#include "../dev/tracyHelper.hpp"
+#include "../loaders/Configurator.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -25,10 +25,10 @@
 
 #include "backends/imgui_impl_vulkan.h"
 
-#include "../Application/Input.hpp"
-#include "../Application/Scene.hpp"
-#include "../Components/MeshComponent.hpp"
-#include "../Dev/Log.hpp"
+#include "../application/Input.hpp"
+#include "../application/Scene.hpp"
+#include "../components/MeshComponent.hpp"
+#include "../dev/Log.hpp"
 
 static void checkVkResult(VkResult err)
 {
