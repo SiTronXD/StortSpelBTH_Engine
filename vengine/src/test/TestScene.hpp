@@ -1,15 +1,16 @@
 #pragma once
 
-#include "../application0/Scene.hpp"
+#include "../application/Scene.hpp"
 
-class TestScene2 : public Scene
+class TestScene : public Scene
 {
 private:
+	int testEntity;
 	int testEntity2;
 
 public:
-	TestScene2();
-	virtual ~TestScene2();
+	TestScene();
+	virtual ~TestScene();
 
 	// Inherited via Scene
 	virtual void init() override;

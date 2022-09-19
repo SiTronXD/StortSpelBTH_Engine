@@ -2,7 +2,7 @@
 #define VMA_IMPLEMENTATION
 #include "tracy/Tracy.hpp"
 #include "vk_mem_alloc.h"
-#include "../loaders0/Configurator.hpp"
+#include "../loaders/Configurator.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>

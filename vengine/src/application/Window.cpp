@@ -5,8 +5,8 @@
 #include "Window.hpp"
 #include "tracy/Tracy.hpp"
 #include "Input.hpp"
-#include "../dev0/Log.hpp"
-#include "../graphics0/vulkan0/VulkanInstance.hpp"
+#include "../dev/Log.hpp"
+#include "../graphics/vulkan/VulkanInstance.hpp"
 
 Window::Window()
     : windowHandle(nullptr),
