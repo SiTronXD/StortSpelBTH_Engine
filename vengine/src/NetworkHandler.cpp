@@ -140,6 +140,8 @@ void NetworkHandler::updateNetWork()
 			for (int i = 0; i < ix - 1; i++) {
 				otherPlayers.push_back(sceneHandler->getScene()->createEntity());
 				sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1]);
+				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(otherPlayers[otherPlayers.size() - 1]);
+				transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 			}
 		}
 		else if (gameEvent == GameEvents::PlayerDied) {
@@ -157,10 +159,7 @@ void NetworkHandler::updateNetWork()
 				//fxyz position, fabc rotation
 				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
 				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i]);
-				//transform.position = glm::vec3(fx, fy, fz);
-				transform.position.x = fx;
-				transform.position.y = fy;
-				transform.position.z = fz;
+				transform.position = glm::vec3(fx, fy, fz);
 				transform.rotation = glm::vec3(fa, fb, fc);
 			}
 		}
