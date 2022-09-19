@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../Systems/System.hpp"
-#include "../Components/Transform.hpp"
-#include "../Components/Camera.hpp"
+#include "../systems0/System.hpp"
+#include "../components0/Transform.hpp"
+#include "../components0/Camera.hpp"
 
 #include <entt.hpp>
 #include <vector>
