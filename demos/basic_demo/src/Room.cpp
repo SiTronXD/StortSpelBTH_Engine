@@ -42,15 +42,20 @@ void initRooms(Scene& scene, std::vector<int>& rooms)
 
 int setUpRooms(Scene& scene, std::vector<int>& rooms)
 {
-	const float MAX_WIDTH = 200.0f;
-	const float MAX_HEIGHT = 200.0f;
 	const float MIN_WIDTH = 50.0f;
+	const float MAX_WIDTH = 200.0f;
 	const float MIN_HEIGHT = 50.0f;
+	const float MAX_HEIGHT = 200.0f;
+	const float MIN_DEPTH = 50.0f;
+	const float MAX_DEPTH = 200.0f;
+
 
 	const float MIN_X_POS_SPREAD = -50.0f;
 	const float MAX_X_POS_SPREAD = 50.0f;
-	const float MIN_Y_POS_SPREAD = 0;
-	const float MAX_Y_POS_SPREAD = 20.0f;
+	const float MIN_Y_POS_SPREAD = 0.0f;
+	const float MAX_Y_POS_SPREAD = 0.0f;
+	const float MIN_Z_POS_SPREAD = 0.0f;
+	const float MAX_Z_POS_SPREAD = 20.0f;
 
 
 	int numRooms = rand() % 15 + 4;
@@ -97,7 +102,7 @@ int setUpRooms(Scene& scene, std::vector<int>& rooms)
 		float minY = curPos.y + offset.y + MIN_Y_POS_SPREAD;
 		float maxY = curPos.y + offset.y + MAX_Y_POS_SPREAD;
 
-		curPos = getRandomVec3(minX, maxX, minY, maxY, 0.0f, 1.0f);
+		curPos = getRandomVec3(minX, maxX, minY, maxY, 0.0f, 0.0f);
 
 		if (i > 0)
 		{

@@ -42,7 +42,6 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity);
 	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
 
-
 	// Create entity2 (already has transform)
 	this->testEntity2 = this->createEntity();
 
@@ -57,10 +56,10 @@ void TestDemoScene::init()
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
 
 
-	//Room layout testing
+	//Set up room layout
 	initRooms(*this, rooms);
 
-	traverseRooms(*this, rooms);
+	//traverseRooms(*this, rooms);
 }
 
 void TestDemoScene::update()

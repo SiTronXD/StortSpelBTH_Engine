@@ -4,7 +4,7 @@ glm::vec2 getRandomVec2(int min, int max)
 {
     if (min >= max)
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
+        std::cout << "Max needs to be greater than min.\nReturning (0, 0)" << std::endl;
         return glm::vec2(0.0f, 0.0f);
     }
     return glm::vec2(
@@ -17,7 +17,7 @@ glm::vec2 getRandomVec2(float min, float max)
 {
     if (min >= max)
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
+        std::cout << "Max needs to be greater than min\nReturning (0, 0)" << std::endl;
         return glm::vec2(0.0f, 0.0f);
     }
     return glm::vec2(
@@ -28,41 +28,47 @@ glm::vec2 getRandomVec2(float min, float max)
 
 glm::vec2 getRandomVec2(int xMin, int xMax, int yMin, int yMax)
 {
-    if (xMin >= xMin || yMin >= yMax) 
+    int x = 0;
+    int y = 0;
+    if (xMin < xMin)
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
-        return glm::vec2(0.0f, 0.0f);
+        x = rand() % (xMax - xMin) + xMin;
     }
-    return glm::vec2(
-        (float)(rand() % (xMax - xMin) + xMin),
-        (float)(rand() % (yMax - yMin) + yMin)
-    );
+    if (yMin < yMax)
+    {
+        y = rand() % (yMax - yMin) + yMin;
+    }
+    return glm::vec2((float)x, (float)y);
 }
 
 glm::vec2 getRandomVec2(float xMin, float xMax, float yMin, float yMax)
 {
-    if (xMin >= xMax || yMin >= yMax) 
+    float x = 0.0f;
+    float y = 0.0f;
+    if (xMin < xMin)
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
-        return glm::vec2(0.0f, 0.0f);
+        x = rand() % ((int)xMax - (int)xMin) + xMin;
     }
-    return glm::vec2(
-        (float)(rand() % ((int)xMax - (int)xMin) + xMin),
-        (float)(rand() % ((int)yMax - (int)yMin) + yMin)
-    );
+    if (yMin < yMax)
+    {
+        y = rand() % ((int)yMax - (int)yMin) + yMin;
+    }
+    return glm::vec2(x, y);
 }
 
 glm::vec2 getRandomVec2(glm::vec2 min, glm::vec2 max)
 {
-    if (min.x >= max.x || min.y >= max.y) 
+    float x = 0.0f;
+    float y = 0.0f;
+    if (min.x < max.x)
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
-        return glm::vec2(0.0f, 0.0f);
+        x = rand() % ((int)max.x - (int)min.x) + min.x;
     }
-    return glm::vec2(
-        rand() % ((int)max.x - (int)min.x) + (int)min.x,
-        rand() % ((int)max.y - (int)min.y) + (int)min.y
-    );
+    if (min.y < max.y)
+    {
+        y = rand() % ((int)max.y - (int)min.y) + min.y;
+    }
+    return glm::vec2(x, y);
 }
 
 
@@ -71,7 +77,7 @@ glm::vec3 getRandomVec3(int min, int max)
 {
     if (min >= max) 
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
+        std::cout << "Max needs to be greater than min\nReturning (0, 0)" << std::endl;
         return glm::vec3(0.0f, 0.0f, 0.0f);
     }
     return glm::vec3(
@@ -85,7 +91,7 @@ glm::vec3 getRandomVec3(float min, float max)
 {
     if (min >= max) 
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
+        std::cout << "Max needs to be greater than min\nReturning (0, 0)" << std::endl;
         return glm::vec3(0.0f, 0.0f, 0.0f);
     }
     return glm::vec3(
@@ -97,42 +103,62 @@ glm::vec3 getRandomVec3(float min, float max)
 
 glm::vec3 getRandomVec3(int xMin, int xMax, int yMin, int yMax, int zMin, int zMax)
 {
-    if (xMin >= xMax || yMin >= yMax || zMin >= zMax)
+
+    int x = 0;
+    int y = 0;
+    int z = 0;
+    if (xMin < xMin)
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
-        return glm::vec3(0.0f, 0.0f, 0.0f);
+        x = rand() % (xMax - xMin) + xMin;
     }
-    return glm::vec3(
-        (float)(rand() % (xMax - xMin) + xMin),
-        (float)(rand() % (yMax - yMin) + yMin),
-        (float)(rand() % (zMax - zMin) + zMin)
-    );
+    if (yMin < yMax)
+    {
+        y = rand() % (yMax - yMin) + yMin;
+    }
+    if (zMin < zMax)
+    {
+        z = rand() % (zMax - zMin) + zMin;
+    }
+
+    return glm::vec3(x, y, z);
 }
 
 glm::vec3 getRandomVec3(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax)
 {
-    if (xMin >= xMax || yMin >= yMax || zMin >= zMax)
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    if (xMin < xMax)
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
-        return glm::vec3(0.0f, 0.0f, 0.0f);
+        x = rand() % ((int)xMax - (int)xMin) + xMin;
     }
-    return glm::vec3(
-        (float)(rand() % ((int)xMax - (int)xMin) + xMin),
-        (float)(rand() % ((int)yMax - (int)yMin) + yMin),
-        (float)(rand() % ((int)zMax - (int)zMin) + zMin)
-    );
+    if (yMin < yMax)
+    {
+        y = rand() % ((int)yMax - (int)yMin) + yMin;
+    }
+    if (zMin < zMax)
+    {
+        z = rand() % ((int)zMax - (int)zMin) + zMin;
+    }
+    return glm::vec3(x, y, z);
 }
 
 glm::vec3 getRandomVec3(glm::vec3 min, glm::vec3 max)
 {
-    if (min.x >= max.x || min.y >= max.y || min.z >= max.z)
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    if (min.x < max.x)
     {
-        std::cout << "Max needs to be greater than min" << std::endl;
-        return glm::vec3(0.0f, 0.0f, 0.0f);
+        x = rand() % ((int)max.x - (int)min.x) + min.x;
     }
-    return glm::vec3(
-        rand() % ((int)max.x - (int)min.x) + (int)min.x,
-        rand() % ((int)max.y - (int)min.y) + (int)min.y,
-        rand() % ((int)max.z - (int)min.z) + (int)min.z
-    );
+    if (min.y < max.y)
+    {
+        y = rand() % ((int)max.y - (int)min.y) + min.y;
+    }
+    if (min.z < max.z)
+    {
+        z = rand() % ((int)max.z - (int)min.z) + min.z;
+    }
+    return glm::vec3(x, y, z);
 }
