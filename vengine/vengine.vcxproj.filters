@@ -78,7 +78,7 @@
     <ClInclude Include="src\Graphics\VulkanRenderer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\VulkanValidation.hpp">
+    <ClInclude Include="src\Graphics\vulkan\VulkanValidation.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Application\Window.hpp">
@@ -108,16 +108,16 @@
     <ClInclude Include="imgui\backends\imgui_impl_vulkan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\Device.hpp">
+    <ClInclude Include="src\Graphics\vulkan\Device.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\PhysicalDevice.hpp">
+    <ClInclude Include="src\Graphics\vulkan\PhysicalDevice.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\QueueFamilies.hpp">
+    <ClInclude Include="src\Graphics\vulkan\QueueFamilies.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\Swapchain.hpp">
+    <ClInclude Include="src\Graphics\vulkan\Swapchain.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Graphics\TempPCH.hpp">
@@ -126,10 +126,10 @@
     <ClInclude Include="src\Graphics\Texture.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\VulkanDbg.hpp">
+    <ClInclude Include="src\Graphics\vulkan\VulkanDbg.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Graphics\Vulkan\VulkanInstance.hpp">
+    <ClInclude Include="src\Graphics\vulkan\VulkanInstance.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -182,7 +182,7 @@
     <ClCompile Include="src\Graphics\VulkanRenderer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\VulkanValidation.cpp">
+    <ClCompile Include="src\Graphics\vulkan\VulkanValidation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Application\Window.cpp">
@@ -212,25 +212,25 @@
     <ClCompile Include="src\Dev\TracyClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\Device.cpp">
+    <ClCompile Include="src\Graphics\vulkan\Device.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\PhysicalDevice.cpp">
+    <ClCompile Include="src\Graphics\vulkan\PhysicalDevice.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\QueueFamilies.cpp">
+    <ClCompile Include="src\Graphics\vulkan\QueueFamilies.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\Swapchain.cpp">
+    <ClCompile Include="src\Graphics\vulkan\Swapchain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Graphics\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\VulkanDbg.cpp">
+    <ClCompile Include="src\Graphics\vulkan\VulkanDbg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Graphics\Vulkan\VulkanInstance.cpp">
+    <ClCompile Include="src\Graphics\vulkan\VulkanInstance.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
