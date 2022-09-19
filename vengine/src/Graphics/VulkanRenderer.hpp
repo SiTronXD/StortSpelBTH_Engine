@@ -6,6 +6,7 @@
 #include "Vulkan/Device.hpp"
 #include "Vulkan/Swapchain.hpp"
 #include "Vulkan/QueueFamilies.hpp"
+#include "Vulkan/Pipeline.hpp"
 
 #include "../Application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
@@ -87,7 +88,7 @@ class VulkanRenderer
     std::vector<vk::ImageView>    textureImageViews;
 
     /// - Pipeline
-    vk::Pipeline       graphicsPipeline{};
+    Pipeline pipeline;
     vk::PipelineCache  graphics_pipelineCache = nullptr;
     vk::PipelineLayout pipelineLayout{};
     vk::RenderPass     renderPass_base{};
@@ -141,8 +142,6 @@ private:
     void createRenderPass_Imgui();
     void createDescriptorSetLayout();
     void createPushConstantRange();
-    void createGraphicsPipeline_Base();
-    void createGraphicsPipeline_DynamicRendering();
     void createCommandPool();   //TODO: Deprecate! 
     void createCommandBuffers(); //TODO: Deprecate!  //Allocate Command Buffers from Command pool...
     void createSynchronisation();
