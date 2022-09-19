@@ -6,7 +6,6 @@
 #include "vengine.h"
 
 TestDemoScene::TestDemoScene()
-	: testEntity(-1), testEntity2(-1)
 {
 }
 

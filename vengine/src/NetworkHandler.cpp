@@ -177,12 +177,16 @@ void NetworkHandler::updateNetWork()
 
 void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
 {
-	client->sendTCPEvent(tcpP);
+	if (client != nullptr) {
+		client->sendTCPEvent(tcpP);
+	}
 }
 
 void NetworkHandler::sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot)
 {
-	client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
+	if (client != nullptr) {
+		client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
+	}
 }
 
 
