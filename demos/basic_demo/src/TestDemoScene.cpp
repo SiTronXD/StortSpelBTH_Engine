@@ -60,6 +60,9 @@ void TestDemoScene::update()
 		this->getNetworkHandler()->createServer();
 		this->getNetworkHandler()->createClient();
 		this->getNetworkHandler()->connectClientToThis();
+		Transform& transform = this->getComponent<Transform>(this->Player);
+		transform.rotation = glm::vec3(69,69,69);
+
 	}
 	if (Input::isKeyPressed(Keys::H)) {
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{GameEvents::START});
@@ -70,5 +73,7 @@ void TestDemoScene::update()
 		std::cin >> ip;
 		this->getNetworkHandler()->createClient(name);
 		this->getNetworkHandler()->connectClient(ip);
+		Transform& transform = this->getComponent<Transform>(this->Player);
+		transform.rotation = glm::vec3(77, 77, 77);
 	}
 }
