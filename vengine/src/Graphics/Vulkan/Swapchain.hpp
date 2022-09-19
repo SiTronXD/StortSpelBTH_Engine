@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Utilities.hpp"
-#include "TempPCH.hpp"
+#include "../Utilities.hpp"
+#include "../TempPCH.hpp"
 
 class Window;
 class PhysicalDevice;

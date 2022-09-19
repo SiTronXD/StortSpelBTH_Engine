@@ -1,7 +1,6 @@
 #include "Texture.hpp"
-
-#include "PhysicalDevice.hpp"
-#include "Device.hpp"
+#include "Vulkan/PhysicalDevice.hpp"
+#include "Vulkan/Device.hpp"
 
 vk::Format Texture::chooseSupportedFormat(
     PhysicalDevice& physicalDevice,

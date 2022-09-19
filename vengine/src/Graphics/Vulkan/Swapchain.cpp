@@ -5,9 +5,9 @@
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "QueueFamilies.hpp"
-#include "Window.hpp"
-#include "Texture.hpp"
-#include "Log.hpp"
+#include "../../Application/Window.hpp"
+#include "../../Dev/Log.hpp"
+#include "../Texture.hpp"
 
 vk::SurfaceFormat2KHR Swapchain::chooseBestSurfaceFormat(
     const std::vector<vk::SurfaceFormat2KHR >& formats)

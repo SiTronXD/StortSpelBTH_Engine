@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SceneHandler.hpp"
+#include "Application/SceneHandler.hpp"
 
 class Engine
 {

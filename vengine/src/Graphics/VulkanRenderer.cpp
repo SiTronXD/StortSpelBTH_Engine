@@ -1,10 +1,11 @@
 #include "VulkanRenderer.hpp"
 #include "Utilities.hpp"
 #include "assimp/Importer.hpp"
-#include "defs.hpp"
-#include "VulkanValidation.hpp"
-#include "tracyHelper.hpp"
-#include "Configurator.hpp"
+#include "Vulkan/VulkanValidation.hpp"
+#include "Vulkan/VulkanDbg.hpp"
+#include "../Dev/defs.hpp"
+#include "../Dev/tracyHelper.hpp"
+#include "../Loaders/Configurator.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -16,7 +17,6 @@
 #include <limits>               // Used to get the Max value of a uint32_t
 #include <algorithm>            // Used for std::clamp...
 #include "stb_image.h"
-#include "VulkanDbg.hpp"
 #include "Texture.hpp"
 
 #include "assimp/Importer.hpp"
@@ -25,10 +25,10 @@
 
 #include "backends/imgui_impl_vulkan.h"
 
-#include "Input.hpp"
-#include "Scene.hpp"
-#include "MeshComponent.hpp"
-#include "Log.hpp"
+#include "../Application/Input.hpp"
+#include "../Application/Scene.hpp"
+#include "../Components/MeshComponent.hpp"
+#include "../Dev/Log.hpp"
 
 static void checkVkResult(VkResult err)
 {
