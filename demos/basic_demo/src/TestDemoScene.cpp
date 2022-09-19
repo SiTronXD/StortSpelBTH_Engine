@@ -54,8 +54,6 @@ void TestDemoScene::update()
 		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), 0.0f, Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
 		Transform& transform = this->getComponent<Transform>(this->Player);
 		transform.position += moveVec * 25.0f * Time::getDT();
-		Transform& ptransform = this->getComponent<Transform>(this->getMainCameraID());
-		ptransform.position = transform.position - (transform.up() * 3.f);
 		this->getNetworkHandler()->sendUDPDataToClient(transform.position, transform.rotation);
 	}
 	if (Input::isKeyPressed(Keys::P)) {
