@@ -76,4 +76,8 @@ void TestDemoScene::update()
 		Transform& transform = this->getComponent<Transform>(this->Player);
 		transform.rotation = glm::vec3(77, 77, 77);
 	}
+	else if (Input::isKeyPressed(Keys::B)) {
+		Transform& transform = this->getComponent<Transform>(this->Player);
+		transform.position = glm::vec3(0, 0, 0);
+	}
 }
