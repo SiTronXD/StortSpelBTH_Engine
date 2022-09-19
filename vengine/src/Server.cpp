@@ -317,17 +317,17 @@ void Server::handlePacketFromUser(int ClientID, bool tcp)
 			case GameEvents::UpdatePlayerPos:
 				std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
 				clientToServerPacketUdp[ClientID] >> packetHelper1;
-				sGame.getServerPlayers()[ClientID].position.x;
+				sGame.getServerPlayers()[ClientID].position.x = packetHelper1;
 				clientToServerPacketUdp[ClientID] >> packetHelper1;
-				sGame.getServerPlayers()[ClientID].position.y;
+				sGame.getServerPlayers()[ClientID].position.y = packetHelper1;
 				clientToServerPacketUdp[ClientID] >> packetHelper1;
-				sGame.getServerPlayers()[ClientID].position.z;
+				sGame.getServerPlayers()[ClientID].position.z = packetHelper1;
 				clientToServerPacketUdp[ClientID] >> packetHelper1;
-				sGame.getServerPlayers()[ClientID].rotation.x;
+				sGame.getServerPlayers()[ClientID].rotation.x = packetHelper1;
 				clientToServerPacketUdp[ClientID] >> packetHelper1;
-				sGame.getServerPlayers()[ClientID].rotation.y;
+				sGame.getServerPlayers()[ClientID].rotation.y = packetHelper1;
 				clientToServerPacketUdp[ClientID] >> packetHelper1;
-				sGame.getServerPlayers()[ClientID].rotation.z;
+				sGame.getServerPlayers()[ClientID].rotation.z = packetHelper1;
 			}
 		}
 	}
