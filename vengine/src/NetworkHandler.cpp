@@ -30,7 +30,7 @@ NetworkHandler::~NetworkHandler()
 	}
 }
 
-void NetworkHandler::getSceneHandler(SceneHandler*& sceneHandler)
+void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 {
 	this->sceneHandler = sceneHandler;
 }

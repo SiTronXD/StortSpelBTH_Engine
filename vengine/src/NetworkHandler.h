@@ -8,7 +8,7 @@ class NetworkHandler {
 public:
 	NetworkHandler();
 	virtual ~NetworkHandler();
-	void getSceneHandler(SceneHandler*& sceneHandler);
+	void setSceneHandler(SceneHandler* sceneHandler);
 	
 	//SERVER
 	void createServer();//create new server on a new thread

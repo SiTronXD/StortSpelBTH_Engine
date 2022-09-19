@@ -36,6 +36,7 @@ void Engine::run(Scene* startScene)
     this->sceneHandler.setScene(startScene);
     this->sceneHandler.updateToNextScene();
     this->sceneHandler.setNetworkHandler(&networkHandler);
+    this->networkHandler.setSceneHandler(&sceneHandler);
 
     using namespace vengine_helper::config;
     loadConfIntoMemory(); /// load config data into memory
