@@ -13,7 +13,7 @@ int serverMain(bool &shutDownServer) {
 	return 1;
 }
 
-NetWorkHandler::NetWorkHandler()
+NetworkHandler::NetworkHandler()
 {
 	fx = fy = fz = fa = fb = fc = 0.f;
 	ix = iy = iz = ia = ib = ic = 0;
@@ -22,7 +22,7 @@ NetWorkHandler::NetWorkHandler()
 	serverThread = nullptr;
 }
 
-NetWorkHandler::~NetWorkHandler()
+NetworkHandler::~NetworkHandler()
 {
 	if (serverThread != nullptr) {
 		serverThread->join();
@@ -30,17 +30,17 @@ NetWorkHandler::~NetWorkHandler()
 	}
 }
 
-void NetWorkHandler::getSceneHandler(SceneHandler*& sceneHandler)
+void NetworkHandler::getSceneHandler(SceneHandler*& sceneHandler)
 {
 	this->sceneHandler = sceneHandler;
 }
 
-void NetWorkHandler::createServer()
+void NetworkHandler::createServer()
 {
 	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer));
 }
 
-void NetWorkHandler::deleteServer()
+void NetworkHandler::deleteServer()
 {
 	if (serverThread != nullptr) {
 		shutDownServer = true;
@@ -49,7 +49,7 @@ void NetWorkHandler::deleteServer()
 	}
 }
 
-Client* NetWorkHandler::createClient(std::string name)
+Client* NetworkHandler::createClient(std::string name)
 {
 	if (client == nullptr) {
 		client = new Client(name);
@@ -57,12 +57,17 @@ Client* NetWorkHandler::createClient(std::string name)
 	return client;
 }
 
-Client* NetWorkHandler::getClient()
+Client* NetworkHandler::getClient()
 {
 	return client;
 }
 
-void NetWorkHandler::connectClient(std::string serverIP)
+void NetworkHandler::connectClientToThis()
+{
+	this->connectClient(sf::IpAddress::getLocalAddress().toString());
+}
+
+void NetworkHandler::connectClient(std::string serverIP)
 {
 	if (client == nullptr) {
 		std::cout << "client doesn't exist" << std::endl;
@@ -71,8 +76,9 @@ void NetWorkHandler::connectClient(std::string serverIP)
 	client->connect(serverIP);
 }
 
-void NetWorkHandler::updateNetWork()
+void NetworkHandler::updateNetWork()
 {
+	
 	if (client == nullptr) {
 		return;
 	}
@@ -165,9 +171,9 @@ void NetWorkHandler::updateNetWork()
 		
 }
 
-void NetWorkHandler::disconnectClient()
+void NetworkHandler::disconnectClient()
 {
-	client->disconnect();
+	//client->disconnect();
 }
 
 

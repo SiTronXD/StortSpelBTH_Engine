@@ -4,10 +4,10 @@
 #include "Time.hpp"
 #include "MeshComponent.hpp"
 
-class NetWorkHandler {
+class NetworkHandler {
 public:
-	NetWorkHandler();
-	virtual ~NetWorkHandler();
+	NetworkHandler();
+	virtual ~NetworkHandler();
 	void getSceneHandler(SceneHandler*& sceneHandler);
 	
 	//SERVER
@@ -16,6 +16,7 @@ public:
 	//CLIENT
 	Client* createClient(std::string name = "BOB");//should return a client
 	Client* getClient();
+	void connectClientToThis();
 	void connectClient(std::string serverIP);
 	void disconnectClient();
 

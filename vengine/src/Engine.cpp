@@ -35,6 +35,7 @@ void Engine::run(Scene* startScene)
 {
     this->sceneHandler.setScene(startScene);
     this->sceneHandler.updateToNextScene();
+    this->sceneHandler.setNetworkHandler(&networkHandler);
 
     using namespace vengine_helper::config;
     loadConfIntoMemory(); /// load config data into memory
@@ -95,18 +96,6 @@ void Engine::run(Scene* startScene)
         Time::updateDeltaTime();
         this->sceneHandler.update();
         this->networkHandler.updateNetWork();
-        //DEBUG FOR SIMON/////////////////////
-        if (Input::isKeyPressed(Keys::M)) {
-            this->networkHandler.createServer();
-        }
-        if (Input::isKeyPressed(Keys::N)) {
-            this->networkHandler.createClient("penismanen");
-            this->networkHandler.connectClient("192.168.1.104");
-        }
-
-        ///////////////////////////////////////
-
-        // ------------------------------------
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);

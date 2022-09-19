@@ -62,4 +62,13 @@ void TestDemoScene::update()
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
 	}
+	if (Input::isKeyPressed(Keys::P)) {
+		this->getNetworkHandler()->createServer();
+		this->getNetworkHandler()->createClient();
+		this->getNetworkHandler()->connectClientToThis();
+	}
+	else if (Input::isKeyPressed(Keys::L)) {
+		this->getNetworkHandler()->createClient();
+		this->getNetworkHandler()->connectClient("192.168.1.1");
+	}
 }

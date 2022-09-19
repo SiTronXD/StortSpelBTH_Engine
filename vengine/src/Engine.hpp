@@ -14,6 +14,6 @@ public:
 	void run(Scene* startScene);
 
 	SceneHandler sceneHandler;
-	NetWorkHandler networkHandler;
+	NetworkHandler networkHandler;
 };
 
