@@ -37,7 +37,7 @@ namespace vengine_helper::config::defaults
     const float CAM_TARGET_Z= 0.F ;
     const int W_WIDTH  = 800;    
     const int W_HEIGHT = 600;    
-    const std::string P_ASSETS = "assets-vengine/";     //:NOLINT: Nothing but const std::string works as intended...
+    const std::string P_ASSETS = "vengine_assets/";     //:NOLINT: Nothing but const std::string works as intended...
     const std::string P_MODELS = "";     //:NOLINT:
     const std::string P_TEXTURES = "";   //:NOLINT:
     const std::string P_SHADERS = "";    //:NOLINT:

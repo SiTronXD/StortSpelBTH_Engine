@@ -100,19 +100,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Configuration)\b-demo-int\</IntDir>
+    <IntDir>$(SolutionDir)build\int\$(Configuration)\b-demo\</IntDir>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Distribution|x64'">
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Configuration)\b-demo-int\</IntDir>
+    <IntDir>$(SolutionDir)build\int\$(Configuration)\b-demo\</IntDir>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <OutDir>$(SolutionDir)build\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)build\$(Configuration)\b-demo-int\</IntDir>
+    <IntDir>$(SolutionDir)build\int\$(Configuration)\b-demo\</IntDir>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
   </PropertyGroup>
@@ -180,8 +180,16 @@
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>mklink /D "$(SolutionDir)vengine\assetsEngine" "$(ProjectDir)"
+      <Command>mkdir vengine_assets
+robocopy $(SolutionDir)vengine\vengine_assets vengine_assets /s
+
+mkdir $(OutDir)assets
+robocopy $(ProjectDir)assets $(OutDir)assets /s
+
 cd $(ProjectDir)assets\shaders\
+call compile_shaders.bat
+
+cd $(OutDir)assets\shaders\
 call compile_shaders.bat</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -209,8 +217,16 @@ call compile_shaders.bat</Command>
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>mklink /D "$(SolutionDir)vengine\assetsEngine" "$(ProjectDir)"
+      <Command>mkdir vengine_assets
+robocopy $(SolutionDir)vengine\vengine_assets vengine_assets /s
+
+mkdir $(OutDir)assets
+robocopy $(ProjectDir)assets $(OutDir)assets /s
+
 cd $(ProjectDir)assets\shaders\
+call compile_shaders.bat
+
+cd $(OutDir)assets\shaders\
 call compile_shaders.bat</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
@@ -238,8 +254,16 @@ call compile_shaders.bat</Command>
       </Command>
     </CustomBuildStep>
     <PostBuildEvent>
-      <Command>mklink /D "$(SolutionDir)vengine\assetsEngine" "$(ProjectDir)"
+      <Command>mkdir vengine_assets
+robocopy $(SolutionDir)vengine\vengine_assets vengine_assets /s
+
+mkdir $(OutDir)assets
+robocopy $(ProjectDir)assets $(OutDir)assets /s
+
 cd $(ProjectDir)assets\shaders\
+call compile_shaders.bat
+
+cd $(OutDir)assets\shaders\
 call compile_shaders.bat</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
