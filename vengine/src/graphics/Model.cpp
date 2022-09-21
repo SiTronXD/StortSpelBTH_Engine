@@ -6,6 +6,7 @@
 #include <set>
 #include "vk_mem_alloc.h"
 #include "assimp/scene.h"
+#include "Buffer.hpp"
 
 Model::Model(VmaAllocator *vma,
         vk::PhysicalDevice newPhysicalDevice, 
@@ -86,7 +87,7 @@ void Model::createVertexBuffer(ModelPart& modelPart)
     /// Get size of buffers needed for Vertices
     vk::DeviceSize bufferSize  =sizeof(Vertex) * modelPart.vertices.size();
 
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
             .physicalDevice = physicalDevice, 
             .device         = device, 
@@ -98,7 +99,8 @@ void Model::createVertexBuffer(ModelPart& modelPart)
             .bufferMemory   = &stagingBufferMemory,
             .allocationInfo = &allocInfo_staging,
             .vma = vma
-        });    
+        }
+    );
     
 
     /// -- Map memory to our Temporary Staging Vertex Buffer -- 
@@ -115,7 +117,7 @@ void Model::createVertexBuffer(ModelPart& modelPart)
     VmaAllocationInfo allocInfo_deviceOnly;
     /// Create Buffer with TRANSFER_DST_BIT to mark as recipient of transfer data (also VERTEX_BUFFER)
     /// Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
             .physicalDevice = physicalDevice, 
             .device         = device, 
@@ -131,7 +133,7 @@ void Model::createVertexBuffer(ModelPart& modelPart)
         });
 
     /// Copy Staging Buffer to Vertex Buffer on GPU
-    vengine_helper::copyBuffer(
+    Buffer::copyBuffer(
         this->device, 
         transferQueue, 
         transferCommandPool, 
@@ -157,7 +159,7 @@ void Model::createIndexBuffer(ModelPart& modelPart)
     VmaAllocation stagingBufferMemory{};
     VmaAllocationInfo allocInfo_staging;
 
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
             .physicalDevice = this->physicalDevice, 
             .device         = this->device, 
@@ -180,7 +182,7 @@ void Model::createIndexBuffer(ModelPart& modelPart)
     VmaAllocationInfo allocInfo_device;
 
     /// Create Buffers for INDEX data on GPU access only area
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
             .physicalDevice = this->physicalDevice, 
             .device         = this->device, 
@@ -194,7 +196,7 @@ void Model::createIndexBuffer(ModelPart& modelPart)
             .vma = this->vma
         });
 
-    vengine_helper::copyBuffer(
+    Buffer::copyBuffer(
         this->device, 
         transferQueue, 
         this->transferCommandPool, 

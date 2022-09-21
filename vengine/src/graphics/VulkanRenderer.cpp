@@ -18,6 +18,7 @@
 #include <algorithm>            // Used for std::clamp...
 #include "stb_image.h"
 #include "Texture.hpp"
+#include "Buffer.hpp"
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
@@ -543,7 +544,7 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
     VmaAllocation imageStagingBufferMemory = nullptr;
     VmaAllocationInfo allocInfo;
 
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
             .physicalDevice = this->physicalDevice.getVkPhysicalDevice(),
             .device = this->getVkDevice(), 
@@ -556,7 +557,7 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
             .buffer = &imageStagingBuffer, 
             .bufferMemory = &imageStagingBufferMemory,
             .allocationInfo = &allocInfo,
-            .vma = &vma
+            .vma = &this->vma
         });
 
     void* data = nullptr; 
@@ -585,8 +586,7 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
             .format = vk::Format::eR8G8B8A8Unorm,               // use Alpha channel even if image does not have... 
             .tiling =vk::ImageTiling::eOptimal,                // Same value as the Depth Buffer uses (Dont know if it has to be)
             .useFlags = vk::ImageUsageFlagBits::eTransferDst         // Data should be transfered to the GPU, from the staging buffer
-                        |   vk::ImageUsageFlagBits::eSampled,         // This image will be Sampled by a Sampler!                         
-            .property = vk::MemoryPropertyFlagBits::eDeviceLocal,    // Image should only be accesable on the GPU 
+                        |   vk::ImageUsageFlagBits::eSampled,         // This image will be Sampled by a Sampler! 
             .imageMemory = &texImageMemory
         },
         filename // Describing what image is being created, for debug purposes...
@@ -594,17 +594,17 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
 
     // - COPY THE DATA TO THE IMAGE -
     // Transition image to be in the DST, needed by the Copy Operation (Copy assumes/needs image Layout to be in vk::ImageLayout::eTransferDstOptimal state)
-    vengine_helper::transitionImageLayout(
-        this->getVkDevice(), 
+    Texture::transitionImageLayout(
+        this->device, 
         this->queueFamilies.getGraphicsQueue(),
         this->graphicsCommandPool, 
         texImage,                               // Image to transition the layout on
         vk::ImageLayout::eUndefined,              // Image Layout to transition the image from
         vk::ImageLayout::eTransferDstOptimal);  // Image Layout to transition the image to
 
-    // Copy Data to image
-    vengine_helper::copyImageBuffer(
-        this->getVkDevice(), 
+    // Copy data to image
+    Buffer::copyBufferToImage(
+        this->device, 
         this->queueFamilies.getGraphicsQueue(),
         this->graphicsCommandPool, 
         imageStagingBuffer, 
@@ -614,8 +614,8 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
     );
 
     // Transition iamge to be shader readable for shader usage
-    vengine_helper::transitionImageLayout(
-        this->getVkDevice(), 
+    Texture::transitionImageLayout(
+        this->device, 
         this->queueFamilies.getGraphicsQueue(),
         this->graphicsCommandPool, 
         texImage,
@@ -623,12 +623,11 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
         vk::ImageLayout::eShaderReadOnlyOptimal);  // Image Layout to transition the image to; in order for the Fragment Shader to read it!         
 
     // Add texture data to vector for reference 
-    textureImages.push_back(texImage);
-    textureImageMemory.push_back(texImageMemory);
+    this->textureImages.push_back(texImage);
+    this->textureImageMemory.push_back(texImageMemory);
 
     // Destroy and Free the staging buffer + staging buffer memroy
     this->getVkDevice().destroyBuffer(imageStagingBuffer);
-    //this->getVkDevice().freeMemory(imageStagingBufferMemory);
     vmaFreeMemory(this->vma, imageStagingBufferMemory);
 
     // Return index of last pushed image!
@@ -1134,7 +1133,7 @@ void VulkanRenderer::createUniformBuffers()
     for(size_t i = 0; i < this->viewProjectionUniformBuffer.size(); i++)
     {
         // Create regular Uniform Buffers
-        vengine_helper::createBuffer(
+        Buffer::createBuffer(
             {
                 .physicalDevice = this->physicalDevice.getVkPhysicalDevice(),
                 .device         = this->getVkDevice(), 
@@ -1147,8 +1146,9 @@ void VulkanRenderer::createUniformBuffers()
                 .buffer         = &this->viewProjectionUniformBuffer[i], 
                 .bufferMemory   = &this->viewProjectionUniformBufferMemory[i],
                 .allocationInfo   = &this->viewProjectionUniformBufferMemoryInfo[i],
-                .vma = &vma
-            });
+                .vma = &this->vma
+            }
+        );
 
         VulkanDbg::registerVkObjectDbgInfo("ViewProjection UniformBuffer["+std::to_string(i)+"]", vk::ObjectType::eBuffer, reinterpret_cast<uint64_t>(vk::Buffer::CType(this->viewProjectionUniformBuffer[i])));
     }
@@ -1519,24 +1519,21 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
             currentCommandBuffer.beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
 
-            viewport = vk::Viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = (float)this->swapchain.getWidth();
-            viewport.height = (float)swapchain.getHeight();
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            currentCommandBuffer.setViewport(0, 1, &viewport);
+                viewport = vk::Viewport{};
+                viewport.x = 0.0f;
+                viewport.y = 0.0f;
+                viewport.width = (float)this->swapchain.getWidth();
+                viewport.height = (float)swapchain.getHeight();
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+                currentCommandBuffer.setViewport(0, 1, &viewport);
 
-            scissor = vk::Rect2D{};
-            scissor.offset = vk::Offset2D{ 0, 0 };
-            scissor.extent = this->swapchain.getVkExtent();
-            currentCommandBuffer.setScissor(0, 1, &scissor);
+                currentCommandBuffer.setScissor(0, 1, &scissor);
 
-            ImGui_ImplVulkan_RenderDrawData(
-                ImGui::GetDrawData(), 
-                currentCommandBuffer
-            );
+                ImGui_ImplVulkan_RenderDrawData(
+                    ImGui::GetDrawData(), 
+                    currentCommandBuffer
+                );
 
             // End second render pass
             vk::SubpassEndInfo imgui_subpassEndInfo;
