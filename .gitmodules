@@ -20,3 +20,6 @@
 [submodule "deps/glm/src"]
 	path = deps/glm/src
 	url = https://github.com/lr222gw/glm.git
+[submodule "deps/bullet/src"]
+	path = deps/bullet/src
+	url = https://github.com/bulletphysics/bullet3.git
