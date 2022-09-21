@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../TempPCH.hpp"
+#include "PipelineLayout.hpp"
 
 class Device;
 
@@ -11,11 +11,19 @@ private:
 
 	Device* device;
 
+	vk::ShaderModule createShaderModule(
+		const std::vector<char>& code);
+
 public:
 	Pipeline();
 	~Pipeline();
 
-	void createPipeline(Device& device);
+	void createPipeline(
+		Device& device,
+		PipelineLayout& pipelineLayout,
+		vk::RenderPass& renderPass);
 
 	void cleanup();
+
+	inline vk::Pipeline& getVkPipeline() { return this->pipeline; }
 };

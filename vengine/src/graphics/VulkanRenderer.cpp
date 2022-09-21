@@ -76,7 +76,6 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
             this->device
         );
 
-        VulkanDbg::registerVkObjectDbgInfo("Logical Device", vk::ObjectType::eDevice, reinterpret_cast<uint64_t>(vk::Device::CType(this->getVkDevice())));
         VulkanDbg::registerVkObjectDbgInfo("Graphics Queue", vk::ObjectType::eQueue, reinterpret_cast<uint64_t>(vk::Queue::CType(this->queueFamilies.getGraphicsQueue())));
         VulkanDbg::registerVkObjectDbgInfo("Presentation Queue", vk::ObjectType::eQueue, reinterpret_cast<uint64_t>(vk::Queue::CType(this->queueFamilies.getPresentQueue()))); // TODO: might be problematic.. since it can be same as Graphics Queue
              
@@ -105,15 +104,25 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
             this->vma
         );
 
-        this->createRenderPass_Base();
-        this->createRenderPass_Imgui();
+        this->createRenderPassBase();
+        this->createRenderPassImgui();
         this->createDescriptorSetLayout();
         
         this->createPushConstantRange();
 
-        this->createGraphicsPipeline_Base();
+        this->pipelineLayout.createPipelineLayout(
+            this->device,
+            this->descriptorSetLayout,
+            this->samplerDescriptorSetLayout,
+            this->pushConstantRange
+        );
+        this->pipeline.createPipeline(
+            this->device, 
+            this->pipelineLayout,
+            this->renderPassBase
+        );
         
-        this->swapchain.createFramebuffers(this->renderPass_base);
+        this->swapchain.createFramebuffers(this->renderPassBase);
         this->createCommandPool();
 
         this->createCommandBuffers();
@@ -129,8 +138,8 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
         
         this->createSynchronisation();        
 
-        this->updateUBO_camera_Projection(); //TODO: Allow for more cameras! 
-        this->updateUBO_camera_view(
+        this->updateUboProjection(); //TODO: Allow for more cameras! 
+        this->updateUboView(
             glm::vec3(DEF<float>(CAM_EYE_X),DEF<float>(CAM_EYE_Y),DEF<float>(CAM_EYE_Z)),
             glm::vec3(DEF<float>(CAM_TARGET_X),DEF<float>(CAM_TARGET_Y), DEF<float>(CAM_TARGET_Z)));
 
@@ -187,10 +196,10 @@ void VulkanRenderer::cleanup()
     this->window->shutdownImgui();
     ImGui::DestroyContext();
 
-    this->cleanupFramebuffer_imgui();
+    this->cleanupFramebufferImgui();
 
-    this->getVkDevice().destroyRenderPass(this->renderPass_imgui);
-    this->getVkDevice().destroyDescriptorPool(this->descriptorPool_imgui);
+    this->getVkDevice().destroyRenderPass(this->renderPassImgui);
+    this->getVkDevice().destroyDescriptorPool(this->descriptorPoolImgui);
     
 #ifndef VENGINE_NO_PROFILING
     CustomFree(this->tracyImage);
@@ -241,9 +250,9 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyPipelineCache(this->graphics_pipelineCache);
 
     this->pipeline.cleanup();
+    this->pipelineLayout.cleanup();
 
-    this->getVkDevice().destroyPipelineLayout(this->pipelineLayout);
-    this->getVkDevice().destroyRenderPass(this->renderPass_base);
+    this->getVkDevice().destroyRenderPass(this->renderPassBase);
 
     this->swapchain.cleanup();
 
@@ -359,8 +368,7 @@ void VulkanRenderer::draw(Scene* scene)
     this->updateUniformBuffers();
 
     // ReRecord the current CommandBuffer! In order to update any Push Constants
-    recordRenderPassCommands_Base(scene, imageIndex);
-    //recordDynamicRenderingCommands(imageIndex); 
+    recordRenderPassCommandsBase(scene, imageIndex);
     
     // Submit to graphics queue
     {
@@ -493,10 +501,10 @@ void VulkanRenderer::recreateSwapchain(Camera* camera)
 {
     this->device.waitIdle();
     
-    cleanupFramebuffer_imgui();
+    cleanupFramebufferImgui();
 
-    this->swapchain.recreateSwapchain(this->renderPass_base);
-    createFramebuffer_imgui();
+    this->swapchain.recreateSwapchain(this->renderPassBase);
+    createFramebufferImgui();
 
     this->createDescriptorSets();
 
@@ -508,27 +516,14 @@ void VulkanRenderer::recreateSwapchain(Camera* camera)
     camera->invProjection = glm::inverse(camera->projection);
 }
 
-void VulkanRenderer::cleanupRenderBass_Imgui()
+void VulkanRenderer::cleanupRenderPassImgui()
 {
-    this->getVkDevice().destroyRenderPass(this->renderPass_imgui);
+    this->getVkDevice().destroyRenderPass(this->renderPassImgui);
 }
 
-void VulkanRenderer::cleanupRenderBass_Base()
+void VulkanRenderer::cleanupRenderPassBase()
 {
-    this->getVkDevice().destroyRenderPass(this->renderPass_base);
-}
-
-vk::ShaderModule VulkanRenderer::createShaderModule(const std::vector<char> &code)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    vk::ShaderModuleCreateInfo shaderCreateInfo = {};
-    shaderCreateInfo.setCodeSize(code.size());                                    // Size of code
-    shaderCreateInfo.setPCode(reinterpret_cast<const uint32_t*>(code.data()));    // pointer of code (of uint32_t pointe rtype //NOLINT:Ok to use Reinterpret cast here
-
-    vk::ShaderModule shaderModule = this->getVkDevice().createShaderModule(shaderCreateInfo);
-    return shaderModule;
+    this->getVkDevice().destroyRenderPass(this->renderPassBase);
 }
 
 int VulkanRenderer::createTextureImage(const std::string &filename)
@@ -811,7 +806,7 @@ VulkanRenderer::VulkanRenderer()
     loadConfIntoMemory();
 }
 
-void VulkanRenderer::createRenderPass_Base() 
+void VulkanRenderer::createRenderPassBase() 
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -885,12 +880,12 @@ void VulkanRenderer::createRenderPass_Base()
     renderPassCreateInfo.setDependencyCount(static_cast<uint32_t> (subpassDependencies.size()));
     renderPassCreateInfo.setPDependencies(subpassDependencies.data());
 
-    this->renderPass_base = this->getVkDevice().createRenderPass2(renderPassCreateInfo);
+    this->renderPassBase = this->getVkDevice().createRenderPass2(renderPassCreateInfo);
 
-    VulkanDbg::registerVkObjectDbgInfo("The RenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass_base)));
+    VulkanDbg::registerVkObjectDbgInfo("The RenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPassBase)));
 }
 
-void VulkanRenderer::createRenderPass_Imgui()
+void VulkanRenderer::createRenderPassImgui()
 {
     vk::AttachmentDescription2 attachment{};
     attachment.setFormat(this->swapchain.getVkFormat());
@@ -927,7 +922,7 @@ void VulkanRenderer::createRenderPass_Imgui()
     renderpassCreateinfo.setPSubpasses(&subpass);
     renderpassCreateinfo.setDependencyCount(uint32_t(1));
     renderpassCreateinfo.setPDependencies(&subpassDependecy);
-    this->renderPass_imgui = this->getVkDevice().createRenderPass2(renderpassCreateinfo);
+    this->renderPassImgui = this->getVkDevice().createRenderPass2(renderpassCreateinfo);
 }
 
 void VulkanRenderer::createDescriptorSetLayout()
@@ -1339,7 +1334,7 @@ void VulkanRenderer::updateUniformBuffers()
     );
 }
 
-void VulkanRenderer::updateUBO_camera_Projection()
+void VulkanRenderer::updateUboProjection()
 {
     using namespace vengine_helper::config;
     uboViewProjection.projection  = glm::perspective(                               // View Angle in the y-axis
@@ -1349,7 +1344,7 @@ void VulkanRenderer::updateUBO_camera_Projection()
                             DEF<float>(CAM_FP));                                             // The Far Plane
 }
 
-void VulkanRenderer::updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
+void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
 {
     uboViewProjection.view = glm::lookAt(
                             eye,            // Eye   : Where the Camera is positioned in the world
@@ -1357,7 +1352,7 @@ void VulkanRenderer::updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm:
                             up);            // Up    : Up direction 
 }
 
-void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageIndex)
+void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
@@ -1370,7 +1365,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
     
     // Information about how to begin a render pass (Only needed for graphical applications)
     vk::RenderPassBeginInfo renderPassBeginInfo;
-    renderPassBeginInfo.setRenderPass(this->renderPass_base);                      // Render Pass to Begin
+    renderPassBeginInfo.setRenderPass(this->renderPassBase);                      // Render Pass to Begin
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
     renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());          // Size of region to run render pass on (starting at offset)
      
@@ -1438,23 +1433,23 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
 
                 // Bind Pipeline to be used in render pass
                 currentCommandBuffer.bindPipeline(
-                    vk::PipelineBindPoint::eGraphics, 
-                    this->graphicsPipeline
+                    vk::PipelineBindPoint::eGraphics,
+                    this->pipeline.getVkPipeline()
                 );
                 
                 // For every Mesh we have
                 auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
-                tView.each([this, currentCommandBuffer](Transform& transform, MeshComponent& meshComponent)
+                tView.each([this, currentCommandBuffer](const Transform& transform, const MeshComponent& meshComponent)
                 {
-                    auto currModel = modelList[meshComponent.meshID];
+                    auto& currModel = modelList[meshComponent.meshID];
 
-                    glm::mat4 modelMatrix = transform.matrix;
+                    const glm::mat4& modelMatrix = transform.matrix;
 
                     // auto modelMatrix = currModel.getModelMatrix();
 
                     // "Push" Constants to given Shader Stage Directly (using no Buffer...)
                     currentCommandBuffer.pushConstants(
-                        this->pipelineLayout,
+                        this->pipelineLayout.getVkPipelineLayout(),
                         vk::ShaderStageFlagBits::eVertex,   // Stage to push the Push Constant to.
                         uint32_t(0),                        // Offset of Push Constants to update; 
                                                             // Offset into the Push Constant Block (if more values are used (??))
@@ -1490,7 +1485,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
                         // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
                         currentCommandBuffer.bindDescriptorSets(
                             vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
-                            this->pipelineLayout,            // The Pipeline Layout that describes how the data will be accessed in our shaders
+                            this->pipelineLayout.getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
                             0,                               // Which Set is the first we want to use? We want to use the First set (thus 0)
                             static_cast<uint32_t>(descriptorSetGroup.size()),// How many Descriptor Sets where going to go through? DescriptorSet for View and Projection, and one for Texture
                             descriptorSetGroup.data(),                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
@@ -1516,10 +1511,10 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t imageI
             vk::RenderPassBeginInfo renderPassBeginInfo{};
             vk::SubpassBeginInfo subpassBeginInfo;
             subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-            renderPassBeginInfo.setRenderPass(this->renderPass_imgui);
+            renderPassBeginInfo.setRenderPass(this->renderPassImgui);
             renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());
             renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));
-            renderPassBeginInfo.setFramebuffer(this->frameBuffers_imgui[imageIndex]);
+            renderPassBeginInfo.setFramebuffer(this->frameBuffersImgui[imageIndex]);
             renderPassBeginInfo.setClearValueCount(uint32_t(0));
 
             currentCommandBuffer.beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
@@ -1616,7 +1611,7 @@ void VulkanRenderer::initImgui()
 	pool_info.poolSizeCount = std::size(pool_sizes);
 	pool_info.pPoolSizes = pool_sizes;
 
-	this->descriptorPool_imgui = this->getVkDevice().createDescriptorPool(pool_info, nullptr);
+	this->descriptorPoolImgui = this->getVkDevice().createDescriptorPool(pool_info, nullptr);
     
     IMGUI_CHECKVERSION(); 
     ImGui::CreateContext();
@@ -1637,16 +1632,16 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.QueueFamily = this->queueFamilies.getGraphicsIndex();
     imguiInitInfo.Queue = this->queueFamilies.getGraphicsQueue();
     imguiInitInfo.PipelineCache = VK_NULL_HANDLE;  //TODO: Imgui Pipeline Should have its own Cache! 
-    imguiInitInfo.DescriptorPool = this->descriptorPool_imgui;
+    imguiInitInfo.DescriptorPool = this->descriptorPoolImgui;
     imguiInitInfo.Subpass = 0; 
     imguiInitInfo.MinImageCount = this->swapchain.getNumMinimumImages();
     imguiInitInfo.ImageCount = this->swapchain.getNumImages();
     imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT; //TODO: check correctness    
     imguiInitInfo.Allocator = nullptr;    //TODO: Can/should I pass in something VMA related here?
     imguiInitInfo.CheckVkResultFn = checkVkResult;
-    ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPass_imgui);
+    ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPassImgui);
 
-    this->createFramebuffer_imgui();
+    this->createFramebufferImgui();
 
     // Upload imgui font
     this->getVkDevice().resetCommandPool(this->graphicsCommandPool);
@@ -1679,27 +1674,27 @@ void VulkanRenderer::initImgui()
     ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
-void VulkanRenderer::createFramebuffer_imgui()
+void VulkanRenderer::createFramebufferImgui()
 {
     std::vector<vk::ImageView> attachment;    
     attachment.resize(1);
-    this->frameBuffers_imgui.resize(this->swapchain.getNumImages());
-    for(size_t i = 0; i < this->frameBuffers_imgui.size(); i++)
+    this->frameBuffersImgui.resize(this->swapchain.getNumImages());
+    for(size_t i = 0; i < this->frameBuffersImgui.size(); i++)
     {        
         attachment[0] = this->swapchain.getImageView(i); 
         this->createFramebuffer(
-            this->frameBuffers_imgui[i], 
+            this->frameBuffersImgui[i], 
             attachment, 
-            this->renderPass_imgui, 
+            this->renderPassImgui, 
             this->swapchain.getVkExtent(), 
             std::string("frameBuffers_imgui["+std::to_string(i)+"]")
         );
     }
 }
 
-void VulkanRenderer::cleanupFramebuffer_imgui()
+void VulkanRenderer::cleanupFramebufferImgui()
 {
-    for (auto framebuffer: this->frameBuffers_imgui) 
+    for (auto framebuffer: this->frameBuffersImgui) 
     {
         this->getVkDevice().destroyFramebuffer(framebuffer);        
     }

@@ -4,6 +4,25 @@
 #include "VulkanDbg.hpp"
 #include "../../dev/Log.hpp"
 
+vk::ShaderModule Pipeline::createShaderModule(
+    const std::vector<char>& code)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+    vk::ShaderModuleCreateInfo shaderCreateInfo{};
+    shaderCreateInfo.setCodeSize(code.size());
+    shaderCreateInfo.setPCode(
+        reinterpret_cast<const uint32_t*>(code.data())
+    );    // pointer of code (of uint32_t pointe rtype //NOLINT:Ok to use Reinterpret cast here
+
+    vk::ShaderModule shaderModule = 
+        this->device->getVkDevice().createShaderModule(
+            shaderCreateInfo
+        );
+    return shaderModule;
+}
+
 Pipeline::Pipeline()
 	: device(nullptr)
 {
@@ -13,7 +32,10 @@ Pipeline::~Pipeline()
 {
 }
 
-void Pipeline::createPipeline(Device& device)
+void Pipeline::createPipeline(
+    Device& device,
+    PipelineLayout& pipelineLayout,
+    vk::RenderPass& renderPass)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -152,25 +174,6 @@ void Pipeline::createPipeline(Device& device)
     colorBlendingCreateInfo.setAttachmentCount(uint32_t(1));
     colorBlendingCreateInfo.setPAttachments(&colorState);
 
-    // --- PIPELINE LAYOUT ---
-
-    // We have two Descriptor Set Layouts, 
-    // One for View and Projection matrices Uniform Buffer, and the other one for the texture sampler!
-    std::array<vk::DescriptorSetLayout, 2> descriptorSetLayouts
-    {
-        this->descriptorSetLayout,
-        this->samplerDescriptorSetLayout
-    };
-
-    vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
-    pipelineLayoutCreateInfo.setSetLayoutCount(static_cast<uint32_t>(descriptorSetLayouts.size()));
-    pipelineLayoutCreateInfo.setPSetLayouts(descriptorSetLayouts.data());
-    pipelineLayoutCreateInfo.setPushConstantRangeCount(uint32_t(1));                    // We only have One Push Constant range we want to use
-    pipelineLayoutCreateInfo.setPPushConstantRanges(&this->pushConstantRange);// the Push Constant Range we want to use
-
-    this->pipelineLayout = this->device->getVkDevice().createPipelineLayout(pipelineLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("VkPipelineLayout GraphicsPipelineLayout", vk::ObjectType::ePipelineLayout, reinterpret_cast<uint64_t>(vk::PipelineLayout::CType(this->pipelineLayout)));
-    
     // --- DEPTH STENCIL TESING ---
     vk::PipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
     depthStencilCreateInfo.setDepthTestEnable(VK_TRUE);              // Enable Depth Testing; Check the Depth to determine if it should write to the fragment
@@ -191,8 +194,8 @@ void Pipeline::createPipeline(Device& device)
     pipelineCreateInfo.setPMultisampleState(&multisampleStateCreateInfo);
     pipelineCreateInfo.setPColorBlendState(&colorBlendingCreateInfo);
     pipelineCreateInfo.setPDepthStencilState(&depthStencilCreateInfo);
-    pipelineCreateInfo.setLayout(this->pipelineLayout);                                 // Pipeline layout pipeline should use
-    pipelineCreateInfo.setRenderPass(this->renderPass_base);                                 // Render pass description the pipeline is compatible with
+    pipelineCreateInfo.setLayout(pipelineLayout.getVkPipelineLayout());                                 // Pipeline layout pipeline should use
+    pipelineCreateInfo.setRenderPass(renderPass);                                 // Render pass description the pipeline is compatible with
     pipelineCreateInfo.setSubpass(uint32_t(0));                                             // subpass of render pass to use with pipeline
 
     // Pipeline Derivatives : Can Create multiple pipelines that derive from one another for optimization
@@ -210,7 +213,7 @@ void Pipeline::createPipeline(Device& device)
     {
         Log::error("Could not create pipeline");
     }
-    VulkanDbg::registerVkObjectDbgInfo("VkPipeline GraphicsPipeline", vk::ObjectType::ePipeline, reinterpret_cast<uint64_t>(vk::Pipeline::CType(this->graphicsPipeline)));
+    VulkanDbg::registerVkObjectDbgInfo("VkPipeline", vk::ObjectType::ePipeline, reinterpret_cast<uint64_t>(vk::Pipeline::CType(this->pipeline)));
 
     //Destroy Shader Moduels, no longer needed after pipeline created
     this->device->getVkDevice().destroyShaderModule(vertexShaderModule);

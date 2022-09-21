@@ -233,6 +233,7 @@
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="src\graphics\vulkan\PipelineLayout.hpp" />
     <ClInclude Include="src\application\Input.hpp" />
     <ClInclude Include="src\application\Scene.hpp" />
     <ClInclude Include="src\application\SceneHandler.hpp" />
@@ -274,6 +275,7 @@
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="src\graphics\vulkan\PipelineLayout.cpp" />
     <ClCompile Include="src\application\Input.cpp" />
     <ClCompile Include="src\application\Scene.cpp" />
     <ClCompile Include="src\application\SceneHandler.cpp" />
