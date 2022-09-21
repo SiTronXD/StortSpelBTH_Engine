@@ -1,8 +1,8 @@
 #pragma once
 #include "Server.h"
 #include "Client.h"
-#include "Time.hpp"
-#include "MeshComponent.hpp"
+#include "../application/Time.hpp"
+#include "../components/MeshComponent.hpp"
 
 class NetworkHandler {
 public:

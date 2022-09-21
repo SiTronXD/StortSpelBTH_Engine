@@ -1,6 +1,6 @@
 #pragma once
 
-#include "NetworkHandler.h"
+#include "network/NetworkHandler.h"
 #include "application/SceneHandler.hpp"
 
 class Engine

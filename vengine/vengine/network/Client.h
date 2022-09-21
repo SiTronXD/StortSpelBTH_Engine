@@ -1,7 +1,7 @@
 #pragma once
 #include "SFML/Network.hpp"
 #include "NetworkEnumAndDefines.h"
-#include "SceneHandler.hpp"
+#include "../application/SceneHandler.hpp"
 #include "glm/vec3.hpp"
 
 class Client {
