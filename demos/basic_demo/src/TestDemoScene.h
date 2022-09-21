@@ -10,10 +10,11 @@ private:
 	int testEntity;
 	int testEntity2;
 
+	int boss;
 	std::vector<int> rooms;
 	int doors[4];
 	bool foundBoss;
-	bool done;
+	int bossHealth;
 	int roomID;
 public:
 	TestDemoScene();
@@ -23,12 +24,5 @@ public:
 	virtual void init() override;
 	virtual void update() override;
 
-private:
-	bool traverseRooms();
-	void placeDoors();
-	bool canGoForward();
-	bool canGoBack();
-	bool canGoLeft();
-	bool canGoRight();
 };
 
