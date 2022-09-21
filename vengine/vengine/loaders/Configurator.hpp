@@ -39,13 +39,12 @@ namespace vengine_helper::config::defaults
     const float CAM_TARGET_Z= 0.F ;
     const int W_WIDTH  = 800;    
     const int W_HEIGHT = 600;    
-    const std::string P_ASSETS      = "assets/" ;           //:NOLINT: Nothing but const std::string works as intended...
-    const std::string P_MODELS      = "assets/models/";     //:NOLINT:
-    const std::string P_TEXTURES    = "assets/textures/";   //:NOLINT:
-    const std::string P_SHADERS     = "assets/shaders/";    //:NOLINT:
+    const std::string P_ASSETS      = "vengine_assets/" ;           //:NOLINT: Nothing but const std::string works as intended...
+    const std::string P_MODELS      = "vengine_assets/models/";     //:NOLINT:
+    const std::string P_TEXTURES    = "vengine_assets/textures/";   //:NOLINT:
+    const std::string P_SHADERS     = "vengine_assets/shaders/";    //:NOLINT:
     const float SAMPL_MAX_ANISOSTROPY = 16.F ;
     const bool USE_BUILTIN_VALIDATION = false ;
-
 }
 
 namespace vengine_helper::config
@@ -94,18 +93,10 @@ namespace vengine_helper::config
 {    
     void loadConfIntoMemory();
     float camera_fov();
-
-    // template<typename T>
-    // T DEF(std::string&& name)
-    // {
-    //     std::cout << std::any_cast<T>(conf.rules.find(name)->second.value) << std::endl;
-    //     return std::any_cast<T>(conf.rules.find(name)->second.value);
-    // }
         
     template<typename T >
     T DEF(std::string_view name)
     {
-        //std::cout << std::any_cast<T>(conf.rules.find(name)->second.value) << std::endl;
         return std::any_cast<T>(conf.rules.find(name)->second.value);
     }
 
