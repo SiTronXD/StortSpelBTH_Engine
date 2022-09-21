@@ -11,6 +11,10 @@ private:
 	int testEntity2;
 
 	std::vector<int> rooms;
+	int doors[4];
+	bool foundBoss;
+	bool done;
+	int roomID;
 public:
 	TestDemoScene();
 	virtual ~TestDemoScene();
@@ -18,5 +22,13 @@ public:
 	// Inherited via Scene
 	virtual void init() override;
 	virtual void update() override;
+
+private:
+	bool traverseRooms();
+	void placeDoors();
+	bool canGoForward();
+	bool canGoBack();
+	bool canGoLeft();
+	bool canGoRight();
 };
 

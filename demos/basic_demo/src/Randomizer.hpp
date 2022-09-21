@@ -14,4 +14,3 @@ glm::vec3 getRandomVec3(float min, float max);
 glm::vec3 getRandomVec3(int xMin, int xMax, int yMin, int yMax, int zMin, int zMax);
 glm::vec3 getRandomVec3(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax);
 glm::vec3 getRandomVec3(glm::vec3 min, glm::vec3 max);
-

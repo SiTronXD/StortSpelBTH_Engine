@@ -33,11 +33,10 @@ void initRooms(Scene& scene, std::vector<int>& rooms)
 	int numRooms = setUpRooms(scene, rooms);
 	int numBranches = rand() % (numRooms - 2) * 2 + 1;
 	for (int i = 0; i < numBranches; i++) {
-		setRandomBranch(scene, rooms);
+		setRandomBranch(scene, rooms, numRooms);
 	}
 	setBoss(scene, rooms, numRooms);
 	setExit(scene, rooms);
-
 }
 
 int setUpRooms(Scene& scene, std::vector<int>& rooms)
@@ -60,8 +59,8 @@ int setUpRooms(Scene& scene, std::vector<int>& rooms)
 
 	int numRooms = rand() % 15 + 4;
 
-	
-	glm::vec2 offset = glm::vec2(0.0f, 0.0f);
+
+	glm::vec3 offset = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	for (int i = 0; i < numRooms; i++)
 	{
@@ -72,11 +71,13 @@ int setUpRooms(Scene& scene, std::vector<int>& rooms)
 		Room& curRoom = scene.getComponent<Room>(rooms[i]);
 		Transform& curTransform = scene.getComponent<Transform>(rooms[i]);
 		glm::vec3& curPos = curTransform.position;
-		glm::vec2& dimensions = curRoom.dimensions;
+		glm::vec3& dimensions = curRoom.dimensions;
 
 		//First room is alwas the start room
 		if (i == 0)
 		{
+			curPos = glm::vec3(0.0f, 0.0f, 0.0f);
+			curRoom.dimensions = getRandomVec3(MIN_WIDTH, MAX_WIDTH, MIN_HEIGHT, MAX_HEIGHT, MIN_DEPTH, MAX_DEPTH);
 			curRoom.type = ROOM_TYPE::START;
 		}
 		else
@@ -92,22 +93,27 @@ int setUpRooms(Scene& scene, std::vector<int>& rooms)
 				curRoom.type = ROOM_TYPE::NORMAL;
 			}
 
-			curRoom.dimensions = getRandomVec2(MIN_WIDTH, MAX_WIDTH, MIN_HEIGHT, MAX_HEIGHT);
+			curRoom.dimensions = getRandomVec3(MIN_WIDTH, MAX_WIDTH, MIN_HEIGHT, MAX_HEIGHT, MIN_DEPTH, MAX_DEPTH);
 			offset.x = dimensions.x / 2.0f + scene.getComponent<Room>(rooms[i - 1]).dimensions.x / 2.0f;
-			offset.y = dimensions.y / 2.0f + scene.getComponent<Room>(rooms[i - 1]).dimensions.y / 2.0f;
+			offset.y = 0.0f;// dimensions.y / 2.0f + scene.getComponent<Room>(rooms[i - 1]).dimensions.y / 2.0f;
+			offset.z = dimensions.z / 2.0f + scene.getComponent<Room>(rooms[i - 1]).dimensions.z / 2.0f;
+
+			float minX = curPos.x - offset.x + MIN_X_POS_SPREAD;
+			float maxX = curPos.x + offset.x + MAX_X_POS_SPREAD;
+			float minY = curPos.y + offset.y + MIN_Y_POS_SPREAD;
+			float maxY = curPos.y + offset.y + MAX_Y_POS_SPREAD;
+			float minZ = curPos.z + offset.z + MIN_Z_POS_SPREAD;
+			float maxZ = curPos.z + offset.z + MAX_Z_POS_SPREAD;
+
+			curPos = getRandomVec3(minX, maxX, minY, maxY, minZ, maxZ);
 		}
 
-		float minX = curPos.x - offset.x + MIN_X_POS_SPREAD;
-		float maxX = curPos.x + offset.x + MAX_X_POS_SPREAD;
-		float minY = curPos.y + offset.y + MIN_Y_POS_SPREAD;
-		float maxY = curPos.y + offset.y + MAX_Y_POS_SPREAD;
 
-		curPos = getRandomVec3(minX, maxX, minY, maxY, 0.0f, 0.0f);
 
 		if (i > 0)
 		{
 			scene.getComponent<Room>(rooms[i - 1]).up = i;
-			curRoom.down = i - 1;
+			scene.getComponent<Room>(rooms[i]).down = i - 1;
 		}
 
 	}
@@ -115,11 +121,11 @@ int setUpRooms(Scene& scene, std::vector<int>& rooms)
 	return numRooms;
 }
 
-void setRandomBranch(Scene& scene, std::vector<int>& rooms)
+void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 {
 	int branchSize = rand() % 3 + 1;
 	bool foundSpot = false;
-	int numMainRooms = (int)rooms.size();
+	int numMainRooms = numRooms;
 	int spot = rand() % (numMainRooms - 1);
 	Room& roomRef = scene.getComponent<Room>(rooms[spot]);
 
@@ -128,19 +134,24 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms)
 		//Keep looking for a spot to place branch
 		while (!foundSpot)
 		{
-			roomRef = scene.getComponent<Room>(rooms[++spot]);
-			if (spot >= numMainRooms)
-			{
-				spot = 0;
-			}
+			roomRef = scene.getComponent<Room>(rooms[spot]);
+
 			if (roomRef.left == -1 || roomRef.right == -1)
 			{
 				foundSpot = true;
+				break;
+			}
+			if (++spot >= numMainRooms)
+			{
+				spot = 0;
 			}
 		}
 	}
 	roomRef = scene.getComponent<Room>(rooms[spot]);
 	//Found spot
+	if (roomRef.branch) {
+		int test = 0;
+	}
 	if (roomRef.left == -1 && roomRef.right == -1)
 	{
 		if (rand() % 2 == 0)
@@ -164,24 +175,30 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms)
 
 }
 
+
 void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int size)
 {
-	const float MAX_WIDTH = 200.0f;
-	const float MAX_HEIGHT = 200.0f;
 	const float MIN_WIDTH = 50.0f;
+	const float MAX_WIDTH = 200.0f;
 	const float MIN_HEIGHT = 50.0f;
+	const float MAX_HEIGHT = 200.0f;
+	const float MIN_DEPTH = 50.0f;
+	const float MAX_DEPTH = 200.0f;
 
-	const float MIN_X_POS_SPREAD = -50.0f;
-	const float MAX_X_POS_SPREAD = 50.0f;
-	const float MIN_Y_POS_SPREAD = 0;
-	const float MAX_Y_POS_SPREAD = 20.0f;
+
+	const float MIN_X_POS_SPREAD = 50.0f;
+	const float MAX_X_POS_SPREAD = 20.0f;
+	const float MIN_Y_POS_SPREAD = 0.0f;
+	const float MAX_Y_POS_SPREAD = 0.0f;
+	const float MIN_Z_POS_SPREAD = -10.0f;
+	const float MAX_Z_POS_SPREAD = 10.0f;
 
 	ROOM_TYPE roomType = ROOM_TYPE::NORMAL;
 
-	glm::vec2 offset = glm::vec2(0.0f, 0.0f);
+	glm::vec3 offset = glm::vec3(0.0f, 0.0f, 0.0f);
 
 	glm::vec3& position = scene.getComponent<Transform>(rooms[index]).position;
-	glm::vec2 dimensions = getRandomVec2(MIN_WIDTH, MAX_WIDTH, MIN_HEIGHT, MAX_HEIGHT);
+	glm::vec3 dimensions = getRandomVec3(MIN_WIDTH, MAX_WIDTH, MIN_HEIGHT, MAX_HEIGHT, MIN_DEPTH, MAX_DEPTH);
 
 	if (rand() % 5 == 0) {
 		roomType = ROOM_TYPE::HARD;
@@ -194,14 +211,17 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 		for (int i = 0; i < size; i++)
 		{
 			offset.x = dimensions.x / 2.0f + scene.getComponent<Room>(rooms[index]).dimensions.x / 2.0f;
-			offset.y = dimensions.y / 2.0f + scene.getComponent<Room>(rooms[index]).dimensions.y / 2.0f;
+			offset.y = 0.0f;// dimensions.y / 2.0f + scene.getComponent<Room>(rooms[index]).dimensions.y / 2.0f;
+			offset.z = dimensions.z / 2.0f + scene.getComponent<Room>(rooms[index]).dimensions.z / 2.0f;
 
-			float minX = position.x - offset.x - 200.0f;
-			float maxX = position.x + offset.x - 100.0f;
-			float minY = position.y + offset.y - 10.0f;
-			float maxY = position.y + offset.y + 10.0f;
+			float minX = position.x - offset.x - MIN_X_POS_SPREAD;
+			float maxX = position.x + offset.x - MAX_X_POS_SPREAD;
+			float minY = position.y + offset.y - MIN_Y_POS_SPREAD;
+			float maxY = position.y + offset.y + MAX_Y_POS_SPREAD;
+			float minZ = position.z + offset.z - MIN_Z_POS_SPREAD;
+			float maxZ = position.z + offset.z + MAX_Z_POS_SPREAD;
 
-			position = getRandomVec3(minX, maxX, minY, maxY, 0.0f, 1.0f);
+			position = getRandomVec3(minX, maxX, minY, maxY, minZ, maxZ);
 
 			rooms.push_back(scene.createEntity());
 			scene.setComponent<Room>(rooms[rooms.size() - 1]);
@@ -212,15 +232,27 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 			roomRef.dimensions = dimensions;
 			posRef = position;
 
+			int curRoomLeft, curRoomIndex;
+
 			if (i == 0)
 			{
-				scene.getComponent<Room>(rooms[index]).left = (int)rooms.size() - 1;
-				scene.getComponent<Room>(rooms[(int)rooms.size() - 1]).right = index;
+				curRoomIndex = index;
+				curRoomLeft = (int)rooms.size() - 1;
+				if (curRoomIndex == curRoomLeft) {
+					int test = 0;
+				}
+				scene.getComponent<Room>(rooms[curRoomIndex]).left = curRoomLeft;
+				scene.getComponent<Room>(rooms[curRoomLeft]).right = curRoomIndex;
 			}
 			else
 			{
-				scene.getComponent<Room>(rooms[(int)rooms.size() - 2]).left = (int)rooms.size() - 1;
-				scene.getComponent<Room>(rooms[(int)rooms.size() - 1]).right = (int)rooms.size() - 2;
+				curRoomIndex = (int)rooms.size() - 2;
+				curRoomLeft = (int)rooms.size() - 1;
+				if (curRoomIndex == curRoomLeft) {
+					int test = 0;
+				}
+				scene.getComponent<Room>(rooms[curRoomIndex]).left = curRoomLeft;
+				scene.getComponent<Room>(rooms[curRoomLeft]).right = curRoomIndex;
 			}
 
 		}
@@ -230,14 +262,17 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 		for (int i = 0; i < size; i++)
 		{
 			offset.x = dimensions.x / 2.0f + scene.getComponent<Room>(rooms[index]).dimensions.x / 2.0f;
-			offset.y = dimensions.y / 2.0f + scene.getComponent<Room>(rooms[index]).dimensions.y / 2.0f;
+			offset.y = 0.0f;// dimensions.y / 2.0f + scene.getComponent<Room>(rooms[index]).dimensions.y / 2.0f;
+			offset.z = dimensions.z / 2.0f + scene.getComponent<Room>(rooms[index]).dimensions.z / 2.0f;
 
-			float minX = position.x - offset.x + 100.0f;
-			float maxX = position.x + offset.x + 200.0f;
-			float minY = position.y + offset.y - 10.0f;
-			float maxY = position.y + offset.y + 10.0f;
+			float minX = position.x - offset.x + MIN_X_POS_SPREAD;
+			float maxX = position.x + offset.x + MAX_X_POS_SPREAD;
+			float minY = position.y + offset.y - MIN_Y_POS_SPREAD;
+			float maxY = position.y + offset.y + MAX_Y_POS_SPREAD;
+			float minZ = position.z + offset.z - MIN_Z_POS_SPREAD;
+			float maxZ = position.z + offset.z + MAX_Z_POS_SPREAD;
 
-			position = getRandomVec3(minX, maxX, minY, maxY, 0.0f, 1.0f);
+			position = getRandomVec3(minX, maxX, minY, maxY, minZ, maxZ);
 
 			rooms.push_back(scene.createEntity());
 			scene.setComponent<Room>(rooms[rooms.size() - 1]);
@@ -247,16 +282,26 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 			roomRef.type = roomType;
 			roomRef.dimensions = dimensions;
 			posRef = position;
-
+			int curRoomRight, curRoomIndex;
 			if (i == 0)
 			{
-				scene.getComponent<Room>(rooms[index]).right = (int)rooms.size() - 1;
-				scene.getComponent<Room>(rooms[(int)rooms.size() - 1]).left = index;
+				curRoomIndex = index;
+				curRoomRight = (int)rooms.size() - 1;
+				if (curRoomIndex == curRoomRight) {
+					int test = 0;
+				}
+				scene.getComponent<Room>(rooms[curRoomIndex]).right = curRoomRight;
+				scene.getComponent<Room>(rooms[curRoomRight]).left = curRoomIndex;
 			}
 			else
 			{
-				scene.getComponent<Room>(rooms[(int)rooms.size() - 2]).right = (int)rooms.size() - 1;
-				scene.getComponent<Room>(rooms[(int)rooms.size() - 1]).left = (int)rooms.size() - 2;
+				curRoomIndex = (int)rooms.size() - 2;
+				curRoomRight = (int)rooms.size() - 1;
+				if (curRoomIndex == curRoomRight) {
+					int test = 0;
+				}
+				scene.getComponent<Room>(rooms[curRoomIndex]).right = curRoomRight;
+				scene.getComponent<Room>(rooms[curRoomRight]).left = curRoomIndex;
 			}
 
 		}
@@ -307,7 +352,7 @@ void setExit(Scene& scene, std::vector<int>& rooms)
 }
 
 
-void traverseRooms(Scene& scene, std::vector<int>& rooms)
+void traverseRoomsConsole(Scene& scene, std::vector<int>& rooms)
 {
 	std::string input;
 
