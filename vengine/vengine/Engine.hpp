@@ -1,7 +1,8 @@
 #pragma once
 
-#include "network/NetworkHandler.h"
 #include "application/SceneHandler.hpp"
+#include "network/NetworkHandler.h"
+#include "lua/ScriptHandler.h"
 
 class Engine
 {
@@ -15,5 +16,6 @@ public:
 
 	SceneHandler sceneHandler;
 	NetworkHandler networkHandler;
+	ScriptHandler scriptHandler;
 };
 

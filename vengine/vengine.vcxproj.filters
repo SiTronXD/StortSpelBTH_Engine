@@ -156,6 +156,12 @@
     <ClInclude Include="vengine\network\Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vengine\lua\dev\LuaHelper.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\lua\ScriptHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -270,6 +276,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\network\Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\lua\ScriptHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

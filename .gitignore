@@ -365,3 +365,5 @@ imgui.ini
 /deps/assimp/int/assimp.tlog
 vulkan_validations.txt
 demos/*/vengine_assets
+deps/*/int
+deps/lua/lib

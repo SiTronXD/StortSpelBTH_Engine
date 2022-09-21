@@ -22,9 +22,10 @@
 #include "imgui_impl_vulkan.h"
 #include "backends/imgui_impl_vulkan.h"
 
+#include "lua/dev/LuaHelper.h"
+
 Engine::Engine()
 {
-	
 }
 
 Engine::~Engine()
@@ -77,6 +78,7 @@ void Engine::run(Scene* startScene)
         Time::updateDeltaTime();
         this->sceneHandler.update();
         this->networkHandler.updateNetwork();
+        this->scriptHandler.update();
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);
