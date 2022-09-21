@@ -269,9 +269,11 @@ call compile_shaders.bat</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\NetworkTestScene.cpp" />
     <ClCompile Include="src\TestDemoScene.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\NetworkTestScene.h" />
     <ClInclude Include="src\TestDemoScene.h" />
   </ItemGroup>
   <ItemGroup>

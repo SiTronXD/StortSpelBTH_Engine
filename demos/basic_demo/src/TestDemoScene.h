@@ -5,9 +5,8 @@
 class TestDemoScene : public Scene
 {
 private:
-	int stone;
-	int Player;
-	//other players are in networkHandler
+	int testEntity;
+	int testEntity2;
 public:
 	TestDemoScene();
 	virtual ~TestDemoScene();
