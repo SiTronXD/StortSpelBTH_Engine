@@ -7,6 +7,7 @@
 #include <entt.hpp>
 #include <vector>
 
+class NetworkHandler;
 class SceneHandler;
 
 class Scene
@@ -20,6 +21,7 @@ private:
 
 protected:
 	void switchScene(Scene* nextScene);
+	NetworkHandler* getNetworkHandler();
 
 public:
 	Scene();

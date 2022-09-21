@@ -44,6 +44,16 @@ void SceneHandler::setScene(Scene* scene)
 	}
 }
 
+void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
+{
+	this->networkHandler = networkHandler;
+}
+
+NetworkHandler* SceneHandler::getNetworkHandler()
+{
+	return this->networkHandler;
+}
+
 Scene* SceneHandler::getScene() const
 {
 	return this->scene;

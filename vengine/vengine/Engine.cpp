@@ -35,6 +35,8 @@ void Engine::run(Scene* startScene)
 {
     this->sceneHandler.setScene(startScene);
     this->sceneHandler.updateToNextScene();
+    this->sceneHandler.setNetworkHandler(&networkHandler);
+    this->networkHandler.setSceneHandler(&sceneHandler);
 
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
@@ -74,8 +76,7 @@ void Engine::run(Scene* startScene)
 
         Time::updateDeltaTime();
         this->sceneHandler.update();
-
-        // ------------------------------------
+        this->networkHandler.updateNetwork();
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);
@@ -95,6 +96,7 @@ void Engine::run(Scene* startScene)
         FrameMark;
 #endif
     }
+    this->networkHandler.deleteServer();
 
     renderer.cleanup();
 }
