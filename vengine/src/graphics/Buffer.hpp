@@ -33,7 +33,6 @@ protected:
 
     inline std::vector<vk::Buffer>& getBuffers() { return this->buffers; }
     inline std::vector<VmaAllocation>& getBufferMemories() { return this->bufferMemories; }
-    inline const size_t& getBufferSize() { return this->bufferSize; }
 
 public:
 	Buffer();
@@ -46,6 +45,8 @@ public:
     );
 
     void cleanup();
+
+    inline const size_t& getBufferSize() { return this->bufferSize; }
 
     static void createBuffer(CreateBufferData&& bufferData);
 

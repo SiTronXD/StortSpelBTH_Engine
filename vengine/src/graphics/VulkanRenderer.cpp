@@ -1196,46 +1196,40 @@ void VulkanRenderer::createDescriptorSets()
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    this->descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
-    for(size_t i = 0; i < this->descriptorSets.size(); i++)
-    {
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorSet["+std::to_string(i)+"]  UniformBuffer", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->descriptorSets[i])));
-    }
 
     // Update all of the Descriptor Set buffer binding
     for(size_t i = 0; i < this->descriptorSets.size(); i++)
     {
         // - VIEW PROJECTION DESCRIPTOR - 
         // Describe the Buffer info and Data offset Info
-        vk::DescriptorBufferInfo viewProjection_BufferInfo; 
-        viewProjection_BufferInfo.setBuffer(this->viewProjectionUB.getBuffer(i));// Buffer to get the Data from
-        viewProjection_BufferInfo.setOffset(0);                                    // Position Of start of Data; 
-                                                                                 // Offset from the start (0), since we want to write all data
-        viewProjection_BufferInfo.setRange(sizeof(UboViewProjection));             // Size of data ... 
+        vk::DescriptorBufferInfo viewProjectionBufferInfo; 
+        viewProjectionBufferInfo.setBuffer(this->viewProjectionUB.getBuffer(i)); // Buffer to get the Data from
+        viewProjectionBufferInfo.setOffset(0);
+        viewProjectionBufferInfo.setRange((vk::DeviceSize) this->viewProjectionUB.getBufferSize());
 
         // Data to describe the connection between Binding and Uniform Buffer
-        vk::WriteDescriptorSet viewProjection_setWrite;
-        viewProjection_setWrite.setDstSet(this->descriptorSets[i]);              // Descriptor Set to update
-        viewProjection_setWrite.setDstBinding(uint32_t (0));                                    // Binding to update (Matches with Binding on Layout/Shader)
-        viewProjection_setWrite.setDstArrayElement(uint32_t (0));                                // Index in array we want to update (if we use an array, we do not. thus 0)
-        viewProjection_setWrite.setDescriptorType(vk::DescriptorType::eUniformBuffer);// Type of Descriptor
-        viewProjection_setWrite.setDescriptorCount(uint32_t (1));                                // Amount of Descriptors to update
-        viewProjection_setWrite.setPBufferInfo(&viewProjection_BufferInfo); 
+        vk::WriteDescriptorSet viewProjectionWriteSet;
+        viewProjectionWriteSet.setDstSet(this->descriptorSets[i]);              // Descriptor Set to update
+        viewProjectionWriteSet.setDstBinding(uint32_t(0));                                    // Binding to update (Matches with Binding on Layout/Shader)
+        viewProjectionWriteSet.setDstArrayElement(uint32_t(0));                                // Index in array we want to update (if we use an array, we do not. thus 0)
+        viewProjectionWriteSet.setDescriptorType(vk::DescriptorType::eUniformBuffer);// Type of Descriptor
+        viewProjectionWriteSet.setDescriptorCount(uint32_t(1));                                // Amount of Descriptors to update
+        viewProjectionWriteSet.setPBufferInfo(&viewProjectionBufferInfo);
 
         // List of descriptorSetWrites
-        std::vector<vk::WriteDescriptorSet> descriptorSetWrites
+        std::vector<vk::WriteDescriptorSet> writeDescriptorSets
         {
-            viewProjection_setWrite
+            viewProjectionWriteSet
         };
 
         // Update the Descriptor Set with new buffer/binding info
         this->getVkDevice().updateDescriptorSets(
-            viewProjection_setWrite,  // Update all Descriptor sets in descripotrSetWrites vector
+            writeDescriptorSets,  // Update all Descriptor sets in writeDescriptorSets vector
             nullptr
         );
-    }
 
+        VulkanDbg::registerVkObjectDbgInfo("DescriptorSet[" + std::to_string(i) + "]  UniformBuffer", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->descriptorSets[i])));
+    }
 }
 
 void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")
@@ -1261,7 +1255,12 @@ void VulkanRenderer::createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::Co
     //TODO: automatic trash collection    
 }
 
-void VulkanRenderer::createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name = "NoName")
+void VulkanRenderer::createFramebuffer(
+    vk::Framebuffer& frameBuffer,
+    std::vector<vk::ImageView>& attachments,
+    vk::RenderPass& renderPass, 
+    vk::Extent2D& extent, 
+    std::string&& name = "NoName")
 {
     vk::FramebufferCreateInfo framebufferCreateInfo{};
     framebufferCreateInfo.setRenderPass(renderPass);
@@ -1460,6 +1459,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
             currentCommandBuffer.beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
 
+                // Viewport
                 viewport = vk::Viewport{};
                 viewport.x = 0.0f;
                 viewport.y = 0.0f;
@@ -1469,6 +1469,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 viewport.maxDepth = 1.0f;
                 currentCommandBuffer.setViewport(0, 1, &viewport);
 
+                // Reuse the previous scissor
                 currentCommandBuffer.setScissor(0, 1, &scissor);
 
                 ImGui_ImplVulkan_RenderDrawData(
