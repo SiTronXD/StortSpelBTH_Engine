@@ -89,8 +89,6 @@ void Model::createVertexBuffer(ModelPart& modelPart)
 
     Buffer::createBuffer(
         {
-            .physicalDevice = physicalDevice, 
-            .device         = device, 
             .bufferSize     = bufferSize,  
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       /// This buffers vertex data will be transfered somewhere else!
             .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -119,8 +117,6 @@ void Model::createVertexBuffer(ModelPart& modelPart)
     /// Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
     Buffer::createBuffer(
         {
-            .physicalDevice = physicalDevice, 
-            .device         = device, 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst            /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eVertexBuffer,    //// This is a Vertex Buffer
@@ -161,8 +157,6 @@ void Model::createIndexBuffer(ModelPart& modelPart)
 
     Buffer::createBuffer(
         {
-            .physicalDevice = this->physicalDevice, 
-            .device         = this->device, 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
             .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -184,8 +178,6 @@ void Model::createIndexBuffer(ModelPart& modelPart)
     /// Create Buffers for INDEX data on GPU access only area
     Buffer::createBuffer(
         {
-            .physicalDevice = this->physicalDevice, 
-            .device         = this->device, 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eIndexBuffer,     /// This is a Index Buffer, will be used as a Index Buffer

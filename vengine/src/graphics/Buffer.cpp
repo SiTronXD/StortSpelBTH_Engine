@@ -3,6 +3,50 @@
 #include "vulkan/Device.hpp"
 #include "../dev/Log.hpp"
 
+void Buffer::map(void*& outputWriteData, const uint32_t& bufferIndex)
+{
+    vmaMapMemory(
+        *this->vma,
+        this->bufferMemories[bufferIndex],
+        &outputWriteData
+    );
+}
+
+void Buffer::unmap(const uint32_t& bufferIndex)
+{
+    vmaUnmapMemory(
+        *this->vma,
+        this->bufferMemories[bufferIndex]
+    );
+}
+
+Buffer::Buffer()
+{
+}
+
+Buffer::~Buffer()
+{
+}
+
+void Buffer::init(
+    Device& device,
+    VmaAllocator& vma,
+    const size_t& bufferSize)
+{
+    this->device = &device;
+    this->vma = &vma;
+    this->bufferSize = bufferSize;
+}
+
+void Buffer::cleanup()
+{
+    for (size_t i = 0; i < this->buffers.size(); i++)
+    {
+        this->device->getVkDevice().destroyBuffer(this->buffers[i]);
+        vmaFreeMemory(*this->vma, this->bufferMemories[i]);
+    }
+}
+
 void Buffer::createBuffer(CreateBufferData&& bufferData)
 {
 #ifndef VENGINE_NO_PROFILING

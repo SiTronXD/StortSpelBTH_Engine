@@ -266,6 +266,7 @@
     <ClInclude Include="src\systems\UpdateMatricesSystem.hpp" />
     <ClInclude Include="src\test\TestScene.hpp" />
     <ClInclude Include="src\test\TestScene2.hpp" />
+    <ClInclude Include="src\graphics\vulkan\UniformBuffer.hpp" />
     <ClInclude Include="vengine.h" />
   </ItemGroup>
   <ItemGroup>
@@ -305,6 +306,7 @@
     <ClCompile Include="src\loaders\Configurator.cpp" />
     <ClCompile Include="src\test\TestScene.cpp" />
     <ClCompile Include="src\test\TestScene2.cpp" />
+    <ClCompile Include="src\graphics\vulkan\UniformBuffer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

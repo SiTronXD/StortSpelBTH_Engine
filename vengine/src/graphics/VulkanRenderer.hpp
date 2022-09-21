@@ -8,6 +8,7 @@
 #include "vulkan/QueueFamilies.hpp"
 #include "vulkan/PipelineLayout.hpp"
 #include "vulkan/Pipeline.hpp"
+#include "vulkan/UniformBuffer.hpp"
 
 #include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
@@ -75,9 +76,7 @@ class VulkanRenderer
     std::vector<vk::DescriptorSet> samplerDescriptorSets; // To be used for our texture Samplers! (need one per Texture)
                                                         /// NOTE; There will NOT be one samplerDescriptionSet per image!... It will be One per Texture!
 
-    std::vector<vk::Buffer> viewProjectionUniformBuffer;
-    std::vector<VmaAllocation> viewProjectionUniformBufferMemory;
-    std::vector<VmaAllocationInfo> viewProjectionUniformBufferMemoryInfo;
+    UniformBuffer viewProjectionUB;
 
     // - Assets    
     std::vector<Model>  modelList;
@@ -146,7 +145,6 @@ private:
     void createSynchronisation();
     void createTextureSampler();
 
-    void createUniformBuffers();
     void createDescriptorPool();
     void createDescriptorSets();
     void allocateDescriptorSets();
@@ -160,7 +158,6 @@ private:
     void createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::CommandPool& commandPool, std::string&& name);
     void createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
 
-    void updateUniformBuffers();
     void updateUboProjection();
     void updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up = glm::vec3(0.F,1.F,0.F));
 

@@ -130,7 +130,12 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
 
         this->createTextureSampler();
         
-        this->createUniformBuffers();
+        this->viewProjectionUB.createUniformBuffer(
+            this->device,
+            this->vma,
+            sizeof(UboViewProjection),
+            MAX_FRAMES_IN_FLIGHT
+        );
 
         this->createDescriptorPool();
 
@@ -233,11 +238,7 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyDescriptorPool(this->descriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->descriptorSetLayout);
 
-    for(size_t i = 0; i < this->viewProjectionUniformBuffer.size(); i++)
-    {
-        this->getVkDevice().destroyBuffer(this->viewProjectionUniformBuffer[i]);
-        vmaFreeMemory(this->vma, this->viewProjectionUniformBufferMemory[i]);
-    }
+    this->viewProjectionUB.cleanup();
 
     for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -366,7 +367,10 @@ void VulkanRenderer::draw(Scene* scene)
     if (deleteCamera) { delete camera; }
 
     // Update the Uniform Buffers
-    this->updateUniformBuffers();
+    this->viewProjectionUB.update(
+        (void*) &this->uboViewProjection, 
+        this->currentFrame
+    );
 
     // ReRecord the current CommandBuffer! In order to update any Push Constants
     recordRenderPassCommandsBase(scene, imageIndex);
@@ -546,8 +550,6 @@ int VulkanRenderer::createTextureImage(const std::string &filename)
 
     Buffer::createBuffer(
         {
-            .physicalDevice = this->physicalDevice.getVkPhysicalDevice(),
-            .device = this->getVkDevice(), 
             .bufferSize = imageSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
             // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible         // Staging buffer needs to be visible from HOST  (CPU), in order for modification
@@ -1116,45 +1118,6 @@ void VulkanRenderer::createTextureSampler()
     VulkanDbg::registerVkObjectDbgInfo("Texture Sampler", vk::ObjectType::eSampler, reinterpret_cast<uint64_t>(vk::Sampler::CType(this->textureSampler)));
 }
 
-void VulkanRenderer::createUniformBuffers()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // viewProjectionUniformBuffer size will be size of the view and Projection Members (will offset to access)
-    vk::DeviceSize viewProjection_buffer_size = sizeof(UboViewProjection);
-
-    // One uniform buffer for each image ( and by extension, command buffer)
-    this->viewProjectionUniformBuffer.resize(MAX_FRAMES_IN_FLIGHT);        // Resize to have as many ViewProjection buffers as frames in flight
-    this->viewProjectionUniformBufferMemory.resize(MAX_FRAMES_IN_FLIGHT);
-    this->viewProjectionUniformBufferMemoryInfo.resize(MAX_FRAMES_IN_FLIGHT);
-
-    // Create Uniform Buffers 
-    for(size_t i = 0; i < this->viewProjectionUniformBuffer.size(); i++)
-    {
-        // Create regular Uniform Buffers
-        Buffer::createBuffer(
-            {
-                .physicalDevice = this->physicalDevice.getVkPhysicalDevice(),
-                .device         = this->getVkDevice(), 
-                .bufferSize     = viewProjection_buffer_size, 
-                .bufferUsageFlags = vk::BufferUsageFlagBits::eUniformBuffer,         // We're going to use this as a Uniform Buffer...
-                // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible         // So we can access the Data from the HOST (CPU)
-                //                     | vk::MemoryPropertyFlagBits::eHostCoherent,     // So we don't have to flush the data constantly...
-                .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-                .buffer         = &this->viewProjectionUniformBuffer[i], 
-                .bufferMemory   = &this->viewProjectionUniformBufferMemory[i],
-                .allocationInfo   = &this->viewProjectionUniformBufferMemoryInfo[i],
-                .vma = &this->vma
-            }
-        );
-
-        VulkanDbg::registerVkObjectDbgInfo("ViewProjection UniformBuffer["+std::to_string(i)+"]", vk::ObjectType::eBuffer, reinterpret_cast<uint64_t>(vk::Buffer::CType(this->viewProjectionUniformBuffer[i])));
-    }
-
-}
-
 void VulkanRenderer::createDescriptorPool()
 {
 #ifndef VENGINE_NO_PROFILING
@@ -1210,7 +1173,7 @@ void VulkanRenderer::createDescriptorPool()
 void VulkanRenderer::allocateDescriptorSets()
 {
     // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    this->descriptorSets.resize(this->viewProjectionUniformBuffer.size()); // Since we have a uniform buffer per images, better use size of swapchainImages!
+    this->descriptorSets.resize(this->viewProjectionUB.getNumBuffers()); // Since we have a uniform buffer per images, better use size of swapchainImages!
 
     // Copy our DescriptorSetLayout so we have one per Image (one per UniformBuffer)
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts(
@@ -1246,7 +1209,7 @@ void VulkanRenderer::createDescriptorSets()
         // - VIEW PROJECTION DESCRIPTOR - 
         // Describe the Buffer info and Data offset Info
         vk::DescriptorBufferInfo viewProjection_BufferInfo; 
-        viewProjection_BufferInfo.setBuffer(this->viewProjectionUniformBuffer[i]);// Buffer to get the Data from
+        viewProjection_BufferInfo.setBuffer(this->viewProjectionUB.getBuffer(i));// Buffer to get the Data from
         viewProjection_BufferInfo.setOffset(0);                                    // Position Of start of Data; 
                                                                                  // Offset from the start (0), since we want to write all data
         viewProjection_BufferInfo.setRange(sizeof(UboViewProjection));             // Size of data ... 
@@ -1310,28 +1273,6 @@ void VulkanRenderer::createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<
 
     frameBuffer = getVkDevice().createFramebuffer(framebufferCreateInfo);
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eFramebuffer, reinterpret_cast<uint64_t>(vk::Framebuffer::CType(frameBuffer)));
-}
-
-void VulkanRenderer::updateUniformBuffers()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // - REGULAR UNIFORM BUFFER - 
-    // - Copy View Projection   - 
-
-    void * data = nullptr;
-    
-    vmaMapMemory(
-        this->vma, 
-        this->viewProjectionUniformBufferMemory[this->currentFrame], 
-        &data
-    );
-    memcpy(data, &this->uboViewProjection, sizeof(UboViewProjection));
-    vmaUnmapMemory(
-        this->vma, 
-        this->viewProjectionUniformBufferMemory[this->currentFrame]
-    );
 }
 
 void VulkanRenderer::updateUboProjection()
