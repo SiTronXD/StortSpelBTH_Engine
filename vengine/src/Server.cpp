@@ -56,6 +56,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 
 Server::Server()
 {
+	sGame.GivePacketInfo(this->serverToClientPacketTcp);
 	starting = StartingEnum::WaitingForUsers;
 	currentTimeToSend = 0;
 
@@ -80,7 +81,6 @@ Server::Server()
 
 	std::cout << "Server: waiting for users to connect" << std::endl;
 	connectThread = new std::thread(ConnectUsers, std::ref(clients), std::ref(listener), std::ref(starting));
-
 }
 
 Server::~Server()
@@ -134,10 +134,11 @@ void Server::update(float dt)
 
 		getDataFromUsers();
 		if (this->currentTimeToSend > this->timeToSend) {
-			this->currentTimeToSend = 0;
 			seeIfUsersExist();
 			sendDataToAllUsers();
 			cleanSendPackages();
+			sGame.update(this->currentTimeToSend);
+			this->currentTimeToSend = 0;
 		}
 		cleanRecvPackages();
 	}

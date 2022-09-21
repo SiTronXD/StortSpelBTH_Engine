@@ -112,7 +112,7 @@ void NetworkHandler::updateNetWork()
 			transform.position = glm::vec3(fx, fy, fz);
 		}
 		else if (gameEvent == GameEvents::SpawnEnemies) {
-			//ix = what type of enemy
+			//ix = what type of enemy, iy how many enemies
 			cTCPP >> ix >> iy;
 
 			for (int i = 0; i < iy; i++) {
@@ -166,6 +166,9 @@ void NetworkHandler::updateNetWork()
 		else if (gameEvent == GameEvents::UpdateMonsterPos) {
 			//ix number of monsters
 			cUDPP >> ix;
+			if (monsters.size() < ix) {
+				monsters.resize(ix);
+			}
 			for (int i = 0; i < ix; i++) {
 				//fxyz position, fabc rotation
 				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
