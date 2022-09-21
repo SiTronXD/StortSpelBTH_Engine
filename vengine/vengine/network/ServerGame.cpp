@@ -2,6 +2,13 @@
 
 ServerGame::ServerGame()
 {
+#ifndef NDEBUG
+    #define SERVERSEED 69
+    srand(SERVERSEED);
+#else
+    srand((unsigned)time(NULL));
+#endif
+    this->seed = rand();
 }
 
 void ServerGame::update(float dt)
@@ -25,7 +32,7 @@ ServerGame::~ServerGame()
 
 void ServerGame::createPlayer()
 {
-    players.push_back(ServerEntity());
+    this->players.push_back(ServerEntity());
 }
 
 std::vector<ServerEntity>& ServerGame::getServerEntities()
@@ -35,10 +42,15 @@ std::vector<ServerEntity>& ServerGame::getServerEntities()
 
 std::vector<ServerEntity>& ServerGame::getServerPlayers()
 {
-    return players;
+    return this->players;
 }
 
 void ServerGame::GivePacketInfo(std::vector<sf::Packet>& serverToClient)
 {
     this->serverToClient = &serverToClient;
+}
+
+const int ServerGame::getSeed()
+{
+    return this->seed;
 }

@@ -24,6 +24,7 @@ public:
 	void sendTCPDataToClient(TCPPacketEvent tcpP);
 	//little cheating here but only one event from client to server via udp
 	void sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot);
+	int getServerSeed();
 private:
 
 	std::thread* serverThread;
@@ -34,6 +35,9 @@ private:
 	//HELPERS
 	float fx, fy, fz, fa, fb, fc;
 	int ix, iy, iz, ia, ib, ic;
+	
+	//data
+	int seed;
 	std::vector<int> otherPlayers;
 	std::vector<int> monsters;
 

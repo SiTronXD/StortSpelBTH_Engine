@@ -65,7 +65,7 @@ private:
 	std::vector<sf::Packet> serverToClientPacketUdp;
 
 
-	ServerGame sGame;
+	ServerGame serverGame;
 
 	//help functions
 	template <typename T>

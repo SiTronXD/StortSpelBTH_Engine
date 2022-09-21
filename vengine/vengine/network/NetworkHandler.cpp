@@ -150,10 +150,10 @@ void NetworkHandler::updateNetwork()
 		}
 		else if (gameEvent == GameEvents::GAMEDATA) {
 			cTCPP >> ix;//nrOfPlayers;
-			cTCPP >> iy;//seed nr;
+			cTCPP >> this->seed;//seed nr;
 			for (int i = 0; i < ix - 1; i++) {
-				otherPlayers.push_back(sceneHandler->getScene()->createEntity());
-				sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1]);
+				this->otherPlayers.push_back(sceneHandler->getScene()->createEntity());
+				sceneHandler->getScene()->setComponent<MeshComponent>(this->otherPlayers[otherPlayers.size() - 1]);
 				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(otherPlayers[otherPlayers.size() - 1]);
 				transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 			}
@@ -209,6 +209,11 @@ void NetworkHandler::sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot)
 	if (client != nullptr) {
 		client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
 	}
+}
+
+int NetworkHandler::getServerSeed()
+{
+	return seed;
 }
 
 

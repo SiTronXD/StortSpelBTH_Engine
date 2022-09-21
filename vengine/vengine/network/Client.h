@@ -27,12 +27,12 @@ public:
 	sf::Packet getUDPDataFromServer();
 
 private:
-	sf::TcpSocket tcpSocket;
-	sf::TcpListener tcpListener;
-	sf::UdpSocket udpSocket;
+	sf::TcpSocket m_tcpSocket;
+	sf::TcpListener m_tcpListener;
+	sf::UdpSocket m_udpSocket;
 
 
-	std::string serverIP;
+	std::string m_serverIP;
 	bool connected;
 	StartingEnum m_starting;
 	float currentTimeToSendDataToServer;

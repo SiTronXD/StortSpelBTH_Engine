@@ -8,6 +8,7 @@
 
 #include "vengine.h"
 #include "src/TestDemoScene.h"
+#include "src/NetworkTestScene.h"
 
 int main(int argc, char* argv[])
 {
@@ -18,7 +19,7 @@ int main(int argc, char* argv[])
 
     {
         Engine engine;
-        engine.run(new TestDemoScene());
+        engine.run(new NetworkTestScene());
     }
 
     return EXIT_SUCCESS;
