@@ -1,8 +1,9 @@
 #pragma once 
-#include "src/Engine.hpp"
-#include "src/TestScene.hpp"
+
+#include "vengine/application/Input.hpp"
+#include "vengine/application/Time.hpp"
+#include "vengine/components/MeshComponent.hpp"
+#include "vengine/dev/Log.hpp"
+#include "vengine/test/TestScene.hpp"
+#include "vengine/Engine.hpp"
 #include "imgui/imgui.h"
-#include "src/Input.hpp"
-#include "src/MeshComponent.hpp"
-#include "src/Log.hpp"
-#include "src/Time.hpp"

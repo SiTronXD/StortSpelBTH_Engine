@@ -3,7 +3,6 @@
 #include "glm/gtx/string_cast.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
-#include "vengine.h"
 
 TestDemoScene::TestDemoScene()
 {
