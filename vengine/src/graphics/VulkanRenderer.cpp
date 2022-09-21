@@ -221,8 +221,6 @@ void VulkanRenderer::cleanup()
         i.destroyMeshModel();
     }
 
-    this->getVkDevice().destroyDescriptorSetLayout(this->inputSetLayout);
-
     this->getVkDevice().destroyDescriptorPool(this->samplerDescriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->samplerDescriptorSetLayout);
 
@@ -975,36 +973,6 @@ void VulkanRenderer::createDescriptorSetLayout()
     // create Descriptor Set Layout
     this->samplerDescriptorSetLayout = this->getVkDevice().createDescriptorSetLayout(textureLayoutCreateInfo);
     VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout SamplerTexture", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->samplerDescriptorSetLayout)));
-
-    // CREATE INPUT ATTACHMENT IMAGE DESCRIPTOR SET LAYOUT
-    // Colour Input Binding
-    vk::DescriptorSetLayoutBinding colorInputLayoutBinding;
-    colorInputLayoutBinding.setBinding(uint32_t (0));                                            // Binding 0 for Set 0, but for a new pipeline
-    colorInputLayoutBinding.setDescriptorCount(uint32_t (1));
-    colorInputLayoutBinding.setDescriptorType(vk::DescriptorType::eInputAttachment);   // Describes that the Descriptor is used by Input Attachment
-    colorInputLayoutBinding.setStageFlags(vk::ShaderStageFlagBits::eFragment);              // Passed into the Fragment Shader Stage
-
-    vk::DescriptorSetLayoutBinding depthInputLayoutBinding;
-    depthInputLayoutBinding.setBinding(uint32_t (1));
-    depthInputLayoutBinding.setDescriptorCount(uint32_t (1)); 
-    depthInputLayoutBinding.setDescriptorType(vk::DescriptorType::eInputAttachment);
-    depthInputLayoutBinding.setStageFlags(vk::ShaderStageFlagBits::eFragment);
-
-    std::array<vk::DescriptorSetLayoutBinding, 2> inputLayoutBindings {   // Bindings for the Second Subpass input attachments (??)
-        colorInputLayoutBinding,
-        depthInputLayoutBinding
-    };
-
-    // Create a Descriptor Set Layout for input attachments
-    vk::DescriptorSetLayoutCreateInfo inputCreateInfo;
-    inputCreateInfo.setBindingCount(static_cast<uint32_t>(inputLayoutBindings.size()));
-    inputCreateInfo.setPBindings(inputLayoutBindings.data());
-    inputCreateInfo.setFlags(vk::DescriptorSetLayoutCreateFlags());    
-    inputCreateInfo.pNext = nullptr;
-
-    // create Descriptor Set Layout
-    this->inputSetLayout = this->getVkDevice().createDescriptorSetLayout(inputCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout SubPass2_input", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->inputSetLayout)));
 }
 
 void VulkanRenderer::createPushConstantRange()

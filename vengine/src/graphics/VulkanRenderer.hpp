@@ -69,7 +69,6 @@ class VulkanRenderer
     // - Descriptors
     vk::DescriptorSetLayout samplerDescriptorSetLayout{};
     vk::DescriptorSetLayout descriptorSetLayout{};
-    vk::DescriptorSetLayout inputSetLayout{};
     vk::PushConstantRange pushConstantRange{};      
 
     std::vector<vk::DescriptorSet> descriptorSets;        // To be used with our View and Projection matrices
