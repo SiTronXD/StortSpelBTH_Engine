@@ -126,6 +126,7 @@ void Engine::run(Scene* startScene)
         FrameMark;
 #endif
     }
+    this->networkHandler.deleteServer();
 
     renderer.cleanup();
 }

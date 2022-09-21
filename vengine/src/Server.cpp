@@ -313,10 +313,10 @@ void Server::handlePacketFromUser(int ClientID, bool tcp)
 			case GameEvents::EMPTY:
 				break;
 			case GameEvents::A_Button_Was_Pressed_On_Client:
-				std::cout << "Server: client pressed Button wow (UDP)" << std::endl;
+				//std::cout << "Server: client pressed Button wow (UDP)" << std::endl;
 				break;
 			case GameEvents::UpdatePlayerPos:
-				std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
+				//std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
 				clientToServerPacketUdp[ClientID] >> packetHelper1;
 				sGame.getServerPlayers()[ClientID].position.x = packetHelper1;
 				clientToServerPacketUdp[ClientID] >> packetHelper1;

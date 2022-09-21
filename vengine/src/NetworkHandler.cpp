@@ -27,6 +27,11 @@ NetworkHandler::~NetworkHandler()
 	if (serverThread != nullptr) {
 		serverThread->join();
 		delete serverThread;
+		serverThread = nullptr;
+	}
+	if (client != nullptr) {
+		delete client;
+		client = nullptr;
 	}
 }
 
@@ -46,6 +51,11 @@ void NetworkHandler::deleteServer()
 		shutDownServer = true;
 		serverThread->join();
 		delete serverThread;
+		serverThread = nullptr;
+	}
+	if (client != nullptr) {
+		delete client;
+		client = nullptr;
 	}
 }
 
