@@ -134,10 +134,10 @@ void Server::update(float dt)
 
 		getDataFromUsers();
 		if (this->currentTimeToSend > this->timeToSend) {
+			sGame.update(this->currentTimeToSend);
 			seeIfUsersExist();
 			sendDataToAllUsers();
 			cleanSendPackages();
-			sGame.update(this->currentTimeToSend);
 			this->currentTimeToSend = 0;
 		}
 		cleanRecvPackages();
@@ -346,9 +346,13 @@ void Server::createUDPPacketToClient(int clientID, sf::Packet& packet)
 				sGame.getServerPlayers()[i].rotation.x << sGame.getServerPlayers()[i].rotation.y << sGame.getServerPlayers()[i].rotation.z;
 		}
 	}
-
 	//get all monster position
-
+	packet << GameEvents::UpdateMonsterPos << (int)sGame.getServerEntities().size();
+	for (int i = 0; i < sGame.getServerEntities().size(); i++) {
+		packet <<
+			sGame.getServerEntities()[i].position.x << sGame.getServerEntities()[i].position.y << sGame.getServerEntities()[i].position.z <<
+			sGame.getServerEntities()[i].rotation.x << sGame.getServerEntities()[i].rotation.y << sGame.getServerEntities()[i].rotation.z;
+	}
 
 }
 
