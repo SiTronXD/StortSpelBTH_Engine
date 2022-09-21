@@ -119,7 +119,7 @@ void Server::start()
 	this->starting = StartingEnum::Running;
 }
 
-void Server::update(float dt)
+bool Server::update(float dt)
 {
 	//if all users is connected and client host sayd it ok to start
 	if (this->starting == StartingEnum::Start) {
@@ -131,7 +131,9 @@ void Server::update(float dt)
 		for (int i = 0; i < this->clients.size(); i++) {
 			this->clients[i]->TimeToDisconnect += dt;
 		}
-
+		if (clients.size() == 0) {
+			return true;
+		}
 		getDataFromUsers();
 		if (this->currentTimeToSend > this->timeToSend) {
 			sGame.update(this->currentTimeToSend);
@@ -142,6 +144,7 @@ void Server::update(float dt)
 		}
 		cleanRecvPackages();
 	}
+	return false;//server is not done
 }
 
 std::string Server::getServerIP()
@@ -204,7 +207,7 @@ void Server::cleanSendPackages()
 
 void Server::seeIfUsersExist()
 {
-	static const float MaxTimeUntilDisconnect = 50.f;
+	static const float MaxTimeUntilDisconnect = 10.f;
 
 	for (int i = 0; i < clients.size(); i++) {
 		if (clients[i]->TimeToDisconnect > MaxTimeUntilDisconnect) {

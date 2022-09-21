@@ -20,7 +20,7 @@ public:
 	void connectClient(std::string serverIP);
 	void disconnectClient();
 
-	void updateNetWork();
+	void updateNetwork();
 	void sendTCPDataToClient(TCPPacketEvent tcpP);
 	//little cheating here but only one event from client to server via udp
 	void sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot);

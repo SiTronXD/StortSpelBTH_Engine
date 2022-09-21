@@ -21,7 +21,7 @@ public:
 	Server();
 	~Server();
 	void start();
-	void update(float dt);
+	bool update(float dt);
 	std::string getServerIP();
 	std::string getLocalAddress();
 	void disconnect();

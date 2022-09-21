@@ -96,7 +96,7 @@ void Engine::run(Scene* startScene)
 
         Time::updateDeltaTime();
         this->sceneHandler.update();
-        this->networkHandler.updateNetWork();
+        this->networkHandler.updateNetwork();
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);

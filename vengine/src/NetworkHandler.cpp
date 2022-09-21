@@ -5,10 +5,11 @@
 int serverMain(bool &shutDownServer) {
 	Timer serverTime;
 	Server s;
+	bool serverIsDone = false;
 
-	while (!shutDownServer) {
-		s.update(serverTime.getDT());
-		serverTime.updateDeltaTime();
+	while (!shutDownServer && !serverIsDone) {
+		serverIsDone = s.update(serverTime.getDT());
+ 		serverTime.updateDeltaTime();
 	}
 	return 1;
 }
@@ -86,7 +87,7 @@ void NetworkHandler::connectClient(std::string serverIP)
 	client->connect(serverIP);
 }
 
-void NetworkHandler::updateNetWork()
+void NetworkHandler::updateNetwork()
 {
 	
 	if (client == nullptr) {
@@ -99,7 +100,10 @@ void NetworkHandler::updateNetWork()
 	while (!cTCPP.endOfPacket()) {
 		cTCPP >> gameEvent;
 		if (gameEvent == GameEvents::DISCONNECT) {
-			this->disconnectClient();
+			cTCPP >> ix;
+			if(ix == -1){//we got kicked
+				this->disconnectClient();
+			}
 		}
 		else if (gameEvent == GameEvents::START) {
 			client->starting();
@@ -212,6 +216,10 @@ void NetworkHandler::sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot)
 void NetworkHandler::disconnectClient()
 {
 	client->disconnect();
+	if (client != nullptr) {
+		delete client;
+		client = nullptr;
+	}
 }
 
 
