@@ -5,7 +5,7 @@
 class PhysicalDevice;
 class Device;
 
-struct CreateImageData 
+struct ImageCreateData
 {
 	uint32_t width;
 	uint32_t height;
@@ -31,7 +31,7 @@ public:
 
 	static vk::Image createImage(
 		VmaAllocator& vma,
-		CreateImageData&& imageData, 
+		ImageCreateData&& imageData,
 		const std::string& imageDescription
 	);
 

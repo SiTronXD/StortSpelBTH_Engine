@@ -41,7 +41,7 @@ struct Vertex
     glm::vec2 tex;      /// texture coords  (u,v)
 };
 
-struct CreateImageBarrierData
+struct ImageBarrierCreateData
 {
     vk::CommandBuffer cmdBuffer; 
     vk::Image image; 
@@ -69,19 +69,11 @@ namespace vengine_helper
     ////__attribute__((unused))
 [[maybe_unused]]  // To remove annoying warning... this function is                        
 
-     uint32_t findMemoryTypeIndex( vk::PhysicalDevice physicalDevice, uint32_t allowedTypes,vk::MemoryPropertyFlags properties);
-
-    vk::CommandBuffer beginCommandBuffer(vk::Device device,
-                                         vk::CommandPool commandPool);
-
-    void endAndSubmitCommandBuffer(vk::Device device,
-                                   vk::CommandPool commandPool, vk::Queue queue,
-                                   vk::CommandBuffer commandBuffer);
-
-    void endAndSubmitCommandBufferWithFences(
-        vk::Device device, vk::CommandPool commandPool, vk::Queue queue,
-        vk::CommandBuffer commandBuffer);
+     uint32_t findMemoryTypeIndex(
+         vk::PhysicalDevice physicalDevice, 
+         uint32_t allowedTypes,
+         vk::MemoryPropertyFlags properties);
 
     void insertImageMemoryBarrier(
-        CreateImageBarrierData &&imageBarrierData);
+        ImageBarrierCreateData&& imageBarrierData);
 }

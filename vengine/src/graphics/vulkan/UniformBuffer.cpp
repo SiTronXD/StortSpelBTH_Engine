@@ -22,7 +22,7 @@ void UniformBuffer::createUniformBuffer(
     std::vector<vk::Buffer>& buffers = Buffer::getBuffers();
     std::vector<VmaAllocation>& bufferMemories = Buffer::getBufferMemories();
 
-    // One uniform buffer for each image ( and by extension, command buffer)
+    // One uniform buffer for each frame in flight
     buffers.resize(framesInFlight);
     bufferMemories.resize(framesInFlight);
     std::vector<VmaAllocationInfo> bufferMemoriesInfo(framesInFlight);

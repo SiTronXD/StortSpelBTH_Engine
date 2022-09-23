@@ -1,6 +1,7 @@
 #include "Texture.hpp"
 #include "vulkan/PhysicalDevice.hpp"
 #include "vulkan/Device.hpp"
+#include "vulkan/CommandBuffer.hpp"
 
 Texture::Texture()
 { }
@@ -44,7 +45,7 @@ vk::Format Texture::chooseSupportedFormat(
 
 vk::Image Texture::createImage(
     VmaAllocator& vma,
-    CreateImageData&& imageData, 
+    ImageCreateData&& imageData,
     const std::string& imageDescription)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -140,7 +141,7 @@ void Texture::transitionImageLayout(
 #endif
     // Create Buffer
     vk::CommandBuffer commandBuffer = 
-        vengine_helper::beginCommandBuffer(
+        CommandBuffer::beginCommandBuffer(
             device.getVkDevice(), 
             commandPool
         );
@@ -234,7 +235,7 @@ void Texture::transitionImageLayout(
 
     commandBuffer.pipelineBarrier2(dependencyInfo);
 
-    vengine_helper::endAndSubmitCommandBuffer(
+    CommandBuffer::endAndSubmitCommandBuffer(
         device.getVkDevice(), 
         commandPool, 
         queue, 

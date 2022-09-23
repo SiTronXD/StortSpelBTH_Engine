@@ -1,6 +1,7 @@
 #include "Buffer.hpp"
 
 #include "vulkan/Device.hpp"
+#include "vulkan/CommandBuffer.hpp"
 #include "../dev/Log.hpp"
 
 void Buffer::map(void*& outputWriteData, const uint32_t& bufferIndex)
@@ -47,7 +48,7 @@ void Buffer::cleanup()
     }
 }
 
-void Buffer::createBuffer(CreateBufferData&& bufferData)
+void Buffer::createBuffer(BufferCreateData&& bufferData)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //: NOLINT
@@ -106,7 +107,7 @@ void Buffer::copyBuffer(
 
     // Create Command Buffer
     vk::CommandBuffer transferCommandBuffer =
-        vengine_helper::beginCommandBuffer(
+        CommandBuffer::beginCommandBuffer(
             device,
             transferCommandPool
         );
@@ -128,7 +129,7 @@ void Buffer::copyBuffer(
     copyBufferInfo.setPRegions(&bufferCopyRegion);
     transferCommandBuffer.copyBuffer2(copyBufferInfo);
 
-    vengine_helper::endAndSubmitCommandBuffer(
+    CommandBuffer::endAndSubmitCommandBuffer(
         device,
         transferCommandPool,
         transferQueue,
@@ -171,7 +172,7 @@ void Buffer::copyBufferToImage(
 
     /// Create Command Buffer
     vk::CommandBuffer transferCommandBuffer =
-        vengine_helper::beginCommandBuffer(device, transferCommandPool);
+        CommandBuffer::beginCommandBuffer(device, transferCommandPool);
 
     vk::BufferImageCopy2 imageRegion;
     imageRegion.setBufferOffset(0); /// offset into Data; start of file
@@ -212,6 +213,9 @@ void Buffer::copyBufferToImage(
     copyBufferToImageInfo.setPRegions(&imageRegion); /// The region we defined
     transferCommandBuffer.copyBufferToImage2(copyBufferToImageInfo);
 
-    vengine_helper::endAndSubmitCommandBuffer(device, transferCommandPool, transferQueue,
+    CommandBuffer::endAndSubmitCommandBuffer(
+        device, 
+        transferCommandPool, 
+        transferQueue,
         transferCommandBuffer);
 }

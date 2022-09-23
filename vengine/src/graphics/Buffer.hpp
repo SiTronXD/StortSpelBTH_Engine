@@ -4,7 +4,7 @@
 
 class Device;
 
-struct CreateBufferData
+struct BufferCreateData
 {
     vk::DeviceSize bufferSize;
     vk::BufferUsageFlags bufferUsageFlags;
@@ -48,7 +48,7 @@ public:
 
     inline const size_t& getBufferSize() { return this->bufferSize; }
 
-    static void createBuffer(CreateBufferData&& bufferData);
+    static void createBuffer(BufferCreateData&& bufferData);
 
     static void copyBuffer(
         Device& device,
