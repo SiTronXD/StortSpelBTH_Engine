@@ -73,7 +73,7 @@ class VulkanRenderer
 
     std::vector<vk::DescriptorSet> descriptorSets;        // To be used with our View and Projection matrices
     std::vector<vk::DescriptorSet> samplerDescriptorSets; // To be used for our texture Samplers! (need one per Texture)
-                                                        /// NOTE; There will NOT be one samplerDescriptionSet per image!... It will be One per Texture!
+                                                        // NOTE; There will NOT be one samplerDescriptionSet per image!... It will be One per Texture!
 
     UniformBuffer viewProjectionUB;
 
@@ -117,7 +117,7 @@ class VulkanRenderer
     // - - Tracy
 #ifndef VENGINE_NO_PROFILING    
     void initTracy();
-    /// - - Tracy  Callbacks
+    // - - Tracy  Callbacks
     bool TracyThumbnail_bool = false;
 #endif
 public:
