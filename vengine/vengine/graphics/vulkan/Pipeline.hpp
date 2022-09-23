@@ -25,5 +25,6 @@ public:
 
 	void cleanup();
 
-	inline vk::Pipeline& getVkPipeline() { return this->pipeline; }
+	inline const vk::Pipeline& getVkPipeline() const
+	{ return this->pipeline; }
 };

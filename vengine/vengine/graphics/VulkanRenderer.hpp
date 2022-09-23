@@ -8,6 +8,7 @@
 #include "vulkan/QueueFamilies.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/UniformBuffer.hpp"
+#include "vulkan/CommandBufferArray.hpp"
 
 #include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
@@ -74,7 +75,7 @@ class VulkanRenderer
     vk::RenderPass renderPassBase{};
     vk::RenderPass renderPassImgui{};
     vk::CommandPool commandPool{};
-    std::vector<vk::CommandBuffer> commandBuffers;
+    CommandBufferArray commandBuffers;
 
     UniformBuffer viewProjectionUB;
     ShaderInput shaderInput;
@@ -122,7 +123,6 @@ private:
     void createRenderPassBase();
     void createRenderPassImgui();
     void createCommandPool();   //TODO: Deprecate! 
-    void createCommandBuffers(); //TODO: Deprecate!  //Allocate Command Buffers from Command pool...
     void createSynchronisation();
     void createTextureSampler();
 

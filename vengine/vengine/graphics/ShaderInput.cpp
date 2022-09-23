@@ -170,7 +170,7 @@ void ShaderInput::createDescriptorSets()
     }
 }
 
-int ShaderInput::createSamplerDescriptor(
+int ShaderInput::addPossibleTexture(
     vk::ImageView textureImage,
     vk::Sampler& textureSampler)
 {
@@ -243,20 +243,26 @@ void ShaderInput::addUniformBuffer(UniformBuffer& uniformBuffer)
     this->viewProjectionUB = &uniformBuffer;
 }
 
-void ShaderInput::addPushConstant(const uint32_t& modelMatrixSize)
+void ShaderInput::addPushConstant(
+    const uint32_t& pushConstantSize,
+    const vk::ShaderStageFlagBits& pushConstantShaderStage)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
+
+    this->pushConstantSize = pushConstantSize;
+    this->pushConstantShaderStage = pushConstantShaderStage;
+
     // Define the Push Constants values
-    this->pushConstantRange.setStageFlags(vk::ShaderStageFlagBits::eVertex);    // Push Constant should be available in the Vertex Shader!
+    this->pushConstantRange.setStageFlags(this->pushConstantShaderStage);    // Push Constant should be available in the Vertex Shader!
     this->pushConstantRange.setOffset(uint32_t(0));                             // Offset into the given data that our Push Constant value is (??)
-    this->pushConstantRange.setSize(modelMatrixSize);                 // Size of the Data being passed
+    this->pushConstantRange.setSize(this->pushConstantSize);                 // Size of the Data being passed
 }
 
 void ShaderInput::addSampler()
 {
-    
+    this->samplersTextureIndex.push_back(~0u);
 }
 
 void ShaderInput::endForInput()
@@ -265,6 +271,9 @@ void ShaderInput::endForInput()
     this->createDescriptorPool();
     this->allocateDescriptorSets();
     this->createDescriptorSets();
+
+    // TODO: remove this
+    this->bindDescriptorSets.resize(2);
 
     this->pipelineLayout.createPipelineLayout(
         *this->device,
@@ -283,4 +292,22 @@ void ShaderInput::cleanup()
     this->device->getVkDevice().destroyDescriptorSetLayout(this->samplerDescriptorSetLayout);
 
     this->pipelineLayout.cleanup();
+}
+
+void ShaderInput::setCurrentFrame(const uint32_t& currentFrame)
+{
+    this->currentFrame = currentFrame;
+
+    // TODO: remove this
+    this->bindDescriptorSets[0] = this->descriptorSets[currentFrame];
+}
+
+void ShaderInput::setTexture(
+    const uint32_t& samplerIndex, 
+    const uint32_t& textureIndex)
+{
+    this->samplersTextureIndex[samplerIndex] = textureIndex;
+
+    // TODO: remove this
+    this->bindDescriptorSets[1] = this->samplerDescriptorSets[textureIndex];
 }

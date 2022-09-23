@@ -109,7 +109,11 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
         this->createRenderPassImgui();
         this->swapchain.createFramebuffers(this->renderPassBase);
         this->createCommandPool();
-        this->createCommandBuffers();
+        this->commandBuffers.createCommandBuffers(
+            this->device, 
+            this->commandPool, 
+            MAX_FRAMES_IN_FLIGHT
+        );
         
         // Engine "specifics"
 
@@ -119,8 +123,12 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
             this->vma,
             MAX_FRAMES_IN_FLIGHT
         );
-        this->shaderInput.addPushConstant(sizeof(ModelMatrix));
+        this->shaderInput.addPushConstant(
+            sizeof(ModelMatrix),
+            vk::ShaderStageFlagBits::eVertex
+        );
         this->createTextureSampler();
+        this->shaderInput.addSampler();
         this->viewProjectionUB.createUniformBuffer(
             this->device,
             this->vma,
@@ -384,8 +392,12 @@ void VulkanRenderer::draw(Scene* scene)
         signal_semaphoreSubmitInfo.setSemaphore(this->renderFinished[this->currentFrame]);
         signal_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
 
-        std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos{
-            vk::CommandBufferSubmitInfo{this->commandBuffers[this->currentFrame]}
+        std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos
+        {
+            vk::CommandBufferSubmitInfo{
+                this->commandBuffers.getCommandBuffer(this->currentFrame).
+                    getVkCommandBuffer()
+            }
         };        
         
         vk::SubmitInfo2 submitInfo {};      
@@ -639,7 +651,7 @@ int VulkanRenderer::createTexture(const std::string &filename)
     this->textureImageViews.push_back(imageView);
 
     // Create Texture Descriptor
-    int descriptorLoc = this->shaderInput.createSamplerDescriptor(
+    int descriptorLoc = this->shaderInput.addPossibleTexture(
         imageView, 
         this->textureSampler);
 
@@ -885,29 +897,6 @@ void VulkanRenderer::createCommandPool()
 
 }
 
-void VulkanRenderer::createCommandBuffers() 
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    // Resize command buffer count to have one for each framebuffer
-    this->commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-
-    vk::CommandBufferAllocateInfo cbAllocInfo;
-    cbAllocInfo.setCommandPool(this->commandPool);
-    cbAllocInfo.setLevel(vk::CommandBufferLevel::ePrimary);
-    cbAllocInfo.setCommandBufferCount(static_cast<uint32_t>(this->commandBuffers.size()));
-
-    // Allocate command Buffers and place handles in array of buffers
-    this->commandBuffers = this->getVkDevice().allocateCommandBuffers(cbAllocInfo);
-
-    for(size_t i = 0; i < this->commandBuffers.size(); i++)
-    {
-        VulkanDbg::registerVkObjectDbgInfo("Graphics CommandBuffer["+std::to_string(i)+"]", vk::ObjectType::eCommandBuffer, reinterpret_cast<uint64_t>(vk::CommandBuffer::CType(this->commandBuffers[i])));
-    }
-}
-
 void VulkanRenderer::createSynchronisation()
 {
 #ifndef VENGINE_NO_PROFILING
@@ -1069,8 +1058,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
     subpassBeginInfo.setContents(vk::SubpassContents::eInline);
     
 
-    vk::CommandBuffer& currentCommandBuffer =
-        this->commandBuffers[this->currentFrame];
+    CommandBuffer& currentCommandBuffer =
+        this->commandBuffers.getCommandBuffer(this->currentFrame);
 
     // Start recording commands to commandBuffer!
     currentCommandBuffer.begin(bufferBeginInfo);
@@ -1078,7 +1067,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
         #ifndef VENGINE_NO_PROFILING
         TracyVkZone(
             this->tracyContext[imageIndex],
-            this->commandBuffers[imageIndex],"Render Record Commands");
+            this->commandBuffers.getCommandBuffer(imageIndex).getVkCommandBuffer(),
+            "Render Record Commands");
         #endif
         {
         #ifndef VENGINE_NO_PROFILING        
@@ -1089,7 +1079,10 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
-            currentCommandBuffer.beginRenderPass2(renderPassBeginInfo, subpassBeginInfo);
+            currentCommandBuffer.beginRenderPass2(
+                renderPassBeginInfo, 
+                subpassBeginInfo
+            );
 
                 vk::Viewport viewport{};
                 viewport.x = 0.0f;
@@ -1098,80 +1091,63 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 viewport.height = -((float)swapchain.getHeight());
                 viewport.minDepth = 0.0f;
                 viewport.maxDepth = 1.0f;
-                currentCommandBuffer.setViewport(0, 1, &viewport);
+                currentCommandBuffer.setViewport(viewport);
 
                 vk::Rect2D scissor{};
                 scissor.offset = vk::Offset2D{ 0, 0 };
                 scissor.extent = this->swapchain.getVkExtent();
-                currentCommandBuffer.setScissor(0, 1, &scissor);
+                currentCommandBuffer.setScissor(scissor);
 
                 // Bind Pipeline to be used in render pass
-                currentCommandBuffer.bindPipeline(
-                    vk::PipelineBindPoint::eGraphics,
-                    this->pipeline.getVkPipeline()
+                currentCommandBuffer.bindGraphicsPipeline(
+                    this->pipeline
                 );
                 
                 // For every Mesh we have
                 auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
-                tView.each([this, currentCommandBuffer](const Transform& transform, const MeshComponent& meshComponent)
+                tView.each([&](const Transform& transform, const MeshComponent& meshComponent)
                 {
                     auto& currModel = modelList[meshComponent.meshID];
 
                     const glm::mat4& modelMatrix = transform.matrix;
 
                     // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                    currentCommandBuffer.pushConstants(
-                        this->shaderInput.getPipelineLayout().getVkPipelineLayout(),
-                        vk::ShaderStageFlagBits::eVertex,   // Stage to push the Push Constant to.
-                        uint32_t(0),                        // Offset of Push Constants to update; 
-                                                            // Offset into the Push Constant Block (if more values are used (??))
-                        sizeof(modelMatrix),                // Size of data being pushed
-                        &modelMatrix                        // Actual data being pushed (can also be an array)
+                    currentCommandBuffer.pushConstant(
+                        this->shaderInput,
+                        (void*) &modelMatrix
                     );
 
                     for(auto& modelPart : currModel.getModelParts())
                     {
-                        // -- BINDING VERTEX BUFFERS --
-                        //std::array<vk::Buffer,1> vertexBuffer = { currModel.getMesh(k)->getVertexBuffer()};                // Buffers to bind
-                        std::array<vk::Buffer,1> vertexBuffer = { modelPart.second.vertexBuffer};                // Buffers to bind
-                        std::array<vk::DeviceSize,1> offsets  = {0};                                           // Offsets into buffers being bound
-                        currentCommandBuffer.bindVertexBuffers2(
-                            uint32_t(0),
-                            uint32_t(1),
-                            vertexBuffer.data(),
-                            offsets.data(),
-                            nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
-                            nullptr         //NOTE: Could also be a pointer to an array of buffer strides
-                        );
-                        // Bind Mesh Index Buffer; Define the Index Buffer that decides how to draw the Vertex Buffers
+                        // Bind vertex buffer
+                        currentCommandBuffer.bindVertexBuffers2(modelPart.second.vertexBuffer);
+
+                        // Bind index buffer
                         currentCommandBuffer.bindIndexBuffer(
-                            modelPart.second.indexBuffer, 
-                            0,
-                            vk::IndexType::eUint32);
+                            modelPart.second.indexBuffer
+                        );
                       
                         // We're going to bind Two descriptorSets! put them in array...
-                        std::array<vk::DescriptorSet,2> descriptorSetGroup{
+                        /*std::array<vk::DescriptorSet, 2> descriptorSetGroup
+                        {
                             this->shaderInput.getDescriptorSet(this->currentFrame),                // Use the descriptor set for the Image                            
                             this->shaderInput.getSamplerDescriptorSet(modelPart.second.textureID)   // Use the Texture which the current mesh has
-                        };
-                        // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
-                        currentCommandBuffer.bindDescriptorSets(
-                            vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
-                            this->shaderInput.getPipelineLayout().getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
-                            0,                               // Which Set is the first we want to use? We want to use the First set (thus 0)
-                            static_cast<uint32_t>(descriptorSetGroup.size()),// How many Descriptor Sets where going to go through? DescriptorSet for View and Projection, and one for Texture
-                            descriptorSetGroup.data(),                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
-                            0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
-                            nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
+                        };*/
 
-                        
-                        // Execute Pipeline!
+                        // Update for descriptors
+                        this->shaderInput.setCurrentFrame(this->currentFrame);
+                        this->shaderInput.setTexture(
+                            0,
+                            modelPart.second.textureID
+                        );
+                        currentCommandBuffer.bindShaderInput(
+                            this->shaderInput
+                        );
+
+                        // Draw
                         currentCommandBuffer.drawIndexed(
-                            modelPart.second.indexCount,  // Number of vertices to draw (nr of indexes)
-                            1,                          // We're drawing only one instance
-                            0,                          // Start at index 0
-                            0,                          // Vertex offset is 0, i.e. no offset! 
-                            0);                         // We Draw Only one Instance, so first will be 0...
+                            modelPart.second.indexCount
+                        );
                     }
                 });
 
@@ -1189,7 +1165,10 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
             renderPassBeginInfo.setFramebuffer(this->frameBuffersImgui[imageIndex]);
             renderPassBeginInfo.setClearValueCount(uint32_t(0));
 
-            currentCommandBuffer.beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
+            currentCommandBuffer.beginRenderPass2(
+                renderPassBeginInfo, 
+                subpassBeginInfo
+            );
 
                 // Viewport
                 viewport = vk::Viewport{};
@@ -1199,14 +1178,14 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 viewport.height = (float)swapchain.getHeight();
                 viewport.minDepth = 0.0f;
                 viewport.maxDepth = 1.0f;
-                currentCommandBuffer.setViewport(0, 1, &viewport);
+                currentCommandBuffer.setViewport(viewport);
 
                 // Reuse the previous scissor
-                currentCommandBuffer.setScissor(0, 1, &scissor);
+                currentCommandBuffer.setScissor(scissor);
 
                 ImGui_ImplVulkan_RenderDrawData(
                     ImGui::GetDrawData(), 
-                    currentCommandBuffer
+                    currentCommandBuffer.getVkCommandBuffer()
                 );
 
             // End second render pass
@@ -1216,8 +1195,10 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
         #pragma endregion commandBufferRecording
         
         #ifndef VENGINE_NO_PROFILING
-        TracyVkCollect(this->tracyContext[imageIndex],
-            this->commandBuffers[imageIndex]);
+        TracyVkCollect(
+            this->tracyContext[imageIndex],
+            currentCommandBuffer.getVkCommandBuffer()
+        );
         #endif
     }
 
@@ -1244,7 +1225,7 @@ void VulkanRenderer::initTracy()
             this->physicalDevice.getVkPhysicalDevice(),
             this->getVkDevice(),             
             this->queueFamilies.getGraphicsQueue(),
-            commandBuffers[i],
+            this->commandBuffers.getCommandBuffer(i).getVkCommandBuffer(),
             pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
             pfnvkGetCalibratedTimestampsEXT
         );
@@ -1320,15 +1301,17 @@ void VulkanRenderer::initImgui()
     VkCommandBufferBeginInfo begin_info = {};
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-    this->commandBuffers[0].begin(begin_info);
+    const vk::CommandBuffer& firstCommandBuffer = 
+        this->commandBuffers.getCommandBuffer(0).getVkCommandBuffer();
+    firstCommandBuffer.begin(begin_info);
     
-    ImGui_ImplVulkan_CreateFontsTexture(this->commandBuffers[0]);
+    ImGui_ImplVulkan_CreateFontsTexture(firstCommandBuffer);
 
-    this->commandBuffers[0].end();
+    firstCommandBuffer.end();
     
     vk::SubmitInfo end_info = {};        
     end_info.commandBufferCount = 1;
-    end_info.pCommandBuffers = &this->commandBuffers[0];
+    end_info.pCommandBuffers = &firstCommandBuffer;
     vk::Result result = 
         this->queueFamilies.getGraphicsQueue().submit(
             1, 
