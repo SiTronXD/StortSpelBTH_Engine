@@ -49,6 +49,8 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
+
+	audioEngine.loadFile("assets/sounds/test-audio2.wav");
 }
 
 void TestDemoScene::update()
