@@ -6,10 +6,7 @@
 #define UDP_PORT_SERVER 55002
 #define TCP_PORT_SERVER 55003
 #define TCP_PORT_CLIENT 55004
-//#define SERVER_IP ""
-//#define SERVER_IP "192.168.142.16"
 #define SERVER_IP "192.168.1.104"
-//#define SERVER_IP "194.47.150.162"
 #define ServerUpdateRate 1/24.f
 
 #pragma endregion

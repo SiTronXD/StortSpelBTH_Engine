@@ -5,45 +5,44 @@
 #include "glm/vec3.hpp"
 
 class Client {
-  private:
+private:
     //data
-    std::string name;
-    std::string m_serverIP;
-    bool        m_connected;
+    std::string clientName;
+    std::string serverIP;
+    bool        isConnectedToServer;
 
-    StartingEnum m_starting;
-    float        m_currentTimeToSendDataToServer;
-    float        m_timeToSendDataToServer;
+    StartingEnum startingEnum;
+    float        currentTimeToSendDataToServer;
+    float        timeToSendDataToServer;
 
-    sf::Packet m_tcpPacketSend;
-    sf::Packet m_udpPacketSend;
+    sf::Packet clientTcpPacketSend;
+    sf::Packet clientUdpPacketSend;
 
     //sockets
-    sf::TcpSocket   m_tcpSocket;
-    sf::TcpListener m_tcpListener;
-    sf::UdpSocket   m_udpSocket;
+    sf::TcpSocket   tcpSocket;
+    sf::TcpListener tcpListener;
+    sf::UdpSocket   udpSocket;
 
     //functions
     void sendDataToServer();
     void cleanPackageAndGameEvents();
 
-  public:
-    Client(std::string name = "BOB");
+public:
+    Client(const std::string& clientName = "BOB");
     virtual ~Client();
-    bool connect(std::string serverIP = SERVER_IP);
-    void update(float dt);
+    bool connect(const std::string& serverIP = SERVER_IP);
+    void update(const float& dt);
 
-    bool isConnected();
-    bool hasStarted();
-    int  getNumberOfPlayers(); //DOESN'T WORK FOR NOW
+    bool isConnected() const;
+    bool hasStarted() const;
 
     void starting();
     void disconnect();
 
     //send events
-    void sendTCPEvent(TCPPacketEvent eventTCP);
+    void sendTCPEvent(TCPPacketEvent& eventTCP);
     //only exist one udp event from client to server
-    void sendUDPEvent(GameEvents gameEvent, glm::vec3 pos, glm::vec3 rot);
+    void sendUDPEvent(const GameEvents& gameEvent, const glm::vec3& pos, const glm::vec3& rot);
 
     sf::Packet& getTcpPacket();
 
