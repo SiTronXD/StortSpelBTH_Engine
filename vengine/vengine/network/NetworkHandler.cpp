@@ -198,7 +198,7 @@ void NetworkHandler::updateNetwork()
     }
 }
 
-void NetworkHandler::sendTCPDataToClient(TCPPacketEvent &tcpP)
+void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
 {
     if (client != nullptr) {
         client->sendTCPEvent(tcpP);

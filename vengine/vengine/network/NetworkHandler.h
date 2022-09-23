@@ -37,7 +37,7 @@ class NetworkHandler {
     void    disconnectClient();
 
     void updateNetwork();
-    void sendTCPDataToClient(TCPPacketEvent &tcpP);
+    void sendTCPDataToClient(TCPPacketEvent tcpP);
     //little cheating here but only one event from client to server via udp
     void sendUDPDataToClient(const glm::vec3 &pos, const glm::vec3 &rot);
     int  getServerSeed();
