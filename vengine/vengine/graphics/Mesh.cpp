@@ -1,5 +1,5 @@
 #include "Mesh.hpp"
-#include "Utilities.hpp"
+#include "Buffer.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -132,10 +132,8 @@ void Mesh::createVertexBuffer(std::vector<Vertex>* vertices)
     /// Get size of buffers needed for Vertices
     vk::DeviceSize bufferSize  =sizeof(Vertex) * vertices->size();
 
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
-            .physicalDevice = physicalDevice, 
-            .device         = device, 
             .bufferSize     = bufferSize, 
             ///.bufferUsageFlags =  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       /// This buffers vertex data will be transfered somewhere else!
@@ -177,10 +175,8 @@ void Mesh::createVertexBuffer(std::vector<Vertex>* vertices)
     VmaAllocationInfo allocInfo_deviceOnly;
     /// Create Buffer with TRANSFER_DST_BIT to mark as recipient of transfer data (also VERTEX_BUFFER)
     /// Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
-            .physicalDevice = physicalDevice, 
-            .device         = device, 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst            /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eVertexBuffer,    //// This is a Vertex Buffer
@@ -195,7 +191,7 @@ void Mesh::createVertexBuffer(std::vector<Vertex>* vertices)
         });
 
     /// Copy Staging Buffer to Vertex Buffer on GPU
-    vengine_helper::copyBuffer(
+    Buffer::copyBuffer(
         this->device, 
         transferQueue, 
         transferCommandPool, 
@@ -223,10 +219,8 @@ void Mesh::createIndexBuffer(std::vector<uint32_t>* indicies)
     VmaAllocation stagingBufferMemory{};
     VmaAllocationInfo allocInfo_staging;
 
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
-            .physicalDevice = this->physicalDevice, 
-            .device         = this->device, 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
             // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible 
@@ -250,22 +244,11 @@ void Mesh::createIndexBuffer(std::vector<uint32_t>* indicies)
     vmaUnmapMemory(*this->vma, stagingBufferMemory);
     //vmaUnmapMemory(*this->vma, stagingBufferMemory);
     
-    if(false)
-    {
-        /// Map Memory to Index Buffer! 
-        // void * data{};
-        // data = this->device.mapMemory(stagingBufferMemory, 0, bufferSize, vk::MemoryMapFlags());
-        // memcpy(data, indicies->data(), (size_t)bufferSize); 
-        // this->device.unmapMemory( stagingBufferMemory);
-    }
-
     VmaAllocationInfo allocInfo_device;
 
     /// Create Buffers for INDEX data on GPU access only area
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
-            .physicalDevice = this->physicalDevice, 
-            .device         = this->device, 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eIndexBuffer,     /// This is a Index Buffer, will be used as a Index Buffer
@@ -278,7 +261,7 @@ void Mesh::createIndexBuffer(std::vector<uint32_t>* indicies)
             .vma = this->vma
         });
 
-    vengine_helper::copyBuffer(
+    Buffer::copyBuffer(
         this->device, 
         transferQueue, 
         this->transferCommandPool, 
@@ -288,9 +271,5 @@ void Mesh::createIndexBuffer(std::vector<uint32_t>* indicies)
 
     /// Destroy + Release Staging Buffer resources
     this->device.destroyBuffer(stagingBuffer);
-    //this->device.freeMemory(stagingBufferMemory);
     vmaFreeMemory(*this->vma,stagingBufferMemory);
-
 }
-
-

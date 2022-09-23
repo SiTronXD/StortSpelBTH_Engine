@@ -308,6 +308,11 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="vengine\graphics\vulkan\CommandBuffer.hpp" />
+    <ClInclude Include="vengine\graphics\Buffer.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\PipelineLayout.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\Pipeline.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\UniformBuffer.hpp" />	
     <ClInclude Include="vengine.h" />
     <ClInclude Include="vengine\application\Input.hpp" />
     <ClInclude Include="vengine\application\Scene.hpp" />
@@ -354,6 +359,11 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="vengine\graphics\Buffer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\CommandBuffer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\PipelineLayout.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\Pipeline.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\UniformBuffer.cpp" />
     <ClCompile Include="vengine\application\Input.cpp" />
     <ClCompile Include="vengine\application\Scene.cpp" />
     <ClCompile Include="vengine\application\SceneHandler.cpp" />

@@ -1,7 +1,7 @@
 #include "PhysicalDevice.hpp"
 #include "VulkanInstance.hpp"
 #include "Swapchain.hpp"
-#include "../Utilities.hpp"
+#include "QueueFamilies.hpp"
 #include "../../dev/Log.hpp"
 
 bool PhysicalDevice::checkPhysicalDeviceSuitability(
@@ -23,7 +23,8 @@ bool PhysicalDevice::checkPhysicalDeviceSuitability(
         deviceHasSupportedFeatures = true;
     }
     
-    QueueFamilyIndices indices = this->getQueueFamilies(physDevice, surface);
+    QueueFamilyIndices indices = 
+        this->getQueueFamilies(physDevice, surface);
 
     bool extensions_supported = this->checkDeviceExtensionSupport(physDevice);
 
