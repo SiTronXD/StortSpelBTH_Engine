@@ -6,7 +6,6 @@
 #include "vulkan/Device.hpp"
 #include "vulkan/Swapchain.hpp"
 #include "vulkan/QueueFamilies.hpp"
-#include "vulkan/PipelineLayout.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/UniformBuffer.hpp"
 
@@ -16,6 +15,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
+#include "ShaderInput.hpp"
 #include "Model.hpp"
 
 class Scene;
@@ -83,6 +83,8 @@ class VulkanRenderer
     std::vector<vk::Image>        textureImages;
     std::vector<VmaAllocation> textureImageMemory;
     std::vector<vk::ImageView>    textureImageViews;
+
+    ShaderInput shaderInput;
 
     // - Pipeline
     PipelineLayout pipelineLayout;

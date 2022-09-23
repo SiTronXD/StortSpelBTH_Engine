@@ -107,40 +107,40 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
 
         this->createRenderPassBase();
         this->createRenderPassImgui();
-        this->createDescriptorSetLayout();
-        
-        this->createPushConstantRange();
-
-        this->pipelineLayout.createPipelineLayout(
-            this->device,
-            this->descriptorSetLayout,
-            this->samplerDescriptorSetLayout,
-            this->pushConstantRange
-        );
-        this->pipeline.createPipeline(
-            this->device, 
-            this->pipelineLayout,
-            this->renderPassBase
-        );
-        
         this->swapchain.createFramebuffers(this->renderPassBase);
         this->createCommandPool();
-
         this->createCommandBuffers();
-
-        this->createTextureSampler();
         
+        // Shader inputs
+        this->shaderInput.beginForInput(
+            this->device,
+            this->vma
+        );
+        this->createPushConstantRange();
+        this->createTextureSampler();
         this->viewProjectionUB.createUniformBuffer(
             this->device,
             this->vma,
             sizeof(UboViewProjection),
             MAX_FRAMES_IN_FLIGHT
         );
-
+        this->createDescriptorSetLayout();
         this->createDescriptorPool();
-
         this->allocateDescriptorSets();
         this->createDescriptorSets();
+        this->pipelineLayout.createPipelineLayout(
+            this->device,
+            this->descriptorSetLayout,
+            this->samplerDescriptorSetLayout,
+            this->pushConstantRange
+        );
+        this->shaderInput.endForInput();
+
+        this->pipeline.createPipeline(
+            this->device, 
+            this->pipelineLayout,
+            this->renderPassBase
+        );
         
         this->createSynchronisation();        
 
