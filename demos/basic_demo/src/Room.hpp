@@ -13,12 +13,13 @@ struct Room
 	int up, down, left, right;
 	glm::vec3 dimensions;
 	ROOM_TYPE type;
-	bool branch, branchEnd;
+	bool branch, branchEnd, shortcut;
 
 	Room()
 		:up(-1), down(-1), left(-1), right(-1),
 		dimensions(glm::vec3(10.0f, 10.0f, 10.0f)),
-		type(ROOM_TYPE::NORMAL),branch(false), branchEnd(false)
+		type(ROOM_TYPE::NORMAL),branch(false), branchEnd(false),
+		shortcut(false)
 	{
 	};
 
@@ -35,6 +36,8 @@ void setExit(Scene& scene, std::vector<int>& rooms);
 void setShortcut(Scene& scene, std::vector<int>& rooms, int numBranches, int numRooms);
 
 int numEnds(Scene& scene, std::vector<int>& rooms);
+int getEndWithRightAvaliable(Scene& scene, std::vector<int>& rooms);
+int getEndWithLeftAvaliable(Scene& scene, std::vector<int>& rooms);
 
 void traverseRoomsConsole(Scene& scene, std::vector<int>& rooms);
 bool traverseRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& roomID, int& boss, int& bossHealth, bool& foundBoss, float delta);

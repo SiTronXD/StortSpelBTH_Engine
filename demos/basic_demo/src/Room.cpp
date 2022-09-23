@@ -30,21 +30,23 @@ std::string typeToString(ROOM_TYPE type)
 
 void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& roomID)
 {
+
 	int numRooms = setUpRooms(scene, rooms);
 	int numBranches = rand() % 5 + 2;
 
-	std::cout << "Above set random branch" << std::endl;
-	for (int i = 0; i < numBranches; i++) 
+	for (int i = 0; i < numBranches; i++)
 	{
 		setRandomBranch(scene, rooms, numRooms);
 	}
-	std::cout << "Above set boss" << std::endl;
 	setBoss(scene, rooms, numRooms);
-	std::cout << "Above set exit" << std::endl;
 	setExit(scene, rooms);
-	//setShortcut(scene, rooms, numBranches, numRooms);
-	std::cout << "Above placeDoors" << std::endl;
+	setShortcut(scene, rooms, numBranches, numRooms);
 	placeDoors(scene, rooms, doors, roomID);
+
+	if (scene.getComponent<Room>(rooms[1]).down == -1) {
+		int test = 0;
+	}
+
 }
 
 int setUpRooms(Scene& scene, std::vector<int>& rooms)
@@ -183,7 +185,6 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 
 }
 
-
 void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int size)
 {
 	const float MIN_WIDTH = 50.0f;
@@ -208,16 +209,16 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 	glm::vec3& position = scene.getComponent<Transform>(rooms[index]).position;
 	glm::vec3 dimensions = getRandomVec3(MIN_WIDTH, MAX_WIDTH, MIN_HEIGHT, MAX_HEIGHT, MIN_DEPTH, MAX_DEPTH);
 
-	if (rand() % 5 == 0) 
+	if (rand() % 5 == 0)
 	{
 		roomType = ROOM_TYPE::HARD;
 	}
-	else 
+	else
 	{
 		roomType = ROOM_TYPE::NORMAL;
 	}
 
-	if (left) 
+	if (left)
 	{
 		for (int i = 0; i < size; i++)
 		{
@@ -239,7 +240,7 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 			Room& roomRef = scene.getComponent<Room>(rooms[rooms.size() - 1]);
 			glm::vec3 posRef = scene.getComponent<Transform>(rooms[rooms.size() - 1]).position;
 			roomRef.branch = true;
-			if (i == size - 1) 
+			if (i == size - 1)
 			{
 				roomRef.branchEnd = true;
 			}
@@ -265,7 +266,7 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 
 		}
 	}
-	else 
+	else
 	{
 
 		for (int i = 0; i < size; i++)
@@ -319,22 +320,22 @@ void setBoss(Scene& scene, std::vector<int>& rooms, int numRooms)
 {
 	int left = -1;
 	int bossIndex = rand() % (numRooms / 2) + numRooms / 2;
-	while (scene.getComponent<Room>(rooms[bossIndex]).left != -1 && scene.getComponent<Room>(rooms[bossIndex]).right != -1) 
+	while (scene.getComponent<Room>(rooms[bossIndex]).left != -1 && scene.getComponent<Room>(rooms[bossIndex]).right != -1)
 	{
-		if (++bossIndex > numRooms) 
+		if (++bossIndex > numRooms)
 		{
 			bossIndex = 1;
 		}
 	}
-	if (scene.getComponent<Room>(rooms[bossIndex]).left == -1 && scene.getComponent<Room>(rooms[bossIndex]).right == -1) 
+	if (scene.getComponent<Room>(rooms[bossIndex]).left == -1 && scene.getComponent<Room>(rooms[bossIndex]).right == -1)
 	{
 		left = rand() % 2;
 	}
-	else if (scene.getComponent<Room>(rooms[bossIndex]).left == -1) 
+	else if (scene.getComponent<Room>(rooms[bossIndex]).left == -1)
 	{
 		left = 1;
 	}
-	else 
+	else
 	{
 		left = 0;
 	}
@@ -344,24 +345,24 @@ void setBoss(Scene& scene, std::vector<int>& rooms, int numRooms)
 
 void setExit(Scene& scene, std::vector<int>& rooms)
 {
-	int exitIndex = rand() % (rooms.size()-1) + 1;
-	while (scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::BOSS || scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::START) 
+	int exitIndex = rand() % (rooms.size() - 1) + 1;
+	while (scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::BOSS || scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::START)
 	{
-		if (++exitIndex >= rooms.size()) 
+		if (++exitIndex >= rooms.size())
 		{
 			exitIndex = 1;
 		}
 	}
-	while (scene.getComponent<Room>(rooms[exitIndex]).left != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).left]).type == ROOM_TYPE::BOSS) 
+	while (scene.getComponent<Room>(rooms[exitIndex]).left != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).left]).type == ROOM_TYPE::BOSS)
 	{
-		if (++exitIndex >= rooms.size()) 
+		if (++exitIndex >= rooms.size())
 		{
 			exitIndex = 1;
 		}
 	}
-	while (scene.getComponent<Room>(rooms[exitIndex]).right != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).right]).type == ROOM_TYPE::BOSS) 
+	while (scene.getComponent<Room>(rooms[exitIndex]).right != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).right]).type == ROOM_TYPE::BOSS)
 	{
-		if (++exitIndex >= rooms.size()) 
+		if (++exitIndex >= rooms.size())
 		{
 			exitIndex = 1;
 		}
@@ -371,77 +372,56 @@ void setExit(Scene& scene, std::vector<int>& rooms)
 
 void setShortcut(Scene& scene, std::vector<int>& rooms, int numBranches, int numRooms)
 {
-	if (numEnds(scene, rooms) <= 1) 
+	int one = getEndWithLeftAvaliable(scene, rooms);
+	int two = getEndWithRightAvaliable(scene, rooms);
+	if (one == -1 || two == -1)
 	{
 		return;
 	}
-	int one = -1;
-	int two = -1;
-	for (int i = numRooms; i < rooms.size()-1; i++)
-	{
-		Room& curRoom = scene.getComponent<Room>(rooms[i]);
-		if (one == -1 && curRoom.branchEnd) 
-		{
-			one = i;
-			curRoom.branchEnd = false;
-		}
-		else if (two == -1 && curRoom.branchEnd) 
-		{
-			two = i;
-			curRoom.branchEnd = false;
-		}
-		else if (one != -1 && two != -1) 
-		{
-			break;
-		}
-	}
-	Room& room = scene.getComponent<Room>(rooms[one]);
-	if (room.left == -1) 
-	{
-		room = scene.getComponent<Room>(rooms[two]);
-		if (room.left == -1) 
-		{
-			//Left left
-			scene.getComponent<Room>(rooms[one]).left = two;
-			scene.getComponent<Room>(rooms[two]).left = one;
-		}
-		else 
-		{
-			//Left right
-			scene.getComponent<Room>(rooms[one]).left = two;
-			scene.getComponent<Room>(rooms[two]).right = one;
-		}
-	}
-	else 
-	{
-		room = scene.getComponent<Room>(rooms[two]);
-		if (room.left == -1)
-		{
-			//Right left
-			scene.getComponent<Room>(rooms[one]).right = two;
-			scene.getComponent<Room>(rooms[two]).left = one;
-		}
-		else 
-		{
-			//Right right
-			scene.getComponent<Room>(rooms[one]).right = two;
-			scene.getComponent<Room>(rooms[two]).right = one;
-		}
-	}
-
-	Room& room1 = scene.getComponent<Room>(rooms[one]);
-	Room& room2 = scene.getComponent<Room>(rooms[two]);
-	int bskls = 0;
+	scene.getComponent<Room>(rooms[one]).shortcut = true;
+	scene.getComponent<Room>(rooms[one]).left = two;
+	scene.getComponent<Room>(rooms[two]).shortcut = true;
+	scene.getComponent<Room>(rooms[two]).right = one;
 }
 
 int numEnds(Scene& scene, std::vector<int>& rooms)
 {
 	int ret = 0;
-	for (int i = 0; i < rooms.size(); i++) 
+	for (int i = 0; i < rooms.size(); i++)
 	{
-		if (scene.getComponent<Room>(rooms[i]).branchEnd) 
+		if (scene.getComponent<Room>(rooms[i]).branchEnd)
 		{
 			ret++;
+		}
+	}
+	return ret;
+}
+
+int getEndWithRightAvaliable(Scene& scene, std::vector<int>& rooms)
+{
+	int ret = -1;
+	for (int i = 0; i < rooms.size(); i++)
+	{
+		Room& curRoom = scene.getComponent<Room>(rooms[i]);
+		if (curRoom.branchEnd && curRoom.right == -1)
+		{
+			ret = i;
+			break;
+		}
+	}
+	return ret;
+}
+
+int getEndWithLeftAvaliable(Scene& scene, std::vector<int>& rooms)
+{
+	int ret = -1;
+	for (int i = 0; i < rooms.size(); i++)
+	{
+		Room& curRoom = scene.getComponent<Room>(rooms[i]);
+		if (curRoom.branchEnd && curRoom.left == -1)
+		{
+			ret = i;
+			break;
 		}
 	}
 	return ret;
@@ -461,25 +441,25 @@ void traverseRoomsConsole(Scene& scene, std::vector<int>& rooms)
 		if (curRoom->branch)
 		{
 			std::cout << "Branch ";
-			if (curRoom->branchEnd) 
+			if (curRoom->branchEnd)
 			{
 				std::cout << "end." << std::endl;
 			}
-			else 
+			else
 			{
 				std::cout << std::endl;
 			}
 		}
 		std::cout << "Current Room: " << typeToString(curRoom->type) << " ID: " << id << std::endl << "Choises: " << std::endl;
-		if (curRoom->down != -1) 
+		if (curRoom->down != -1)
 		{
 			std::cout << "down\n";
 		}
-		if (curRoom->left != -1) 
+		if (curRoom->left != -1)
 		{
 			std::cout << "left\n";
 		}
-		if (curRoom->right != -1) 
+		if (curRoom->right != -1)
 		{
 			std::cout << "right\n";
 		}
@@ -491,42 +471,42 @@ void traverseRoomsConsole(Scene& scene, std::vector<int>& rooms)
 		std::cout << "input room: ";
 		std::cin >> input;
 
-		if (input == "down" && curRoom->down != -1) 
+		if (input == "down" && curRoom->down != -1)
 		{
 			id = curRoom->down;
 			curRoom = &scene.getComponent<Room>(rooms[curRoom->down]);
 		}
-		else if (input == "left" && curRoom->left != -1) 
+		else if (input == "left" && curRoom->left != -1)
 		{
 			id = curRoom->left;
 			curRoom = &scene.getComponent<Room>(rooms[curRoom->left]);
 		}
-		else if (input == "right" && curRoom->right != -1) 
+		else if (input == "right" && curRoom->right != -1)
 		{
 			id = curRoom->right;
 			curRoom = &scene.getComponent<Room>(rooms[curRoom->right]);
 		}
-		else if (input == "up" && curRoom->up != -1) 
+		else if (input == "up" && curRoom->up != -1)
 		{
 			id = curRoom->up;
 			curRoom = &scene.getComponent<Room>(rooms[curRoom->up]);
 		}
-		else if (input == "exit" || input == "end") 
+		else if (input == "exit" || input == "end")
 		{
 			break;
 		}
 
-		if ((curRoom->type == ROOM_TYPE::BOSS) && !foundBoss) 
+		if ((curRoom->type == ROOM_TYPE::BOSS) && !foundBoss)
 		{
 			foundBoss = true;
 		}
 
-		if ((curRoom->type == ROOM_TYPE::EXIT) && foundBoss) 
+		if ((curRoom->type == ROOM_TYPE::EXIT) && foundBoss)
 		{
 			system("cls");
 			std::cout << "You found the exit!\nDo you want to exit? Y/n" << std::endl;
 			std::cin >> input;
-			if (input == "Y") 
+			if (input == "Y")
 			{
 				exit = true;
 			}
@@ -534,7 +514,7 @@ void traverseRoomsConsole(Scene& scene, std::vector<int>& rooms)
 	}
 }
 
-bool traverseRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& roomID, int& boss, int& bossHealth, bool& foundBoss,float delta)
+bool traverseRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& roomID, int& boss, int& bossHealth, bool& foundBoss, float delta)
 {
 	bool ret = false;
 	Room curRoom = scene.getComponent<Room>(rooms[roomID]);
@@ -703,7 +683,7 @@ void fightBoss(Scene& scene, std::vector<int>& rooms, int doors[], int& boss, in
 			std::cout << "HOW DARE YOU?!";
 			break;
 		case 4:
-			std::cout << "no dont touch med there!";
+			std::cout << "no dont touch me there!";
 			break;
 		case 5:
 			std::cout << "I will kill you!";
@@ -742,17 +722,20 @@ void printDoorOptions(Scene& scene, std::vector<int>& rooms, int& roomID)
 			std::cout << std::endl;
 		}
 	}
-	std::cout << "Current Room: " << typeToString(curRoom.type) << " ID: " << roomID << std::endl << "Choises: " << std::endl;
+	if (curRoom.shortcut) {
+		std::cout << "Shortcut" << std::endl;
+	}
+	std::cout << "Current Room: " << typeToString(curRoom.type) << std::endl << " ID: " << roomID << std::endl << "Choises: " << std::endl;
+	if (curRoom.up != -1) {
+		std::cout << "up\n";
+	}
 	if (curRoom.down != -1) {
 		std::cout << "down\n";
-	}
-	if (curRoom.left != -1) {
-		std::cout << "right\n";
 	}
 	if (curRoom.right != -1) {
 		std::cout << "left\n";
 	}
-	if (curRoom.up != -1) {
-		std::cout << "up\n";
+	if (curRoom.left != -1) {
+		std::cout << "right\n";
 	}
 }

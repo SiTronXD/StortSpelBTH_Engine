@@ -21,7 +21,6 @@ void TestDemoScene::init()
 {
 	std::cout << "Test scene init" << std::endl;
 
-
 	// Camera
 	int camEntity = this->createEntity();
 	this->setComponent<Camera>(camEntity, 1.0f);
@@ -38,10 +37,9 @@ void TestDemoScene::init()
 		doors[i] = this->createEntity();
 		this->setComponent<MeshComponent>(doors[i]);
 	}
-	std::cout << "Above init rooms" << std::endl;
 	initRooms(*this, rooms, doors, roomID);
 	std::cout << "Num rooms: " << rooms.size() << std::endl;
-
+	std::cout << "Slow: WASD" << std::endl << "Fast: HBNM" << std::endl;
 }
 
 void TestDemoScene::update()
