@@ -27,7 +27,7 @@ struct Room
 
 std::string typeToString(ROOM_TYPE type);
 
-void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& roomID);
+void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int roomID);
 int setUpRooms(Scene& scene, std::vector<int>& rooms);
 void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms);
 void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int size);

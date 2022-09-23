@@ -28,12 +28,10 @@ std::string typeToString(ROOM_TYPE type)
 	return ret;
 }
 
-void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& roomID)
+void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int roomID)
 {
-
 	int numRooms = setUpRooms(scene, rooms);
 	int numBranches = rand() % 5 + 2;
-
 	for (int i = 0; i < numBranches; i++)
 	{
 		setRandomBranch(scene, rooms, numRooms);
@@ -42,11 +40,6 @@ void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& roomID)
 	setExit(scene, rooms);
 	setShortcut(scene, rooms, numBranches, numRooms);
 	placeDoors(scene, rooms, doors, roomID);
-
-	if (scene.getComponent<Room>(rooms[1]).down == -1) {
-		int test = 0;
-	}
-
 }
 
 int setUpRooms(Scene& scene, std::vector<int>& rooms)
@@ -137,16 +130,13 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 	bool foundSpot = false;
 	int numMainRooms = numRooms;
 	int spot = rand() % (numMainRooms - 1);
-	Room& roomRef = scene.getComponent<Room>(rooms[spot]);
 
-	if (roomRef.left != -1 && roomRef.right != -1)
+	if (scene.getComponent<Room>(rooms[spot]).left != -1 && scene.getComponent<Room>(rooms[spot]).right != -1)
 	{
 		//Keep looking for a spot to place branch
 		while (!foundSpot)
 		{
-			roomRef = scene.getComponent<Room>(rooms[spot]);
-
-			if (roomRef.left == -1 || roomRef.right == -1)
+			if (scene.getComponent<Room>(rooms[spot]).left == -1 || scene.getComponent<Room>(rooms[spot]).right == -1)
 			{
 				foundSpot = true;
 				break;
@@ -157,12 +147,11 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 			}
 		}
 	}
-	roomRef = scene.getComponent<Room>(rooms[spot]);
 	//Found spot
-	if (roomRef.branch) {
+	if (scene.getComponent<Room>(rooms[spot]).branch) {
 		int test = 0;
 	}
-	if (roomRef.left == -1 && roomRef.right == -1)
+	if (scene.getComponent<Room>(rooms[spot]).left == -1 && scene.getComponent<Room>(rooms[spot]).right == -1)
 	{
 		if (rand() % 2 == 0)
 		{
@@ -173,7 +162,7 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 			setBranch(scene, rooms, spot, false, branchSize);
 		}
 	}
-	else if (roomRef.left == -1)
+	else if (scene.getComponent<Room>(rooms[spot]).left == -1)
 	{
 		setBranch(scene, rooms, spot, true, branchSize);
 	}
@@ -181,8 +170,6 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 	{
 		setBranch(scene, rooms, spot, false, branchSize);
 	}
-
-
 }
 
 void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int size)
@@ -379,8 +366,10 @@ void setShortcut(Scene& scene, std::vector<int>& rooms, int numBranches, int num
 		return;
 	}
 	scene.getComponent<Room>(rooms[one]).shortcut = true;
+	scene.getComponent<Room>(rooms[one]).branchEnd = false;
 	scene.getComponent<Room>(rooms[one]).left = two;
 	scene.getComponent<Room>(rooms[two]).shortcut = true;
+	scene.getComponent<Room>(rooms[two]).branchEnd = false;
 	scene.getComponent<Room>(rooms[two]).right = one;
 }
 
