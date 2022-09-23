@@ -15,7 +15,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
-#include "ShaderInput.hpp"
 #include "Model.hpp"
 
 class Scene;
@@ -59,23 +58,11 @@ class VulkanRenderer
     Device device;
     QueueFamilies queueFamilies;
 
-    vk::SurfaceKHR        surface{};            //Images will be displayed through a surface, which GLFW will read from
+    vk::SurfaceKHR surface{};            //Images will be displayed through a surface, which GLFW will read from
     
     Swapchain swapchain;
-    std::vector<vk::CommandBuffer> commandBuffers;
     
-    vk::Sampler       textureSampler{}; // Sampler used to sample images in order to present (??)
-
-    // - Descriptors
-    vk::DescriptorSetLayout samplerDescriptorSetLayout{};
-    vk::DescriptorSetLayout descriptorSetLayout{};
-    vk::PushConstantRange pushConstantRange{};      
-
-    std::vector<vk::DescriptorSet> descriptorSets;        // To be used with our View and Projection matrices
-    std::vector<vk::DescriptorSet> samplerDescriptorSets; // To be used for our texture Samplers! (need one per Texture)
-                                                        // NOTE; There will NOT be one samplerDescriptionSet per image!... It will be One per Texture!
-
-    UniformBuffer viewProjectionUB;
+    vk::Sampler textureSampler{}; // Sampler used to sample images in order to present (??)
 
     // - Assets    
     std::vector<Model>  modelList;
@@ -84,19 +71,14 @@ class VulkanRenderer
     std::vector<VmaAllocation> textureImageMemory;
     std::vector<vk::ImageView>    textureImageViews;
 
-    ShaderInput shaderInput;
-
-    // - Pipeline
-    PipelineLayout pipelineLayout;
-    Pipeline pipeline;
-    vk::PipelineCache graphics_pipelineCache = nullptr;
     vk::RenderPass renderPassBase{};
     vk::RenderPass renderPassImgui{};
+    vk::CommandPool commandPool{};
+    std::vector<vk::CommandBuffer> commandBuffers;
 
-    // - Pools
-    vk::CommandPool    graphicsCommandPool{};           // Command pool that only is used for graphics command...
-    vk::DescriptorPool descriptorPool{};
-    vk::DescriptorPool samplerDescriptorPool{};
+    UniformBuffer viewProjectionUB;
+    ShaderInput shaderInput;
+    Pipeline pipeline;
 
     // - Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
@@ -139,16 +121,10 @@ private:
     void recreateSwapchain(Camera* camera);
     void createRenderPassBase();
     void createRenderPassImgui();
-    void createDescriptorSetLayout();
-    void createPushConstantRange();
     void createCommandPool();   //TODO: Deprecate! 
     void createCommandBuffers(); //TODO: Deprecate!  //Allocate Command Buffers from Command pool...
     void createSynchronisation();
     void createTextureSampler();
-
-    void createDescriptorPool();
-    void createDescriptorSets();
-    void allocateDescriptorSets();
 
     // Cleanup 
     void cleanupRenderPassImgui();
@@ -170,7 +146,6 @@ private:
 
     int createTextureImage(const std::string &filename);
     int createTexture(const std::string &filename);
-    int createSamplerDescriptor(vk::ImageView textureImage);
 
     // -- Loader Functions
     static stbi_uc* loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );

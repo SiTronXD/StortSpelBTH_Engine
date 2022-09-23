@@ -1,6 +1,6 @@
 #pragma once
 
-#include "PipelineLayout.hpp"
+#include "../ShaderInput.hpp"
 
 class Device;
 
@@ -20,7 +20,7 @@ public:
 
 	void createPipeline(
 		Device& device,
-		PipelineLayout& pipelineLayout,
+		ShaderInput& shaderInput,
 		vk::RenderPass& renderPass);
 
 	void cleanup();
