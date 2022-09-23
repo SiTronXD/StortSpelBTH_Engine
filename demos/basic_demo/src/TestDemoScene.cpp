@@ -38,7 +38,7 @@ void TestDemoScene::init()
 		doors[i] = this->createEntity();
 		this->setComponent<MeshComponent>(doors[i]);
 	}
-	
+	std::cout << "Above init rooms" << std::endl;
 	initRooms(*this, rooms, doors, roomID);
 	std::cout << "Num rooms: " << rooms.size() << std::endl;
 

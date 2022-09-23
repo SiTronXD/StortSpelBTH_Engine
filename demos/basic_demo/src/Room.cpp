@@ -33,14 +33,17 @@ void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& roomID)
 	int numRooms = setUpRooms(scene, rooms);
 	int numBranches = rand() % 5 + 2;
 
+	std::cout << "Above set random branch" << std::endl;
 	for (int i = 0; i < numBranches; i++) 
 	{
 		setRandomBranch(scene, rooms, numRooms);
 	}
+	std::cout << "Above set boss" << std::endl;
 	setBoss(scene, rooms, numRooms);
+	std::cout << "Above set exit" << std::endl;
 	setExit(scene, rooms);
 	//setShortcut(scene, rooms, numBranches, numRooms);
-
+	std::cout << "Above placeDoors" << std::endl;
 	placeDoors(scene, rooms, doors, roomID);
 }
 
@@ -341,7 +344,7 @@ void setBoss(Scene& scene, std::vector<int>& rooms, int numRooms)
 
 void setExit(Scene& scene, std::vector<int>& rooms)
 {
-	int exitIndex = rand() % rooms.size() + 1;
+	int exitIndex = rand() % (rooms.size()-1) + 1;
 	while (scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::BOSS || scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::START) 
 	{
 		if (++exitIndex >= rooms.size()) 
@@ -536,19 +539,19 @@ bool traverseRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& room
 	bool ret = false;
 	Room curRoom = scene.getComponent<Room>(rooms[roomID]);
 
-	if (canGoForward(scene, doors)) {
+	if (canGoForward(scene, doors) || (curRoom.up != -1 && Input::isKeyPressed(Keys::H))) {
 		roomID = curRoom.up;
 		placeDoors(scene, rooms, doors, roomID);
 	}
-	else if (canGoBack(scene, doors)) {
+	else if (canGoBack(scene, doors) || (curRoom.down != -1 && Input::isKeyPressed(Keys::N))) {
 		roomID = curRoom.down;
 		placeDoors(scene, rooms, doors, roomID);
 	}
-	else if (canGoLeft(scene, doors)) {
+	else if (canGoLeft(scene, doors) || (curRoom.left != -1 && Input::isKeyPressed(Keys::M))) {
 		roomID = curRoom.left;
 		placeDoors(scene, rooms, doors, roomID);
 	}
-	else if (canGoRight(scene, doors)) {
+	else if (canGoRight(scene, doors) || (curRoom.right != -1 && Input::isKeyPressed(Keys::B))) {
 		roomID = curRoom.right;
 		placeDoors(scene, rooms, doors, roomID);
 	}
@@ -667,9 +670,14 @@ void fightBoss(Scene& scene, std::vector<int>& rooms, int doors[], int& boss, in
 		system("cls");
 		std::cout << "Press H to fight the boss!\n Health: " << bossHealth << std::endl;
 	}
-	if (Input::isKeyDown(Keys::H)) {
+	if (Input::isKeyPressed(Keys::H)) {
 		system("cls");
 		if (rand() % 10 == 0)
+		{
+			bossHealth -= 10;
+			std::cout << bossHealth << std::endl << "-10 HUUUGE!" << std::endl;
+		}
+		else if (rand() % 5 == 0)
 		{
 			bossHealth -= 5;
 			std::cout << bossHealth << std::endl << "-5 *CRITICAL HIT*" << std::endl;
