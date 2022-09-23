@@ -1,13 +1,18 @@
 {
-    
-	"folders": [
-		{
-			"path": "."
-		}
+    "folders": [
+        {
+            "path": "."
+        }
     ],
     "settings": {
+        //Clang format...
+        "clang-format.executable": "clang-format",
+        "editor.formatOnSave": false,
+
         "terminal.integrated.scrollback": 10000,
-        "clangd.arguments": ["--header-insertion=never"],
+        "clangd.arguments": [
+            "--header-insertion=never"
+        ],
         "cmake.configureOnOpen": false,
         "debug.allowBreakpointsEverywhere": true,
         "debug.openDebug": "openOnSessionStart",
@@ -36,23 +41,20 @@
         "c-cpp-flylint.flexelint.enable": false,
         "c-cpp-flylint.clang.configFile": ".clang-tidy",
         "c-cpp-flylint.clang.enable": false,
-        "c-cpp-flylint.cppcheck.suppressions": 
-        [
+        "c-cpp-flylint.cppcheck.suppressions": [
             "unusedStructMember",
             "unreadVariable",
             "knownConditionTrueFalse",  /// Might be good, but annoying when using a macro for either debug or non-debug mode...
             "cstyleCast"                /// Already covered by Clang-Tidy...
-
         ],
         "c-cpp-flylint.excludeFromWorkspacePaths": [
             "deps"
         ],
         "editor.peekWidgetDefaultFocus": "editor",
-
         "editor.minimap.scale": 1,
         "editor.minimap.maxColumn": 50,
         "editor.minimap.renderCharacters": false,
-        "window.zoomLevel": -2,
+        "window.zoomLevel": -1,
         "gitlens.views.commits.files.layout": "list",
         "activitusbar.combineWorkspaceSettings": true,
         "activitusbar.views": [
@@ -86,7 +88,6 @@
                 "name": "extensions",
                 "codicon": "extensions-view-icon"
             },
-            
         ],
         "git.fetchOnPull": true,
         //"activitusbar.toggleSidebar": false
@@ -117,18 +118,21 @@
         },
         "explorerExclude.backup": {},
         "workspace.isHidden": false,
-
         "output.smartScroll.enabled": false, // annoying...
-
         "glsllint.glslangValidatorArgs": "-V",
         "shaderc-lint.defaultGLSLVersion": "450",
         "shaderc-lint.shadercOutputDir": "assets/shaders/",
-        "cmake.configureArgs": ["-DCMAKE_BUILD_TYPE=cmake_project", "-DCMAKE_CXX_COMPILER=clang++"],   
+        "cmake.configureArgs": [
+            "-DCMAKE_BUILD_TYPE=cmake_project",
+            "-DCMAKE_CXX_COMPILER=clang++"
+        ],
         //"cmake.generator": "Unix Makefiles",     //TODO: how do we make this different between platforms?...
-        "cmake.generator": "Ninja",     //TODO: how do we make this different between platforms?...
-        "cmake.buildDirectory": "${workspaceFolder}/build/cmake_project",        
+        "cmake.generator": "Ninja", //TODO: how do we make this different between platforms?...
+        "cmake.buildDirectory": "${workspaceFolder}/build/cmake_project",
         "cmake.copyCompileCommands": "${workspaceFolder}/build/compile_commands.json",
-        "glsl-linter.validatorArgs": ["-V"],
+        "glsl-linter.validatorArgs": [
+            "-V"
+        ],
         "glsl-linter.validatorPath": "glslangValidator",
         "file_peek.activeLanguages": [
             "typescript",
@@ -149,9 +153,7 @@
             ".cc",
             ".hpp"
         ],
-        
-        
-        "workbench.colorCustomizations": {            
+        "workbench.colorCustomizations": {
             "minimapSlider.hoverBackground": "#00830075",
             "minimapSlider.background": "#00830075"
         },
@@ -171,9 +173,6 @@
         ],
         "compiler-explorer.compiler": "clangdefault", /// Check available compilers at http://localhost:10240/api/compilers
         */
-   
-        
-
         // "lldb.library": "/usr/lib/liblldb.so.13",
         // "lldb.adapterEnv": {
         //     "LLDB_DEBUGSERVER_PATH": "/usr/bin/lldb-server"
@@ -190,11 +189,9 @@
             "other": "on",
             "comments": "on",
             "strings": "on"
-        },        
+        },
         "editor.snippetSuggestions": "bottom",
         "cmake.configureOnEdit": false,
-        
-
     },
     "extensions": {
         "recommendations": [
@@ -224,10 +221,10 @@
     "launch": {
         "version": "0.2.0",
         "configurations": [
-            {             
-                "type": "cppdbg",
+            {
+                "type": "lldb",
                 "request": "launch",
-                "name": "(gdb) Debug",                
+                "name": "(gdb) Debug",
                 "program": "${command:cmake.launchTargetPath}",
                 "args": [],
                 "stopAtEntry": false,
@@ -237,14 +234,14 @@
                 "MIMode": "gdb",
                 "miDebuggerPath": "/usr/bin/gdb",
                 "setupCommands": [
-                    {   
+                    {
                         "description": "Enable pretty-printing for gdb",
                         "text": "-enable-pretty-printing",
                         "ignoreFailures": true
                     }
                 ]
             },
-            {  
+            {
                 "type": "lldb",
                 "request": "launch",
                 "name": "(lldb) Debug",
@@ -252,7 +249,6 @@
                 "args": [],
                 "cwd": "${workspaceFolder}"
             }
-            
         ]
     }
 }
