@@ -22,8 +22,6 @@
 #include "imgui_impl_vulkan.h"
 #include "backends/imgui_impl_vulkan.h"
 
-#include "lua/dev/LuaHelper.h"
-
 Engine::Engine()
 {
 }
@@ -38,6 +36,7 @@ void Engine::run(Scene* startScene)
     this->sceneHandler.updateToNextScene();
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
+    this->scriptHandler.setSceneHandler(&sceneHandler);
 
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory

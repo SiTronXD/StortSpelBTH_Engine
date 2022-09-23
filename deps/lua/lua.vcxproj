@@ -173,6 +173,7 @@
     <ClCompile Include="src\onelua.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="lua.hpp" />
     <ClInclude Include="src\lapi.h" />
     <ClInclude Include="src\lauxlib.h" />
     <ClInclude Include="src\lcode.h" />

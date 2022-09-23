@@ -156,10 +156,22 @@
     <ClInclude Include="vengine\network\Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vengine\lua\dev\LuaHelper.h">
+    <ClInclude Include="vengine\lua\ScriptHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vengine\lua\ScriptHandler.h">
+    <ClInclude Include="vengine\lua\dev\LuaHelper.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\lua\wrappers\SceneLua.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\components\Behaviour.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\lua\wrappers\InputLua.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\lua\LuaPushes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -279,6 +291,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\lua\ScriptHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\lua\wrappers\InputLua.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

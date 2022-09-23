@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.3.32819.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vengine", "vengine\vengine.vcxproj", "{5183ABAD-3D6D-4833-8316-9E2D1DC83D1F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CC5E4D5E-E897-421D-8E87-4716B682AD9A} = {CC5E4D5E-E897-421D-8E87-4716B682AD9A}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "basic_demo", "demos\basic_demo\basic_demo.vcxproj", "{BD466D36-6A4F-4D56-BCC5-DE4D274892E2}"
 	ProjectSection(ProjectDependencies) = postProject

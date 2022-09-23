@@ -4,6 +4,8 @@
 #include <iostream>
 #include <lua.hpp>
 
+#define LUA_ERR_CHECK(L, X) if(X != LUA_OK) { LuaH::dumpError(L); } 
+
 namespace LuaH
 {
 	static void dumpStack(lua_State* L, bool popStack = false)

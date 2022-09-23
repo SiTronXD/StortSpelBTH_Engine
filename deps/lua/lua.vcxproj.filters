@@ -206,5 +206,8 @@
     <ClInclude Include="src\lzio.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="lua.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
