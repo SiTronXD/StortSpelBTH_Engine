@@ -28,5 +28,10 @@ uint32_t ResourceManager::addMesh(std::string&& mesh_path)
     meshes.insert({meshes.size(), std::move(createdMesh)}); //NOTE: meshes.size as key only works if we never remove resources the map...
     
 
-    return meshes.size() -1;
+void ResourceManager::cleanup()
+{
+    for(auto & i : ResourceManager::textures)
+    {                   
+        TextureLoader::cleanupTexture(i.second);
+    }
 }

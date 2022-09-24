@@ -49,6 +49,15 @@ ImageData TextureLoader::createTexture(const std::string &filename) {
   // Return index of Texture Descriptor that was just created
   return imageData;
 }
+
+void TextureLoader::cleanupTexture(ImageData &ref) 
+{
+  TextureLoader::importStructs.device->getVkDevice().destroyImageView(
+      ref.imageView);
+  TextureLoader::importStructs.device->getVkDevice().destroyImage(ref.image);
+  vmaFreeMemory(*TextureLoader::importStructs.vma, ref.imageMemory);
+}
+
 stbi_uc *TextureLoader::loadTextureFile(const std::string &filename, int *width,
                                         int *height,
                                         vk::DeviceSize *imageSize) {
