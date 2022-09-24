@@ -458,7 +458,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
     auto tView = scene->getSceneReg().view<MeshComponent>();
     tView.each([this](MeshComponent& meshComponent)
     {
-        meshComponent.meshID = this->createModel("ghost.obj");
+        meshComponent.meshID = ResourceManager::addMesh("sponza.obj");
     });
 }
 
