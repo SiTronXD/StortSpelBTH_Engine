@@ -20,7 +20,7 @@ private:
 
     static void      createTextureImage(const std::string &filename, vk::Image& ref, VmaAllocation& allocRef);
     static uint32_t  createTextureDescriptor(vk::ImageView textureImage);
-    static stbi_uc*  loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize);
+    static stbi_uc*  loadTextureFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize);
 public:
     static void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool);
     static ImageData createTexture(const std::string &filename);
