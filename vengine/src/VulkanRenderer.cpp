@@ -2164,7 +2164,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                 auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
                 tView.each([this, currentImageIndex](Transform& transform, MeshComponent& meshComponent)
                 {
-                    auto currModel = modelList[meshComponent.meshID];
+                    auto& currModel = ResourceManager::getMesh(meshComponent.meshID);                    
 
                     glm::mat4 modelMatrix = transform.matrix;
 
@@ -2180,31 +2180,29 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                         &modelMatrix                        // Actual data being pushed (can also be an array)
                     );
 
-                    for(auto& modelPart : currModel.getModelParts())
-                    {
-                        // -- BINDING VERTEX BUFFERS --
-                        //std::array<vk::Buffer,1> vertexBuffer = { currModel.getMesh(k)->getVertexBuffer()};                // Buffers to bind
-                        std::array<vk::Buffer,1> vertexBuffer = { modelPart.second.vertexBuffer};                // Buffers to bind
-                        std::array<vk::DeviceSize,1> offsets  = {0};                                           // Offsets into buffers being bound
-                        commandBuffers[currentImageIndex].bindVertexBuffers2(
-                            uint32_t(0),
-                            uint32_t(1),
-                            vertexBuffer.data(),
-                            offsets.data(),
-                            nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
-                            nullptr         //NOTE: Could also be a pointer to an array of buffer strides
-                        );
-                        // Bind Mesh Index Buffer; Define the Index Buffer that decides how to draw the Vertex Buffers
-                        commandBuffers[currentImageIndex].bindIndexBuffer(
-                            //currModel.getMesh(k)->getIndexBuffer(), 
-                            modelPart.second.indexBuffer, 
-                            0,
-                            vk::IndexType::eUint32);
-                      
+                    // -- BINDING VERTEX BUFFERS --
+                    //std::array<vk::Buffer,1> vertexBuffer = { currModel.getMesh(k)->getVertexBuffer()};                // Buffers to bind
+                    std::array<vk::Buffer,1> vertexBuffer = { currModel.getVertexBuffer()};                // Buffers to bind
+                    std::array<vk::DeviceSize,1> offsets  = {0};                                           // Offsets into buffers being bound
+                    commandBuffers[currentImageIndex].bindVertexBuffers2(
+                        uint32_t(0),
+                        uint32_t(1),
+                        vertexBuffer.data(),
+                        offsets.data(),
+                        nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
+                        nullptr         //NOTE: Could also be a pointer to an array of buffer strides
+                    );
+                    // Bind Mesh Index Buffer; Define the Index Buffer that decides how to draw the Vertex Buffers
+                    commandBuffers[currentImageIndex].bindIndexBuffer(
+                        currModel.getIndexBuffer(), 
+                        0,
+                        vk::IndexType::eUint32);
+                    
+                    for(auto& submesh : currModel.getSubMeshData()){                        
                         // We're going to bind Two descriptorSets! put them in array...
                         std::array<vk::DescriptorSet,2> descriptorSetGroup{
-                            this->descriptorSets[currentImageIndex],                // Use the descriptor set for the Image                            
-                            this->samplerDescriptorSets[ modelPart.second.textureID]   // Use the Texture which the current mesh has
+                            this->descriptorSets[currentImageIndex],                // Use the descriptor set for the Image                                                        
+                            this->samplerDescriptorSets[ submesh.materialIndex ] // Use the Texture which the current mesh has                            
                         };
                         // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
                         this->commandBuffers[currentImageIndex].bindDescriptorSets(
@@ -2231,14 +2229,13 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                         scissor.extent = this->swapchain.getVkExtent();
                         this->commandBuffers[currentImageIndex].setScissor( 0, 1, &scissor);
                         // Execute Pipeline!
-                        this->commandBuffers[currentImageIndex].drawIndexed(                            
-                            modelPart.second.indexCount,  // Number of vertices to draw (nr of indexes)
+                        this->commandBuffers[currentImageIndex].drawIndexed(
+                            submesh.numIndicies,        // Number of vertices to draw (nr of indexes)
                             1,                          // We're drawing only one instance
-                            0,                          // Start at index 0
+                            submesh.startIndex,                          // Start at index 0
                             0,                          // Vertex offset is 0, i.e. no offset! 
                             0);                         // We Draw Only one Instance, so first will be 0...
                     }                
-
 
                 });
 
