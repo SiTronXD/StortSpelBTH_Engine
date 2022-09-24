@@ -1,12 +1,42 @@
 #include "ResourceManager.hpp"
-#include "Model.hpp"
+#include "NewModel.hpp"
 #include "Log.hpp"
+#include "Configurator.hpp"
 #include "MeshLoader.hpp"
+#include "TextureLoader.hpp"
 
 std::unordered_map<std::string, uint32_t>   ResourceManager::meshPaths;
 std::unordered_map<std::string, uint32_t>   ResourceManager::texturePaths;
 std::unordered_map<uint32_t, NewModel>      ResourceManager::meshes;
 std::unordered_map<uint32_t, ImageData>     ResourceManager::textures;
+
+uint32_t ResourceManager::addMesh(std::string&& meshPath)
+{        
+    using namespace vengine_helper::config;    
+    
+    uint32_t prevSize = ResourceManager::meshPaths.size();
+    ResourceManager::meshPaths.insert({meshPath,prevSize}); //NOTE: prevSize as key only works if we never remove resources the map...
+
+    // If exists, return key of existing mesh
+    if(ResourceManager::meshPaths.size() == prevSize)
+    {
+        Log::warning("Mesh [TODO: insert name of mesh file] was already added!"); //TODO: should be able to log what mesh
+        
+        return ResourceManager::meshes.find(
+                ResourceManager::meshPaths.find(meshPath)->second
+        )->first;
+    }    
+
+    auto model = MeshLoader::createMesh(DEF<std::string>(P_MODELS) + meshPath); //NOTE: meshes.size as key only works if we never remove resources the map...
+
+    // Create mesh, insert into map of meshes
+    meshes.insert({
+        meshes.size(),
+        std::move(model)}        
+        ); 
+
+    return meshes.size() -1;
+}
 
 uint32_t ResourceManager::addTexture(std::string&& texturePath)
 { 
