@@ -13,7 +13,7 @@ struct ModelMatrix {
     glm::mat4 model; 
 };
 
-struct Vertex_New  //TODO: This is already defined in utilities.  Move to this place?
+struct Vertex
 {
     glm::vec3 pos;      /// Vertex Position (x,y,z)
     glm::vec3 col;      /// Vertex Color    (r,g,b)
@@ -35,7 +35,7 @@ struct SubMeshData{
 
 struct MeshData{
     std::vector<SubMeshData> submeshes;
-    std::vector<Vertex_New>  vertices;
+    std::vector<Vertex>  vertices;
     std::vector<uint32_t>    indicies;
 
 };
