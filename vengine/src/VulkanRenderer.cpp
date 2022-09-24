@@ -156,16 +156,15 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
             glm::vec3(DEF<float>(CAM_EYE_X),DEF<float>(CAM_EYE_Y),DEF<float>(CAM_EYE_Z)),
             glm::vec3(DEF<float>(CAM_TARGET_X),DEF<float>(CAM_TARGET_Y), DEF<float>(CAM_TARGET_Z)));
 
-        // Setup Fallback Texture: Let first Texture be default if no other texture is found.
-        this->createTexture("missing_texture.png");
-
 #ifndef VENGINE_NO_PROFILING
         this->initTracy();
 #endif
         this->initImgui();
 
-        //TODO: This is for testing, final implementation is not decided...
         this->initResourceManager();
+
+        // Setup Fallback Texture: Let first Texture be default if no other texture is found.
+        ResourceManager::addTexture("missing_texture.png");
 
     }
     catch(std::runtime_error &e)
