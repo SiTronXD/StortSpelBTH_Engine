@@ -50,7 +50,6 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
     {
         Log::warning("Texture [TODO: insert name of mesh file] was already added!"); //TODO: should be able to log what mesh
         
-        
         return ResourceManager::textures.find(
                 ResourceManager::texturePaths.find(texturePath)->second
         )->first;
@@ -66,6 +65,16 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
     return textures.size() -1;
 }
 
+NewModel& ResourceManager::getMesh(uint32_t id)
+{
+    auto map_iterator = ResourceManager::meshes.find(id);
+    if(ResourceManager::meshes.end() == map_iterator)
+    {
+        Log::error("getMesh failed to find a mesh with the given ID : " + std::to_string(id));
+        assert(false);
+    }
+    return map_iterator->second;
+}
 
 ImageData& ResourceManager::getTexture(uint32_t id)
 {
