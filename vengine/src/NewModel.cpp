@@ -155,3 +155,27 @@ void NewModel::createIndexBuffer(MeshData& meshData, VulkanImportStructs& import
     importStructs.device->getVkDevice().destroyBuffer(stagingBuffer);
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
+
+vk::Buffer& NewModel::getVertexBuffer()
+{
+    return this->vertexBuffer;
+}
+
+vk::Buffer& NewModel::getIndexBuffer()
+{
+    return this->indexBuffer;
+}
+
+
+std::vector<SubMeshData> NewModel::getSubMeshData()
+{
+    return this->submeshData;
+}
+
+void NewModel::cleanup()
+{
+    this->device.getVkDevice().destroyBuffer(this->vertexBuffer);
+    this->device.getVkDevice().destroyBuffer(this->indexBuffer);
+    vmaFreeMemory(this->vma, this->indexBufferMemory);
+    vmaFreeMemory(this->vma, this->vertexBufferMemory);
+}
