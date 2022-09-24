@@ -1,15 +1,12 @@
 #pragma once
 
 #include "Utilities.hpp"
-
+#include "CommonMeshStructs.hpp"
 
 
 /// Model used to Define the Model Matrix of a mesh...
 //// Previously it was a UniformBuffer (we called it UboModel)
 //// Right now it's a Push Constant, but we will just call it Model from now on...
-struct ModelMatrix { 
-    glm::mat4 model; 
-};
 
 class Mesh 
 {
