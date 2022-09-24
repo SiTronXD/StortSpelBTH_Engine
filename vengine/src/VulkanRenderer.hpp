@@ -14,8 +14,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
-#include "Model.hpp"
-
 class Scene;
 class Camera;
 
@@ -25,8 +23,8 @@ class VulkanRenderer {
 #ifndef VENGINE_NO_PROFILING
     std::vector<TracyVkCtx> tracyContext;
 #endif
+    friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
     Window* window;
-
     VmaAllocator vma = nullptr;
 
     int currentFrame = 0; 
@@ -77,8 +75,6 @@ class VulkanRenderer {
     std::vector<VmaAllocationInfo> viewProjection_uniformBufferMemory_info;
 
     // - Assets    
-
-    std::vector<Model>  modelList;
 
     std::vector<vk::Image>        textureImages;
     //std::vector<vk::DeviceMemory> textureImageMemory;
@@ -179,12 +175,6 @@ private:
     /// -- Create Functions    
     [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);
 
-    int createTextureImage(const std::string &filename);
-    int createTexture(const std::string &filename);
-    int createTextureDescriptor(vk::ImageView textureImage);
-
-    /// -- Loader Functions
-    static stbi_uc*    loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );
 
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
@@ -201,7 +191,6 @@ public:
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
     int  init(Window* window, std::string&& windowName);
-    int  createModel(const std::string &modelFile);
 
     void draw(Scene* scene);
 
