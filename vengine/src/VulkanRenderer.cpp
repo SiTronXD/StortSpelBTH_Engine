@@ -176,13 +176,6 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
     return EXIT_SUCCESS;
 }
 
-void VulkanRenderer::updateModel(int modelIndex, glm::mat4 newModel)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    this->modelList[modelIndex].setModelMatrix(newModel);
-}
 
 void VulkanRenderer::generateVmaDump()
 {

@@ -202,7 +202,7 @@ public:
 
     int  init(Window* window, std::string&& windowName);
     int  createModel(const std::string &modelFile);
-    void updateModel(int modelIndex, glm::mat4 newModel);
+
     void draw(Scene* scene);
 
     void initMeshes(Scene* scene);
