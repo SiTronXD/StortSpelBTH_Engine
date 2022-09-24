@@ -37,6 +37,17 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
 }
 
 
+ImageData& ResourceManager::getTexture(uint32_t id)
+{
+    auto map_iterator = ResourceManager::textures.find(id);
+    if(ResourceManager::textures.end() == map_iterator)
+    {
+        Log::error("getMesh failed to find a mesh with the given ID : " + std::to_string(id));
+        assert(false);
+    }
+    return map_iterator->second;
+}
+
 
 
 void ResourceManager::cleanup()
