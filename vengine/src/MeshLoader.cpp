@@ -12,10 +12,19 @@ vk::Device*          MeshLoader::device              = nullptr;
 vk::Queue*           MeshLoader::transferQueue       = nullptr; 
 vk::CommandPool*     MeshLoader::transferCommandPool = nullptr; 
 
-Model&& MeshLoader::createMesh(std::string modelFile)
-{
-    // Import Model Scene
-    using namespace vengine_helper::config;
+Assimp::Importer MeshLoader::importer; 
+VulkanImportStructs MeshLoader::importStructs;
+
+void MeshLoader::init(VmaAllocator *vma,
+                                     vk::PhysicalDevice *physiscalDev,
+                                     Device *dev, vk::Queue *transQueue,
+                                     vk::CommandPool *transCmdPool) {
+  MeshLoader::importStructs.vma = vma;
+  MeshLoader::importStructs.physicalDevice = physiscalDev;
+  MeshLoader::importStructs.device = dev;
+  MeshLoader::importStructs.transferQueue = transQueue;
+  MeshLoader::importStructs.transferCommandPool = transCmdPool;
+}
     const aiScene* scene = MeshLoader::importer.ReadFile(
         (DEF<std::string>(P_MODELS)+modelFile).c_str(),
         aiProcess_Triangulate               // Ensures that ALL objects will be represented as Triangles
