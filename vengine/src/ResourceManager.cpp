@@ -82,6 +82,10 @@ ImageData& ResourceManager::getTexture(uint32_t id)
 
 void ResourceManager::cleanup()
 {
+    for(auto & keyVal : ResourceManager::meshes)
+    {                
+        keyVal.second.cleanup();
+    }
     for(auto & i : ResourceManager::textures)
     {                   
         TextureLoader::cleanupTexture(i.second);
