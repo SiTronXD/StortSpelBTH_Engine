@@ -134,7 +134,7 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
   uint32_t initialIndex = lastIndex;
   uint32_t initialVertex = lastVertice;
 
-  std::vector<Vertex_New> vertices;
+  std::vector<Vertex> vertices;
   std::vector<uint32_t> indices;
 
   const unsigned int sizeOTextureCoordsElement = 8;
