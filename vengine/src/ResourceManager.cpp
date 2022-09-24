@@ -48,7 +48,7 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
     // If exists, return key of existing mesh
     if(ResourceManager::texturePaths.size() == prevSize)
     {
-        Log::warning("Texture [TODO: insert name of mesh file] was already added!"); //TODO: should be able to log what mesh
+        Log::warning("Texture [TODO: insert name of mesh file] was already added!"); //TODO: should be able to log what Texture
         
         return ResourceManager::textures.find(
                 ResourceManager::texturePaths.find(texturePath)->second

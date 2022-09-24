@@ -30,12 +30,12 @@
 #include "MeshComponent.hpp"
 #include "Log.hpp"
 
-#include "ResourceManager.hpp" // TODO: Remove, this is just for testing the ResourceManager
+#include "ResourceManager.hpp"
 
 
 #include "MeshLoader.hpp"
 #include "TextureLoader.hpp"
-//TODO: This is for testing, final implementation is not decided...
+
 void VulkanRenderer::initResourceManager()
 {
     MeshLoader::init(&this->vma,
@@ -194,7 +194,7 @@ void VulkanRenderer::cleanup()
 #endif
 
 #ifndef VENGINE_NO_PROFILING
-    tracy::GetProfiler().RequestShutdown(); //TODO: is this correct?    
+    tracy::GetProfiler().RequestShutdown();  
 #endif
     
     //Wait until no actions is run on device...

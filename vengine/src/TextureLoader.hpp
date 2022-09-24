@@ -3,6 +3,7 @@
 #include "ResourceManagerStructs.hpp"
 
 typedef unsigned char stbi_uc;
+
 /// TODO: REMOVE VulkanRenderer (Maybe?)
 class VulkanRenderer;
 
@@ -16,7 +17,7 @@ private:
     static VulkanImportStructs  importStructs;
 
     static std::vector<std::string> assimpGetTextures(const aiScene* scene);
-    static void assimpTextureImport(const aiScene* scene, std::vector<uint32_t>& materialToTexture);     //TODO: Use reference?
+    static void assimpTextureImport(const aiScene* scene, std::vector<uint32_t>& materialToTexture);
 
     static void      createTextureImage(const std::string &filename, vk::Image& ref, VmaAllocation& allocRef);
     static uint32_t  createTextureDescriptor(vk::ImageView textureImage);

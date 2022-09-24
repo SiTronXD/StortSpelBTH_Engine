@@ -24,14 +24,13 @@ class VulkanRenderer {
     std::vector<TracyVkCtx> tracyContext;
 #endif
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
+
     Window* window;
     VmaAllocator vma = nullptr;
 
     int currentFrame = 0; 
 
     bool windowResized = false;
-    /// Scene Objects
-    //std::vector<Mesh> meshes;
 
     /// Scene Settings
     struct UboViewProjection 
@@ -118,15 +117,6 @@ class VulkanRenderer {
     /// - - Tracy
 #ifndef VENGINE_NO_PROFILING    
     void initTracy();
-    //// - - Tracy  Callbacks
-    bool TracyThumbnail_bool = false;
-#endif
-public:
-#ifndef VENGINE_NO_PROFILING    
-    /// TODO: this should not be visible to client...
-    // void toggleTracyThumbnail(bool toggle){
-    //     TracyThumbnail_bool = toggle;
-    // };
 #endif
 
 private:
@@ -158,7 +148,7 @@ private:
 
     // Cleanup 
     void cleanupRenderBass_Imgui();
-    void cleanupRenderBass_Base(); //TODO
+    void cleanupRenderBass_Base();
 
     /// Newer Create functions! 
     void createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name);

@@ -13,7 +13,7 @@ private:
     static Assimp::Importer     importer;
     static VulkanImportStructs  importStructs;
     static MeshData assimpImport(const std::string& modelFile);
-    static MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materailToTexture);     //TODO: Use reference?    
+    static MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materailToTexture);   
 
     //static std::vector<std::string> loadMaterials(const aiScene* scene);    
     static std::vector<MeshData> getMeshesFromNodeTree(const aiScene * scene, const std::vector<uint32_t>& matToTex);

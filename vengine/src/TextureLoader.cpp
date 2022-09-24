@@ -8,13 +8,10 @@
 #include "ResourceManager.hpp" // Importing mesh with Assimp needs to add Texture resources
 #include <span>
 
-/// TODO: REMOVE TEMP and VulkanRender (temporary solution for checking
-/// createTedxture...)
 #include "VulkanRenderer.hpp"
 
 VulkanImportStructs TextureLoader::importStructs;
 VulkanRenderer *TextureLoader::TEMP = nullptr; 
-
 
 void TextureLoader::init(VmaAllocator *vma,
                                         vk::PhysicalDevice *physiscalDev,
