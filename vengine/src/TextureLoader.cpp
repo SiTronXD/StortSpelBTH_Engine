@@ -23,6 +23,51 @@ void TextureLoader::init(VmaAllocator *vma,
   TextureLoader::importStructs.transferCommandPool = transCmdPool;
 }
 
+std::vector<std::string> TextureLoader::assimpGetTextures(const aiScene *scene) 
+{
+  std::vector<std::string> textureList(scene->mNumMaterials);
+  int textureIndex =
+      0; /// index of the texture that corresponds to the Diffuse material
+
+  /// For each material, if texture file name exists, store it in vector
+  for (auto *material :
+       std::span<aiMaterial *>(scene->mMaterials, scene->mNumMaterials)) {
+
+    /// Check for a Diffure Texture
+    if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
+      /// get the Path of the texture file
+      aiString path;
+      if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
+        textureList[textureIndex] = std::string(path.C_Str());
+      }
+    }
+    textureIndex++; /// Which Material the
+  }
+  return textureList;
+}
+
+void TextureLoader::assimpTextureImport(
+    const aiScene *scene, std::vector<uint32_t> &materialToTexture) 
+{
+  // Get vector of all materials
+  std::vector<std::string> textureNames =
+      TextureLoader::assimpGetTextures(scene);
+
+  // Handle empty texture
+  materialToTexture.resize(textureNames.size());
+  for (size_t i = 0; i < textureNames.size(); i++) {
+
+    if (textureNames[i].empty()) {
+      // Use default textures for models if textures are missing
+      materialToTexture[i] = 0;
+    } else {
+      // Create texture, use the index returned by our createTexture function
+      materialToTexture[i] =
+          ResourceManager::addTexture(textureNames[i].c_str());
+    }
+  }
+}
+
 ImageData TextureLoader::createTexture(const std::string &filename) {
 #ifndef VENGINE_NO_PROFILING
   ZoneScoped; //: NOLINT
