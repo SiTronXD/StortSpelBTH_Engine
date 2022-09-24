@@ -34,14 +34,27 @@
 
 
 #include "MeshLoader.hpp"
+#include "TextureLoader.hpp"
 //TODO: This is for testing, final implementation is not decided...
 void VulkanRenderer::initResourceManager()
 {
-    MeshLoader::device              = &this->device.getVkDevice();
-    MeshLoader::vma                 = &this->vma;
-    MeshLoader::physicalDevice      = &this->physicalDevice.getVkPhysicalDevice();    
-    MeshLoader::transferQueue       = &this->queueFamilies.getGraphicsQueue();
-    MeshLoader::transferCommandPool = &this->graphicsCommandPool;
+    MeshLoader::init(&this->vma,
+        &this->physicalDevice.getVkPhysicalDevice(),
+        &this->device,
+        &this->queueFamilies.getGraphicsQueue(),
+        &this->graphicsCommandPool);
+
+    TextureLoader::init(&this->vma,
+        &this->physicalDevice.getVkPhysicalDevice(),
+        &this->device,
+        &this->queueFamilies.getGraphicsQueue(),
+        &this->graphicsCommandPool);
+
+    /// TODO: REMOVE THIS, temporary used before making createTexture part of resourceManager...
+    TextureLoader::TEMP = this;
+    
+    /// TODO: IF Resource Manager wont be static, then pass it 
+    //TextureLoader::resourceMan = ResourceManager::ResourceManager;
 }
 
 using namespace vengine_helper::config;
