@@ -146,7 +146,6 @@ private:
     void createPushConstantRange();
     void createGraphicsPipeline_Base();
     void createGraphicsPipeline_Imgui();
-    void createGraphicsPipeline_DynamicRendering();
     void createCommandPool();   //TODO: Deprecate! 
     void createCommandBuffers(); //TODO: Deprecate!  //Allocate Command Buffers from Command pool...
     void createSynchronisation();
@@ -176,7 +175,6 @@ private:
 
     /// - Record Functions
     void recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex);    // Using renderpass
-    void recordDynamicRenderingCommands(uint32_t currentImageIndex);   /// Using DynamicRendering
 
     /// -- Create Functions    
     [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);
