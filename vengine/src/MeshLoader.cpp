@@ -1,9 +1,15 @@
 #include "MeshLoader.hpp"
 
-#include "assimp/scene.h"
-#include "assimp/postprocess.h"
 #include "Configurator.hpp"
+#include "assimp/postprocess.h"
+#include "assimp/scene.h"
+#include <span>
+#include <stack>
 
+#include "tracy/Tracy.hpp"
+#include "ResourceManager.hpp" // Importing mesh with Assimp needs to add Textures Sampler index
+#include "NewModel.hpp"
+#include "TextureLoader.hpp"
 
 
 Assimp::Importer MeshLoader::importer; 
