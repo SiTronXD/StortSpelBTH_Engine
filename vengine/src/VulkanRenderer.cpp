@@ -191,7 +191,7 @@ void VulkanRenderer::generateVmaDump()
     std::ofstream file("vma_dump.json");
     file << vma_dump << std::endl;
     file.close();
-    
+
 }
 
 void VulkanRenderer::cleanup()
@@ -206,6 +206,8 @@ void VulkanRenderer::cleanup()
     
     //Wait until no actions is run on device...
     this->device.waitIdle(); // Dont destroy semaphores before they are done
+
+    ResourceManager::cleanup(); //TODO: Rewrite cleanup, "sartCleanup"
     
     ImGui_ImplVulkan_Shutdown();
     this->window->shutdownImgui();
@@ -225,10 +227,6 @@ void VulkanRenderer::cleanup()
     }
 #endif
 
-    for(auto & i : modelList)
-    {
-        i.destroryMeshModel();
-    }
 
     this->getVkDevice().destroyDescriptorPool(this->inputDescriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->inputSetLayout);
