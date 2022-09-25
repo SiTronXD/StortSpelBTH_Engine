@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene.hpp"
+#include "../application/Scene.hpp"
 
 class TestScene2 : public Scene
 {

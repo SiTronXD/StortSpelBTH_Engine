@@ -21,9 +21,9 @@ private:
 
     std::string titleName;
 
-public:
     SDL_Window* windowHandle;
 
+public:
     Window();
     Window(Window const& ref) = delete;
     Window(Window&& ref) noexcept = delete;
@@ -44,6 +44,7 @@ public:
 
     const bool& getIsRunning() const { return this->isRunning; }
 
+    inline SDL_Window*& getWindowHandle() { return this->windowHandle; }
     inline const std::string& getTitleName() { return this->titleName; }
 };
 

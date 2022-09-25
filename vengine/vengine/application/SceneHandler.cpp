@@ -1,6 +1,6 @@
 #include "SceneHandler.hpp"
 #include "Time.hpp"
-#include "VulkanRenderer.hpp"
+#include "../graphics/VulkanRenderer.hpp"
 
 SceneHandler::SceneHandler()
 	: scene(nullptr),
@@ -42,6 +42,16 @@ void SceneHandler::setScene(Scene* scene)
 		this->nextScene = scene;
 		this->nextScene->setSceneHandler(*this);
 	}
+}
+
+void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
+{
+	this->networkHandler = networkHandler;
+}
+
+NetworkHandler* SceneHandler::getNetworkHandler()
+{
+	return this->networkHandler;
 }
 
 Scene* SceneHandler::getScene() const

@@ -1,11 +1,17 @@
 #include "Scene.hpp"
 #include "SceneHandler.hpp"
-#include "UpdateMatricesSystem.hpp"
+#include "../systems/UpdateMatricesSystem.hpp"
+#include "../network/NetworkHandler.h"
 #include "Time.hpp"
 
 void Scene::switchScene(Scene* nextScene)
 {
 	this->sceneHandler->setScene(nextScene);
+}
+
+NetworkHandler* Scene::getNetworkHandler()
+{
+	return sceneHandler->getNetworkHandler();
 }
 
 Scene::Scene()

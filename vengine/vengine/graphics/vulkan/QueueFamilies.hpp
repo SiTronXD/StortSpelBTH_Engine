@@ -1,6 +1,19 @@
 #pragma once
 
-#include "TempPCH.hpp"
+#include "../TempPCH.hpp"
+
+struct QueueFamilyIndices
+{
+	// Note! Both the GraphicsFamily and PresentationFamily queue might be the same QueueFamily!
+	// - Presentation is actually a Feature of a Queue Family, rather than being a seperate Queue Family Type...!
+	int32_t graphicsFamily = -1;
+	int32_t presentationFamily = -1;
+
+	// Check if Queue Families are valid... (Invalid Families will have -1 as value...)
+	[[nodiscard]] bool isValid() const {
+		return graphicsFamily >= 0 && presentationFamily >= 0;
+	}
+};
 
 class QueueFamilies
 {

@@ -1,37 +1,12 @@
 #include "PhysicalDevice.hpp"
-#include "Utilities.hpp"
-#include "Log.hpp"
 #include "VulkanInstance.hpp"
-
-void PhysicalDevice::getSwapchainDetails(
-    const vk::PhysicalDevice& physDevice,
-    vk::SurfaceKHR& surface,
-    SwapChainDetails& outputDetails)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    outputDetails = {};
-
-    // Surface capabilities
-    vk::PhysicalDeviceSurfaceInfo2KHR physicalDeviceSurfaceInfo{};
-    physicalDeviceSurfaceInfo.setSurface(surface);
-    outputDetails.surfaceCapabilities =
-        physDevice.getSurfaceCapabilities2KHR(physicalDeviceSurfaceInfo);
-
-    // Formats
-    outputDetails.Format =
-        physDevice.getSurfaceFormats2KHR(physicalDeviceSurfaceInfo);
-
-    // Presentation modes
-    outputDetails.presentationMode =
-        physDevice.getSurfacePresentModesKHR(surface);
-}
+#include "Swapchain.hpp"
+#include "QueueFamilies.hpp"
+#include "../../dev/Log.hpp"
 
 bool PhysicalDevice::checkPhysicalDeviceSuitability(
-    const vk::PhysicalDevice& physDevice, 
-    vk::SurfaceKHR& surface,
-    SwapChainDetails& outputSwapChainDetails)
+    vk::PhysicalDevice& physDevice, 
+    vk::SurfaceKHR& surface)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -48,20 +23,22 @@ bool PhysicalDevice::checkPhysicalDeviceSuitability(
         deviceHasSupportedFeatures = true;
     }
     
-    QueueFamilyIndices indices = this->getQueueFamilies(physDevice, surface);
+    QueueFamilyIndices indices = 
+        this->getQueueFamilies(physDevice, surface);
 
     bool extensions_supported = this->checkDeviceExtensionSupport(physDevice);
 
-    this->getSwapchainDetails(
+    SwapchainDetails swapchainDetails{};
+    Swapchain::getDetails(
         physDevice,
         surface,
-        outputSwapChainDetails
+        swapchainDetails
     );
 
     /// Once we have the QueueFamily Indices we can return whatever our "isValid" function concludes...
     return indices.isValid() &&
         extensions_supported &&
-        outputSwapChainDetails.isValid() &&
+        swapchainDetails.isValid() &&
         deviceHasSupportedFeatures;
 }
 
@@ -160,8 +137,7 @@ PhysicalDevice::~PhysicalDevice()
 void PhysicalDevice::pickPhysicalDevice(
     VulkanInstance& instance,
     vk::SurfaceKHR& surface,
-    QueueFamilyIndices& outputQueueFamilies,
-    SwapChainDetails& outputSwapChainDetails)
+    QueueFamilyIndices& outputQueueFamilies)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -177,12 +153,11 @@ void PhysicalDevice::pickPhysicalDevice(
     }
 
     // Loop through all possible devices and pick the first suitable device!    
-    for (const auto& physDevice : allPhysicalDevices)
+    for (auto& physDevice : allPhysicalDevices)
     {
         if (this->checkPhysicalDeviceSuitability(
             physDevice, 
-            surface, 
-            outputSwapChainDetails))
+            surface))
         {
             this->physicalDevice = physDevice;
             break;

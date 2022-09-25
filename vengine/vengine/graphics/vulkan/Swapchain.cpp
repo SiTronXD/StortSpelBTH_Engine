@@ -1,10 +1,13 @@
+#include <string>
+
 #include "Swapchain.hpp"
 #include "VulkanDbg.hpp"
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "QueueFamilies.hpp"
-#include "Window.hpp"
-#include "Texture.hpp"
+#include "../../application/Window.hpp"
+#include "../../dev/Log.hpp"
+#include "../Texture.hpp"
 
 vk::SurfaceFormat2KHR Swapchain::chooseBestSurfaceFormat(
     const std::vector<vk::SurfaceFormat2KHR >& formats)
@@ -42,32 +45,38 @@ vk::SurfaceFormat2KHR Swapchain::chooseBestSurfaceFormat(
         }
     }
 
+    Log::error("Could not find a suitable surface format.");
+
     // If no 'best format' is found, then we return the first format...This is however very unlikely
     return formats[0];
 }
 
-vk::PresentModeKHR Swapchain::chooseBestPresentationMode(const std::vector<vk::PresentModeKHR>& presentationModes) {
+vk::PresentModeKHR Swapchain::chooseBestPresentationMode(
+    const std::vector<vk::PresentModeKHR>& presentationModes) 
+{
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    return vk::PresentModeKHR::eImmediate;
-    // "Best" PresentationMode is subjective. Here we pick 'VSYNC'...
-    std::vector<vk::PresentModeKHR> priorityList{ // The different types we setttle with, first = highset priority
+    
+    // The different types we setttle with, first = highest priority
+    std::vector<vk::PresentModeKHR> priorityList
+    { 
          vk::PresentModeKHR::eMailbox,
          vk::PresentModeKHR::eImmediate,
          vk::PresentModeKHR::eFifo
     };
 
-    for (auto prioritized_mode : priorityList) 
+    for (auto mode : priorityList) 
     {
-
-        if (std::find(presentationModes.begin(), presentationModes.end(), prioritized_mode) != presentationModes.end()) 
+        if (std::find(presentationModes.begin(), presentationModes.end(), mode) != presentationModes.end())
         {
-            return prioritized_mode;
+            Log::write("Chosen swapchain presentation mode: " + std::to_string((int) mode));
+
+            return mode;
         }
     }
 
-    // If Mailbox Mode does not exist, use FIFO since it always should be available...
+    // Use FIFO as a last resort since it's always guaranteed to be available
     return vk::PresentModeKHR::eFifo;
 }
 
@@ -83,12 +92,14 @@ vk::Extent2D Swapchain::chooseBestImageResolution(
     // The default currentExtent.width value of a surface will be the size of the created window...
     // - This is set by the glfwCreateWindowSurface function...
     // - NOTE: the surfaces currentExtent.width/height can change, and then it will not be equal to the window size(??)
-    if (surfaceCapabilities.surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
+    if (surfaceCapabilities.surfaceCapabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) 
+    {
         //IF the current Extent does not vary, then the value will be the same as the windows currentExtent...
         // - This will be the case if the currentExtent.width/height is NOT equal to the maximum value of a uint32_t...
         return surfaceCapabilities.surfaceCapabilities.currentExtent;
     }
-    else {
+    else 
+    {
         //IF The current Extent vary, Then currentExtent.width/height will be set to the maximum size of a uint32_t!
         // - This means that we do have to Define it ourself! i.e. grab the size from our glfw_window!
         int width = 0, height = 0;
@@ -112,53 +123,6 @@ vk::Extent2D Swapchain::chooseBestImageResolution(
     }
 }
 
-void Swapchain::createColorBuffer()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    this->colorBufferImage.resize(this->getNumImages());
-    this->colorBufferImageMemory.resize(this->getNumImages());
-    this->colorBufferImageView.resize(this->getNumImages());
-
-    // Get supported formats for Color Attachment
-    const std::vector<vk::Format> formats{ vk::Format::eR8G8B8A8Unorm };
-    this->colorFormat = Texture::chooseSupportedFormat(
-        *this->physicalDevice,
-        formats,
-        vk::ImageTiling::eOptimal,
-        vk::FormatFeatureFlagBits::eColorAttachment);
-
-    for (size_t i = 0; i < this->colorBufferImage.size(); i++)
-    {
-        colorBufferImage[i] = Texture::createImage(
-            *this->vma,
-            {
-                .width = this->getWidth(),
-                .height = this->getHeight(),
-                .format = this->colorFormat,
-                .tiling = vk::ImageTiling::eOptimal,
-                .useFlags = vk::ImageUsageFlagBits::eColorAttachment     // Image will be used as a Color Attachment
-                            | vk::ImageUsageFlagBits::eInputAttachment, // This will be an Input Attachemnt, recieved by a subpass
-                // TODO:; Not optimal for normal offscreen rendering, since we can only handle info for a current pixel/fragment
-                .property = vk::MemoryPropertyFlagBits::eDeviceLocal,     // Image will only be handled by the GPU
-                .imageMemory = &this->colorBufferImageMemory[i]
-            },
-            "ColorBufferImage"
-        );
-
-        // Creation of Color Buffer Image View
-        this->colorBufferImageView[i] = Texture::createImageView(
-            *this->device,
-            this->colorBufferImage[i],
-            this->colorFormat,
-            vk::ImageAspectFlagBits::eColor
-        );
-        VulkanDbg::registerVkObjectDbgInfo("colorBufferImageView[" + std::to_string(i) + "]", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->colorBufferImageView[i])));
-        VulkanDbg::registerVkObjectDbgInfo("colorBufferImage[" + std::to_string(i) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->colorBufferImage[i])));
-    }
-}
-
 void Swapchain::createDepthBuffer()
 {
 #ifndef VENGINE_NO_PROFILING
@@ -167,7 +131,6 @@ void Swapchain::createDepthBuffer()
     this->depthBufferImage.resize(this->getNumImages());
     this->depthBufferImageMemory.resize(this->getNumImages());
     this->depthBufferImageView.resize(this->getNumImages());
-
 
     // Get supported VkFormat for the DepthBuffer
     this->depthFormat = Texture::chooseSupportedFormat(
@@ -192,8 +155,7 @@ void Swapchain::createDepthBuffer()
                 .format = this->depthFormat,
                 .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
                 .useFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment     // Image will be used as a Depth Stencil
-                            | vk::ImageUsageFlagBits::eInputAttachment,
-                .property = vk::MemoryPropertyFlagBits::eDeviceLocal,            // Image is local to the device, it will not be changed by the HOST (CPU)
+                            | vk::ImageUsageFlagBits::eInputAttachment,        // Image is local to the device, it will not be changed by the HOST (CPU)
                 .imageMemory = &this->depthBufferImageMemory[i]
             },
             "depthBufferImage"
@@ -214,10 +176,12 @@ void Swapchain::createDepthBuffer()
 Swapchain::Swapchain()
     : swapchain(VK_NULL_HANDLE),
     window(nullptr),
+    physicalDevice(nullptr),
     device(nullptr),
     surface(nullptr),
     queueFamilies(nullptr),
-    vma(nullptr)
+    vma(nullptr),
+    numMinimumImages(0)
 {
 }
 
@@ -245,6 +209,12 @@ void Swapchain::createSwapchain(
         this->queueFamilies = &queueFamilies;
         this->vma = &vma;
 
+        Swapchain::getDetails(
+            this->physicalDevice->getVkPhysicalDevice(),
+            *this->surface,
+            this->swapchainDetails
+        );
+
         // Store Old Swapchain, if it exists
         vk::SwapchainKHR oldSwapchain = this->swapchain;
 
@@ -260,6 +230,8 @@ void Swapchain::createSwapchain(
         // - 3. Choose Swap Chain image Resolution
         vk::Extent2D imageExtent =
             this->chooseBestImageResolution(this->swapchainDetails.surfaceCapabilities);
+
+        this->numMinimumImages = this->swapchainDetails.surfaceCapabilities.surfaceCapabilities.minImageCount;
 
         // --- PREPARE DATA FOR SwapChainCreateInfo ... ---
         // Minimum number of images our swapChain should use.
@@ -284,6 +256,8 @@ void Swapchain::createSwapchain(
              *
              * Also... Do I always want to use the MaxImageCount just because I can? Or is minImageCount + X a better choice...
              * */
+
+            Log::warning("Swapchain image count was set to 0.");
         }
 
         //Create the SwapChain Create Info!
@@ -370,7 +344,6 @@ void Swapchain::createSwapchain(
         }
     }
 
-    this->createColorBuffer();
     this->createDepthBuffer();
 }
 
@@ -383,13 +356,12 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
     this->swapchainFrameBuffers.resize(this->getNumImages());
 
     // Create a framebuffer for each swap chain image
-    for (size_t i = 0; i < this->swapchainFrameBuffers.size(); i++) {
-
-        std::array<vk::ImageView, 3> attachments = 
+    for (size_t i = 0; i < this->swapchainFrameBuffers.size(); i++) 
+    {
+        std::array<vk::ImageView, 2> attachments = 
         {
-                this->swapchainImageViews[i],   // Attatchment on index 0 of array : swapchain image
-                this->colorBufferImageView[i],   // Attachement on index 1 of array : color
-                this->depthBufferImageView[i]  // Attatchment on index 2 of array : depth
+                this->swapchainImageViews[i],
+                this->depthBufferImageView[i]
         };
 
         vk::FramebufferCreateInfo framebufferCreateInfo;
@@ -407,7 +379,7 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
 
 void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
 {
-    this->cleanup();
+    this->cleanup(false);
 
     this->createSwapchain(
         *this->window, 
@@ -418,22 +390,42 @@ void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
         *this->vma
     );
 
-    this->createColorBuffer();
-    this->createDepthBuffer();
-
     this->createFramebuffers(renderPass);
 }
 
-void Swapchain::cleanup()
+void Swapchain::getDetails(
+    vk::PhysicalDevice& physDevice, 
+    vk::SurfaceKHR& surface, 
+    SwapchainDetails& outputDetails)
 {
-    // Color
-    for (size_t i = 0; i < this->colorBufferImage.size(); i++)
-    {
-        this->device->getVkDevice().destroyImageView(this->colorBufferImageView[i]);
-        this->device->getVkDevice().destroyImage(this->colorBufferImage[i]);
-        vmaFreeMemory(*this->vma, this->colorBufferImageMemory[i]);
-    }
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+    outputDetails = {};
 
+    // Surface capabilities
+    vk::PhysicalDeviceSurfaceInfo2KHR physicalDeviceSurfaceInfo{};
+    physicalDeviceSurfaceInfo.setSurface(surface);
+    outputDetails.surfaceCapabilities =
+        physDevice.getSurfaceCapabilities2KHR(
+            physicalDeviceSurfaceInfo
+        );
+
+    // Formats
+    outputDetails.Format =
+        physDevice.getSurfaceFormats2KHR(
+            physicalDeviceSurfaceInfo
+        );
+
+    // Presentation modes
+    outputDetails.presentationMode =
+        physDevice.getSurfacePresentModesKHR(
+            surface
+        );
+}
+
+void Swapchain::cleanup(bool destroySwapchain)
+{
     // Depth
     for (size_t i = 0; i < this->depthBufferImage.size(); i++)
     {
@@ -443,14 +435,20 @@ void Swapchain::cleanup()
     }
 
     // Swapchain image views
-    for (auto views : this->swapchainImageViews)
+    for (auto view : this->swapchainImageViews)
     {
-        device->getVkDevice().destroyImageView(views);
+        this->device->getVkDevice().destroyImageView(view);
     }
+    this->swapchainImageViews.resize(0);
+
+    // The swapchain destruction will destroy the swapchain images
     this->swapchainImages.resize(0);
 
     // Swapchain
-    this->device->getVkDevice().destroySwapchainKHR(this->swapchain);
+    if (destroySwapchain)
+    {
+        this->device->getVkDevice().destroySwapchainKHR(this->swapchain);
+    }
 
     // Framebuffers
     for (auto framebuffer : this->swapchainFrameBuffers)

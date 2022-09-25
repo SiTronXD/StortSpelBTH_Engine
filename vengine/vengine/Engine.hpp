@@ -1,7 +1,9 @@
 #pragma once
 
-#include "SceneHandler.hpp"
-#include "ResourceManager.hpp"
+#include "network/NetworkHandler.h"
+#include "application/SceneHandler.hpp"
+#include "application/ResourceManager.hpp"
+
 class Engine
 {
 private:
@@ -12,7 +14,9 @@ public:
 
 	void run(Scene* startScene);
 
-    ResourceManager resourceMan;
 	SceneHandler    sceneHandler;
+    ResourceManager resourceMan;
+	NetworkHandler networkHandler;
 };
+
 

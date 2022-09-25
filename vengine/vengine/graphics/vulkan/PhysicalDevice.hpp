@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TempPCH.hpp"
+#include "../TempPCH.hpp"
 
 class VulkanInstance;
 
@@ -12,15 +12,9 @@ class PhysicalDevice
 private:
 	vk::PhysicalDevice physicalDevice;
 
-	void getSwapchainDetails(
-		const vk::PhysicalDevice& physDevice,
-		vk::SurfaceKHR& surface,
-		SwapChainDetails& outputDetails);
-
 	bool checkPhysicalDeviceSuitability(
-		const vk::PhysicalDevice& physDevice,
-		vk::SurfaceKHR& surface,
-		SwapChainDetails& outputSwapChainDetails);
+		vk::PhysicalDevice& physDevice,
+		vk::SurfaceKHR& surface);
 	bool checkDeviceExtensionSupport(
 		const vk::PhysicalDevice& physDevice);
 
@@ -35,8 +29,7 @@ public:
 	void pickPhysicalDevice(
 		VulkanInstance& instance,
 		vk::SurfaceKHR& surface,
-		QueueFamilyIndices& outputQueueFamilies,
-		SwapChainDetails& outputSwapChainDetails);
+		QueueFamilyIndices& outputQueueFamilies);
 
 	inline vk::PhysicalDevice& getVkPhysicalDevice() { return this->physicalDevice; }
 };

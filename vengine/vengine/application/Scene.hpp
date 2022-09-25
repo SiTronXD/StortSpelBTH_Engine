@@ -1,12 +1,13 @@
 #pragma once
 
-#include "System.hpp"
-#include "Transform.hpp"
-#include "Camera.hpp"
+#include "../systems/System.hpp"
+#include "../components/Transform.hpp"
+#include "../components/Camera.hpp"
 
 #include <entt.hpp>
 #include <vector>
 
+class NetworkHandler;
 class SceneHandler;
 
 class Scene
@@ -20,6 +21,7 @@ private:
 
 protected:
 	void switchScene(Scene* nextScene);
+	NetworkHandler* getNetworkHandler();
 
 public:
 	Scene();

@@ -3,7 +3,7 @@
 
 #ifndef VENGINE_NO_PROFILING    
 #include "tracy/Tracy.hpp"
-#include "VulkanRenderer.hpp"
+#include "../graphics/VulkanRenderer.hpp"
 
 VulkanRenderer* ref;
 

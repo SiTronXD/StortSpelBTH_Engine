@@ -1,6 +1,7 @@
 #include "VulkanInstance.hpp"
 
-#include "Window.hpp"
+#include "../../application/Window.hpp"
+#include "../../dev/Log.hpp"
 #include "VulkanValidation.hpp"
 #include "VulkanDbg.hpp"
 
@@ -53,7 +54,7 @@ void VulkanInstance::createInstance(Window& window)
     // Check if in debug mode and if we can use the Vulkan Validation Layers...
     if (isValidationLayersEnabled() && !Validation::checkValidationLayerSupport())
     {
-        throw std::runtime_error("Tried to use a non-available validation layer...");
+        Log::error("Tried to use a non-available validation layer...");
     }
 
 #ifndef NDEBUG
@@ -91,7 +92,7 @@ void VulkanInstance::createInstance(Window& window)
     //Check if any of the instance extensions is not supported...
     if (!this->checkInstanceExtensionSupport(&instanceExtensions))
     {
-        throw std::runtime_error("vk::Instance does not support at least one of the required extension!");
+        Log::error("vk::Instance does not support at least one of the required extension!");
     }
 
     if (isValidationLayersEnabled())

@@ -1,10 +1,11 @@
 #include "VulkanRenderer.hpp"
 #include "Utilities.hpp"
 #include "assimp/Importer.hpp"
-#include "defs.hpp"
-#include "VulkanValidation.hpp"
-#include "tracyHelper.hpp"
-#include "Configurator.hpp"
+#include "vulkan/VulkanValidation.hpp"
+#include "vulkan/VulkanDbg.hpp"
+#include "../dev/defs.hpp"
+#include "../dev/tracyHelper.hpp"
+#include "../loaders/Configurator.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -16,8 +17,8 @@
 #include <limits>               // Used to get the Max value of a uint32_t
 #include <algorithm>            // Used for std::clamp...
 #include "stb_image.h"
-#include "VulkanDbg.hpp"
 #include "Texture.hpp"
+#include "Buffer.hpp"
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"
@@ -25,16 +26,21 @@
 
 #include "backends/imgui_impl_vulkan.h"
 
-#include "Input.hpp"
-#include "Scene.hpp"
-#include "MeshComponent.hpp"
-#include "Log.hpp"
+#include "../application/Input.hpp"
+#include "../application/Scene.hpp"
+#include "../components/MeshComponent.hpp"
+#include "../dev/Log.hpp"
+#include "../application/ResourceManager.hpp"
+#include "../loaders/MeshLoader.hpp"
+#include "../loaders/TextureLoader.hpp"
 
-#include "ResourceManager.hpp"
+static void checkVkResult(VkResult err)
+{
+    if (err == 0)
+        return;
 
-
-#include "MeshLoader.hpp"
-#include "TextureLoader.hpp"
+    Log::error("Vulkan error from imgui: " + std::to_string(err));
+}
 
 void VulkanRenderer::initResourceManager()
 {
@@ -59,7 +65,6 @@ void VulkanRenderer::initResourceManager()
 using namespace vengine_helper::config;
 int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManager* resourceMan)
 {
-    
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif        
@@ -67,19 +72,18 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
     this->resourceMan = resourceMan;
     this->window = window;
 
-    try {
+    try 
+    {
         this->instance.createInstance(*this->window);
 
-        // - Will create a Instance that checks if we have all needed extensions
-        // -- for Example if GLFW window surface has support
+        // Create the surface
         createSurface();
 
         // Pick a physical device based on certain requirements
         this->physicalDevice.pickPhysicalDevice(
             this->instance,
             this->surface,
-            this->queueFamilies.getIndices(),
-            this->swapchain.getDetails()
+            this->queueFamilies.getIndices()
         );
 
         // Create logical device
@@ -97,7 +101,6 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
             this->device
         );
 
-        VulkanDbg::registerVkObjectDbgInfo("Logical Device", vk::ObjectType::eDevice, reinterpret_cast<uint64_t>(vk::Device::CType(this->getVkDevice())));
         VulkanDbg::registerVkObjectDbgInfo("Graphics Queue", vk::ObjectType::eQueue, reinterpret_cast<uint64_t>(vk::Queue::CType(this->queueFamilies.getGraphicsQueue())));
         VulkanDbg::registerVkObjectDbgInfo("Presentation Queue", vk::ObjectType::eQueue, reinterpret_cast<uint64_t>(vk::Queue::CType(this->queueFamilies.getPresentQueue()))); // TODO: might be problematic.. since it can be same as Graphics Queue
              
@@ -106,16 +109,16 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
         VulkanDbg::registerVkObjectDbgInfo("Logical Device",vk::ObjectType::eDevice, reinterpret_cast<uint64_t>(vk::Device::CType(this->getVkDevice())));
 
         VmaAllocatorCreateInfo vmaAllocatorCreateInfo{};
-        vmaAllocatorCreateInfo.device = this->getVkDevice();
-        vmaAllocatorCreateInfo.physicalDevice = this->physicalDevice.getVkPhysicalDevice();
         vmaAllocatorCreateInfo.instance = this->instance.getVkInstance();
+        vmaAllocatorCreateInfo.physicalDevice = this->physicalDevice.getVkPhysicalDevice();
+        vmaAllocatorCreateInfo.device = this->getVkDevice();
         vmaAllocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
         if(vmaCreateAllocator(&vmaAllocatorCreateInfo, &this->vma) != VK_SUCCESS)
         {
-            throw std::runtime_error("Could not create the VMA (vulkan memory allocator)!");
+            Log::error("Could not create the VMA (vulkan memory allocator)!");
         }
 
-        setupDebugMessenger();  // Used when we use Validation Layers to trigger errors/warnings/etc.
+        this->setupDebugMessenger();  // Used when we use Validation Layers to trigger errors/warnings/etc.
 
         this->swapchain.createSwapchain(
             *this->window,
@@ -125,35 +128,48 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
             this->queueFamilies,
             this->vma
         );
-        
-        this->createRenderPass_Base();
-        this->createRenderPass_Imgui();
+
+        this->createRenderPassBase();
+        this->createRenderPassImgui();
         this->createDescriptorSetLayout();
         
         this->createPushConstantRange();
 
-        this->createGraphicsPipeline_Base();
+        this->pipelineLayout.createPipelineLayout(
+            this->device,
+            this->descriptorSetLayout,
+            this->samplerDescriptorSetLayout,
+            this->pushConstantRange
+        );
+        this->pipeline.createPipeline(
+            this->device, 
+            this->pipelineLayout,
+            this->renderPassBase
+        );
         
-        this->swapchain.createFramebuffers(this->renderPass_base);
+        this->swapchain.createFramebuffers(this->renderPassBase);
         this->createCommandPool();
-        
+
         this->createCommandBuffers();
 
         this->createTextureSampler();
         
-        this->createUniformBuffers();
+        this->viewProjectionUB.createUniformBuffer(
+            this->device,
+            this->vma,
+            sizeof(UboViewProjection),
+            MAX_FRAMES_IN_FLIGHT
+        );
 
         this->createDescriptorPool();
 
         this->allocateDescriptorSets();
         this->createDescriptorSets();
         
-        this->createInputDescriptorSets();
-
         this->createSynchronisation();        
 
-        this->updateUBO_camera_Projection(); //TODO: Allow for more cameras! 
-        this->updateUBO_camera_view(
+        this->updateUboProjection(); //TODO: Allow for more cameras! 
+        this->updateUboView(
             glm::vec3(DEF<float>(CAM_EYE_X),DEF<float>(CAM_EYE_Y),DEF<float>(CAM_EYE_Z)),
             glm::vec3(DEF<float>(CAM_TARGET_X),DEF<float>(CAM_TARGET_Y), DEF<float>(CAM_TARGET_Z)));
 
@@ -180,8 +196,10 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
 
 void VulkanRenderer::generateVmaDump()
 {
+    Log::error("generateVmaDump() is causing a memory leak at the moment :(");
+
     char* vma_dump;
-    vmaBuildStatsString(this->vma,&vma_dump,VK_TRUE);
+    vmaBuildStatsString(this->vma, &vma_dump, VK_TRUE);
     std::ofstream file("vma_dump.json");
     file << vma_dump << std::endl;
     file.close();
@@ -207,10 +225,10 @@ void VulkanRenderer::cleanup()
     this->window->shutdownImgui();
     ImGui::DestroyContext();
 
-    this->cleanupFramebuffer_imgui();
+    this->cleanupFramebufferImgui();
 
-    this->getVkDevice().destroyRenderPass(this->renderPass_imgui);
-    this->getVkDevice().destroyDescriptorPool(this->descriptorPool_imgui);
+    this->getVkDevice().destroyRenderPass(this->renderPassImgui);
+    this->getVkDevice().destroyDescriptorPool(this->descriptorPoolImgui);
     
 #ifndef VENGINE_NO_PROFILING
     CustomFree(this->tracyImage);
@@ -221,9 +239,9 @@ void VulkanRenderer::cleanup()
     }
 #endif
 
-
-    this->getVkDevice().destroyDescriptorPool(this->inputDescriptorPool);
-    this->getVkDevice().destroyDescriptorSetLayout(this->inputSetLayout);
+    //TODO: Check if this should be removed... Probably should
+    //this->getVkDevice().destroyDescriptorPool(this->inputDescriptorPool);
+    //this->getVkDevice().destroyDescriptorSetLayout(this->inputSetLayout);
 
     this->getVkDevice().destroyDescriptorPool(this->samplerDescriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->samplerDescriptorSetLayout);
@@ -240,13 +258,9 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyDescriptorPool(this->descriptorPool);
     this->getVkDevice().destroyDescriptorSetLayout(this->descriptorSetLayout);
 
-    for(size_t i = 0; i < this->swapchain.getNumImages(); i++)
-    {
-        this->getVkDevice().destroyBuffer(this->viewProjection_uniformBuffer[i]);
-        vmaFreeMemory(this->vma, this->viewProjection_uniformBufferMemory[i]);
-    }
+    this->viewProjectionUB.cleanup();
 
-    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         this->getVkDevice().destroySemaphore(this->renderFinished[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
@@ -256,12 +270,11 @@ void VulkanRenderer::cleanup()
     this->getVkDevice().destroyCommandPool(this->graphicsCommandPool);
     
     this->getVkDevice().destroyPipelineCache(this->graphics_pipelineCache);
-    this->getVkDevice().destroyPipeline(this->secondGraphicsPipeline);
-    this->getVkDevice().destroyPipelineLayout(this->secondPipelineLayout);
 
-    this->getVkDevice().destroyPipeline(this->graphicsPipeline);
-    this->getVkDevice().destroyPipelineLayout(this->pipelineLayout);
-    this->getVkDevice().destroyRenderPass(this->renderPass_base);
+    this->pipeline.cleanup();
+    this->pipelineLayout.cleanup();
+
+    this->getVkDevice().destroyRenderPass(this->renderPassBase);
 
     this->swapchain.cleanup();
 
@@ -303,10 +316,13 @@ void VulkanRenderer::draw(Scene* scene)
 
         auto result = this->getVkDevice().waitForFences(
             uint32_t(1),                        // number of Fences to wait on
-            &this->drawFences[currentFrame],    // Which Fences to wait on
+            &this->drawFences[this->currentFrame],    // Which Fences to wait on
             waitForAllFences,                   // should we wait for all Fences or not?              
             std::numeric_limits<uint64_t>::max());
-        if(result != vk::Result::eSuccess) {throw std::runtime_error("Failed to wait for all fences!");}        
+        if(result != vk::Result::eSuccess) 
+        {
+            Log::error("Failed to wait for all fences!");
+        }
     }
 
     // Get scene camera and update view matrix
@@ -343,26 +359,27 @@ void VulkanRenderer::draw(Scene* scene)
             this->swapchain.getVkSwapchain(),
             std::numeric_limits<uint64_t>::max(),   // How long to wait before the Image is retrieved, crash if reached. 
                                                     // We dont want to use a timeout, so we make it as big as possible.
-            this->imageAvailable[currentFrame],     // The Semaphore to signal, when it's available to be used!
+            this->imageAvailable[this->currentFrame],     // The Semaphore to signal, when it's available to be used!
             VK_NULL_HANDLE                          // The Fence to signal, when it's available to be used...(??)
         );
         if(result == vk::Result::eErrorOutOfDateKHR){
-            reCreateSwapChain(camera);    
+            this->recreateSwapchain(camera);    
             return;
         }
-        else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) {throw std::runtime_error("Failed to AcquireNextImage!");}
+        else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) 
+        {
+            Log::error("Failed to AcquireNextImage!");
+        }
 
         // Close the Fence behind us if work is being submitted...
         result = this->getVkDevice().resetFences(
             uint32_t(1),
-            &this->drawFences[currentFrame]);
-        if(result != vk::Result::eSuccess) {throw std::runtime_error("Failed to reset fences!");}
+            &this->drawFences[this->currentFrame]);
+        if(result != vk::Result::eSuccess) 
+        {
+            Log::error("Failed to reset fences!");
+        }
     }
-    
-    // ReRecord the current CommandBuffer! In order to update any Push Constants
-    recordRenderPassCommands_Base(scene, imageIndex);
-    // recordRenderPassCommands_imgui(imageIndex);
-    //recordDynamicRenderingCommands(imageIndex); //TODO: User should be able to set if DynamicRendering or Renderpass should be used
     
     // Set view and projection in ubo
     uboViewProjection.view = camera->view;
@@ -370,8 +387,15 @@ void VulkanRenderer::draw(Scene* scene)
     if (deleteCamera) { delete camera; }
 
     // Update the Uniform Buffers
-    this->updateUniformBuffers(imageIndex);
+    this->viewProjectionUB.update(
+        (void*) &this->uboViewProjection, 
+        this->currentFrame
+    );
 
+    // ReRecord the current CommandBuffer! In order to update any Push Constants
+    recordRenderPassCommandsBase(scene, imageIndex);
+    
+    // Submit to graphics queue
     {
         #ifndef VENGINE_NO_PROFILING
         ZoneNamedN(draw_zone3, "Wait for Semaphore", true); //:NOLINT   
@@ -386,18 +410,17 @@ void VulkanRenderer::draw(Scene* scene)
         };
         
         vk::SemaphoreSubmitInfo wait_semaphoreSubmitInfo;
-        wait_semaphoreSubmitInfo.setSemaphore(this->imageAvailable[currentFrame]);
+        wait_semaphoreSubmitInfo.setSemaphore(this->imageAvailable[this->currentFrame]);
         wait_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput); // (!!)
         //wait_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eAllCommands); // (!!)(??)
         wait_semaphoreSubmitInfo.setDeviceIndex(uint32_t(1));                            // 0: sets all devices in group 1 to valid... bad or good?
 
         vk::SemaphoreSubmitInfo signal_semaphoreSubmitInfo;
-        signal_semaphoreSubmitInfo.setSemaphore(this->renderFinished[currentFrame]);
+        signal_semaphoreSubmitInfo.setSemaphore(this->renderFinished[this->currentFrame]);
         signal_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
 
         std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos{
-            vk::CommandBufferSubmitInfo{this->commandBuffers[imageIndex]}
-            //vk::CommandBufferSubmitInfo{this->commandBuffers_imgui[imageIndex]}
+            vk::CommandBufferSubmitInfo{this->commandBuffers[this->currentFrame]}
         };        
         
         vk::SubmitInfo2 submitInfo {};      
@@ -407,21 +430,21 @@ void VulkanRenderer::draw(Scene* scene)
         submitInfo.setCommandBufferInfoCount(commandBufferSubmitInfos.size()); 
         submitInfo.setPCommandBufferInfos(commandBufferSubmitInfos.data()); // Pointer to the CommandBuffer to execute
         submitInfo.setSignalSemaphoreInfoCount(uint32_t(1));
-        submitInfo.setPSignalSemaphoreInfos(&signal_semaphoreSubmitInfo);// Semaphore that will be signaled when 
-                                                                        // CommandBuffer is finished
-
+        submitInfo.setPSignalSemaphoreInfos(&signal_semaphoreSubmitInfo);// Semaphore that will be signaled when CommandBuffer is finished
 
         // Submit The CommandBuffers to the Queue to begin drawing to the framebuffers
         this->queueFamilies.getGraphicsQueue().submit2(
             submitInfo, 
-            drawFences[currentFrame]
+            this->drawFences[this->currentFrame]
         ); // drawing, signal this Fence to open!
     }
-        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-            ImGui::UpdatePlatformWindows();        
-            ImGui::RenderPlatformWindowsDefault();
-        }
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        ImGui::UpdatePlatformWindows();        
+        ImGui::RenderPlatformWindowsDefault();
+    }
+
+    // Submit to presentation queue
     {
         #ifndef VENGINE_NO_PROFILING
         ZoneNamedN(draw_zone4, "Present Image", true); //:NOLINT   
@@ -430,7 +453,7 @@ void VulkanRenderer::draw(Scene* scene)
         //3. Present image to screen when it has signalled finished rendering.
         vk::PresentInfoKHR presentInfo{};
         presentInfo.setWaitSemaphoreCount(uint32_t (1));
-        presentInfo.setPWaitSemaphores(&this->renderFinished[currentFrame]);  // Semaphore to Wait on before Presenting
+        presentInfo.setPWaitSemaphores(&this->renderFinished[this->currentFrame]);  // Semaphore to Wait on before Presenting
         presentInfo.setSwapchainCount(uint32_t (1));    
         presentInfo.setPSwapchains(&this->swapchain.getVkSwapchain());                         // Swapchain to present the image to
         presentInfo.setPImageIndices(&imageIndex);                            // Index of images in swapchains to present                
@@ -441,9 +464,12 @@ void VulkanRenderer::draw(Scene* scene)
         if (resultvk == vk::Result::eErrorOutOfDateKHR || resultvk == vk::Result::eSuboptimalKHR || this->windowResized )
         {
             this->windowResized = false;       
-            reCreateSwapChain(camera);
+            this->recreateSwapchain(camera);
         }
-        else if(resultvk != vk::Result::eSuccess) {throw std::runtime_error("Failed to present Image!");}
+        else if(resultvk != vk::Result::eSuccess) 
+        {
+            Log::error("Failed to present Image!");
+        }
     }
 
     // Update current Frame for next draw!
@@ -480,7 +506,7 @@ void VulkanRenderer::setupDebugMessenger()
             this->dynamicDispatch);
     if (result != vk::Result::eSuccess) 
     {
-        throw std::runtime_error("Failed to create Debug Messenger!");
+        Log::error("Failed to create Debug Messenger!");
     }
 }
 
@@ -490,336 +516,311 @@ void VulkanRenderer::createSurface()
     ZoneScoped; //:NOLINT
 #endif
 
-    //Using SDL to create WindowSurface, to make it cross platform
-    //Creates a surface create info struct configured for how SDL handles windows.    
+    // Using SDL to create WindowSurface, to make it cross platform
+    // Creates a surface create info struct configured for how SDL handles windows.    
     this->window->createVulkanSurface(this->instance, this->surface);
 }
 
-void VulkanRenderer::reCreateSwapChain(Camera* camera)
+void VulkanRenderer::recreateSwapchain(Camera* camera)
 {
     this->device.waitIdle();
     
-    this->getVkDevice().freeDescriptorSets(this->inputDescriptorPool,this->inputDescriptorSets);
-    cleanupFramebuffer_imgui();    
-    // cleanupSwapChain();
-    cleanupRenderBass_Imgui();  
-    cleanupRenderBass_Base();  
+    cleanupFramebufferImgui();
 
-    // createSwapChain();
-    this->swapchain.recreateSwapchain(this->renderPass_base);
-    createRenderPass_Base();
-    createRenderPass_Imgui();
-
-    // createFrameBuffers();
-    createFramebuffer_imgui();
+    this->swapchain.recreateSwapchain(this->renderPassBase);
+    createFramebufferImgui();
 
     this->createDescriptorSets();
-    this->createInputDescriptorSets();
 
-    //this->updateUBO_camera_Projection();
-    camera->aspectRatio = (float)this->swapchain.getWidth() / (float)swapchain.getHeight();
+    ImGui_ImplVulkan_SetMinImageCount(this->swapchain.getNumMinimumImages());
+
+    // Take new aspect ratio into account for the camera
+    camera->aspectRatio = (float) this->swapchain.getWidth() / (float)swapchain.getHeight();
     camera->projection = glm::perspective(camera->fov, camera->aspectRatio, 0.1f, 100.0f);
     camera->invProjection = glm::inverse(camera->projection);
 }
 
-void VulkanRenderer::cleanupRenderBass_Imgui()
+void VulkanRenderer::cleanupRenderPassImgui()
 {
-    this->getVkDevice().destroyRenderPass(this->renderPass_imgui);
+    this->getVkDevice().destroyRenderPass(this->renderPassImgui);
 }
 
-void VulkanRenderer::cleanupRenderBass_Base()
+void VulkanRenderer::cleanupRenderPassBase()
 {
-    this->getVkDevice().destroyRenderPass(this->renderPass_base);
+    this->getVkDevice().destroyRenderPass(this->renderPassBase);
 }
 
-void VulkanRenderer::createGraphicsPipeline_Base() 
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // read in SPIR-V code of shaders
-    auto vertexShaderCode = vengine_helper::readShaderFile("shader.vert.spv");
-    auto fragShaderCode = vengine_helper::readShaderFile("shader.frag.spv");
-
-    // Build Shader Modules to link to Graphics Pipeline
-    // Create Shader Modules
-    vk::ShaderModule vertexShaderModule = this->createShaderModule(vertexShaderCode);
-    vk::ShaderModule fragmentShaderModule = this->createShaderModule(fragShaderCode);
-    VulkanDbg::registerVkObjectDbgInfo("ShaderModule VertexShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(vertexShaderModule)));
-    VulkanDbg::registerVkObjectDbgInfo("ShaderModule fragmentShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(fragmentShaderModule)));
-
-    // --- SHADER STAGE CREATION INFORMATION ---
-    // Vertex Stage Creation Information
-    vk::PipelineShaderStageCreateInfo vertexShaderStageCreateInfo {};
-    vertexShaderStageCreateInfo.setStage(vk::ShaderStageFlagBits::eVertex);                             // Shader stage name
-    vertexShaderStageCreateInfo.setModule(vertexShaderModule);                                    // Shader Modual to be used by Stage
-    vertexShaderStageCreateInfo.setPName("main");                                                 //Name of the vertex Shaders main function (function to run)
-
-    // Fragment Stage Creation Information
-    vk::PipelineShaderStageCreateInfo fragmentShaderPipelineCreatInfo {};
-    fragmentShaderPipelineCreatInfo.setStage(vk::ShaderStageFlagBits::eFragment);                       // Shader Stage Name
-    fragmentShaderPipelineCreatInfo.setModule(fragmentShaderModule);                              // Shader Module used by stage
-    fragmentShaderPipelineCreatInfo.setPName("main");                                             // name of the fragment shader main function (function to run)
-    
-    // Put shader stage creation infos into array
-    // graphics pipeline creation info requires array of shader stage creates
-    std::array<vk::PipelineShaderStageCreateInfo, 2> pipelineShaderStageCreateInfos {
-            vertexShaderStageCreateInfo,
-            fragmentShaderPipelineCreatInfo
-    };
-
-    // -- FIXED SHADER STAGE CONFIGURATIONS -- 
-
-    // How the data for a single vertex (including info such as position, colour, texture coords, normals, etc)
-    // is as a whole.
-    vk::VertexInputBindingDescription bindingDescription;
-    bindingDescription.setBinding(uint32_t (0));                 // Can bind multiple streams of data, this defines which one.
-    bindingDescription.setStride(sizeof(Vertex));    // Size of a single Vertex Object
-    bindingDescription.setInputRate(vk::VertexInputRate::eVertex); // How to move between data after each vertex...
-    
-    // How the Data  for an attribute is definied within a vertex    
-    std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions{}; 
-
-    // Position Attribute: 
-    attributeDescriptions[0].setBinding(uint32_t (0));                           // which binding the data is at (should be same as above)
-    attributeDescriptions[0].setLocation(uint32_t (0));                           // Which Location in shader where data will be read from
-    attributeDescriptions[0].setFormat(vk::Format::eR32G32B32Sfloat);  // Format the data will take (also helps define size of data)
-    attributeDescriptions[0].setOffset(offsetof(Vertex, pos));       // Sets the offset of our struct member Pos (where this attribute is defined for a single vertex...)
-
-    // Color Attribute.
-    attributeDescriptions[1].setBinding(uint32_t (0));                         
-    attributeDescriptions[1].setLocation(uint32_t (1));                         
-    attributeDescriptions[1].setFormat(vk::Format::eR32G32B32Sfloat);
-    attributeDescriptions[1].setOffset(offsetof(Vertex, col));
-
-    // Texture Coorinate Attribute (uv): 
-    attributeDescriptions[2].setBinding(uint32_t (0));
-    attributeDescriptions[2].setLocation(uint32_t (2));
-    attributeDescriptions[2].setFormat(vk::Format::eR32G32Sfloat);      // Note; only RG, since it's a 2D image we don't use the depth and thus we only need RG and not RGB
-    attributeDescriptions[2].setOffset(offsetof(Vertex, tex));
-
-
-    // -- VERTEX INPUT --
-    vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
-    vertexInputCreateInfo.setVertexBindingDescriptionCount(uint32_t (1));
-    vertexInputCreateInfo.setPVertexBindingDescriptions(&bindingDescription);
-    vertexInputCreateInfo.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()));
-    vertexInputCreateInfo.setPVertexAttributeDescriptions(attributeDescriptions.data());      
-
-    // -- INPUT ASSEMBLY --
-    vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
-    inputAssemblyStateCreateInfo.setTopology(vk::PrimitiveTopology::eTriangleList);        // Primitive type to assemble primitives from ;
-    inputAssemblyStateCreateInfo.setPrimitiveRestartEnable(VK_FALSE);                     // Allow overrideing tof "strip" topology to start new primitives
-
-    // -- VIEWPORT & SCISSOR ---
-    // Create viewport info struct
-    vk::Viewport viewport;    
-    viewport.setX(0.0F);        // x start coordinate
-    viewport.setY(0.0F);        // y start coordinate
-    viewport.setWidth(static_cast<float>(this->swapchain.getWidth()));       // width of viewport
-    viewport.setHeight(static_cast<float>(this->swapchain.getHeight()));     // height of viewport
-    viewport.setMinDepth(0.0F);     // min framebuffer depth
-    viewport.setMaxDepth(1.0F);     // max framebuffer depth
-    //create a scissor info struct
-    vk::Rect2D scissor;
-    scissor.offset = vk::Offset2D{0, 0};                            // Offset to use Region from
-    scissor.extent = this->swapchain.getVkExtent();                   // Extent to sdescribe region to use, starting at offset
-
-    vk::PipelineViewportStateCreateInfo viewportStateCreateInfo = {};
-    viewportStateCreateInfo.setViewportCount(uint32_t(1));
-    viewportStateCreateInfo.setPViewports(&viewport);
-    viewportStateCreateInfo.setScissorCount(uint32_t(1));
-    viewportStateCreateInfo.setPScissors(&scissor);
-
-
-    // --- DYNAMIC STATES ---
-    // dynamic states to enable... NOTE: to change some stuff you might need to reset it first... example viewport...
-    std::vector<vk::DynamicState > dynamicStateEnables;
-    dynamicStateEnables.push_back(vk::DynamicState::eViewport); // Dynamic Viewport    : can resize in command buffer with vkCmdSetViewport(command, 0,1,&viewport)
-    dynamicStateEnables.push_back(vk::DynamicState::eScissor);  // Dynamic Scissor     : Can resize in commandbuffer with vkCmdSetScissor(command, 0,1, &viewport)
-
-    // Dynamic state creation info
-    vk::PipelineDynamicStateCreateInfo dynamicStateCreateInfo = {};    
-    dynamicStateCreateInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStateEnables.size());
-    dynamicStateCreateInfo.pDynamicStates = dynamicStateEnables.data();
-
-    // --- RASTERIZER ---
-    vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
-    rasterizationStateCreateInfo.setDepthClampEnable(VK_FALSE);         // Change if fragments beyond near/far planes are clipped / clamped  (Requires depthclamp as a device features...)
-    rasterizationStateCreateInfo.setRasterizerDiscardEnable(VK_FALSE);// Wether to discard data or skip rasterizzer. Never creates fragments, only suitable for pipleine without framebuffer output
-    rasterizationStateCreateInfo.setPolygonMode(vk::PolygonMode::eFill);// How to handle filling point betweeen vertices...
-    rasterizationStateCreateInfo.setLineWidth(1.F);                  // how thiock lines should be when drawn (other than 1 requires device features...)
-    rasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eBack);  // Which face of tri to cull
-    rasterizationStateCreateInfo.setFrontFace(vk::FrontFace::eCounterClockwise);// Since our Projection matrix now has a inverted Y-axis (GLM is right handed, but vulkan is left handed)
-                                                                    // winding order to determine which side is front
-    rasterizationStateCreateInfo.setDepthBiasEnable(VK_FALSE);        // Wether to add depthbiaoas to fragments (to remove shadowacne...)
-
-    // --- MULTISAMPLING ---
-    vk::PipelineMultisampleStateCreateInfo multisampleStateCreateInfo;
-    multisampleStateCreateInfo.setSampleShadingEnable(VK_FALSE);                      // Enable multisample shading or not
-    multisampleStateCreateInfo.setRasterizationSamples(vk::SampleCountFlagBits::e1);        // number of samples to use per fragment
-
-
-    // --- BLENDING --
-    
-    // Blend attachment State (how blending is handled)
-    vk::PipelineColorBlendAttachmentState  colorState;
-    colorState.setColorWriteMask(vk::ColorComponentFlagBits::eA | vk::ColorComponentFlagBits::eB // Colours to apply blending to
-                | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eR);
-    colorState.setBlendEnable(VK_TRUE);                                                       // enable blending
-
-    // Blending uses Equation: (srcColorBlendFactor * new Colour) colorBlendOp (dstColorBlendFactor * old Colour)
-    colorState.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha);
-    colorState.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
-    colorState.setColorBlendOp(vk::BlendOp::eAdd);
-
-    colorState.setSrcAlphaBlendFactor(vk::BlendFactor::eOne);
-    colorState.setDstAlphaBlendFactor(vk::BlendFactor::eZero);
-    colorState.setAlphaBlendOp(vk::BlendOp::eAdd);
-
-    vk::PipelineColorBlendStateCreateInfo colorBlendingCreateInfo;
-    colorBlendingCreateInfo.setLogicOpEnable(VK_FALSE);               // Alternative to calculations is to use logical Operations
-    colorBlendingCreateInfo.setAttachmentCount(uint32_t (1));
-    colorBlendingCreateInfo.setPAttachments(&colorState);
-
-    // --- PIPELINE LAYOUT ---
-
-    // We have two Descriptor Set Layouts, 
-    // One for View and Projection matrices Uniform Buffer, and the other one for the texture sampler!
-    std::array<vk::DescriptorSetLayout, 2> descriptorSetLayouts{
-        this->descriptorSetLayout,
-        this->samplerDescriptorSetLayout
-    };
-
-    vk::PipelineLayoutCreateInfo  pipelineLayoutCreateInfo{};
-    pipelineLayoutCreateInfo.setSetLayoutCount(static_cast<uint32_t>(descriptorSetLayouts.size()));
-    pipelineLayoutCreateInfo.setPSetLayouts(descriptorSetLayouts.data());
-    pipelineLayoutCreateInfo.setPushConstantRangeCount(uint32_t(1));                    // We only have One Push Constant range we want to use
-    pipelineLayoutCreateInfo.setPPushConstantRanges(&this->pushConstantRange);// the Push Constant Range we want to use
-
-    // --- DEPTH STENCIL TESING ---
-    vk::PipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
-    depthStencilCreateInfo.setDepthTestEnable(VK_TRUE);              // Enable Depth Testing; Check the Depth to determine if it should write to the fragment
-    depthStencilCreateInfo.setDepthWriteEnable(VK_TRUE);              // enable writing to Depth Buffer; To make sure it replaces old values
-    depthStencilCreateInfo.setDepthCompareOp(vk::CompareOp::eLess);   // Describes that we want to replace the old values IF new values are smaller/lesser.
-    depthStencilCreateInfo.setDepthBoundsTestEnable(VK_FALSE);             // In case we want to use as Min and a Max Depth; if depth Values exist between two bounds... 
-    depthStencilCreateInfo.setStencilTestEnable(VK_FALSE);             // Whether to enable the Stencil Test; we dont use it so we let it be disabled
-
-    this->pipelineLayout = this->getVkDevice().createPipelineLayout(pipelineLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("VkPipelineLayout GraphicsPipelineLayout", vk::ObjectType::ePipelineLayout, reinterpret_cast<uint64_t>(vk::PipelineLayout::CType(this->pipelineLayout)));
-    // --- RENDER PASS ---
-    //createRenderPass(); <-- This is done in the init-function!
-
-    // -- GRAPHICS PIPELINE CREATION --
-    vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
-    pipelineCreateInfo.setStageCount(uint32_t(2));                                          // Number of shader stages
-    pipelineCreateInfo.setPStages(pipelineShaderStageCreateInfos.data());         // List of Shader stages
-    pipelineCreateInfo.setPVertexInputState(&vertexInputCreateInfo);              // All the fixed function Pipeline states
-    pipelineCreateInfo.setPInputAssemblyState(&inputAssemblyStateCreateInfo);
-    pipelineCreateInfo.setPViewportState(&viewportStateCreateInfo);
-    pipelineCreateInfo.setPDynamicState(&dynamicStateCreateInfo);
-    pipelineCreateInfo.setPRasterizationState(&rasterizationStateCreateInfo);
-    pipelineCreateInfo.setPMultisampleState(&multisampleStateCreateInfo);
-    pipelineCreateInfo.setPColorBlendState(&colorBlendingCreateInfo);
-    pipelineCreateInfo.setPDepthStencilState(&depthStencilCreateInfo);
-    pipelineCreateInfo.setLayout(this->pipelineLayout);                                 // Pipeline layout pipeline should use
-    pipelineCreateInfo.setRenderPass(this->renderPass_base);                                 // Render pass description the pipeline is compatible with
-    pipelineCreateInfo.setSubpass(uint32_t(0));                                             // subpass of render pass to use with pipeline
-
-    // Pipeline Derivatives : Can Create multiple pipelines that derive from one another for optimization
-    pipelineCreateInfo.setBasePipelineHandle(nullptr); // Existing pipeline to derive from ...
-    pipelineCreateInfo.setBasePipelineIndex(int32_t(-1));              // or index of pipeline being created to derive from ( in case of creating multiple of at once )
-
-    // Create Graphics Pipeline
-    vk::Result result{};
-    std::tie(result , this->graphicsPipeline) = getVkDevice().createGraphicsPipeline(nullptr,pipelineCreateInfo);
-    if(result != vk::Result::eSuccess){throw std::runtime_error("Could not create Pipeline");}
-    VulkanDbg::registerVkObjectDbgInfo("VkPipeline GraphicsPipeline", vk::ObjectType::ePipeline, reinterpret_cast<uint64_t>(vk::Pipeline::CType(this->graphicsPipeline)));
-
-    //Destroy Shader Moduels, no longer needed after pipeline created
-    this->getVkDevice().destroyShaderModule(vertexShaderModule);
-    this->getVkDevice().destroyShaderModule(fragmentShaderModule);
-
-
-    //////////////////////
-    //////////////////////
-    //////////////////////
-    //////////////////////
-    
-    // - CREATE SECOND PASS PIPELINE - 
-    // second Pass Shaders
-    auto secondVertexShaderCode     = vengine_helper::readShaderFile("second.vert.spv");
-    auto secondFragmentShaderCode     = vengine_helper::readShaderFile("second.frag.spv");    
-
-    // Build Shaders
-    vk::ShaderModule secondVertexShaderModule = createShaderModule(secondVertexShaderCode);
-    vk::ShaderModule secondFragmentShaderModule = createShaderModule(secondFragmentShaderCode);
-    VulkanDbg::registerVkObjectDbgInfo("ShaderModule Second_VertexShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(secondVertexShaderModule)));
-    VulkanDbg::registerVkObjectDbgInfo("ShaderModule Second_fragmentShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(secondFragmentShaderModule)));
-
-    // --- SHADER STAGE CREATION INFORMATION ---
-    // Vertex Stage Creation Information
-    vertexShaderStageCreateInfo.module = secondVertexShaderModule;                              // Shader Modual to be used by Stage
-
-    // Fragment Stage Creation Information    
-    fragmentShaderPipelineCreatInfo.module = secondFragmentShaderModule;                        // Shader Module used by stage    
-
-    // Put shader stage creation infos into array
-    // graphics pipeline creation info requires array of shader stage creates
-    std::array<vk::PipelineShaderStageCreateInfo,2> secondPipelineShaderStageCreateInfos = {
-            vertexShaderStageCreateInfo,
-            fragmentShaderPipelineCreatInfo
-    };
-    
-     // -- VERTEX INPUT --
-    vertexInputCreateInfo.setVertexBindingDescriptionCount(uint32_t(0));
-    vertexInputCreateInfo.setPVertexBindingDescriptions(nullptr);
-    vertexInputCreateInfo.setVertexAttributeDescriptionCount(uint32_t (0));
-    vertexInputCreateInfo.setPVertexAttributeDescriptions(nullptr);  
-
-    // --- DEPTH STENCIL TESING ---
-    depthStencilCreateInfo.setDepthWriteEnable(VK_FALSE);             // DISABLE writing to Depth Buffer; To make sure it replaces old values
-
-    // Create New pipeline Layout
-    vk::PipelineLayoutCreateInfo secondPipelineLayoutCreateInfo{};
-    secondPipelineLayoutCreateInfo.setSetLayoutCount(uint32_t (1));
-    secondPipelineLayoutCreateInfo.setPSetLayouts(&this->inputSetLayout);
-    secondPipelineLayoutCreateInfo.setPushConstantRangeCount(uint32_t (0));
-    secondPipelineLayoutCreateInfo.setPPushConstantRanges(nullptr);
-    // createPipelineLayout
-    this->secondPipelineLayout = this->getVkDevice().createPipelineLayout(secondPipelineLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("VkPipelineLayout Second_GraphicsPipelineLayout", vk::ObjectType::ePipelineLayout, reinterpret_cast<uint64_t>(vk::PipelineLayout::CType(this->secondPipelineLayout)));
-    
-     // -- GRAPHICS PIPELINE CREATION --
-    pipelineCreateInfo.setPStages(secondPipelineShaderStageCreateInfos.data());                // List of Shader stages
-    pipelineCreateInfo.setLayout(this->secondPipelineLayout);                      // Pipeline layout pipeline should use
-    pipelineCreateInfo.setSubpass(uint32_t (1));                                             // Use Subpass 2 (index 1...)
-
-    // Create Graphics Pipeline
-    std::tie(result, this->secondGraphicsPipeline) = this->getVkDevice().createGraphicsPipeline(nullptr, pipelineCreateInfo);
-    if(result != vk::Result::eSuccess){throw std::runtime_error("Could not create Second Pipeline");}
-    VulkanDbg::registerVkObjectDbgInfo("VkPipeline Second_GraphicsPipeline", vk::ObjectType::ePipeline, reinterpret_cast<uint64_t>(vk::Pipeline::CType(this->secondGraphicsPipeline)));
-
-    //Destroy Second Shader Moduels, no longer needed after pipeline created
-    this->getVkDevice().destroyShaderModule(secondVertexShaderModule);
-    this->getVkDevice().destroyShaderModule(secondFragmentShaderModule);
-
-}
-
-vk::ShaderModule VulkanRenderer::createShaderModule(const std::vector<char> &code)
+/////////////////////////////////////////////////TODO: REMOVE vv
+int VulkanRenderer::createTextureImage(const std::string &filename)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    vk::ShaderModuleCreateInfo shaderCreateInfo = {};
-    shaderCreateInfo.setCodeSize(code.size());                                    // Size of code
-    shaderCreateInfo.setPCode(reinterpret_cast<const uint32_t*>(code.data()));    // pointer of code (of uint32_t pointe rtype //NOLINT:Ok to use Reinterpret cast here
+    // Load the image file
+    int width = 0;
+    int height = 0;
+    vk::DeviceSize imageSize = 0;
+    stbi_uc* imageData = this->loadTextuerFile(filename, &width,&height, &imageSize);
 
-    vk::ShaderModule shaderModule = this->getVkDevice().createShaderModule(shaderCreateInfo);
-    return shaderModule;
+    //Create Staging buffer to hold loaded data, ready to copy to device
+    vk::Buffer imageStagingBuffer = nullptr;
+    //vk::DeviceMemory imageStagingBufferMemory = nullptr;
+    VmaAllocation imageStagingBufferMemory = nullptr;
+    VmaAllocationInfo allocInfo;
+
+    Buffer::createBuffer(
+        {
+            .bufferSize = imageSize, 
+            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
+            // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible         // Staging buffer needs to be visible from HOST  (CPU), in order for modification
+            //                     |   vk::MemoryPropertyFlagBits::eHostCoherent,   // not using cache...
+            .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+            .buffer = &imageStagingBuffer, 
+            .bufferMemory = &imageStagingBufferMemory,
+            .allocationInfo = &allocInfo,
+            .vma = &this->vma
+        });
+
+    void* data = nullptr; 
+    
+    if(vmaMapMemory(this->vma, imageStagingBufferMemory, &data) != VK_SUCCESS)
+    {
+        Log::error("Failed to allocate Mesh Staging Texture Image Buffer Using VMA!");
+    }
+
+    memcpy(data, imageData, imageSize);
+    vmaUnmapMemory(this->vma , imageStagingBufferMemory);
+    
+
+    // Free image data allocated through stb_image.h 
+    stbi_image_free(imageData);
+
+    // Create image to hold final texture
+    vk::Image texImage = nullptr;
+    //vk::DeviceMemory texImageMemory = nullptr;
+    VmaAllocation texImageMemory = nullptr;
+    texImage = Texture::createImage(
+        this->vma,
+        {
+            .width = static_cast<uint32_t>(width), 
+            .height = static_cast<uint32_t>(height), 
+            .format = vk::Format::eR8G8B8A8Unorm,               // use Alpha channel even if image does not have... 
+            .tiling =vk::ImageTiling::eOptimal,                // Same value as the Depth Buffer uses (Dont know if it has to be)
+            .useFlags = vk::ImageUsageFlagBits::eTransferDst         // Data should be transfered to the GPU, from the staging buffer
+                        |   vk::ImageUsageFlagBits::eSampled,         // This image will be Sampled by a Sampler! 
+            .imageMemory = &texImageMemory
+        },
+        filename // Describing what image is being created, for debug purposes...
+    );
+
+    // - COPY THE DATA TO THE IMAGE -
+    // Transition image to be in the DST, needed by the Copy Operation (Copy assumes/needs image Layout to be in vk::ImageLayout::eTransferDstOptimal state)
+    Texture::transitionImageLayout(
+        this->device, 
+        this->queueFamilies.getGraphicsQueue(),
+        this->graphicsCommandPool, 
+        texImage,                               // Image to transition the layout on
+        vk::ImageLayout::eUndefined,              // Image Layout to transition the image from
+        vk::ImageLayout::eTransferDstOptimal);  // Image Layout to transition the image to
+
+    // Copy data to image
+    Buffer::copyBufferToImage(
+        this->device, 
+        this->queueFamilies.getGraphicsQueue(),
+        this->graphicsCommandPool, 
+        imageStagingBuffer, 
+        texImage, 
+        width, 
+        height
+    );
+
+    // Transition iamge to be shader readable for shader usage
+    Texture::transitionImageLayout(
+        this->device, 
+        this->queueFamilies.getGraphicsQueue(),
+        this->graphicsCommandPool, 
+        texImage,
+        vk::ImageLayout::eTransferDstOptimal,       // Image layout to transition the image from; this is the same as we transition the image too before we copied buffer!
+        vk::ImageLayout::eShaderReadOnlyOptimal);  // Image Layout to transition the image to; in order for the Fragment Shader to read it!         
+
+    // Add texture data to vector for reference 
+    this->textureImages.push_back(texImage);
+    this->textureImageMemory.push_back(texImageMemory);
+
+    // Destroy and Free the staging buffer + staging buffer memroy
+    this->getVkDevice().destroyBuffer(imageStagingBuffer);
+    vmaFreeMemory(this->vma, imageStagingBufferMemory);
+
+    // Return index of last pushed image!
+    return static_cast<int>(textureImages.size()) -1; 
+}
+
+int VulkanRenderer::createTexture(const std::string &filename)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+    // Create Texture Image and get its Location in array
+    int textureImageLoc = createTextureImage(filename);
+
+    // Create Image View
+    vk::ImageView imageView = Texture::createImageView(
+        this->device,
+        this->textureImages[textureImageLoc],   // The location of the Image in our textureImages vector
+        vk::Format::eR8G8B8A8Unorm,               // Format for rgba 
+        vk::ImageAspectFlagBits::eColor
+    );
+
+    // Add the Image View to our vector with Image views
+    this->textureImageViews.push_back(imageView);
+
+    // Create Texture Descriptor
+    int descriptorLoc = createSamplerDescriptor(imageView);
+
+    // Return index of Texture Descriptor that was just created
+    return descriptorLoc;
+}
+
+int VulkanRenderer::createSamplerDescriptor(vk::ImageView textureImage)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
+    // Descriptor Set Allocation Info
+    vk::DescriptorSetAllocateInfo setAllocateInfo;
+    setAllocateInfo.setDescriptorPool(this->samplerDescriptorPool);
+    setAllocateInfo.setDescriptorSetCount(uint32_t (1));
+    setAllocateInfo.setPSetLayouts(&this->samplerDescriptorSetLayout);
+
+    // Allocate Descriptor Sets
+    vk::DescriptorSet descriptorSet = 
+        this->getVkDevice().allocateDescriptorSets(setAllocateInfo)[0];
+
+    // Tedxture Image info
+    vk::DescriptorImageInfo imageInfo;
+    imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);     // The Image Layout when it is in use
+    imageInfo.setImageView(textureImage);                                 // Image to be bind to set
+    imageInfo.setSampler(this->textureSampler);                         // the Sampler to use for this Descriptor Set
+
+    // Descriptor Write Info
+    vk::WriteDescriptorSet descriptorWrite;
+    descriptorWrite.setDstSet(descriptorSet);
+    descriptorWrite.setDstArrayElement(uint32_t (0));
+    descriptorWrite.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+    descriptorWrite.setDescriptorCount(uint32_t (1));
+    descriptorWrite.setPImageInfo(&imageInfo);
+
+    // Update the new Descriptor Set
+    this->getVkDevice().updateDescriptorSets(
+        uint32_t(1),
+        &descriptorWrite,
+        uint32_t(0),
+        nullptr
+    );
+
+    // Add descriptor Set to our list of descriptor Sets
+    this->samplerDescriptorSets.push_back(descriptorSet);
+
+    //Return the last created Descriptor set
+    return static_cast<int>(this->samplerDescriptorSets.size() - 1); 
+}
+
+int VulkanRenderer::createModel(const std::string& modelFile)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif    
+    // Import Model Scene
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(
+        (DEF<std::string>(P_MODELS)+modelFile).c_str(),
+        aiProcess_Triangulate               // Ensures that ALL objects will be represented as Triangles
+        | aiProcess_FlipUVs                 // Flips the texture UV values, to be same as how we use them
+        | aiProcess_JoinIdenticalVertices   // Saves memory by making sure no dublicate vertices exists
+        );
+
+    if(scene == nullptr)
+    {
+        Log::error("Failed to load model ("+modelFile+")");
+    }
+
+    // Get vector of all materials 
+    std::vector<std::string> textureNames = Model::loadMaterials(scene);
+
+    // Handle empty texture 
+    std::vector<int> matToTexture(textureNames.size());
+
+    for(size_t i = 0; i < textureNames.size(); i++){
+        
+        if(textureNames[i].empty())
+        {
+            matToTexture[i] = 0; // Use default textures for models if textures are missing
+        }
+        else
+        {
+            // Create texture, use the index returned by our createTexture function
+            matToTexture[i] = createTexture(textureNames[i]);
+        }
+    }
+
+    // Load in all meshes
+    std::vector<Mesh> modelMeshes = Model::getMeshesFromNodeTree(
+        &this->vma,
+        this->physicalDevice.getVkPhysicalDevice(), 
+        this->getVkDevice(), 
+        this->queueFamilies.getGraphicsQueue(),
+        this->graphicsCommandPool, 
+        scene, 
+        matToTexture
+    );
+
+    // Create Model, add to list
+    Model model = Model(
+        &this->vma,
+        this->physicalDevice.getVkPhysicalDevice(), 
+        this->getVkDevice(), 
+        this->queueFamilies.getGraphicsQueue(),
+        this->graphicsCommandPool,
+        modelMeshes
+    );
+    modelList.emplace_back(model);
+
+    return static_cast<int>(modelList.size())-1;
+
 }
 
 
+stbi_uc* VulkanRenderer::loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+    // Number of Channels the image uses, will not be used but could be used in the future
+    int channels = 0;
+    using namespace vengine_helper::config;
+    // Load pixel Data from file to image
+    std::string fileLoc  = DEF<std::string>(P_TEXTURES) + filename;
+    stbi_uc* image = stbi_load(
+            fileLoc.c_str(),
+            width,
+            height,
+            &channels,          // In case we want to  use channels, its stored in channels
+            STBI_rgb_alpha );   // force image to be in format : RGBA
+
+    if(image == nullptr)
+    {
+        Log::error("Failed to load a Texture file! ("+filename+")");
+    }
+    
+
+    // Calculate image sisze using given and known data
+    *imageSize = static_cast<uint32_t>((*width) * (*height) * 4); // width times height gives us size per channel, we have 4 channels! (rgba)
+
+    return image;
+    
+}
 
 VulkanRenderer::VulkanRenderer()
     : resourceMan(nullptr), window(nullptr)
@@ -827,115 +828,69 @@ VulkanRenderer::VulkanRenderer()
     loadConfIntoMemory();
 }
 
-void VulkanRenderer::createRenderPass_Base() 
+void VulkanRenderer::createRenderPassBase() 
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
 
     // Array of our subPasses    
-    std::array<vk::SubpassDescription2, 2> subPasses {};     
+    // std::array<vk::SubpassDescription2, 2> subPasses {};
+    std::array<vk::SubpassDescription2, 1> subPasses{};
 
-    // - ATTATCHMENTS - 
-    // SUBPASS 1 ATTACHMENTS (Input attachments) and ATTACHMENT REFERENCES
-
-    // Color Attachment (Input)
+    // Color Attachment
     vk::AttachmentDescription2 colorAttachment {};
-    colorAttachment.setFormat(this->swapchain.getVkColorFormat());        
-        
+    colorAttachment.setFormat(this->swapchain.getVkFormat());
     colorAttachment.setSamples(vk::SampleCountFlagBits::e1);
     colorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);      // When we start the renderpass, first thing to do is to clear since there is no values in it yet
     colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore); // How to store it after the RenderPass; We dont care! But we do care what happens after the first SubPass! (not handled here)
     colorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     colorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
     colorAttachment.setInitialLayout(vk::ImageLayout::eUndefined);        // We dont care what the image layout is when we start. But we do care about what layout it is when it enter the first SubPass! (not handled here)
-    //colorAttachment.setFinalLayout(vk::ImageLayout::eAttachmentOptimal); // Should be the same value as it was after the subpass finishes (??)
     colorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); //(!!) Should be the same value as it was after the subpass finishes (??)
 
-    
+    // Depth Attatchment
+    vk::AttachmentDescription2 depthAttachment{};
+    depthAttachment.setFormat(this->swapchain.getVkDepthFormat());
+    depthAttachment.setSamples(vk::SampleCountFlagBits::e1);
+    depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);      // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
+    depthAttachment.setStoreOp(vk::AttachmentStoreOp::eDontCare); // Whenever it's used, we dont care what happens with the data... (we dont present it or anything)
+    depthAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);  // Even though the Stencil i present, we dont plan to use it. so we dont care    
+    depthAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);     // Even though the Stencil i present, we dont plan to use it. so we dont care
+    depthAttachment.setInitialLayout(vk::ImageLayout::eUndefined);        // We don't care how the image layout is initially, so let it be undefined
+    depthAttachment.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // Final layout should be Optimal for Depth Stencil attachment!
 
-    // Depth Attatchment Of Render Pass 
-    vk::AttachmentDescription2 depthAttatchment{};
-    depthAttatchment.setFormat(this->swapchain.getVkDepthFormat());
-    depthAttatchment.setSamples(vk::SampleCountFlagBits::e1);
-    depthAttatchment.setLoadOp(vk::AttachmentLoadOp::eClear);      // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
-    depthAttatchment.setStoreOp(vk::AttachmentStoreOp::eDontCare); // Whenever it's used, we dont care what happens with the data... (we dont present it or anything)
-    depthAttatchment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);  // Even though the Stencil i present, we dont plan to use it. so we dont care    
-    depthAttatchment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);     // Even though the Stencil i present, we dont plan to use it. so we dont care
-    depthAttatchment.setInitialLayout(vk::ImageLayout::eUndefined);        // We don't care how the image layout is initially, so let it be undefined
-    depthAttatchment.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // Final layout should be Optimal for Depth Stencil attachment!
-
-    // Color Attachment (input) Reference
+    // Color attachment reference
     vk::AttachmentReference2 colorAttachmentReference {};    
-    colorAttachmentReference.setAttachment(uint32_t(1));            // Match the number/ID of the Attachment to the index of the FrameBuffer!
+    colorAttachmentReference.setAttachment(uint32_t(0));            // Match the number/ID of the Attachment to the index of the FrameBuffer!
     colorAttachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal); // The Layout the Subpass must be in! 
 
-    // Depth Attachment (input) Reference
+    // Depth attachment reference
     vk::AttachmentReference2 depthAttachmentReference {};
-    depthAttachmentReference.setAttachment(uint32_t(2)); 
+    depthAttachmentReference.setAttachment(uint32_t(1)); 
     depthAttachmentReference.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // The layout the subpass must be in! Should be same as 'final layout'(??)
 
-    // Setup Subpass 1
+    // Setup Subpass 0
     subPasses[0].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics); 
     subPasses[0].setColorAttachmentCount(uint32_t(1)); 
     subPasses[0].setPColorAttachments(&colorAttachmentReference); 
     subPasses[0].setPDepthStencilAttachment(&depthAttachmentReference); 
 
-    // SUBPASS 2 ATTACHMENTS and ATTACHMENT REFERENCES
-
-    // Color Attachment SwapChain
-    vk::AttachmentDescription2 swapchainColorAttachment{};
-    swapchainColorAttachment.setFormat(this->swapchain.getVkFormat());              // Format to use for attachgment
-    swapchainColorAttachment.setSamples(vk::SampleCountFlagBits::e1);            // Number of samples to write for multisampling
-    swapchainColorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);       // Descripbes what to do with attachment before rendeing
-    swapchainColorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);     // Describes what to do with Attachment after rendering
-    swapchainColorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);     // Describes what to do with stencil before rendering
-    swapchainColorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);   // Describes what to do with stencil affter rendering
-
-    // Framebuffer data will be stored as an image, but images can be given different data layouts
-    // to give optimal usefor certain operations
-    swapchainColorAttachment.setInitialLayout(vk::ImageLayout::eUndefined);      // image data layout before render pass starts
-    //swapchainColorAttachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);  // Image data layout after render pass (to change to)
-    swapchainColorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);  // edit: After adding Imgui, this renderpass will no longer be the presenting one, thus we change final layout! 
-
-    vk::AttachmentReference2 swapchainColorAttachmentReference = {};
-    swapchainColorAttachmentReference.setAttachment(uint32_t(0));                                       // Attatchment on index 0 of array
-    swapchainColorAttachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    // Create two more Attachment References; These describes what the subpass will take input from
-    std::array<vk::AttachmentReference2,2 > inputReferences{};
-    inputReferences[0].setAttachment(uint32_t(1));                                        // The Attachment index (Color Input)
-    inputReferences[0].setLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // reuse the attachment (1), make sure it's uses SHADER_READ_ONLY_OPTIMAL layout!
-    inputReferences[0].setAspectMask(vk::ImageAspectFlagBits::eColor);//(!!)
-    inputReferences[0].setPNext(nullptr); //(!!)(??)
-    inputReferences[1].setAttachment(uint32_t(2));                                        // The Attachment index (Depth Input)
-    inputReferences[1].setAspectMask(vk::ImageAspectFlagBits::eDepth);//(!!)    
-    inputReferences[1].setLayout(vk::ImageLayout::eReadOnlyOptimal); // reuse the attachment (2), make sure it's uses SHADER_READ_ONLY_OPTIMAL layout!
-    inputReferences[1].setPNext(nullptr); //(!!)(??)
-
-    // Setup Subpass 2
-    subPasses[1].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics); 
-    subPasses[1].setColorAttachmentCount(uint32_t(1)); 
-    subPasses[1].setPColorAttachments(&swapchainColorAttachmentReference); 
-    subPasses[1].setInputAttachmentCount(static_cast<uint32_t>(inputReferences.size()));    // How many Inputs Subpass 2 will have
-    subPasses[1].setPInputAttachments(inputReferences.data());                           // The Input Attachments References Subpass 2 will use
-    
-    // Replacing all subpass dependencies with this results in no errors/warnings. But I dont know if it is correct... Seems to be the same if subpassDependency[0] and [2] are removed from the code above...
+    // Override the first implicit subpass
     std::array<vk::SubpassDependency2, 1> subpassDependencies{};
-    subpassDependencies[0].setSrcSubpass(0);
-    subpassDependencies[0].setDstSubpass(1);
-    subpassDependencies[0].setSrcStageMask(vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests);
-    subpassDependencies[0].setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader);
-    subpassDependencies[0].setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
-    subpassDependencies[0].setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
+    subpassDependencies[0].setSrcSubpass(VK_SUBPASS_EXTERNAL);
+    subpassDependencies[0].setDstSubpass(0);
+    subpassDependencies[0].setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests);
+    subpassDependencies[0].setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests);
+    subpassDependencies[0].setSrcAccessMask(vk::AccessFlagBits::eNone);
+    subpassDependencies[0].setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
     subpassDependencies[0].setDependencyFlags(vk::DependencyFlagBits::eByRegion);
 
     // Vector with the Attatchments
-    std::array<vk::AttachmentDescription2,3> attachments
+    std::array<vk::AttachmentDescription2, 2> attachments
     {
-        swapchainColorAttachment,   // Attachment on index 0 of array : SwapChain Color
-        colorAttachment,            // Attachment on index 1 of array : Color (input to SubPass 2)
-        depthAttatchment            // Attachment on index 2 of array : Depth (input to SubPass 2)
+        colorAttachment,
+        depthAttachment
     };
 
     //Create info for render pass
@@ -947,13 +902,12 @@ void VulkanRenderer::createRenderPass_Base()
     renderPassCreateInfo.setDependencyCount(static_cast<uint32_t> (subpassDependencies.size()));
     renderPassCreateInfo.setPDependencies(subpassDependencies.data());
 
-    this->renderPass_base = this->getVkDevice().createRenderPass2(renderPassCreateInfo);
+    this->renderPassBase = this->getVkDevice().createRenderPass2(renderPassCreateInfo);
 
-    VulkanDbg::registerVkObjectDbgInfo("The RenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass_base)));
-    
+    VulkanDbg::registerVkObjectDbgInfo("The RenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPassBase)));
 }
 
-void VulkanRenderer::createRenderPass_Imgui()
+void VulkanRenderer::createRenderPassImgui()
 {
     vk::AttachmentDescription2 attachment{};
     attachment.setFormat(this->swapchain.getVkFormat());
@@ -963,8 +917,6 @@ void VulkanRenderer::createRenderPass_Imgui()
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal);
-    //attachment.setInitialLayout(vk::ImageLayout::eUndefined);
-    
     attachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
 
     vk::AttachmentReference2 attachment_reference{};
@@ -992,7 +944,7 @@ void VulkanRenderer::createRenderPass_Imgui()
     renderpassCreateinfo.setPSubpasses(&subpass);
     renderpassCreateinfo.setDependencyCount(uint32_t(1));
     renderpassCreateinfo.setPDependencies(&subpassDependecy);
-    this->renderPass_imgui = this->getVkDevice().createRenderPass2(renderpassCreateinfo);
+    this->renderPassImgui = this->getVkDevice().createRenderPass2(renderpassCreateinfo);
 }
 
 void VulkanRenderer::createDescriptorSetLayout()
@@ -1044,36 +996,6 @@ void VulkanRenderer::createDescriptorSetLayout()
     // create Descriptor Set Layout
     this->samplerDescriptorSetLayout = this->getVkDevice().createDescriptorSetLayout(textureLayoutCreateInfo);
     VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout SamplerTexture", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->samplerDescriptorSetLayout)));
-
-    // CREATE INPUT ATTACHMENT IMAGE DESCRIPTOR SET LAYOUT
-    // Colour Input Binding
-    vk::DescriptorSetLayoutBinding colorInputLayoutBinding;
-    colorInputLayoutBinding.setBinding(uint32_t (0));                                            // Binding 0 for Set 0, but for a new pipeline
-    colorInputLayoutBinding.setDescriptorCount(uint32_t (1));
-    colorInputLayoutBinding.setDescriptorType(vk::DescriptorType::eInputAttachment);   // Describes that the Descriptor is used by Input Attachment
-    colorInputLayoutBinding.setStageFlags(vk::ShaderStageFlagBits::eFragment);              // Passed into the Fragment Shader Stage
-
-    vk::DescriptorSetLayoutBinding depthInputLayoutBinding;
-    depthInputLayoutBinding.setBinding(uint32_t (1));
-    depthInputLayoutBinding.setDescriptorCount(uint32_t (1)); 
-    depthInputLayoutBinding.setDescriptorType(vk::DescriptorType::eInputAttachment);
-    depthInputLayoutBinding.setStageFlags(vk::ShaderStageFlagBits::eFragment);
-
-    std::array<vk::DescriptorSetLayoutBinding, 2> inputLayoutBindings {   // Bindings for the Second Subpass input attachments (??)
-        colorInputLayoutBinding,
-        depthInputLayoutBinding
-    };
-
-    // Create a Descriptor Set Layout for input attachments
-    vk::DescriptorSetLayoutCreateInfo inputCreateInfo;
-    inputCreateInfo.setBindingCount(static_cast<uint32_t>(inputLayoutBindings.size()));
-    inputCreateInfo.setPBindings(inputLayoutBindings.data());
-    inputCreateInfo.setFlags(vk::DescriptorSetLayoutCreateFlags());    
-    inputCreateInfo.pNext = nullptr;
-
-    // create Descriptor Set Layout
-    this->inputSetLayout = this->getVkDevice().createDescriptorSetLayout(inputCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout SubPass2_input", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->inputSetLayout)));
 }
 
 void VulkanRenderer::createPushConstantRange()
@@ -1113,13 +1035,12 @@ void VulkanRenderer::createCommandBuffers()
 #endif
 
     // Resize command buffer count to have one for each framebuffer
-    // TODO: replace size with frames in flight
-    commandBuffers.resize(this->swapchain.getNumImages());
+    this->commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
     vk::CommandBufferAllocateInfo cbAllocInfo;
     cbAllocInfo.setCommandPool(graphicsCommandPool);
     cbAllocInfo.setLevel(vk::CommandBufferLevel::ePrimary);
-    cbAllocInfo.setCommandBufferCount(static_cast<uint32_t>(commandBuffers.size()));
+    cbAllocInfo.setCommandBufferCount(static_cast<uint32_t>(this->commandBuffers.size()));
 
     // Allocate command Buffers and place handles in array of buffers
     this->commandBuffers = this->getVkDevice().allocateCommandBuffers(cbAllocInfo);
@@ -1136,9 +1057,9 @@ void VulkanRenderer::createSynchronisation()
     ZoneScoped; //:NOLINT
 #endif
     // Create Semaphores for each Transition a Image can be in
-    imageAvailable.resize(MAX_FRAMES_IN_FLIGHT);
-    renderFinished.resize(MAX_FRAMES_IN_FLIGHT);
-    drawFences.resize(MAX_FRAMES_IN_FLIGHT);
+    this->imageAvailable.resize(MAX_FRAMES_IN_FLIGHT);
+    this->renderFinished.resize(MAX_FRAMES_IN_FLIGHT);
+    this->drawFences.resize(MAX_FRAMES_IN_FLIGHT);
 
     //  Semaphore Creation information
     vk::SemaphoreCreateInfo semaphoreCreateInfo; 
@@ -1188,45 +1109,6 @@ void VulkanRenderer::createTextureSampler()
     VulkanDbg::registerVkObjectDbgInfo("Texture Sampler", vk::ObjectType::eSampler, reinterpret_cast<uint64_t>(vk::Sampler::CType(this->textureSampler)));
 }
 
-void VulkanRenderer::createUniformBuffers()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // viewProjection_UniformBuffer size will be size of the view and Projection Members (will offset to access)
-    vk::DeviceSize viewProjection_buffer_size = sizeof(UboViewProjection);
-
-    // One uniform buffer for each image ( and by extension, command buffer)
-    // TODO: replace size with frames in flight
-    this->viewProjection_uniformBuffer.resize(this->swapchain.getNumImages());        // Resize to have as many ViewProjection buffers as images in swapchain
-    this->viewProjection_uniformBufferMemory.resize(this->swapchain.getNumImages());
-    this->viewProjection_uniformBufferMemory_info.resize(this->swapchain.getNumImages());
-
-    // Create Uniform Buffers 
-    for(size_t i = 0; i < this->viewProjection_uniformBuffer.size(); i++)
-    {
-        // Create regular Uniform Buffers
-        vengine_helper::createBuffer(
-            {
-                .physicalDevice = this->physicalDevice.getVkPhysicalDevice(),
-                .device         = this->getVkDevice(), 
-                .bufferSize     = viewProjection_buffer_size, 
-                .bufferUsageFlags = vk::BufferUsageFlagBits::eUniformBuffer,         // We're going to use this as a Uniform Buffer...
-                // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible         // So we can access the Data from the HOST (CPU)
-                //                     | vk::MemoryPropertyFlagBits::eHostCoherent,     // So we don't have to flush the data constantly...
-                .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-                .buffer         = &this->viewProjection_uniformBuffer[i], 
-                .bufferMemory   = &this->viewProjection_uniformBufferMemory[i],
-                .allocationInfo   = &this->viewProjection_uniformBufferMemory_info[i],
-                .vma = &vma
-            });
-
-        VulkanDbg::registerVkObjectDbgInfo("ViewProjection UniformBuffer["+std::to_string(i)+"]", vk::ObjectType::eBuffer, reinterpret_cast<uint64_t>(vk::Buffer::CType(this->viewProjection_uniformBuffer[i])));
-    }
-
-}
-
 void VulkanRenderer::createDescriptorPool()
 {
 #ifndef VENGINE_NO_PROFILING
@@ -1239,7 +1121,7 @@ void VulkanRenderer::createDescriptorPool()
     // viewProjection uniform Buffer Pool size
     vk::DescriptorPoolSize viewProjection_poolSize {};
     viewProjection_poolSize.setType(vk::DescriptorType::eUniformBuffer);                                     // Descriptors in Set will be of Type Uniform Buffer    
-    viewProjection_poolSize.setDescriptorCount(static_cast<uint32_t>(viewProjection_uniformBuffer.size())); // How many Descriptors we want, we want One uniformBuffer so we its only the size of our uniformBuffer
+    viewProjection_poolSize.setDescriptorCount(MAX_FRAMES_IN_FLIGHT); // How many Descriptors we want, we want One uniformBuffer so we its only the size of our uniformBuffer
 
     std::vector<vk::DescriptorPoolSize> descriptorPoolSizes
     {
@@ -1247,9 +1129,8 @@ void VulkanRenderer::createDescriptorPool()
     };
 
     // Data to create Descriptor Pool
-    // TODO: replace size with frames in flight
     vk::DescriptorPoolCreateInfo poolCreateInfo{};
-    poolCreateInfo.setMaxSets(this->swapchain.getNumImages());             // Max Nr Of descriptor Sets that can be created from the pool, 
+    poolCreateInfo.setMaxSets(MAX_FRAMES_IN_FLIGHT);             // Max Nr Of descriptor Sets that can be created from the pool, 
                                                                                         // Same as the number of buffers / images we have. 
     poolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(descriptorPoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
     poolCreateInfo.setPPoolSizes(descriptorPoolSizes.data());                          // PoolSizes to create the Descriptor Pool with
@@ -1278,41 +1159,12 @@ void VulkanRenderer::createDescriptorPool()
 
     this->samplerDescriptorPool = this->getVkDevice().createDescriptorPool(samplerPoolCreateInfo);
     VulkanDbg::registerVkObjectDbgInfo("DescriptorPool ImageSampler ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->samplerDescriptorPool)));
-
-
-    // - CREATE INPUT ATTTACHMENT DESCRIPTOR POOL -
-    // Color Attachment Pool Size
-    vk::DescriptorPoolSize colorInputPoolSize{};
-    colorInputPoolSize.setType(vk::DescriptorType::eInputAttachment);                          // Will be used by a Subpass as a Input Attachment... (??) 
-    colorInputPoolSize.setDescriptorCount(static_cast<uint32_t>(this->swapchain.getNumColorBufferImages()));// One Descriptor per colorBufferImageView
-
-    // Depth attachment Pool Size
-    vk::DescriptorPoolSize depthInputPoolSize{};
-    depthInputPoolSize.setType(vk::DescriptorType::eInputAttachment);                          // Will be used by a Subpass as a Input Attachment... (??) 
-    depthInputPoolSize.descriptorCount = static_cast<uint32_t>(this->swapchain.getNumDepthBufferImages());// One Descriptor per depthBufferImageView
-
-    std::array<vk::DescriptorPoolSize, 2> inputPoolSizes {
-        colorInputPoolSize,
-        depthInputPoolSize
-    };
-
-    // Create Input attachment pool
-    // TODO: replace size with frames in flight
-    vk::DescriptorPoolCreateInfo inputPoolCreateInfo {};
-    inputPoolCreateInfo.setMaxSets(this->swapchain.getNumImages());
-    inputPoolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(inputPoolSizes.size()));
-    inputPoolCreateInfo.setPPoolSizes(inputPoolSizes.data());
-    inputPoolCreateInfo.setFlags(vk::DescriptorPoolCreateFlagBits::eFreeDescriptorSet); // In order to be able to free this set later (recreate swapchain)
-
-    this->inputDescriptorPool = this->getVkDevice().createDescriptorPool(inputPoolCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool InputAttachment ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->inputDescriptorPool)));
-
 }
 
 void VulkanRenderer::allocateDescriptorSets()
 {
     // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    this->descriptorSets.resize(this->viewProjection_uniformBuffer.size()); // Since we have a uniform buffer per images, better use size of swapchainImages!
+    this->descriptorSets.resize(this->viewProjectionUB.getNumBuffers()); // Since we have a uniform buffer per images, better use size of swapchainImages!
 
     // Copy our DescriptorSetLayout so we have one per Image (one per UniformBuffer)
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts(
@@ -1335,122 +1187,40 @@ void VulkanRenderer::createDescriptorSets()
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    // TODO: replace size with frames in flight
-    descriptorSets.resize(this->swapchain.getNumImages()); // Since we have a uniform buffer per images, better use size of swapchainImages!
-
-    
-    for(size_t i = 0; i < descriptorSets.size(); i++)
-    {
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorSet["+std::to_string(i)+"]  UniformBuffer", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->descriptorSets[i])));
-    }
 
     // Update all of the Descriptor Set buffer binding
     for(size_t i = 0; i < this->descriptorSets.size(); i++)
     {
         // - VIEW PROJECTION DESCRIPTOR - 
         // Describe the Buffer info and Data offset Info
-        vk::DescriptorBufferInfo viewProjection_BufferInfo; 
-        viewProjection_BufferInfo.setBuffer(this->viewProjection_uniformBuffer[i]);// Buffer to get the Data from
-        viewProjection_BufferInfo.setOffset(0);                                    // Position Of start of Data; 
-                                                                                 // Offset from the start (0), since we want to write all data
-        viewProjection_BufferInfo.setRange(sizeof(UboViewProjection));             // Size of data ... 
+        vk::DescriptorBufferInfo viewProjectionBufferInfo; 
+        viewProjectionBufferInfo.setBuffer(this->viewProjectionUB.getBuffer(i)); // Buffer to get the Data from
+        viewProjectionBufferInfo.setOffset(0);
+        viewProjectionBufferInfo.setRange((vk::DeviceSize) this->viewProjectionUB.getBufferSize());
 
         // Data to describe the connection between Binding and Uniform Buffer
-        vk::WriteDescriptorSet viewProjection_setWrite;
-        viewProjection_setWrite.setDstSet(this->descriptorSets[i]);              // Descriptor Set to update
-        viewProjection_setWrite.setDstBinding(uint32_t (0));                                    // Binding to update (Matches with Binding on Layout/Shader)
-        viewProjection_setWrite.setDstArrayElement(uint32_t (0));                                // Index in array we want to update (if we use an array, we do not. thus 0)
-        viewProjection_setWrite.setDescriptorType(vk::DescriptorType::eUniformBuffer);// Type of Descriptor
-        viewProjection_setWrite.setDescriptorCount(uint32_t (1));                                // Amount of Descriptors to update
-        viewProjection_setWrite.setPBufferInfo(&viewProjection_BufferInfo); 
+        vk::WriteDescriptorSet viewProjectionWriteSet;
+        viewProjectionWriteSet.setDstSet(this->descriptorSets[i]);              // Descriptor Set to update
+        viewProjectionWriteSet.setDstBinding(uint32_t(0));                                    // Binding to update (Matches with Binding on Layout/Shader)
+        viewProjectionWriteSet.setDstArrayElement(uint32_t(0));                                // Index in array we want to update (if we use an array, we do not. thus 0)
+        viewProjectionWriteSet.setDescriptorType(vk::DescriptorType::eUniformBuffer);// Type of Descriptor
+        viewProjectionWriteSet.setDescriptorCount(uint32_t(1));                                // Amount of Descriptors to update
+        viewProjectionWriteSet.setPBufferInfo(&viewProjectionBufferInfo);
 
         // List of descriptorSetWrites
-        std::vector<vk::WriteDescriptorSet> descriptorSetWrites
+        std::vector<vk::WriteDescriptorSet> writeDescriptorSets
         {
-            viewProjection_setWrite
+            viewProjectionWriteSet
         };
 
         // Update the Descriptor Set with new buffer/binding info
         this->getVkDevice().updateDescriptorSets(
-            viewProjection_setWrite,  // Update all Descriptor sets in descripotrSetWrites vector
+            writeDescriptorSets,  // Update all Descriptor sets in writeDescriptorSets vector
             nullptr
         );
+
+        VulkanDbg::registerVkObjectDbgInfo("DescriptorSet[" + std::to_string(i) + "]  UniformBuffer", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->descriptorSets[i])));
     }
-
-}
-
-void VulkanRenderer::createInputDescriptorSets()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Resize array to hold Descriptor Set for each Swap Chain image
-    // TODO: replace size with frames in flight
-    this->inputDescriptorSets.resize(this->swapchain.getNumImages());
-
-    // Fill vector of layouts ready for set creation
-    std::vector<vk::DescriptorSetLayout> inputSetLayouts(
-        this->inputDescriptorSets.size(),
-        this->inputSetLayout
-    );
-
-    // Input Attachment Descriptor Set Allocation Info
-    vk::DescriptorSetAllocateInfo inputSetAllocInfo;
-    inputSetAllocInfo.setDescriptorPool(this->inputDescriptorPool);
-    inputSetAllocInfo.setDescriptorSetCount(static_cast<uint32_t>(this->inputDescriptorSets.size()));
-    inputSetAllocInfo.setPSetLayouts(inputSetLayouts.data());    
-
-    // Allocate Descriptor Sets
-    this->inputDescriptorSets = this->getVkDevice().allocateDescriptorSets(inputSetAllocInfo);  
-
-    for(size_t i = 0; i < this->inputDescriptorSets.size(); i++)
-    {
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorSet[" + std::to_string(i) + "] InputAttachment", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->inputDescriptorSets[i])));
-
-        // Color Attachment Descriptor
-        vk::DescriptorImageInfo colorAttachmentDescriptor;
-        colorAttachmentDescriptor.setImageLayout(vk::ImageLayout::eReadOnlyOptimal);   // Layout of the Image when it will be Read from! (This is what we've setup the second subpass to expect...)
-        colorAttachmentDescriptor.setImageView(this->swapchain.getColorBufferImageView(i));
-        colorAttachmentDescriptor.setSampler(VK_NULL_HANDLE);                             // A Subpass Input Attachment can't have a sampler! 
-
-        // Color Attachment Descriptor Write
-        vk::WriteDescriptorSet colorWrite;
-        colorWrite.setDstSet(this->inputDescriptorSets[i]);
-        colorWrite.setDstBinding(uint32_t (0)); 
-        colorWrite.setDstArrayElement(uint32_t (0));
-        colorWrite.setDescriptorType(vk::DescriptorType::eInputAttachment);
-        colorWrite.setDescriptorCount(uint32_t(1));
-        colorWrite.setPImageInfo(&colorAttachmentDescriptor);
-
-        
-        // Depth Attachment Descriptor
-        vk::DescriptorImageInfo depthAttachmentDescriptor;
-        depthAttachmentDescriptor.setImageLayout(vk::ImageLayout::eReadOnlyOptimal);   // Layout of the Image when it will be Read from! (This is what we've setup the second subpass to expect...)
-        depthAttachmentDescriptor.setImageView(this->swapchain.getDepthBufferImageView(i));
-        depthAttachmentDescriptor.setSampler(VK_NULL_HANDLE);                             // A Subpass Input Attachment can't have a sampler! 
-
-        // Depth Attachment Descriptor Write
-        vk::WriteDescriptorSet depthWrite;
-        depthWrite.setDstSet(this->inputDescriptorSets[i]);
-        depthWrite.setDstBinding(uint32_t (1)); 
-        depthWrite.setDstArrayElement(uint32_t (0));
-        depthWrite.setDescriptorType(vk::DescriptorType::eInputAttachment);
-        depthWrite.setDescriptorCount(uint32_t (1));
-        depthWrite.setPImageInfo(&depthAttachmentDescriptor);
-
-        // List of the Input Descriptor Sets Writes 
-        std::array<vk::WriteDescriptorSet,2> inputDescriptorSetWrites{
-            colorWrite,
-            depthWrite
-        };
-
-        this->getVkDevice().updateDescriptorSets(
-            inputDescriptorSetWrites,
-            0
-        );
-    }
-    
 }
 
 void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")
@@ -1476,7 +1246,12 @@ void VulkanRenderer::createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::Co
     //TODO: automatic trash collection    
 }
 
-void VulkanRenderer::createFrameBuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name = "NoName")
+void VulkanRenderer::createFramebuffer(
+    vk::Framebuffer& frameBuffer,
+    std::vector<vk::ImageView>& attachments,
+    vk::RenderPass& renderPass, 
+    vk::Extent2D& extent, 
+    std::string&& name = "NoName")
 {
     vk::FramebufferCreateInfo framebufferCreateInfo{};
     framebufferCreateInfo.setRenderPass(renderPass);
@@ -1490,22 +1265,7 @@ void VulkanRenderer::createFrameBuffer(vk::Framebuffer& frameBuffer,std::vector<
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eFramebuffer, reinterpret_cast<uint64_t>(vk::Framebuffer::CType(frameBuffer)));
 }
 
-void VulkanRenderer::updateUniformBuffers(uint32_t imageIndex)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // - REGULAR UNIFORM BUFFER - 
-    // - Copy View Projection   - 
-
-    void * data = nullptr;
-    
-    vmaMapMemory(this->vma, this->viewProjection_uniformBufferMemory[imageIndex], &data);
-    memcpy(data, &uboViewProjection, sizeof(UboViewProjection));
-    vmaUnmapMemory(this->vma, this->viewProjection_uniformBufferMemory[imageIndex]);
-}
-
-void VulkanRenderer::updateUBO_camera_Projection()
+void VulkanRenderer::updateUboProjection()
 {
     using namespace vengine_helper::config;
     uboViewProjection.projection  = glm::perspective(                               // View Angle in the y-axis
@@ -1515,7 +1275,7 @@ void VulkanRenderer::updateUBO_camera_Projection()
                             DEF<float>(CAM_FP));                                             // The Far Plane
 }
 
-void VulkanRenderer::updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
+void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
 {
     uboViewProjection.view = glm::lookAt(
                             eye,            // Eye   : Where the Camera is positioned in the world
@@ -1523,7 +1283,7 @@ void VulkanRenderer::updateUBO_camera_view(glm::vec3 eye, glm::vec3 center, glm:
                             up);            // Up    : Up direction 
 }
 
-void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t currentImageIndex) 
+void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
@@ -1536,23 +1296,19 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
     
     // Information about how to begin a render pass (Only needed for graphical applications)
     vk::RenderPassBeginInfo renderPassBeginInfo;
-    renderPassBeginInfo.setRenderPass(this->renderPass_base);                      // Render Pass to Begin
+    renderPassBeginInfo.setRenderPass(this->renderPassBase);                      // Render Pass to Begin
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
     renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());          // Size of region to run render pass on (starting at offset)
      
     static const vk::ClearColorValue clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
     static const vk::ClearColorValue clear_Plum(std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
 
-    std::array<vk::ClearValue, 3> clearValues = 
-    {        // Clear values consists of a VkClearColorValue and a VkClearDepthStencilValue
-
+    std::array<vk::ClearValue, 2> clearValues = 
+    {
             vk::ClearValue(                              // of type VkClearColorValue 
-                vk::ClearColorValue{clear_black}     // Clear Value for Attachment 0
+                vk::ClearColorValue{clear_Plum}     // Clear Value for Attachment 0
             ),  
-            vk::ClearValue(                              // of type VkClearColorValue 
-                vk::ClearColorValue{clear_Plum}     // Clear Value for Attachment 1
-            ),            
-            vk::ClearValue(                              // Clear Value for Attachment 2
+            vk::ClearValue(                              // Clear Value for Attachment 1
                 vk::ClearDepthStencilValue(
                     1.F,    // depth
                     0       // stencil
@@ -1564,19 +1320,22 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
 
     // The only changes we do per commandbuffer is to change the swapChainFrameBuffer a renderPass should point to...
-    renderPassBeginInfo.setFramebuffer(this->swapchain.getVkFramebuffer(currentImageIndex));
+    renderPassBeginInfo.setFramebuffer(this->swapchain.getVkFramebuffer(imageIndex));
 
     vk::SubpassBeginInfoKHR subpassBeginInfo;
     subpassBeginInfo.setContents(vk::SubpassContents::eInline);
     
-    
+
+    vk::CommandBuffer& currentCommandBuffer =
+        this->commandBuffers[this->currentFrame];
+
     // Start recording commands to commandBuffer!
-    commandBuffers[currentImageIndex].begin(bufferBeginInfo);
+    currentCommandBuffer.begin(bufferBeginInfo);
     {   // Scope for Tracy Vulkan Zone...
         #ifndef VENGINE_NO_PROFILING
         TracyVkZone(
-            this->tracyContext[currentImageIndex],
-            this->commandBuffers[currentImageIndex],"Render Record Commands");
+            this->tracyContext[imageIndex],
+            this->commandBuffers[imageIndex],"Render Record Commands");
         #endif
         {
         #ifndef VENGINE_NO_PROFILING        
@@ -1584,29 +1343,45 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
         #endif
         
         #pragma region commandBufferRecording
+
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
-            commandBuffers[currentImageIndex].beginRenderPass2(renderPassBeginInfo, subpassBeginInfo);            
+            currentCommandBuffer.beginRenderPass2(renderPassBeginInfo, subpassBeginInfo);
+
+                vk::Viewport viewport{};
+                viewport.x = 0.0f;
+                viewport.y = (float)swapchain.getHeight();
+                viewport.width = (float)this->swapchain.getWidth();
+                viewport.height = -((float)swapchain.getHeight());
+                viewport.minDepth = 0.0f;
+                viewport.maxDepth = 1.0f;
+                currentCommandBuffer.setViewport(0, 1, &viewport);
+
+                vk::Rect2D scissor{};
+                scissor.offset = vk::Offset2D{ 0, 0 };
+                scissor.extent = this->swapchain.getVkExtent();
+                currentCommandBuffer.setScissor(0, 1, &scissor);
 
                 // Bind Pipeline to be used in render pass
-                commandBuffers[currentImageIndex].bindPipeline(
-                    vk::PipelineBindPoint::eGraphics, 
-                    this->graphicsPipeline
+                currentCommandBuffer.bindPipeline(
+                    vk::PipelineBindPoint::eGraphics,
+                    this->pipeline.getVkPipeline()
                 );
                 
                 // For every Mesh we have
                 auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
-                tView.each([this, currentImageIndex](Transform& transform, MeshComponent& meshComponent)
+                tView.each([this, currentCommandBuffer](const Transform& transform, const MeshComponent& meshComponent)
                 {
+                    auto& currModel = modelList[meshComponent.meshID];
                     auto& currModel = this->resourceMan->getMesh(meshComponent.meshID);                    
 
-                    glm::mat4 modelMatrix = transform.matrix;
+                    const glm::mat4& modelMatrix = transform.matrix;
 
                     // auto modelMatrix = currModel.getModelMatrix();
 
                     // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                    this->commandBuffers[currentImageIndex].pushConstants(
-                        this->pipelineLayout,
+                    currentCommandBuffer.pushConstants(
+                        this->pipelineLayout.getVkPipelineLayout(),
                         vk::ShaderStageFlagBits::eVertex,   // Stage to push the Push Constant to.
                         uint32_t(0),                        // Offset of Push Constants to update; 
                                                             // Offset into the Push Constant Block (if more values are used (??))
@@ -1614,11 +1389,10 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                         &modelMatrix                        // Actual data being pushed (can also be an array)
                     );
 
-                    // -- BINDING VERTEX BUFFERS --
-                    //std::array<vk::Buffer,1> vertexBuffer = { currModel.getMesh(k)->getVertexBuffer()};                // Buffers to bind
+                    // -- BINDING VERTEX BUFFERS --                    
                     std::array<vk::Buffer,1> vertexBuffer = { currModel.getVertexBuffer()};                // Buffers to bind
                     std::array<vk::DeviceSize,1> offsets  = {0};                                           // Offsets into buffers being bound
-                    commandBuffers[currentImageIndex].bindVertexBuffers2(
+                    commandBuffers[imageIndex].bindVertexBuffers2(
                         uint32_t(0),
                         uint32_t(1),
                         vertexBuffer.data(),
@@ -1635,13 +1409,13 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                     for(auto& submesh : currModel.getSubmeshData()){                        
                         // We're going to bind Two descriptorSets! put them in array...
                         std::array<vk::DescriptorSet,2> descriptorSetGroup{
-                            this->descriptorSets[currentImageIndex],                // Use the descriptor set for the Image                                                        
-                            this->samplerDescriptorSets[ submesh.materialIndex ] // Use the Texture which the current mesh has                            
+                            this->descriptorSets[this->currentFrame],                // Use the descriptor set for the Image         //TODO: Check if correct after merge (alt. imageIndex)                   
+                            this->samplerDescriptorSets[submesh.materialIndex]       // Use the Texture which the current mesh has
                         };
                         // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
-                        this->commandBuffers[currentImageIndex].bindDescriptorSets(
+                        currentCommandBuffer.bindDescriptorSets( //TODO: Check If correct after merge (alt. imageIndex)
                             vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
-                            this->pipelineLayout,            // The Pipeline Layout that describes how the data will be accessed in our shaders
+                            this->pipelineLayout.getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
                             0,                               // Which Set is the first we want to use? We want to use the First set (thus 0)
                             static_cast<uint32_t>(descriptorSetGroup.size()),// How many Descriptor Sets where going to go through? DescriptorSet for View and Projection, and one for Texture
                             descriptorSetGroup.data(),                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
@@ -1649,87 +1423,34 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                             nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
 
                         
-                        vk::Viewport viewport{};
-                        viewport.x = 0.0f;
-                        viewport.y = (float) swapchain.getHeight();
-                        viewport.width = (float) this->swapchain.getWidth();
-                        viewport.height = -((float) swapchain.getHeight());
-                        viewport.minDepth = 0.0f;
-                        viewport.maxDepth = 1.0f;
-                        this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
-
-                        vk::Rect2D scissor{};
-                        scissor.offset = vk::Offset2D{0, 0};
-                        scissor.extent = this->swapchain.getVkExtent();
-                        this->commandBuffers[currentImageIndex].setScissor( 0, 1, &scissor);
                         // Execute Pipeline!
-                        this->commandBuffers[currentImageIndex].drawIndexed(
-                            submesh.numIndicies,        // Number of vertices to draw (nr of indexes)
+                        currentCommandBuffer.drawIndexed( //TODO: Check if correct after merge (alt imageIndex)
+                            submesh.numIndicies,  // Number of vertices to draw (nr of indexes)
                             1,                          // We're drawing only one instance
                             submesh.startIndex,                          // Start at index 0
                             0,                          // Vertex offset is 0, i.e. no offset! 
                             0);                         // We Draw Only one Instance, so first will be 0...
-                    }                
+                    }
 
                 });
 
-                // Start Second Subpass
-                vk::SubpassEndInfo subpassEndInfo;                
-                commandBuffers[currentImageIndex].nextSubpass2(subpassBeginInfo,subpassEndInfo);
-
-                this->commandBuffers[currentImageIndex].bindPipeline(
-                    vk::PipelineBindPoint::eGraphics, 
-                    this->secondGraphicsPipeline
-                );
-
-                this->commandBuffers[currentImageIndex].bindDescriptorSets(
-                    vk::PipelineBindPoint::eGraphics,
-                    this->secondPipelineLayout,
-                    uint32_t(0),
-                    uint32_t(1),
-                    &this->inputDescriptorSets[currentImageIndex],
-                    uint32_t(0),
-                    nullptr
-                );
-
-
-                vk::Viewport viewport{};
-                viewport.x = 0.0f;
-                viewport.y = 0.0f;
-                viewport.width = (float) this->swapchain.getWidth();
-                viewport.height = (float) swapchain.getHeight();
-                viewport.minDepth = 0.0f;
-                viewport.maxDepth = 1.0f;
-                this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
-
-                vk::Rect2D scissor{};
-                scissor.offset = vk::Offset2D{0, 0};
-                scissor.extent = swapchain.getVkExtent();
-                this->commandBuffers[currentImageIndex].setScissor( 0, 1, &scissor);
-
-            
-                this->commandBuffers[currentImageIndex].draw(
-                    3,      // We will draw a Triangle, so we only want to draw 3 vertices
-                    1,
-                    0,
-                    0);
-
-            
             // End Render Pass!
-            this->commandBuffers[currentImageIndex].endRenderPass2(subpassEndInfo);
+            vk::SubpassEndInfo subpassEndInfo;
+            currentCommandBuffer.endRenderPass2(subpassEndInfo);
             
-
+            // Begin second render pass
             vk::RenderPassBeginInfo renderPassBeginInfo{};
             vk::SubpassBeginInfo subpassBeginInfo;
             subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-            renderPassBeginInfo.setRenderPass(this->renderPass_imgui);
+            renderPassBeginInfo.setRenderPass(this->renderPassImgui);
             renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());
             renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));
-            renderPassBeginInfo.setFramebuffer(this->frameBuffers_imgui[currentImageIndex]);
+            renderPassBeginInfo.setFramebuffer(this->frameBuffersImgui[imageIndex]);
             renderPassBeginInfo.setClearValueCount(uint32_t(0));
 
-            this->commandBuffers[currentImageIndex].beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
+            currentCommandBuffer.beginRenderPass2(&renderPassBeginInfo, &subpassBeginInfo);
 
+            // Viewport
             viewport = vk::Viewport{};
             viewport.x = 0.0f;
             viewport.y = 0.0f;
@@ -1737,28 +1458,30 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
             viewport.height = (float)swapchain.getHeight();
             viewport.minDepth = 0.0f;
             viewport.maxDepth = 1.0f;
-            this->commandBuffers[currentImageIndex].setViewport(0, 1, &viewport);
+            currentCommandBuffer.setViewport(0, 1, &viewport);
 
-            scissor = vk::Rect2D{};
-            scissor.offset = vk::Offset2D{ 0, 0 };
-            scissor.extent = this->swapchain.getVkExtent();
-            this->commandBuffers[currentImageIndex].setScissor(0, 1, &scissor);
+            // Reuse the previous scissor
+            currentCommandBuffer.setScissor(0, 1, &scissor);
 
-            ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), this->commandBuffers[currentImageIndex]);
+            ImGui_ImplVulkan_RenderDrawData(
+                ImGui::GetDrawData(), 
+                currentCommandBuffer
+            );
 
+            // End second render pass
             vk::SubpassEndInfo imgui_subpassEndInfo;
-            this->commandBuffers[currentImageIndex].endRenderPass2(imgui_subpassEndInfo);
+            currentCommandBuffer.endRenderPass2(imgui_subpassEndInfo);
         }
         #pragma endregion commandBufferRecording
         
         #ifndef VENGINE_NO_PROFILING
-        TracyVkCollect(this->tracyContext[currentImageIndex],
-            this->commandBuffers[currentImageIndex]);
+        TracyVkCollect(this->tracyContext[imageIndex],
+            this->commandBuffers[imageIndex]);
         #endif
     }
-    // Stop recording to a command buffer
-    commandBuffers[currentImageIndex].end();
 
+    // Stop recording to a command buffer
+    currentCommandBuffer.end();
 }
 
 
@@ -1821,20 +1544,17 @@ void VulkanRenderer::initImgui()
 	pool_info.poolSizeCount = std::size(pool_sizes);
 	pool_info.pPoolSizes = pool_sizes;
 
-	this->descriptorPool_imgui = this->getVkDevice().createDescriptorPool(pool_info, nullptr);
-	
-
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();    
+	this->descriptorPoolImgui = this->getVkDevice().createDescriptorPool(pool_info, nullptr);
+    
+    IMGUI_CHECKVERSION(); 
+    ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
     
     io.ConfigWindowsResizeFromEdges = true;
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
     
-
     ImGui::StyleColorsDark();
     this->window->initImgui();
 
@@ -1844,21 +1564,17 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.Device = this->getVkDevice();
     imguiInitInfo.QueueFamily = this->queueFamilies.getGraphicsIndex();
     imguiInitInfo.Queue = this->queueFamilies.getGraphicsQueue();
-    //imguiInitInfo.PipelineCache = this->graphics_pipelineCache;
     imguiInitInfo.PipelineCache = VK_NULL_HANDLE;  //TODO: Imgui Pipeline Should have its own Cache! 
-    imguiInitInfo.DescriptorPool = this->descriptorPool_imgui;
+    imguiInitInfo.DescriptorPool = this->descriptorPoolImgui;
     imguiInitInfo.Subpass = 0; 
-    imguiInitInfo.MinImageCount = 3; //TODO: Expose this information (available when createing the swapchain) and use it here
-    imguiInitInfo.ImageCount = 3;    //TODO: Expose this information (available when createing the swapchain) and use it here
+    imguiInitInfo.MinImageCount = this->swapchain.getNumMinimumImages();
+    imguiInitInfo.ImageCount = this->swapchain.getNumImages();
     imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT; //TODO: check correctness    
     imguiInitInfo.Allocator = nullptr;    //TODO: Can/should I pass in something VMA related here?
-    //imguiInitInfo.CheckVkResultFn = ...? ;  //TODO: Check what tthis is? Callback to debug message log?
-    ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPass_imgui);
+    imguiInitInfo.CheckVkResultFn = checkVkResult;
+    ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPassImgui);
 
-    std::vector<vk::ImageView> attachment;    
-    attachment.resize(1);
-
-    this->createFramebuffer_imgui();
+    this->createFramebufferImgui();
 
     // Upload imgui font
     this->getVkDevice().resetCommandPool(this->graphicsCommandPool);
@@ -1883,7 +1599,7 @@ void VulkanRenderer::initImgui()
         );
     if(result != vk::Result::eSuccess)
     {
-        throw std::runtime_error("Failed to submit imgui fonts to graphics queue...");
+        Log::error("Failed to submit imgui fonts to graphics queue...");
     }
 
     this->device.waitIdle();
@@ -1891,27 +1607,27 @@ void VulkanRenderer::initImgui()
     ImGui_ImplVulkan_DestroyFontUploadObjects();
 }
 
-void VulkanRenderer::createFramebuffer_imgui()
+void VulkanRenderer::createFramebufferImgui()
 {
     std::vector<vk::ImageView> attachment;    
     attachment.resize(1);
-    this->frameBuffers_imgui.resize(this->commandBuffers.size());
-    for(size_t i = 0; i < this->frameBuffers_imgui.size(); i++)
+    this->frameBuffersImgui.resize(this->swapchain.getNumImages());
+    for(size_t i = 0; i < this->frameBuffersImgui.size(); i++)
     {        
         attachment[0] = this->swapchain.getImageView(i); 
-        createFrameBuffer(
-            this->frameBuffers_imgui[i], 
+        this->createFramebuffer(
+            this->frameBuffersImgui[i], 
             attachment, 
-            this->renderPass_imgui, 
+            this->renderPassImgui, 
             this->swapchain.getVkExtent(), 
             std::string("frameBuffers_imgui["+std::to_string(i)+"]")
         );
     }
 }
 
-void VulkanRenderer::cleanupFramebuffer_imgui()
+void VulkanRenderer::cleanupFramebufferImgui()
 {
-    for (auto framebuffer: this->frameBuffers_imgui) 
+    for (auto framebuffer: this->frameBuffersImgui) 
     {
         this->getVkDevice().destroyFramebuffer(framebuffer);        
     }
