@@ -1,7 +1,7 @@
 #pragma once
 
 #include "SceneHandler.hpp"
-
+#include "ResourceManager.hpp"
 class Engine
 {
 private:
@@ -12,6 +12,7 @@ public:
 
 	void run(Scene* startScene);
 
-	SceneHandler sceneHandler;
+    ResourceManager resourceMan;
+	SceneHandler    sceneHandler;
 };
 

@@ -11,6 +11,7 @@
 #include "Window.hpp"
 #include "imgui.h"              // Need to be included in header
 
+#include "ResourceManager.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
@@ -24,6 +25,7 @@ class VulkanRenderer {
     std::vector<TracyVkCtx> tracyContext;
 #endif
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
+    ResourceManager* resourceMan;
 
     Window* window;
     VmaAllocator vma = nullptr;
@@ -180,7 +182,7 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int  init(Window* window, std::string&& windowName);
+    int  init(Window* window, std::string&& windowName, ResourceManager* resourceMan);
 
     void draw(Scene* scene);
 

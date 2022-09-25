@@ -42,13 +42,15 @@ void VulkanRenderer::initResourceManager()
         &this->physicalDevice.getVkPhysicalDevice(),
         &this->device,
         &this->queueFamilies.getGraphicsQueue(),
-        &this->graphicsCommandPool);
+        &this->graphicsCommandPool,
+        this->resourceMan);
 
     TextureLoader::init(&this->vma,
         &this->physicalDevice.getVkPhysicalDevice(),
         &this->device,
         &this->queueFamilies.getGraphicsQueue(),
-        &this->graphicsCommandPool);
+        &this->graphicsCommandPool,
+        this->resourceMan);
 
     /// TODO: REMOVE THIS, temporary used before making createTexture part of resourceManager...
     TextureLoader::TEMP = this;
@@ -58,12 +60,14 @@ void VulkanRenderer::initResourceManager()
 }
 
 using namespace vengine_helper::config;
-int VulkanRenderer::init(Window* window, std::string&& windowName) {
+int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManager* resourceMan)
+{
     
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif        
 
+    this->resourceMan = resourceMan;
     this->window = window;
 
     try {
@@ -164,7 +168,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName) {
         this->initResourceManager();
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
-        ResourceManager::addTexture("missing_texture.png");
+        this->resourceMan->addTexture("missing_texture.png");
 
     }
     catch(std::runtime_error &e)
@@ -200,7 +204,7 @@ void VulkanRenderer::cleanup()
     //Wait until no actions is run on device...
     this->device.waitIdle(); // Dont destroy semaphores before they are done
 
-    ResourceManager::cleanup(); //TODO: Rewrite cleanup, "sartCleanup"
+    this->resourceMan->cleanup(); //TODO: Rewrite cleanup, "sartCleanup"
     
     ImGui_ImplVulkan_Shutdown();
     this->window->shutdownImgui();
@@ -458,7 +462,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
     auto tView = scene->getSceneReg().view<MeshComponent>();
     tView.each([this](MeshComponent& meshComponent)
     {
-        meshComponent.meshID = ResourceManager::addMesh("sponza.obj");
+        meshComponent.meshID = this->resourceMan->addMesh("sponza.obj");
     });
 }
 
@@ -821,7 +825,7 @@ vk::ShaderModule VulkanRenderer::createShaderModule(const std::vector<char> &cod
 
 
 VulkanRenderer::VulkanRenderer()
-    : window(nullptr)
+    : resourceMan(nullptr), window(nullptr)
 {
     loadConfIntoMemory();
 }
@@ -1597,7 +1601,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                 auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
                 tView.each([this, currentImageIndex](Transform& transform, MeshComponent& meshComponent)
                 {
-                    auto& currModel = ResourceManager::getMesh(meshComponent.meshID);                    
+                    auto& currModel = this->resourceMan->getMesh(meshComponent.meshID);                    
 
                     glm::mat4 modelMatrix = transform.matrix;
 

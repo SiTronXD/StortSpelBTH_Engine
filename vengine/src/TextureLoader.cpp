@@ -5,24 +5,28 @@
 #include "Texture.hpp"
 #include "assimp/scene.h"
 #include "assimp/material.h"
+#include "assimp/Importer.hpp" 
 #include "ResourceManager.hpp" // Importing mesh with Assimp needs to add Texture resources
 #include <span>
 
 #include "VulkanRenderer.hpp"
 
 VulkanImportStructs TextureLoader::importStructs;
-VulkanRenderer *TextureLoader::TEMP = nullptr; 
+VulkanRenderer*     TextureLoader::TEMP         = nullptr; 
+ResourceManager*    TextureLoader::resourceMan  = nullptr; 
 
 void TextureLoader::init(VmaAllocator *vma,
                                         vk::PhysicalDevice *physiscalDev,
                                         Device *dev, vk::Queue *transQueue,
-                                        vk::CommandPool *transCmdPool) 
+                                        vk::CommandPool *transCmdPool,
+                                        ResourceManager* resourceMan) 
 {
     TextureLoader::importStructs.vma = vma;
     TextureLoader::importStructs.physicalDevice = physiscalDev;
     TextureLoader::importStructs.device = dev;
     TextureLoader::importStructs.transferQueue = transQueue;
     TextureLoader::importStructs.transferCommandPool = transCmdPool;
+    TextureLoader::resourceMan = resourceMan;
 }
 
 std::vector<std::string> TextureLoader::assimpGetTextures(const aiScene *scene) 
@@ -65,7 +69,7 @@ void TextureLoader::assimpTextureImport(
     } else {
         // Create texture, use the index returned by our createTexture function
         materialToTexture[i] =
-            ResourceManager::addTexture(textureNames[i].c_str());
+            TextureLoader::resourceMan->addTexture(textureNames[i].c_str());
     }
     }
 }

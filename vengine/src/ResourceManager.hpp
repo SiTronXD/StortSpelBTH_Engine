@@ -3,40 +3,50 @@
 #include <cstdint>
 #include <unordered_map>
 #include <string>
+#include "NewModel.hpp"
+#include "ResourceManagerStructs.hpp"
+#include "Log.hpp"
 
-//class Model;
-class NewModel;
 class Engine;
 struct ImageData;   //Defined in MeshLoader
 
 class ResourceManager{
 private:
-    /// Engine should take care of cleanups
-    friend class Engine; 
+    /// VulkanRenderer takes care of cleanups
     friend class VulkanRenderer; 
-    ResourceManager(); // Private Constructor, do not allow ResourceManager to be created
-    static std::unordered_map<std::string, uint32_t> meshPaths;
-    static std::unordered_map<std::string, uint32_t> texturePaths;
+    std::unordered_map<std::string, uint32_t> meshPaths;
+    std::unordered_map<std::string, uint32_t> texturePaths;
     
-    static std::unordered_map<uint32_t, NewModel>  meshes;
-    static std::unordered_map<uint32_t, ImageData> textures;
+    std::unordered_map<uint32_t, NewModel>  meshes;
+    std::unordered_map<uint32_t, ImageData> textures;
 
-    static void cleanup();
-public:
+    void cleanup();
+public:    
+    uint32_t addMesh(std::string&& meshPath);
+    uint32_t addTexture(std::string&& texturePath);
 
-    static uint32_t addMesh(std::string&& meshPath);
-    static uint32_t addTexture(std::string&& texturePath);
-
-    static NewModel&     getMesh(uint32_t id);      //TODO: inline when not static
-    static ImageData&    getTexture(uint32_t id);   //TODO: inline when not static
+    NewModel&     getMesh(uint32_t id);
+    ImageData&    getTexture(uint32_t id);
 };
 
-/*
-- (meshloader) Komponent för mesh: interfaces till assimp
-- - inkludera assimp i translation units ...
-- - Mesh data klass => agnostisk från vulkan, m.m.
-- - MeshLoader Gör ett interface för Assimp 
-- (imageLoader) komponent för images: interface till .. stb_image?
-- - imageLoader gör ett interface för stb_image
-- Log status of resource; was it already loaded? Collision? 
-*/
+inline NewModel& ResourceManager::getMesh(uint32_t id)
+{
+    auto map_iterator = this->meshes.find(id);
+    if(this->meshes.end() == map_iterator)
+    {
+        Log::error("getMesh failed to find a mesh with the given ID : " + std::to_string(id));
+        assert(false);
+    }
+    return map_iterator->second;
+}
+
+inline ImageData& ResourceManager::getTexture(uint32_t id)
+{
+    auto map_iterator = this->textures.find(id);
+    if(this->textures.end() == map_iterator)
+    {
+        Log::error("getMesh failed to find a mesh with the given ID : " + std::to_string(id));
+        assert(false);
+    }
+    return map_iterator->second;
+}

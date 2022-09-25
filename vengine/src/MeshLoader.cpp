@@ -12,18 +12,22 @@
 #include "TextureLoader.hpp"
 
 
-Assimp::Importer MeshLoader::importer; 
+Assimp::Importer    MeshLoader::importer; 
 VulkanImportStructs MeshLoader::importStructs;
+ResourceManager*    MeshLoader::resourceMan  = nullptr;
 
 void MeshLoader::init(VmaAllocator *vma,
-                                     vk::PhysicalDevice *physiscalDev,
-                                     Device *dev, vk::Queue *transQueue,
-                                     vk::CommandPool *transCmdPool) {
+    vk::PhysicalDevice *physiscalDev,
+    Device *dev, vk::Queue *transQueue,
+    vk::CommandPool *transCmdPool,
+    ResourceManager* resourceMan) 
+{
   MeshLoader::importStructs.vma = vma;
   MeshLoader::importStructs.physicalDevice = physiscalDev;
   MeshLoader::importStructs.device = dev;
   MeshLoader::importStructs.transferQueue = transQueue;
   MeshLoader::importStructs.transferCommandPool = transCmdPool;
+  MeshLoader::resourceMan = resourceMan;
 }
 
 
@@ -187,7 +191,7 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
       .submeshes = std::vector<SubmeshData>{{
           //.materialIndex = matToTex[mesh->mMaterialIndex],
           .materialIndex =
-              ResourceManager::getTexture(matToTex[mesh->mMaterialIndex])
+              MeshLoader::resourceMan->getTexture(matToTex[mesh->mMaterialIndex])
                   .descriptorLocation,
           .startIndex = initialIndex,
           .numIndicies = static_cast<uint32_t>(indices.size()),
