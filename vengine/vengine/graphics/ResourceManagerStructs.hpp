@@ -1,7 +1,7 @@
 #pragma once 
 #include "vk_mem_alloc.h"
 #include <vulkan/vulkan.hpp>
-#include "Device.hpp"
+#include "../graphics/vulkan/Device.hpp"
 
 // All vulkan handles required to create and delete mesh/texture resources
 struct VulkanImportStructs{

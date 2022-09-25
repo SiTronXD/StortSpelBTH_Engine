@@ -13,7 +13,7 @@
 #include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
 
-#include "ResourceManager.hpp"
+#include "../application/ResourceManager.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
@@ -29,7 +29,7 @@ class VulkanRenderer
 #endif
     const int MAX_FRAMES_IN_FLIGHT = 3;
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
-    ResourceManager* resourceMan;
+    ResourceManager* resourceMan;    
 
     Window* window;
     VmaAllocator vma = nullptr;
@@ -136,6 +136,9 @@ private:
     void createDescriptorSets();
     void allocateDescriptorSets();
 
+    // initializations of subsystems
+    void initResourceManager();
+
     // Cleanup 
     void cleanupRenderPassImgui();
     void cleanupRenderPassBase();
@@ -175,7 +178,7 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int  init(Window* window, std::string&& windowName);
+    int  init(Window* window, std::string&& windowName, ResourceManager* resourceMan);
     int  createModel(const std::string &modelFile);
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);

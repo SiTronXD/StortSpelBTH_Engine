@@ -1,8 +1,7 @@
 #include "ResourceManager.hpp"
-#include "Log.hpp"
-#include "Configurator.hpp"
-#include "MeshLoader.hpp"
-#include "TextureLoader.hpp"
+#include "../loaders/Configurator.hpp"
+#include "../loaders/MeshLoader.hpp"
+#include "../loaders/TextureLoader.hpp"
 
 uint32_t ResourceManager::addMesh(std::string&& meshPath)
 {        
@@ -34,7 +33,7 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
     }    
 
     //NOTE: meshes.size as key only works if we never remove resources the map...
-    auto model = MeshLoader::createMesh(DEF<std::string>(P_MODELS) + meshPath); 
+    auto model = MeshLoader::createMesh(DEF<std::string>(P_MODELS) + meshPath); //TODO: Move this into the map insert function call...
 
     // Create mesh, insert into map of meshes
     meshes.insert({

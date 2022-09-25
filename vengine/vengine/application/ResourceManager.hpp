@@ -3,9 +3,9 @@
 #include <cstdint>
 #include <unordered_map>
 #include <string>
-#include "NewModel.hpp"
-#include "ResourceManagerStructs.hpp"
-#include "Log.hpp"
+#include "../graphics/NewModel.hpp"
+#include "../graphics/ResourceManagerStructs.hpp"
+#include "../dev/Log.hpp"
 
 class Engine;
 struct ImageData;   //Defined in MeshLoader

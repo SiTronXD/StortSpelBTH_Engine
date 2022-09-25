@@ -2,14 +2,14 @@
 #include "Configurator.hpp"
 #include "stb_image.h"
 #include "tracy/Tracy.hpp"
-#include "Texture.hpp"
+#include "../graphics/Texture.hpp"
 #include "assimp/scene.h"
 #include "assimp/material.h"
 #include "assimp/Importer.hpp" 
-#include "ResourceManager.hpp" // Importing mesh with Assimp needs to add Texture resources
+#include "../application/ResourceManager.hpp" // Importing mesh with Assimp needs to add Texture resources
 #include <span>
 
-#include "VulkanRenderer.hpp"
+#include "../graphics/VulkanRenderer.hpp"
 
 VulkanImportStructs TextureLoader::importStructs;
 VulkanRenderer*     TextureLoader::TEMP         = nullptr; 

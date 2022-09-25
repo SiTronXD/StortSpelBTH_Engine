@@ -1,11 +1,11 @@
 #pragma once
 
-#include "NewModel.hpp"
+#include "../graphics/NewModel.hpp"
 #include "assimp/Importer.hpp" 
 #include "assimp/mesh.h"
 #include "assimp/scene.h"
 
-#include "ResourceManagerStructs.hpp"
+#include "../graphics/ResourceManagerStructs.hpp"
 
 class ResourceManager;
 class MeshLoader

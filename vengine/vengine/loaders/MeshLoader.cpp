@@ -1,4 +1,4 @@
-#include "MeshLoader.hpp"
+#include "../loaders/MeshLoader.hpp"
 
 #include "Configurator.hpp"
 #include "assimp/postprocess.h"
@@ -7,8 +7,8 @@
 #include <stack>
 
 #include "tracy/Tracy.hpp"
-#include "ResourceManager.hpp" // Importing mesh with Assimp needs to add Textures Sampler index
-#include "NewModel.hpp"
+#include "../application/ResourceManager.hpp" // Importing mesh with Assimp needs to add Textures Sampler index
+#include "../graphics/NewModel.hpp"
 #include "TextureLoader.hpp"
 
 
