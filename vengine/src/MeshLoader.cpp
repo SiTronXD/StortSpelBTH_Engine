@@ -66,7 +66,7 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
 
 
 MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
-                             std::vector<uint32_t> &materailToTexture) 
+    std::vector<uint32_t> &materailToTexture)
 {  
     // Load in all meshes
     std::vector<MeshData> modelMeshes =
