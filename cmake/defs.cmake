@@ -15,9 +15,9 @@ function(setup_vengine_definitions)
     set_parentScope(BUILD_AS_EXECUTABLE "executable" )
 
     # Vengine Path Constants
-    set_parentScope(VENGINE_ASSETS_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/assets       )
+    set_parentScope(VENGINE_ASSETS_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/vengine/vengine_assets       )
     set_parentScope(VENGINE_DEPS_DIR            ${CMAKE_CURRENT_SOURCE_DIR}/deps         )
-    set_parentScope(VENGINE_SOURCE_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/vengine/src  )
+    set_parentScope(VENGINE_SOURCE_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/vengine/vengine  )
     set_parentScope(VENGINE_TESTS_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/test_src     )
     set_parentScope(VENGINE_LIBS_DIR            ${VENGINE_DEPS_DIR}/lib                  )
     set_parentScope(VENGINE_INCLUDES_DIR        ${VENGINE_DEPS_DIR}/include              )
@@ -51,7 +51,7 @@ endfunction()
 #Location Must be Relative to CMakeLists (root) location... 
 function(update_vengine_assets_location newPath)
     # Vengine Path Constants
-    set_parentScope(VENGINE_ASSETS_DIR          ${update_vengine_assets_location}/assets       )
+    set_parentScope(VENGINE_ASSETS_DIR          ${update_vengine_assets_location}/vengine/vengine_assets       )
 
     # Paths used for Symbolic Link for assets
     set_parentScope(VENGINE_ASSET_LINK_SRC "${VENGINE_ASSETS_DIR}"              )

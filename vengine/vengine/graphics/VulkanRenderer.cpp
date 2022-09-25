@@ -551,136 +551,136 @@ void VulkanRenderer::cleanupRenderPassBase()
 }
 
 /////////////////////////////////////////////////TODO: REMOVE vv
-int VulkanRenderer::createTextureImage(const std::string &filename)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Load the image file
-    int width = 0;
-    int height = 0;
-    vk::DeviceSize imageSize = 0;
-    stbi_uc* imageData = this->loadTextuerFile(filename, &width,&height, &imageSize);
+// int VulkanRenderer::createTextureImage(const std::string &filename)
+// {
+// #ifndef VENGINE_NO_PROFILING
+//     ZoneScoped; //:NOLINT
+// #endif
+//     // Load the image file
+//     int width = 0;
+//     int height = 0;
+//     vk::DeviceSize imageSize = 0;
+//     stbi_uc* imageData = this->loadTextuerFile(filename, &width,&height, &imageSize);
 
-    //Create Staging buffer to hold loaded data, ready to copy to device
-    vk::Buffer imageStagingBuffer = nullptr;
-    //vk::DeviceMemory imageStagingBufferMemory = nullptr;
-    VmaAllocation imageStagingBufferMemory = nullptr;
-    VmaAllocationInfo allocInfo;
+//     //Create Staging buffer to hold loaded data, ready to copy to device
+//     vk::Buffer imageStagingBuffer = nullptr;
+//     //vk::DeviceMemory imageStagingBufferMemory = nullptr;
+//     VmaAllocation imageStagingBufferMemory = nullptr;
+//     VmaAllocationInfo allocInfo;
 
-    Buffer::createBuffer(
-        {
-            .bufferSize = imageSize, 
-            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
-            // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible         // Staging buffer needs to be visible from HOST  (CPU), in order for modification
-            //                     |   vk::MemoryPropertyFlagBits::eHostCoherent,   // not using cache...
-            .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-            .buffer = &imageStagingBuffer, 
-            .bufferMemory = &imageStagingBufferMemory,
-            .allocationInfo = &allocInfo,
-            .vma = &this->vma
-        });
+//     Buffer::createBuffer(
+//         {
+//             .bufferSize = imageSize, 
+//             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
+//             // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible         // Staging buffer needs to be visible from HOST  (CPU), in order for modification
+//             //                     |   vk::MemoryPropertyFlagBits::eHostCoherent,   // not using cache...
+//             .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+//                                 | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+//             .buffer = &imageStagingBuffer, 
+//             .bufferMemory = &imageStagingBufferMemory,
+//             .allocationInfo = &allocInfo,
+//             .vma = &this->vma
+//         });
 
-    void* data = nullptr; 
+//     void* data = nullptr; 
     
-    if(vmaMapMemory(this->vma, imageStagingBufferMemory, &data) != VK_SUCCESS)
-    {
-        Log::error("Failed to allocate Mesh Staging Texture Image Buffer Using VMA!");
-    }
+//     if(vmaMapMemory(this->vma, imageStagingBufferMemory, &data) != VK_SUCCESS)
+//     {
+//         Log::error("Failed to allocate Mesh Staging Texture Image Buffer Using VMA!");
+//     }
 
-    memcpy(data, imageData, imageSize);
-    vmaUnmapMemory(this->vma , imageStagingBufferMemory);
+//     memcpy(data, imageData, imageSize);
+//     vmaUnmapMemory(this->vma , imageStagingBufferMemory);
     
 
-    // Free image data allocated through stb_image.h 
-    stbi_image_free(imageData);
+//     // Free image data allocated through stb_image.h 
+//     stbi_image_free(imageData);
 
-    // Create image to hold final texture
-    vk::Image texImage = nullptr;
-    //vk::DeviceMemory texImageMemory = nullptr;
-    VmaAllocation texImageMemory = nullptr;
-    texImage = Texture::createImage(
-        this->vma,
-        {
-            .width = static_cast<uint32_t>(width), 
-            .height = static_cast<uint32_t>(height), 
-            .format = vk::Format::eR8G8B8A8Unorm,               // use Alpha channel even if image does not have... 
-            .tiling =vk::ImageTiling::eOptimal,                // Same value as the Depth Buffer uses (Dont know if it has to be)
-            .useFlags = vk::ImageUsageFlagBits::eTransferDst         // Data should be transfered to the GPU, from the staging buffer
-                        |   vk::ImageUsageFlagBits::eSampled,         // This image will be Sampled by a Sampler! 
-            .imageMemory = &texImageMemory
-        },
-        filename // Describing what image is being created, for debug purposes...
-    );
+//     // Create image to hold final texture
+//     vk::Image texImage = nullptr;
+//     //vk::DeviceMemory texImageMemory = nullptr;
+//     VmaAllocation texImageMemory = nullptr;
+//     texImage = Texture::createImage(
+//         this->vma,
+//         {
+//             .width = static_cast<uint32_t>(width), 
+//             .height = static_cast<uint32_t>(height), 
+//             .format = vk::Format::eR8G8B8A8Unorm,               // use Alpha channel even if image does not have... 
+//             .tiling =vk::ImageTiling::eOptimal,                // Same value as the Depth Buffer uses (Dont know if it has to be)
+//             .useFlags = vk::ImageUsageFlagBits::eTransferDst         // Data should be transfered to the GPU, from the staging buffer
+//                         |   vk::ImageUsageFlagBits::eSampled,         // This image will be Sampled by a Sampler! 
+//             .imageMemory = &texImageMemory
+//         },
+//         filename // Describing what image is being created, for debug purposes...
+//     );
 
-    // - COPY THE DATA TO THE IMAGE -
-    // Transition image to be in the DST, needed by the Copy Operation (Copy assumes/needs image Layout to be in vk::ImageLayout::eTransferDstOptimal state)
-    Texture::transitionImageLayout(
-        this->device, 
-        this->queueFamilies.getGraphicsQueue(),
-        this->graphicsCommandPool, 
-        texImage,                               // Image to transition the layout on
-        vk::ImageLayout::eUndefined,              // Image Layout to transition the image from
-        vk::ImageLayout::eTransferDstOptimal);  // Image Layout to transition the image to
+//     // - COPY THE DATA TO THE IMAGE -
+//     // Transition image to be in the DST, needed by the Copy Operation (Copy assumes/needs image Layout to be in vk::ImageLayout::eTransferDstOptimal state)
+//     Texture::transitionImageLayout(
+//         this->device, 
+//         this->queueFamilies.getGraphicsQueue(),
+//         this->graphicsCommandPool, 
+//         texImage,                               // Image to transition the layout on
+//         vk::ImageLayout::eUndefined,              // Image Layout to transition the image from
+//         vk::ImageLayout::eTransferDstOptimal);  // Image Layout to transition the image to
 
-    // Copy data to image
-    Buffer::copyBufferToImage(
-        this->device, 
-        this->queueFamilies.getGraphicsQueue(),
-        this->graphicsCommandPool, 
-        imageStagingBuffer, 
-        texImage, 
-        width, 
-        height
-    );
+//     // Copy data to image
+//     Buffer::copyBufferToImage(
+//         this->device, 
+//         this->queueFamilies.getGraphicsQueue(),
+//         this->graphicsCommandPool, 
+//         imageStagingBuffer, 
+//         texImage, 
+//         width, 
+//         height
+//     );
 
-    // Transition iamge to be shader readable for shader usage
-    Texture::transitionImageLayout(
-        this->device, 
-        this->queueFamilies.getGraphicsQueue(),
-        this->graphicsCommandPool, 
-        texImage,
-        vk::ImageLayout::eTransferDstOptimal,       // Image layout to transition the image from; this is the same as we transition the image too before we copied buffer!
-        vk::ImageLayout::eShaderReadOnlyOptimal);  // Image Layout to transition the image to; in order for the Fragment Shader to read it!         
+//     // Transition iamge to be shader readable for shader usage
+//     Texture::transitionImageLayout(
+//         this->device, 
+//         this->queueFamilies.getGraphicsQueue(),
+//         this->graphicsCommandPool, 
+//         texImage,
+//         vk::ImageLayout::eTransferDstOptimal,       // Image layout to transition the image from; this is the same as we transition the image too before we copied buffer!
+//         vk::ImageLayout::eShaderReadOnlyOptimal);  // Image Layout to transition the image to; in order for the Fragment Shader to read it!         
 
-    // Add texture data to vector for reference 
-    this->textureImages.push_back(texImage);
-    this->textureImageMemory.push_back(texImageMemory);
+//     // Add texture data to vector for reference 
+//     this->textureImages.push_back(texImage);
+//     this->textureImageMemory.push_back(texImageMemory);
 
-    // Destroy and Free the staging buffer + staging buffer memroy
-    this->getVkDevice().destroyBuffer(imageStagingBuffer);
-    vmaFreeMemory(this->vma, imageStagingBufferMemory);
+//     // Destroy and Free the staging buffer + staging buffer memroy
+//     this->getVkDevice().destroyBuffer(imageStagingBuffer);
+//     vmaFreeMemory(this->vma, imageStagingBufferMemory);
 
-    // Return index of last pushed image!
-    return static_cast<int>(textureImages.size()) -1; 
-}
+//     // Return index of last pushed image!
+//     return static_cast<int>(textureImages.size()) -1; 
+// }
 
-int VulkanRenderer::createTexture(const std::string &filename)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Create Texture Image and get its Location in array
-    int textureImageLoc = createTextureImage(filename);
+// int VulkanRenderer::createTexture(const std::string &filename)
+// {
+// #ifndef VENGINE_NO_PROFILING
+//     ZoneScoped; //:NOLINT
+// #endif
+//     // Create Texture Image and get its Location in array
+//     int textureImageLoc = createTextureImage(filename);
 
-    // Create Image View
-    vk::ImageView imageView = Texture::createImageView(
-        this->device,
-        this->textureImages[textureImageLoc],   // The location of the Image in our textureImages vector
-        vk::Format::eR8G8B8A8Unorm,               // Format for rgba 
-        vk::ImageAspectFlagBits::eColor
-    );
+//     // Create Image View
+//     vk::ImageView imageView = Texture::createImageView(
+//         this->device,
+//         this->textureImages[textureImageLoc],   // The location of the Image in our textureImages vector
+//         vk::Format::eR8G8B8A8Unorm,               // Format for rgba 
+//         vk::ImageAspectFlagBits::eColor
+//     );
 
-    // Add the Image View to our vector with Image views
-    this->textureImageViews.push_back(imageView);
+//     // Add the Image View to our vector with Image views
+//     this->textureImageViews.push_back(imageView);
 
-    // Create Texture Descriptor
-    int descriptorLoc = createSamplerDescriptor(imageView);
+//     // Create Texture Descriptor
+//     int descriptorLoc = createSamplerDescriptor(imageView);
 
-    // Return index of Texture Descriptor that was just created
-    return descriptorLoc;
-}
+//     // Return index of Texture Descriptor that was just created
+//     return descriptorLoc;
+// }
 
 int VulkanRenderer::createSamplerDescriptor(vk::ImageView textureImage)
 {
@@ -727,100 +727,100 @@ int VulkanRenderer::createSamplerDescriptor(vk::ImageView textureImage)
     return static_cast<int>(this->samplerDescriptorSets.size() - 1); 
 }
 
-int VulkanRenderer::createModel(const std::string& modelFile)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif    
-    // Import Model Scene
-    Assimp::Importer importer;
-    const aiScene* scene = importer.ReadFile(
-        (DEF<std::string>(P_MODELS)+modelFile).c_str(),
-        aiProcess_Triangulate               // Ensures that ALL objects will be represented as Triangles
-        | aiProcess_FlipUVs                 // Flips the texture UV values, to be same as how we use them
-        | aiProcess_JoinIdenticalVertices   // Saves memory by making sure no dublicate vertices exists
-        );
+// int VulkanRenderer::createModel(const std::string& modelFile)
+// {
+// #ifndef VENGINE_NO_PROFILING
+//     ZoneScoped; //:NOLINT
+// #endif    
+//     // Import Model Scene
+//     Assimp::Importer importer;
+//     const aiScene* scene = importer.ReadFile(
+//         (DEF<std::string>(P_MODELS)+modelFile).c_str(),
+//         aiProcess_Triangulate               // Ensures that ALL objects will be represented as Triangles
+//         | aiProcess_FlipUVs                 // Flips the texture UV values, to be same as how we use them
+//         | aiProcess_JoinIdenticalVertices   // Saves memory by making sure no dublicate vertices exists
+//         );
 
-    if(scene == nullptr)
-    {
-        Log::error("Failed to load model ("+modelFile+")");
-    }
+//     if(scene == nullptr)
+//     {
+//         Log::error("Failed to load model ("+modelFile+")");
+//     }
 
-    // Get vector of all materials 
-    std::vector<std::string> textureNames = Model::loadMaterials(scene);
+//     // Get vector of all materials 
+//     std::vector<std::string> textureNames = Model::loadMaterials(scene);
 
-    // Handle empty texture 
-    std::vector<int> matToTexture(textureNames.size());
+//     // Handle empty texture 
+//     std::vector<int> matToTexture(textureNames.size());
 
-    for(size_t i = 0; i < textureNames.size(); i++){
+//     for(size_t i = 0; i < textureNames.size(); i++){
         
-        if(textureNames[i].empty())
-        {
-            matToTexture[i] = 0; // Use default textures for models if textures are missing
-        }
-        else
-        {
-            // Create texture, use the index returned by our createTexture function
-            matToTexture[i] = createTexture(textureNames[i]);
-        }
-    }
+//         if(textureNames[i].empty())
+//         {
+//             matToTexture[i] = 0; // Use default textures for models if textures are missing
+//         }
+//         else
+//         {
+//             // Create texture, use the index returned by our createTexture function
+//             matToTexture[i] = createTexture(textureNames[i]);
+//         }
+//     }
 
-    // Load in all meshes
-    std::vector<Mesh> modelMeshes = Model::getMeshesFromNodeTree(
-        &this->vma,
-        this->physicalDevice.getVkPhysicalDevice(), 
-        this->getVkDevice(), 
-        this->queueFamilies.getGraphicsQueue(),
-        this->graphicsCommandPool, 
-        scene, 
-        matToTexture
-    );
+//     // Load in all meshes
+//     std::vector<Mesh> modelMeshes = Model::getMeshesFromNodeTree(
+//         &this->vma,
+//         this->physicalDevice.getVkPhysicalDevice(), 
+//         this->getVkDevice(), 
+//         this->queueFamilies.getGraphicsQueue(),
+//         this->graphicsCommandPool, 
+//         scene, 
+//         matToTexture
+//     );
 
-    // Create Model, add to list
-    Model model = Model(
-        &this->vma,
-        this->physicalDevice.getVkPhysicalDevice(), 
-        this->getVkDevice(), 
-        this->queueFamilies.getGraphicsQueue(),
-        this->graphicsCommandPool,
-        modelMeshes
-    );
-    modelList.emplace_back(model);
+//     // Create Model, add to list
+//     Model model = Model(
+//         &this->vma,
+//         this->physicalDevice.getVkPhysicalDevice(), 
+//         this->getVkDevice(), 
+//         this->queueFamilies.getGraphicsQueue(),
+//         this->graphicsCommandPool,
+//         modelMeshes
+//     );
+//     modelList.emplace_back(model);
 
-    return static_cast<int>(modelList.size())-1;
+//     return static_cast<int>(modelList.size())-1;
 
-}
+// }
 
 
-stbi_uc* VulkanRenderer::loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Number of Channels the image uses, will not be used but could be used in the future
-    int channels = 0;
-    using namespace vengine_helper::config;
-    // Load pixel Data from file to image
-    std::string fileLoc  = DEF<std::string>(P_TEXTURES) + filename;
-    stbi_uc* image = stbi_load(
-            fileLoc.c_str(),
-            width,
-            height,
-            &channels,          // In case we want to  use channels, its stored in channels
-            STBI_rgb_alpha );   // force image to be in format : RGBA
+// stbi_uc* VulkanRenderer::loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize)
+// {
+// #ifndef VENGINE_NO_PROFILING
+//     ZoneScoped; //:NOLINT
+// #endif
+//     // Number of Channels the image uses, will not be used but could be used in the future
+//     int channels = 0;
+//     using namespace vengine_helper::config;
+//     // Load pixel Data from file to image
+//     std::string fileLoc  = DEF<std::string>(P_TEXTURES) + filename;
+//     stbi_uc* image = stbi_load(
+//             fileLoc.c_str(),
+//             width,
+//             height,
+//             &channels,          // In case we want to  use channels, its stored in channels
+//             STBI_rgb_alpha );   // force image to be in format : RGBA
 
-    if(image == nullptr)
-    {
-        Log::error("Failed to load a Texture file! ("+filename+")");
-    }
+//     if(image == nullptr)
+//     {
+//         Log::error("Failed to load a Texture file! ("+filename+")");
+//     }
     
 
-    // Calculate image sisze using given and known data
-    *imageSize = static_cast<uint32_t>((*width) * (*height) * 4); // width times height gives us size per channel, we have 4 channels! (rgba)
+//     // Calculate image sisze using given and known data
+//     *imageSize = static_cast<uint32_t>((*width) * (*height) * 4); // width times height gives us size per channel, we have 4 channels! (rgba)
 
-    return image;
+//     return image;
     
-}
+// }
 
 VulkanRenderer::VulkanRenderer()
     : resourceMan(nullptr), window(nullptr)

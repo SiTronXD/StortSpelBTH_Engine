@@ -189,8 +189,10 @@ else() # Use Git Submodules
 
     find_package(SDL2 REQUIRED)
     target_include_directories(vengine PRIVATE ${SDL2_INCLUDE_DIRS})
-
     
+    find_package(SFML REQUIRED sfml‑network)
+    message("was sfml found: " ${sfml_FOUND})
+
     #set(vengine_vma VulkanMemoryAllocator) 
     set(vengine_stb "") #part of sources, no need to use as lib...
 
