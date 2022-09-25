@@ -1372,7 +1372,6 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
                 tView.each([this, currentCommandBuffer](const Transform& transform, const MeshComponent& meshComponent)
                 {
-                    auto& currModel = modelList[meshComponent.meshID];
                     auto& currModel = this->resourceMan->getMesh(meshComponent.meshID);                    
 
                     const glm::mat4& modelMatrix = transform.matrix;
@@ -1392,7 +1391,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     // -- BINDING VERTEX BUFFERS --                    
                     std::array<vk::Buffer,1> vertexBuffer = { currModel.getVertexBuffer()};                // Buffers to bind
                     std::array<vk::DeviceSize,1> offsets  = {0};                                           // Offsets into buffers being bound
-                    commandBuffers[imageIndex].bindVertexBuffers2(
+                    currentCommandBuffer.bindVertexBuffers2(
                         uint32_t(0),
                         uint32_t(1),
                         vertexBuffer.data(),
@@ -1401,7 +1400,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                         nullptr         //NOTE: Could also be a pointer to an array of buffer strides
                     );
                     // Bind Mesh Index Buffer; Define the Index Buffer that decides how to draw the Vertex Buffers
-                    commandBuffers[currentImageIndex].bindIndexBuffer(
+                    currentCommandBuffer.bindIndexBuffer(
                         currModel.getIndexBuffer(), 
                         0,
                         vk::IndexType::eUint32);
@@ -1409,7 +1408,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     for(auto& submesh : currModel.getSubmeshData()){                        
                         // We're going to bind Two descriptorSets! put them in array...
                         std::array<vk::DescriptorSet,2> descriptorSetGroup{
-                            this->descriptorSets[this->currentFrame],                // Use the descriptor set for the Image         //TODO: Check if correct after merge (alt. imageIndex)                   
+                            this->descriptorSets[this->currentFrame],                // Use the descriptor set for the Image                  
                             this->samplerDescriptorSets[submesh.materialIndex]       // Use the Texture which the current mesh has
                         };
                         // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
