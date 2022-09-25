@@ -177,7 +177,6 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
     auto faceIndicies =
         std::span<unsigned int>(face.mIndices, face.mNumIndices);
     for (size_t j = 0; j < face.mNumIndices; j++) {
-      // indices.push_back(face.mIndices[j]);
       indices.push_back(faceIndicies[j] + initialVertex);
       index_index++;
     }
@@ -189,7 +188,6 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
   /// Construct MeshData and return it
   MeshData meshData{
       .submeshes = std::vector<SubmeshData>{{
-          //.materialIndex = matToTex[mesh->mMaterialIndex],
           .materialIndex =
               MeshLoader::resourceMan->getTexture(matToTex[mesh->mMaterialIndex])
                   .descriptorLocation,
