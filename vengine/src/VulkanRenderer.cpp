@@ -1631,7 +1631,7 @@ void VulkanRenderer::recordRenderPassCommands_Base(Scene* scene, uint32_t curren
                         0,
                         vk::IndexType::eUint32);
                     
-                    for(auto& submesh : currModel.getSubMeshData()){                        
+                    for(auto& submesh : currModel.getSubmeshData()){                        
                         // We're going to bind Two descriptorSets! put them in array...
                         std::array<vk::DescriptorSet,2> descriptorSetGroup{
                             this->descriptorSets[currentImageIndex],                // Use the descriptor set for the Image                                                        

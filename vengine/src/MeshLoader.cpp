@@ -75,7 +75,7 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
     data.indicies.insert(data.indicies.end(), mesh.indicies.begin(),
                             mesh.indicies.end());
 
-    data.submeshes.push_back(SubMeshData{
+    data.submeshes.push_back(SubmeshData{
         .materialIndex = mesh.submeshes[0].materialIndex,
         .startIndex = mesh.submeshes[0].startIndex,
         .numIndicies = static_cast<uint32_t>(mesh.indicies.size()),
@@ -184,7 +184,7 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
 
   /// Construct MeshData and return it
   MeshData meshData{
-      .submeshes = std::vector<SubMeshData>{{
+      .submeshes = std::vector<SubmeshData>{{
           //.materialIndex = matToTex[mesh->mMaterialIndex],
           .materialIndex =
               ResourceManager::getTexture(matToTex[mesh->mMaterialIndex])

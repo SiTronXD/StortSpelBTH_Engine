@@ -24,14 +24,14 @@ struct Vertex
 //TODO: AnimVertex
 //TODO: DefaultMesh (??)
 
-struct SubMeshData{
+struct SubmeshData{
     uint32_t materialIndex;
     uint32_t startIndex;
     uint32_t numIndicies;
 };
 
 struct MeshData{
-    std::vector<SubMeshData> submeshes;
+    std::vector<SubmeshData> submeshes;
     std::vector<Vertex>  vertices;
     std::vector<uint32_t>    indicies;
 

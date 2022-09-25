@@ -10,7 +10,7 @@
 
 class NewModel{
 private: 
-    std::vector<SubMeshData>    submeshData;
+    std::vector<SubmeshData>    submeshData;
     Device&         device; 
     VmaAllocator&   vma;     
 
@@ -25,7 +25,7 @@ public:
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     vk::Buffer& getVertexBuffer();
     vk::Buffer& getIndexBuffer( );
-    std::vector<SubMeshData> getSubMeshData();
+    std::vector<SubmeshData> getSubmeshData();
 
     void cleanup();
 };

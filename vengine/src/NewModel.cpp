@@ -167,7 +167,7 @@ vk::Buffer& NewModel::getIndexBuffer()
 }
 
 
-std::vector<SubMeshData> NewModel::getSubMeshData()
+std::vector<SubmeshData> NewModel::getSubmeshData()
 {
     return this->submeshData;
 }
