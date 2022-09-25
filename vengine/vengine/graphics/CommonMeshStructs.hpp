@@ -5,7 +5,7 @@
 #include <glm/vec2.hpp>
 #include <glm/mat4x4.hpp>
 
-const uint32_t MAX_SUBMESH_MATERIAL_NAME_LENGTH = 64;
+const uint32_t MAX_SUBMESH_MATERIAL_NAME_LENGTH = 64; //TODO REMOVE
 
 struct ModelMatrix { 
     glm::mat4 model; 
