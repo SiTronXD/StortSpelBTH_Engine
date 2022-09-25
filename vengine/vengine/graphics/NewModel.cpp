@@ -1,6 +1,7 @@
 #include "NewModel.hpp"
 #include "Utilities.hpp"
 #include "tracy/Tracy.hpp"
+#include "Buffer.hpp"
 #include <map>
 
 NewModel::NewModel(MeshData&& meshData, VulkanImportStructs& importStructs)
@@ -37,10 +38,8 @@ void NewModel::createVertexBuffer(MeshData& meshData, VulkanImportStructs& impor
     /// Get size of buffers needed for Vertices
     vk::DeviceSize bufferSize  =sizeof(Vertex) * meshData.vertices.size();
 
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
-            .physicalDevice = *importStructs.physicalDevice, 
-            .device         = importStructs.device->getVkDevice(), 
             .bufferSize     = bufferSize,  
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       /// This buffers vertex data will be transfered somewhere else!
             .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -64,10 +63,8 @@ void NewModel::createVertexBuffer(MeshData& meshData, VulkanImportStructs& impor
     VmaAllocationInfo allocInfo_deviceOnly;
     /// Create Buffer with TRANSFER_DST_BIT to mark as recipient of transfer data (also VERTEX_BUFFER)
     /// Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
-            .physicalDevice = *importStructs.physicalDevice, 
-            .device         = importStructs.device->getVkDevice(), 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eVertexBuffer,    //// This is a Vertex Buffer
@@ -80,7 +77,7 @@ void NewModel::createVertexBuffer(MeshData& meshData, VulkanImportStructs& impor
         });
 
     /// Copy Staging Buffer to Vertex Buffer on GPU
-    vengine_helper::copyBuffer(
+    Buffer::copyBuffer(
         importStructs.device->getVkDevice(), 
         *importStructs.transferQueue, 
         *importStructs.transferCommandPool, 
@@ -106,10 +103,8 @@ void NewModel::createIndexBuffer(MeshData& meshData, VulkanImportStructs& import
     VmaAllocation stagingBufferMemory{};
     VmaAllocationInfo allocInfo_staging;
 
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
-            .physicalDevice = *importStructs.physicalDevice, 
-            .device         = importStructs.device->getVkDevice(), 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
             .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
@@ -129,10 +124,8 @@ void NewModel::createIndexBuffer(MeshData& meshData, VulkanImportStructs& import
     VmaAllocationInfo allocInfo_device;
 
     /// Create Buffers for INDEX data on GPU access only area
-    vengine_helper::createBuffer(
+    Buffer::createBuffer(
         {
-            .physicalDevice = *importStructs.physicalDevice, 
-            .device         = importStructs.device->getVkDevice(), 
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eIndexBuffer,     /// This is a Index Buffer, will be used as a Index Buffer
@@ -143,7 +136,7 @@ void NewModel::createIndexBuffer(MeshData& meshData, VulkanImportStructs& import
             .vma = importStructs.vma
         });
 
-    vengine_helper::copyBuffer(
+    Buffer::copyBuffer(
         importStructs.device->getVkDevice(), 
         *importStructs.transferQueue, 
         *importStructs.transferCommandPool, 

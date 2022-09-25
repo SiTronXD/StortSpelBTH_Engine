@@ -9,6 +9,7 @@
 #include "../application/ResourceManager.hpp" // Importing mesh with Assimp needs to add Texture resources
 #include <span>
 
+#include "../graphics/Buffer.hpp"
 #include "../graphics/VulkanRenderer.hpp"
 
 VulkanImportStructs TextureLoader::importStructs;
@@ -157,9 +158,7 @@ void TextureLoader::createTextureImage(const std::string &filename,
     VmaAllocation imageStagingBufferMemory = nullptr;
     VmaAllocationInfo allocInfo;
 
-    vengine_helper::createBuffer(createBufferData{
-        .physicalDevice = *TextureLoader::importStructs.physicalDevice,
-        .device = TextureLoader::importStructs.device->getVkDevice(),
+    Buffer::createBuffer(BufferCreateData{
         .bufferSize = imageSize,
         .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,
         .bufferProperties =
@@ -199,9 +198,6 @@ void TextureLoader::createTextureImage(const std::string &filename,
                                                 // buffer
             | vk::ImageUsageFlagBits::eSampled,  // This image will be Sampled by
                                                 // a Sampler!
-        .property =
-            vk::MemoryPropertyFlagBits::eDeviceLocal, // Image should only be
-                                                        // accesable on the GPU
         .imageMemory = &allocRef
 
         },
@@ -212,8 +208,8 @@ void TextureLoader::createTextureImage(const std::string &filename,
     // Transition image to be in the DST, needed by the Copy Operation (Copy
     // assumes/needs image Layout to be in vk::ImageLayout::eTransferDstOptimal
     // state)
-    vengine_helper::transitionImageLayout(
-        TextureLoader::importStructs.device->getVkDevice(),
+    Texture::transitionImageLayout(
+        *TextureLoader::importStructs.device,
         *TextureLoader::importStructs.transferQueue, // Same as graphics Queue
         *TextureLoader::importStructs.transferCommandPool,
         imageRef,                    // Image to transition the layout on
@@ -222,15 +218,15 @@ void TextureLoader::createTextureImage(const std::string &filename,
                                                 // image to
 
     // Copy Data to image
-    vengine_helper::copyImageBuffer(
+    Buffer::copyBufferToImage(
         TextureLoader::importStructs.device->getVkDevice(),
         *TextureLoader::importStructs.transferQueue,
         *TextureLoader::importStructs.transferCommandPool, imageStagingBuffer,
         imageRef, width, height);
 
     // Transition iamge to be shader readable for shader usage
-    vengine_helper::transitionImageLayout(
-        TextureLoader::importStructs.device->getVkDevice(),
+    Texture::transitionImageLayout(
+        *TextureLoader::importStructs.device,
         *TextureLoader::importStructs.transferQueue,
         *TextureLoader::importStructs.transferCommandPool, imageRef,
         vk::ImageLayout::eTransferDstOptimal, // Image layout to transition the
