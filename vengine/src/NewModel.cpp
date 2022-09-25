@@ -69,7 +69,7 @@ void NewModel::createVertexBuffer(MeshData& meshData, VulkanImportStructs& impor
             .physicalDevice = *importStructs.physicalDevice, 
             .device         = importStructs.device->getVkDevice(), 
             .bufferSize     = bufferSize, 
-            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst            /// Destination Buffer to be transfered to
+            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eVertexBuffer,    //// This is a Vertex Buffer
             .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
             .buffer         = &this->vertexBuffer, 
@@ -136,7 +136,7 @@ void NewModel::createIndexBuffer(MeshData& meshData, VulkanImportStructs& import
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eIndexBuffer,     /// This is a Index Buffer, will be used as a Index Buffer
-            .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,    /// Buffer will be local to the device
+            .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,  /// Buffer will be local to the device
             .buffer         = &this->indexBuffer, 
             .bufferMemory   = &this->indexBufferMemory,
             .allocationInfo = &allocInfo_device,

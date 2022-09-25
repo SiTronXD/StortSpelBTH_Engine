@@ -34,7 +34,8 @@ inline NewModel& ResourceManager::getMesh(uint32_t id)
     auto map_iterator = this->meshes.find(id);
     if(this->meshes.end() == map_iterator)
     {
-        Log::error("getMesh failed to find a mesh with the given ID : " + std::to_string(id));
+        Log::error("getMesh failed to find a mesh with the given ID : " 
+            + std::to_string(id));
         assert(false);
     }
     return map_iterator->second;
@@ -45,7 +46,8 @@ inline ImageData& ResourceManager::getTexture(uint32_t id)
     auto map_iterator = this->textures.find(id);
     if(this->textures.end() == map_iterator)
     {
-        Log::error("getMesh failed to find a mesh with the given ID : " + std::to_string(id));
+        Log::error("getMesh failed to find a mesh with the given ID : " 
+            + std::to_string(id));
         assert(false);
     }
     return map_iterator->second;

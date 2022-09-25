@@ -54,9 +54,6 @@ void VulkanRenderer::initResourceManager()
 
     /// TODO: REMOVE THIS, temporary used before making createTexture part of resourceManager...
     TextureLoader::TEMP = this;
-    
-    /// TODO: IF Resource Manager wont be static, then pass it 
-    //TextureLoader::resourceMan = ResourceManager::ResourceManager;
 }
 
 using namespace vengine_helper::config;

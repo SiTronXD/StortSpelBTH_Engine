@@ -9,12 +9,14 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
     using namespace vengine_helper::config;    
     
     uint32_t prevSize = this->meshPaths.size();
-    this->meshPaths.insert({meshPath,prevSize}); //NOTE: prevSize as key only works if we never remove resources the map...
+    //NOTE: prevSize as key only works if we never remove resources the map...
+    this->meshPaths.insert({meshPath,prevSize}); 
 
     // If exists, return key of existing mesh
     if(this->meshPaths.size() == prevSize)
     {
-        Log::warning("Mesh \""+meshPath+"\" was already added!"); //TODO: should be able to log what mesh
+        //TODO: should be able to log what mesh
+        Log::warning("Mesh \""+meshPath+"\" was already added!"); 
         
         // Check if Collision happened.
         // - Check if the meshPaths-map bucket for specific ID has more than 1 element
@@ -31,7 +33,8 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
         )->first;
     }    
 
-    auto model = MeshLoader::createMesh(DEF<std::string>(P_MODELS) + meshPath); //NOTE: meshes.size as key only works if we never remove resources the map...
+    //NOTE: meshes.size as key only works if we never remove resources the map...
+    auto model = MeshLoader::createMesh(DEF<std::string>(P_MODELS) + meshPath); 
 
     // Create mesh, insert into map of meshes
     meshes.insert({
@@ -71,7 +74,8 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
     }
 
     //NOTE: meshes.size as key only works if we never remove resources the map...
-    auto textureResource = TextureLoader::createTexture(DEF<std::string>(P_TEXTURES) + texturePath); 
+    auto textureResource = 
+        TextureLoader::createTexture(DEF<std::string>(P_TEXTURES) + texturePath); 
 
     // Create mesh, insert into map of meshes
     textures.insert({
