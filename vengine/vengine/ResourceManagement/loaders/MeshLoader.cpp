@@ -1,14 +1,14 @@
 #include "../loaders/MeshLoader.hpp"
 
-#include "Configurator.hpp"
+#include "../Configurator.hpp"
 #include "assimp/postprocess.h"
 #include "assimp/scene.h"
 #include <span>
 #include <stack>
 
 #include "tracy/Tracy.hpp"
-#include "../application/ResourceManager.hpp" // Importing mesh with Assimp needs to add Textures Sampler index
-#include "../graphics/NewModel.hpp"
+#include "../ResourceManager.hpp" // Importing mesh with Assimp needs to add Textures Sampler index
+#include "../../graphics/Mesh.hpp"
 #include "TextureLoader.hpp"
 
 
@@ -31,11 +31,11 @@ void MeshLoader::init(VmaAllocator *vma,
 }
 
 
-NewModel MeshLoader::createMesh(std::string modelFile) 
+Mesh MeshLoader::createMesh(std::string modelFile) 
 {
     auto meshData = MeshLoader::assimpImport(modelFile);
 
-    return std::move(NewModel(std::move(meshData), MeshLoader::importStructs));
+    return std::move(Mesh(std::move(meshData), MeshLoader::importStructs));
 }
 
 MeshData MeshLoader::assimpImport(const std::string &modelFile) 

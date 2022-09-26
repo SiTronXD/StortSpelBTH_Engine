@@ -1,10 +1,10 @@
-#include "NewModel.hpp"
+#include "Mesh.hpp"
 #include "Utilities.hpp"
 #include "tracy/Tracy.hpp"
 #include "Buffer.hpp"
 #include <map>
 
-NewModel::NewModel(MeshData&& meshData, VulkanImportStructs& importStructs)
+Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
     : submeshData(meshData.submeshes), device(*importStructs.device),vma(*importStructs.vma)
 {  
     this->createVertexBuffer(meshData, importStructs);
@@ -13,7 +13,7 @@ NewModel::NewModel(MeshData&& meshData, VulkanImportStructs& importStructs)
 
 
 
-NewModel::NewModel(NewModel&& ref)
+Mesh::Mesh(Mesh&& ref)
 :   submeshData(std::move(ref.submeshData)),
     device(ref.device),
     vma(ref.vma),
@@ -24,7 +24,7 @@ NewModel::NewModel(NewModel&& ref)
 {
 }
 
-void NewModel::createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs)
+void Mesh::createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -90,7 +90,7 @@ void NewModel::createVertexBuffer(MeshData& meshData, VulkanImportStructs& impor
     vmaFreeMemory(*importStructs.vma, stagingBufferMemory);
 }
 
-void NewModel::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStructs)
+void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStructs)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -149,23 +149,23 @@ void NewModel::createIndexBuffer(MeshData& meshData, VulkanImportStructs& import
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
 
-vk::Buffer& NewModel::getVertexBuffer()
+vk::Buffer& Mesh::getVertexBuffer()
 {
     return this->vertexBuffer;
 }
 
-vk::Buffer& NewModel::getIndexBuffer()
+vk::Buffer& Mesh::getIndexBuffer()
 {
     return this->indexBuffer;
 }
 
 
-std::vector<SubmeshData> NewModel::getSubmeshData()
+std::vector<SubmeshData> Mesh::getSubmeshData()
 {
     return this->submeshData;
 }
 
-void NewModel::cleanup()
+void Mesh::cleanup()
 {
     this->device.getVkDevice().destroyBuffer(this->vertexBuffer);
     this->device.getVkDevice().destroyBuffer(this->indexBuffer);

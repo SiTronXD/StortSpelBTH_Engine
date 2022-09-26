@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../graphics/ResourceManagerStructs.hpp"
+#include "../ResourceManagerStructs.hpp"
 
 typedef unsigned char stbi_uc;
 

@@ -1,7 +1,7 @@
 #include "Utilities.hpp"
 #include "tracy/Tracy.hpp"
 #include "../graphics/vulkan/VmaUsage.hpp"
-#include "../loaders/Configurator.hpp"
+#include "../ResourceManagement/Configurator.hpp"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>

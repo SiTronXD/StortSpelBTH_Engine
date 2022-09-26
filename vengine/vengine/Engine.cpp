@@ -14,7 +14,7 @@
 #include "application/Input.hpp"
 #include "application/Time.hpp"
 #include "graphics/VulkanRenderer.hpp"
-#include "loaders/Configurator.hpp"
+#include "ResourceManagement/Configurator.hpp"
 
 #include <chrono>
 #include <functional>

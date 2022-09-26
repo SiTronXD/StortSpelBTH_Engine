@@ -1,11 +1,11 @@
 #pragma once
 
-#include "../graphics/NewModel.hpp"
+#include "../../graphics/Mesh.hpp"
 #include "assimp/Importer.hpp" 
 #include "assimp/mesh.h"
 #include "assimp/scene.h"
 
-#include "../graphics/ResourceManagerStructs.hpp"
+#include "../ResourceManagerStructs.hpp"
 
 class ResourceManager;
 class MeshLoader
@@ -24,5 +24,5 @@ private:
 public: 
     static void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager* resourceMan);
 
-    static NewModel createMesh(std::string path);
+    static Mesh createMesh(std::string path);
 };

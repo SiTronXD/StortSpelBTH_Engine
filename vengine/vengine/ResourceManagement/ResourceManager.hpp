@@ -3,8 +3,8 @@
 #include <cstdint>
 #include <unordered_map>
 #include <string>
-#include "../graphics/NewModel.hpp"
-#include "../graphics/ResourceManagerStructs.hpp"
+#include "ResourceManagerStructs.hpp"
+#include "../graphics/Mesh.hpp"
 #include "../dev/Log.hpp"
 
 class Engine;
@@ -17,7 +17,7 @@ private:
     std::unordered_map<std::string, uint32_t> meshPaths;
     std::unordered_map<std::string, uint32_t> texturePaths;
     
-    std::unordered_map<uint32_t, NewModel>  meshes;
+    std::unordered_map<uint32_t, Mesh>  meshes;
     std::unordered_map<uint32_t, ImageData> textures;
 
     void cleanup();
@@ -25,11 +25,11 @@ public:
     uint32_t addMesh(std::string&& meshPath);
     uint32_t addTexture(std::string&& texturePath);
 
-    NewModel&     getMesh(uint32_t id);
+    Mesh&     getMesh(uint32_t id);
     ImageData&    getTexture(uint32_t id);
 };
 
-inline NewModel& ResourceManager::getMesh(uint32_t id)
+inline Mesh& ResourceManager::getMesh(uint32_t id)
 {
     auto map_iterator = this->meshes.find(id);
     if(this->meshes.end() == map_iterator)

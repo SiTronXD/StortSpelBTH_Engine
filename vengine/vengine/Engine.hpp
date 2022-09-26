@@ -2,7 +2,7 @@
 
 #include "network/NetworkHandler.h"
 #include "application/SceneHandler.hpp"
-#include "application/ResourceManager.hpp"
+#include "ResourceManagement/ResourceManager.hpp"
 
 class Engine
 {

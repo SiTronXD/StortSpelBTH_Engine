@@ -1,7 +1,7 @@
 #include "ResourceManager.hpp"
-#include "../loaders/Configurator.hpp"
-#include "../loaders/MeshLoader.hpp"
-#include "../loaders/TextureLoader.hpp"
+#include "Configurator.hpp"
+#include "loaders/MeshLoader.hpp"
+#include "loaders/TextureLoader.hpp"
 
 uint32_t ResourceManager::addMesh(std::string&& meshPath)
 {        

@@ -13,7 +13,7 @@
 #include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
 
-#include "../application/ResourceManager.hpp"
+#include "../ResourceManagement/ResourceManager.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
