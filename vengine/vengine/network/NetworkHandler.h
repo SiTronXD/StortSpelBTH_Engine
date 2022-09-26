@@ -11,6 +11,7 @@ class NetworkHandler {
     bool          shutDownServer;
     Client*       client;
     SceneHandler* sceneHandler;
+    int ID;
 
     //HELPERS
     float fx, fy, fz, fa, fb, fc;
@@ -19,6 +20,7 @@ class NetworkHandler {
     //data
     int              seed;
     std::vector<int> otherPlayers;
+    std::vector<int> otherPlayersServerId;
     std::vector<int> monsters;
 
   public:

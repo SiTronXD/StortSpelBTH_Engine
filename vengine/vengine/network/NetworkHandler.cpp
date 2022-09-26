@@ -4,224 +4,244 @@
 
 int serverMain(bool& shutDownServer)
 {
-    Timer  serverTime;
-    Server s;
-    bool   serverIsDone = false;
+	Timer  serverTime;
+	Server s;
+	bool   serverIsDone = false;
 
-    while (!shutDownServer && !serverIsDone) {
-        serverIsDone = s.update(serverTime.getDT());
-        serverTime.updateDeltaTime();
-    }
-    return 1;
+	while (!shutDownServer && !serverIsDone) {
+		serverIsDone = s.update(serverTime.getDT());
+		serverTime.updateDeltaTime();
+	}
+	return 1;
 }
 
 NetworkHandler::NetworkHandler()
 {
-    fx = fy = fz = fa = fb = fc = 0.f;
-    ix = iy = iz = ia = ib = ic = 0;
-    shutDownServer              = false;
-    client                      = nullptr;
-    serverThread                = nullptr;
+	fx = fy = fz = fa = fb = fc = 0.f;
+	ix = iy = iz = ia = ib = ic = 0;
+	shutDownServer = false;
+	client = nullptr;
+	serverThread = nullptr;
 }
 
 NetworkHandler::~NetworkHandler()
 {
-    if (serverThread != nullptr) {
-        serverThread->join();
-        delete serverThread;
-        serverThread = nullptr;
-    }
-    if (client != nullptr) {
-        delete client;
-        client = nullptr;
-    }
+	if (serverThread != nullptr) {
+		serverThread->join();
+		delete serverThread;
+		serverThread = nullptr;
+	}
+	if (client != nullptr) {
+		delete client;
+		client = nullptr;
+	}
 }
 
 void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 {
-    this->sceneHandler = sceneHandler;
+	this->sceneHandler = sceneHandler;
 }
 
 void NetworkHandler::createServer()
 {
-    serverThread = new std::thread(serverMain, std::ref(this->shutDownServer));
+	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer));
 }
 
 void NetworkHandler::deleteServer()
 {
-    if (serverThread != nullptr) {
-        shutDownServer = true;
-        serverThread->join();
-        delete serverThread;
-        serverThread = nullptr;
-    }
-    if (client != nullptr) {
-        delete client;
-        client = nullptr;
-    }
+	if (serverThread != nullptr) {
+		shutDownServer = true;
+		serverThread->join();
+		delete serverThread;
+		serverThread = nullptr;
+	}
+	if (client != nullptr) {
+		delete client;
+		client = nullptr;
+	}
 }
 
 Client* NetworkHandler::createClient(const std::string& name)
 {
-    if (client == nullptr) {
-        client = new Client(name);
-    }
-    return client;
+	if (client == nullptr) {
+		client = new Client(name);
+	}
+	return client;
 }
 
 Client* NetworkHandler::getClient()
 {
-    return client;
+	return client;
 }
 
 void NetworkHandler::connectClientToThis()
 {
-    this->connectClient(sf::IpAddress::getLocalAddress().toString());
+	this->connectClient(sf::IpAddress::getLocalAddress().toString());
 }
 
 void NetworkHandler::connectClient(const std::string& serverIP)
 {
-    if (client == nullptr) {
-        std::cout << "client doesn't exist" << std::endl;
-        return;
-    }
-    client->connect(serverIP);
+	if (client == nullptr) {
+		std::cout << "client doesn't exist" << std::endl;
+		return;
+	}
+	client->connect(serverIP);
 }
 
 void NetworkHandler::updateNetwork()
 {
-    if (client == nullptr) {
-        return;
-    }
-    client->update(Time::getDT());
-    //tcp
-    sf::Packet cTCPP = client->getTCPDataFromServer();
-    int        gameEvent;
-    while (!cTCPP.endOfPacket()) {
-        cTCPP >> gameEvent;
-        if (gameEvent == GameEvents::DISCONNECT) {
-            cTCPP >> ix;
-            if (ix == -1) { //we got kicked
-                this->disconnectClient();
-            }
-        }
-        else if (gameEvent == GameEvents::START) {
-            client->starting();
-        }
-        else if (gameEvent == GameEvents::PlayerJoined) {
-            otherPlayers.push_back(sceneHandler->getScene()->createEntity());
-            sceneHandler->getScene()->setComponent<MeshComponent>(
-                otherPlayers[otherPlayers.size() - 1]);
-        }
-        else if (gameEvent == GameEvents::SpawnEnemy) {
-            //ix = what type of enemy
-            cTCPP >> ix;
-            //should we really create a new entity everytime?
-            iy = sceneHandler->getScene()->createEntity();
-            monsters.push_back(iy);
+	if (client == nullptr) {
+		return;
+	}
+	client->update(Time::getDT());
+	//tcp
+	sf::Packet cTCPP = client->getTCPDataFromServer();
+	int        gameEvent;
+	while (!cTCPP.endOfPacket()) {
+		cTCPP >> gameEvent;
+		if (gameEvent == GameEvents::DISCONNECT) {
+			cTCPP >> ix;
+			if (ix == -1) { //we got kicked
+				this->disconnectClient();
+			}
+		}
+		else if (gameEvent == GameEvents::START) {
+			client->starting();
+		}
+		else if (gameEvent == GameEvents::PlayerJoined) {
+			otherPlayers.push_back(sceneHandler->getScene()->createEntity());
+			sceneHandler->getScene()->setComponent<MeshComponent>(
+				otherPlayers[otherPlayers.size() - 1]);
+			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(
+				otherPlayers[otherPlayers.size() - 1]);
 
-            sceneHandler->getScene()->setComponent<MeshComponent>(iy);
+			transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
+			transform.position = glm::vec3(-30.0f + (otherPlayers.size() * 50), 0.0f, 30.0f);
+		}
+		else if (gameEvent == GameEvents::ID) {
+			cTCPP >> this->ID;//id of this player
+			cTCPP >> ix;//nr of players in this game
+			for (int i = 0; i < ix; i++) {
+				otherPlayers.push_back(sceneHandler->getScene()->createEntity());
+				sceneHandler->getScene()->setComponent<MeshComponent>(
+					otherPlayers[otherPlayers.size() - 1]);
+				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(
+					otherPlayers[otherPlayers.size() - 1]);
 
-            cTCPP >> fx >> fy >> fz;
-            Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
-            transform.position   = glm::vec3(fx, fy, fz);
-        }
-        else if (gameEvent == GameEvents::SpawnEnemies) {
-            //ix = what type of enemy, iy how many enemies
-            cTCPP >> ix >> iy;
+				transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
+				transform.position = glm::vec3(-30.0f + (otherPlayers.size() * 50), 0.0f, 30.0f);
+			}
+		}
+		else if (gameEvent == GameEvents::SpawnEnemy) {
+			//ix = what type of enemy
+			cTCPP >> ix;
+			//should we really create a new entity everytime?
+			iy = sceneHandler->getScene()->createEntity();
+			monsters.push_back(iy);
 
-            for (int i = 0; i < iy; i++) {
-                iz = sceneHandler->getScene()->createEntity();
-                sceneHandler->getScene()->setComponent<MeshComponent>(iz);
+			sceneHandler->getScene()->setComponent<MeshComponent>(iy);
 
-                //ix = what type of enemy
-                cTCPP >> fx >> fy >> fz;
-                Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
-                transform.position   = glm::vec3(fx, fy, fz);
-            }
-        }
-        else if (gameEvent == GameEvents::Explosion) {
-            //don't know how this should be implemented right now
-        }
-        else if (gameEvent == GameEvents::MonsterDied) {
-            //don't know how this should be implemented right now
-        }
-        else if (gameEvent == GameEvents::PlayerShoot) {
-            //don't know how this should be implemented right now
-        }
-        else if (gameEvent == GameEvents::GAMEDATA) {
-            cTCPP >> ix; //nrOfPlayers;
-            cTCPP >> this->seed; //seed nr;
-            for (int i = 0; i < ix - 1; i++) {
-                this->otherPlayers.push_back(sceneHandler->getScene()->createEntity());
-                sceneHandler->getScene()->setComponent<MeshComponent>(
-                    this->otherPlayers[otherPlayers.size() - 1]);
-                Transform& transform = sceneHandler->getScene()->getComponent<Transform>(
-                    otherPlayers[otherPlayers.size() - 1]);
-                transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
-            }
-        }
-        else if (gameEvent == GameEvents::PlayerDied) {
-            //don't know how this should be implemented right now
-        }
-    }
-    sf::Packet cUDPP = client->getUDPDataFromServer();
-    while (!cUDPP.endOfPacket()) {
-        cUDPP >> gameEvent;
-        if (gameEvent == GameEvents::UpdatePlayerPos) {
-            //ix = amount of players
-            cUDPP >> ix;
-            for (int i = 0; i < ix; i++) {
-                //fxyz position, fabc rotation
-                cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
-                Transform& transform =
-                    sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i]);
-                transform.position = glm::vec3(fx, fy, fz);
-                transform.rotation = glm::vec3(fa, fb, fc);
-            }
-        }
-        else if (gameEvent == GameEvents::UpdateMonsterPos) {
-            //ix number of monsters
-            cUDPP >> ix;
-            if (monsters.size() < ix) {
-                monsters.resize(ix);
-            }
-            for (int i = 0; i < ix; i++) {
-                //fxyz position, fabc rotation
-                cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
-                Transform& transform =
-                    sceneHandler->getScene()->getComponent<Transform>(monsters[i]);
-                transform.position = glm::vec3(fx, fy, fz);
-                transform.rotation = glm::vec3(fa, fb, fc);
-            }
-        }
-    }
+			cTCPP >> fx >> fy >> fz;
+			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
+			transform.position = glm::vec3(fx, fy, fz);
+		}
+		else if (gameEvent == GameEvents::SpawnEnemies) {
+			//ix = what type of enemy, iy how many enemies
+			cTCPP >> ix >> iy;
+
+			for (int i = 0; i < iy; i++) {
+				iz = sceneHandler->getScene()->createEntity();
+				sceneHandler->getScene()->setComponent<MeshComponent>(iz);
+
+				//ix = what type of enemy
+				cTCPP >> fx >> fy >> fz;
+				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
+				transform.position = glm::vec3(fx, fy, fz);
+			}
+		}
+		else if (gameEvent == GameEvents::Explosion) {
+			//don't know how this should be implemented right now
+		}
+		else if (gameEvent == GameEvents::MonsterDied) {
+			//don't know how this should be implemented right now
+		}
+		else if (gameEvent == GameEvents::PlayerShoot) {
+			//don't know how this should be implemented right now
+		}
+		else if (gameEvent == GameEvents::GAMEDATA) {
+			cTCPP >> ix; //nrOfPlayers;
+
+			for (int i = 0; i < ix - 1; i++) {
+				cTCPP >> iz;
+				if(iz != this->ID){
+					this->otherPlayersServerId.push_back(iz);
+				}
+			}
+
+			cTCPP >> this->seed; //seed nr;
+			
+		}
+		else if (gameEvent == GameEvents::PlayerDied) {
+			//don't know how this should be implemented right now
+		}
+	}
+	sf::Packet cUDPP = client->getUDPDataFromServer();
+	while (!cUDPP.endOfPacket()) {
+		cUDPP >> gameEvent;
+		if (gameEvent == GameEvents::UpdatePlayerPos) {
+			//ix = amount of players
+			cUDPP >> ix;
+			for (int i = 0; i < ix; i++) {
+				//fxyz position, fabc rotation
+				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
+				Transform& transform =
+					sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i]);
+				transform.position = glm::vec3(fx, fy, fz);
+				transform.rotation = glm::vec3(fa, fb, fc);
+			}
+		}
+		else if (gameEvent == GameEvents::UpdateMonsterPos) {
+			//ix number of monsters
+			cUDPP >> ix;
+			if (monsters.size() < ix) {
+				monsters.resize(ix);
+			}
+			for (int i = 0; i < ix; i++) {
+				//fxyz position, fabc rotation
+				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
+				Transform& transform =
+					sceneHandler->getScene()->getComponent<Transform>(monsters[i]);
+				transform.position = glm::vec3(fx, fy, fz);
+				transform.rotation = glm::vec3(fa, fb, fc);
+			}
+		}
+	}
 }
 
 void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
 {
-    if (client != nullptr) {
-        client->sendTCPEvent(tcpP);
-    }
+	if (client != nullptr) {
+		client->sendTCPEvent(tcpP);
+	}
 }
 
 void NetworkHandler::sendUDPDataToClient(const glm::vec3& pos, const glm::vec3& rot)
 {
-    if (client != nullptr) {
-        client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
-    }
+	if (client != nullptr) {
+		client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
+	}
 }
 
 int NetworkHandler::getServerSeed()
 {
-    return seed;
+	return seed;
 }
 
 void NetworkHandler::disconnectClient()
 {
-    client->disconnect();
-    if (client != nullptr) {
-        delete client;
-        client = nullptr;
-    }
+	client->disconnect();
+	if (client != nullptr) {
+		delete client;
+		client = nullptr;
+	}
 }
