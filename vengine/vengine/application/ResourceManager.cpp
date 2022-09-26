@@ -32,13 +32,12 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
         )->first;
     }    
 
-    //NOTE: meshes.size as key only works if we never remove resources the map...
-    auto model = MeshLoader::createMesh(DEF<std::string>(P_MODELS) + meshPath); //TODO: Move this into the map insert function call...
 
+    //NOTE: meshes.size as key only works if we never remove resources the map...
     // Create mesh, insert into map of meshes
     meshes.insert({
         meshes.size(),
-        std::move(model)}        
+        MeshLoader::createMesh(DEF<std::string>(P_MODELS) + meshPath)}        
         ); 
 
     return meshes.size() -1;
@@ -73,13 +72,10 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
     }
 
     //NOTE: meshes.size as key only works if we never remove resources the map...
-    auto textureResource = 
-        TextureLoader::createTexture(DEF<std::string>(P_TEXTURES) + texturePath); 
-
     // Create mesh, insert into map of meshes
     textures.insert({
         textures.size(),
-        textureResource});       
+        TextureLoader::createTexture(DEF<std::string>(P_TEXTURES) + texturePath)});
 
     return textures.size() -1;
 }
