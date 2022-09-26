@@ -1,7 +1,6 @@
 #pragma once
 
 #include "vengine.h"
-#include "vengine/audio/AudioEngine.h"
 
 class TestDemoScene : public Scene
 {
@@ -15,8 +14,5 @@ public:
 	// Inherited via Scene
 	virtual void init() override;
 	virtual void update() override;
-
-	AudioEngine audioEngine;
-
 };
 

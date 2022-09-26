@@ -5,6 +5,9 @@
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
 
+// temp
+#include "vengine/audio/AudioHandler.h"
+
 TestDemoScene::TestDemoScene()
 	: testEntity(-1), testEntity2(-1)
 {
@@ -49,8 +52,6 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
-
-	audioEngine.loadFile("assets/sounds/test-audio2.wav");
 }
 
 void TestDemoScene::update()
