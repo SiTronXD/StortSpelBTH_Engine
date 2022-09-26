@@ -5,9 +5,6 @@
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
 
-// temp
-#include "vengine/audio/AudioHandler.h"
-
 TestDemoScene::TestDemoScene()
 	: testEntity(-1), testEntity2(-1)
 {

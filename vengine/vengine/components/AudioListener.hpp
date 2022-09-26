@@ -4,7 +4,9 @@
 
 struct AudioListener
 {
-	int a = 0;
+	// Problems arose when the struct was empty
+	char variable{};
+
 	void setPosition(float x, float y, float z)
 	{
 		sf::Listener::setPosition(x, y, z);
