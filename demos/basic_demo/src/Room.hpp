@@ -6,7 +6,7 @@
 
 #include "Randomizer.hpp"
 
-enum ROOM_TYPE{START, NORMAL, HARD, BOSS, EXIT};
+enum ROOM_TYPE{START_ROOM, NORMAL_ROOM, HARD_ROOM, BOSS_ROOM, EXIT_ROOM};
 
 struct Room
 {
@@ -18,7 +18,7 @@ struct Room
 	Room()
 		:up(-1), down(-1), left(-1), right(-1),
 		dimensions(glm::vec3(10.0f, 10.0f, 10.0f)),
-		type(ROOM_TYPE::NORMAL),branch(false), branchEnd(false),
+		type(ROOM_TYPE::NORMAL_ROOM),branch(false), branchEnd(false),
 		shortcut(false)
 	{
 	};

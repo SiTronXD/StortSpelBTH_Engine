@@ -6,19 +6,19 @@ std::string typeToString(ROOM_TYPE type)
 	std::string ret;
 	switch (type)
 	{
-	case START:
+	case START_ROOM:
 		ret = "Start";
 		break;
-	case NORMAL:
+	case NORMAL_ROOM:
 		ret = "Normal";
 		break;
-	case HARD:
+	case HARD_ROOM:
 		ret = "Hard";
 		break;
-	case BOSS:
+	case BOSS_ROOM:
 		ret = "Boss";
 		break;
-	case EXIT:
+	case EXIT_ROOM:
 		ret = "Exit";
 		break;
 	default:
@@ -89,7 +89,7 @@ int setUpRooms(Scene& scene, std::vector<int>& rooms)
 		{
 			curPos = glm::vec3(0.0f, 0.0f, 0.0f);
 			curRoom.dimensions = getRandomVec3(MIN_WIDTH, MAX_WIDTH, MIN_HEIGHT, MAX_HEIGHT, MIN_DEPTH, MAX_DEPTH);
-			curRoom.type = ROOM_TYPE::START;
+			curRoom.type = ROOM_TYPE::START_ROOM;
 		}
 		else
 		{
@@ -97,11 +97,11 @@ int setUpRooms(Scene& scene, std::vector<int>& rooms)
 			//one in five to become a hard room
 			if (rand() % 5 == 0)
 			{
-				curRoom.type = ROOM_TYPE::HARD;
+				curRoom.type = ROOM_TYPE::HARD_ROOM;
 			}
 			else
 			{
-				curRoom.type = ROOM_TYPE::NORMAL;
+				curRoom.type = ROOM_TYPE::NORMAL_ROOM;
 			}
 
 			curRoom.dimensions = getRandomVec3(MIN_WIDTH, MAX_WIDTH, MIN_HEIGHT, MAX_HEIGHT, MIN_DEPTH, MAX_DEPTH);
@@ -202,7 +202,7 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 	const float MIN_Z_POS_SPREAD = -10.0f;
 	const float MAX_Z_POS_SPREAD = 10.0f;
 
-	ROOM_TYPE roomType = ROOM_TYPE::NORMAL;
+	ROOM_TYPE roomType = ROOM_TYPE::NORMAL_ROOM;
 
 	glm::vec3 offset = glm::vec3(0.0f, 0.0f, 0.0f);
 
@@ -211,11 +211,11 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 
 	if (rand() % 5 == 0)
 	{
-		roomType = ROOM_TYPE::HARD;
+		roomType = ROOM_TYPE::HARD_ROOM;
 	}
 	else
 	{
-		roomType = ROOM_TYPE::NORMAL;
+		roomType = ROOM_TYPE::NORMAL_ROOM;
 	}
 
 	if (left)
@@ -344,7 +344,7 @@ bool setBoss(Scene& scene, std::vector<int>& rooms, int numRooms)
 		left = 0;
 	}
 	setBranch(scene, rooms, bossIndex, left, rand() % 3 + 1);
-	scene.getComponent<Room>(rooms[rooms.size() - 1]).type = ROOM_TYPE::BOSS;
+	scene.getComponent<Room>(rooms[rooms.size() - 1]).type = ROOM_TYPE::BOSS_ROOM;
 
 	return true;
 }
@@ -353,7 +353,7 @@ bool setExit(Scene& scene, std::vector<int>& rooms)
 {
 	int exitIndex = rand() % (rooms.size() - 1) + 1;
 	int numTests = 0;
-	while (scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::BOSS || scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::START)
+	while (scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::BOSS_ROOM || scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::START_ROOM)
 	{
 		if (++exitIndex >= rooms.size())
 		{
@@ -363,7 +363,7 @@ bool setExit(Scene& scene, std::vector<int>& rooms)
 			return false;
 		}
 	}
-	while (scene.getComponent<Room>(rooms[exitIndex]).left != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).left]).type == ROOM_TYPE::BOSS)
+	while (scene.getComponent<Room>(rooms[exitIndex]).left != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).left]).type == ROOM_TYPE::BOSS_ROOM)
 	{
 		if (++exitIndex >= rooms.size())
 		{
@@ -373,7 +373,7 @@ bool setExit(Scene& scene, std::vector<int>& rooms)
 			return false;
 		}
 	}
-	while (scene.getComponent<Room>(rooms[exitIndex]).right != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).right]).type == ROOM_TYPE::BOSS)
+	while (scene.getComponent<Room>(rooms[exitIndex]).right != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).right]).type == ROOM_TYPE::BOSS_ROOM)
 	{
 		if (++exitIndex >= rooms.size())
 		{
@@ -383,7 +383,7 @@ bool setExit(Scene& scene, std::vector<int>& rooms)
 			return false;
 		}
 	}
-	scene.getComponent<Room>(rooms[exitIndex]).type = ROOM_TYPE::EXIT;
+	scene.getComponent<Room>(rooms[exitIndex]).type = ROOM_TYPE::EXIT_ROOM;
 
 	return true;
 }
@@ -518,12 +518,12 @@ void traverseRoomsConsole(Scene& scene, std::vector<int>& rooms)
 			break;
 		}
 
-		if ((curRoom->type == ROOM_TYPE::BOSS) && !foundBoss)
+		if ((curRoom->type == ROOM_TYPE::BOSS_ROOM) && !foundBoss)
 		{
 			foundBoss = true;
 		}
 
-		if ((curRoom->type == ROOM_TYPE::EXIT) && foundBoss)
+		if ((curRoom->type == ROOM_TYPE::EXIT_ROOM) && foundBoss)
 		{
 			system("cls");
 			std::cout << "You found the exit!\nDo you want to exit? Y/n" << std::endl;
@@ -558,7 +558,7 @@ bool traverseRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& room
 		placeDoors(scene, rooms, doors, roomID);
 	}
 
-	if (curRoom.type == ROOM_TYPE::BOSS && bossHealth > 0)
+	if (curRoom.type == ROOM_TYPE::BOSS_ROOM && bossHealth > 0)
 	{
 		fightBoss(scene, rooms, doors, boss, bossHealth, roomID, foundBoss);
 	}
@@ -567,10 +567,10 @@ bool traverseRooms(Scene& scene, std::vector<int>& rooms, int doors[], int& room
 		Transform& transform = scene.getComponent<Transform>(boss);
 		transform.position = glm::vec3(-1000.0f, -1000.0f, -1000.0f);
 	}
-	if (curRoom.type == ROOM_TYPE::BOSS && foundBoss == false) {
+	if (curRoom.type == ROOM_TYPE::BOSS_ROOM && foundBoss == false) {
 		foundBoss = true;
 	}
-	else if (curRoom.type == ROOM_TYPE::EXIT && foundBoss) {
+	else if (curRoom.type == ROOM_TYPE::EXIT_ROOM && foundBoss) {
 		ret = true;
 	}
 	return ret;

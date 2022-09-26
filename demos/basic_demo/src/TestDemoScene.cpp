@@ -28,7 +28,7 @@ void TestDemoScene::init()
 	this->setMainCamera(camEntity);
 
 	//room setup
-	this->setUpRooms();
+	//this->setUpRooms();
 }
 
 void TestDemoScene::update()
@@ -42,7 +42,7 @@ void TestDemoScene::update()
 	}
 	
 	//Iterate rooms
-	runRoomIteration();
+	//runRoomIteration();
 }
 
 void TestDemoScene::setRoomVar()
