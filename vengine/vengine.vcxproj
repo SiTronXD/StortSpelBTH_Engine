@@ -195,7 +195,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\bullet\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;BulletDynamics_Debug.lib;BulletCollision_Debug.lib;LinearMath_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
       <Command>
@@ -311,6 +311,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="vengine.h" />
     <ClInclude Include="vengine\application\Input.hpp" />
+    <ClInclude Include="vengine\application\PhysicsEngine.h" />
     <ClInclude Include="vengine\application\Scene.hpp" />
     <ClInclude Include="vengine\application\SceneHandler.hpp" />
     <ClInclude Include="vengine\application\Time.hpp" />
@@ -350,6 +351,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="vengine\application\Input.cpp" />
+    <ClCompile Include="vengine\application\PhysicsEngine.cpp" />
     <ClCompile Include="vengine\application\Scene.cpp" />
     <ClCompile Include="vengine\application\SceneHandler.cpp" />
     <ClCompile Include="vengine\application\Time.cpp" />

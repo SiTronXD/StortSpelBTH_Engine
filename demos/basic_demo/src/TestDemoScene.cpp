@@ -4,10 +4,8 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 
-#include "btBulletDynamicsCommon.h"
-
 TestDemoScene::TestDemoScene()
-	: testEntity(-1), testEntity2(-1)
+	: testEntity(-1), testEntity2(-1), physEngine()
 {
 }
 
@@ -43,19 +41,31 @@ void TestDemoScene::init()
 
 	// Transform component
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	transform2.position = glm::vec3(20.f, 0.f, 30.f);
-	transform2.rotation = glm::vec3(-90.0f, 40.0f, 0.0f);
+	transform2.position = glm::vec3(20.f, 100.f, 30.f);
+	transform2.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 	transform2.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
+
+	//physEngine.createBoxCol(glm::vec3(0.f, -20.f, 0.f), glm::vec3(50.f, 10.f, 50.f), 0.f);
+	physEngine.createBoxCol(glm::vec3(20.f, -20.f, 30.f), glm::vec3(20.f, 2.f, 20.f));
+	physEngine.createCapsuleCol(transform2.position, glm::vec3(10.f, 20.f, 10.f), 1.f);
+	physEngine.createCapsuleCol(transform.position, glm::vec3(10.f, 20.f, 10.f), 1.f);
+	//physEngine.createCapsuleCol(glm::vec3(2.f, 40.f, 0.f), glm::vec3(5.f, 5.f, 5.f), 1.f);
 }
 
 void TestDemoScene::update()
 {
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	transform2.position.x += Time::getDT();
+	//transform2.position.x += Time::getDT();
+
+	physEngine.initPhysEngine(*this, this->testEntity2);
+	if (Input::isKeyPressed(Keys::E))
+	{
+		physEngine.removeFromArray();
+	}
 
 	if (this->entityValid(this->getMainCameraID()))
 	{

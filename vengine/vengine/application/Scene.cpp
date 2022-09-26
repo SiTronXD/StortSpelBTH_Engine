@@ -3,9 +3,12 @@
 #include "../systems/UpdateMatricesSystem.hpp"
 #include "Time.hpp"
 
+#include "PhysicsEngine.h"
+
 void Scene::switchScene(Scene* nextScene)
 {
 	this->sceneHandler->setScene(nextScene);
+	PhysicsEngine hej;
 }
 
 Scene::Scene()
