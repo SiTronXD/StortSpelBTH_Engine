@@ -1,7 +1,6 @@
 #include "Utilities.hpp"
-#define VMA_IMPLEMENTATION
 #include "tracy/Tracy.hpp"
-#include "vk_mem_alloc.h"
+#include "../graphics/vulkan/VmaUsage.hpp"
 #include "../loaders/Configurator.hpp"
 
 #include <SDL2/SDL.h>

@@ -5,7 +5,7 @@
 #include "../graphics/ResourceManagerStructs.hpp"
 #include "CommonMeshStructs.hpp"
 #include "glm/matrix.hpp"
-#include "vk_mem_alloc.h"
+#include "../graphics/vulkan/VmaUsage.hpp"
 
 
 class NewModel{
