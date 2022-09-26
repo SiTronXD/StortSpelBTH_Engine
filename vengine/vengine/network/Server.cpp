@@ -45,6 +45,8 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 					idPacket << GameEvents::ID << client[client.size()-1]->id << (int)client.size()-1;
 					client[client.size() - 1]->clientTcpSocket.send(idPacket);
 
+					std::cout << "DUBBLE" << std::endl;
+
 					duplicatedUser = true;
 				}
 			}
@@ -63,7 +65,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 
 				//TODO: send to player their id
 				sf::Packet idPacket;
-				idPacket << GameEvents::ID << client[client.size()-1]->id;
+				idPacket << GameEvents::ID << client[client.size()-1]->id << (int)client.size();
 				client[client.size() - 1]->clientTcpSocket.send(idPacket);
 
 				//TODO: send that a player has joined

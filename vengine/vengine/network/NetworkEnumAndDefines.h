@@ -12,10 +12,10 @@
 #pragma endregion
 
 struct TCPPacketEvent {
-    int                gameEvent;
-    int                nrOfInts;
-    int                ints[3]; //max nr of ints is 3
-    std::vector<float> floats;
+	int                gameEvent;
+	int                nrOfInts;
+	int                ints[3]; //max nr of ints is 3
+	std::vector<float> floats;
 };
 
 enum StartingEnum { WaitingForUsers, Start, Running };
@@ -23,30 +23,30 @@ enum StartingEnum { WaitingForUsers, Start, Running };
 #pragma region GAMEEVENTS_NETWORK
 
 enum GameEvents {
-    EMPTY = 0,
-    //TCP
-    SpawnEnemy   = 1,
-    SpawnEnemies = 2,
-    Explosion,
-    MonsterDied,
-    PlayerShoot,
-    HitMonster,
-    PlayerDied,
+	EMPTY		 = 0,
+	//TCP
+	SpawnEnemy   = 1,
+	SpawnEnemies = 2,
+	Explosion    = 3,
+	MonsterDied  = 4,
+	PlayerShoot  = 5,
+	HitMonster	 = 6,
+	PlayerDied	 = 7,
 
-    ID,
-    PlayerJoined,
-    GAMEDATA,
-    START,
-    DISCONNECT,
-    END,
+	ID			 = 7,
+	PlayerJoined = 9,
+	GAMEDATA	 = 10,
+	START		 = 11,
+	DISCONNECT	 = 12,
+	END			 = 13,
 
-    //UDP
-    UpdatePlayerPos,
-    UpdateMonsterPos,
+	//UDP
+	UpdatePlayerPos,
+	UpdateMonsterPos,
 
-    //DEBUG
-    A_Button_Was_Pressed_On_Server,
-    A_Button_Was_Pressed_On_Client
+	//DEBUG
+	A_Button_Was_Pressed_On_Server,
+	A_Button_Was_Pressed_On_Client
 };
 
 //In every package we must say how many events first

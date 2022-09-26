@@ -123,7 +123,8 @@ void NetworkHandler::updateNetwork()
 		else if (gameEvent == GameEvents::ID) {
 			cTCPP >> this->ID;//id of this player
 			cTCPP >> ix;//nr of players in this game
-			for (int i = 0; i < ix; i++) {
+			std::cout << "players in this game: "<< ix << std::endl;
+			for (int i = 0; i < ix - 1; i++) {
 				otherPlayers.push_back(sceneHandler->getScene()->createEntity());
 				sceneHandler->getScene()->setComponent<MeshComponent>(
 					otherPlayers[otherPlayers.size() - 1]);
