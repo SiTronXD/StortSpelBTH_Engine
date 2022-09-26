@@ -2,7 +2,7 @@
 #include "Timer.h"
 #include <iostream>
 
-int serverMain(bool& shutDownServer)
+void serverMain(bool& shutDownServer)
 {
 	Timer  serverTime;
 	Server s;
@@ -12,7 +12,7 @@ int serverMain(bool& shutDownServer)
 		serverIsDone = s.update(serverTime.getDT());
 		serverTime.updateDeltaTime();
 	}
-	return 1;
+	return;
 }
 
 NetworkHandler::NetworkHandler()
@@ -26,6 +26,7 @@ NetworkHandler::NetworkHandler()
 
 NetworkHandler::~NetworkHandler()
 {
+	shutDownServer = true;
 	if (serverThread != nullptr) {
 		serverThread->join();
 		delete serverThread;
@@ -49,12 +50,13 @@ void NetworkHandler::createServer()
 
 void NetworkHandler::deleteServer()
 {
+	shutDownServer = true;
 	if (serverThread != nullptr) {
-		shutDownServer = true;
 		serverThread->join();
 		delete serverThread;
 		serverThread = nullptr;
 	}
+
 	if (client != nullptr) {
 		delete client;
 		client = nullptr;

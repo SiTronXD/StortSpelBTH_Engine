@@ -147,6 +147,7 @@ void Server::start()
 	//wait for the thread to be done
 	this->connectThread->join();
 	delete this->connectThread;
+	this->connectThread = nullptr;
 
 	//make packets ready
 	this->clientToServerPacketTcp.resize(this->clients.size());
