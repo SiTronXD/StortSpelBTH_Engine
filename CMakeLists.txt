@@ -190,8 +190,9 @@ else() # Use Git Submodules
     find_package(SDL2 REQUIRED)
     target_include_directories(vengine PRIVATE ${SDL2_INCLUDE_DIRS})
     
-    find_package(SFML REQUIRED sfml‑network)
+    find_package(SFML REQUIRED network audio)
     message("was sfml found: " ${sfml_FOUND})
+    
 
     #set(vengine_vma VulkanMemoryAllocator) 
     set(vengine_stb "") #part of sources, no need to use as lib...
@@ -263,12 +264,16 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:DebugWCallStackProfiling>
 target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_COMPILE_TIME_DEFINITIONS_debug}>" ) 
 # NOTE! STB_IMAGE_IMPLEMENTATION  <-- Cant be used here! for some reason!
 
+
+
 # Link all libraries to vengine target
 target_link_libraries(
     vengine 
     PUBLIC
     ${vengine_tracy}
     ${SDL2_LIBRARIES}
+    sfml-network
+    sfml-audio
     PRIVATE
     ${Vulkan_LIBRARIES}
     assimp::assimp
@@ -276,11 +281,13 @@ target_link_libraries(
     ${vengine_vma}
 )
 
+
 # Sources for executable demo
 FILE(GLOB VENGINE_DEMO_SOURCES CONFIGURE_DEPENDS            
     demos/basic_demo/src/*.cpp    
     demos/basic_demo/src/*.hpp
     demos/basic_demo/src/*.h
+    demos/basic_demo/main.cpp
 )
 
 # Build demo, for developers
