@@ -5,14 +5,9 @@
 
 uint32_t ResourceManager::addMesh(std::string&& meshPath)
 {        
-    using namespace vengine_helper::config;    
-    
-    uint32_t prevSize = this->meshPaths.size();
-    //NOTE: prevSize as key only works if we never remove resources the map...
-    this->meshPaths.insert({meshPath,prevSize}); 
+    using namespace vengine_helper::config;
 
-    // If exists, return key of existing mesh
-    if(this->meshPaths.size() == prevSize)
+    if(this->meshPaths.count(meshPath) != 0)
     {
         //TODO: should be able to log what mesh
         Log::warning("Mesh \""+meshPath+"\" was already added!"); 
@@ -24,16 +19,15 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
             this->meshPaths.bucket(meshPath));
 
         if(bucketSize != 1) 
-        {assert(false && "ResourceManager::Collision in map[meshPaths]");}        
+        {Log::error("ResourceManager::Collision in meshPaths["+meshPath+"]");}        
         
+        return this->meshPaths[meshPath];        
+    } 
+        
+    //NOTE: prevSize as key only works if we never remove resources the map...
+    this->meshPaths.insert({meshPath,this->meshPaths.size()}); 
 
-        return this->meshes.find(
-                this->meshPaths.find(meshPath)->second
-        )->first;
-    }    
-
-
-    //NOTE: meshes.size as key only works if we never remove resources the map...
+    //NOTE: meshes.size as key only works if we never remove resources the map...    
     // Create mesh, insert into map of meshes
     meshes.insert({
         meshes.size(),
@@ -45,15 +39,9 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
 
 uint32_t ResourceManager::addTexture(std::string&& texturePath)
 { 
-    using namespace vengine_helper::config;    
-    
-    uint32_t prevSize = this->texturePaths.size();
+    using namespace vengine_helper::config;
 
-    //NOTE: prevSize as key only works if we never remove resources the map...
-    this->texturePaths.insert({texturePath,prevSize}); 
-
-    // If exists, return key of existing mesh
-    if(this->texturePaths.size() == prevSize)
+    if(this->texturePaths.count(texturePath) != 0)
     {
         Log::warning("Texture ["+texturePath+"] was already added!");
         
@@ -64,14 +52,15 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
             this->texturePaths.bucket(texturePath));
 
         if(bucketSize != 1) 
-        {assert(false && "ResourceManager::Collision in map[texturePaths]");}        
+        {Log::error("ResourceManager::Collision in texturePaths["+texturePath+"]");}                
         
-        return this->textures.find(
-            this->texturePaths.find(texturePath)->second
-            )->first;
+        return this->texturePaths[texturePath];
     }
+    
+    //NOTE: texturePaths.size() as key only works if we never remove resources the map...
+    this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
 
-    //NOTE: meshes.size as key only works if we never remove resources the map...
+    //NOTE: meshes.size as key only works if we never remove resources the map...    
     // Create mesh, insert into map of meshes
     textures.insert({
         textures.size(),
