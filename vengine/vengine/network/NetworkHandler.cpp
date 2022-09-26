@@ -105,6 +105,14 @@ void NetworkHandler::updateNetwork()
 			cTCPP >> ix;
 			if (ix == -1) { //we got kicked
 				this->disconnectClient();
+				//sceneHandler->setScene();
+			}
+			else{
+				for(int i = 0; i < otherPlayersServerId.size(); i++){
+					if(otherPlayersServerId[i] == ix){
+						sceneHandler->getScene()->removeEntity(otherPlayers[i]);
+					}
+				}
 			}
 		}
 		else if (gameEvent == GameEvents::START) {
@@ -174,7 +182,7 @@ void NetworkHandler::updateNetwork()
 		else if (gameEvent == GameEvents::GAMEDATA) {
 			cTCPP >> ix; //nrOfPlayers;
 
-			for (int i = 0; i < ix - 1; i++) {
+			for (int i = 0; i < ix; i++) {
 				cTCPP >> iz;
 				if(iz != this->ID){
 					this->otherPlayersServerId.push_back(iz);

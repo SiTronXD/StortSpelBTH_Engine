@@ -233,6 +233,15 @@ void Server::disconnect()
 void Server::handleDisconnects(int clientID)
 {
 	std::cout << "Server: user " << clients[clientID]->name << " getting kicked" << std::endl;
+
+	sf::Packet packetOtherClients;
+	packetOtherClients << GameEvents::DISCONNECT << clients[clientID]->id;
+	for(int i = 0; i < clients.size(); i++){
+		if(clientID != i){
+			clients[i]->clientTcpSocket.send(packetOtherClients);
+		}
+	}
+
 	//say to client we ack his/her disconnect
 	sf::Packet packet;
 	packet << GameEvents::DISCONNECT << -1;
@@ -247,6 +256,8 @@ void Server::handleDisconnects(int clientID)
 	this->serverToClientPacketTcp.erase(serverToClientPacketTcp.begin() + clientID);
 	this->clientToServerPacketUdp.erase(clientToServerPacketUdp.begin() + clientID);
 	this->serverToClientPacketUdp.erase(serverToClientPacketUdp.begin() + clientID);
+
+	
 }
 
 void Server::cleanRecvPackages()
