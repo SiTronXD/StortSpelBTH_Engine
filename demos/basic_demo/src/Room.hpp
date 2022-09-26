@@ -29,11 +29,11 @@ std::string typeToString(ROOM_TYPE type);
 
 void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int roomID);
 int setUpRooms(Scene& scene, std::vector<int>& rooms);
-void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms);
+bool setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms);
 void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int size);
-void setBoss(Scene& scene, std::vector<int>& rooms, int numRooms);
-void setExit(Scene& scene, std::vector<int>& rooms);
-void setShortcut(Scene& scene, std::vector<int>& rooms, int numBranches, int numRooms);
+bool setBoss(Scene& scene, std::vector<int>& rooms, int numRooms);
+bool setExit(Scene& scene, std::vector<int>& rooms);
+bool setShortcut(Scene& scene, std::vector<int>& rooms, int numBranches, int numRooms);
 
 int numEnds(Scene& scene, std::vector<int>& rooms);
 int getEndWithRightAvaliable(Scene& scene, std::vector<int>& rooms);

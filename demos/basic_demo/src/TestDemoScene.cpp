@@ -9,8 +9,9 @@
 
 
 TestDemoScene::TestDemoScene()
-	: testEntity(-1), testEntity2(-1)
+	: testEntity(-1), testEntity2(-1), boss(-1)
 {
+	setRoomVar();
 }
 
 TestDemoScene::~TestDemoScene()
@@ -26,29 +27,13 @@ void TestDemoScene::init()
 	this->setComponent<Camera>(camEntity, 1.0f);
 	this->setMainCamera(camEntity);
 
-	//Set up room layout
-	foundBoss = false;
-	bossHealth = 100;
-	roomID = 0;
-	boss = this->createEntity();
-	this->setComponent<MeshComponent>(boss);
-	for (int i = 0; i < 4; i++)
-	{
-		doors[i] = this->createEntity();
-		this->setComponent<MeshComponent>(doors[i]);
-
-	}
-	initRooms(*this, rooms);
-	std::cout << "Num rooms: " << rooms.size() << std::endl;
-	std::cout << "Slow: WASD" << std::endl << "Fast: HBNM" << std::endl;
+	//room setup
+	this->setUpRooms();
 }
 
 void TestDemoScene::update()
 {
-	/*
-	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	transform2.position.x += Time::getDT();
-	*/
+
 	if (this->entityValid(this->getMainCameraID()))
 	{
 		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), 0.0f, Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
@@ -56,6 +41,35 @@ void TestDemoScene::update()
 		camTransform.position += moveVec * 25.0f * Time::getDT();
 	}
 	
+	//Iterate rooms
+	runRoomIteration();
+}
+
+void TestDemoScene::setRoomVar()
+{
+	foundBoss = false;
+	bossHealth = 100;
+	roomID = 0;
+}
+
+void TestDemoScene::setUpRooms()
+{
+	
+	boss = this->createEntity();
+	this->setComponent<MeshComponent>(boss);
+	this->getComponent<Transform>(boss).position = glm::vec3(-1000.0f, -1000.0f, -1000.0f);
+	for (int i = 0; i < 4; i++)
+	{
+		doors[i] = this->createEntity();
+		this->setComponent<MeshComponent>(doors[i]);
+	}
+	initRooms(*this, rooms, doors, roomID);
+	std::cout << "Num rooms: " << rooms.size() << std::endl;
+	std::cout << "Slow: WASD" << std::endl << "Fast: HBNM" << std::endl;
+}
+
+void TestDemoScene::runRoomIteration()
+{
 	if (traverseRooms(*this, rooms, doors, roomID, boss, bossHealth, foundBoss, Time::getDT())) {
 		std::cout << "You found the exit!\n";
 		Transform& bossTransform = this->getComponent<Transform>((boss));

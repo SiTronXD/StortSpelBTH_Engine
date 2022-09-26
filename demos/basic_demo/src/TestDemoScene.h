@@ -10,6 +10,7 @@ private:
 	int testEntity;
 	int testEntity2;
 
+	//Room test variables
 	int boss;
 	std::vector<int> rooms;
 	int doors[4];
@@ -23,6 +24,12 @@ public:
 	// Inherited via Scene
 	virtual void init() override;
 	virtual void update() override;
+
+private:
+	//Room stuff
+	void setRoomVar();
+	void setUpRooms();
+	void runRoomIteration();
 
 };
 

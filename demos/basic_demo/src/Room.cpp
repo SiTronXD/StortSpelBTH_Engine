@@ -34,11 +34,19 @@ void initRooms(Scene& scene, std::vector<int>& rooms, int doors[], int roomID)
 	int numBranches = rand() % 5 + 2;
 	for (int i = 0; i < numBranches; i++)
 	{
-		setRandomBranch(scene, rooms, numRooms);
+		if (!setRandomBranch(scene, rooms, numRooms)) {
+			std::cout << "Room: Could not create branch.\n";
+		}
 	}
-	setBoss(scene, rooms, numRooms);
-	setExit(scene, rooms);
-	setShortcut(scene, rooms, numBranches, numRooms);
+	if (!setBoss(scene, rooms, numRooms)) {
+		std::cout << "Room: Could not create boss room.\n";
+	}
+	if (!setExit(scene, rooms)) {
+		std::cout << "Room: Could not create exit.\n";
+	}
+	if (!setShortcut(scene, rooms, numBranches, numRooms)) {
+		std::cout << "Room: Could not create shortcut.\n";
+	}
 	placeDoors(scene, rooms, doors, roomID);
 }
 
@@ -124,13 +132,13 @@ int setUpRooms(Scene& scene, std::vector<int>& rooms)
 	return numRooms;
 }
 
-void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
+bool setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 {
 	int branchSize = rand() % 3 + 1;
 	bool foundSpot = false;
 	int numMainRooms = numRooms;
 	int spot = rand() % (numMainRooms - 1);
-
+	int numTest = 0;
 	if (scene.getComponent<Room>(rooms[spot]).left != -1 && scene.getComponent<Room>(rooms[spot]).right != -1)
 	{
 		//Keep looking for a spot to place branch
@@ -144,6 +152,9 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 			if (++spot >= numMainRooms)
 			{
 				spot = 0;
+			}
+			if (++numTest > numRooms) {
+				return false;
 			}
 		}
 	}
@@ -170,6 +181,8 @@ void setRandomBranch(Scene& scene, std::vector<int>& rooms, int numRooms)
 	{
 		setBranch(scene, rooms, spot, false, branchSize);
 	}
+
+	return true;
 }
 
 void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int size)
@@ -303,15 +316,19 @@ void setBranch(Scene& scene, std::vector<int>& rooms, int index, bool left, int 
 	}
 }
 
-void setBoss(Scene& scene, std::vector<int>& rooms, int numRooms)
+bool setBoss(Scene& scene, std::vector<int>& rooms, int numRooms)
 {
 	int left = -1;
 	int bossIndex = rand() % (numRooms / 2) + numRooms / 2;
+	int numTest = 0;
 	while (scene.getComponent<Room>(rooms[bossIndex]).left != -1 && scene.getComponent<Room>(rooms[bossIndex]).right != -1)
 	{
 		if (++bossIndex > numRooms)
 		{
 			bossIndex = 1;
+		}
+		if (++numTest > numRooms) {
+			return false;
 		}
 	}
 	if (scene.getComponent<Room>(rooms[bossIndex]).left == -1 && scene.getComponent<Room>(rooms[bossIndex]).right == -1)
@@ -328,16 +345,22 @@ void setBoss(Scene& scene, std::vector<int>& rooms, int numRooms)
 	}
 	setBranch(scene, rooms, bossIndex, left, rand() % 3 + 1);
 	scene.getComponent<Room>(rooms[rooms.size() - 1]).type = ROOM_TYPE::BOSS;
+
+	return true;
 }
 
-void setExit(Scene& scene, std::vector<int>& rooms)
+bool setExit(Scene& scene, std::vector<int>& rooms)
 {
 	int exitIndex = rand() % (rooms.size() - 1) + 1;
+	int numTests = 0;
 	while (scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::BOSS || scene.getComponent<Room>(rooms[exitIndex]).type == ROOM_TYPE::START)
 	{
 		if (++exitIndex >= rooms.size())
 		{
 			exitIndex = 1;
+		}
+		if (++numTests > rooms.size()) {
+			return false;
 		}
 	}
 	while (scene.getComponent<Room>(rooms[exitIndex]).left != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).left]).type == ROOM_TYPE::BOSS)
@@ -346,6 +369,9 @@ void setExit(Scene& scene, std::vector<int>& rooms)
 		{
 			exitIndex = 1;
 		}
+		if (++numTests > rooms.size()) {
+			return false;
+		}
 	}
 	while (scene.getComponent<Room>(rooms[exitIndex]).right != -1 && scene.getComponent<Room>(rooms[scene.getComponent<Room>(rooms[exitIndex]).right]).type == ROOM_TYPE::BOSS)
 	{
@@ -353,17 +379,22 @@ void setExit(Scene& scene, std::vector<int>& rooms)
 		{
 			exitIndex = 1;
 		}
+		if (++numTests > rooms.size()) {
+			return false;
+		}
 	}
 	scene.getComponent<Room>(rooms[exitIndex]).type = ROOM_TYPE::EXIT;
+
+	return true;
 }
 
-void setShortcut(Scene& scene, std::vector<int>& rooms, int numBranches, int numRooms)
+bool setShortcut(Scene& scene, std::vector<int>& rooms, int numBranches, int numRooms)
 {
 	int one = getEndWithLeftAvaliable(scene, rooms);
 	int two = getEndWithRightAvaliable(scene, rooms);
 	if (one == -1 || two == -1)
 	{
-		return;
+		return false;
 	}
 	scene.getComponent<Room>(rooms[one]).shortcut = true;
 	scene.getComponent<Room>(rooms[one]).branchEnd = false;
@@ -371,6 +402,8 @@ void setShortcut(Scene& scene, std::vector<int>& rooms, int numBranches, int num
 	scene.getComponent<Room>(rooms[two]).shortcut = true;
 	scene.getComponent<Room>(rooms[two]).branchEnd = false;
 	scene.getComponent<Room>(rooms[two]).right = one;
+
+	return true;
 }
 
 int numEnds(Scene& scene, std::vector<int>& rooms)
