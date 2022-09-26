@@ -21,6 +21,8 @@
 class Scene;
 class Camera;
 
+
+
 #include <functional>
 using stbi_uc = unsigned char;
 class VulkanRenderer 
@@ -49,7 +51,6 @@ class VulkanRenderer
 
     //Vulkan Components
     // - Main
-    
     VulkanInstance instance;
     vk::DispatchLoaderDynamic dynamicDispatch;
     vk::DebugUtilsMessengerEXT debugMessenger{}; // used to handle callback from errors based on the validation Layer (??)
@@ -77,7 +78,9 @@ class VulkanRenderer
     vk::CommandPool commandPool{};
     CommandBufferArray commandBuffers;
 
-    UniformBuffer viewProjectionUB;
+    UniformBufferID viewProjectionUB;
+    UniformBufferID testUB;
+
     ShaderInput shaderInput;
     Pipeline pipeline;
 

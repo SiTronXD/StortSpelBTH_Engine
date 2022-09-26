@@ -3,20 +3,22 @@
 #include "vulkan/PipelineLayout.hpp"
 #include "vulkan/UniformBuffer.hpp"
 
+class PhysicalDevice;
 class Device;
+
+using UniformBufferID = uint32_t;
 
 class ShaderInput
 {
 private:
 	PipelineLayout pipelineLayout;
 
+	PhysicalDevice* physicalDevice;
 	Device* device;
 	VmaAllocator* vma;
 
 	uint32_t currentFrame;
 	uint32_t framesInFlight;
-
-	UniformBuffer* viewProjectionUB;
 
 	vk::DescriptorPool descriptorPool{};
 	vk::DescriptorPool samplerDescriptorPool{};
@@ -24,6 +26,8 @@ private:
 	vk::DescriptorSetLayout descriptorSetLayout{};
 	vk::DescriptorSetLayout samplerDescriptorSetLayout{};
 	vk::PushConstantRange pushConstantRange{};
+
+	std::vector<UniformBuffer> addedUniformBuffers;
 
 	std::vector<vk::DescriptorSet> descriptorSets;
 	std::vector<vk::DescriptorSet> samplerDescriptorSets;
@@ -45,18 +49,24 @@ public:
 	~ShaderInput();
 
 	void beginForInput(
+		PhysicalDevice& physicalDevice,
 		Device& device, 
 		VmaAllocator& vma,
 		const uint32_t& framesInFlight);
 	void addPushConstant(
 		const uint32_t& pushConstantSize,
 		const vk::ShaderStageFlagBits& pushConstantShaderStage);
-	void addUniformBuffer(UniformBuffer& uniformBuffer);
+	UniformBufferID addUniformBuffer(
+		const size_t& contentsSize);
 	void addSampler();
 	void endForInput();
 
 	void cleanup();
 
+	void updateUniformBuffer(
+		const UniformBufferID& id,
+		void* data,
+		const uint32_t& currentFrame);
 	void setCurrentFrame(const uint32_t& currentFrame);
 	void setTexture(
 		const uint32_t& samplerIndex,

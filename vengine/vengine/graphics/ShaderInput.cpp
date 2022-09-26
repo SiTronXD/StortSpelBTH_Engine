@@ -1,4 +1,5 @@
 #include "ShaderInput.hpp"
+#include "vulkan/PhysicalDevice.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/VulkanDbg.hpp"
 
@@ -7,8 +8,19 @@ void ShaderInput::createDescriptorSetLayout()
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    // - CREATE UNIFORM VALUES DESCRIPTOR SET LAYOUT -
 
+    std::vector<vk::DescriptorSetLayoutBinding> layoutBindings;
+    layoutBindings.resize(this->addedUniformBuffers.size());
+    for (size_t i = 0; i < layoutBindings.size(); ++i)
+    {
+        layoutBindings[i].setBinding(uint32_t(i));                                           // Describes which Binding Point in the shaders this layout is being bound to
+        layoutBindings[i].setDescriptorType(vk::DescriptorType::eUniformBuffer);    // Type of descriptor (Uniform, Dynamic uniform, image Sampler, etc.)
+        layoutBindings[i].setDescriptorCount(uint32_t(1));                                   // Amount of actual descriptors we're binding, where just binding one; our MVP struct
+        layoutBindings[i].setStageFlags(vk::ShaderStageFlagBits::eVertex);               // What Shader Stage we want to bind our Descriptor set to
+        layoutBindings[i].setPImmutableSamplers(nullptr);//vknullhandle??          // Used by Textures; whether or not the Sampler should be Immutable
+    }
+      
+    /*
     // UboViewProjection binding Info
     vk::DescriptorSetLayoutBinding vpLayoutBinding;
     vpLayoutBinding.setBinding(uint32_t(0));                                           // Describes which Binding Point in the shaders this layout is being bound to
@@ -18,11 +30,10 @@ void ShaderInput::createDescriptorSetLayout()
     vpLayoutBinding.setPImmutableSamplers(nullptr);//vknullhandle??          // Used by Textures; whether or not the Sampler should be Immutable
 
     // Adding the Bindings to a Vector in order to submit all the DescriptorSetLayout Bindings! 
-    std::vector<vk::DescriptorSetLayoutBinding> layoutBindings{
+    std::vector<vk::DescriptorSetLayoutBinding> layoutBindings
+    {
         vpLayoutBinding
-        // Left for Reference; we dont use Dynamic Uniform Buffers for our Model Matrix anymore.
-        //,modelLayoutBinding
-    };
+    };*/
 
     // Create Descriptor Set Layout with given bindings
     vk::DescriptorSetLayoutCreateInfo layoutCreateInfo{};
@@ -59,11 +70,26 @@ void ShaderInput::createDescriptorPool()
     ZoneScoped; //:NOLINT
 #endif
 
-    // - CRTEATE UNIFORM DESCRIPTOR POOL -
+    // Create descriptor pool
+    vk::DescriptorPoolSize descriptorPoolSize{};
+    descriptorPoolSize.setType(vk::DescriptorType::eUniformBuffer);                                     // Descriptors in Set will be of Type Uniform Buffer
+    descriptorPoolSize.setDescriptorCount(
+        this->framesInFlight * this->addedUniformBuffers.size()); 
 
+    std::vector<vk::DescriptorPoolSize> descriptorPoolSizes
+    {
+        descriptorPoolSize
+    };
+
+    // Data to create Descriptor Pool
+    vk::DescriptorPoolCreateInfo poolCreateInfo{};
+    poolCreateInfo.setMaxSets(this->framesInFlight * this->addedUniformBuffers.size());             // Max Nr Of descriptor Sets that can be created from the pool,
+    poolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(descriptorPoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
+    poolCreateInfo.setPPoolSizes(descriptorPoolSizes.data());                        // PoolSizes to create the Descriptor Pool with
+    
     // Pool Size is definied by the Type of the Descriptors times number of those Descriptors
     // viewProjection uniform Buffer Pool size
-    vk::DescriptorPoolSize viewProjection_poolSize{};
+    /*vk::DescriptorPoolSize viewProjection_poolSize{};
     viewProjection_poolSize.setType(vk::DescriptorType::eUniformBuffer);                                     // Descriptors in Set will be of Type Uniform Buffer    
     viewProjection_poolSize.setDescriptorCount(this->framesInFlight); // How many Descriptors we want, we want One uniformBuffer so we its only the size of our uniformBuffer
 
@@ -77,8 +103,8 @@ void ShaderInput::createDescriptorPool()
     poolCreateInfo.setMaxSets(this->framesInFlight);             // Max Nr Of descriptor Sets that can be created from the pool, 
     // Same as the number of buffers / images we have. 
     poolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(descriptorPoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
-    poolCreateInfo.setPPoolSizes(descriptorPoolSizes.data());                          // PoolSizes to create the Descriptor Pool with
-
+    poolCreateInfo.setPPoolSizes(descriptorPoolSizes.data());                        // PoolSizes to create the Descriptor Pool with
+    */
     this->descriptorPool = this->device->getVkDevice().createDescriptorPool(
         poolCreateInfo);
     VulkanDbg::registerVkObjectDbgInfo("DescriptorPool UniformBuffer ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->descriptorPool)));
@@ -110,7 +136,7 @@ void ShaderInput::createDescriptorPool()
 void ShaderInput::allocateDescriptorSets()
 {
     // Resize Descriptor Set; one Descriptor Set per UniformBuffer
-    this->descriptorSets.resize(this->viewProjectionUB->getNumBuffers()); // Since we have a uniform buffer per images, better use size of swapchainImages!
+    this->descriptorSets.resize(this->framesInFlight);
 
     // Copy our DescriptorSetLayout so we have one per Image (one per UniformBuffer)
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts(
@@ -135,12 +161,40 @@ void ShaderInput::createDescriptorSets()
     ZoneScoped; //:NOLINT
 #endif
 
+    const vk::PhysicalDeviceProperties& physicalDeviceProperties =
+        this->physicalDevice->getVkPhysicalDevice().getProperties();
+    physicalDeviceProperties.limits.minUniformBufferOffsetAlignment;
+
     // Update all of the Descriptor Set buffer binding
     for (size_t i = 0; i < this->descriptorSets.size(); i++)
     {
-        // - VIEW PROJECTION DESCRIPTOR - 
+        std::vector<vk::DescriptorBufferInfo> descriptorBufferInfos;
+        std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
+        descriptorBufferInfos.resize(this->addedUniformBuffers.size());
+        writeDescriptorSets.resize(this->addedUniformBuffers.size());
+
+        // Loop through all uniform buffers
+        for (size_t j = 0; j < this->addedUniformBuffers.size(); ++j)
+        {
+            // Describe the Buffer info and Data offset Info
+            descriptorBufferInfos[j].setBuffer(
+                this->addedUniformBuffers[j].getBuffer(i)); // Buffer to get the Data from
+            descriptorBufferInfos[j].setOffset(
+                0);
+            descriptorBufferInfos[j].setRange(
+                (vk::DeviceSize)this->addedUniformBuffers[j].getBufferSize());
+
+            // Data to describe the connection between Binding and Uniform Buffer
+            writeDescriptorSets[j].setDstSet(this->descriptorSets[i]);              // Descriptor Set to update
+            writeDescriptorSets[j].setDstBinding(uint32_t(j));                                    // Binding to update (Matches with Binding on Layout/Shader)
+            writeDescriptorSets[j].setDstArrayElement(uint32_t(0));                                // Index in array we want to update (if we use an array, we do not. thus 0)
+            writeDescriptorSets[j].setDescriptorType(vk::DescriptorType::eUniformBuffer);// Type of Descriptor
+            writeDescriptorSets[j].setDescriptorCount(uint32_t(1));                                // Amount of Descriptors to update
+            writeDescriptorSets[j].setPBufferInfo(&descriptorBufferInfos[j]);
+        }
+
         // Describe the Buffer info and Data offset Info
-        vk::DescriptorBufferInfo viewProjectionBufferInfo;
+        /*vk::DescriptorBufferInfo viewProjectionBufferInfo;
         viewProjectionBufferInfo.setBuffer(this->viewProjectionUB->getBuffer(i)); // Buffer to get the Data from
         viewProjectionBufferInfo.setOffset(0);
         viewProjectionBufferInfo.setRange((vk::DeviceSize)this->viewProjectionUB->getBufferSize());
@@ -158,7 +212,7 @@ void ShaderInput::createDescriptorSets()
         std::vector<vk::WriteDescriptorSet> writeDescriptorSets
         {
             viewProjectionWriteSet
-        };
+        };*/
 
         // Update the Descriptor Set with new buffer/binding info
         this->device->getVkDevice().updateDescriptorSets(
@@ -218,29 +272,45 @@ int ShaderInput::addPossibleTexture(
 }
 
 ShaderInput::ShaderInput()
-    : device(nullptr),
+    : physicalDevice(nullptr),
+    device(nullptr),
     vma(nullptr),
     framesInFlight(0),
-
-    viewProjectionUB(nullptr)
+    currentFrame(0),
+    pushConstantSize(0),
+    pushConstantShaderStage(vk::ShaderStageFlagBits::eAll)
 { }
 
 ShaderInput::~ShaderInput()
 {}
 
 void ShaderInput::beginForInput(
+    PhysicalDevice& physicalDevice,
     Device& device, 
     VmaAllocator& vma,
     const uint32_t& framesInFlight)
 {
+    this->physicalDevice = &physicalDevice;
     this->device = &device;
     this->vma = &vma;
     this->framesInFlight = framesInFlight;
 }
 
-void ShaderInput::addUniformBuffer(UniformBuffer& uniformBuffer)
+UniformBufferID ShaderInput::addUniformBuffer(
+    const size_t& contentsSize)
 {
-    this->viewProjectionUB = &uniformBuffer;
+    uint32_t uniformBufferID = this->addedUniformBuffers.size();
+
+    // Add and create uniform buffer
+    this->addedUniformBuffers.push_back(UniformBuffer());
+    this->addedUniformBuffers[uniformBufferID].createUniformBuffer(
+        *this->device,
+        *this->vma,
+        contentsSize,
+        this->framesInFlight
+    );
+
+    return uniformBufferID;
 }
 
 void ShaderInput::addPushConstant(
@@ -285,6 +355,12 @@ void ShaderInput::endForInput()
 
 void ShaderInput::cleanup()
 {
+    for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
+    {
+        this->addedUniformBuffers[i].cleanup();
+    }
+    this->addedUniformBuffers.clear();
+
     this->device->getVkDevice().destroyDescriptorPool(this->descriptorPool);
     this->device->getVkDevice().destroyDescriptorPool(this->samplerDescriptorPool);
 
@@ -292,6 +368,14 @@ void ShaderInput::cleanup()
     this->device->getVkDevice().destroyDescriptorSetLayout(this->samplerDescriptorSetLayout);
 
     this->pipelineLayout.cleanup();
+}
+
+void ShaderInput::updateUniformBuffer(
+    const UniformBufferID& id,
+    void* data,
+    const uint32_t& currentFrame)
+{
+    this->addedUniformBuffers[id].update(data, currentFrame);
 }
 
 void ShaderInput::setCurrentFrame(const uint32_t& currentFrame)

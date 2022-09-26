@@ -119,6 +119,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
 
         // Shader inputs
         this->shaderInput.beginForInput(
+            this->physicalDevice,
             this->device,
             this->vma,
             MAX_FRAMES_IN_FLIGHT
@@ -129,13 +130,8 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
         );
         this->createTextureSampler();
         this->shaderInput.addSampler();
-        this->viewProjectionUB.createUniformBuffer(
-            this->device,
-            this->vma,
-            sizeof(UboViewProjection),
-            MAX_FRAMES_IN_FLIGHT
-        );
-        this->shaderInput.addUniformBuffer(this->viewProjectionUB);
+        this->viewProjectionUB = this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
+        this->testUB = this->shaderInput.addUniformBuffer(sizeof(glm::mat4));
         this->shaderInput.endForInput();
 
         this->pipeline.createPipeline(
@@ -231,8 +227,6 @@ void VulkanRenderer::cleanup()
         this->getVkDevice().destroyImage(this->textureImages[i]);
         vmaFreeMemory(this->vma,this->textureImageMemory[i]);
     }
-
-    this->viewProjectionUB.cleanup();
 
     for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
@@ -360,8 +354,15 @@ void VulkanRenderer::draw(Scene* scene)
     if (deleteCamera) { delete camera; }
 
     // Update the Uniform Buffers
-    this->viewProjectionUB.update(
-        (void*) &this->uboViewProjection, 
+    this->shaderInput.updateUniformBuffer(
+        this->viewProjectionUB,
+        (void*)&this->uboViewProjection,
+        this->currentFrame
+    );
+    glm::mat4 testMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 1.0f, 1.0f));
+    this->shaderInput.updateUniformBuffer(
+        this->testUB,
+        (void*) &testMat,
         this->currentFrame
     );
 

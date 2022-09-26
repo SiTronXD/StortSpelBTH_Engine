@@ -11,6 +11,11 @@ layout(set = 0, binding = 0) uniform UboViewProjection
     mat4 view;    
 } uboViewProjection;
 
+layout(set = 0, binding = 1) uniform testUniformBuffer
+{
+    mat4 testMatrix;
+} testBuffer;
+
 // Push Constant to update the model Matrix! 
 layout(push_constant) uniform PushConstant_Model
 {
@@ -26,6 +31,7 @@ void main()
         uboViewProjection.projection *
         uboViewProjection.view *
         pushConstant_Model.model *
+        testBuffer.testMatrix * 
         vec4(pos, 1.0);
 
     fragCol = col;
