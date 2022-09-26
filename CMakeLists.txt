@@ -115,12 +115,12 @@ else()
     # Add stb headers 
     FILE(GLOB STB_HEADERS CONFIGURE_DEPENDS            
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb_image.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h #?
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h 
     )
     # Add stb headers 
     FILE(GLOB STB_HEADERS CONFIGURE_DEPENDS            
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb_image.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h #?
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h 
     )
 
 endif()
@@ -164,7 +164,7 @@ if( NOT (VENGINE_USE_GIT_SUBMODULES))
     target_include_directories(vengine PUBLIC ${imgui_include_dirs})
     target_include_directories(vengine PUBLIC ${tracy_include_dirs})
     target_include_directories(vengine PUBLIC ${vma_include_dirs})
-    target_include_directories(vengine PUBLIC ${assimp_include_dirs})
+    target_include_directories(vengine PUBLIC ${assimp_include_dirs})    
 
     set(vengine_stb "stb::stb")
 
@@ -190,9 +190,7 @@ else() # Use Git Submodules
     find_package(SDL2 REQUIRED)
     target_include_directories(vengine PRIVATE ${SDL2_INCLUDE_DIRS})
     
-    find_package(SFML REQUIRED network audio)
-    message("was sfml found: " ${sfml_FOUND})
-    
+    find_package(SFML REQUIRED network audio)    
 
     #set(vengine_vma VulkanMemoryAllocator) 
     set(vengine_stb "") #part of sources, no need to use as lib...
@@ -205,7 +203,7 @@ target_sources(vengine PRIVATE
     
     ${VENGINE_SOURCES} 
     ${IMGUI_HEADERS}    
-    ${IMGUI_SOURCES}
+    ${IMGUI_SOURCES}    
     ${ENTT_HEADERS}
     )
 
