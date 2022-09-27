@@ -10,22 +10,22 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
     if(this->meshPaths.count(meshPath) != 0)
     {
         //TODO: should be able to log what mesh
-        Log::warning("Mesh \""+meshPath+"\" was already added!"); 
-        
-        // Check if Collision happened.
-        // - Check if the meshPaths-map bucket for specific ID has more than 1 element
-        uint32_t bucketSize = this->meshPaths.bucket_size(
-            // Get bucket index based on the given key
-            this->meshPaths.bucket(meshPath));
-
-        if(bucketSize != 1) 
-        {Log::error("ResourceManager::Collision in meshPaths["+meshPath+"]");}        
+        Log::warning("Mesh \""+meshPath+"\" was already added!");                
         
         return this->meshPaths[meshPath];        
     } 
         
     //NOTE: prevSize as key only works if we never remove resources the map...
     this->meshPaths.insert({meshPath,this->meshPaths.size()}); 
+
+    // Check if Collision happened.
+    // - Check if the meshPaths-map bucket for specific ID has more than 1 element
+    uint32_t bucketSize = this->meshPaths.bucket_size(
+        // Get bucket index based on the given key
+        this->meshPaths.bucket(meshPath));
+
+    if(bucketSize != 1) 
+    {Log::error("ResourceManager::Collision in meshPaths["+meshPath+"]");}     
 
     //NOTE: meshes.size as key only works if we never remove resources the map...    
     // Create mesh, insert into map of meshes
@@ -43,22 +43,22 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
 
     if(this->texturePaths.count(texturePath) != 0)
     {
-        Log::warning("Texture ["+texturePath+"] was already added!");
-        
-        // Check if Collision happened.
-        // - Check if the texturePaths-map bucket for specific ID has more than 1 element
-        uint32_t bucketSize = this->texturePaths.bucket_size(
-            // Get bucket index based on the given key
-            this->texturePaths.bucket(texturePath));
-
-        if(bucketSize != 1) 
-        {Log::error("ResourceManager::Collision in texturePaths["+texturePath+"]");}                
+        Log::warning("Texture ["+texturePath+"] was already added!");                          
         
         return this->texturePaths[texturePath];
     }
     
     //NOTE: texturePaths.size() as key only works if we never remove resources the map...
     this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
+
+    // Check if Collision happened.
+    // - Check if the texturePaths-map bucket for specific ID has more than 1 element
+    uint32_t bucketSize = this->texturePaths.bucket_size(
+        // Get bucket index based on the given key
+        this->texturePaths.bucket(texturePath));
+
+    if(bucketSize != 1) 
+    {Log::error("ResourceManager::Collision in texturePaths["+texturePath+"]");}      
 
     //NOTE: meshes.size as key only works if we never remove resources the map...    
     // Create mesh, insert into map of meshes
