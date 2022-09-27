@@ -1,4 +1,4 @@
-#include "../loaders/MeshLoader.hpp"
+#include "MeshLoader.hpp"
 
 #include "../Configurator.hpp"
 #include "assimp/postprocess.h"
@@ -57,8 +57,6 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
     }
     std::vector<uint32_t> materailToTexture;
     this->textureLoader->assimpTextureImport(scene, materailToTexture);
-    //this->textureLoader->assimpGetTextures(scene);
-    this->test.test();
     
     MeshData meshData = this->assimpMeshImport(scene, materailToTexture);
     this->importer.FreeScene();
