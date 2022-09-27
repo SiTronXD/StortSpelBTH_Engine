@@ -149,22 +149,6 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
 
-vk::Buffer& Mesh::getVertexBuffer()
-{
-    return this->vertexBuffer;
-}
-
-vk::Buffer& Mesh::getIndexBuffer()
-{
-    return this->indexBuffer;
-}
-
-
-std::vector<SubmeshData> Mesh::getSubmeshData()
-{
-    return this->submeshData;
-}
-
 void Mesh::cleanup()
 {
     this->device.getVkDevice().destroyBuffer(this->vertexBuffer);

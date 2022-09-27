@@ -23,9 +23,24 @@ public:
     Mesh(Mesh&& ref);
     void createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
-    vk::Buffer& getVertexBuffer();
-    vk::Buffer& getIndexBuffer( );
-    std::vector<SubmeshData> getSubmeshData();
+    inline const vk::Buffer& getVertexBuffer();
+    inline const vk::Buffer& getIndexBuffer( );
+    inline const std::vector<SubmeshData>& getSubmeshData();
 
     void cleanup();
 };
+
+const vk::Buffer& Mesh::getVertexBuffer()
+{
+    return this->vertexBuffer;
+}
+
+const vk::Buffer& Mesh::getIndexBuffer()
+{
+    return this->indexBuffer;
+}
+
+const std::vector<SubmeshData>& Mesh::getSubmeshData()
+{
+    return this->submeshData;
+}
