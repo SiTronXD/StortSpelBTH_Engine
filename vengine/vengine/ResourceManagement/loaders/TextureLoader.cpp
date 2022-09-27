@@ -73,31 +73,6 @@ void TextureLoader::assimpTextureImport(
     }
 }
 
-void TextureLoader::assimpTextureImport2()
-{
-    
-        //// Get vector of all materials
-        //std::vector<std::string> textureNames =
-        //    this->assimpGetTextures(scene);
-
-        //// Handle empty texture
-        //materialToTexture.resize(textureNames.size());
-        //for (size_t i = 0; i < textureNames.size(); i++) {
-
-        //    if (textureNames[i].empty()) {
-        //        // Use default textures for models if textures are missing
-        //        materialToTexture[i] = 0;
-        //    }
-        //    else {
-        //        // Create texture, use the index returned by our createTexture function
-        //        materialToTexture[i] =
-        //            this->resourceMan->addTexture(textureNames[i].c_str());
-        //    }
-        //}
-    
-}
-
-
 ImageData TextureLoader::createTexture(const std::string &filename) {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //: NOLINT

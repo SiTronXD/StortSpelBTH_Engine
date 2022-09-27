@@ -13,9 +13,8 @@ class MeshLoader
 private:
     Assimp::Importer     importer;
     VulkanImportStructs  importStructs;
-    ResourceManager*     resourceMan;
-    TextureLoader*       textureLoader = nullptr;
-    A test;
+    ResourceManager*     resourceMan    = nullptr;
+    TextureLoader*       textureLoader  = nullptr;
 
     MeshData assimpImport(const std::string& modelFile);
     MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materailToTexture);   
