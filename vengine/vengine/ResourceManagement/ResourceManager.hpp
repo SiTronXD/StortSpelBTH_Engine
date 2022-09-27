@@ -27,6 +27,7 @@ private:
 
     void cleanup();
 public:
+    ResourceManager() = default;
     void init(
         VmaAllocator * vma,
         vk::PhysicalDevice* physiscalDev,
