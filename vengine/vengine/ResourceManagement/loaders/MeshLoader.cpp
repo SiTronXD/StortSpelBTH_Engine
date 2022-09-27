@@ -5,16 +5,11 @@
 #include "assimp/scene.h"
 #include <span>
 #include <stack>
-
+#include "TextureLoader.hpp"
 #include "tracy/Tracy.hpp"
 #include "../ResourceManager.hpp" // Importing mesh with Assimp needs to add Textures Sampler index
 #include "../../graphics/Mesh.hpp"
-#include "TextureLoader.hpp"
-
-
-Assimp::Importer    MeshLoader::importer; 
-VulkanImportStructs MeshLoader::importStructs;
-ResourceManager*    MeshLoader::resourceMan  = nullptr;
+#include "../../graphics/MeshData.hpp"
 
 void MeshLoader::init(VmaAllocator *vma,
     vk::PhysicalDevice *physiscalDev,
@@ -22,20 +17,25 @@ void MeshLoader::init(VmaAllocator *vma,
     vk::CommandPool *transCmdPool,
     ResourceManager* resourceMan) 
 {
-  MeshLoader::importStructs.vma = vma;
-  MeshLoader::importStructs.physicalDevice = physiscalDev;
-  MeshLoader::importStructs.device = dev;
-  MeshLoader::importStructs.transferQueue = transQueue;
-  MeshLoader::importStructs.transferCommandPool = transCmdPool;
-  MeshLoader::resourceMan = resourceMan;
+    this->importStructs.vma = vma;
+    this->importStructs.physicalDevice = physiscalDev;
+    this->importStructs.device = dev;
+    this->importStructs.transferQueue = transQueue;
+    this->importStructs.transferCommandPool = transCmdPool;
+    this->resourceMan = resourceMan;
+}
+
+void MeshLoader::setTextureLoader(TextureLoader* textureLoader)
+{
+    this->textureLoader = textureLoader;
 }
 
 
 Mesh MeshLoader::createMesh(std::string modelFile) 
 {
-    auto meshData = MeshLoader::assimpImport(modelFile);
+    auto meshData = this->assimpImport(modelFile);
 
-    return std::move(Mesh(std::move(meshData), MeshLoader::importStructs));
+    return std::move(Mesh(std::move(meshData), this->importStructs));
 }
 
 MeshData MeshLoader::assimpImport(const std::string &modelFile) 
@@ -43,7 +43,7 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
 
     // Import Model Scene
     using namespace vengine_helper::config;
-    const aiScene *scene = MeshLoader::importer.ReadFile(
+    const aiScene *scene = this->importer.ReadFile(
         (modelFile).c_str(),
         aiProcess_Triangulate   // Ensures that ALL objects will be represented as
                                 // Triangles
@@ -56,10 +56,12 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
     throw std::runtime_error("Failed to load model (" + modelFile + ")");
     }
     std::vector<uint32_t> materailToTexture;
-    TextureLoader::assimpTextureImport(scene, materailToTexture);
+    this->textureLoader->assimpTextureImport(scene, materailToTexture);
+    //this->textureLoader->assimpGetTextures(scene);
+    this->test.test();
     
-    MeshData meshData = MeshLoader::assimpMeshImport(scene, materailToTexture);
-    MeshLoader::importer.FreeScene();
+    MeshData meshData = this->assimpMeshImport(scene, materailToTexture);
+    this->importer.FreeScene();
     return meshData;
 }
 
@@ -70,7 +72,7 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
 {  
     // Load in all meshes
     std::vector<MeshData> modelMeshes =
-        MeshLoader::getMeshesFromNodeTree(scene, materailToTexture);
+        this->getMeshesFromNodeTree(scene, materailToTexture);
 
     MeshData data;
     for (auto mesh : modelMeshes) {
@@ -184,12 +186,20 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
 
   lastVertice += vertex_index;
   lastIndex += indices.size();
-
+  //auto a = std::vector<SubmeshData>{
+    auto a = SubmeshData{
+  .materialIndex =
+              this->resourceMan->getTexture(matToTex[mesh->mMaterialIndex])
+                  .descriptorLocation,
+          .startIndex = initialIndex,
+          .numIndicies = static_cast<uint32_t>(indices.size()),
+  };
   /// Construct MeshData and return it
   MeshData meshData{
-      .submeshes = std::vector<SubmeshData>{{
+      .submeshes = std::vector<SubmeshData>{
+          SubmeshData{
           .materialIndex =
-              MeshLoader::resourceMan->getTexture(matToTex[mesh->mMaterialIndex])
+              this->resourceMan->getTexture(matToTex[mesh->mMaterialIndex])
                   .descriptorLocation,
           .startIndex = initialIndex,
           .numIndicies = static_cast<uint32_t>(indices.size()),

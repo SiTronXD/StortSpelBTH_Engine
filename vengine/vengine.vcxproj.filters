@@ -105,9 +105,6 @@
     <ClInclude Include="vengine\graphics\Mesh.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vengine\graphics\Model.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vengine\graphics\TempPCH.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -118,9 +115,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\graphics\VulkanRenderer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\loaders\Configurator.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\systems\System.hpp">
@@ -169,6 +163,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\graphics\vulkan\CommandBuffer.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ResourceManagement\loaders\TextureLoader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ResourceManagement\Configurator.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ResourceManagement\ResourceManager.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ResourceManagement\ResourceManagerStructs.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\graphics\MeshData.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\graphics\vulkan\VmaUsage.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -245,9 +260,6 @@
     <ClCompile Include="vengine\graphics\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vengine\graphics\Model.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vengine\graphics\stb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -258,9 +270,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\graphics\VulkanRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vengine\loaders\Configurator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\test\TestScene.cpp">
@@ -300,6 +309,21 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\graphics\vulkan\CommandBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ResourceManagement\loaders\MeshLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ResourceManagement\loaders\TextureLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ResourceManagement\Configurator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ResourceManagement\ResourceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\VmaUsage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -44,22 +44,15 @@ static void checkVkResult(VkResult err)
 
 void VulkanRenderer::initResourceManager()
 {
-    MeshLoader::init(&this->vma,
+    this->resourceMan->init(&this->vma,
         &this->physicalDevice.getVkPhysicalDevice(),
         &this->device,
         &this->queueFamilies.getGraphicsQueue(),
         &this->graphicsCommandPool,
-        this->resourceMan);
+        this); /// TODO:  <-- REMOVE THIS, temporary used before making createTexture part of resourceManager...
 
-    TextureLoader::init(&this->vma,
-        &this->physicalDevice.getVkPhysicalDevice(),
-        &this->device,
-        &this->queueFamilies.getGraphicsQueue(),
-        &this->graphicsCommandPool,
-        this->resourceMan);
-
-    /// TODO: REMOVE THIS, temporary used before making createTexture part of resourceManager...
-    TextureLoader::TEMP = this;
+    
+    
 }
 
 using namespace vengine_helper::config;

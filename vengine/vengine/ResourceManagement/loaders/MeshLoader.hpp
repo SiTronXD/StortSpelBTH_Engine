@@ -4,25 +4,28 @@
 #include "assimp/Importer.hpp" 
 #include "assimp/mesh.h"
 #include "assimp/scene.h"
-
-#include "../ResourceManagerStructs.hpp"
-
+#include "../ResourceManagerStructs.hpp" 
+#include "TextureLoader.hpp"
 class ResourceManager;
+
 class MeshLoader
 {   
 private:
-    static Assimp::Importer     importer;
-    static VulkanImportStructs  importStructs;
-    static ResourceManager*     resourceMan;
+    Assimp::Importer     importer;
+    VulkanImportStructs  importStructs;
+    ResourceManager*     resourceMan;
+    TextureLoader*       textureLoader = nullptr;
+    A test;
 
-    static MeshData assimpImport(const std::string& modelFile);
-    static MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materailToTexture);   
+    MeshData assimpImport(const std::string& modelFile);
+    MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materailToTexture);   
 
-    static std::vector<MeshData> getMeshesFromNodeTree(const aiScene * scene, const std::vector<uint32_t>& matToTex);
-    static MeshData loadMesh(aiMesh* mesh, uint32_t& lastVertice, uint32_t& lastIndex, std::vector<uint32_t> matToTex);
+    std::vector<MeshData> getMeshesFromNodeTree(const aiScene * scene, const std::vector<uint32_t>& matToTex);
+    MeshData loadMesh(aiMesh* mesh, uint32_t& lastVertice, uint32_t& lastIndex, std::vector<uint32_t> matToTex);
 
 public: 
-    static void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager* resourceMan);
+    void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager* resourceMan);
+    void setTextureLoader(TextureLoader* textureLoader);
 
-    static Mesh createMesh(std::string path);
+    Mesh createMesh(std::string path);
 };

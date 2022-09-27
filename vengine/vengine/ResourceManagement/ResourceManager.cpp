@@ -3,6 +3,32 @@
 #include "loaders/MeshLoader.hpp"
 #include "loaders/TextureLoader.hpp"
 
+void ResourceManager::init(
+    VmaAllocator* vma,
+    vk::PhysicalDevice* physiscalDev,
+    Device* dev, vk::Queue* transQueue,
+    vk::CommandPool* transCmdPool,
+    VulkanRenderer* vulkanRenderer)
+{
+    this->meshLoader.init(
+        vma,
+        physiscalDev,
+        dev,
+        transQueue,
+        transCmdPool,
+        this);
+    this->textureLoader.init(
+        vma,
+        physiscalDev,
+        dev,
+        transQueue,
+        transCmdPool,
+        this);
+    this->meshLoader.setTextureLoader(&this->textureLoader);
+    this->textureLoader.setVulkanRenderer(vulkanRenderer);
+    
+}
+
 uint32_t ResourceManager::addMesh(std::string&& meshPath)
 {        
     using namespace vengine_helper::config;
@@ -31,7 +57,7 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
     // Create mesh, insert into map of meshes
     meshes.insert({
         meshes.size(),
-        MeshLoader::createMesh(DEF<std::string>(P_MODELS) + meshPath)}        
+        meshLoader.createMesh(DEF<std::string>(P_MODELS) + meshPath)}        
         ); 
 
     return meshes.size() -1;
@@ -64,7 +90,7 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
     // Create mesh, insert into map of meshes
     textures.insert({
         textures.size(),
-        TextureLoader::createTexture(DEF<std::string>(P_TEXTURES) + texturePath)});
+        textureLoader.createTexture(DEF<std::string>(P_TEXTURES) + texturePath)});
 
     return textures.size() -1;
 }
@@ -77,6 +103,6 @@ void ResourceManager::cleanup()
     }
     for(auto & i : this->textures)
     {                   
-        TextureLoader::cleanupTexture(i.second);
+        textureLoader.cleanupTexture(i.second);
     }
 }
