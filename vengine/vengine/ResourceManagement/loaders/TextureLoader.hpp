@@ -2,11 +2,12 @@
 
 #include "../ResourceManagerStructs.hpp"
 
+#include "assimp/scene.h"
 typedef unsigned char stbi_uc;
 
 /// TODO: REMOVE VulkanRenderer (Maybe?)
 class VulkanRenderer;
-class aiScene;
+//class aiScene;
 class ResourceManager;
 
 class TextureLoader{
