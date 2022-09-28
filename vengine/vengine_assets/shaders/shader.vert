@@ -1,20 +1,17 @@
 #version 450        //Use GLSL 4.5
 
+#define FREQ_PER_FRAME 0
+
 //Location 0, has binding = 0! 
 layout(location = 0) in vec3 pos;
 layout(location = 1) in vec3 col;
 layout(location = 2) in vec2 tex; 
 
-layout(set = 0, binding = 0) uniform UboViewProjection
+layout(set = FREQ_PER_FRAME, binding = 0) uniform UboViewProjection
 {
     mat4 projection;
     mat4 view;    
 } uboViewProjection;
-
-layout(set = 0, binding = 1) uniform testUniformBuffer
-{
-    mat4 testMatrix;
-} testBuffer;
 
 // Push Constant to update the model Matrix! 
 layout(push_constant) uniform PushConstant_Model
@@ -31,7 +28,6 @@ void main()
         uboViewProjection.projection *
         uboViewProjection.view *
         pushConstant_Model.model *
-        testBuffer.testMatrix * 
         vec4(pos, 1.0);
 
     fragCol = col;

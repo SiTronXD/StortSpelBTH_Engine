@@ -7,10 +7,20 @@ class PhysicalDevice;
 class Device;
 
 using UniformBufferID = uint32_t;
+using SamplerID = uint32_t;
+
+enum class DescriptorFrequency
+{
+	PER_FRAME,
+	// PER_MESH, // TODO: add functionality for this
+	PER_DRAW_CALL
+};
 
 class ShaderInput
 {
 private:
+	const uint32_t MAX_NUM_TEXTURES = 250;
+
 	PipelineLayout pipelineLayout;
 
 	PhysicalDevice* physicalDevice;
@@ -29,8 +39,9 @@ private:
 
 	std::vector<UniformBuffer> addedUniformBuffers;
 
-	std::vector<vk::DescriptorSet> descriptorSets;
-	std::vector<vk::DescriptorSet> samplerDescriptorSets;
+	std::vector<vk::DescriptorSet> perFrameDescriptorSets;
+	// std::vector<vk::DescriptorSet> perMeshDescriptorSets; // TODO: add functionality for this
+	std::vector<vk::DescriptorSet> perDrawDescriptorSets;
 
 	std::vector<uint32_t> samplersTextureIndex;
 
@@ -58,7 +69,7 @@ public:
 		const vk::ShaderStageFlagBits& pushConstantShaderStage);
 	UniformBufferID addUniformBuffer(
 		const size_t& contentsSize);
-	void addSampler();
+	SamplerID addSampler();
 	void endForInput();
 
 	void cleanup();
@@ -69,12 +80,12 @@ public:
 		const uint32_t& currentFrame);
 	void setCurrentFrame(const uint32_t& currentFrame);
 	void setTexture(
-		const uint32_t& samplerIndex,
+		const SamplerID& samplerID,
 		const uint32_t& textureIndex);
 
 	// TODO: Take in texture ID
 	int addPossibleTexture(
-		vk::ImageView textureImage,
+		vk::ImageView textureImageView,
 		vk::Sampler& textureSampler);
 
 	inline const vk::ShaderStageFlagBits& getPushConstantShaderStage() const { return this->pushConstantShaderStage; }
@@ -83,12 +94,4 @@ public:
 		{ return this->bindDescriptorSets; }
 	inline const PipelineLayout& getPipelineLayout() const 
 		{ return this->pipelineLayout; }
-
-	// TODO: remove these...
-	
-	inline vk::DescriptorSet& getDescriptorSet(const uint32_t& index) 
-	{ return this->descriptorSets[index]; }
-
-	inline vk::DescriptorSet& getSamplerDescriptorSet(const uint32_t& index)
-	{ return this->samplerDescriptorSets[index]; }
 };

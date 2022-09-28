@@ -129,9 +129,8 @@ int VulkanRenderer::init(Window* window, std::string&& windowName)
             vk::ShaderStageFlagBits::eVertex
         );
         this->createTextureSampler();
-        this->shaderInput.addSampler();
+        this->sampler0 = this->shaderInput.addSampler();
         this->viewProjectionUB = this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
-        this->testUB = this->shaderInput.addUniformBuffer(sizeof(glm::mat4));
         this->shaderInput.endForInput();
 
         this->pipeline.createPipeline(
@@ -193,8 +192,8 @@ void VulkanRenderer::cleanup()
     tracy::GetProfiler().RequestShutdown(); //TODO: is this correct?    
 #endif
     
-    //Wait until no actions is run on device...
-    this->device.waitIdle(); // Dont destroy semaphores before they are done
+    // Wait until no actions is run on device...
+    this->device.waitIdle(); 
     
     ImGui_ImplVulkan_Shutdown();
     this->window->shutdownImgui();
@@ -357,12 +356,6 @@ void VulkanRenderer::draw(Scene* scene)
     this->shaderInput.updateUniformBuffer(
         this->viewProjectionUB,
         (void*)&this->uboViewProjection,
-        this->currentFrame
-    );
-    glm::mat4 testMat = glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 1.0f, 1.0f));
-    this->shaderInput.updateUniformBuffer(
-        this->testUB,
-        (void*) &testMat,
         this->currentFrame
     );
 
@@ -1138,7 +1131,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                         // Update for descriptors
                         this->shaderInput.setCurrentFrame(this->currentFrame);
                         this->shaderInput.setTexture(
-                            0,
+                            this->sampler0,
                             modelPart.second.textureID
                         );
                         currentCommandBuffer.bindShaderInput(
