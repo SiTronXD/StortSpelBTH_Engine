@@ -110,6 +110,9 @@ void NetworkHandler::updateNetwork()
 			else{
 				for(int i = 0; i < otherPlayersServerId.size(); i++){
 					if(otherPlayersServerId[i] == ix){
+						if(otherPlayers.size() < i){
+							return;
+						}
 						sceneHandler->getScene()->removeEntity(otherPlayers[i]);
 					}
 				}
@@ -132,7 +135,7 @@ void NetworkHandler::updateNetwork()
 			cTCPP >> this->ID;//id of this player
 			cTCPP >> ix;//nr of players in this game
 			std::cout << "players in this game: "<< ix << std::endl;
-			for (int i = 0; i < ix - 1; i++) {
+			for (int i = 0; i < ix; i++) {
 				otherPlayers.push_back(sceneHandler->getScene()->createEntity());
 				sceneHandler->getScene()->setComponent<MeshComponent>(
 					otherPlayers[otherPlayers.size() - 1]);
@@ -205,6 +208,11 @@ void NetworkHandler::updateNetwork()
 			for (int i = 0; i < ix; i++) {
 				//fxyz position, fabc rotation
 				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
+
+				if(otherPlayers.size() < i){
+					//create entity
+				}
+
 				Transform& transform =
 					sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i]);
 				transform.position = glm::vec3(fx, fy, fz);
@@ -217,6 +225,10 @@ void NetworkHandler::updateNetwork()
 			if (monsters.size() < ix) {
 				monsters.resize(ix);
 			}
+			if(monsters.size() < ix){
+					//create entity
+			}
+
 			for (int i = 0; i < ix; i++) {
 				//fxyz position, fabc rotation
 				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;

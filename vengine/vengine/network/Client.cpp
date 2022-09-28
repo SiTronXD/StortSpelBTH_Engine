@@ -12,24 +12,30 @@ Client::Client(const std::string& clientName)
 
 Client::~Client() {}
 
-bool Client::connect(const std::string& serverIP)
+bool Client::connect(const std::string& serverIP, int tries)
 {
     this->serverIP = serverIP;
-    //bind udp socket
-    if (this->udpSocket.bind(UDP_PORT_CLIENT) != sf::Socket::Done) {
-        std::cout << "Client: error with client udpSocket (press something to return)" << std::endl;
+    tries += 4;
+    if(tries > 3 * 4){
         this->isConnectedToServer = false;
         getchar();
         return false;
     }
+    //bind udp socket
+    if (this->udpSocket.bind(UDP_PORT_CLIENT + tries) != sf::Socket::Done) {
+        std::cout << "Client: error with client udpSocket (press something to return)" << std::endl;
+        return connect(serverIP, tries);//try again
+    }
     //Connect the tcp socket to server
-    if (this->tcpListener.listen(TCP_PORT_CLIENT) == sf::Socket::Done) {
+    else if (this->tcpListener.listen(TCP_PORT_CLIENT + tries) == sf::Socket::Done) {
         std::cout << "Client: connecting to server" << std::endl;
         if (this->tcpSocket.connect(serverIP, TCP_PORT_SERVER) == sf::Socket::Done) {
             std::cout << "Client: connected to server sending name" << std::endl;
 
             //send name to server
-            this->tcpSocket.send(clientName.c_str(), clientName.size() + 1);
+            sf::Packet infoPacket;
+            infoPacket << clientName << (unsigned short)(UDP_PORT_CLIENT + tries);
+            this->tcpSocket.send(infoPacket);
         }
         else {
             std::cout << "Client: error with client tcpSocket (press something to return)"
@@ -41,9 +47,7 @@ bool Client::connect(const std::string& serverIP)
     }
     else {
         std::cout << "Client: error with client tcpSocket" << std::endl;
-        this->isConnectedToServer = false;
-        getchar();
-        return false;
+        return connect(serverIP, tries);//try again
     }
 
     //we have now made a full connection with server

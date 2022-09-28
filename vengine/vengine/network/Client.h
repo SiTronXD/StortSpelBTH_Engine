@@ -30,7 +30,7 @@ private:
 public:
     Client(const std::string& clientName = "BOB");
     virtual ~Client();
-    bool connect(const std::string& serverIP = SERVER_IP);
+    bool connect(const std::string& serverIP = SERVER_IP, int tries = -1);
     void update(const float& dt);
 
     bool isConnected() const;
