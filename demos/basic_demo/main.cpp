@@ -14,15 +14,15 @@
 
 int main(int argc, char* argv[])
 {
-    // Set flags for tracking CPU memory leaks
+	// Set flags for tracking CPU memory leaks
 #if defined(_WIN32) && defined(_DEBUG)
-    _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif // _WIN32 && _DEBUG
 
-    {
-        Engine engine;
-        engine.run(new TestDemoScene());
-    }
+	{
+		Engine engine;
+		engine.run(new TestDemoScene());
+	}
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
