@@ -2,6 +2,7 @@
 
 #include "Device.hpp"
 #include "VulkanDbg.hpp"
+#include "../MeshData.hpp"
 #include "../../dev/Log.hpp"
 
 vk::ShaderModule Pipeline::createShaderModule(

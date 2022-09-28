@@ -13,10 +13,9 @@
 #include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
 
+#include "../ResourceManagement/ResourceManager.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
-
-#include "Model.hpp"
 
 class Scene;
 class Camera;
@@ -29,16 +28,15 @@ class VulkanRenderer
     std::vector<TracyVkCtx> tracyContext;
 #endif
     const int MAX_FRAMES_IN_FLIGHT = 3;
+    friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
+    ResourceManager* resourceMan;    
 
     Window* window;
-
     VmaAllocator vma = nullptr;
 
     int currentFrame = 0; 
 
     bool windowResized = false;
-    // Scene Objects
-    //std::vector<Mesh> meshes;
 
     // Scene Settings
     struct UboViewProjection 
@@ -78,7 +76,6 @@ class VulkanRenderer
     UniformBuffer viewProjectionUB;
 
     // - Assets    
-    std::vector<Model>  modelList;
 
     std::vector<vk::Image>        textureImages;
     std::vector<VmaAllocation> textureImageMemory;
@@ -117,20 +114,11 @@ class VulkanRenderer
     // - - Tracy
 #ifndef VENGINE_NO_PROFILING    
     void initTracy();
-    // - - Tracy  Callbacks
-    bool TracyThumbnail_bool = false;
-#endif
-public:
-#ifndef VENGINE_NO_PROFILING    
-    // TODO: this should not be visible to client...
-    // void toggleTracyThumbnail(bool toggle){
-    //     TracyThumbnail_bool = toggle;
-    // };
 #endif
 
 private:
 
-    //Vulkan Functions
+    // Vulkan Functions
     // - Create functions
     void setupDebugMessenger();
     void createSurface();
@@ -147,6 +135,9 @@ private:
     void createDescriptorPool();
     void createDescriptorSets();
     void allocateDescriptorSets();
+
+    // initializations of subsystems
+    void initResourceManager();
 
     // Cleanup 
     void cleanupRenderPassImgui();
@@ -187,7 +178,7 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int  init(Window* window, std::string&& windowName);
+    int  init(Window* window, std::string&& windowName, ResourceManager* resourceMan);
     int  createModel(const std::string &modelFile);
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);

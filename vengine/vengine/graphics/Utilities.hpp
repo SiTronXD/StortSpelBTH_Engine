@@ -34,13 +34,6 @@ constexpr std::array<const char *, 1> extraInstanceExtensions = {
     
 };
 
-struct Vertex 
-{
-    glm::vec3 pos;      /// Vertex Position (x,y,z)
-    glm::vec3 col;      /// Vertex Color    (r,g,b)
-    glm::vec2 tex;      /// texture coords  (u,v)
-};
-
 struct ImageBarrierCreateData
 {
     vk::CommandBuffer cmdBuffer; 

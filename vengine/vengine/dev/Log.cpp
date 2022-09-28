@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "Log.hpp"
-
+#include <cassert>
 
 
 void Log::write(const std::string& message)
@@ -42,5 +42,6 @@ void Log::error(const std::string& errorMessage)
 void Log::error(const std::string& message)
 {
 	std::cout << "[Log Error]: " << message << std::endl;
+    assert(false);
 }
 #endif

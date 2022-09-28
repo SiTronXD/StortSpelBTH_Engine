@@ -1,74 +1,46 @@
-#pragma once
+#pragma once 
 
-#include "Utilities.hpp"
+#include <vulkan/vulkan.hpp>
+
+#include "../ResourceManagement/ResourceManagerStructs.hpp"
+#include "MeshData.hpp"
+#include "glm/matrix.hpp"
+#include "../graphics/vulkan/VmaUsage.hpp"
 
 
-
-/// Model used to Define the Model Matrix of a mesh...
-//// Previously it was a UniformBuffer (we called it UboModel)
-//// Right now it's a Push Constant, but we will just call it Model from now on...
-struct ModelMatrix { 
-    glm::mat4 model; 
-};
-
-class Mesh 
-{
-public:
-    //~Mesh();
-    Mesh() = default;
-    Mesh(VmaAllocator *vma,
-        vk::PhysicalDevice newPhysicalDevice, vk::Device newDevice,
-        vk::Queue transferQueue, vk::CommandPool transferCommandPool, 
-        std::vector<Vertex> * vertices, 
-        std::vector<uint32_t> * indicies,
-        int newTextureID);
-
-    void setModelMatrix(glm::mat4 newModel);
-    ModelMatrix* getModelMatrix();
-
-    [[nodiscard]] 
-    int getTextureId() const;
-
-    [[nodiscard]] 
-    uint32_t getVertexCount() const;
-    vk::Buffer getVertexBuffer();
-
-    [[nodiscard]] 
-    std::vector<Vertex>& getVertex_vector();
-    std::vector<uint32_t>& getIndicies_vector();
-
-    [[nodiscard]] 
-    uint32_t getIndexCount() const;
-    vk::Buffer getIndexBuffer();
-
-    void destroyBuffers();
-
+class Mesh{
 private: 
-    ModelMatrix model{}; 
+    std::vector<SubmeshData>    submeshData;
+    Device&         device; 
+    VmaAllocator&   vma;     
 
-    int texId = -1; //index of the Texture
-    VmaAllocator *vma;
-
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indicies;
-
-    uint32_t vertexCount = 0;    
-    vk::Buffer vertexBuffer{};
-    //vk::DeviceMemory vertexBufferMemory{};
+    vk::Buffer  vertexBuffer{};
+    vk::Buffer  indexBuffer{};
     VmaAllocation vertexBufferMemory{};
-
-
-    uint32_t indexCount = 0;
-    vk::Buffer indexBuffer{};
-    //vk::DeviceMemory indexBufferMemory{};
     VmaAllocation indexBufferMemory{};
+public:     
+    Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
+    Mesh(Mesh&& ref);
+    void createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs);
+    void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
+    inline const vk::Buffer& getVertexBuffer();
+    inline const vk::Buffer& getIndexBuffer( );
+    inline const std::vector<SubmeshData>& getSubmeshData();
 
-    vk::PhysicalDevice physicalDevice{};
-    vk::Device device{};
-
-    vk::Queue transferQueue{};
-    vk::CommandPool transferCommandPool{};
-
-    void createVertexBuffer(std::vector<Vertex>* vertices);    
-    void createIndexBuffer(std::vector<uint32_t>* indicies);
+    void cleanup();
 };
+
+const vk::Buffer& Mesh::getVertexBuffer()
+{
+    return this->vertexBuffer;
+}
+
+const vk::Buffer& Mesh::getIndexBuffer()
+{
+    return this->indexBuffer;
+}
+
+const std::vector<SubmeshData>& Mesh::getSubmeshData()
+{
+    return this->submeshData;
+}
