@@ -24,13 +24,14 @@ private:
 public:
     vk::ImageView imageView;
     VmaAllocation imageMemory;
-    vk::Image     image;
-    uint32_t      descriptorLocation;
+    vk::Image image;
 
 	Texture(Device& device, VmaAllocator& vma);
 	~Texture();
 
 	void cleanup();
+
+	inline const vk::ImageView& getImageView() const { return this->imageView; }
 
 	static vk::Format chooseSupportedFormat(
 		PhysicalDevice& physicalDevice,

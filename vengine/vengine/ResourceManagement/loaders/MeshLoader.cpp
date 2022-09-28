@@ -189,9 +189,7 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
   MeshData meshData{
       .submeshes = std::vector<SubmeshData>{
           SubmeshData{
-          .materialIndex =
-              this->resourceMan->getTexture(matToTex[mesh->mMaterialIndex])
-                  .descriptorLocation,
+          .materialIndex = matToTex[mesh->mMaterialIndex],
           .startIndex = initialIndex,
           .numIndicies = static_cast<uint32_t>(indices.size()),
       }},

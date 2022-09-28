@@ -83,13 +83,13 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
 
 void ResourceManager::cleanup()
 {
-    for(auto & keyVal : this->meshes)
+    for(auto& elementPair : this->meshes)
     {                
-        keyVal.second.cleanup();
+        elementPair.second.cleanup();
     }
-    for(auto & i : this->textures)
+
+    for (auto& elementPair : this->textures)
     {     
-        i.second.cleanup();
-        //textureLoader.cleanupTexture(i.second);
+        elementPair.second.cleanup();
     }
 }

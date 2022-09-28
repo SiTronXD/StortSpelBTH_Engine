@@ -5,6 +5,8 @@
 
 class PhysicalDevice;
 class Device;
+class ResourceManager;
+class Texture;
 
 using UniformBufferID = uint32_t;
 using SamplerID = uint32_t;
@@ -13,7 +15,9 @@ enum class DescriptorFrequency
 {
 	PER_FRAME,
 	// PER_MESH, // TODO: add functionality for this
-	PER_DRAW_CALL
+	PER_DRAW_CALL,
+
+	NUM_FREQUENCY_TYPES
 };
 
 class ShaderInput
@@ -25,7 +29,8 @@ private:
 
 	PhysicalDevice* physicalDevice;
 	Device* device;
-	VmaAllocator* vma;
+    VmaAllocator* vma;
+    ResourceManager* resourceManager;
 
 	uint32_t currentFrame;
 	uint32_t framesInFlight;
@@ -63,6 +68,7 @@ public:
 		PhysicalDevice& physicalDevice,
 		Device& device, 
 		VmaAllocator& vma,
+		ResourceManager& resourceManager,
 		const uint32_t& framesInFlight);
 	void addPushConstant(
 		const uint32_t& pushConstantSize,
@@ -83,9 +89,8 @@ public:
 		const SamplerID& samplerID,
 		const uint32_t& textureIndex);
 
-	// TODO: Take in texture ID
 	int addPossibleTexture(
-		vk::ImageView textureImageView,
+		const uint32_t& textureIndex,
 		vk::Sampler& textureSampler);
 
 	inline const vk::ShaderStageFlagBits& getPushConstantShaderStage() const { return this->pushConstantShaderStage; }

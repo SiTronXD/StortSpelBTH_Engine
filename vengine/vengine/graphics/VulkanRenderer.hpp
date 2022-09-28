@@ -31,7 +31,7 @@ class VulkanRenderer
 #endif
     const int MAX_FRAMES_IN_FLIGHT = 3;
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
-    ResourceManager* resourceMan;    
+    ResourceManager* resourceManager;
 
     Window* window;
     VmaAllocator vma = nullptr;
@@ -139,12 +139,6 @@ private:
     // -- Create Functions    
     [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);
 
-    int createTextureImage(const std::string &filename);
-    int createTexture(const std::string &filename);
-
-    // -- Loader Functions
-    static stbi_uc* loadTextuerFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize );
-
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
 private: 
@@ -159,8 +153,7 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int  init(Window* window, std::string&& windowName, ResourceManager* resourceMan);
-    int  createModel(const std::string &modelFile);
+    int init(Window* window, std::string&& windowName, ResourceManager* resourceMan);
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);
 

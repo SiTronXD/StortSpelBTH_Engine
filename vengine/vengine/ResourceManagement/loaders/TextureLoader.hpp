@@ -18,7 +18,6 @@ private:
     std::vector<std::string> assimpGetTextures(const aiScene* scene);
 
     void      createTextureImage(const std::string &filename, vk::Image& ref, VmaAllocation& allocRef);
-    uint32_t  createTextureDescriptor(vk::ImageView textureImage);
     stbi_uc*  loadTextureFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize);
 public:
     

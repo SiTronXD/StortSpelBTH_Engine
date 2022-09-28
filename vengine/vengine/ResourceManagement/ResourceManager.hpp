@@ -13,7 +13,8 @@
 class Engine;
 struct ImageData;   //Defined in MeshLoader
 
-class ResourceManager{
+class ResourceManager
+{
 private:
     /// VulkanRenderer takes care of cleanups
     friend class VulkanRenderer; 
@@ -39,8 +40,11 @@ public:
     uint32_t addMesh(std::string&& meshPath);
     uint32_t addTexture(std::string&& texturePath);
 
-    Mesh&         getMesh(uint32_t id);
-    Texture&    getTexture(uint32_t id);
+    Mesh& getMesh(uint32_t id);
+    Texture& getTexture(uint32_t id);
+
+    size_t getNumMeshes();
+    size_t getNumTextures();
 };
 
 inline Mesh& ResourceManager::getMesh(uint32_t id)
@@ -63,4 +67,14 @@ inline Texture& ResourceManager::getTexture(uint32_t id)
             + std::to_string(id));        
     }
     return map_iterator->second;
+}
+
+inline size_t ResourceManager::getNumMeshes() 
+{
+    return this->meshes.size();
+}
+
+inline size_t ResourceManager::getNumTextures() 
+{
+    return this->textures.size();
 }

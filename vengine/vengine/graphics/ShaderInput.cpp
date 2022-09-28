@@ -2,6 +2,8 @@
 #include "vulkan/PhysicalDevice.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/VulkanDbg.hpp"
+#include "../ResourceManagement/ResourceManager.hpp"
+#include "Texture.hpp"
 #include "../dev/Log.hpp"
 
 void ShaderInput::createDescriptorSetLayout()
@@ -166,7 +168,7 @@ void ShaderInput::createDescriptorSets()
 }
 
 int ShaderInput::addPossibleTexture(
-    vk::ImageView textureImageView,
+    const uint32_t& textureIndex,
     vk::Sampler& textureSampler)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -195,7 +197,8 @@ int ShaderInput::addPossibleTexture(
     // Tedxture Image info
     vk::DescriptorImageInfo imageInfo;
     imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);     // The Image Layout when it is in use
-    imageInfo.setImageView(textureImageView);                                 // Image to be bind to set
+    imageInfo.setImageView(
+        this->resourceManager->getTexture(textureIndex).getImageView()); // Image to be bind to set
     imageInfo.setSampler(textureSampler);                         // the Sampler to use for this Descriptor Set
 
     // Descriptor Write Info
@@ -225,7 +228,8 @@ int ShaderInput::addPossibleTexture(
 ShaderInput::ShaderInput()
     : physicalDevice(nullptr),
     device(nullptr),
-    vma(nullptr),
+    vma(nullptr), 
+    resourceManager(nullptr),
     framesInFlight(0),
     currentFrame(0),
     pushConstantSize(0),
@@ -239,11 +243,13 @@ void ShaderInput::beginForInput(
     PhysicalDevice& physicalDevice,
     Device& device, 
     VmaAllocator& vma,
+    ResourceManager& resourceManager,
     const uint32_t& framesInFlight)
 {
     this->physicalDevice = &physicalDevice;
     this->device = &device;
     this->vma = &vma;
+    this->resourceManager = &resourceManager;
     this->framesInFlight = framesInFlight;
 }
 
@@ -301,8 +307,9 @@ void ShaderInput::endForInput()
     this->allocateDescriptorSets();
     this->createDescriptorSets();
 
-    // TODO: remove this
-    this->bindDescriptorSets.resize(2);
+    // Descriptors to bind when rendering
+    this->bindDescriptorSets.resize(
+        (int) DescriptorFrequency::NUM_FREQUENCY_TYPES);
 
     this->pipelineLayout.createPipelineLayout(
         *this->device,
