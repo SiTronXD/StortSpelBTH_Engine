@@ -278,9 +278,6 @@ void Server::seeIfUsersExist()
     for (int i = 0; i < clients.size(); i++) {
         if (clients[i]->TimeToDisconnect > MaxTimeUntilDisconnect) {
             handleDisconnects(i);
-            for (int c = 0; c < clients.size(); c++) {
-                serverToClientPacketTcp[c] << (int)GameEvents::DISCONNECT << i;
-            }
         }
     }
 }
