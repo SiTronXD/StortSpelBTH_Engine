@@ -108,20 +108,24 @@ std::vector<MeshData> MeshLoader::getMeshesFromNodeTree(const aiScene *scene,
     nodeStack.push(node);
 
     while (!nodeStack.empty()) {
-    node_meshes = std::span<unsigned int>(node->mMeshes, node->mNumMeshes);
-    for (size_t j = 0; j < node->mNumMeshes; j++) {
-        meshList.push_back(loadMesh(scenes_meshes[node_meshes[j]], vertice_index,
-                                    index_index, matToTex));
-    }
+        node_meshes = std::span<unsigned int>(node->mMeshes, node->mNumMeshes);
+        for (size_t j = 0; j < node->mNumMeshes; j++) {
+            meshList.push_back(loadMesh(scenes_meshes[node_meshes[j]], vertice_index,
+                                        index_index, matToTex));
 
-    node_children = std::span<aiNode *>(node->mChildren, node->mNumChildren);
+            if (scenes_meshes[node_meshes[j]]->HasBones()) {
+                loadBones(scene, scenes_meshes[node_meshes[j]], meshList.back(), vertice_index);
+            }
+        }
 
-    for (auto *child : node_children) {
-        nodeStack.push(child);
-    }
+        node_children = std::span<aiNode *>(node->mChildren, node->mNumChildren);
 
-    node = nodeStack.top();
-    nodeStack.pop();
+        for (auto *child : node_children) {
+            nodeStack.push(child);
+        }
+
+        node = nodeStack.top();
+        nodeStack.pop();
     }
 
     return meshList;
@@ -200,4 +204,77 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
   };
 
   return meshData;
+}
+
+bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData,
+                           uint32_t lastVertex)
+{
+    aiAnimation* ani = nullptr;
+
+    // Search the aiScene for the animation (will change with multiple animations per file)
+    for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
+        for (unsigned int k = 0; k < scene->mAnimations[i]->mNumMeshChannels; k++) {
+            if (strcmp(scene->mAnimations[i]->mMeshChannels[k]->mName.C_Str(), mesh->mName.C_Str())) {
+                ani = scene->mAnimations[i];
+            }
+        }
+    }
+
+    if (!ani) {
+        return false;
+    }
+
+    outBoneData.aniVertices.resize(outBoneData.vertices.size());
+    outBoneData.bones.resize(mesh->mNumBones);
+
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+        for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
+
+            aiVertexWeight& aiWeight = mesh->mBones[i]->mWeights[k];
+            AnimVertex& vertex = outBoneData.aniVertices[aiWeight.mVertexId + lastVertex];
+
+            if      (vertex.weights[0] == 0.f) { vertex.weights[0] = aiWeight.mWeight; vertex.bonesIndex[0] = i; }
+            else if (vertex.weights[1] == 0.f) { vertex.weights[1] = aiWeight.mWeight; vertex.bonesIndex[1] = i; }
+            else if (vertex.weights[2] == 0.f) { vertex.weights[2] = aiWeight.mWeight; vertex.bonesIndex[2] = i; }
+            else if (vertex.weights[3] == 0.f) { vertex.weights[3] = aiWeight.mWeight; vertex.bonesIndex[3] = i; }
+        }
+
+        Bone& bone = outBoneData.bones[i];
+
+        memcpy(&bone.inverseBindPoseMatrix, &mesh->mBones[i]->mOffsetMatrix, sizeof(glm::mat4));
+        bone.inverseBindPoseMatrix = glm::transpose(bone.inverseBindPoseMatrix);
+
+        aiNodeAnim* nodeAnim = findAnimationNode(ani->mChannels, ani->mNumChannels, mesh->mBones[i]->mName.C_Str());
+
+        if (!nodeAnim) {
+            Log::error("Could not find animation node");
+            // Fix bone? (timeStamp 0, all values are default)
+            continue;
+        }
+
+        bone.translationStamps.resize(nodeAnim->mNumPositionKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumPositionKeys; k++) {
+            memcpy(&bone.translationStamps[k], &nodeAnim->mPositionKeys[k], sizeof(glm::vec3));
+        }
+
+        bone.rotationStamps.resize(nodeAnim->mNumRotationKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumRotationKeys; k++) {
+
+            // Assimp quaternion struct order differs from ours (?)
+            // bone.rotationStamps[k].second.x = nodeAnim->mRotationKeys[k].mValue.x;
+            // bone.rotationStamps[k].second.y = nodeAnim->mRotationKeys[k].mValue.y;
+            // bone.rotationStamps[k].second.z = nodeAnim->mRotationKeys[k].mValue.z;
+            // bone.rotationStamps[k].second.w = nodeAnim->mRotationKeys[k].mValue.w;
+
+            memcpy(&bone.rotationStamps[k], &nodeAnim->mRotationKeys[k], sizeof(glm::vec4));
+        }
+
+        bone.scaleStamps.resize(nodeAnim->mNumScalingKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumScalingKeys; k++) {
+            memcpy(&bone.scaleStamps[k], &nodeAnim->mScalingKeys[k], sizeof(glm::vec3));
+        }
+
+    }
+
+    return true;
 }

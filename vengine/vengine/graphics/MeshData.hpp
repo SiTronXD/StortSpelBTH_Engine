@@ -17,6 +17,23 @@ struct Vertex
     glm::vec2 tex;      /// texture coords  (u,v)
 };
 
+struct AnimVertex 
+{
+    float weights[4] {};
+    unsigned int bonesIndex[4] {};
+};
+
+struct Bone 
+{
+    int parentIndex = -1;
+    glm::mat4 inverseBindPoseMatrix;
+    glm::mat4 modelMatrix;
+    glm::mat4 finalMatrix;
+    std::vector<std::pair<float, glm::vec3>> translationStamps;
+    std::vector<std::pair<float, glm::vec4>> rotationStamps; // quaternion x, y, z, w
+    std::vector<std::pair<float, glm::vec3>> scaleStamps;
+};
+
 //TODO: BoneTranformations
 //TODO: Bone
 //TODO: AnimVertex
@@ -32,5 +49,6 @@ struct MeshData{
     std::vector<SubmeshData> submeshes;
     std::vector<Vertex>  vertices;
     std::vector<uint32_t>    indicies;
-
+    std::vector<AnimVertex>  aniVertices;
+    std::vector<Bone>        bones;
 };

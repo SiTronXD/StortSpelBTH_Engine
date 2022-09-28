@@ -21,10 +21,13 @@ private:
 
     std::vector<MeshData> getMeshesFromNodeTree(const aiScene * scene, const std::vector<uint32_t>& matToTex);
     MeshData loadMesh(aiMesh* mesh, uint32_t& lastVertice, uint32_t& lastIndex, std::vector<uint32_t> matToTex);
+    bool loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData, uint32_t lastVertex);
 
 public: 
     void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager* resourceMan);
     void setTextureLoader(TextureLoader* textureLoader);
 
     Mesh createMesh(std::string path);
+
+    aiNodeAnim* findAnimationNode(aiNodeAnim** nodeAnims, unsigned int numNodes, std::string_view name);
 };
