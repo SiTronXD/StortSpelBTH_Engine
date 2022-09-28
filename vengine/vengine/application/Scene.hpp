@@ -24,7 +24,7 @@ protected:
 	void switchScene(Scene* nextScene);
 	NetworkHandler* getNetworkHandler();
 
-    template <typename T> T GetConfigValue(std::string_view name)
+    template <typename T> T getConfigValue(std::string_view name)
     {
         return vengine_helper::config::DEF<T>(name);
     }
