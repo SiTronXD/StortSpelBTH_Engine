@@ -41,68 +41,8 @@ struct Vertex
     glm::vec2 tex;      /// texture coords  (u,v)
 };
 
-/// Indices (locations) of Queue Families (if they exists at all...)
-struct QueueFamilyIndices 
+struct ImageBarrierCreateData
 {
-    /// Note! Both the GraphicsFamily and PresentationFamily queue might be the same QueueFamily!
-    /// - Presentation is actually a Feature of a Queue Family, rather than being a seperate Queue Family Type...!
-    int32_t graphicsFamily = -1 ;
-    int32_t presentationFamily = -1;
-
-    ///Check if Queue Families are valid... (Invalid Families will have -1 as value...)
-    [[nodiscard]] bool isValid() const{
-        return graphicsFamily >= 0 && presentationFamily >= 0;
-    }
-};
-
-/// Defines what kind of surface we can create with our given surface
-struct SwapchainDetails 
-{
-    vk::SurfaceCapabilities2KHR surfaceCapabilities;       /// Surface Properties, Image size/extent
-    /*!Describes Information about what the surface can handle:
-     * - minImageCount/maxImageCount         : defines the min/max amount of image our surface can handle
-     * - currentExtent/minExtent/maxExtent   : defines the size of a image
-     * - supportedTransforms/currentTransform: ...
-     * */
-     std::vector<vk::SurfaceFormat2KHR> Format;          /// Surface Image Formats, RGBA and colorspace (??)
-     /*!Describes the format for the Color Space and how the data is represented...
-      * */
-      std::vector<vk::PresentModeKHR> presentationMode; /// The presentation mode that our Swapchain will use.
-    /*!How images should be presented to screen...
-     * */
-
-    [[nodiscard]] 
-    bool isValid() const{
-        return !Format.empty() && !presentationMode.empty();
-    }
-};
-
-struct createImageData{
-    uint32_t width;
-    uint32_t height; 
-    vk::Format format; 
-    vk::ImageTiling tiling; 
-    vk::ImageUsageFlags useFlags; 
-    vk::MemoryPropertyFlags property; 
-    //vk::DeviceMemory *imageMemory;
-    VmaAllocation *imageMemory;
-};
-
-struct createBufferData{
-    vk::PhysicalDevice physicalDevice;
-    vk::Device device;
-    vk::DeviceSize bufferSize;
-    vk::BufferUsageFlags bufferUsageFlags;
-    // vk::MemoryPropertyFlags bufferProperties;
-    VmaAllocationCreateFlags bufferProperties; //TODO: Replace this name... (!!)
-    vk::Buffer* buffer;
-    //vk::DeviceMemory* bufferMemory;
-    VmaAllocation *bufferMemory;
-    VmaAllocationInfo *allocationInfo = nullptr;
-    VmaAllocator* vma;
-};
-
-struct createImageBarrierData{
     vk::CommandBuffer cmdBuffer; 
     vk::Image image; 
     vk::AccessFlags2 srcAccessMask;    
@@ -114,7 +54,8 @@ struct createImageBarrierData{
     vk::ImageSubresourceRange imageSubresourceRange;
 };
 
-namespace vengine_helper{
+namespace vengine_helper
+{
 
     ////__attribute__((unused))
 [[maybe_unused]]  // To remove annoying warning... this function is used in another translation unit...
@@ -128,35 +69,11 @@ namespace vengine_helper{
     ////__attribute__((unused))
 [[maybe_unused]]  // To remove annoying warning... this function is                        
 
-     uint32_t findMemoryTypeIndex( vk::PhysicalDevice physicalDevice, uint32_t allowedTypes,vk::MemoryPropertyFlags properties);
+     uint32_t findMemoryTypeIndex(
+         vk::PhysicalDevice physicalDevice, 
+         uint32_t allowedTypes,
+         vk::MemoryPropertyFlags properties);
 
-    void createBuffer(createBufferData &&bufferData);
-
-    vk::CommandBuffer beginCommandBuffer(vk::Device device,
-                                         vk::CommandPool commandPool);
-
-    void endAndSubmitCommandBuffer(vk::Device device,
-                                   vk::CommandPool commandPool, vk::Queue queue,
-                                   vk::CommandBuffer commandBuffer);
-
-    void endAndSubmitCommandBufferWithFences(
-        vk::Device device, vk::CommandPool commandPool, vk::Queue queue,
-        vk::CommandBuffer commandBuffer);
-
-    void copyBuffer(vk::Device device, vk::Queue transferQueue,
-                           vk::CommandPool transferCommandPool,
-                           vk::Buffer srcBuffer, vk::Buffer dstBuffer,
-                           vk::DeviceSize bufferSize);
-
-    void copyImageBuffer(vk::Device device, vk::Queue transferQueue,
-                                vk::CommandPool transferCommandPool,
-                                vk::Buffer srcBuffer, vk::Image dstImage,
-                                uint32_t width, uint32_t height);
-
-    void transitionImageLayout(vk::Device device, vk::Queue queue,
-                               vk::CommandPool commandPool, vk::Image image,
-                               vk::ImageLayout oldLayout,
-                               vk::ImageLayout newLayout);
-
-    void insertImageMemoryBarrier(createImageBarrierData &&imageBarrierData);
+    void insertImageMemoryBarrier(
+        ImageBarrierCreateData&& imageBarrierData);
 }
