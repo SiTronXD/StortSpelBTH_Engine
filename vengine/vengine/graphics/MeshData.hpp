@@ -25,7 +25,7 @@ struct AnimVertex
 
 struct Bone 
 {
-    int parentIndex = -1;
+    int parentIndex;
     glm::mat4 inverseBindPoseMatrix;
     glm::mat4 modelMatrix;
     glm::mat4 finalMatrix;

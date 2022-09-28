@@ -206,19 +206,17 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
   return meshData;
 }
 
-bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData,
-                           uint32_t lastVertex)
+bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData, uint32_t lastVertex)
 {
-    aiAnimation* ani = nullptr;
+    aiAnimation* ani = scene->mAnimations[0];
 
-    // Search the aiScene for the animation (will change with multiple animations per file)
-    for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
+    /*for (unsigned int i = 0; i < scene->mNumAnimations; i++) {
         for (unsigned int k = 0; k < scene->mAnimations[i]->mNumMeshChannels; k++) {
             if (strcmp(scene->mAnimations[i]->mMeshChannels[k]->mName.C_Str(), mesh->mName.C_Str())) {
                 ani = scene->mAnimations[i];
             }
         }
-    }
+    }*/
 
     if (!ani) {
         return false;
@@ -226,19 +224,10 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
 
     outBoneData.aniVertices.resize(outBoneData.vertices.size());
     outBoneData.bones.resize(mesh->mNumBones);
+    std::unordered_map<std::string_view, int> boneIndices;
 
     for (unsigned int i = 0; i < mesh->mNumBones; i++) {
-        for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
-
-            aiVertexWeight& aiWeight = mesh->mBones[i]->mWeights[k];
-            AnimVertex& vertex = outBoneData.aniVertices[aiWeight.mVertexId + lastVertex];
-
-            if      (vertex.weights[0] == 0.f) { vertex.weights[0] = aiWeight.mWeight; vertex.bonesIndex[0] = i; }
-            else if (vertex.weights[1] == 0.f) { vertex.weights[1] = aiWeight.mWeight; vertex.bonesIndex[1] = i; }
-            else if (vertex.weights[2] == 0.f) { vertex.weights[2] = aiWeight.mWeight; vertex.bonesIndex[2] = i; }
-            else if (vertex.weights[3] == 0.f) { vertex.weights[3] = aiWeight.mWeight; vertex.bonesIndex[3] = i; }
-        }
-
+        boneIndices[mesh->mBones[i]->mName.C_Str()] = i;
         Bone& bone = outBoneData.bones[i];
 
         memcpy(&bone.inverseBindPoseMatrix, &mesh->mBones[i]->mOffsetMatrix, sizeof(glm::mat4));
@@ -248,13 +237,14 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
 
         if (!nodeAnim) {
             Log::error("Could not find animation node");
-            // Fix bone? (timeStamp 0, all values are default)
+            // Fix bone? (timeStamp 0, set all values to default)
             continue;
         }
 
         bone.translationStamps.resize(nodeAnim->mNumPositionKeys);
         for (unsigned int k = 0; k < nodeAnim->mNumPositionKeys; k++) {
-            memcpy(&bone.translationStamps[k], &nodeAnim->mPositionKeys[k], sizeof(glm::vec3));
+            bone.translationStamps[k].first = (float)nodeAnim->mPositionKeys[k].mTime;
+            memcpy(&bone.translationStamps[k].second, &nodeAnim->mPositionKeys[k], sizeof(glm::vec3));
         }
 
         bone.rotationStamps.resize(nodeAnim->mNumRotationKeys);
@@ -266,15 +256,88 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
             // bone.rotationStamps[k].second.z = nodeAnim->mRotationKeys[k].mValue.z;
             // bone.rotationStamps[k].second.w = nodeAnim->mRotationKeys[k].mValue.w;
 
-            memcpy(&bone.rotationStamps[k], &nodeAnim->mRotationKeys[k], sizeof(glm::vec4));
+            bone.rotationStamps[k].first = (float)nodeAnim->mRotationKeys[k].mTime;
+            memcpy(&bone.rotationStamps[k].second, &nodeAnim->mRotationKeys[k], sizeof(glm::vec4));
         }
 
         bone.scaleStamps.resize(nodeAnim->mNumScalingKeys);
         for (unsigned int k = 0; k < nodeAnim->mNumScalingKeys; k++) {
-            memcpy(&bone.scaleStamps[k], &nodeAnim->mScalingKeys[k], sizeof(glm::vec3));
+            bone.scaleStamps[k].first = (float)nodeAnim->mScalingKeys[k].mTime;
+            memcpy(&bone.scaleStamps[k].second, &nodeAnim->mScalingKeys[k], sizeof(glm::vec3));
+        }
+
+
+        // Set weights & boneIndex
+        for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
+            aiVertexWeight& aiWeight = mesh->mBones[i]->mWeights[k];
+            AnimVertex&     vertex = outBoneData.aniVertices[aiWeight.mVertexId /* + lastVertex*/];
+
+            if      (vertex.weights[0] == 0.f) { vertex.weights[0] = aiWeight.mWeight; vertex.bonesIndex[0] = i; }
+            else if (vertex.weights[1] == 0.f) { vertex.weights[1] = aiWeight.mWeight; vertex.bonesIndex[1] = i; }
+            else if (vertex.weights[2] == 0.f) { vertex.weights[2] = aiWeight.mWeight; vertex.bonesIndex[2] = i; }
+            else if (vertex.weights[3] == 0.f) { vertex.weights[3] = aiWeight.mWeight; vertex.bonesIndex[3] = i; }
         }
 
     }
 
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+        aiNode* boneNode = findNode(scene->mRootNode, mesh->mBones[i]->mName.C_Str());
+        if (!boneNode) {
+            outBoneData.bones[i].parentIndex = -1;
+            continue;
+        }
+
+        aiNode* parent = findParentBoneNode(boneIndices, boneNode);
+        outBoneData.bones[i].parentIndex = parent ? boneIndices[parent->mName.C_Str()] : -1;
+    }
+
+    // Normalize weights
+
     return true;
+}
+
+aiNodeAnim* MeshLoader::findAnimationNode(aiNodeAnim** nodeAnims, unsigned int numNodes, std::string_view name)
+{
+    for (unsigned int i = 0; i < numNodes; i++) {
+        if (nodeAnims[i]->mNodeName.C_Str() == name) {
+            return nodeAnims[i];
+        }
+    }
+
+    return nullptr;
+}
+
+aiNode* MeshLoader::findNode(aiNode* rootNode, std::string_view boneName)
+{
+    aiNode* ptr = nullptr;
+
+    for (unsigned int i = 0; i < rootNode->mNumChildren; i++) {
+
+        if (rootNode->mChildren[i]->mName.C_Str() == boneName) {
+            ptr = rootNode->mChildren[i];
+        }
+
+        else if (!ptr) {
+            ptr = findNode(rootNode->mChildren[i], boneName);
+        }
+    }
+
+    return ptr;
+}
+
+aiNode* MeshLoader::findParentBoneNode(std::unordered_map<std::string_view, int>& bones, aiNode* node)
+{
+    if (!node) {
+        return nullptr;
+    }
+
+    if (!node->mParent) {
+        return nullptr;
+    }
+
+    if (bones.find(node->mParent->mName.C_Str()) != bones.end()) {
+        return node->mParent;
+    }
+
+    return findParentBoneNode(bones, node->mParent);
 }
