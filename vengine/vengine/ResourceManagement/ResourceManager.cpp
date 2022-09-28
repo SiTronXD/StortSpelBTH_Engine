@@ -70,9 +70,13 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
 
     //NOTE: meshes.size as key only works if we never remove resources the map...    
     // Create mesh, insert into map of meshes
-    textures.insert({
-        textures.size(),
-        textureLoader.createTexture(DEF<std::string>(P_TEXTURES) + texturePath)});
+    textures.insert(
+        {
+            textures.size(),
+            textureLoader.createTexture(
+                DEF<std::string>(P_TEXTURES) + texturePath)
+        }
+    );
 
     return textures.size() -1;
 }
@@ -84,7 +88,8 @@ void ResourceManager::cleanup()
         keyVal.second.cleanup();
     }
     for(auto & i : this->textures)
-    {                   
-        textureLoader.cleanupTexture(i.second);
+    {     
+        i.second.cleanup();
+        //textureLoader.cleanupTexture(i.second);
     }
 }

@@ -18,9 +18,19 @@ struct ImageCreateData
 class Texture
 {
 private:
+    Device* device;
+    VmaAllocator* vma;
+
 public:
-	Texture();
+    vk::ImageView imageView;
+    VmaAllocation imageMemory;
+    vk::Image     image;
+    uint32_t      descriptorLocation;
+
+	Texture(Device& device, VmaAllocator& vma);
 	~Texture();
+
+	void cleanup();
 
 	static vk::Format chooseSupportedFormat(
 		PhysicalDevice& physicalDevice,

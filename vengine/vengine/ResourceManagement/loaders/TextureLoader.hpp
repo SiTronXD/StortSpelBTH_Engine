@@ -6,8 +6,8 @@ typedef unsigned char stbi_uc;
 
 /// TODO: REMOVE VulkanRenderer (Maybe?)
 class VulkanRenderer;
-//class aiScene;
 class ResourceManager;
+class Texture;
 
 class TextureLoader{
 private:
@@ -26,6 +26,5 @@ public:
     void      assimpTextureImport(const aiScene* scene, std::vector<uint32_t>& materialToTexture);
     inline const void setVulkanRenderer(VulkanRenderer* ref) { this->TEMP = ref; };  /// TODO: REMOVE VulkanRenderer
     void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager*);
-    ImageData createTexture(const std::string &filename);
-    void cleanupTexture(ImageData& ref);
+    Texture createTexture(const std::string &filename);
 };

@@ -5,6 +5,7 @@
 #include <string>
 #include "ResourceManagerStructs.hpp"
 #include "../graphics/Mesh.hpp"
+#include "../graphics/Texture.hpp"
 #include "../dev/Log.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "loaders/MeshLoader.hpp"
@@ -20,7 +21,7 @@ private:
     std::unordered_map<std::string, uint32_t> texturePaths;
     
     std::unordered_map<uint32_t, Mesh>  meshes;
-    std::unordered_map<uint32_t, ImageData> textures;
+    std::unordered_map<uint32_t, Texture> textures;
 
     MeshLoader      meshLoader;
     TextureLoader   textureLoader;
@@ -39,7 +40,7 @@ public:
     uint32_t addTexture(std::string&& texturePath);
 
     Mesh&         getMesh(uint32_t id);
-    ImageData&    getTexture(uint32_t id);
+    Texture&    getTexture(uint32_t id);
 };
 
 inline Mesh& ResourceManager::getMesh(uint32_t id)
@@ -53,7 +54,7 @@ inline Mesh& ResourceManager::getMesh(uint32_t id)
     return map_iterator->second;
 }
 
-inline ImageData& ResourceManager::getTexture(uint32_t id)
+inline Texture& ResourceManager::getTexture(uint32_t id)
 {
     auto map_iterator = this->textures.find(id);
     if(this->textures.end() == map_iterator)

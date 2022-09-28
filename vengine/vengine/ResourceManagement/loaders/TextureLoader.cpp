@@ -73,39 +73,36 @@ void TextureLoader::assimpTextureImport(
     }
 }
 
-ImageData TextureLoader::createTexture(const std::string &filename) {
+Texture TextureLoader::createTexture(const std::string &filename) {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //: NOLINT
 #endif
-    ImageData imageData;
+    Texture createdTexture(
+        *this->importStructs.device, 
+        *this->importStructs.vma
+    );
 
     // Create Texture Image and get its Location in array
-    this->createTextureImage(filename, imageData.image,
-                                    imageData.imageMemory);
+    this->createTextureImage(
+        filename, 
+        createdTexture.image, 
+        createdTexture.imageMemory);
 
     // Create Image View
-    imageData.imageView = Texture::createImageView(
+    createdTexture.imageView = Texture::createImageView(
         *this->importStructs.device,
         // textureImages[textureImageLoc],          // The location of the Image
         // in our textureImages vector
-        imageData.image, // The location of the Image in our textureImages vector
+        createdTexture.image, // The location of the Image in our textureImages vector
         vk::Format::eR8G8B8A8Unorm, // Format for rgba
         vk::ImageAspectFlagBits::eColor);
 
     // Create Texture Descriptor
-    imageData.descriptorLocation =
-        this->createTextureDescriptor(imageData.imageView);
+    createdTexture.descriptorLocation =
+        this->createTextureDescriptor(createdTexture.imageView);
 
     // Return index of Texture Descriptor that was just created
-    return imageData;
-}
-
-void TextureLoader::cleanupTexture(ImageData &ref) 
-{
-    this->importStructs.device->getVkDevice().destroyImageView(
-        ref.imageView);
-    this->importStructs.device->getVkDevice().destroyImage(ref.image);
-    vmaFreeMemory(*this->importStructs.vma, ref.imageMemory);
+    return createdTexture;
 }
 
 stbi_uc *TextureLoader::loadTextureFile(const std::string &filename, int *width,
