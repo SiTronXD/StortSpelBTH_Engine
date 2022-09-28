@@ -37,7 +37,7 @@ void TestDemoScene::init()
 	//this->setComponent<MeshComponent>(this->testEntity);
 	this->setComponent<MeshComponent>(this->testEntity);
 	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
-	meshComp.filePath = "sponza.obj";
+	memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
  
 	// // Create entity2 (already has transform)
 	this->testEntity2 = this->createEntity();

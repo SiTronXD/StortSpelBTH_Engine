@@ -3,5 +3,5 @@
 struct MeshComponent
 {
 	int meshID;
-    const char* filePath = "ghost.obj";
+    char filePath[64] = "ghost.obj";
 };
