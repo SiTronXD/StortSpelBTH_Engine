@@ -184,6 +184,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\graphics\vulkan\VmaUsage.hpp">
+    <ClInclude Include="vengine\graphics\ShaderInput.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\graphics\vulkan\CommandBufferArray.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -329,5 +333,11 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <ClCompile Include="vengine\graphics\ShaderInput.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\CommandBufferArray.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

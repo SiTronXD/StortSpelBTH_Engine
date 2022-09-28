@@ -23,6 +23,6 @@ public:
 
 	void cleanup();
 
-	inline vk::PipelineLayout& getVkPipelineLayout() 
+	inline const vk::PipelineLayout& getVkPipelineLayout() const
 	{ return this->pipelineLayout; }
 };
