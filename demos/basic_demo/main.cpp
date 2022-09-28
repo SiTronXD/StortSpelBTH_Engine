@@ -19,7 +19,7 @@ int main(int argc, char* argv[])
 
     {
         Engine engine;
-        engine.run(new NetworkTestScene());
+        engine.run(new TestDemoScene());
     }
 
     return EXIT_SUCCESS;
