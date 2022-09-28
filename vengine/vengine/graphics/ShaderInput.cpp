@@ -256,9 +256,9 @@ void ShaderInput::beginForInput(
 UniformBufferID ShaderInput::addUniformBuffer(
     const size_t& contentsSize)
 {
-    uint32_t uniformBufferID = this->addedUniformBuffers.size();
+    UniformBufferID uniformBufferID = this->addedUniformBuffers.size();
 
-    // Add and create uniform buffer
+    // Create and add uniform buffer
     this->addedUniformBuffers.push_back(UniformBuffer());
     this->addedUniformBuffers[uniformBufferID].createUniformBuffer(
         *this->device,
@@ -268,6 +268,23 @@ UniformBufferID ShaderInput::addUniformBuffer(
     );
 
     return uniformBufferID;
+}
+
+StorageBufferID ShaderInput::addStorageBuffer(
+    const size_t& contentsSize) 
+{
+    StorageBufferID storageBufferID = this->addedStorageBuffers.size();
+
+    // Create and add storage buffer
+    this->addedStorageBuffers.push_back(StorageBuffer());
+    this->addedStorageBuffers[storageBufferID].createStorageBuffer(
+        *this->device,
+        *this->vma,
+        contentsSize,
+        this->framesInFlight
+    );
+
+    return storageBufferID;
 }
 
 void ShaderInput::addPushConstant(
@@ -321,18 +338,29 @@ void ShaderInput::endForInput()
 
 void ShaderInput::cleanup()
 {
+    // Uniform buffers
     for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
     {
         this->addedUniformBuffers[i].cleanup();
     }
     this->addedUniformBuffers.clear();
 
+    // Storage buffers
+    for (size_t i = 0; i < this->addedStorageBuffers.size(); ++i)
+    {
+        this->addedStorageBuffers[i].cleanup();
+    }
+    this->addedStorageBuffers.clear();
+
+    // Descriptor pools
     this->device->getVkDevice().destroyDescriptorPool(this->descriptorPool);
     this->device->getVkDevice().destroyDescriptorPool(this->samplerDescriptorPool);
 
+    // Descriptor set layouts
     this->device->getVkDevice().destroyDescriptorSetLayout(this->descriptorSetLayout);
     this->device->getVkDevice().destroyDescriptorSetLayout(this->samplerDescriptorSetLayout);
 
+    // Pipeline layout
     this->pipelineLayout.cleanup();
 }
 

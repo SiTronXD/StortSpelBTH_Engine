@@ -2,6 +2,7 @@
 
 #include "vulkan/PipelineLayout.hpp"
 #include "vulkan/UniformBuffer.hpp"
+#include "vulkan/StorageBuffer.hpp"
 
 class PhysicalDevice;
 class Device;
@@ -9,6 +10,7 @@ class ResourceManager;
 class Texture;
 
 using UniformBufferID = uint32_t;
+using StorageBufferID = uint32_t;
 using SamplerID = uint32_t;
 
 enum class DescriptorFrequency
@@ -43,6 +45,7 @@ private:
 	vk::PushConstantRange pushConstantRange{};
 
 	std::vector<UniformBuffer> addedUniformBuffers;
+	std::vector<StorageBuffer> addedStorageBuffers; 
 
 	std::vector<vk::DescriptorSet> perFrameDescriptorSets;
 	// std::vector<vk::DescriptorSet> perMeshDescriptorSets; // TODO: add functionality for this
@@ -74,6 +77,8 @@ public:
 		const uint32_t& pushConstantSize,
 		const vk::ShaderStageFlagBits& pushConstantShaderStage);
 	UniformBufferID addUniformBuffer(
+		const size_t& contentsSize);
+    StorageBufferID addStorageBuffer(
 		const size_t& contentsSize);
 	SamplerID addSampler();
 	void endForInput();

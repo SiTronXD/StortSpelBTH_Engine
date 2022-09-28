@@ -145,8 +145,12 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
             vk::ShaderStageFlagBits::eVertex
         );
         this->createTextureSampler();
-        this->sampler0 = this->shaderInput.addSampler();
-        this->viewProjectionUB = this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
+        this->sampler0 = 
+            this->shaderInput.addSampler();
+        this->viewProjectionUB = 
+            this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
+        this->testStorageBufferID = 
+            this->shaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
         this->shaderInput.endForInput();
 
         this->pipeline.createPipeline(
@@ -465,7 +469,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
     auto tView = scene->getSceneReg().view<MeshComponent>();
     tView.each([this](MeshComponent& meshComponent)
     {
-        meshComponent.meshID = this->resourceManager->addMesh("sponza.obj");
+        meshComponent.meshID = this->resourceManager->addMesh("ghost.obj");
     });
 
     // Add all textures for possible use in the shader
