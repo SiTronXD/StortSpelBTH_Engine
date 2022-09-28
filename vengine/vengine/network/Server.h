@@ -6,25 +6,19 @@
 #include "ServerGame.h"
 
 struct clientInfo {
-	clientInfo(std::string name) {
+	clientInfo(std::string name)
+	{
 		this->name = name;
 	}
-	std::string name;
-	sf::IpAddress sender;
+	std::string    name;
+	sf::IpAddress  sender;
 	unsigned short port;
-	sf::TcpSocket clientTcpSocket;
-	float TimeToDisconnect = 0;
+	sf::TcpSocket  clientTcpSocket;
+	float          TimeToDisconnect = 0;
+	int			   id;
 };
 
 class Server {
-public:
-	Server();
-	~Server();
-	void start();
-	bool update(float dt);
-	std::string getServerIP();
-	std::string getLocalAddress();
-	void disconnect();
 private:
 	//functions
 	//see if user is still connected by seeing if user has been to the sending messages the last 3 seconds or so
@@ -37,8 +31,8 @@ private:
 	//sendmessage To users
 	void sendDataToAllUsers();
 	void getDataFromUsers();
-	void handlePacketFromUser(int clientID, bool tcp = true);
-	void createUDPPacketToClient(int clientID, sf::Packet& packet);
+	void handlePacketFromUser(const int& clientID, bool tcp = true);
+	void createUDPPacketToClient(const int& clientID, sf::Packet& packet);
 
 
 	//print all users
@@ -48,40 +42,49 @@ private:
 
 	//varibles
 	StartingEnum starting;
-	float currentTimeToSend;
-	float timeToSend;
+	float        currentTimeToSend;
+	float        timeToSend;
 
 	//objects
 	std::thread* connectThread;
 
 	std::vector<clientInfo*> clients;
-	sf::UdpSocket udpSocket;
-	sf::TcpListener listener;
+	sf::UdpSocket            udpSocket;
+	sf::TcpListener          listener;
 
 	std::vector<sf::Packet> clientToServerPacketTcp; //packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketTcp;
-	
+
 	std::vector<sf::Packet> clientToServerPacketUdp; //packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketUdp;
 
 
-	ServerGame sGame;
+	ServerGame serverGame;
 
 	//help functions
-	template <typename T>
-	void getToAllExeptIDTCP(int clientID, T var) {
+	template <typename T> void getToAllExeptIDTCP(int clientID, T var)
+	{
 		for (int i = 0; i < serverToClientPacketTcp.size(); i++) {
 			if (i != clientID) {
 				serverToClientPacketTcp[i] << var;
 			}
 		}
 	}
-	template <typename T>
-	void getToAllExeptIDUDP(int clientID, T var) {
+	template <typename T> void getToAllExeptIDUDP(int clientID, T var)
+	{
 		for (int i = 0; i < serverToClientPacketUdp.size(); i++) {
 			if (i != clientID) {
 				serverToClientPacketUdp[i] << var;
 			}
 		}
 	}
+
+public:
+	Server();
+	~Server();
+	void        start();
+	bool        update(float dt);
+	std::string getServerIP();
+	std::string getLocalAddress();
+	void        disconnect();
 };

@@ -8,6 +8,7 @@
 
 #include "vengine.h"
 #include "src/TestDemoScene.h"
+#include "src/NetworkTestScene.h"
 
 int main(int argc, char* argv[])
 {

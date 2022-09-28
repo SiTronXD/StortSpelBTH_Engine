@@ -396,6 +396,9 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include=".clang-format" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
