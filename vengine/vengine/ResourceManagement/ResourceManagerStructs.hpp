@@ -11,13 +11,3 @@ struct VulkanImportStructs{
     vk::Queue*           transferQueue; 
     vk::CommandPool*     transferCommandPool; 
 };
-
-/*  Temporar wrapping struct for Texture related data, 
-    will be refactored into Texture wrapper later. 
-*/ 
-struct ImageData {
-        vk::ImageView   imageView;
-        VmaAllocation   imageMemory;
-        vk::Image       image;
-        uint32_t        descriptorLocation;
-};
