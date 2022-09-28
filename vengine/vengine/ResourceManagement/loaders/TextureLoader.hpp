@@ -1,7 +1,6 @@
 #pragma once
 
 #include "../ResourceManagerStructs.hpp"
-
 #include "assimp/scene.h"
 typedef unsigned char stbi_uc;
 

@@ -184,14 +184,7 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
 
   lastVertice += vertex_index;
   lastIndex += indices.size();
-  //auto a = std::vector<SubmeshData>{
-    auto a = SubmeshData{
-  .materialIndex =
-              this->resourceMan->getTexture(matToTex[mesh->mMaterialIndex])
-                  .descriptorLocation,
-          .startIndex = initialIndex,
-          .numIndicies = static_cast<uint32_t>(indices.size()),
-  };
+  
   /// Construct MeshData and return it
   MeshData meshData{
       .submeshes = std::vector<SubmeshData>{
