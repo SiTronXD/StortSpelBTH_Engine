@@ -9,11 +9,12 @@ class SceneLua
 {
 private:
 	// COUNT: Getting the number of Components
-	enum class CompType { TRANSFORM, MESH, BEHAVIOUR, COUNT };
+	enum class CompType { TRANSFORM, MESH, BEHAVIOUR, CAMERA, COUNT };
 	inline static const std::vector<std::string> compTypes {
 		"Transform",
 		"Mesh",
-		"Behaviour"
+		"Behaviour",
+		"Camera"
 	};
 
 	// COUNT: Getting the number of Systems
@@ -23,6 +24,9 @@ private:
 
 	static int lua_createSystem(lua_State* L);
 	static int lua_setScene(lua_State* L);
+
+	static int lua_getMainCamera(lua_State* L);
+	static int lua_setMainCamera(lua_State* L);
 
 	static int lua_getEntityCount(lua_State* L);
 	static int lua_entityValid(lua_State* L);

@@ -20,7 +20,7 @@ private:
 	int mainCamera;
 
 protected:
-	void switchScene(Scene* nextScene);
+	void switchScene(std::string& path);
 	NetworkHandler* getNetworkHandler();
 
 public:
@@ -56,9 +56,6 @@ public:
 
 	template <typename T>
 	void removeComponent(int entity);
-
-	virtual void init() = 0;
-	virtual void update() = 0;
 
 	inline entt::registry& getSceneReg() { return this->reg; }
 

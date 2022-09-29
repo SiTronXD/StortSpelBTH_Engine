@@ -1,10 +1,10 @@
 #include "SceneHandler.hpp"
 #include "Time.hpp"
 #include "../graphics/VulkanRenderer.hpp"
+#include "../lua/ScriptHandler.h"
 
 SceneHandler::SceneHandler()
-	: scene(nullptr),
-	nextScene(nullptr)
+	: scene(nullptr), nextScene(nullptr), networkHandler(nullptr), scriptHandler(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -15,7 +15,6 @@ SceneHandler::~SceneHandler()
 void SceneHandler::update()
 {
 	this->scene->updateSystems();
-	this->scene->update();
 }
 
 void SceneHandler::updateToNextScene()
@@ -30,18 +29,26 @@ void SceneHandler::updateToNextScene()
 		// Switch
 		this->scene = this->nextScene;
 		this->nextScene = nullptr;
-		this->scene->init();
+		this->luaScript = this->nextLuaScript;
+		this->scriptHandler->runScript(this->luaScript);
+
 		Time::init();
 	}
 }
 
-void SceneHandler::setScene(Scene* scene)
+void SceneHandler::setScene(std::string& path)
 {
 	if (this->nextScene == nullptr)
 	{
-		this->nextScene = scene;
+		this->nextScene = new Scene();
 		this->nextScene->setSceneHandler(*this);
+		this->nextLuaScript = path;
 	}
+}
+
+void SceneHandler::reloadScene()
+{
+	this->setScene(this->luaScript);
 }
 
 void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
@@ -52,6 +59,11 @@ void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
 NetworkHandler* SceneHandler::getNetworkHandler()
 {
 	return this->networkHandler;
+}
+
+void SceneHandler::setScriptHandler(ScriptHandler* scriptHandler)
+{
+	this->scriptHandler = scriptHandler;
 }
 
 Scene* SceneHandler::getScene() const

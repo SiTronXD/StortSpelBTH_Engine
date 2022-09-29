@@ -1,7 +1,10 @@
 #include "SceneLua.h"
 #include "../../application/SceneHandler.hpp"
+#include "../../application/Time.hpp"
 #include "../../components/Behaviour.hpp"
 #include "../../components/MeshComponent.hpp"
+#include "../LuaPushes.hpp"
+
 
 int SceneLua::lua_createSystem(lua_State* L)
 {
@@ -13,6 +16,27 @@ int SceneLua::lua_createSystem(lua_State* L)
 
 int SceneLua::lua_setScene(lua_State* L)
 {
+	SceneHandler* sceneHandler = (SceneHandler*)lua_touserdata(L, lua_upvalueindex(1));
+	std::string path = lua_tostring(L, 1);
+	sceneHandler->setScene(path);
+
+	return 0;
+}
+
+int SceneLua::lua_getMainCamera(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	lua_pushinteger(L, scene->getMainCameraID());
+
+	return 1;
+}
+
+int SceneLua::lua_setMainCamera(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	int entity = (int)lua_tointeger(L, 1);
+	scene->setMainCamera(entity);
+
 	return 0;
 }
 
@@ -57,8 +81,14 @@ int SceneLua::lua_hasComponent(lua_State* L)
 	case CompType::TRANSFORM:
 		hasComp = scene->hasComponents<Transform>(entity);
 		break;
+	case CompType::MESH:
+		hasComp = scene->hasComponents<MeshComponent>(entity);
+		break;
 	case CompType::BEHAVIOUR:
 		hasComp = scene->hasComponents<Behaviour>(entity);
+		break;
+	case CompType::CAMERA:
+		hasComp = scene->hasComponents<Camera>(entity);
 		break;
 	default:
 		break;
@@ -76,7 +106,7 @@ int SceneLua::lua_getComponent(lua_State* L)
 
 	if ((CompType)type == CompType::TRANSFORM && scene->hasComponents<Transform>(entity))
 	{
-		// Transform
+		lua_pushtransform(L, scene->getComponent<Transform>(entity));
 	}
 	else if ((CompType)type == CompType::BEHAVIOUR && scene->hasComponents<Behaviour>(entity))
 	{
@@ -96,7 +126,7 @@ int SceneLua::lua_setComponent(lua_State* L)
 	switch ((CompType)type)
 	{
 	case CompType::TRANSFORM:
-		//scene->setComponent<Transform>(entity, lua_totransform(L, 3));
+		scene->setComponent<Transform>(entity, lua_totransform(L, 3));
 		break;
 	case CompType::MESH:
 		// Get from resource manager
@@ -127,6 +157,9 @@ int SceneLua::lua_setComponent(lua_State* L)
 			}
 		}
 		break;
+	case CompType::CAMERA:
+		scene->setComponent<Camera>(entity, 1.0f);
+		break;
 	default:
 		break;
 	}
@@ -148,6 +181,9 @@ int SceneLua::lua_removeComponent(lua_State* L)
 	case CompType::BEHAVIOUR:
 		scene->removeComponent<Behaviour>(entity);
 		break;
+	case CompType::CAMERA:
+		scene->removeComponent<Camera>(entity);
+		break;
 	default:
 		break;
 	}
@@ -162,6 +198,8 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 	luaL_Reg methods[] = {
 		{ "createSystem", lua_createSystem },
 		{ "setScene", lua_setScene },
+		{ "getMainCamera", lua_getMainCamera },
+		{ "setMainCamera", lua_setMainCamera },
 		{ "getEntityCount", lua_getEntityCount },
 		{ "entityValid", lua_entityValid },
 		{ "createEntity", lua_createEntity },

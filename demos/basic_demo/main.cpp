@@ -7,7 +7,7 @@
 #include <cstdlib>
 
 #include "vengine.h"
-#include "src/TestDemoScene.h"
+//#include "src/TestDemoScene.h"
 
 int main(int argc, char* argv[])
 {
@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 
     {
         Engine engine;
-        engine.run(new TestDemoScene());
+        engine.run("Demo Application", "assets/scripts/test.lua");
     }
 
     return EXIT_SUCCESS;

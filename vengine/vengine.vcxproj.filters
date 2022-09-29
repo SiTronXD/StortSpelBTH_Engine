@@ -129,12 +129,6 @@
     <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vengine\test\TestScene.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\test\TestScene2.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vengine\Engine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -264,12 +258,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\loaders\Configurator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vengine\test\TestScene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vengine\test\TestScene2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\Engine.cpp">

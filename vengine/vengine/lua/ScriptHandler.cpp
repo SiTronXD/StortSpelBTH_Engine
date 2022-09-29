@@ -1,5 +1,6 @@
 #include "ScriptHandler.h"
 #include "../dev/Log.hpp"
+#include "../application/SceneHandler.hpp"
 #include "../application/Input.hpp"
 #include "dev/LuaHelper.hpp"
 
@@ -24,7 +25,6 @@ ScriptHandler::ScriptHandler()
 
 ScriptHandler::~ScriptHandler()
 {
-	lua_close(L);
 }
 
 void ScriptHandler::setSceneHandler(SceneHandler* sceneHandler)
@@ -33,10 +33,29 @@ void ScriptHandler::setSceneHandler(SceneHandler* sceneHandler)
 	SceneLua::lua_openscene(L, sceneHandler);
 }
 
+bool ScriptHandler::runScript(std::string& path)
+{
+	bool result = luaL_dofile(L, path.c_str()) == LUA_OK;
+	if (!result) { LuaH::dumpError(L); }
+	return result;
+}
+
+bool ScriptHandler::loadScript(std::string& path)
+{
+	bool result = luaL_loadfile(L, path.c_str()) == LUA_OK;
+	if (!result) { LuaH::dumpError(L); }
+	return result;
+}
+
 void ScriptHandler::update()
 {
 	if (Input::isKeyPressed(Keys::R))
 	{
-		LUA_ERR_CHECK(L, luaL_dofile(L, (SCRIPT_PATH + "test.lua").c_str()));
+		this->sceneHandler->reloadScene();
 	}
+}
+
+void ScriptHandler::cleanup()
+{
+	lua_close(L);
 }

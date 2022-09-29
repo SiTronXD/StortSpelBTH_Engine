@@ -349,8 +349,6 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\network\Timer.h" />
     <ClInclude Include="vengine\systems\System.hpp" />
     <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp" />
-    <ClInclude Include="vengine\test\TestScene.hpp" />
-    <ClInclude Include="vengine\test\TestScene2.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_sdl.cpp" />
@@ -392,8 +390,6 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="vengine\network\Server.cpp" />
     <ClCompile Include="vengine\network\ServerGame.cpp" />
     <ClCompile Include="vengine\network\Timer.cpp" />
-    <ClCompile Include="vengine\test\TestScene.cpp" />
-    <ClCompile Include="vengine\test\TestScene2.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

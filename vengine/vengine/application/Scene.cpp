@@ -4,9 +4,9 @@
 #include "../network/NetworkHandler.h"
 #include "Time.hpp"
 
-void Scene::switchScene(Scene* nextScene)
+void Scene::switchScene(std::string& path)
 {
-	this->sceneHandler->setScene(nextScene);
+	this->sceneHandler->setScene(path);
 }
 
 NetworkHandler* Scene::getNetworkHandler()
@@ -15,8 +15,9 @@ NetworkHandler* Scene::getNetworkHandler()
 }
 
 Scene::Scene()
-	: sceneHandler(nullptr)
+	: sceneHandler(nullptr), mainCamera(-1)
 {
+	this->reg.clear();
 	this->createSystem<UpdateMatricesSystem>();
 }
 

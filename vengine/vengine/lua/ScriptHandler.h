@@ -8,7 +8,7 @@ class SceneHandler;
 class ScriptHandler
 {
 private:
-	static inline const std::string SCRIPT_PATH = "vengine_assets/scripts/";
+	static inline const std::string SCRIPT_PATH = "assets/scripts/";
 
 	lua_State* L;
 	SceneHandler* sceneHandler;
@@ -21,6 +21,10 @@ public:
 
 	void setSceneHandler(SceneHandler* sceneHandler);
 
+	bool runScript(std::string& path);
+	bool loadScript(std::string& path);
+
 	void update();
+	void cleanup();
 };
 
