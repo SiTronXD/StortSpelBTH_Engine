@@ -16,7 +16,7 @@ using SamplerID = uint32_t;
 enum class DescriptorFrequency
 {
 	PER_FRAME,
-	// PER_MESH, // TODO: add functionality for this
+	PER_MESH, // TODO: add functionality for this
 	PER_DRAW_CALL,
 
 	NUM_FREQUENCY_TYPES
@@ -38,9 +38,11 @@ private:
 	uint32_t framesInFlight;
 
 	vk::DescriptorPool perFramePool{};
+	vk::DescriptorPool perMeshPool{};
 	vk::DescriptorPool perDrawPool{};
 
 	vk::DescriptorSetLayout perFrameSetLayout{};
+	vk::DescriptorSetLayout perMeshSetLayout{};
 	vk::DescriptorSetLayout perDrawSetLayout{};
 	vk::PushConstantRange pushConstantRange{};
 
@@ -48,7 +50,7 @@ private:
 	std::vector<StorageBuffer> addedStorageBuffers; 
 
 	std::vector<vk::DescriptorSet> perFrameDescriptorSets;
-	// std::vector<vk::DescriptorSet> perMeshDescriptorSets; // TODO: add functionality for this
+	std::vector<vk::DescriptorSet> perMeshDescriptorSets;
 	std::vector<vk::DescriptorSet> perDrawDescriptorSets;
 
 	std::vector<uint32_t> samplersTextureIndex;
@@ -63,7 +65,7 @@ private:
 	void createDescriptorSetLayout();
 	void createDescriptorPool();
 	void allocateDescriptorSets();
-	void createDescriptorSets();
+	void updateDescriptorSets();
 
 public:
 	ShaderInput();
@@ -91,6 +93,11 @@ public:
 		const UniformBufferID& id,
 		void* data,
 		const uint32_t& currentFrame);
+	void updateStorageBuffer(
+		const StorageBufferID& id,
+		void* data,
+		const uint32_t& currentFrame
+	);
 	void setCurrentFrame(const uint32_t& currentFrame);
 	void setTexture(
 		const SamplerID& samplerID,

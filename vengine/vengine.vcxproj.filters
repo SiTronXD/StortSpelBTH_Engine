@@ -113,5 +113,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="vengine_assets\shaders\shader.vert" />
+    <None Include="vengine_assets\shaders\shader.frag" />
   </ItemGroup>
 </Project>

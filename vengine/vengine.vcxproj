@@ -412,6 +412,8 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="vengine_assets\shaders\shader.frag" />
+    <None Include="vengine_assets\shaders\shader.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
