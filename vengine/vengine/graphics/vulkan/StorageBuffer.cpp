@@ -1,10 +1,9 @@
-#include "UniformBuffer.hpp"
-
+#include "StorageBuffer.hpp"
 #include "VulkanDbg.hpp"
 
-void UniformBuffer::createUniformBuffer(
-    Device& device,
-    VmaAllocator& vma,
+void StorageBuffer::createStorageBuffer(
+    Device& device, 
+    VmaAllocator& vma, 
     const size_t& bufferSize,
     const uint32_t& framesInFlight)
 {
@@ -21,30 +20,33 @@ void UniformBuffer::createUniformBuffer(
     bufferMemories.resize(framesInFlight);
     std::vector<VmaAllocationInfo> bufferMemoriesInfo(framesInFlight);
 
-    // Create Uniform Buffers 
-    for (size_t i = 0; i < buffers.size(); i++)
+    // Create storage buffers
+    for (size_t i = 0; i < buffers.size(); ++i)
     {
         Buffer::createBuffer(
-            {
-                .bufferSize = (vk::DeviceSize) bufferSize,
-                .bufferUsageFlags = vk::BufferUsageFlagBits::eUniformBuffer,         // We're going to use this as a Uniform Buffer...
+            { 
+                .bufferSize       = (vk::DeviceSize) bufferSize,
+                .bufferUsageFlags = 
+                    vk::BufferUsageFlagBits::eStorageBuffer, 
                 // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible         // So we can access the Data from the HOST (CPU)
                 //                     | vk::MemoryPropertyFlagBits::eHostCoherent,     // So we don't have to flush the data constantly...
-                .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-                .buffer = &buffers[i],
-                .bufferMemory = &bufferMemories[i],
+                .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+                                    VMA_ALLOCATION_CREATE_MAPPED_BIT,
+                .buffer         = &buffers[i],
+                .bufferMemory   = &bufferMemories[i],
                 .allocationInfo = &bufferMemoriesInfo[i],
-                .vma = &vma
+                .vma            = &vma 
             }
         );
 
-        VulkanDbg::registerVkObjectDbgInfo("UniformBuffer[" + std::to_string(i) + "]", vk::ObjectType::eBuffer, reinterpret_cast<uint64_t>(vk::Buffer::CType(buffers[i])));
+        VulkanDbg::registerVkObjectDbgInfo(
+            "StorageBuffer[" + std::to_string(i) + "]", vk::ObjectType::eBuffer,
+            reinterpret_cast<uint64_t>(vk::Buffer::CType(buffers[i])));
     }
 }
 
-void UniformBuffer::update(
-    void* copyData,
+void StorageBuffer::update(
+    void* copyData, 
     const uint32_t& currentFrame)
 {
 #ifndef VENGINE_NO_PROFILING

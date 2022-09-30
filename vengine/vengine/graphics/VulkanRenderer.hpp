@@ -76,8 +76,9 @@ class VulkanRenderer
     CommandBufferArray commandBuffers;
 
     UniformBufferID viewProjectionUB;
-
     SamplerID sampler0;
+
+    StorageBufferID testStorageBufferID;
 
     ShaderInput shaderInput;
     Pipeline pipeline;
