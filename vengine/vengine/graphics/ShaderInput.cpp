@@ -80,9 +80,9 @@ void ShaderInput::createDescriptorPool()
     poolCreateInfo.setPoolSizeCount(static_cast<uint32_t>(descriptorPoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
     poolCreateInfo.setPPoolSizes(descriptorPoolSizes.data());                        // PoolSizes to create the Descriptor Pool with
     
-    this->descriptorPool = this->device->getVkDevice().createDescriptorPool(
+    this->perFramePool = this->device->getVkDevice().createDescriptorPool(
         poolCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool UniformBuffer ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->descriptorPool)));
+    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool UniformBuffer ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perFramePool)));
 
 
     // Texture Sampler Pool
@@ -95,9 +95,9 @@ void ShaderInput::createDescriptorPool()
     samplerPoolCreateInfo.setPoolSizeCount(uint32_t(1));
     samplerPoolCreateInfo.setPPoolSizes(&samplerPoolSize);
 
-    this->samplerDescriptorPool = this->device->getVkDevice().createDescriptorPool(
+    this->perDrawPool = this->device->getVkDevice().createDescriptorPool(
         samplerPoolCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool ImageSampler ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->samplerDescriptorPool)));
+    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool ImageSampler ", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perDrawPool)));
 }
 
 void ShaderInput::allocateDescriptorSets()
@@ -113,7 +113,7 @@ void ShaderInput::allocateDescriptorSets()
 
     // Descriptor Set Allocation Info
     vk::DescriptorSetAllocateInfo setAllocInfo;
-    setAllocInfo.setDescriptorPool(this->descriptorPool);                                   // Pool to allocate descriptors (Set?) from   
+    setAllocInfo.setDescriptorPool(this->perFramePool);                                   // Pool to allocate descriptors (Set?) from   
     setAllocInfo.setDescriptorSetCount(
         static_cast<uint32_t>(this->perFrameDescriptorSets.size()));
     setAllocInfo.setPSetLayouts(descriptorSetLayouts.data());                               // Layouts to use to allocate sets (1:1 relationship)
@@ -186,7 +186,7 @@ int ShaderInput::addPossibleTexture(
 
     // Descriptor Set Allocation Info
     vk::DescriptorSetAllocateInfo setAllocateInfo;
-    setAllocateInfo.setDescriptorPool(this->samplerDescriptorPool);
+    setAllocateInfo.setDescriptorPool(this->perDrawPool);
     setAllocateInfo.setDescriptorSetCount(uint32_t(1));
     setAllocateInfo.setPSetLayouts(&this->perDrawSetLayout);
 
@@ -360,8 +360,8 @@ void ShaderInput::cleanup()
     this->addedStorageBuffers.clear();
 
     // Descriptor pools
-    this->device->getVkDevice().destroyDescriptorPool(this->descriptorPool);
-    this->device->getVkDevice().destroyDescriptorPool(this->samplerDescriptorPool);
+    this->device->getVkDevice().destroyDescriptorPool(this->perFramePool);
+    this->device->getVkDevice().destroyDescriptorPool(this->perDrawPool);
 
     // Descriptor set layouts
     this->device->getVkDevice().destroyDescriptorSetLayout(this->perFrameSetLayout);

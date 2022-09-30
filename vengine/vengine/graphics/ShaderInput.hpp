@@ -37,8 +37,8 @@ private:
 	uint32_t currentFrame;
 	uint32_t framesInFlight;
 
-	vk::DescriptorPool descriptorPool{};
-	vk::DescriptorPool samplerDescriptorPool{};
+	vk::DescriptorPool perFramePool{};
+	vk::DescriptorPool perDrawPool{};
 
 	vk::DescriptorSetLayout perFrameSetLayout{};
 	vk::DescriptorSetLayout perDrawSetLayout{};
