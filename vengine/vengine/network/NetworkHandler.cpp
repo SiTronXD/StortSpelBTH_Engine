@@ -2,14 +2,14 @@
 #include "Timer.h"
 #include <iostream>
 
-void serverMain(bool& shutDownServer)
+void serverMain(bool& shutDownServer, ServerGame* game)
 {
 	Timer  serverTime;
-	Server s;
+    Server server(game);
 	bool   serverIsDone = false;
 
 	while (!shutDownServer && !serverIsDone) {
-		serverIsDone = s.update(serverTime.getDT());
+		serverIsDone = server.update(serverTime.getDT());
 		serverTime.updateDeltaTime();
 	}
 	return;
@@ -45,7 +45,7 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 
 void NetworkHandler::createServer()
 {
-	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer));
+	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), nullptr);
 }
 
 void NetworkHandler::deleteServer()

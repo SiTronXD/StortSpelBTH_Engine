@@ -14,27 +14,23 @@ struct ServerEntity {
 };
 
 class ServerGame {
-private:
+protected:
 	//GameDATA
 	std::vector<ServerEntity> serverEntities;
 	std::vector<ServerEntity> players;
-
 	int seed;
 
-	//DEBUG
-	bool Went_in = false;
 public:
 	ServerGame();
-	void update(float dt);
-	virtual ~ServerGame();
+    virtual ~ServerGame();
+	virtual void update(float dt) = 0;
 	void createPlayer();
 	std::vector<ServerEntity>& getServerEntities();
 	std::vector<ServerEntity>& getServerPlayers();
 	void GivePacketInfo(std::vector<sf::Packet> &serverToClient);
 	const int getSeed();
-private:
-	
-	
+
+protected:
 	std::vector<sf::Packet> *serverToClient;
 
 	template<typename I, typename F>

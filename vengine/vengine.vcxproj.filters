@@ -144,9 +144,6 @@
     <ClInclude Include="vengine\network\Server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vengine\network\ServerGame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vengine\network\Timer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -184,6 +181,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\graphics\vulkan\VmaUsage.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\network\ServerGame.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\network\ServerGames\DefaultServerGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -290,9 +293,6 @@
     <ClCompile Include="vengine\network\Server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vengine\network\ServerGame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vengine\network\Timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -324,6 +324,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\graphics\vulkan\VmaUsage.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\network\ServerGame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\network\ServerGames\DefaultServerGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -345,6 +345,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\network\NetworkHandler.h" />
     <ClInclude Include="vengine\network\Server.h" />
     <ClInclude Include="vengine\network\ServerGame.h" />
+    <ClInclude Include="vengine\network\ServerGames\DefaultServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
     <ClInclude Include="vengine\ResourceManagement\Configurator.hpp" />
     <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp" />
@@ -396,6 +397,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="vengine\network\NetworkHandler.cpp" />
     <ClCompile Include="vengine\network\Server.cpp" />
     <ClCompile Include="vengine\network\ServerGame.cpp" />
+    <ClCompile Include="vengine\network\ServerGames\DefaultServerGame.cpp" />
     <ClCompile Include="vengine\network\Timer.cpp" />
     <ClCompile Include="vengine\ResourceManagement\Configurator.cpp" />
     <ClCompile Include="vengine\ResourceManagement\loaders\MeshLoader.cpp" />
