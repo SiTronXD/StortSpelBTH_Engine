@@ -176,7 +176,10 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
         this->animSampler = this->animShaderInput.addSampler();
         this->animShaderInput.endForInput();
         this->animPipeline.createPipeline(
-            this->device, this->animShaderInput, this->renderPassBase
+            this->device, 
+            this->animShaderInput, 
+            this->renderPassBase,
+            true
         );
 
         this->createSynchronisation();        

@@ -36,7 +36,8 @@ Pipeline::~Pipeline()
 void Pipeline::createPipeline(
     Device& device,
     ShaderInput& shaderInput,
-    vk::RenderPass& renderPass)
+    vk::RenderPass& renderPass,
+    bool hasAnimations)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -47,6 +48,11 @@ void Pipeline::createPipeline(
     // read in SPIR-V code of shaders
     auto vertexShaderCode = vengine_helper::readShaderFile("shader.vert.spv");
     auto fragShaderCode = vengine_helper::readShaderFile("shader.frag.spv");
+
+    if (hasAnimations)
+    {
+        vertexShaderCode = vengine_helper::readShaderFile("shaderAnim.vert.spv");
+    }
 
     // Build Shader Modules to link to Graphics Pipeline
     // Create Shader Modules
@@ -85,27 +91,49 @@ void Pipeline::createPipeline(
     bindingDescription.setStride(sizeof(Vertex));    // Size of a single Vertex Object
     bindingDescription.setInputRate(vk::VertexInputRate::eVertex); // How to move between data after each vertex...
 
-    // How the Data  for an attribute is definied within a vertex    
-    std::array<vk::VertexInputAttributeDescription, 3> attributeDescriptions{};
+    if (hasAnimations)
+        bindingDescription.setStride(sizeof(AnimVertex));
 
-    // Position Attribute: 
+    // How the Data  for an attribute is definied within a vertex    
+    std::vector<vk::VertexInputAttributeDescription> attributeDescriptions{};
+
+    // Positions
+    attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
     attributeDescriptions[0].setBinding(uint32_t(0));                           // which binding the data is at (should be same as above)
     attributeDescriptions[0].setLocation(uint32_t(0));                           // Which Location in shader where data will be read from
     attributeDescriptions[0].setFormat(vk::Format::eR32G32B32Sfloat);  // Format the data will take (also helps define size of data)
     attributeDescriptions[0].setOffset(offsetof(Vertex, pos));       // Sets the offset of our struct member Pos (where this attribute is defined for a single vertex...)
 
-    // Color Attribute.
+    // Colors
+    attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
     attributeDescriptions[1].setBinding(uint32_t(0));
     attributeDescriptions[1].setLocation(uint32_t(1));
     attributeDescriptions[1].setFormat(vk::Format::eR32G32B32Sfloat);
     attributeDescriptions[1].setOffset(offsetof(Vertex, col));
 
-    // Texture Coorinate Attribute (uv): 
+    // Texture coordinates
+    attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
     attributeDescriptions[2].setBinding(uint32_t(0));
     attributeDescriptions[2].setLocation(uint32_t(2));
     attributeDescriptions[2].setFormat(vk::Format::eR32G32Sfloat);      // Note; only RG, since it's a 2D image we don't use the depth and thus we only need RG and not RGB
     attributeDescriptions[2].setOffset(offsetof(Vertex, tex));
 
+    if (hasAnimations)
+    {
+        // Bone weights
+        attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
+        attributeDescriptions[3].setBinding(uint32_t(0));
+        attributeDescriptions[3].setLocation(uint32_t(3));
+        attributeDescriptions[3].setFormat(vk::Format::eR32G32B32A32Sfloat);
+        attributeDescriptions[3].setOffset(offsetof(AnimVertex, weights));
+
+        // Bone indices
+        attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
+        attributeDescriptions[4].setBinding(uint32_t(0));
+        attributeDescriptions[4].setLocation(uint32_t(4));
+        attributeDescriptions[4].setFormat(vk::Format::eR32G32B32A32Uint);
+        attributeDescriptions[4].setOffset(offsetof(AnimVertex, bonesIndex));
+    }
 
     // -- VERTEX INPUT --
     vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;

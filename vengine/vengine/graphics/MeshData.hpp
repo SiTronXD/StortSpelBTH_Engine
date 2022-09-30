@@ -20,6 +20,10 @@ struct Vertex
 
 struct AnimVertex 
 {
+    glm::vec3 pos;  /// Vertex Position (x,y,z)
+    glm::vec3 col;  /// Vertex Color    (r,g,b)
+    //glm::vec3 nor;      /// texture normal (x,y,z)      //TODO: Add?
+    glm::vec2 tex;  /// texture coords  (u,v)
     float weights[4] { -1.f, -1.f, -1.f, -1.f };
     unsigned int bonesIndex[4] {};
 };
@@ -48,8 +52,8 @@ struct SubmeshData{
 
 struct MeshData{
     std::vector<SubmeshData> submeshes;
-    std::vector<Vertex>  vertices;
+    std::vector<Vertex> vertices;
+    std::vector<AnimVertex> aniVertices;
     std::vector<uint32_t>    indicies;
-    std::vector<AnimVertex>  aniVertices;
     std::vector<Bone>        bones;
 };

@@ -90,6 +90,21 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
 
         data.bones.insert(data.bones.end(), mesh.bones.begin(), mesh.bones.end());
     }
+
+    // Move pos, col and tex to aniVertices
+    if (data.aniVertices.size() > 0)
+    {
+        for (size_t i = 0; i < data.aniVertices.size(); ++i)
+        {
+            data.aniVertices[i].pos = data.vertices[i].pos;
+            data.aniVertices[i].col = data.vertices[i].col;
+            data.aniVertices[i].tex = data.vertices[i].tex;
+        }
+
+        data.vertices.clear();
+    }
+
+
     return data;
 }
 

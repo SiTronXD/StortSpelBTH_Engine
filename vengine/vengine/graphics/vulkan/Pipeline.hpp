@@ -21,7 +21,8 @@ public:
 	void createPipeline(
 		Device& device,
 		ShaderInput& shaderInput,
-		vk::RenderPass& renderPass);
+		vk::RenderPass& renderPass,
+		bool hasAnimations = false);
 
 	void cleanup();
 

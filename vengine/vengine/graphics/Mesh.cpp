@@ -36,7 +36,12 @@ void Mesh::createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStr
     VmaAllocationInfo allocInfo_staging;
 
     /// Get size of buffers needed for Vertices
-    vk::DeviceSize bufferSize  =sizeof(Vertex) * meshData.vertices.size();
+    bool hasAnimations = meshData.aniVertices.size() > 0;
+
+    vk::DeviceSize bufferSize =
+        !hasAnimations ? 
+        sizeof(meshData.vertices[0]) * meshData.vertices.size() : 
+        sizeof(meshData.aniVertices[0]) * meshData.aniVertices.size();
 
     Buffer::createBuffer(
         {
@@ -57,7 +62,23 @@ void Mesh::createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStr
         throw std::runtime_error("Failed to allocate Mesh Staging Vertex Buffer Using VMA!");
     };
 
-    memcpy(data, meshData.vertices.data(),sizeof(Vertex) * meshData.vertices.size());
+    if (!hasAnimations)
+    {
+        memcpy(
+            data,
+            meshData.vertices.data(),
+            (size_t) bufferSize
+        );
+    }
+    else
+    {
+        memcpy(
+            data,
+            meshData.aniVertices.data(), 
+            (size_t) bufferSize
+        );
+    }
+    
     vmaUnmapMemory(*importStructs.vma, stagingBufferMemory); 
 
     VmaAllocationInfo allocInfo_deviceOnly;
