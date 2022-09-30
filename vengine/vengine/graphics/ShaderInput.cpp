@@ -30,9 +30,9 @@ void ShaderInput::createDescriptorSetLayout()
     layoutCreateInfo.setPBindings(layoutBindings.data());                            // Array containing the binding infos
 
     // Create Descriptor Set Layout
-    this->descriptorSetLayout = this->device->getVkDevice().createDescriptorSetLayout(layoutCreateInfo);
+    this->perFrameSetLayout = this->device->getVkDevice().createDescriptorSetLayout(layoutCreateInfo);
 
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout ViewProjection", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->descriptorSetLayout)));
+    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout ViewProjection", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perFrameSetLayout)));
 
     
     // Layout for textures
@@ -53,8 +53,8 @@ void ShaderInput::createDescriptorSetLayout()
     textureLayoutCreateInfo.setPBindings(samplerLayoutBindings.data());
 
     // Create sampler descriptor set layout
-    this->samplerDescriptorSetLayout = this->device->getVkDevice().createDescriptorSetLayout(textureLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout SamplerTexture", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->samplerDescriptorSetLayout)));
+    this->perDrawSetLayout = this->device->getVkDevice().createDescriptorSetLayout(textureLayoutCreateInfo);
+    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout SamplerTexture", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perDrawSetLayout)));
 }
 
 void ShaderInput::createDescriptorPool()
@@ -108,7 +108,7 @@ void ShaderInput::allocateDescriptorSets()
     // Copy our DescriptorSetLayout so we have one per Image (one per UniformBuffer)
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts(
         this->perFrameDescriptorSets.size(),
-        this->descriptorSetLayout
+        this->perFrameSetLayout
     );
 
     // Descriptor Set Allocation Info
@@ -188,7 +188,7 @@ int ShaderInput::addPossibleTexture(
     vk::DescriptorSetAllocateInfo setAllocateInfo;
     setAllocateInfo.setDescriptorPool(this->samplerDescriptorPool);
     setAllocateInfo.setDescriptorSetCount(uint32_t(1));
-    setAllocateInfo.setPSetLayouts(&this->samplerDescriptorSetLayout);
+    setAllocateInfo.setPSetLayouts(&this->perDrawSetLayout);
 
     // Allocate Descriptor Sets
     vk::DescriptorSet descriptorSet =
@@ -233,7 +233,8 @@ ShaderInput::ShaderInput()
     framesInFlight(0),
     currentFrame(0),
     pushConstantSize(0),
-    pushConstantShaderStage(vk::ShaderStageFlagBits::eAll)
+    pushConstantShaderStage(vk::ShaderStageFlagBits::eAll), 
+    usePushConstant(false)
 { }
 
 ShaderInput::~ShaderInput()
@@ -297,6 +298,7 @@ void ShaderInput::addPushConstant(
 
     this->pushConstantSize = pushConstantSize;
     this->pushConstantShaderStage = pushConstantShaderStage;
+    this->usePushConstant = true;
 
     // Define the Push Constants values
     this->pushConstantRange.setStageFlags(this->pushConstantShaderStage);    // Push Constant should be available in the Vertex Shader!
@@ -324,15 +326,20 @@ void ShaderInput::endForInput()
     this->allocateDescriptorSets();
     this->createDescriptorSets();
 
-    // Descriptors to bind when rendering
+    // Descriptor set layouts to bind for pipeline layout
+    this->bindDescriptorSetLayouts =
+    {
+        this->perFrameSetLayout,
+        this->perDrawSetLayout
+    };
+
+    // Descriptor sets to bind when rendering
     this->bindDescriptorSets.resize(
         (int) DescriptorFrequency::NUM_FREQUENCY_TYPES);
 
     this->pipelineLayout.createPipelineLayout(
         *this->device,
-        this->descriptorSetLayout,
-        this->samplerDescriptorSetLayout,
-        this->pushConstantRange
+        *this
     );
 }
 
@@ -357,8 +364,8 @@ void ShaderInput::cleanup()
     this->device->getVkDevice().destroyDescriptorPool(this->samplerDescriptorPool);
 
     // Descriptor set layouts
-    this->device->getVkDevice().destroyDescriptorSetLayout(this->descriptorSetLayout);
-    this->device->getVkDevice().destroyDescriptorSetLayout(this->samplerDescriptorSetLayout);
+    this->device->getVkDevice().destroyDescriptorSetLayout(this->perFrameSetLayout);
+    this->device->getVkDevice().destroyDescriptorSetLayout(this->perDrawSetLayout);
 
     // Pipeline layout
     this->pipelineLayout.cleanup();

@@ -2,6 +2,7 @@
 
 #include "Device.hpp"
 #include "VulkanDbg.hpp"
+#include "../ShaderInput.hpp"
 
 PipelineLayout::PipelineLayout()
     : device(nullptr)
@@ -14,9 +15,7 @@ PipelineLayout::~PipelineLayout()
 
 void PipelineLayout::createPipelineLayout(
     Device& device,
-    vk::DescriptorSetLayout& descriptorSetLayout,
-    vk::DescriptorSetLayout& samplerDescriptorSetLayout,
-    vk::PushConstantRange& pushConstantRange)
+    ShaderInput& shaderInput)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -24,23 +23,22 @@ void PipelineLayout::createPipelineLayout(
 
     this->device = &device;
 
-    // We have two Descriptor Set Layouts, 
-    // One for View and Projection matrices Uniform Buffer, and the other one for the texture sampler!
-    std::array<vk::DescriptorSetLayout, 2> descriptorSetLayouts
-    {
-        descriptorSetLayout,
-        samplerDescriptorSetLayout
-    };
-
     vk::PipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+
+    // Descriptor set layouts
     pipelineLayoutCreateInfo.setSetLayoutCount(
-        static_cast<uint32_t>(descriptorSetLayouts.size()));
+        uint32_t(shaderInput.getBindDescriptorSetLayouts().size()));
     pipelineLayoutCreateInfo.setPSetLayouts(
-        descriptorSetLayouts.data());
-    pipelineLayoutCreateInfo.setPushConstantRangeCount(
-        uint32_t(1));                    
-    pipelineLayoutCreateInfo.setPPushConstantRanges(
-        &pushConstantRange);
+        shaderInput.getBindDescriptorSetLayouts().data());
+
+    // Push constant range
+    if (shaderInput.getIsUsingPushConstant())
+    {
+        pipelineLayoutCreateInfo.setPushConstantRangeCount(
+            uint32_t(1));
+        pipelineLayoutCreateInfo.setPPushConstantRanges(
+            &shaderInput.getPushConstantRange());
+    }
 
     this->pipelineLayout = this->device->getVkDevice().createPipelineLayout(pipelineLayoutCreateInfo);
     VulkanDbg::registerVkObjectDbgInfo("VkPipelineLayout GraphicsPipelineLayout", vk::ObjectType::ePipelineLayout, reinterpret_cast<uint64_t>(vk::PipelineLayout::CType(this->pipelineLayout)));

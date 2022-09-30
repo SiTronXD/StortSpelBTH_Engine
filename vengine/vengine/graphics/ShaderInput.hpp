@@ -40,8 +40,8 @@ private:
 	vk::DescriptorPool descriptorPool{};
 	vk::DescriptorPool samplerDescriptorPool{};
 
-	vk::DescriptorSetLayout descriptorSetLayout{};
-	vk::DescriptorSetLayout samplerDescriptorSetLayout{};
+	vk::DescriptorSetLayout perFrameSetLayout{};
+	vk::DescriptorSetLayout perDrawSetLayout{};
 	vk::PushConstantRange pushConstantRange{};
 
 	std::vector<UniformBuffer> addedUniformBuffers;
@@ -53,10 +53,12 @@ private:
 
 	std::vector<uint32_t> samplersTextureIndex;
 
+	std::vector<vk::DescriptorSetLayout> bindDescriptorSetLayouts;
 	std::vector<vk::DescriptorSet> bindDescriptorSets;
 
 	uint32_t pushConstantSize;
 	vk::ShaderStageFlagBits pushConstantShaderStage;
+	bool usePushConstant;
 
 	void createDescriptorSetLayout();
 	void createDescriptorPool();
@@ -100,8 +102,14 @@ public:
 
 	inline const vk::ShaderStageFlagBits& getPushConstantShaderStage() const { return this->pushConstantShaderStage; }
 	inline const uint32_t& getPushConstantSize() const { return this->pushConstantSize; }
+	inline const std::vector<vk::DescriptorSetLayout>& getBindDescriptorSetLayouts() const
+		{ return this->bindDescriptorSetLayouts; }
 	inline const std::vector<vk::DescriptorSet>& getBindDescriptorSets() const 
 		{ return this->bindDescriptorSets; }
 	inline const PipelineLayout& getPipelineLayout() const 
 		{ return this->pipelineLayout; }
+	inline const vk::PushConstantRange& getPushConstantRange() const
+		{ return this->pushConstantRange; }
+	inline const bool& getIsUsingPushConstant() const 
+		{ return this->usePushConstant; }
 };
