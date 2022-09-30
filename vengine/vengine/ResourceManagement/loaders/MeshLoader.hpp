@@ -22,7 +22,7 @@ private:
 
     std::vector<MeshData> getMeshesFromNodeTree(const aiScene * scene, const std::vector<uint32_t>& matToTex);
     MeshData loadMesh(aiMesh* mesh, uint32_t& lastVertice, uint32_t& lastIndex, std::vector<uint32_t> matToTex);
-    bool loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData, uint32_t lastVertex);
+    bool loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData);
 
     aiNodeAnim* findAnimationNode(aiNodeAnim** nodeAnims, unsigned int numNodes, std::string_view name);
     aiNode* findNode(aiNode* rootNode, std::string_view boneName);
