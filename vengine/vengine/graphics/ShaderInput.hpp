@@ -60,7 +60,7 @@ private:
 
 	uint32_t pushConstantSize;
 	vk::ShaderStageFlagBits pushConstantShaderStage;
-	bool usePushConstant;
+    bool usePushConstant;
 
 	void createDescriptorSetLayout();
 	void createDescriptorPool();

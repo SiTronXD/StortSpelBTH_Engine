@@ -394,6 +394,11 @@ void VulkanRenderer::draw(Scene* scene)
         (void*)&this->uboViewProjection,
         this->currentFrame
     );
+    this->animShaderInput.updateUniformBuffer(
+        this->viewProjectionUB,
+        (void*)&this->uboViewProjection,
+        this->currentFrame
+    );
 
     glm::mat4 testMats[2];
     testMats[0] = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 1.0f, 1.0f));
@@ -512,6 +517,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
         else
         {
             meshComponent.meshID = this->resourceManager->addMesh("Amogus/source/1.fbx");
+            meshComponent.hasAnimations = true;
         }
     });
 
@@ -523,6 +529,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
             i,
             this->textureSampler
         );
+        this->animShaderInput.addPossibleTexture(i, this->textureSampler);
     }
 }
 
@@ -934,51 +941,110 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     this->pipeline
                 );
                 
-                // For every Mesh we have
+                // For every non-animating mesh we have
                 auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
                 tView.each([&](const Transform& transform, const MeshComponent& meshComponent)
-                {
-                    auto& currModel = this->resourceManager->getMesh(meshComponent.meshID);                    
-
-                    const glm::mat4& modelMatrix = transform.matrix;
-
-                    // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                    currentCommandBuffer.pushConstant(
-                        this->shaderInput,
-                        (void*) &modelMatrix
-                    );
-
-                    // Bind vertex buffer
-                    currentCommandBuffer.bindVertexBuffers2(currModel.getVertexBuffer());
-
-                    // Bind index buffer
-                    currentCommandBuffer.bindIndexBuffer(currModel.getIndexBuffer());
-
-                    const std::vector<SubmeshData>& submeshes = 
-                        currModel.getSubmeshData();
-                    for(size_t i = 0; i < submeshes.size(); ++i)
                     {
-                        const SubmeshData& currentSubmesh = submeshes[i];
+                        if (!meshComponent.hasAnimations)
+                        {
+                            auto& currModel =
+                                this->resourceManager->getMesh(meshComponent.meshID);
 
-                        // Update for descriptors
-                        this->shaderInput.setCurrentFrame(this->currentFrame);
-                        this->shaderInput.setTexture(
-                            this->sampler, 
-                            currentSubmesh.materialIndex
-                        );
-                        currentCommandBuffer.bindShaderInput(
-                            this->shaderInput
-                        );
+                            const glm::mat4& modelMatrix = transform.matrix;
 
-                        // Draw
-                        currentCommandBuffer.drawIndexed(
-                            currentSubmesh.numIndicies,
-                            1,
-                            currentSubmesh.startIndex
-                        );
+                            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                            currentCommandBuffer.pushConstant(
+                                this->shaderInput, (void*)&modelMatrix
+                            );
+
+                            // Bind vertex buffer
+                            currentCommandBuffer.bindVertexBuffers2(
+                                currModel.getVertexBuffer()
+                            );
+
+                            // Bind index buffer
+                            currentCommandBuffer.bindIndexBuffer(
+                                currModel.getIndexBuffer()
+                            );
+
+                            const std::vector<SubmeshData>& submeshes =
+                                currModel.getSubmeshData();
+                            for (size_t i = 0; i < submeshes.size(); ++i)
+                            {
+                                const SubmeshData& currentSubmesh = submeshes[i];
+
+                                // Update for descriptors
+                                this->shaderInput.setCurrentFrame(this->currentFrame);
+                                this->shaderInput.setTexture(
+                                    this->sampler, currentSubmesh.materialIndex
+                                );
+                                currentCommandBuffer.bindShaderInput(this->shaderInput);
+
+                                // Draw
+                                currentCommandBuffer.drawIndexed(
+                                    currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
+                                );
+                            }
+                        }
                     }
+                );
 
-                });
+                // Bind Pipeline to be used in render pass
+                currentCommandBuffer.bindGraphicsPipeline(this->animPipeline);
+
+                // For every animating mesh we have
+                tView.each(
+                    [&](const Transform& transform,
+                        const MeshComponent& meshComponent)
+                    {
+                        if (meshComponent.hasAnimations)
+                        {
+                            auto& currModel =
+                                this->resourceManager->getMesh(meshComponent.meshID);
+
+                            const glm::mat4& modelMatrix = transform.matrix;
+
+                            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                            currentCommandBuffer.pushConstant(
+                                this->animShaderInput, (void*)&modelMatrix
+                            );
+
+                            // Bind vertex buffer
+                            currentCommandBuffer.bindVertexBuffers2(
+                                currModel.getVertexBuffer()
+                            );
+
+                            // Bind index buffer
+                            currentCommandBuffer.bindIndexBuffer(
+                                currModel.getIndexBuffer()
+                            );
+
+                            const std::vector<SubmeshData>& submeshes =
+                                currModel.getSubmeshData();
+                            for (size_t i = 0; i < submeshes.size(); ++i)
+                            {
+                                const SubmeshData& currentSubmesh = submeshes[i];
+
+                                // Update for descriptors
+                                this->animShaderInput.setCurrentFrame(
+                                    this->currentFrame
+                                );
+                                this->animShaderInput.setTexture(
+                                    this->animSampler, 
+                                    currentSubmesh.materialIndex
+                                );
+                                currentCommandBuffer.bindShaderInput(
+                                    this->animShaderInput
+                                );
+
+                                // Draw
+                                currentCommandBuffer.drawIndexed(
+                                    currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
+                                );
+                            }
+                        }
+                    }
+                );
 
             // End Render Pass!
             vk::SubpassEndInfo subpassEndInfo;
