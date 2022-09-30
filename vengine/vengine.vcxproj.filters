@@ -165,6 +165,15 @@
     <ClInclude Include="vengine\graphics\vulkan\CommandBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vengine\audio\AudioHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\components\AudioSource.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\components\AudioListener.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -313,6 +322,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\graphics\vulkan\CommandBuffer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\audio\AudioHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\ResourceManagement\loaders\MeshLoader.cpp">
