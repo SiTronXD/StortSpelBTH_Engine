@@ -75,13 +75,19 @@ class VulkanRenderer
     vk::CommandPool commandPool{};
     CommandBufferArray commandBuffers;
 
+    // Default pipeline
     UniformBufferID viewProjectionUB;
-    SamplerID sampler0;
-
-    StorageBufferID testStorageBufferID;
-
+    StorageBufferID testSB;
+    SamplerID sampler;
     ShaderInput shaderInput;
     Pipeline pipeline;
+
+    // Animations pipeline
+    UniformBufferID animViewProjectionUB;
+    StorageBufferID animTransformsSB;
+    SamplerID animSampler;
+    ShaderInput animShaderInput;
+    Pipeline animPipeline;
 
     // - Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};

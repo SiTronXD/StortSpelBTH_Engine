@@ -129,10 +129,12 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
             this->commandPool, 
             MAX_FRAMES_IN_FLIGHT
         );
-        
+
+        this->createTextureSampler();
+
         // Engine "specifics"
 
-        // Shader inputs
+        // Default shader inputs
         this->shaderInput.beginForInput(
             this->physicalDevice,
             this->device,
@@ -144,21 +146,39 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
             sizeof(ModelMatrix),
             vk::ShaderStageFlagBits::eVertex
         );
-        this->createTextureSampler();
-        this->sampler0 = 
-            this->shaderInput.addSampler();
         this->viewProjectionUB = 
             this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
-        this->testStorageBufferID = 
+        this->testSB =
             this->shaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
+        this->sampler = this->shaderInput.addSampler();
         this->shaderInput.endForInput();
-
         this->pipeline.createPipeline(
             this->device, 
             this->shaderInput,
             this->renderPassBase
         );
-        
+
+        // Animation shader inputs
+        this->animShaderInput.beginForInput(
+            this->physicalDevice,
+            this->device,
+            this->vma,
+            *this->resourceManager,
+            MAX_FRAMES_IN_FLIGHT
+        );
+        this->animShaderInput.addPushConstant(
+            sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+        );
+        this->animViewProjectionUB =
+            this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+        this->animTransformsSB =
+            this->animShaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
+        this->animSampler = this->animShaderInput.addSampler();
+        this->animShaderInput.endForInput();
+        this->animPipeline.createPipeline(
+            this->device, this->animShaderInput, this->renderPassBase
+        );
+
         this->createSynchronisation();        
 
         this->updateUboProjection(); //TODO: Allow for more cameras! 
@@ -250,8 +270,10 @@ void VulkanRenderer::cleanup()
 
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
-    this->pipeline.cleanup();
+    this->animPipeline.cleanup();
+    this->animShaderInput.cleanup();
 
+    this->pipeline.cleanup();
     this->shaderInput.cleanup();
 
     this->getVkDevice().destroyRenderPass(this->renderPassBase);
@@ -377,7 +399,12 @@ void VulkanRenderer::draw(Scene* scene)
     testMats[0] = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 1.0f, 1.0f));
     testMats[1] = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     this->shaderInput.updateStorageBuffer(
-        this->testStorageBufferID,
+        this->testSB, 
+        (void*)&testMats[0], 
+        this->currentFrame
+    );
+    this->animShaderInput.updateStorageBuffer(
+        this->animTransformsSB,
         (void*) &testMats[0],
         this->currentFrame
     );
@@ -475,10 +502,17 @@ void VulkanRenderer::draw(Scene* scene)
 
 void VulkanRenderer::initMeshes(Scene* scene)
 {
-    auto tView = scene->getSceneReg().view<MeshComponent>();
-    tView.each([this](MeshComponent& meshComponent)
+    auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
+    tView.each([&](Transform& transform, MeshComponent& meshComponent)
     {
-        meshComponent.meshID = this->resourceManager->addMesh("ghost.obj");
+        if (transform.scale.x > 0.9f)
+        {
+            meshComponent.meshID = this->resourceManager->addMesh("ghost.obj");
+        }
+        else
+        {
+            meshComponent.meshID = this->resourceManager->addMesh("Amogus/source/1.fbx");
+        }
     });
 
     // Add all textures for possible use in the shader
@@ -926,17 +960,10 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     {
                         const SubmeshData& currentSubmesh = submeshes[i];
 
-                        // We're going to bind Two descriptorSets! put them in array...
-                        /*std::array<vk::DescriptorSet, 2> descriptorSetGroup
-                        {
-                            this->shaderInput.getDescriptorSet(this->currentFrame),                // Use the descriptor set for the Image                            
-                            this->shaderInput.getSamplerDescriptorSet(modelPart.second.textureID)   // Use the Texture which the current mesh has
-                        };*/
-
                         // Update for descriptors
                         this->shaderInput.setCurrentFrame(this->currentFrame);
                         this->shaderInput.setTexture(
-                            this->sampler0, 
+                            this->sampler, 
                             currentSubmesh.materialIndex
                         );
                         currentCommandBuffer.bindShaderInput(

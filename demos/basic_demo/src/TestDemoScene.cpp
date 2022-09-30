@@ -37,7 +37,16 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity);
 	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
 
- 
+	// Test entity 2
+	int testEntity2 = this->createEntity();
+
+	Transform& transform2 = this->getComponent<Transform>(testEntity2);
+	transform2.position = glm::vec3(-7.f, 0.f, 30.f);
+	transform2.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+	transform2.scale = glm::vec3(0.03f, 0.032f, 0.03f);
+
+	this->setComponent<MeshComponent>(testEntity2);
+
 	// // Create entity2 (already has transform)
 	// this->testEntity2 = this->createEntity();
 
