@@ -375,7 +375,7 @@ void VulkanRenderer::draw(Scene* scene)
 
     glm::mat4 testMats[2];
     testMats[0] = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 1.0f, 1.0f));
-    testMats[1] = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 0.2f, 1.0f));
+    testMats[1] = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
     this->shaderInput.updateStorageBuffer(
         this->testStorageBufferID,
         (void*) &testMats[0],
