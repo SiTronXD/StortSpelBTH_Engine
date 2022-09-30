@@ -16,7 +16,7 @@ using SamplerID = uint32_t;
 enum class DescriptorFrequency
 {
 	PER_FRAME,
-	PER_MESH, // TODO: add functionality for this
+	PER_MESH,
 	PER_DRAW_CALL,
 
 	NUM_FREQUENCY_TYPES
