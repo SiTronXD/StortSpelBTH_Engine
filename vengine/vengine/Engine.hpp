@@ -3,6 +3,7 @@
 #include "audio/AudioHandler.h"
 #include "network/NetworkHandler.h"
 #include "application/SceneHandler.hpp"
+#include "ResourceManagement/ResourceManager.hpp"
 
 class Engine
 {
@@ -14,8 +15,10 @@ public:
 
 	void run(Scene* startScene);
 
-	SceneHandler sceneHandler;
+	SceneHandler    sceneHandler;
+    ResourceManager resourceMan;
 	NetworkHandler networkHandler;
 	AudioHandler audioHandler;
 };
+
 

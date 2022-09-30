@@ -85,5 +85,5 @@ public:
         const uint32_t& height);
 
     inline vk::Buffer& getBuffer(const uint32_t& index) { return this->buffers[index]; }
-    inline const size_t& getNumBuffers() { return this->buffers.size(); }
+    inline size_t getNumBuffers() const { return this->buffers.size(); }    
 };

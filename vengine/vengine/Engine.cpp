@@ -14,7 +14,7 @@
 #include "application/Input.hpp"
 #include "application/Time.hpp"
 #include "graphics/VulkanRenderer.hpp"
-#include "loaders/Configurator.hpp"
+#include "ResourceManagement/Configurator.hpp"
 
 #include <chrono>
 #include <functional>
@@ -51,7 +51,7 @@ void Engine::run(Scene* startScene)
     
     // Creating Vulkan Renderer Instance
     auto renderer = VulkanRenderer();
-    if (renderer.init(&window, "Some Program") == 1)
+    if (renderer.init(&window, "Some Program", &this->resourceMan) == 1)
     {
         std::cout << "EXIT_FAILURE" << std::endl;
     }

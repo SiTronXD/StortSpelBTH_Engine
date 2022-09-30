@@ -3,6 +3,9 @@
 #include "glm/vec3.hpp"
 #include "SFML/Network.hpp"
 #include "NetworkEnumAndDefines.h"
+#include <stdlib.h>
+#include <time.h>
+#include <stdio.h>
 
 struct ServerEntity {
 	glm::vec3 position;
@@ -11,6 +14,15 @@ struct ServerEntity {
 };
 
 class ServerGame {
+private:
+	//GameDATA
+	std::vector<ServerEntity> serverEntities;
+	std::vector<ServerEntity> players;
+
+	int seed;
+
+	//DEBUG
+	bool Went_in = false;
 public:
 	ServerGame();
 	void update(float dt);
@@ -19,11 +31,10 @@ public:
 	std::vector<ServerEntity>& getServerEntities();
 	std::vector<ServerEntity>& getServerPlayers();
 	void GivePacketInfo(std::vector<sf::Packet> &serverToClient);
-	
+	const int getSeed();
 private:
 	
-	std::vector<ServerEntity> serverEntities;
-	std::vector<ServerEntity> players;
+	
 	std::vector<sf::Packet> *serverToClient;
 
 	template<typename I, typename F>
@@ -42,6 +53,5 @@ private:
 		}
 	}
 
-	//DEBUG
-	bool Went_in = false;
+
 };

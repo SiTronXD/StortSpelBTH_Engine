@@ -6,7 +6,7 @@
 #include <vector>
 #include <array>
 
-#include "../../loaders/Configurator.hpp"
+#include "../../ResourceManagement/Configurator.hpp"
 
 /// Defines the Validation layers to be used (??)
 //constexpr std::vector<const char*>   validationLayers = {

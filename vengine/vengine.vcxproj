@@ -194,7 +194,7 @@
     </Link>
     <Lib>
       <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>TracyProfiler.lib;assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;sfml-network-d.lib;sfml-system-d.lib;sfml-audio-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;sfml-network-d.lib;sfml-system-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
       <Command>
@@ -300,6 +300,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\graphics\vulkan\CommandBufferArray.hpp" />
     <ClInclude Include="imgui\backends\imgui_impl_sdl.h" />
     <ClInclude Include="imgui\backends\imgui_impl_vulkan.h" />
     <ClInclude Include="imgui\imconfig.h" />
@@ -311,6 +312,8 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\audio\AudioHandler.h" />
     <ClInclude Include="vengine\components\AudioListener.hpp" />
     <ClInclude Include="vengine\components\AudioSource.hpp" />
+    <ClInclude Include="vengine\graphics\MeshData.hpp" />
+    <ClInclude Include="vengine\graphics\ShaderInput.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\CommandBuffer.hpp" />
     <ClInclude Include="vengine\graphics\Buffer.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\PipelineLayout.hpp" />
@@ -330,7 +333,6 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\dev\tracyHelper.hpp" />
     <ClInclude Include="vengine\Engine.hpp" />
     <ClInclude Include="vengine\graphics\Mesh.hpp" />
-    <ClInclude Include="vengine\graphics\Model.hpp" />
     <ClInclude Include="vengine\graphics\TempPCH.hpp" />
     <ClInclude Include="vengine\graphics\Texture.hpp" />
     <ClInclude Include="vengine\graphics\Utilities.hpp" />
@@ -339,16 +341,21 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\graphics\vulkan\PhysicalDevice.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\QueueFamilies.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\Swapchain.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VmaUsage.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\VulkanDbg.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\VulkanInstance.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\VulkanValidation.hpp" />
-    <ClInclude Include="vengine\loaders\Configurator.hpp" />
     <ClInclude Include="vengine\network\Client.h" />
     <ClInclude Include="vengine\network\NetworkEnumAndDefines.h" />
     <ClInclude Include="vengine\network\NetworkHandler.h" />
     <ClInclude Include="vengine\network\Server.h" />
     <ClInclude Include="vengine\network\ServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
+    <ClInclude Include="vengine\ResourceManagement\Configurator.hpp" />
+    <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp" />
+    <ClInclude Include="vengine\ResourceManagement\loaders\TextureLoader.hpp" />
+    <ClInclude Include="vengine\ResourceManagement\ResourceManager.hpp" />
+    <ClInclude Include="vengine\ResourceManagement\ResourceManagerStructs.hpp" />
     <ClInclude Include="vengine\systems\System.hpp" />
     <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
@@ -364,7 +371,9 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="imgui\imgui_widgets.cpp" />
     <ClCompile Include="vengine\audio\AudioHandler.cpp" />
     <ClCompile Include="vengine\graphics\Buffer.cpp" />
+    <ClCompile Include="vengine\graphics\ShaderInput.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\CommandBuffer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\CommandBufferArray.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\PipelineLayout.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\Pipeline.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\UniformBuffer.cpp" />
@@ -379,7 +388,6 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="vengine\dev\tracyHelper.cpp" />
     <ClCompile Include="vengine\Engine.cpp" />
     <ClCompile Include="vengine\graphics\Mesh.cpp" />
-    <ClCompile Include="vengine\graphics\Model.cpp" />
     <ClCompile Include="vengine\graphics\stb.cpp" />
     <ClCompile Include="vengine\graphics\Texture.cpp" />
     <ClCompile Include="vengine\graphics\Utilities.cpp" />
@@ -388,17 +396,24 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="vengine\graphics\vulkan\PhysicalDevice.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\QueueFamilies.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\Swapchain.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VmaUsage.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\VulkanDbg.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\VulkanInstance.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\VulkanValidation.cpp" />
-    <ClCompile Include="vengine\loaders\Configurator.cpp" />
     <ClCompile Include="vengine\network\Client.cpp" />
     <ClCompile Include="vengine\network\NetworkHandler.cpp" />
     <ClCompile Include="vengine\network\Server.cpp" />
     <ClCompile Include="vengine\network\ServerGame.cpp" />
     <ClCompile Include="vengine\network\Timer.cpp" />
+    <ClCompile Include="vengine\ResourceManagement\Configurator.cpp" />
+    <ClCompile Include="vengine\ResourceManagement\loaders\MeshLoader.cpp" />
+    <ClCompile Include="vengine\ResourceManagement\loaders\TextureLoader.cpp" />
+    <ClCompile Include="vengine\ResourceManagement\ResourceManager.cpp" />
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".clang-format" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
