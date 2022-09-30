@@ -3,6 +3,8 @@
 #include "../systems/System.hpp"
 #include "../components/Transform.hpp"
 #include "../components/Camera.hpp"
+#include "../components/AudioSource.hpp"
+#include "../components/AudioListener.hpp"
 
 #include <entt.hpp>
 #include <vector>
