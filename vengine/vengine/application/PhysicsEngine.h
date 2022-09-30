@@ -42,18 +42,19 @@ public:
 
 	void update(Scene& scene, int id);
 
-	void createRigidBody(glm::vec3 pos, float weight);
-	void createRigidBody(glm::vec3 pos, glm::vec3 rot, float weight, btCollisionShape* shape);
+	void createRigidBody(glm::vec3 pos, float weight, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f));
+	void createRigidBody(glm::vec3 pos, btCollisionShape* shape, float weight, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f), bool passThrough = false);
 
-	void createSphereCol(glm::vec3 pos, glm::vec3 rot, float radius);
-	void createSphereCol(glm::vec3 pos, glm::vec3 rot, float radius, float weight);
+	void createSphereCol(glm::vec3 pos, float radius, bool passThrough = false, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f));
+	void createSphereCol(glm::vec3 pos, float radius, float weight, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f), bool passThrough = false);
 
-	void createBoxCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExtents);
-	void createBoxCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExtents, float weight);
+	void createBoxCol(glm::vec3 pos, glm::vec3 halfExtents, bool passThrough = false, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f));
+	void createBoxCol(glm::vec3 pos, glm::vec3 halfExtents, float weight, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f), bool passThrough = false);
 
-	void createCapsuleCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExtents);
-	void createCapsuleCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExtents, float weight);
+	void createCapsuleCol(glm::vec3 pos, glm::vec3 halfExtents, bool passThrough = false, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f));
+	void createCapsuleCol(glm::vec3 pos, glm::vec3 halfExtents, float weight, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f), bool passThrough = false);
 
 	void shootRay(glm::vec3 pos, glm::vec3 dir, float distance = 300.f);
 
+	void applyForce(glm::vec3 force);
 };

@@ -64,11 +64,11 @@ void PhysicsEngine::update(Scene& scene, int id)
 	timer += Time::getDT();
 
 	Transform& trans = scene.getComponent<Transform>(id);
-	btVector3 hej = dynWorld->getCollisionObjectArray()[1]->getWorldTransform().getOrigin();
-	btQuaternion holla = dynWorld->getCollisionObjectArray()[1]->getWorldTransform().getRotation();
-	trans.position = { hej.x(), hej.y(), hej.z()};
+	btVector3 colTrans = dynWorld->getCollisionObjectArray()[1]->getWorldTransform().getOrigin();
+	btQuaternion colRot = dynWorld->getCollisionObjectArray()[1]->getWorldTransform().getRotation();
+	trans.position = { colTrans.x(), colTrans.y(), colTrans.z()};
 	btScalar x, y, z;
-	holla.getEulerZYX(y, x, z);
+	colRot.getEulerZYX(y, x, z);
 	trans.rotation.x = z * radiansToDegrees;
 	trans.rotation.y = x * radiansToDegrees;
 	trans.rotation.z = y * radiansToDegrees;
@@ -97,6 +97,15 @@ void PhysicsEngine::update(Scene& scene, int id)
 			static float up = 0.f;
 			static float dir = 1.f;
 
+			int numManifolds = dynWorld->getDispatcher()->getNumManifolds();
+			for (size_t i = 0; i < numManifolds; i++)
+			{
+				if (dynWorld->getDispatcher()->getManifoldByIndexInternal(i))
+				{
+					std::cout << "DUDSADASD%%%%%%%%%%%%%%%%%%%" << std::endl;
+				}
+			}
+
 			/////all hits
 			//{
 			//	btVector3 from(-30, 1 + up, 0);
@@ -115,23 +124,17 @@ void PhysicsEngine::update(Scene& scene, int id)
 			//	}
 			//}
 
-			///first hit
+			for (size_t i = 0; i < rayVec.size(); i++)
 			{
-				//btVector3 from(-30, 1.2, 0);
-				//btVector3 to(30, 1.2, 0);
+				btCollisionWorld::ClosestRayResultCallback closestResults(rayVec[i].pos, rayVec[i].dir);
+				closestResults.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
 
-				for (size_t i = 0; i < rayVec.size(); i++)
+				dynWorld->rayTest(rayVec[i].pos, rayVec[i].dir, closestResults);
+
+				if (closestResults.hasHit())
 				{
-					btCollisionWorld::ClosestRayResultCallback closestResults(rayVec[i].pos, rayVec[i].dir);
-					closestResults.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
-
-					dynWorld->rayTest(rayVec[i].pos, rayVec[i].dir, closestResults);
-
-					if (closestResults.hasHit())
-					{
-						btVector3 p = rayVec[i].pos.lerp(rayVec[i].dir, closestResults.m_closestHitFraction);
-						std::cout << "########## BIG HIT ##########" << std::endl;
-					}
+					btVector3 p = rayVec[i].pos.lerp(rayVec[i].dir, closestResults.m_closestHitFraction);
+					std::cout << "########## BIG HIT ##########" << std::endl;
 				}
 			}
 		}
@@ -140,7 +143,7 @@ void PhysicsEngine::update(Scene& scene, int id)
 	}
 }
 
-void PhysicsEngine::createRigidBody(glm::vec3 pos, float weight)
+void PhysicsEngine::createRigidBody(glm::vec3 pos, float weight, glm::vec3 rot)
 {
 	btScalar mass(weight);
 
@@ -155,7 +158,7 @@ void PhysicsEngine::createRigidBody(glm::vec3 pos, float weight)
 	dynWorld->addRigidBody(body);
 }
 
-void PhysicsEngine::createRigidBody(glm::vec3 pos, glm::vec3 rot, float weight, btCollisionShape* shape)
+void PhysicsEngine::createRigidBody(glm::vec3 pos, btCollisionShape* shape, float weight, glm::vec3 rot, bool passThrough)
 {
 	btScalar mass(weight);
 	bool isDynamic = (mass != 0.f);
@@ -175,16 +178,24 @@ void PhysicsEngine::createRigidBody(glm::vec3 pos, glm::vec3 rot, float weight, 
 	btDefaultMotionState* motionState = new btDefaultMotionState(transform);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, shape, localInertia);
 	btRigidBody* body = new btRigidBody(rbInfo);
+	if (passThrough)
+	{
+		body->setCollisionFlags(4);
+	}
 
 	dynWorld->addRigidBody(body);
 }
 
-void PhysicsEngine::createSphereCol(glm::vec3 pos, glm::vec3 rot, float radius)
+void PhysicsEngine::createSphereCol(glm::vec3 pos, float radius, bool passThrough, glm::vec3 rot)
 {
 	btCollisionShape* sphereShape = new btSphereShape(radius);
 	colShapes.push_back(sphereShape);
 
 	btCollisionObject* sphere = new btCollisionObject;
+	if (passThrough)
+	{
+		sphere->setCollisionFlags(4);
+	}
 	sphere->setCollisionShape(sphereShape);
 
 	btTransform transform;
@@ -195,20 +206,24 @@ void PhysicsEngine::createSphereCol(glm::vec3 pos, glm::vec3 rot, float radius)
 	dynWorld->addCollisionObject(sphere);
 }
 
-void PhysicsEngine::createSphereCol(glm::vec3 pos, glm::vec3 rot, float radius, float weight)
+void PhysicsEngine::createSphereCol(glm::vec3 pos, float radius, float weight, glm::vec3 rot, bool passThrough)
 {
 	btCollisionShape* sphereShape = new btSphereShape(radius);
 	colShapes.push_back(sphereShape);
 
-	createRigidBody(pos, rot, weight, sphereShape);
+	createRigidBody(pos, sphereShape, weight, rot, passThrough);
 }
 
-void PhysicsEngine::createBoxCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExtents)
+void PhysicsEngine::createBoxCol(glm::vec3 pos, glm::vec3 halfExtents, bool passThrough, glm::vec3 rot)
 {
 	btCollisionShape* boxShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
 	colShapes.push_back(boxShape);
 
 	btCollisionObject* box = new btCollisionObject;
+	if (passThrough)
+	{
+		box->setCollisionFlags(4);
+	}
 	box->setCollisionShape(boxShape);
 
 	btTransform transform;
@@ -219,20 +234,24 @@ void PhysicsEngine::createBoxCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExt
 	dynWorld->addCollisionObject(box);
 }
 
-void PhysicsEngine::createBoxCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExtents, float weight)
+void PhysicsEngine::createBoxCol(glm::vec3 pos, glm::vec3 halfExtents, float weight, glm::vec3 rot, bool passThrough)
 {
 	btCollisionShape* boxShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
 	colShapes.push_back(boxShape);
 
-	createRigidBody(pos, rot, weight, boxShape);
+	createRigidBody(pos, boxShape, weight, rot, passThrough);
 }
 
-void PhysicsEngine::createCapsuleCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExtents)
+void PhysicsEngine::createCapsuleCol(glm::vec3 pos, glm::vec3 halfExtents, bool passThrough, glm::vec3 rot)
 {
 	btCollisionShape* capsuleShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
 	colShapes.push_back(capsuleShape);
 
 	btCollisionObject* capsule = new btCollisionObject;
+	if (passThrough)
+	{
+		capsule->setCollisionFlags(4);
+	}
 	capsule->setCollisionShape(capsuleShape);
 
 	btTransform transform;
@@ -249,12 +268,12 @@ void PhysicsEngine::createCapsuleCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 hal
 	dynWorld->addCollisionObject(capsule);
 }
 
-void PhysicsEngine::createCapsuleCol(glm::vec3 pos, glm::vec3 rot, glm::vec3 halfExtents, float weight)
+void PhysicsEngine::createCapsuleCol(glm::vec3 pos, glm::vec3 halfExtents, float weight, glm::vec3 rot, bool passThrough)
 {
 	btCollisionShape* capsuleShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
 	colShapes.push_back(capsuleShape);
 
-	createRigidBody(pos, rot, weight, capsuleShape);
+	createRigidBody(pos, capsuleShape, weight, rot, passThrough);
 }
 
 void PhysicsEngine::shootRay(glm::vec3 pos, glm::vec3 dir, float distance)
@@ -264,4 +283,10 @@ void PhysicsEngine::shootRay(glm::vec3 pos, glm::vec3 dir, float distance)
 	btVector3 btEndPos = { pos.x + (distance * dir.x), pos.y + (distance * dir.y), pos.z + (distance * dir.z) };
 	Rays ray = {ray.pos = btPos, ray.dir = btEndPos};
 	rayVec.emplace_back(ray);
+}
+
+void PhysicsEngine::applyForce(glm::vec3 force)
+{
+	btVector3 btForce = { force.x, force.y, force.z };
+	dynWorld->getNonStaticRigidBodies().at(0)->applyForce(btForce, btVector3(0, 0, 0));
 }

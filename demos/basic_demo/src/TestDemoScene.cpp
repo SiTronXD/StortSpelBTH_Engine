@@ -27,7 +27,7 @@ void TestDemoScene::init()
 
 	// Transform component
 	Transform& transform = this->getComponent<Transform>(this->testEntity);
-	transform.position = glm::vec3(0.f, 0.f, 30.f);
+	transform.position = glm::vec3(1000.f, 0.f, 30.f);
 	transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 	transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 
@@ -49,12 +49,10 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
 
-	//physEngine.createBoxCol(glm::vec3(0.f, -20.f, 0.f), glm::vec3(50.f, 10.f, 50.f), 0.f);
 	physEngine.shootRay(glm::vec3(0, 0, -60), glm::vec3(0, 0, 60));
-	physEngine.createSphereCol(glm::vec3(300.f, 0.f, 15.f), glm::vec3(0.f, 0.f, 0.f), 20.f);
-	physEngine.createCapsuleCol(transform2.position, transform2.rotation, glm::vec3(20.f, 20.f, 20.f), 1.f);
-	//physEngine.createCapsuleCol(transform.position, glm::vec3(10.f, 20.f, 10.f), 1.f);
-	//physEngine.createCapsuleCol(glm::vec3(2.f, 40.f, 0.f), glm::vec3(5.f, 5.f, 5.f), 1.f);
+	physEngine.createSphereCol(glm::vec3(0.f, -20.f, 25.f), 10.f);
+	physEngine.createCapsuleCol(transform2.position, glm::vec3(20.f, 20.f, 20.f), 1.f, transform2.rotation);
+	physEngine.createBoxCol(glm::vec3(0.f, -100.f, 0.f), glm::vec3(200.f, 10.f, 200.f));
 }
 
 void TestDemoScene::update()
@@ -63,6 +61,14 @@ void TestDemoScene::update()
 	//transform2.position.x += Time::getDT();
 
 	physEngine.update(*this, this->testEntity2);
+	if (Input::isKeyDown(Keys::E))
+	{
+		physEngine.applyForce(glm::vec3(0, 100, 0));
+	}
+	else
+	{
+		physEngine.applyForce(glm::vec3(0, -50, 0));
+	}
 
 	if (this->entityValid(this->getMainCameraID()))
 	{
