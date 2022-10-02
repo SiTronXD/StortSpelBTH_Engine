@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 
     {
         Engine engine;
-        engine.run("Demo Application", "assets/scripts/test.lua");
+        engine.run("Demo Application", "assets/scripts/scene.lua");
     }
 
     return EXIT_SUCCESS;

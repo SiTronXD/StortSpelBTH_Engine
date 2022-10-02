@@ -31,7 +31,7 @@ Engine::~Engine()
 {
 }
 
-void Engine::run(std::string appName, std::string path)
+void Engine::run(std::string appName, std::string startScenePath)
 {
     // Set references to other systems
     this->sceneHandler.setNetworkHandler(&networkHandler);
@@ -40,7 +40,7 @@ void Engine::run(std::string appName, std::string path)
     this->scriptHandler.setSceneHandler(&sceneHandler);
 
     // Initialize the start scene
-    this->sceneHandler.setScene(path);
+    this->sceneHandler.setScene(startScenePath);
     this->sceneHandler.updateToNextScene();
 
     using namespace vengine_helper::config;
@@ -80,9 +80,9 @@ void Engine::run(std::string appName, std::string path)
         ImGui::NewFrame();
 
         Time::updateDeltaTime();
+        this->scriptHandler.update();
         this->sceneHandler.update();
         this->networkHandler.updateNetwork();
-        this->scriptHandler.update();
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);

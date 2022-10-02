@@ -1,9 +1,5 @@
 #include "SceneLua.h"
-#include "../../application/SceneHandler.hpp"
 #include "../../application/Time.hpp"
-#include "../../components/Behaviour.hpp"
-#include "../../components/MeshComponent.hpp"
-#include "../LuaPushes.hpp"
 
 
 int SceneLua::lua_createSystem(lua_State* L)
@@ -127,6 +123,16 @@ int SceneLua::lua_setComponent(lua_State* L)
 	{
 	case CompType::TRANSFORM:
 		scene->setComponent<Transform>(entity, lua_totransform(L, 3));
+		if (scene->hasComponents<Behaviour>(entity))
+		{
+			const Behaviour& script = scene->getComponent<Behaviour>(entity);
+
+			lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+			lua_pushtransform(L, scene->getComponent<Transform>(entity));
+			lua_setfield(L, -2, "transform");
+
+			lua_pop(L, 1);
+		}
 		break;
 	case CompType::MESH:
 		// Get from resource manager
@@ -135,7 +141,7 @@ int SceneLua::lua_setComponent(lua_State* L)
 	case CompType::BEHAVIOUR:
 		path = lua_tostring(L, 3);
 		if (luaL_dofile(L, path.c_str()) != LUA_OK)
-			LuaH::dumpError(L);
+		{ LuaH::dumpError(L); }
 		else
 		{
 			lua_pushvalue(L, -1);
@@ -146,6 +152,12 @@ int SceneLua::lua_setComponent(lua_State* L)
 
 			lua_pushstring(L, path.c_str());
 			lua_setfield(L, -2, "path");
+
+			Transform& t = scene->getComponent<Transform>(entity);
+			lua_pushtransform(L, scene->getComponent<Transform>(entity));
+			lua_setfield(L, -2, "transform");
+
+			// right, up, forward
 
 			scene->setComponent<Behaviour>(entity, path.c_str(), luaRef);
 

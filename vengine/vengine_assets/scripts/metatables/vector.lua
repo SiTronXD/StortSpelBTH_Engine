@@ -10,6 +10,10 @@ function vector.new(x, y, z)
 	return t
 end
 
+function vector.fill(v)
+	return vector.new(v, v, v)
+end
+
 function vector.isvector(t)
 	return getmetatable(t) == vector
 end

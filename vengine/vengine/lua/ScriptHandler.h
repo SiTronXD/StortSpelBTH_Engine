@@ -8,12 +8,14 @@ class SceneHandler;
 class ScriptHandler
 {
 private:
-	static inline const std::string SCRIPT_PATH = "assets/scripts/";
+	static inline const std::string SCRIPT_PATH = "vengine_assets/scripts/";
 
 	lua_State* L;
 	SceneHandler* sceneHandler;
 
 	void lua_openmetatables(lua_State* L);
+
+	void updateScripts();
 
 public:
 	ScriptHandler();

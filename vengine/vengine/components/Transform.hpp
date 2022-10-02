@@ -16,6 +16,6 @@ struct Transform
 	{ }
 
 	glm::vec3 right() { return glm::normalize(glm::vec3(this->matrix[0])); }
-	glm::vec3 up() { return glm::normalize(glm::vec3(this->matrix[1])); }
-	glm::vec3 forward() { return glm::normalize(glm::vec3(this->matrix[2])); }
+	glm::vec3 up() { return glm::normalize(glm::vec3(this->matrix[2])); }
+	glm::vec3 forward() { return glm::normalize(glm::vec3(this->matrix[1])); }
 };

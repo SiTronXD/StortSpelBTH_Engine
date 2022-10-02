@@ -3,7 +3,10 @@
 #include <vector>
 #include <string>
 #include "../dev/LuaHelper.hpp"
-#include "../../application/Scene.hpp"
+#include "../../application/SceneHandler.hpp"
+#include "../../components/Behaviour.hpp"
+#include "../../components/MeshComponent.hpp"
+#include "../LuaPushes.hpp"
 
 class SceneLua
 {
