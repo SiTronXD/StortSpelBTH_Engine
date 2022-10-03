@@ -3,11 +3,19 @@
 #include "vulkan/Device.hpp"
 #include "vulkan/CommandBuffer.hpp"
 
-Texture::Texture()
-{ }
+Texture::Texture(Device& device, VmaAllocator& vma) 
+    : device(&device), vma(&vma) 
+{}
 
 Texture::~Texture()
 { }
+
+void Texture::cleanup() 
+{
+    this->device->getVkDevice().destroyImageView(this->imageView);
+    this->device->getVkDevice().destroyImage(this->image);
+    vmaFreeMemory(*this->vma, this->imageMemory);
+}
 
 vk::Format Texture::chooseSupportedFormat(
     PhysicalDevice& physicalDevice,

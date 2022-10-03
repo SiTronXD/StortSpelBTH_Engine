@@ -74,16 +74,21 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
 
     MeshData data;
     for (auto mesh : modelMeshes) {
-    data.vertices.insert(data.vertices.end(), mesh.vertices.begin(),
-                            mesh.vertices.end());
-    data.indicies.insert(data.indicies.end(), mesh.indicies.begin(),
-                            mesh.indicies.end());
+        data.vertices.insert(data.vertices.end(), mesh.vertices.begin(),
+                                mesh.vertices.end());
+        data.indicies.insert(data.indicies.end(), mesh.indicies.begin(),
+                                mesh.indicies.end());
 
-    data.submeshes.push_back(SubmeshData{
-        .materialIndex = mesh.submeshes[0].materialIndex,
-        .startIndex = mesh.submeshes[0].startIndex,
-        .numIndicies = static_cast<uint32_t>(mesh.indicies.size()),
-    });
+        data.submeshes.push_back(SubmeshData{
+            .materialIndex = mesh.submeshes[0].materialIndex,
+            .startIndex = mesh.submeshes[0].startIndex,
+            .numIndicies = static_cast<uint32_t>(mesh.indicies.size()),
+        });
+
+        data.aniVertices.insert(data.aniVertices.end(), mesh.aniVertices.begin(),
+                                mesh.aniVertices.end());
+
+        data.bones.insert(data.bones.end(), mesh.bones.begin(), mesh.bones.end());
     }
     return data;
 }
@@ -108,20 +113,24 @@ std::vector<MeshData> MeshLoader::getMeshesFromNodeTree(const aiScene *scene,
     nodeStack.push(node);
 
     while (!nodeStack.empty()) {
-    node_meshes = std::span<unsigned int>(node->mMeshes, node->mNumMeshes);
-    for (size_t j = 0; j < node->mNumMeshes; j++) {
-        meshList.push_back(loadMesh(scenes_meshes[node_meshes[j]], vertice_index,
-                                    index_index, matToTex));
-    }
+        node_meshes = std::span<unsigned int>(node->mMeshes, node->mNumMeshes);
+        for (size_t j = 0; j < node->mNumMeshes; j++) {
+            meshList.push_back(loadMesh(scenes_meshes[node_meshes[j]], vertice_index,
+                                        index_index, matToTex));
 
-    node_children = std::span<aiNode *>(node->mChildren, node->mNumChildren);
+            if (scenes_meshes[node_meshes[j]]->HasBones()) {
+                loadBones(scene, scenes_meshes[node_meshes[j]], meshList.back());
+            }
+        }
 
-    for (auto *child : node_children) {
-        nodeStack.push(child);
-    }
+        node_children = std::span<aiNode *>(node->mChildren, node->mNumChildren);
 
-    node = nodeStack.top();
-    nodeStack.pop();
+        for (auto *child : node_children) {
+            nodeStack.push(child);
+        }
+
+        node = nodeStack.top();
+        nodeStack.pop();
     }
 
     return meshList;
@@ -189,9 +198,7 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
   MeshData meshData{
       .submeshes = std::vector<SubmeshData>{
           SubmeshData{
-          .materialIndex =
-              this->resourceMan->getTexture(matToTex[mesh->mMaterialIndex])
-                  .descriptorLocation,
+          .materialIndex = matToTex[mesh->mMaterialIndex],
           .startIndex = initialIndex,
           .numIndicies = static_cast<uint32_t>(indices.size()),
       }},
@@ -200,4 +207,151 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
   };
 
   return meshData;
+}
+
+bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData)
+{
+    aiAnimation* ani = scene->mAnimations[0];
+    if (!ani) {
+        return false;
+    }
+
+    outBoneData.aniVertices.resize(outBoneData.vertices.size());
+    outBoneData.bones.resize(mesh->mNumBones);
+
+    // boneIndices used for getting parentIndex
+    std::unordered_map<std::string_view, int> boneIndices;
+
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+        boneIndices[mesh->mBones[i]->mName.C_Str()] = i;
+        Bone& bone = outBoneData.bones[i];
+
+        // Get the inverse bind pose matrix
+        memcpy(&bone.inverseBindPoseMatrix, &mesh->mBones[i]->mOffsetMatrix, sizeof(glm::mat4));
+        bone.inverseBindPoseMatrix = glm::transpose(bone.inverseBindPoseMatrix);
+
+        // Set weights & boneIndex
+        for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
+            aiVertexWeight& aiWeight = mesh->mBones[i]->mWeights[k];
+            AnimVertex&     vertex   = outBoneData.aniVertices[aiWeight.mVertexId];
+
+            if      (vertex.weights[0] < 0.f) { vertex.weights[0] = aiWeight.mWeight; vertex.bonesIndex[0] = i; }
+            else if (vertex.weights[1] < 0.f) { vertex.weights[1] = aiWeight.mWeight; vertex.bonesIndex[1] = i; }
+            else if (vertex.weights[2] < 0.f) { vertex.weights[2] = aiWeight.mWeight; vertex.bonesIndex[2] = i; }
+            else if (vertex.weights[3] < 0.f) { vertex.weights[3] = aiWeight.mWeight; vertex.bonesIndex[3] = i; }
+        }
+
+        // The order of aiMesh::mBones does not always match aiAnimation::mChannels
+        aiNodeAnim* nodeAnim = findAnimationNode(ani->mChannels, ani->mNumChannels, mesh->mBones[i]->mName.C_Str());
+        if (!nodeAnim) {
+            Log::error("Could not find animation node");
+            
+            // Create and default stamp[0] to avoid future errors
+            bone.translationStamps.emplace_back(0.f, glm::vec3(0.f));
+            bone.rotationStamps.emplace_back(0.f, glm::vec4(0.f));
+            bone.scaleStamps.emplace_back(0.f, glm::vec3(1.f));
+
+            continue;
+        }
+
+        // Get all poses
+        bone.translationStamps.resize(nodeAnim->mNumPositionKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumPositionKeys; k++) {
+            bone.translationStamps[k].first = (float)nodeAnim->mPositionKeys[k].mTime;
+            memcpy(&bone.translationStamps[k].second, &nodeAnim->mPositionKeys[k].mValue, sizeof(glm::vec3));
+        }
+
+        bone.rotationStamps.resize(nodeAnim->mNumRotationKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumRotationKeys; k++) {
+            bone.rotationStamps[k].first = (float)nodeAnim->mRotationKeys[k].mTime;
+            memcpy(&bone.rotationStamps[k].second, &nodeAnim->mRotationKeys[k].mValue, sizeof(glm::quat));
+        }
+
+        bone.scaleStamps.resize(nodeAnim->mNumScalingKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumScalingKeys; k++) {
+            bone.scaleStamps[k].first = (float)nodeAnim->mScalingKeys[k].mTime;
+            memcpy(&bone.scaleStamps[k].second, &nodeAnim->mScalingKeys[k].mValue, sizeof(glm::vec3));
+        }
+    }
+
+    // Find parent index
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+        aiNode* boneNode = findNode(scene->mRootNode, mesh->mBones[i]->mName.C_Str());
+        if (!boneNode) {
+            outBoneData.bones[i].parentIndex = -1;
+            continue;
+        }
+
+        aiNode* parent = findParentBoneNode(boneIndices, boneNode);
+        outBoneData.bones[i].parentIndex = parent ? boneIndices[parent->mName.C_Str()] : -1;
+    }
+
+    // Normalize & fix invalid weights
+    for (AnimVertex& vertex : outBoneData.aniVertices) {
+
+         if (vertex.weights[0] < 0.f) vertex.weights[0] = 0.f;
+         if (vertex.weights[1] < 0.f) vertex.weights[1] = 0.f;
+         if (vertex.weights[2] < 0.f) vertex.weights[2] = 0.f;
+         if (vertex.weights[3] < 0.f) vertex.weights[3] = 0.f;
+
+        float inverseSum = vertex.weights[0] + vertex.weights[1] + vertex.weights[2] + vertex.weights[3];
+        if (inverseSum == 0.f) {
+            continue;
+        }
+
+        inverseSum = 1.f / inverseSum;
+
+        vertex.weights[0] *= inverseSum;
+        vertex.weights[1] *= inverseSum;
+        vertex.weights[2] *= inverseSum;
+        vertex.weights[3] *= inverseSum;
+    }
+
+    return true;
+}
+
+aiNodeAnim* MeshLoader::findAnimationNode(aiNodeAnim** nodeAnims, unsigned int numNodes, std::string_view name)
+{
+    for (unsigned int i = 0; i < numNodes; i++) {
+        if (nodeAnims[i]->mNodeName.C_Str() == name) {
+            return nodeAnims[i];
+        }
+    }
+
+    return nullptr;
+}
+
+aiNode* MeshLoader::findNode(aiNode* rootNode, std::string_view boneName)
+{
+    aiNode* ptr = nullptr;
+
+    for (unsigned int i = 0; i < rootNode->mNumChildren; i++) {
+
+        if (rootNode->mChildren[i]->mName.C_Str() == boneName) {
+            ptr = rootNode->mChildren[i];
+        }
+
+        else if (!ptr) {
+            ptr = findNode(rootNode->mChildren[i], boneName);
+        }
+    }
+
+    return ptr;
+}
+
+aiNode* MeshLoader::findParentBoneNode(std::unordered_map<std::string_view, int>& bones, aiNode* node)
+{
+    if (!node) {
+        return nullptr;
+    }
+
+    if (!node->mParent) {
+        return nullptr;
+    }
+
+    if (bones.find(node->mParent->mName.C_Str()) != bones.end()) {
+        return node->mParent;
+    }
+
+    return findParentBoneNode(bones, node->mParent);
 }

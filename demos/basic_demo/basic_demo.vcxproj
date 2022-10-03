@@ -281,6 +281,9 @@ call compile_shaders.bat</Command>
       <Project>{5183abad-3d6d-4833-8316-9e2d1dc83d1f}</Project>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\vengine\.clang-format" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
