@@ -5,6 +5,7 @@
 #include <string>
 #include "ResourceManagerStructs.hpp"
 #include "../graphics/Mesh.hpp"
+#include "../graphics/Texture.hpp"
 #include "../dev/Log.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "loaders/MeshLoader.hpp"
@@ -12,7 +13,8 @@
 class Engine;
 struct ImageData;   //Defined in MeshLoader
 
-class ResourceManager{
+class ResourceManager
+{
 private:
     /// VulkanRenderer takes care of cleanups
     friend class VulkanRenderer; 
@@ -20,7 +22,7 @@ private:
     std::unordered_map<std::string, uint32_t> texturePaths;
     
     std::unordered_map<uint32_t, Mesh>  meshes;
-    std::unordered_map<uint32_t, ImageData> textures;
+    std::unordered_map<uint32_t, Texture> textures;
 
     MeshLoader      meshLoader;
     TextureLoader   textureLoader;
@@ -38,8 +40,11 @@ public:
     uint32_t addMesh(std::string&& meshPath);
     uint32_t addTexture(std::string&& texturePath);
 
-    Mesh&         getMesh(uint32_t id);
-    ImageData&    getTexture(uint32_t id);
+    Mesh& getMesh(uint32_t id);
+    Texture& getTexture(uint32_t id);
+
+    size_t getNumMeshes();
+    size_t getNumTextures();
 };
 
 inline Mesh& ResourceManager::getMesh(uint32_t id)
@@ -53,7 +58,7 @@ inline Mesh& ResourceManager::getMesh(uint32_t id)
     return map_iterator->second;
 }
 
-inline ImageData& ResourceManager::getTexture(uint32_t id)
+inline Texture& ResourceManager::getTexture(uint32_t id)
 {
     auto map_iterator = this->textures.find(id);
     if(this->textures.end() == map_iterator)
@@ -62,4 +67,14 @@ inline ImageData& ResourceManager::getTexture(uint32_t id)
             + std::to_string(id));        
     }
     return map_iterator->second;
+}
+
+inline size_t ResourceManager::getNumMeshes() 
+{
+    return this->meshes.size();
+}
+
+inline size_t ResourceManager::getNumTextures() 
+{
+    return this->textures.size();
 }

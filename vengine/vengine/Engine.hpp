@@ -1,5 +1,6 @@
 #pragma once
 
+#include "audio/AudioHandler.h"
 #include "network/NetworkHandler.h"
 #include "application/SceneHandler.hpp"
 #include "ResourceManagement/ResourceManager.hpp"
@@ -17,6 +18,7 @@ public:
 	SceneHandler    sceneHandler;
     ResourceManager resourceMan;
 	NetworkHandler networkHandler;
+	AudioHandler audioHandler;
 };
 
 

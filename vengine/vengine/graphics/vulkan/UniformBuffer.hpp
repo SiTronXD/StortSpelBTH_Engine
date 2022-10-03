@@ -6,9 +6,6 @@ class UniformBuffer : public Buffer
 {
 private:
 public:
-	UniformBuffer();
-	~UniformBuffer();
-
 	void createUniformBuffer(
 		Device& device,
 		VmaAllocator& vma,
@@ -18,6 +15,4 @@ public:
 	void update(
 		void* data,
 		const uint32_t& currentFrame);
-
-	void cleanup();
 };

@@ -3,6 +3,7 @@
 #include "../TempPCH.hpp"
 
 class Device;
+class ShaderInput;
 
 class PipelineLayout
 {
@@ -17,12 +18,10 @@ public:
 
 	void createPipelineLayout(
 		Device& device,
-		vk::DescriptorSetLayout& descriptorSetLayout,
-		vk::DescriptorSetLayout& samplerDescriptorSetLayout,
-		vk::PushConstantRange& pushConstantRange);
+		ShaderInput& shaderInput);
 
 	void cleanup();
 
-	inline vk::PipelineLayout& getVkPipelineLayout() 
+	inline const vk::PipelineLayout& getVkPipelineLayout() const
 	{ return this->pipelineLayout; }
 };
