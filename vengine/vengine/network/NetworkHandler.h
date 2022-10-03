@@ -29,7 +29,7 @@ class NetworkHandler {
     void setSceneHandler(SceneHandler* sceneHandler);
 
     //SERVER
-    void createServer(); //create new server on a new thread
+    void createServer(ServerGame* serverGame); //create new server on a new thread
     void deleteServer();
     //CLIENT
     Client* createClient(const std::string &name = "BOB"); //should return a client

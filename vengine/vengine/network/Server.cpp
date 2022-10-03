@@ -1,5 +1,6 @@
 #include "Server.h"
 #include <iostream>
+#include "ServerGames/DefaultServerGame.h"
 
 //can I do this better?
 void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
@@ -97,9 +98,17 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
     client.resize(client.size() - 1);
 }
 
-Server::Server()
+Server::Server(ServerGame* serverGame)
 {
-    this->serverGame.GivePacketInfo(this->serverToClientPacketTcp);
+    if (serverGame == nullptr)
+    {
+            this->serverGame = new DefaultServerGame();
+    }
+    else
+    {
+            this->serverGame = serverGame;
+    }
+    this->serverGame->GivePacketInfo(this->serverToClientPacketTcp);
     this->starting          = StartingEnum::WaitingForUsers;
     this->currentTimeToSend = 0;
 
@@ -139,6 +148,7 @@ Server::~Server()
     for (int i = 0; i < clients.size(); i++) {
         delete this->clients[i];
     }
+    delete serverGame;
 }
 
 void Server::start()
@@ -161,11 +171,11 @@ void Server::start()
     for (int i = 0; i < clients.size(); i++) {
         startPacket << clients[i]->id;
     }
-    startPacket << this->serverGame.getSeed();
+    startPacket << this->serverGame->getSeed();
 
     for (int i = 0; i < this->clients.size(); i++) {
         this->clients[i]->clientTcpSocket.send(startPacket);
-        this->serverGame.createPlayer();
+        this->serverGame->createPlayer();
     }
 
     this->udpSocket.setBlocking(false);
@@ -193,7 +203,7 @@ bool Server::update(float dt)
         }
         getDataFromUsers();
         if (this->currentTimeToSend > this->timeToSend) {
-            this->serverGame.update(this->currentTimeToSend);
+            this->serverGame->update(this->currentTimeToSend);
             this->seeIfUsersExist();
             this->sendDataToAllUsers();
             this->cleanSendPackages();
@@ -384,17 +394,17 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
                 case GameEvents::UpdatePlayerPos:
                     //std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
                     clientToServerPacketUdp[ClientID] >> packetHelper1;
-                    serverGame.getServerPlayers()[ClientID].position.x = packetHelper1;
+                    serverGame->getServerPlayers()[ClientID].position.x = packetHelper1;
                     clientToServerPacketUdp[ClientID] >> packetHelper1;
-                    serverGame.getServerPlayers()[ClientID].position.y = packetHelper1;
+                    serverGame->getServerPlayers()[ClientID].position.y = packetHelper1;
                     clientToServerPacketUdp[ClientID] >> packetHelper1;
-                    serverGame.getServerPlayers()[ClientID].position.z = packetHelper1;
+                    serverGame->getServerPlayers()[ClientID].position.z = packetHelper1;
                     clientToServerPacketUdp[ClientID] >> packetHelper1;
-                    serverGame.getServerPlayers()[ClientID].rotation.x = packetHelper1;
+                    serverGame->getServerPlayers()[ClientID].rotation.x = packetHelper1;
                     clientToServerPacketUdp[ClientID] >> packetHelper1;
-                    serverGame.getServerPlayers()[ClientID].rotation.y = packetHelper1;
+                    serverGame->getServerPlayers()[ClientID].rotation.y = packetHelper1;
                     clientToServerPacketUdp[ClientID] >> packetHelper1;
-                    serverGame.getServerPlayers()[ClientID].rotation.z = packetHelper1;
+                    serverGame->getServerPlayers()[ClientID].rotation.z = packetHelper1;
             }
         }
     }
@@ -406,23 +416,23 @@ void Server::createUDPPacketToClient(const int& clientID, sf::Packet& packet)
     //get all player position
     for (int i = 0; i < clients.size(); i++) {
         if (i != clientID) {
-            packet << serverGame.getServerPlayers()[i].position.x
-                   << serverGame.getServerPlayers()[i].position.y
-                   << serverGame.getServerPlayers()[i].position.z
-                   << serverGame.getServerPlayers()[i].rotation.x
-                   << serverGame.getServerPlayers()[i].rotation.y
-                   << serverGame.getServerPlayers()[i].rotation.z;
+            packet << serverGame->getServerPlayers()[i].position.x
+                   << serverGame->getServerPlayers()[i].position.y
+                   << serverGame->getServerPlayers()[i].position.z
+                   << serverGame->getServerPlayers()[i].rotation.x
+                   << serverGame->getServerPlayers()[i].rotation.y
+                   << serverGame->getServerPlayers()[i].rotation.z;
         }
     }
     //get all monster position
-    packet << GameEvents::UpdateMonsterPos << (int)serverGame.getServerEntities().size();
-    for (int i = 0; i < serverGame.getServerEntities().size(); i++) {
-        packet << serverGame.getServerEntities()[i].position.x
-               << serverGame.getServerEntities()[i].position.y
-               << serverGame.getServerEntities()[i].position.z
-               << serverGame.getServerEntities()[i].rotation.x
-               << serverGame.getServerEntities()[i].rotation.y
-               << serverGame.getServerEntities()[i].rotation.z;
+    packet << GameEvents::UpdateMonsterPos << (int)serverGame->getServerEntities().size();
+    for (int i = 0; i < serverGame->getServerEntities().size(); i++) {
+        packet << serverGame->getServerEntities()[i].position.x
+               << serverGame->getServerEntities()[i].position.y
+               << serverGame->getServerEntities()[i].position.z
+               << serverGame->getServerEntities()[i].rotation.x
+               << serverGame->getServerEntities()[i].rotation.y
+               << serverGame->getServerEntities()[i].rotation.z;
     }
 }
 
