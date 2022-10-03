@@ -6,4 +6,5 @@ private:
 
 public:
 	TheServerGame();
+	void update(float dt);
 };

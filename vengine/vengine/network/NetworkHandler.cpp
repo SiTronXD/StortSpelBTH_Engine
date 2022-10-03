@@ -5,10 +5,12 @@
 void serverMain(bool& shutDownServer, ServerGame* game)
 {
 	Timer  serverTime;
+    game->n = "penis";
     Server server(game);
 	bool   serverIsDone = false;
 
-	while (!shutDownServer && !serverIsDone) {
+	while (!shutDownServer && !serverIsDone) 
+	{
 		serverIsDone = server.update(serverTime.getDT());
 		serverTime.updateDeltaTime();
 	}
@@ -43,9 +45,9 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 	this->sceneHandler = sceneHandler;
 }
 
-void NetworkHandler::createServer()
+void NetworkHandler::createServer(ServerGame* serverGame)
 {
-	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), nullptr);
+        serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), serverGame);
 }
 
 void NetworkHandler::deleteServer()

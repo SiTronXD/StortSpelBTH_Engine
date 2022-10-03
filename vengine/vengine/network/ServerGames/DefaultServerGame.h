@@ -2,7 +2,7 @@
 
 #include "../ServerGame.h"
 
-class DefaultServerGame: public ServerGame
+class DefaultServerGame : public ServerGame
 {
 private:
 

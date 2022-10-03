@@ -46,6 +46,8 @@ void NetworkTestScene::init()
 
 }
 
+#include "TheServerGame.h"
+
 void NetworkTestScene::update()
 {
 	if (this->entityValid(this->getMainCameraID()))
@@ -56,7 +58,7 @@ void NetworkTestScene::update()
 		this->getNetworkHandler()->sendUDPDataToClient(transform.position, transform.rotation);
 	}
 	if (Input::isKeyPressed(Keys::P)) {
-		this->getNetworkHandler()->createServer();
+		this->getNetworkHandler()->createServer(new TheServerGame());
 		this->getNetworkHandler()->createClient();
 		this->getNetworkHandler()->connectClientToThis();
 		Transform& transform = this->getComponent<Transform>(this->Player);

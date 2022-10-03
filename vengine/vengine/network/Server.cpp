@@ -104,6 +104,10 @@ Server::Server(ServerGame* serverGame)
     {
             this->serverGame = new DefaultServerGame();
     }
+    else
+    {
+            this->serverGame = serverGame;
+    }
     this->serverGame->GivePacketInfo(this->serverToClientPacketTcp);
     this->starting          = StartingEnum::WaitingForUsers;
     this->currentTimeToSend = 0;
