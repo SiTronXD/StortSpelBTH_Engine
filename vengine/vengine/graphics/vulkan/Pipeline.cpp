@@ -35,7 +35,7 @@ Pipeline::~Pipeline()
 
 void Pipeline::createPipeline(
     Device& device,
-    PipelineLayout& pipelineLayout,
+    ShaderInput& shaderInput,
     vk::RenderPass& renderPass)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -195,7 +195,7 @@ void Pipeline::createPipeline(
     pipelineCreateInfo.setPMultisampleState(&multisampleStateCreateInfo);
     pipelineCreateInfo.setPColorBlendState(&colorBlendingCreateInfo);
     pipelineCreateInfo.setPDepthStencilState(&depthStencilCreateInfo);
-    pipelineCreateInfo.setLayout(pipelineLayout.getVkPipelineLayout());                                 // Pipeline layout pipeline should use
+    pipelineCreateInfo.setLayout(shaderInput.getPipelineLayout().getVkPipelineLayout());                                 // Pipeline layout pipeline should use
     pipelineCreateInfo.setRenderPass(renderPass);                                 // Render pass description the pipeline is compatible with
     pipelineCreateInfo.setSubpass(uint32_t(0));                                             // subpass of render pass to use with pipeline
 

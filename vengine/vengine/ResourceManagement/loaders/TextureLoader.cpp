@@ -73,39 +73,36 @@ void TextureLoader::assimpTextureImport(
     }
 }
 
-ImageData TextureLoader::createTexture(const std::string &filename) {
+Texture TextureLoader::createTexture(const std::string &filename) {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //: NOLINT
 #endif
-    ImageData imageData;
+    Texture createdTexture(
+        *this->importStructs.device, 
+        *this->importStructs.vma
+    );
 
     // Create Texture Image and get its Location in array
-    this->createTextureImage(filename, imageData.image,
-                                    imageData.imageMemory);
+    this->createTextureImage(
+        filename, 
+        createdTexture.image, 
+        createdTexture.imageMemory);
 
     // Create Image View
-    imageData.imageView = Texture::createImageView(
+    createdTexture.imageView = Texture::createImageView(
         *this->importStructs.device,
         // textureImages[textureImageLoc],          // The location of the Image
         // in our textureImages vector
-        imageData.image, // The location of the Image in our textureImages vector
+        createdTexture.image, // The location of the Image in our textureImages vector
         vk::Format::eR8G8B8A8Unorm, // Format for rgba
         vk::ImageAspectFlagBits::eColor);
 
     // Create Texture Descriptor
-    imageData.descriptorLocation =
-        this->createTextureDescriptor(imageData.imageView);
+    /*createdTexture.descriptorLocation =
+        this->createTextureDescriptor(createdTexture.imageView);*/
 
     // Return index of Texture Descriptor that was just created
-    return imageData;
-}
-
-void TextureLoader::cleanupTexture(ImageData &ref) 
-{
-    this->importStructs.device->getVkDevice().destroyImageView(
-        ref.imageView);
-    this->importStructs.device->getVkDevice().destroyImage(ref.image);
-    vmaFreeMemory(*this->importStructs.vma, ref.imageMemory);
+    return createdTexture;
 }
 
 stbi_uc *TextureLoader::loadTextureFile(const std::string &filename, int *width,
@@ -241,56 +238,4 @@ void TextureLoader::createTextureImage(const std::string &filename,
         imageStagingBuffer);
 
     vmaFreeMemory(*this->importStructs.vma, imageStagingBufferMemory);
-}
-
-uint32_t TextureLoader::createTextureDescriptor(vk::ImageView textureImage) 
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //: NOLINT
-#endif
-    vk::DescriptorSet descriptorSet = nullptr;
-
-    // Descriptor Set Allocation Info
-    vk::DescriptorSetAllocateInfo setAllocateInfo;
-    setAllocateInfo.setDescriptorPool(
-        this->TEMP
-            ->samplerDescriptorPool); // TODO: Do not use Pointer to
-                                    // VulkanRenderer instance...
-    setAllocateInfo.setDescriptorSetCount(uint32_t(1));
-    setAllocateInfo.setPSetLayouts(
-        &this->TEMP->samplerDescriptorSetLayout);
-
-    // Allocate Descriptor Sets
-    descriptorSet =
-        this->importStructs.device->getVkDevice().allocateDescriptorSets(
-            setAllocateInfo)[0];
-
-    // Tedxture Image info
-    vk::DescriptorImageInfo imageInfo;
-    imageInfo.setImageLayout(
-        vk::ImageLayout::eShaderReadOnlyOptimal); // The Image Layout when it is
-                                                // in use
-    imageInfo.setImageView(textureImage);         // Image to be bind to set
-    imageInfo.setSampler(
-        this->TEMP
-            ->textureSampler); // the Sampler to use for this Descriptor Set
-
-    // Descriptor Write Info
-    vk::WriteDescriptorSet descriptorWrite;
-    descriptorWrite.setDstSet(descriptorSet);
-    descriptorWrite.setDstArrayElement(uint32_t(0));
-    descriptorWrite.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
-    descriptorWrite.setDescriptorCount(uint32_t(1));
-    descriptorWrite.setPImageInfo(&imageInfo);
-
-    // Update the new Descriptor Set
-    this->importStructs.device->getVkDevice().updateDescriptorSets(
-        uint32_t(1), &descriptorWrite, uint32_t(0), nullptr);
-
-    // Add descriptor Set to our list of descriptor Sets
-    this->TEMP->samplerDescriptorSets.push_back(descriptorSet);
-
-    // Return the last created Descriptor set
-    return static_cast<uint32_t>(
-        this->TEMP->samplerDescriptorSets.size() - 1);
 }

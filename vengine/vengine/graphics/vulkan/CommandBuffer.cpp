@@ -1,10 +1,123 @@
 #include "CommandBuffer.hpp"
+#include "Pipeline.hpp"
+#include "../ShaderInput.hpp"
 
-CommandBuffer::CommandBuffer()
-{}
+void CommandBuffer::begin(const vk::CommandBufferBeginInfo& beginInfo)
+{
+    this->commandBuffer.begin(beginInfo);
+}
 
-CommandBuffer::~CommandBuffer()
-{}
+void CommandBuffer::end()
+{
+    this->commandBuffer.end();
+}
+
+void CommandBuffer::beginRenderPass2(
+    const vk::RenderPassBeginInfo& renderPassBeginInfo,
+    const vk::SubpassBeginInfoKHR& subpassBeginInfo)
+{
+    this->commandBuffer.beginRenderPass2(
+        renderPassBeginInfo,
+        subpassBeginInfo
+    );
+}
+
+void CommandBuffer::endRenderPass2(const vk::SubpassEndInfo& subpassEndInfo)
+{
+    this->commandBuffer.endRenderPass2(subpassEndInfo);
+}
+
+void CommandBuffer::setViewport(const vk::Viewport& viewport)
+{
+    this->commandBuffer.setViewport(0, 1, &viewport);
+}
+
+void CommandBuffer::setScissor(const vk::Rect2D& scissor)
+{
+    this->commandBuffer.setScissor(0, 1, &scissor);
+}
+
+void CommandBuffer::bindGraphicsPipeline(const Pipeline& pipeline)
+{
+    this->commandBuffer.bindPipeline(
+        vk::PipelineBindPoint::eGraphics,
+        pipeline.getVkPipeline()
+    );
+}
+
+void CommandBuffer::pushConstant(
+    ShaderInput& shaderInput,
+    void* data)
+{
+    this->commandBuffer.pushConstants(
+        shaderInput.getPipelineLayout().getVkPipelineLayout(),
+        shaderInput.getPushConstantShaderStage(),   // Stage to push the Push Constant to.
+        uint32_t(0),                        // Offset of Push Constants to update; 
+        shaderInput.getPushConstantSize(),  // Size of data being pushed
+        data                        // Actual data being pushed (can also be an array)
+    );
+}
+
+void CommandBuffer::bindVertexBuffers2(const vk::Buffer& vertexBuffer)
+{
+    const std::array<vk::Buffer, 1> vertexBufferArray = { vertexBuffer };
+    const std::array<vk::DeviceSize, 1> offsets = { 0 };
+    this->commandBuffer.bindVertexBuffers2(
+        uint32_t(0),
+        uint32_t(1),
+        vertexBufferArray.data(),
+        offsets.data(),
+        nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
+        nullptr         //NOTE: Could also be a pointer to an array of buffer strides
+    );
+}
+
+void CommandBuffer::bindIndexBuffer(const vk::Buffer& indexBuffer)
+{
+    this->commandBuffer.bindIndexBuffer(
+        indexBuffer,
+        0,
+        vk::IndexType::eUint32
+    );
+}
+
+void CommandBuffer::bindShaderInput(const ShaderInput& shaderInput)
+{
+    const std::vector<vk::DescriptorSet>& descriptorSetGroup =
+        shaderInput.getBindDescriptorSets();
+
+    // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
+    this->commandBuffer.bindDescriptorSets(
+        vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
+        shaderInput.getPipelineLayout().getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
+        0,                               // Which Set is the first we want to use? We want to use the First set (thus 0)
+        static_cast<uint32_t>(descriptorSetGroup.size()),// How many Descriptor Sets where going to go through? DescriptorSet for View and Projection, and one for Texture
+        descriptorSetGroup.data(),                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
+        0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
+        nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
+}
+
+void CommandBuffer::drawIndexed(
+    const uint32_t& indexCount,
+    const uint32_t& instanceCount,
+    const uint32_t& firstIndex,
+    const uint32_t& vertexOffset,
+    const uint32_t& firstInstance)
+{
+    this->commandBuffer.drawIndexed(
+        indexCount,
+        instanceCount,
+        firstIndex,
+        vertexOffset,
+        firstInstance
+    );
+}
+
+void CommandBuffer::setVkCommandBuffer(
+    const vk::CommandBuffer& commandBuffer)
+{
+    this->commandBuffer = commandBuffer;
+}
 
 vk::CommandBuffer CommandBuffer::beginCommandBuffer(vk::Device device,
     vk::CommandPool commandPool)

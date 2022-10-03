@@ -2,12 +2,6 @@
 
 #include "VulkanDbg.hpp"
 
-UniformBuffer::UniformBuffer()
-{}
-
-UniformBuffer::~UniformBuffer()
-{}
-
 void UniformBuffer::createUniformBuffer(
     Device& device,
     VmaAllocator& vma,
@@ -30,7 +24,6 @@ void UniformBuffer::createUniformBuffer(
     // Create Uniform Buffers 
     for (size_t i = 0; i < buffers.size(); i++)
     {
-        // Create regular Uniform Buffers
         Buffer::createBuffer(
             {
                 .bufferSize = (vk::DeviceSize) bufferSize,
@@ -63,9 +56,4 @@ void UniformBuffer::update(
     Buffer::map(data, currentFrame);
     memcpy(data, copyData, Buffer::getBufferSize());
     Buffer::unmap(currentFrame);
-}
-
-void UniformBuffer::cleanup()
-{
-    Buffer::cleanup();
 }

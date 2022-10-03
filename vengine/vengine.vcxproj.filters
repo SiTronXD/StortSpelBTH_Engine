@@ -1,26 +1,61 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Header Files\NetWork">
-      <UniqueIdentifier>{544514c8-9f22-472c-b689-55575a724abc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Network">
-      <UniqueIdentifier>{2265214b-711e-4cd8-8640-a84393d1fce1}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_tables.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="vengine\audio\AudioHandler.cpp" />
+    <ClCompile Include="vengine\graphics\Buffer.cpp" />
+    <ClCompile Include="vengine\graphics\ShaderInput.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\CommandBuffer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\CommandBufferArray.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\PipelineLayout.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\Pipeline.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\UniformBuffer.cpp" />
+    <ClCompile Include="vengine\application\Input.cpp" />
+    <ClCompile Include="vengine\application\Scene.cpp" />
+    <ClCompile Include="vengine\application\SceneHandler.cpp" />
+    <ClCompile Include="vengine\application\Time.cpp" />
+    <ClCompile Include="vengine\application\Window.cpp" />
+    <ClCompile Include="vengine\dev\defs.cpp" />
+    <ClCompile Include="vengine\dev\Log.cpp" />
+    <ClCompile Include="vengine\dev\TracyClient.cpp" />
+    <ClCompile Include="vengine\dev\tracyHelper.cpp" />
+    <ClCompile Include="vengine\Engine.cpp" />
+    <ClCompile Include="vengine\graphics\Mesh.cpp" />
+    <ClCompile Include="vengine\graphics\stb.cpp" />
+    <ClCompile Include="vengine\graphics\Texture.cpp" />
+    <ClCompile Include="vengine\graphics\Utilities.cpp" />
+    <ClCompile Include="vengine\graphics\VulkanRenderer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\Device.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\PhysicalDevice.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\QueueFamilies.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\Swapchain.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VmaUsage.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VulkanDbg.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VulkanInstance.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VulkanValidation.cpp" />
+    <ClCompile Include="vengine\network\Client.cpp" />
+    <ClCompile Include="vengine\network\NetworkHandler.cpp" />
+    <ClCompile Include="vengine\network\Server.cpp" />
+    <ClCompile Include="vengine\network\ServerGame.cpp" />
+    <ClCompile Include="vengine\network\Timer.cpp" />
+    <ClCompile Include="vengine\ResourceManagement\Configurator.cpp" />
+    <ClCompile Include="vengine\ResourceManagement\loaders\MeshLoader.cpp" />
+    <ClCompile Include="vengine\ResourceManagement\loaders\TextureLoader.cpp" />
+    <ClCompile Include="vengine\ResourceManagement\ResourceManager.cpp" />
+    <ClCompile Include="vengine\test\TestScene.cpp" />
+    <ClCompile Include="vengine\test\TestScene2.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\StorageBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="vengine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -162,6 +197,15 @@
     <ClInclude Include="vengine\graphics\vulkan\CommandBuffer.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vengine\audio\AudioHandler.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\components\AudioSource.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\components\AudioListener.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -181,6 +225,10 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\graphics\vulkan\VmaUsage.hpp">
+    <ClInclude Include="vengine\graphics\ShaderInput.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\graphics\vulkan\CommandBufferArray.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\network\ServerGame.h">
@@ -311,6 +359,9 @@
     <ClCompile Include="vengine\graphics\vulkan\CommandBuffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="vengine\audio\AudioHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="vengine\ResourceManagement\loaders\MeshLoader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -335,5 +386,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="vengine_assets\shaders\shader.vert" />
+    <None Include="vengine_assets\shaders\shader.frag" />
   </ItemGroup>
 </Project>
