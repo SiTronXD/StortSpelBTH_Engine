@@ -866,17 +866,41 @@ glm::mat4 VulkanRenderer::getLocalBoneTransform(
 	{
 		if (timer < bone.translationStamps[i+1].first)
 		{
-			translation = bone.translationStamps[i].second;
+			float alpha = (timer - bone.translationStamps[i].first) /
+			              (bone.translationStamps[i + 1].first -
+			               bone.translationStamps[i].first);
+
+			translation = 
+                bone.translationStamps[i].second * (1.0f - alpha)+ 
+                bone.translationStamps[i + 1].second * alpha;
 
 			break;
         }
     }
 
     // Rotation
-	glm::quat rotation;
+	glm::quat rotation = bone.rotationStamps[bone.rotationStamps.size() - 1].second;
+    for (size_t i = 0; i < bone.rotationStamps.size() - 1; ++i)
+    {
+		if (timer < bone.rotationStamps[i+1].first)
+		{
+			rotation = bone.rotationStamps[i].second;
+
+            break;
+        }
+    }
 
     // Scale
-	glm::vec3 scale(1.0f, 1.0f, 1.0f);
+	glm::vec3 scale = bone.scaleStamps[bone.scaleStamps.size() - 1].second;
+	for (size_t i = 0; i < bone.scaleStamps.size() - 1; ++i)
+	{
+		if (timer < bone.scaleStamps[i + 1].first)
+		{
+			scale = bone.scaleStamps[i].second;
+
+            break;
+        }
+    }
 
     // Final transform
     glm::mat4 finalTransform(1.0f);
