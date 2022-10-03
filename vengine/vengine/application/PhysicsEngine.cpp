@@ -54,8 +54,6 @@ PhysicsEngine::~PhysicsEngine()
 	colShapes.clear();
 }
 
-constexpr float radiansToDegrees = 180.f / 3.14f;
-constexpr float degreesToRadians = 3.14f / 180.0f;
 btVector3 from(10, 0, 0);
 btVector3 to(20, 0, 0);
 
@@ -69,9 +67,9 @@ void PhysicsEngine::update(Scene& scene, int id)
 	trans.position = { colTrans.x(), colTrans.y(), colTrans.z()};
 	btScalar x, y, z;
 	colRot.getEulerZYX(y, x, z);
-	trans.rotation.x = z * radiansToDegrees;
-	trans.rotation.y = x * radiansToDegrees;
-	trans.rotation.z = y * radiansToDegrees;
+	trans.rotation.x = glm::degrees(z);
+	trans.rotation.y = glm::degrees(x);
+	trans.rotation.z = glm::degrees(y);
 	
 	while (timer >= timeStep)
 	{
@@ -97,14 +95,15 @@ void PhysicsEngine::update(Scene& scene, int id)
 			static float up = 0.f;
 			static float dir = 1.f;
 
-			int numManifolds = dynWorld->getDispatcher()->getNumManifolds();
-			for (size_t i = 0; i < numManifolds; i++)
-			{
-				if (dynWorld->getDispatcher()->getManifoldByIndexInternal(i))
-				{
-					std::cout << "DUDSADASD%%%%%%%%%%%%%%%%%%%" << std::endl;
-				}
-			}
+			// ###### CHECK IF NON COLLIDABLE OBJECT COLLIDED
+			//int numManifolds = dynWorld->getDispatcher()->getNumManifolds();
+			//for (size_t i = 0; i < numManifolds; i++)
+			//{
+			//	if (dynWorld->getDispatcher()->getManifoldByIndexInternal(i))
+			//	{
+			//		std::cout << "DUDSADASD%%%%%%%%%%%%%%%%%%%" << std::endl;
+			//	}
+			//}
 
 			/////all hits
 			//{
@@ -124,19 +123,6 @@ void PhysicsEngine::update(Scene& scene, int id)
 			//	}
 			//}
 
-			for (size_t i = 0; i < rayVec.size(); i++)
-			{
-				btCollisionWorld::ClosestRayResultCallback closestResults(rayVec[i].pos, rayVec[i].dir);
-				closestResults.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
-
-				dynWorld->rayTest(rayVec[i].pos, rayVec[i].dir, closestResults);
-
-				if (closestResults.hasHit())
-				{
-					btVector3 p = rayVec[i].pos.lerp(rayVec[i].dir, closestResults.m_closestHitFraction);
-					std::cout << "########## BIG HIT ##########" << std::endl;
-				}
-			}
 		}
 		timer -= timeStep;
 		std::cout << std::to_string(timer) << std::endl;
@@ -169,9 +155,9 @@ void PhysicsEngine::createRigidBody(glm::vec3 pos, btCollisionShape* shape, floa
 	transform.setIdentity();
 	transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 	btScalar x, y, z;
-	x = rot.x * degreesToRadians;
-	y = rot.y * degreesToRadians;
-	z = rot.z * degreesToRadians;
+	x = glm::radians(rot.x);
+	y = glm::radians(rot.y);
+	z = glm::radians(rot.z);
 	btQuaternion rotation(y, x, z);
 	transform.setRotation(rotation);
 
@@ -218,7 +204,7 @@ void PhysicsEngine::createBoxCol(glm::vec3 pos, glm::vec3 halfExtents, bool pass
 {
 	btCollisionShape* boxShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
 	colShapes.push_back(boxShape);
-
+	
 	btCollisionObject* box = new btCollisionObject;
 	if (passThrough)
 	{
@@ -258,9 +244,9 @@ void PhysicsEngine::createCapsuleCol(glm::vec3 pos, glm::vec3 halfExtents, bool 
 	transform.setIdentity();
 	transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
 	btScalar x, y, z;
-	x = rot.y * degreesToRadians;
-	y = rot.x * degreesToRadians;
-	z = rot.z * degreesToRadians;
+	x = glm::radians(rot.y);
+	y = glm::radians(rot.x);
+	z = glm::radians(rot.z);
 	btQuaternion rotation(x, y, z);
 	transform.setRotation(rotation);
 
@@ -282,7 +268,18 @@ void PhysicsEngine::shootRay(glm::vec3 pos, glm::vec3 dir, float distance)
 	btVector3 btPos = { pos.x, pos.y, pos.z };
 	btVector3 btEndPos = { pos.x + (distance * dir.x), pos.y + (distance * dir.y), pos.z + (distance * dir.z) };
 	Rays ray = {ray.pos = btPos, ray.dir = btEndPos};
-	rayVec.emplace_back(ray);
+
+	btCollisionWorld::ClosestRayResultCallback closestResults(ray.pos, ray.dir);
+	closestResults.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
+
+	dynWorld->rayTest(ray.pos, ray.dir, closestResults);
+
+	if (closestResults.hasHit())
+	{
+		btVector3 p = ray.pos.lerp(ray.dir, closestResults.m_closestHitFraction);
+		std::cout << "########## BIG HIT ##########" << std::endl;
+		// p.x() p.y() p.z() Returns position which the ray has hit.
+	}
 }
 
 void PhysicsEngine::applyForce(glm::vec3 force)

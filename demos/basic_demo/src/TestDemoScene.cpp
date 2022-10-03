@@ -49,8 +49,7 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
 
-	physEngine.shootRay(glm::vec3(0, 0, -60), glm::vec3(0, 0, 60));
-	physEngine.createSphereCol(glm::vec3(0.f, -20.f, 25.f), 10.f);
+	physEngine.createSphereCol(glm::vec3(0.f, 0.f, 25.f), 20.f);
 	physEngine.createCapsuleCol(transform2.position, glm::vec3(20.f, 20.f, 20.f), 1.f, transform2.rotation);
 	physEngine.createBoxCol(glm::vec3(0.f, -100.f, 0.f), glm::vec3(200.f, 10.f, 200.f));
 }
@@ -68,6 +67,10 @@ void TestDemoScene::update()
 	else
 	{
 		physEngine.applyForce(glm::vec3(0, -50, 0));
+	}
+	if (Input::isKeyDown(Keys::T))
+	{
+		physEngine.shootRay(glm::vec3(0, 0, -60), glm::vec3(0, 0, 60));
 	}
 
 	if (this->entityValid(this->getMainCameraID()))

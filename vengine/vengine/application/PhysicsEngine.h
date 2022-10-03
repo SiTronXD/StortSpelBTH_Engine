@@ -30,7 +30,6 @@ private:
 	btDiscreteDynamicsWorld* dynWorld;
 
 	btAlignedObjectArray<btCollisionShape*> colShapes;
-	std::vector<Rays> rayVec;
 
 	float timer;
 	const float timeStep;
