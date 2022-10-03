@@ -69,6 +69,33 @@ static Transform lua_totransform(lua_State* L, int index)
 	return transform;
 }
 
+namespace TransformLua
+{
+	static int lua_right(lua_State* L)
+	{
+		Transform transform = lua_totransform(L, 1);
+		transform.updateMatrix();
+		lua_pushvector(L, transform.right());
+		return 1;
+	}
+
+	static int lua_up(lua_State* L)
+	{
+		Transform transform = lua_totransform(L, 1);
+		transform.updateMatrix();
+		lua_pushvector(L, transform.up());
+		return 1;
+	}
+
+	static int lua_forward(lua_State* L)
+	{
+		Transform transform = lua_totransform(L, 1);
+		transform.updateMatrix();
+		lua_pushvector(L, transform.forward());
+		return 1;
+	}
+}
+
 static void lua_pushtransform(lua_State* L, const Transform& transform)
 {
 	lua_newtable(L);
@@ -81,4 +108,13 @@ static void lua_pushtransform(lua_State* L, const Transform& transform)
 
 	lua_pushvector(L, transform.scale);
 	lua_setfield(L, -2, "scale");
+
+	luaL_Reg methods[] = {
+		{ "right", TransformLua::lua_right },
+		{ "up", TransformLua::lua_up },
+		{ "forward", TransformLua::lua_forward },
+		{ NULL , NULL }
+	};
+
+	luaL_setfuncs(L, methods, 0);
 }

@@ -1,12 +1,11 @@
 #include "Scene.hpp"
 #include "SceneHandler.hpp"
-#include "../systems/UpdateMatricesSystem.hpp"
 #include "../network/NetworkHandler.h"
 #include "Time.hpp"
 
-void Scene::switchScene(std::string& path)
+void Scene::switchScene(Scene* scene, std::string path)
 {
-	this->sceneHandler->setScene(path);
+	this->sceneHandler->setScene(scene, path);
 }
 
 NetworkHandler* Scene::getNetworkHandler()
@@ -18,7 +17,6 @@ Scene::Scene()
 	: sceneHandler(nullptr), mainCamera(-1)
 {
 	this->reg.clear();
-	this->createSystem<UpdateMatricesSystem>();
 }
 
 Scene::~Scene()
@@ -85,6 +83,16 @@ bool Scene::removeEntity(int entity)
 	bool valid = this->entityValid(entity);
 	if (valid) { this->reg.destroy((entt::entity)entity); }
 	return valid;
+}
+
+void Scene::init()
+{
+
+}
+
+void Scene::update()
+{
+
 }
 
 void Scene::setSceneHandler(SceneHandler& sceneHandler)

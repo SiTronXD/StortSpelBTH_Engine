@@ -31,7 +31,7 @@ Engine::~Engine()
 {
 }
 
-void Engine::run(std::string appName, std::string startScenePath)
+void Engine::run(std::string appName, std::string startScenePath, Scene* startScene)
 {
     // Set references to other systems
     this->sceneHandler.setNetworkHandler(&networkHandler);
@@ -40,7 +40,8 @@ void Engine::run(std::string appName, std::string startScenePath)
     this->scriptHandler.setSceneHandler(&sceneHandler);
 
     // Initialize the start scene
-    this->sceneHandler.setScene(startScenePath);
+    if (startScene == nullptr) { startScene = new Scene(); }
+    this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
 
     using namespace vengine_helper::config;

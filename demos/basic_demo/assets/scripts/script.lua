@@ -5,10 +5,11 @@ function script:init()
 end
 
 function script:update(dt)
-	local x = core.btoi(input.isKeyDown(Keys.D)) - core.btoi(input.isKeyDown(Keys.A))
+	local x = core.btoi(input.isKeyDown(Keys.A)) - core.btoi(input.isKeyDown(Keys.D))
 	local z = core.btoi(input.isKeyDown(Keys.W)) - core.btoi(input.isKeyDown(Keys.S))
 	local moveVec = vector(x, 0, z)
 
+	print(self.transform:right())
 	local p = self.transform.position
 	self.transform.position = p + moveVec * dt * 5
 end

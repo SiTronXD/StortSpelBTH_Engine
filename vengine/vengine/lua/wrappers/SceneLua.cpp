@@ -14,7 +14,7 @@ int SceneLua::lua_setScene(lua_State* L)
 {
 	SceneHandler* sceneHandler = (SceneHandler*)lua_touserdata(L, lua_upvalueindex(1));
 	std::string path = lua_tostring(L, 1);
-	sceneHandler->setScene(path);
+	sceneHandler->setScene(new Scene(), path);
 
 	return 0;
 }

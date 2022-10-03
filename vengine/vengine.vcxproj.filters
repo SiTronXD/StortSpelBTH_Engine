@@ -126,9 +126,6 @@
     <ClInclude Include="vengine\systems\System.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vengine\Engine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -166,6 +163,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\lua\LuaPushes.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\test\TestScene.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\test\TestScene2.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -285,6 +288,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\test\TestScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\test\TestScene2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

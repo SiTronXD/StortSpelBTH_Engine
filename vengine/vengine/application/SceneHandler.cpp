@@ -15,6 +15,14 @@ SceneHandler::~SceneHandler()
 void SceneHandler::update()
 {
 	this->scene->updateSystems();
+	this->scene->update();
+
+	auto view = this->scene->getSceneReg().view<Transform>();
+	auto func = [](Transform& transform)
+	{
+		transform.updateMatrix();
+	};
+	view.each(func);
 }
 
 void SceneHandler::updateToNextScene()
@@ -30,17 +38,22 @@ void SceneHandler::updateToNextScene()
 		this->scene = this->nextScene;
 		this->nextScene = nullptr;
 		this->luaScript = this->nextLuaScript;
-		this->scriptHandler->runScript(this->luaScript);
+
+		this->scene->init();
+		if (this->luaScript.size() != 0)
+		{
+			this->scriptHandler->runScript(this->luaScript);
+		}
 
 		Time::init();
 	}
 }
 
-void SceneHandler::setScene(std::string& path)
+void SceneHandler::setScene(Scene* scene, std::string path)
 {
 	if (this->nextScene == nullptr)
 	{
-		this->nextScene = new Scene();
+		this->nextScene = scene;
 		this->nextScene->setSceneHandler(*this);
 		this->nextLuaScript = path;
 	}
@@ -48,7 +61,13 @@ void SceneHandler::setScene(std::string& path)
 
 void SceneHandler::reloadScene()
 {
-	this->setScene(this->luaScript);
+	this->scene->getSceneReg().clear();
+
+	this->scene->init();
+	if (this->luaScript.size() != 0)
+	{
+		this->scriptHandler->runScript(this->luaScript);
+	}
 }
 
 void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)

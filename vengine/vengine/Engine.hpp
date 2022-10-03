@@ -12,7 +12,7 @@ public:
 	Engine();
 	virtual ~Engine();
 
-	void run(std::string appName, std::string startScenePath);
+	void run(std::string appName, std::string startScenePath, Scene* startScene = nullptr);
 
 	SceneHandler sceneHandler;
 	NetworkHandler networkHandler;
