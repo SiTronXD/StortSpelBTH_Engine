@@ -243,12 +243,6 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
         // Get the inverse bind pose matrix
         memcpy(&bone.inverseBindPoseMatrix, &mesh->mBones[i]->mOffsetMatrix, sizeof(glm::mat4));
         bone.inverseBindPoseMatrix = glm::transpose(bone.inverseBindPoseMatrix);
-        /*bone.inverseBindPoseMatrix = glm::mat4(
-            mesh->mBones[i]->mOffsetMatrix.a1, mesh->mBones[i]->mOffsetMatrix.b1, mesh->mBones[i]->mOffsetMatrix.c1, mesh->mBones[i]->mOffsetMatrix.d1,
-            mesh->mBones[i]->mOffsetMatrix.a2, mesh->mBones[i]->mOffsetMatrix.b2, mesh->mBones[i]->mOffsetMatrix.c2, mesh->mBones[i]->mOffsetMatrix.d2,
-            mesh->mBones[i]->mOffsetMatrix.a3, mesh->mBones[i]->mOffsetMatrix.b3, mesh->mBones[i]->mOffsetMatrix.c3, mesh->mBones[i]->mOffsetMatrix.d3,
-            mesh->mBones[i]->mOffsetMatrix.a4, mesh->mBones[i]->mOffsetMatrix.b4, mesh->mBones[i]->mOffsetMatrix.c4, mesh->mBones[i]->mOffsetMatrix.d4
-        );*/
 
         // Set weights & boneIndex
         for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
@@ -268,7 +262,7 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
             
             // Create and default stamp[0] to avoid future errors
             bone.translationStamps.emplace_back(0.f, glm::vec3(0.f));
-            bone.rotationStamps.emplace_back(0.f, glm::vec4(0.f));
+            bone.rotationStamps.emplace_back(0.f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
             bone.scaleStamps.emplace_back(0.f, glm::vec3(1.f));
 
             continue;

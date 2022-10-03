@@ -930,6 +930,9 @@ glm::mat4 VulkanRenderer::getLocalBoneTransform(
 	glm::quat rotation;
 	this->getSlerp(bone.rotationStamps, timer, rotation);
 
+    /*if(bone.parentIndex >= 0)
+        rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);*/
+
     // Scale
 	glm::vec3 scale;
 	this->getLerp(bone.scaleStamps, timer, scale);
