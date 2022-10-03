@@ -478,7 +478,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
     auto tView = scene->getSceneReg().view<MeshComponent>();
     tView.each([this](MeshComponent& meshComponent)
     {
-        meshComponent.meshID = this->resourceManager->addMesh("ghost.obj");
+          meshComponent.meshID = this->resourceManager->addMesh(meshComponent.filePath);
     });
 
     // Add all textures for possible use in the shader
