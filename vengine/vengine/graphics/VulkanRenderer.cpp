@@ -855,58 +855,90 @@ void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up
                             up);            // Up    : Up direction 
 }
 
+void VulkanRenderer::getLerp(
+    const std::vector<std::pair<float, glm::vec3>>& stamps, 
+    const float& timer,
+    glm::vec3& outputValue
+)
+{
+    // Init to last value
+	outputValue = stamps[stamps.size() - 1].second;
+
+    // Try to find interval
+	for (size_t i = 0; i < stamps.size() - 1; ++i)
+	{
+		float time1 = stamps[i  + 1].first;
+
+        // Found interval
+		if (timer < time1)
+		{
+			float time0 = stamps[i].first;
+			float alpha = (timer - time0) / (time1 - time0);
+
+            // Interpolate
+            outputValue = glm::mix(
+                stamps[i].second, 
+                stamps[i + 1].second, 
+                alpha);
+
+			break;
+		}
+	}
+}
+
+void VulkanRenderer::getSlerp(
+    const std::vector<std::pair<float, glm::quat>>& stamps, 
+    const float& timer,
+    glm::quat& outputValue
+)
+{
+	// Init to last value
+	outputValue = stamps[stamps.size() - 1].second;
+
+	// Try to find interval
+	for (size_t i = 0; i < stamps.size() - 1; ++i)
+	{
+		float time1 = stamps[i + 1].first;
+
+		// Found interval
+		if (timer < time1)
+		{
+			float time0 = stamps[i].first;
+			float alpha = (timer - time0) / (time1 - time0);
+
+			// Interpolate
+            outputValue = 
+                glm::slerp(
+                    stamps[i].second, 
+                    stamps[i + 1].second, 
+                    alpha);
+
+			break;
+		}
+	}
+}
+
 glm::mat4 VulkanRenderer::getLocalBoneTransform(
     const Bone& bone, 
     const float& timer) 
 {
     // Translation
-	glm::vec3 translation =
-	    bone.translationStamps[bone.translationStamps.size() - 1].second;
-    for(size_t i = 0; i < bone.translationStamps.size() - 1; ++i)
-	{
-		if (timer < bone.translationStamps[i+1].first)
-		{
-			float alpha = (timer - bone.translationStamps[i].first) /
-			              (bone.translationStamps[i + 1].first -
-			               bone.translationStamps[i].first);
-
-			translation = 
-                bone.translationStamps[i].second * (1.0f - alpha)+ 
-                bone.translationStamps[i + 1].second * alpha;
-
-			break;
-        }
-    }
-
+	glm::vec3 translation;
+    this->getLerp(bone.translationStamps, timer, translation);
+	
     // Rotation
-	glm::quat rotation = bone.rotationStamps[bone.rotationStamps.size() - 1].second;
-    for (size_t i = 0; i < bone.rotationStamps.size() - 1; ++i)
-    {
-		if (timer < bone.rotationStamps[i+1].first)
-		{
-			rotation = bone.rotationStamps[i].second;
-
-            break;
-        }
-    }
+	glm::quat rotation;
+	this->getSlerp(bone.rotationStamps, timer, rotation);
 
     // Scale
-	glm::vec3 scale = bone.scaleStamps[bone.scaleStamps.size() - 1].second;
-	for (size_t i = 0; i < bone.scaleStamps.size() - 1; ++i)
-	{
-		if (timer < bone.scaleStamps[i + 1].first)
-		{
-			scale = bone.scaleStamps[i].second;
-
-            break;
-        }
-    }
+	glm::vec3 scale;
+	this->getLerp(bone.scaleStamps, timer, scale);
 
     // Final transform
-    glm::mat4 finalTransform(1.0f);
-	finalTransform = glm::translate(finalTransform, translation);
-	// finalTransform = glm::scale(finalTransform, scale);
-	// finalTransform *= glm::toMat4(rotation);
+	glm::mat4 finalTransform = 
+        glm::translate(glm::mat4(1.0f), translation) * 
+        glm::toMat4(rotation) *
+        glm::scale(glm::mat4(1.0f), scale);
 
     return finalTransform;
 }
@@ -1102,10 +1134,11 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                                 currentBone.finalMatrix = deltaTransform;
 
                                 // Apply inverse bind and local transform
-                                finalTransform *= deltaTransform;
+						        finalTransform =deltaTransform * finalTransform;
 
                                 // Apply final transform to array element
 						        boneTransforms[i] = finalTransform;
+						        // boneTransforms[i] = glm::mat4(1.0f);
 					        }
 
 					        this->animShaderInput.updateStorageBuffer(

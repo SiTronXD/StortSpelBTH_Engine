@@ -151,6 +151,14 @@ private:
 
     // TODO: remove this
 	float tempTimer = 0.0f;
+	void getLerp(
+        const std::vector<std::pair<float, glm::vec3>>& stamps,
+        const float& timer,
+        glm::vec3& outputValue);
+	void getSlerp(
+	    const std::vector<std::pair<float, glm::quat>>& stamps,
+	    const float& timer, 
+        glm::quat& outputValue);
 	glm::mat4 getLocalBoneTransform(
         const Bone& bone, 
         const float& timer
