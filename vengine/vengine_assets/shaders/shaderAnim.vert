@@ -18,14 +18,14 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform UboViewProjection
 } uboViewProjection;
 
 // Storage buffer
-struct StorageBufferData
+struct BoneTransformsData
 {
-    mat4 storageMat;
+    mat4 boneTransform;
 };
-layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer TestStorageBuffer
+layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer BoneTransformsBuffer
 {
-    StorageBufferData data[];
-} storageBuffer;
+    BoneTransformsData transforms[];
+} bones;
 
 // Push Constant to update the model Matrix! 
 layout(push_constant) uniform PushConstant_Model
@@ -39,15 +39,23 @@ layout(location = 1) out vec2 fragTex;
 
 void main()
 {
+    mat4 animTransform = mat4(0.0f);
+    if(weights.x > 0.0f)
+        animTransform += bones.transforms[boneIndices.x].boneTransform * weights.x;
+    if(weights.y > 0.0f)
+        animTransform += bones.transforms[boneIndices.y].boneTransform * weights.y;
+    if(weights.z > 0.0f)
+        animTransform += bones.transforms[boneIndices.z].boneTransform * weights.z;
+    if(weights.w > 0.0f)
+        animTransform += bones.transforms[boneIndices.w].boneTransform * weights.w;
+
     gl_Position = 
         uboViewProjection.projection *
         uboViewProjection.view *
-        storageBuffer.data[1].storageMat * 
         pushConstant_Model.model *
+        animTransform *
         vec4(pos, 1.0);
 
     fragCol = col;
     fragTex = tex;
-
-    fragCol = vec3((boneIndices.x == 3 ? 0.7f : 0.0f), 0.0f, 0.0f);
 }

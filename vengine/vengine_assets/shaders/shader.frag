@@ -12,5 +12,4 @@ layout(location = 0) out vec4 outColor; // final output color (must also have lo
 void main() 
 {
 	outColor = texture(textureSampler0, fragTex);
-	outColor = vec4(fragCol, 1.0f);
 }

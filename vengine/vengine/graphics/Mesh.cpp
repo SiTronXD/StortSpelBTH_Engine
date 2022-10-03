@@ -5,7 +5,10 @@
 #include <map>
 
 Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
-    : submeshData(meshData.submeshes), device(*importStructs.device),vma(*importStructs.vma)
+    : submeshData(meshData.submeshes), 
+    meshData(meshData),
+    device(*importStructs.device),
+    vma(*importStructs.vma)
 {  
     this->createVertexBuffer(meshData, importStructs);
     this->createIndexBuffer( meshData, importStructs);  
@@ -15,6 +18,7 @@ Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
 
 Mesh::Mesh(Mesh&& ref)
 :   submeshData(std::move(ref.submeshData)),
+    meshData(std::move(ref.meshData)),
     device(ref.device),
     vma(ref.vma),
     vertexBuffer(std::move(ref.vertexBuffer)),

@@ -28,11 +28,14 @@
 
 #include "../application/Input.hpp"
 #include "../application/Scene.hpp"
+#include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../dev/Log.hpp"
 #include "../ResourceManagement/ResourceManager.hpp"
 #include "../ResourceManagement/loaders/MeshLoader.hpp"
 #include "../ResourceManagement/loaders/TextureLoader.hpp"
+
+#include "glm/gtx/quaternion.hpp"
 
 static void checkVkResult(VkResult err)
 {
@@ -131,56 +134,6 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
         );
 
         this->createTextureSampler();
-
-        // Engine "specifics"
-
-        // Default shader inputs
-        this->shaderInput.beginForInput(
-            this->physicalDevice,
-            this->device,
-            this->vma,
-            *this->resourceManager,
-            MAX_FRAMES_IN_FLIGHT
-        );
-        this->shaderInput.addPushConstant(
-            sizeof(ModelMatrix),
-            vk::ShaderStageFlagBits::eVertex
-        );
-        this->viewProjectionUB = 
-            this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
-        this->testSB =
-            this->shaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
-        this->sampler = this->shaderInput.addSampler();
-        this->shaderInput.endForInput();
-        this->pipeline.createPipeline(
-            this->device, 
-            this->shaderInput,
-            this->renderPassBase
-        );
-
-        // Animation shader inputs
-        this->animShaderInput.beginForInput(
-            this->physicalDevice,
-            this->device,
-            this->vma,
-            *this->resourceManager,
-            MAX_FRAMES_IN_FLIGHT
-        );
-        this->animShaderInput.addPushConstant(
-            sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
-        );
-        this->animViewProjectionUB =
-            this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
-        this->animTransformsSB =
-            this->animShaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
-        this->animSampler = this->animShaderInput.addSampler();
-        this->animShaderInput.endForInput();
-        this->animPipeline.createPipeline(
-            this->device, 
-            this->animShaderInput, 
-            this->renderPassBase,
-            true
-        );
 
         this->createSynchronisation();        
 
@@ -411,11 +364,6 @@ void VulkanRenderer::draw(Scene* scene)
         (void*)&testMats[0], 
         this->currentFrame
     );
-    this->animShaderInput.updateStorageBuffer(
-        this->animTransformsSB,
-        (void*) &testMats[0],
-        this->currentFrame
-    );
 
     // ReRecord the current CommandBuffer! In order to update any Push Constants
     recordRenderPassCommandsBase(scene, imageIndex);
@@ -510,6 +458,8 @@ void VulkanRenderer::draw(Scene* scene)
 
 void VulkanRenderer::initMeshes(Scene* scene)
 {
+	uint32_t numAnimTransforms = 0;
+
     auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
     tView.each([&](Transform& transform, MeshComponent& meshComponent)
     {
@@ -521,8 +471,57 @@ void VulkanRenderer::initMeshes(Scene* scene)
         {
             meshComponent.meshID = this->resourceManager->addMesh("Amogus/source/1.fbx");
             meshComponent.hasAnimations = true;
+
+            numAnimTransforms =
+			    this->resourceManager->getMesh(meshComponent.meshID)
+			        .getMeshData()
+			        .bones.size();
         }
     });
+
+    // Engine "specifics"
+
+	// Default shader inputs
+	this->shaderInput.beginForInput(
+	    this->physicalDevice,
+	    this->device,
+	    this->vma,
+	    *this->resourceManager,
+	    MAX_FRAMES_IN_FLIGHT
+	);
+	this->shaderInput.addPushConstant(
+	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+	);
+	this->viewProjectionUB =
+	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
+	this->testSB = this->shaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
+	this->sampler = this->shaderInput.addSampler();
+	this->shaderInput.endForInput();
+	this->pipeline.createPipeline(
+	    this->device, this->shaderInput, this->renderPassBase
+	);
+
+	// Animation shader inputs
+	this->animShaderInput.beginForInput(
+	    this->physicalDevice,
+	    this->device,
+	    this->vma,
+	    *this->resourceManager,
+	    MAX_FRAMES_IN_FLIGHT
+	);
+	this->animShaderInput.addPushConstant(
+	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+	);
+	this->animViewProjectionUB =
+	    this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+	this->animTransformsSB =
+	    this->animShaderInput.addStorageBuffer(
+            numAnimTransforms * sizeof(glm::mat4));
+	this->animSampler = this->animShaderInput.addSampler();
+	this->animShaderInput.endForInput();
+	this->animPipeline.createPipeline(
+	    this->device, this->animShaderInput, this->renderPassBase, true
+	);
 
     // Add all textures for possible use in the shader
     size_t numTextures = this->resourceManager->getNumTextures();
@@ -856,6 +855,38 @@ void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up
                             up);            // Up    : Up direction 
 }
 
+glm::mat4 VulkanRenderer::getLocalBoneTransform(
+    const Bone& bone, 
+    const float& timer) 
+{
+    // Translation
+	glm::vec3 translation =
+	    bone.translationStamps[bone.translationStamps.size() - 1].second;
+    for(size_t i = 0; i < bone.translationStamps.size() - 1; ++i)
+	{
+		if (timer < bone.translationStamps[i+1].first)
+		{
+			translation = bone.translationStamps[i].second;
+
+			break;
+        }
+    }
+
+    // Rotation
+	glm::quat rotation;
+
+    // Scale
+	glm::vec3 scale(1.0f, 1.0f, 1.0f);
+
+    // Final transform
+    glm::mat4 finalTransform(1.0f);
+	finalTransform = glm::translate(finalTransform, translation);
+	// finalTransform = glm::scale(finalTransform, scale);
+	// finalTransform *= glm::toMat4(rotation);
+
+    return finalTransform;
+}
+
 void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -995,6 +1026,13 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 // Bind Pipeline to be used in render pass
                 currentCommandBuffer.bindGraphicsPipeline(this->animPipeline);
 
+			    tempTimer += Time::getDT() * 24.0f;
+			    if (tempTimer >= 60.0f)
+			    {
+				    tempTimer = 0.0f;
+                }
+                Log::write(std::to_string(tempTimer));
+
                 // For every animating mesh we have
                 tView.each(
                     [&](const Transform& transform,
@@ -1002,8 +1040,59 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     {
                         if (meshComponent.hasAnimations)
                         {
-                            auto& currModel =
+                            Mesh& currentMesh =
                                 this->resourceManager->getMesh(meshComponent.meshID);
+
+                            MeshData& currentMeshData =
+					            currentMesh.getMeshData();
+
+                            // Transformations
+					        glm::mat4* boneTransforms =
+					            new glm::mat4[currentMeshData.bones.size()];
+					        for (size_t i = 0; i < currentMeshData.bones.size();
+					             ++i)
+					        {
+						        Bone& currentBone = currentMeshData.bones[i];
+
+                                // Reset to identity matrix
+						        glm::mat4 finalTransform =
+						            currentBone.inverseBindPoseMatrix;
+						        glm::mat4 deltaTransform = glm::mat4(1.0f);
+
+                                // Apply transformation from parent
+						        if (currentBone.parentIndex >= 0)
+						        {
+							        deltaTransform *=
+							            currentMeshData
+							                .bones[currentBone.parentIndex]
+							                .finalMatrix;
+                                }
+
+                                // Apply this local transformation
+						        deltaTransform *= 
+                                this->getLocalBoneTransform(
+						            currentBone,
+                                    tempTimer
+						        );
+
+                                currentBone.finalMatrix = deltaTransform;
+
+                                // Apply inverse bind and local transform
+                                finalTransform *= deltaTransform;
+
+                                // Apply final transform to array element
+						        boneTransforms[i] = finalTransform;
+					        }
+
+					        this->animShaderInput.updateStorageBuffer(
+					            this->animTransformsSB,
+					            (void *)&boneTransforms[0],
+					            this->currentFrame
+					        );
+					        delete[] boneTransforms;
+
+
+
 
                             const glm::mat4& modelMatrix = transform.matrix;
 
@@ -1014,16 +1103,16 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                             // Bind vertex buffer
                             currentCommandBuffer.bindVertexBuffers2(
-                                currModel.getVertexBuffer()
+					            currentMesh.getVertexBuffer()
                             );
 
                             // Bind index buffer
                             currentCommandBuffer.bindIndexBuffer(
-                                currModel.getIndexBuffer()
+					            currentMesh.getIndexBuffer()
                             );
 
                             const std::vector<SubmeshData>& submeshes =
-                                currModel.getSubmeshData();
+					            currentMesh.getSubmeshData();
                             for (size_t i = 0; i < submeshes.size(); ++i)
                             {
                                 const SubmeshData& currentSubmesh = submeshes[i];

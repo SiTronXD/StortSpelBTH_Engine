@@ -37,7 +37,7 @@ MaxEmptyLinesToKeep: 1
 NamespaceIndentation: None
 ObjCSpaceAfterProperty: false
 ObjCSpaceBeforeProtocolList: true
-PointerAlignment: Middle
+PointerAlignment: Left
 ReflowComments: false
 # SeparateDefinitionBlocks: Always   # Only support for clang-format 14
 SpaceAfterCStyleCast: false

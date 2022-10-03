@@ -148,6 +148,14 @@ private:
 
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
+
+    // TODO: remove this
+	float tempTimer = 0.0f;
+	glm::mat4 getLocalBoneTransform(
+        const Bone& bone, 
+        const float& timer
+    );
+
 private: 
     // Clients Privates 
     std::function<void()> gameLoopFunction;
