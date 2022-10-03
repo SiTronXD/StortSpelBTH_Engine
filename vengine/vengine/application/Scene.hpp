@@ -5,6 +5,7 @@
 #include "../components/Camera.hpp"
 #include "../components/AudioSource.hpp"
 #include "../components/AudioListener.hpp"
+#include "../ResourceManagement/Configurator.hpp"
 
 #include <entt.hpp>
 #include <vector>
@@ -25,7 +26,12 @@ protected:
 	void switchScene(Scene* nextScene);
 	NetworkHandler* getNetworkHandler();
 
-public:
+    template <typename T> T getConfigValue(std::string_view name)
+    {
+        return vengine_helper::config::DEF<T>(name);
+    }
+
+    public:
 	Scene();
 	virtual ~Scene();
 
