@@ -1087,7 +1087,6 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 			    {
 				    tempTimer = 0.0f;
                 }
-                Log::write(std::to_string(tempTimer));
 
                 // For every animating mesh we have
                 tView.each(
@@ -1118,23 +1117,25 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                                 // Apply transformation from parent
 						        if (currentBone.parentIndex >= 0)
 						        {
-							        deltaTransform *=
+							        deltaTransform =
 							            currentMeshData
 							                .bones[currentBone.parentIndex]
 							                .finalMatrix;
                                 }
 
                                 // Apply this local transformation
-						        deltaTransform *= 
-                                this->getLocalBoneTransform(
-						            currentBone,
-                                    tempTimer
-						        );
+						        deltaTransform = 
+                                    deltaTransform *
+                                    this->getLocalBoneTransform(
+						                currentBone,
+                                        tempTimer
+						            );
 
                                 currentBone.finalMatrix = deltaTransform;
 
                                 // Apply inverse bind and local transform
-						        finalTransform =deltaTransform * finalTransform;
+						        finalTransform =
+                                    deltaTransform * finalTransform;
 
                                 // Apply final transform to array element
 						        boneTransforms[i] = finalTransform;

@@ -49,8 +49,7 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
                                 // Triangles
             | aiProcess_FlipUVs // Flips the texture UV values, to be same as how
                                 // we use them
-            | aiProcess_JoinIdenticalVertices // Saves memory by making sure no
-                                            // dublicate vertices exists
+            // | aiProcess_JoinIdenticalVertices // This caused issues for skeletal animations
     );
     if (scene == nullptr) {
     throw std::runtime_error("Failed to load model (" + modelFile + ")");
@@ -244,6 +243,12 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
         // Get the inverse bind pose matrix
         memcpy(&bone.inverseBindPoseMatrix, &mesh->mBones[i]->mOffsetMatrix, sizeof(glm::mat4));
         bone.inverseBindPoseMatrix = glm::transpose(bone.inverseBindPoseMatrix);
+        /*bone.inverseBindPoseMatrix = glm::mat4(
+            mesh->mBones[i]->mOffsetMatrix.a1, mesh->mBones[i]->mOffsetMatrix.b1, mesh->mBones[i]->mOffsetMatrix.c1, mesh->mBones[i]->mOffsetMatrix.d1,
+            mesh->mBones[i]->mOffsetMatrix.a2, mesh->mBones[i]->mOffsetMatrix.b2, mesh->mBones[i]->mOffsetMatrix.c2, mesh->mBones[i]->mOffsetMatrix.d2,
+            mesh->mBones[i]->mOffsetMatrix.a3, mesh->mBones[i]->mOffsetMatrix.b3, mesh->mBones[i]->mOffsetMatrix.c3, mesh->mBones[i]->mOffsetMatrix.d3,
+            mesh->mBones[i]->mOffsetMatrix.a4, mesh->mBones[i]->mOffsetMatrix.b4, mesh->mBones[i]->mOffsetMatrix.c4, mesh->mBones[i]->mOffsetMatrix.d4
+        );*/
 
         // Set weights & boneIndex
         for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
