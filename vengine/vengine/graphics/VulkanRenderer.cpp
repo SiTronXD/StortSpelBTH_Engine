@@ -378,18 +378,14 @@ void VulkanRenderer::draw(Scene* scene)
         //2. Submit command buffer to queue for execution, making sure it waits for the image to be signalled as 
         //   available before drawing and signals when it has finished renedering. 
         
-        std::array<vk::PipelineStageFlags2, 1> waitStages = {   // Definies What stages the Semaphore have to wait on.        
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput  // Stage: Start drawing to the Framebuffer...
-        };
-        
-        vk::SemaphoreSubmitInfo wait_semaphoreSubmitInfo;
-        wait_semaphoreSubmitInfo.setSemaphore(this->imageAvailable[this->currentFrame]);
-        wait_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);         
-        wait_semaphoreSubmitInfo.setDeviceIndex(uint32_t(1));                    // 0: sets all devices in group 1 to valid... bad or good?
+        vk::SemaphoreSubmitInfo waitSemaphoreSubmitInfo;
+        waitSemaphoreSubmitInfo.setSemaphore(this->imageAvailable[this->currentFrame]);
+        waitSemaphoreSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);         
+        // waitSemaphoreSubmitInfo.setDeviceIndex(uint32_t(1));                    // 0: sets all devices in group 1 to valid... bad or good?
 
-        vk::SemaphoreSubmitInfo signal_semaphoreSubmitInfo;
-        signal_semaphoreSubmitInfo.setSemaphore(this->renderFinished[this->currentFrame]);
-        signal_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
+        vk::SemaphoreSubmitInfo signalSemaphoreSubmitInfo;
+        signalSemaphoreSubmitInfo.setSemaphore(this->renderFinished[this->currentFrame]);
+        signalSemaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
 
         std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos
         {
@@ -401,12 +397,11 @@ void VulkanRenderer::draw(Scene* scene)
         
         vk::SubmitInfo2 submitInfo {};      
         submitInfo.setWaitSemaphoreInfoCount(uint32_t(1));
-        // !!!submitInfo.setWaitSemaphoreInfos(const vk::ArrayProxyNoTemporaries<const vk::SemaphoreSubmitInfo> &waitSemaphoreInfos_)
-        submitInfo.setPWaitSemaphoreInfos(&wait_semaphoreSubmitInfo);       // Pointer to the semaphore to wait on.
+        submitInfo.setPWaitSemaphoreInfos(&waitSemaphoreSubmitInfo);       // Pointer to the semaphore to wait on.
         submitInfo.setCommandBufferInfoCount(commandBufferSubmitInfos.size()); 
         submitInfo.setPCommandBufferInfos(commandBufferSubmitInfos.data()); // Pointer to the CommandBuffer to execute
         submitInfo.setSignalSemaphoreInfoCount(uint32_t(1));
-        submitInfo.setPSignalSemaphoreInfos(&signal_semaphoreSubmitInfo);   // Semaphore that will be signaled when CommandBuffer is finished
+        submitInfo.setPSignalSemaphoreInfos(&signalSemaphoreSubmitInfo);   // Semaphore that will be signaled when CommandBuffer is finished
 
         // Submit The CommandBuffers to the Queue to begin drawing to the framebuffers
         this->queueFamilies.getGraphicsQueue().submit2(
@@ -469,7 +464,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
         }
         else
         {
-            meshComponent.meshID = this->resourceManager->addMesh("Stormtrooper/source/silly_dancing.fbx");
+            meshComponent.meshID = this->resourceManager->addMesh("Amogus/source/1.fbx");
             meshComponent.hasAnimations = true;
 
             numAnimTransforms =

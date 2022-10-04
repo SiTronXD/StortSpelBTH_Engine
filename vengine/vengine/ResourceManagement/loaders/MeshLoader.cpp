@@ -107,7 +107,43 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
     return data;
 }
 
-std::vector<MeshData> MeshLoader::getMeshesFromNodeTree(const aiScene *scene,
+void MeshLoader::topologicallySortBones(
+    aiMesh* mesh, aiNode* node, uint32_t& globalIndex
+)
+{
+    // See if this node is a bone
+	unsigned int currentBoneIndex = ~0u;
+	bool isBone = false;
+	for (unsigned int i = 0; i < mesh->mNumBones; ++i)
+	{
+		if (mesh->mBones[i]->mName == node->mName)
+		{
+			currentBoneIndex = i;
+			isBone = true;
+			break;
+        }
+    }
+
+    // This node is a bone
+    if (isBone)
+	{
+        // Swap bones
+		aiBone* tempBone = mesh->mBones[currentBoneIndex];
+		mesh->mBones[currentBoneIndex] = mesh->mBones[globalIndex];
+		mesh->mBones[globalIndex] = tempBone;
+
+		globalIndex++;
+    }
+
+    // Traverse through children
+    for (unsigned int i = 0; i < node->mNumChildren; ++i)
+	{
+		this->topologicallySortBones(mesh, node->mChildren[i], globalIndex);
+    }
+}
+
+std::vector<MeshData> MeshLoader::getMeshesFromNodeTree(
+    const aiScene* scene,
                                   const std::vector<uint32_t> &matToTex) 
 {
 #ifndef VENGINE_NO_PROFILING
@@ -232,6 +268,11 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
 
     outBoneData.aniVertices.resize(outBoneData.vertices.size());
     outBoneData.bones.resize(mesh->mNumBones);
+
+    // Topologically sort bones for iterative tree traversal
+    // when playing the animation
+    uint32_t globalBoneIndex = 0;
+	this->topologicallySortBones(mesh, scene->mRootNode, globalBoneIndex);
 
     // boneIndices used for getting parentIndex
     std::unordered_map<std::string_view, int> boneIndices;
