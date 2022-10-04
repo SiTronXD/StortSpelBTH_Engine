@@ -469,7 +469,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
         }
         else
         {
-            meshComponent.meshID = this->resourceManager->addMesh("Amogus/source/1.fbx");
+            meshComponent.meshID = this->resourceManager->addMesh("Stormtrooper/source/silly_dancing.fbx");
             meshComponent.hasAnimations = true;
 
             numAnimTransforms =

@@ -42,7 +42,8 @@ std::vector<std::string> TextureLoader::assimpGetTextures(const aiScene *scene)
         /// get the Path of the texture file
         aiString path;
         if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
-        textureList[textureIndex] = std::string(path.C_Str());
+            textureList[textureIndex] = std::string(path.C_Str());
+			textureList[textureIndex] = "missing_texture.png"; // TODO: remove this
         }
     }
     textureIndex++; /// Which Material the

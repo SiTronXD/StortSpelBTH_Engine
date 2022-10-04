@@ -42,8 +42,8 @@ void TestDemoScene::init()
 
 	Transform& transform2 = this->getComponent<Transform>(testEntity2);
 	transform2.position = glm::vec3(-7.f, 0.f, 30.f);
-	transform2.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-	transform2.scale = glm::vec3(0.03f, 0.032f, 0.03f);
+	transform2.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
+	transform2.scale = glm::vec3(0.9f, 0.9f, 0.9f);
 
 	this->setComponent<MeshComponent>(testEntity2);
 
