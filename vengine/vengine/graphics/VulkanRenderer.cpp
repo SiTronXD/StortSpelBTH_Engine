@@ -136,7 +136,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
 
         this->createSynchronisation();        
 
-        this->updateUboProjection(); //TODO: Allow for more cameras! 
+        this->updateUboProjection();
         this->updateUboView(
             glm::vec3(DEF<float>(CAM_EYE_X),DEF<float>(CAM_EYE_Y),DEF<float>(CAM_EYE_Z)),
             glm::vec3(DEF<float>(CAM_TARGET_X),DEF<float>(CAM_TARGET_Y), DEF<float>(CAM_TARGET_Z)));
@@ -706,7 +706,6 @@ void VulkanRenderer::createRenderPassImgui()
     subpassDependecy.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput); // Wait until all other graphics have been rendered
     subpassDependecy.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
     subpassDependecy.setSrcAccessMask(vk::AccessFlags());
-    //subpassDependecy.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite); //TODO: check this...
     subpassDependecy.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
 
     vk::RenderPassCreateInfo2 renderpassCreateinfo{};
@@ -788,8 +787,7 @@ void VulkanRenderer::createTextureSampler()
     samplerCreateInfo.setMinLod(0.F);                                        // Minimum level of Detail to pick mip level
     samplerCreateInfo.setMaxLod(VK_LOD_CLAMP_NONE);                          // Maxiumum level of Detail to pick mip level
     samplerCreateInfo.setAnisotropyEnable(VK_TRUE);                          // Enable Anisotropy; take into account the angle of a surface is being viewed from and decide details based on that (??)
-    //samplerCreateInfo.setAnisotropyEnable(VK_FALSE);                       // Disable Anisotropy; Cause Performance Issues according to validation... 
-                                                                             // TODO: Check how anisotrophy can be used without causing validation errors... ? 
+                                                                             
     samplerCreateInfo.setMaxAnisotropy(DEF<float>(SAMPL_MAX_ANISOSTROPY));   // Level of Anisotropy; 16 is a common option in the settings for alot of Games 
 
     this->textureSampler = this->getVkDevice().createSampler(samplerCreateInfo);
@@ -802,21 +800,8 @@ void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::Command
     commandPoolCreateInfo.setFlags(flags);
     commandPoolCreateInfo.setQueueFamilyIndex(this->queueFamilies.getGraphicsIndex());
     commandPool = this->getVkDevice().createCommandPool(commandPoolCreateInfo);
+
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(commandPool)));
-
-    //TODO: automatic trash collection
-}
-
-void VulkanRenderer::createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::CommandPool& commandPool, std::string&&  name = "NoName")
-{
-    vk::CommandBufferAllocateInfo commandBuffferAllocationInfo{};
-    commandBuffferAllocationInfo.setCommandPool(commandPool);
-    commandBuffferAllocationInfo.setLevel(vk::CommandBufferLevel::ePrimary);
-    commandBuffferAllocationInfo.setCommandBufferCount(uint32_t(1));
-    
-    commandBuffer = this->getVkDevice().allocateCommandBuffers(commandBuffferAllocationInfo)[0];
-    VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandBuffer, reinterpret_cast<uint64_t>(vk::CommandBuffer::CType(commandBuffer)));
-    //TODO: automatic trash collection    
 }
 
 void VulkanRenderer::createFramebuffer(
@@ -1214,13 +1199,13 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.Device = this->getVkDevice();
     imguiInitInfo.QueueFamily = this->queueFamilies.getGraphicsIndex();
     imguiInitInfo.Queue = this->queueFamilies.getGraphicsQueue();
-    imguiInitInfo.PipelineCache = VK_NULL_HANDLE;       //TODO: Imgui Pipeline Should have its own Cache! 
+    imguiInitInfo.PipelineCache = VK_NULL_HANDLE;
     imguiInitInfo.DescriptorPool = this->descriptorPoolImgui;
     imguiInitInfo.Subpass = 0; 
     imguiInitInfo.MinImageCount = this->swapchain.getNumMinimumImages();
     imguiInitInfo.ImageCount = this->swapchain.getNumImages();
-    imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;  //TODO: check correctness    
-    imguiInitInfo.Allocator = nullptr;                  //TODO: Can/should I pass in something VMA related here?
+    imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    imguiInitInfo.Allocator = nullptr;
     imguiInitInfo.CheckVkResultFn = checkVkResult;
     ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPassImgui);
 
