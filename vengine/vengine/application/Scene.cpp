@@ -11,7 +11,12 @@ void Scene::switchScene(Scene* nextScene)
 
 NetworkHandler* Scene::getNetworkHandler()
 {
-	return sceneHandler->getNetworkHandler();
+	return this->sceneHandler->getNetworkHandler();
+}
+
+ResourceManager* Scene::getResourceManager()
+{
+	return this->sceneHandler->getResourceManager();
 }
 
 Scene::Scene()

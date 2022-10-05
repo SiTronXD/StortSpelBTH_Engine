@@ -4,7 +4,9 @@
 
 SceneHandler::SceneHandler()
 	: scene(nullptr),
-	nextScene(nullptr)
+	nextScene(nullptr),
+	networkHandler(nullptr),
+	resourceManager(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -49,9 +51,9 @@ void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
 	this->networkHandler = networkHandler;
 }
 
-NetworkHandler* SceneHandler::getNetworkHandler()
+void SceneHandler::setResourceManager(ResourceManager* resourceManager)
 {
-	return this->networkHandler;
+	this->resourceManager = resourceManager;
 }
 
 Scene* SceneHandler::getScene() const

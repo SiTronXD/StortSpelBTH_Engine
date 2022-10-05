@@ -10,6 +10,7 @@
 #include <vector>
 
 class NetworkHandler;
+class ResourceManager;
 class SceneHandler;
 
 class Scene
@@ -24,6 +25,7 @@ private:
 protected:
 	void switchScene(Scene* nextScene);
 	NetworkHandler* getNetworkHandler();
+	ResourceManager* getResourceManager();
 
 public:
 	Scene();

@@ -36,6 +36,7 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity);
 	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
+	meshComp.meshID = Scene::getResourceManager()->addMesh("ghost.obj");
 
 	// Test entity 2
 	int testEntity2 = this->createEntity();
@@ -46,19 +47,8 @@ void TestDemoScene::init()
 	transform2.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
 	this->setComponent<MeshComponent>(testEntity2);
-
-	// // Create entity2 (already has transform)
-	// this->testEntity2 = this->createEntity();
-
-	// // Transform component
-	// Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	// transform2.position = glm::vec3(20.f, 0.f, 30.f);
-	// transform2.rotation = glm::vec3(-90.0f, 40.0f, 0.0f);
-	// transform2.scale = glm::vec3(10.0f, 5.0f, 5.0f);
-
-	// // Mesh component
-	// this->setComponent<MeshComponent>(this->testEntity2);
-	// MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
+	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(testEntity2);
+	meshComp2.meshID = Scene::getResourceManager()->addMesh("Amogus/source/1.fbx");
 }
 
 void TestDemoScene::update()

@@ -455,25 +455,23 @@ void VulkanRenderer::initMeshes(Scene* scene)
 {
 	uint32_t numAnimTransforms = 0;
 
+    // Temporary solution for "hasAnimations" and "numAnimTransforms"
     auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
     tView.each([&](Transform& transform, MeshComponent& meshComponent)
-    {
-        if (transform.scale.x > 0.9f)
         {
-            meshComponent.meshID = this->resourceManager->addMesh("ghost.obj");
+            uint32_t meshNumAnimations = 
+                this->resourceManager->getMesh(meshComponent.meshID)
+                .getMeshData()
+                .bones.size();
 
-        }
-        else
-        {
-            meshComponent.meshID = this->resourceManager->addMesh("Amogus/source/1.fbx");
-            meshComponent.hasAnimations = true;
+            meshComponent.hasAnimations = meshNumAnimations > 0;
 
-            numAnimTransforms =
-			    this->resourceManager->getMesh(meshComponent.meshID)
-			        .getMeshData()
-			        .bones.size();
+            if (meshComponent.hasAnimations)
+            {
+                numAnimTransforms = meshNumAnimations;
+            }
         }
-    });
+    );
 
     // Engine "specifics"
 

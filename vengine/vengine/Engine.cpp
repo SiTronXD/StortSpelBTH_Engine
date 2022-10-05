@@ -34,14 +34,14 @@ Engine::~Engine()
 void Engine::run(Scene* startScene)
 {
     this->sceneHandler.setScene(startScene);
-    this->sceneHandler.updateToNextScene();
-    this->sceneHandler.setNetworkHandler(&networkHandler);
-    this->networkHandler.setSceneHandler(&sceneHandler);
-    this->audioHandler.setSceneHandler(&sceneHandler);
+    this->sceneHandler.setResourceManager(&this->resourceMan);
+    this->sceneHandler.setNetworkHandler(&this->networkHandler);
+    this->networkHandler.setSceneHandler(&this->sceneHandler);
 
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
 
+    // Window
     Window window;
     window.initWindow(
         "Some Program", 
@@ -58,6 +58,9 @@ void Engine::run(Scene* startScene)
 
     window.registerResizeEvent(renderer.getWindowResized());
 
+    // Start scene
+    this->sceneHandler.updateToNextScene();
+    this->audioHandler.setSceneHandler(&this->sceneHandler);
     renderer.initMeshes(this->sceneHandler.getScene());
 
     // Game loop
