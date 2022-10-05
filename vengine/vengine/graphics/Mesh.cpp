@@ -68,10 +68,13 @@ void Mesh::getAnimSlerp(
     }
 }
 
-glm::mat4 Mesh::getLocalBoneTransform(
+void Mesh::getLocalBoneTransform(
     const Bone& bone,
-    const float& timer)
+    const float& timer,
+    glm::mat4& outputMatrix)
 {
+    glm::mat4 identityMat(1.0f);
+
     // Translation
     glm::vec3 translation;
     this->getAnimLerp(bone.translationStamps, timer, translation);
@@ -85,12 +88,10 @@ glm::mat4 Mesh::getLocalBoneTransform(
     this->getAnimLerp(bone.scaleStamps, timer, scale);
 
     // Final transform
-    glm::mat4 finalTransform =
-        glm::translate(glm::mat4(1.0f), translation) *
+    outputMatrix =
+        glm::translate(identityMat, translation) *
         glm::toMat4(rotation) *
-        glm::scale(glm::mat4(1.0f), scale);
-
-    return finalTransform;
+        glm::scale(identityMat, scale);
 }
 
 Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
@@ -266,41 +267,38 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
 
 const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer)
 {
+    // Preallocate
+    glm::mat4 boneTransform;
+
     // Loop through bones, from parents to children
     for (size_t i = 0; i < this->meshData.bones.size(); ++i)
     {
         Bone& currentBone = this->meshData.bones[i];
 
-        // Reset to identity matrix
-        glm::mat4 finalTransform =
-            currentBone.inverseBindPoseMatrix;
-        glm::mat4 deltaTransform = glm::mat4(1.0f);
+        // Start from this local bone transformation
+        this->getLocalBoneTransform(
+            currentBone,
+            timer,
+            boneTransform
+        );
 
-        // Apply transformation from parent
+        // Apply parent transform if it exists
         if (currentBone.parentIndex >= 0)
         {
-            deltaTransform =
-                this->meshData.bones[currentBone.parentIndex].finalMatrix;
+            boneTransform =
+                this->meshData.bones[currentBone.parentIndex].boneMatrix * 
+                boneTransform;
         }
 
-        // Apply this local transformation
-        deltaTransform =
-            deltaTransform *
-            this->getLocalBoneTransform(
-                currentBone,
-                timer
-            );
+        // Set bone transform for children to reuse
+        currentBone.boneMatrix = boneTransform;
 
-        currentBone.finalMatrix = deltaTransform;
-
-        // Apply inverse bind and local transform
-        finalTransform =
-            deltaTransform * finalTransform;
-
-        // Apply final transform to array element
-        this->boneTransforms[i] = finalTransform;
+        // Apply ((parent * local) * inverseBind)
+        this->boneTransforms[i] = 
+            currentBone.boneMatrix * currentBone.inverseBindPoseMatrix;
     }
 
+    // Return transformed array
     return this->boneTransforms;
 }
 

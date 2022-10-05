@@ -32,8 +32,7 @@ struct Bone
 {
     int parentIndex;
     glm::mat4 inverseBindPoseMatrix;
-    glm::mat4 modelMatrix;
-    glm::mat4 finalMatrix;
+    glm::mat4 boneMatrix;
     std::vector<std::pair<float, glm::vec3>> translationStamps;
     std::vector<std::pair<float, glm::quat>> rotationStamps; // quaternion x, y, z, w
     std::vector<std::pair<float, glm::vec3>> scaleStamps;

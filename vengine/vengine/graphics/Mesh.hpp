@@ -31,9 +31,10 @@ private:
         const std::vector<std::pair<float, glm::quat>>& stamps,
         const float& timer,
         glm::quat& outputValue);
-    glm::mat4 getLocalBoneTransform(
+    void getLocalBoneTransform(
         const Bone& bone,
-        const float& timer
+        const float& timer,
+        glm::mat4& outputMatrix
     );
 
 public:     
