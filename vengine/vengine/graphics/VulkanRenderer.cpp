@@ -461,6 +461,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
         if (transform.scale.x > 0.9f)
         {
             meshComponent.meshID = this->resourceManager->addMesh("ghost.obj");
+
         }
         else
         {
