@@ -117,6 +117,7 @@
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\application\MatrixHandler.hpp" />
+    <ClInclude Include="vengine\VengineMath.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
