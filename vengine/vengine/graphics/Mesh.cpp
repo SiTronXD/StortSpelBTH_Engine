@@ -14,8 +14,6 @@ Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
     this->createIndexBuffer( meshData, importStructs);  
 }
 
-
-
 Mesh::Mesh(Mesh&& ref)
 :   submeshData(std::move(ref.submeshData)),
     meshData(std::move(ref.meshData)),
@@ -172,6 +170,12 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     /// Destroy + Release Staging Buffer resources
     importStructs.device->getVkDevice().destroyBuffer(stagingBuffer);
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
+}
+
+void Mesh::setAnimTransformsBufferID(
+    const StorageBufferID& bufferID)
+{
+    this->animTransformsBufferID = bufferID;
 }
 
 void Mesh::cleanup()

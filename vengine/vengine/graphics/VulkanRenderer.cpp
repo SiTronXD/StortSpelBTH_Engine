@@ -364,6 +364,7 @@ void VulkanRenderer::draw(Scene* scene)
         (void*)&testMats[0], 
         this->currentFrame
     );
+    this->shaderInput.setStorageBuffer(this->testSB);
 
     // ReRecord the current CommandBuffer! In order to update any Push Constants
     recordRenderPassCommandsBase(scene, imageIndex);
@@ -453,26 +454,6 @@ void VulkanRenderer::draw(Scene* scene)
 
 void VulkanRenderer::initMeshes(Scene* scene)
 {
-	uint32_t numAnimTransforms = 0;
-
-    // Temporary solution for "hasAnimations" and "numAnimTransforms"
-    auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
-    tView.each([&](Transform& transform, MeshComponent& meshComponent)
-        {
-            uint32_t meshNumAnimations = 
-                this->resourceManager->getMesh(meshComponent.meshID)
-                .getMeshData()
-                .bones.size();
-
-            meshComponent.hasAnimations = meshNumAnimations > 0;
-
-            if (meshComponent.hasAnimations)
-            {
-                numAnimTransforms = meshNumAnimations;
-            }
-        }
-    );
-
     // Engine "specifics"
 
 	// Default shader inputs
@@ -488,6 +469,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
 	);
 	this->viewProjectionUB =
 	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
+    this->shaderInput.setNumShaderStorageBuffers(1);
 	this->testSB = this->shaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
 	this->sampler = this->shaderInput.addSampler();
 	this->shaderInput.endForInput();
@@ -506,11 +488,36 @@ void VulkanRenderer::initMeshes(Scene* scene)
 	this->animShaderInput.addPushConstant(
 	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
 	);
+    this->animShaderInput.setNumShaderStorageBuffers(1);
+
+    // Temporary solution for "hasAnimations" and "numAnimTransforms"
+    auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
+    tView.each([&](Transform& transform, MeshComponent& meshComponent)
+        {
+            // Mesh
+            Mesh& currentMesh =
+                this->resourceManager->getMesh(meshComponent.meshID);
+
+            // Check for number of animation bones
+            uint32_t meshNumAnimationBones =
+                currentMesh
+                .getMeshData()
+                .bones.size();
+
+            // Animations found
+            meshComponent.hasAnimations = meshNumAnimationBones > 0;
+            if (meshComponent.hasAnimations)
+            {
+                StorageBufferID newStorageBufferID =
+                    this->animShaderInput.addStorageBuffer(
+                        meshNumAnimationBones * sizeof(glm::mat4));
+                currentMesh.setAnimTransformsBufferID(newStorageBufferID);
+            }
+        }
+    );
+
 	this->animViewProjectionUB =
 	    this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
-	this->animTransformsSB =
-	    this->animShaderInput.addStorageBuffer(
-            numAnimTransforms * sizeof(glm::mat4));
 	this->animSampler = this->animShaderInput.addSampler();
 	this->animShaderInput.endForInput();
 	this->animPipeline.createPipeline(
@@ -1136,7 +1143,6 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                                 // Apply final transform to array element
 						        boneTransforms[i] = finalTransform;
-						        // boneTransforms[i] = glm::mat4(1.0f);
 					        }
 
 					        this->animShaderInput.updateStorageBuffer(
@@ -1144,6 +1150,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 					            (void *)&boneTransforms[0],
 					            this->currentFrame
 					        );
+                            this->animShaderInput.setStorageBuffer(
+                                currentMesh.getAnimTransformsBufferID());
 					        delete[] boneTransforms;
 
 

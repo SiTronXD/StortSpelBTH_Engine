@@ -80,6 +80,7 @@ public:
 	void addPushConstant(
 		const uint32_t& pushConstantSize,
 		const vk::ShaderStageFlagBits& pushConstantShaderStage);
+	void setNumShaderStorageBuffers(const uint32_t& numStorageBuffers);
 	UniformBufferID addUniformBuffer(
 		const size_t& contentsSize);
     StorageBufferID addStorageBuffer(
@@ -99,6 +100,7 @@ public:
 		const uint32_t& currentFrame
 	);
 	void setCurrentFrame(const uint32_t& currentFrame);
+	void setStorageBuffer(const StorageBufferID& storageBufferID);
 	void setTexture(
 		const SamplerID& samplerID,
 		const uint32_t& textureIndex);

@@ -421,6 +421,11 @@ void ShaderInput::addPushConstant(
     this->pushConstantRange.setSize(this->pushConstantSize);                 // Size of the Data being passed
 }
 
+void ShaderInput::setNumShaderStorageBuffers(const uint32_t& numStorageBuffers)
+{
+
+}
+
 SamplerID ShaderInput::addSampler()
 {
     if (this->samplersTextureIndex.size() > 0)
@@ -512,10 +517,13 @@ void ShaderInput::setCurrentFrame(const uint32_t& currentFrame)
     // Bind descriptor set
     this->bindDescriptorSets[(uint32_t) DescriptorFrequency::PER_FRAME] =
         this->perFrameDescriptorSets[currentFrame];
+}
 
-    // TODO: remove this before pull request
-    this->bindDescriptorSets[(uint32_t)DescriptorFrequency::PER_MESH] = 
-        this->perMeshDescriptorSets[currentFrame];
+void ShaderInput::setStorageBuffer(
+    const UniformBufferID& uniformBufferID)
+{
+    this->bindDescriptorSets[(uint32_t)DescriptorFrequency::PER_MESH] =
+        this->perMeshDescriptorSets[this->currentFrame];
 }
 
 void ShaderInput::setTexture(
