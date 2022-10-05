@@ -38,20 +38,36 @@ void TestDemoScene::init()
 	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
 	meshComp.meshID = Scene::getResourceManager()->addMesh("ghost.obj");
 
-	// Test entity 2
-	int testEntity2 = this->createEntity();
+	// Create other test entities
+	for (uint32_t i = 0; i < 4; ++i)
+	{
+		int newTestEntity = this->createEntity();
 
-	Transform& transform2 = this->getComponent<Transform>(testEntity2);
-	transform2.position = glm::vec3(-7.f, 0.f, 30.f);
-	transform2.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-	transform2.scale = glm::vec3(0.03f, 0.03f, 0.03f);
+		Transform& newTransform = this->getComponent<Transform>(newTestEntity);
 
-	this->setComponent<MeshComponent>(testEntity2);
-	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(testEntity2);
-	meshComp2.meshID = Scene::getResourceManager()->addMesh("Amogus/source/1.fbx");
-	// meshComp2.meshID = Scene::getResourceManager()->addMesh("Stormtrooper/source/silly_dancing.fbx");
+		this->setComponent<MeshComponent>(newTestEntity);
+		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(newTestEntity);
+		if (i <= 1)
+		{
+			newTransform.position = glm::vec3(-7.f - i * 3.5f, 0.f, 30.f);
+			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-	this->setComponent<AnimationComponent>(testEntity2);
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh("Amogus/source/1.fbx");
+		}
+		else
+		{
+			newTransform.position = glm::vec3(-7.f - i * 3.5f, 0.f, 30.f);
+			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
+			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh("Stormtrooper/source/silly_dancing.fbx");
+		}
+
+		this->setComponent<AnimationComponent>(newTestEntity);
+		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(newTestEntity);
+		newAnimComp.timer += 24.0f * 0.6f * i;
+	}
 }
 
 void TestDemoScene::update()

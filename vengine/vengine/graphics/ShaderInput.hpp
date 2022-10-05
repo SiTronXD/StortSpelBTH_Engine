@@ -49,8 +49,9 @@ private:
 	std::vector<UniformBuffer> addedUniformBuffers;
 	std::vector<StorageBuffer> addedStorageBuffers; 
 
+	// per...DescriptorSets[frameInFlight][bufferID]
 	std::vector<vk::DescriptorSet> perFrameDescriptorSets;
-	std::vector<vk::DescriptorSet> perMeshDescriptorSets;
+	std::vector<std::vector<vk::DescriptorSet>> perMeshDescriptorSets;
 	std::vector<vk::DescriptorSet> perDrawDescriptorSets;
 
 	std::vector<uint32_t> samplersTextureIndex;
@@ -92,12 +93,10 @@ public:
 
 	void updateUniformBuffer(
 		const UniformBufferID& id,
-		void* data,
-		const uint32_t& currentFrame);
+		void* data);
 	void updateStorageBuffer(
 		const StorageBufferID& id,
-		void* data,
-		const uint32_t& currentFrame
+		void* data
 	);
 	void setCurrentFrame(const uint32_t& currentFrame);
 	void setStorageBuffer(const StorageBufferID& storageBufferID);

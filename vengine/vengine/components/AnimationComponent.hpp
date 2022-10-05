@@ -4,4 +4,5 @@ struct AnimationComponent
 {
 	float timer;
 	float endTime;
+	StorageBufferID boneTransformsID;
 };

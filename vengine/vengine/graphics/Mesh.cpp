@@ -172,12 +172,6 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
 
-void Mesh::setAnimTransformsBufferID(
-    const StorageBufferID& bufferID)
-{
-    this->animTransformsBufferID = bufferID;
-}
-
 void Mesh::cleanup()
 {
     this->device.getVkDevice().destroyBuffer(this->vertexBuffer);

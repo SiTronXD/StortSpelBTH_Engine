@@ -84,7 +84,6 @@ class VulkanRenderer
 
     // Animations pipeline
     UniformBufferID animViewProjectionUB;
-    StorageBufferID animTransformsSB;
     SamplerID animSampler;
     ShaderInput animShaderInput;
     Pipeline animPipeline;

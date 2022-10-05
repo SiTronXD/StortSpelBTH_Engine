@@ -21,21 +21,17 @@ private:
     VmaAllocation vertexBufferMemory{};
     VmaAllocation indexBufferMemory{};
 
-    StorageBufferID animTransformsBufferID;
-
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
     
     void createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
-    void setAnimTransformsBufferID(const StorageBufferID& bufferID);
-
+    
     inline const vk::Buffer& getVertexBuffer() const;
     inline const vk::Buffer& getIndexBuffer() const;
 	inline MeshData& getMeshData();
     inline const std::vector<SubmeshData>& getSubmeshData() const;
-    inline const StorageBufferID& getAnimTransformsBufferID() const;
 
     void cleanup();
 };
@@ -58,9 +54,4 @@ MeshData& Mesh::getMeshData()
 const std::vector<SubmeshData>& Mesh::getSubmeshData() const
 {
     return this->submeshData;
-}
-
-const StorageBufferID& Mesh::getAnimTransformsBufferID() const
-{
-    return this->animTransformsBufferID;
 }

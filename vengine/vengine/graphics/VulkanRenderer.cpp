@@ -345,29 +345,7 @@ void VulkanRenderer::draw(Scene* scene)
     uboViewProjection.projection = camera->projection;
     if (deleteCamera) { delete camera; }
 
-    // Update the Uniform Buffers
-    this->shaderInput.updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->uboViewProjection,
-        this->currentFrame
-    );
-    this->animShaderInput.updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->uboViewProjection,
-        this->currentFrame
-    );
-
-    glm::mat4 testMats[2];
-    testMats[0] = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 1.0f, 1.0f));
-    testMats[1] = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    this->shaderInput.updateStorageBuffer(
-        this->testSB, 
-        (void*)&testMats[0], 
-        this->currentFrame
-    );
-    this->shaderInput.setStorageBuffer(this->testSB);
-
-    // ReRecord the current CommandBuffer! In order to update any Push Constants
+    // Record the current commandBuffer
     recordRenderPassCommandsBase(scene, imageIndex);
     
     // Submit to graphics queue
@@ -508,8 +486,8 @@ void VulkanRenderer::initMeshes(Scene* scene)
                 this->animShaderInput.addStorageBuffer(
                     numAnimationBones * sizeof(glm::mat4));
 
-            // Update mesh with storage buffer ID
-            currentMesh.setAnimTransformsBufferID(newStorageBufferID);
+            // Update animation component with storage buffer ID
+            animationComponent.boneTransformsID = newStorageBufferID;
 
             // Set end time
             float maxTimeStamp = 0.0f;
@@ -1033,6 +1011,29 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
         
         #pragma region commandBufferRecording
 
+            this->shaderInput.setCurrentFrame(this->currentFrame);
+            this->animShaderInput.setCurrentFrame(this->currentFrame);
+
+            // Update the Uniform Buffers
+            this->shaderInput.updateUniformBuffer(
+                this->viewProjectionUB,
+                (void*)&this->uboViewProjection
+            );
+            this->animShaderInput.updateUniformBuffer(
+                this->viewProjectionUB,
+                (void*)&this->uboViewProjection
+            );
+
+            // TODO: remove this
+            glm::mat4 testMats[2];
+            testMats[0] = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 1.0f, 1.0f));
+            testMats[1] = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
+            this->shaderInput.updateStorageBuffer(
+                this->testSB,
+                (void*)&testMats[0]
+            );
+            this->shaderInput.setStorageBuffer(this->testSB);
+
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
             currentCommandBuffer.beginRenderPass2(
@@ -1092,7 +1093,6 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             const SubmeshData& currentSubmesh = submeshes[i];
 
                             // Update for descriptors
-                            this->shaderInput.setCurrentFrame(this->currentFrame);
                             this->shaderInput.setTexture(
                                 this->sampler, currentSubmesh.materialIndex
                             );
@@ -1163,12 +1163,12 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 					    }
 
 					    this->animShaderInput.updateStorageBuffer(
-					        this->animTransformsSB,
-					        (void *)&boneTransforms[0],
-					        this->currentFrame
+                            animationComponent.boneTransformsID,
+					        (void *)&boneTransforms[0]
 					    );
                         this->animShaderInput.setStorageBuffer(
-                            currentMesh.getAnimTransformsBufferID());
+                            animationComponent.boneTransformsID
+                        );
 					    delete[] boneTransforms;
 
 
@@ -1198,9 +1198,6 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             const SubmeshData& currentSubmesh = submeshes[i];
 
                             // Update for descriptors
-                            this->animShaderInput.setCurrentFrame(
-                                this->currentFrame
-                            );
                             this->animShaderInput.setTexture(
                                 this->animSampler, 
                                 currentSubmesh.materialIndex

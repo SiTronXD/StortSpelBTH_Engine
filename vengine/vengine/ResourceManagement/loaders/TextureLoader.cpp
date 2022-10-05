@@ -67,6 +67,7 @@ void TextureLoader::assimpTextureImport(
         }
         else {
             // Create texture, use the index returned by our createTexture function
+            textureNames[i] = "missing_texture.png";
             materialToTexture[i] =
                 this->resourceMan->addTexture(textureNames[i].c_str());
         }
