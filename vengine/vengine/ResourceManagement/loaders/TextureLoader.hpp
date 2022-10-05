@@ -26,4 +26,5 @@ public:
     inline const void setVulkanRenderer(VulkanRenderer* ref) { this->TEMP = ref; };  /// TODO: REMOVE VulkanRenderer
     void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager*);
     Texture createTexture(const std::string &filename);
+    bool doesTextureExist(const std::string& filePath);
 };

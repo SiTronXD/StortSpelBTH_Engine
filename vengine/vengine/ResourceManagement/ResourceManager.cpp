@@ -65,6 +65,15 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
         return this->texturePaths[texturePath];
     }
     
+    // Check if texture exists
+    std::string fullTexturePath = DEF<std::string>(P_TEXTURES) + texturePath;
+    if (!this->textureLoader.doesTextureExist(fullTexturePath))
+    {
+        Log::warning("Could not find texture: " + texturePath);
+
+        return this->texturePaths["missing_texture.png"];
+    }
+
     //NOTE: texturePaths.size() as key only works if we never remove resources the map...
     this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
 
@@ -74,7 +83,7 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
         {
             textures.size(),
             textureLoader.createTexture(
-                DEF<std::string>(P_TEXTURES) + texturePath)
+                fullTexturePath)
         }
     );
 

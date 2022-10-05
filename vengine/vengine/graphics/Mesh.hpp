@@ -16,10 +16,25 @@ private:
     Device&         device; 
     VmaAllocator&   vma;
 
+    std::vector<glm::mat4> boneTransforms;
+
     vk::Buffer  vertexBuffer{};
     vk::Buffer  indexBuffer{};
     VmaAllocation vertexBufferMemory{};
     VmaAllocation indexBufferMemory{};
+
+    void getAnimLerp(
+        const std::vector<std::pair<float, glm::vec3>>& stamps,
+        const float& timer,
+        glm::vec3& outputValue);
+    void getAnimSlerp(
+        const std::vector<std::pair<float, glm::quat>>& stamps,
+        const float& timer,
+        glm::quat& outputValue);
+    glm::mat4 getLocalBoneTransform(
+        const Bone& bone,
+        const float& timer
+    );
 
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
@@ -28,11 +43,13 @@ public:
     void createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
+    const std::vector<glm::mat4>& getBoneTransforms(const float& timer);
+
     inline const vk::Buffer& getVertexBuffer() const;
     inline const vk::Buffer& getIndexBuffer() const;
 	inline MeshData& getMeshData();
     inline const std::vector<SubmeshData>& getSubmeshData() const;
-
+    
     void cleanup();
 };
 

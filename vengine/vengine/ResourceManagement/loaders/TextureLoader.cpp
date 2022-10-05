@@ -67,7 +67,6 @@ void TextureLoader::assimpTextureImport(
         }
         else {
             // Create texture, use the index returned by our createTexture function
-            textureNames[i] = "missing_texture.png";
             materialToTexture[i] =
                 this->resourceMan->addTexture(textureNames[i].c_str());
         }
@@ -239,4 +238,29 @@ void TextureLoader::createTextureImage(const std::string &filename,
         imageStagingBuffer);
 
     vmaFreeMemory(*this->importStructs.vma, imageStagingBufferMemory);
+}
+
+bool TextureLoader::doesTextureExist(const std::string& filePath)
+{
+    // Easy and cross-platform way of checking if the texture exists
+
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+
+    // Load pixel data from file to image
+    stbi_uc* imageData = stbi_load(
+        filePath.c_str(), 
+        &width, 
+        &height,
+        &channels,
+        STBI_rgb_alpha
+    ); 
+
+    bool doesImageExist = imageData != nullptr;
+
+    // Deallocate pixel data
+    stbi_image_free(imageData);
+
+    return doesImageExist;
 }

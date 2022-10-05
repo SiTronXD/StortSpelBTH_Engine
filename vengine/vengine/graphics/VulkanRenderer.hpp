@@ -147,21 +147,6 @@ private:
 
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
-
-    // TODO: remove this
-	void getLerp(
-        const std::vector<std::pair<float, glm::vec3>>& stamps,
-        const float& timer,
-        glm::vec3& outputValue);
-	void getSlerp(
-	    const std::vector<std::pair<float, glm::quat>>& stamps,
-	    const float& timer, 
-        glm::quat& outputValue);
-	glm::mat4 getLocalBoneTransform(
-        const Bone& bone, 
-        const float& timer
-    );
-
 private: 
     // Clients Privates 
     std::function<void()> gameLoopFunction;

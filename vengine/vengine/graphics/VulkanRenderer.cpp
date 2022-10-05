@@ -36,8 +36,6 @@
 #include "../ResourceManagement/loaders/MeshLoader.hpp"
 #include "../ResourceManagement/loaders/TextureLoader.hpp"
 
-#include "glm/gtx/quaternion.hpp"
-
 static void checkVkResult(VkResult err)
 {
     if (err == 0)
@@ -858,97 +856,6 @@ void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up
                             up);            // Up    : Up direction 
 }
 
-void VulkanRenderer::getLerp(
-    const std::vector<std::pair<float, glm::vec3>>& stamps, 
-    const float& timer,
-    glm::vec3& outputValue
-)
-{
-    // Init to last value
-	outputValue = stamps[stamps.size() - 1].second;
-
-    // Try to find interval
-	for (size_t i = 0; i < stamps.size() - 1; ++i)
-	{
-		float time1 = stamps[i  + 1].first;
-
-        // Found interval
-		if (timer < time1)
-		{
-			float time0 = stamps[i].first;
-			float alpha = (timer - time0) / (time1 - time0);
-
-            // Interpolate
-            outputValue = glm::mix(
-                stamps[i].second, 
-                stamps[i + 1].second, 
-                alpha);
-
-			break;
-		}
-	}
-}
-
-void VulkanRenderer::getSlerp(
-    const std::vector<std::pair<float, glm::quat>>& stamps, 
-    const float& timer,
-    glm::quat& outputValue
-)
-{
-	// Init to last value
-	outputValue = stamps[stamps.size() - 1].second;
-
-	// Try to find interval
-	for (size_t i = 0; i < stamps.size() - 1; ++i)
-	{
-		float time1 = stamps[i + 1].first;
-
-		// Found interval
-		if (timer < time1)
-		{
-			float time0 = stamps[i].first;
-			float alpha = (timer - time0) / (time1 - time0);
-
-			// Interpolate
-            outputValue = 
-                glm::slerp(
-                    stamps[i].second, 
-                    stamps[i + 1].second, 
-                    alpha);
-
-			break;
-		}
-	}
-}
-
-glm::mat4 VulkanRenderer::getLocalBoneTransform(
-    const Bone& bone, 
-    const float& timer) 
-{
-    // Translation
-	glm::vec3 translation;
-    this->getLerp(bone.translationStamps, timer, translation);
-	
-    // Rotation
-	glm::quat rotation;
-	this->getSlerp(bone.rotationStamps, timer, rotation);
-
-    /*if(bone.parentIndex >= 0)
-        rotation = glm::quat(1.0f, 0.0f, 0.0f, 0.0f);*/
-
-    // Scale
-	glm::vec3 scale;
-	this->getLerp(bone.scaleStamps, timer, scale);
-
-    // Final transform
-	glm::mat4 finalTransform = 
-        glm::translate(glm::mat4(1.0f), translation) * 
-        glm::toMat4(rotation) *
-        glm::scale(glm::mat4(1.0f), scale);
-
-    return finalTransform;
-}
-
 void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -1122,46 +1029,11 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                         MeshData& currentMeshData =
 					        currentMesh.getMeshData();
 
-                        // Transformations
-					    glm::mat4* boneTransforms =
-					        new glm::mat4[currentMeshData.bones.size()];
-					    for (size_t i = 0; i < currentMeshData.bones.size();
-					            ++i)
-					    {
-						    Bone& currentBone = currentMeshData.bones[i];
+                        // Get bone transformations
+                        const std::vector<glm::mat4>& boneTransforms =
+                            currentMesh.getBoneTransforms(animationComponent.timer);
 
-                            // Reset to identity matrix
-						    glm::mat4 finalTransform =
-						        currentBone.inverseBindPoseMatrix;
-						    glm::mat4 deltaTransform = glm::mat4(1.0f);
-
-                            // Apply transformation from parent
-						    if (currentBone.parentIndex >= 0)
-						    {
-							    deltaTransform =
-							        currentMeshData
-							            .bones[currentBone.parentIndex]
-							            .finalMatrix;
-                            }
-
-                            // Apply this local transformation
-						    deltaTransform = 
-                                deltaTransform *
-                                this->getLocalBoneTransform(
-						            currentBone,
-                                    animationComponent.timer
-						        );
-
-                            currentBone.finalMatrix = deltaTransform;
-
-                            // Apply inverse bind and local transform
-						    finalTransform =
-                                deltaTransform * finalTransform;
-
-                            // Apply final transform to array element
-						    boneTransforms[i] = finalTransform;
-					    }
-
+                        // Update transformations in storage buffer
 					    this->animShaderInput.updateStorageBuffer(
                             animationComponent.boneTransformsID,
 					        (void *)&boneTransforms[0]
@@ -1169,10 +1041,6 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                         this->animShaderInput.setStorageBuffer(
                             animationComponent.boneTransformsID
                         );
-					    delete[] boneTransforms;
-
-
-
 
                         const glm::mat4& modelMatrix = transform.matrix;
 
