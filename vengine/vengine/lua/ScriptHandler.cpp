@@ -86,11 +86,44 @@ bool ScriptHandler::runScript(std::string& path)
 	return result;
 }
 
-bool ScriptHandler::loadScript(std::string& path)
+void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)
 {
-	bool result = luaL_loadfile(L, path.c_str()) == LUA_OK;
-	if (!result) { LuaH::dumpError(L); }
-	return result;
+	for (auto it = vec.begin(); it != vec.end();)
+	{
+		if (luaL_dofile(L, (*it).path.c_str()) != LUA_OK)
+		{
+			LuaH::dumpError(L);
+			it++;
+			continue;
+		}
+
+		// Add lua reference
+		if ((*it).luaRef == -1)
+		{
+			lua_pushvalue(L, -1);
+			(*it).luaRef = luaL_ref(L, LUA_REGISTRYINDEX);
+		}
+		lua_rawgeti(L, LUA_REGISTRYINDEX, (*it).luaRef);
+
+		lua_getfield(L, -2, "update"); // Get new update
+		if (!lua_isnil(L, -1)) // Found update
+		{
+			lua_pushvalue(L, -2);
+			lua_pushnumber(L, Time::getDT());
+			if (lua_pcall(L, 2, 1, 0) != LUA_OK)
+			{
+				LuaH::dumpError(L);
+				it++;
+				lua_pop(L, 2);
+				continue;
+			}
+			bool returned = lua_toboolean(L, -1);
+			if (returned) { it = vec.erase(it); }
+			else { it++; }
+			lua_pop(L, 3);
+		}
+		else { it++; }
+	}
 }
 
 void ScriptHandler::update()

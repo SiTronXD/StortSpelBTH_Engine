@@ -10,6 +10,12 @@
 class NetworkHandler;
 class SceneHandler;
 
+struct LuaSystem
+{
+	std::string path;
+	int luaRef;
+};
+
 class Scene
 {
 private:
@@ -17,6 +23,7 @@ private:
 
 	entt::registry reg;
 	std::vector<System*> systems;
+	std::vector<LuaSystem> luaSystems;
 	int mainCamera;
 
 protected:
@@ -30,6 +37,8 @@ public:
 	Camera* getMainCamera();
 	int getMainCameraID();
 	void setMainCamera(int entity);
+
+	void createSystem(std::string& path);
 
 	template <typename T, typename ...Args>
 	void createSystem(Args... args);
@@ -61,6 +70,7 @@ public:
 	virtual void update();
 
 	inline entt::registry& getSceneReg() { return this->reg; }
+	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }
 
 	void setSceneHandler(SceneHandler& sceneHandler);
 };

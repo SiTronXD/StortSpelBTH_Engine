@@ -15,6 +15,7 @@ SceneHandler::~SceneHandler()
 void SceneHandler::update()
 {
 	this->scene->updateSystems();
+	this->scriptHandler->updateSystems(this->scene->getLuaSystems());
 	this->scene->update();
 
 	auto view = this->scene->getSceneReg().view<Transform>();

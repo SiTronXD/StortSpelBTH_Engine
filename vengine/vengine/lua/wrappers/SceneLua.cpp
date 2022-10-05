@@ -5,7 +5,16 @@
 int SceneLua::lua_createSystem(lua_State* L)
 {
 	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
-	int type = (int)lua_tointeger(L, 1);
+
+	if (lua_isstring(L, 1)) // Lua System
+	{ 
+		std::string str = lua_tostring(L, 1);
+		scene->createSystem(str);
+	}
+	else if (lua_isnumber(L, 1)) // C++ System
+	{ 
+		int type = lua_tonumber(L, 1);
+	}
 
 	return 0;
 }
@@ -16,6 +25,98 @@ int SceneLua::lua_setScene(lua_State* L)
 	std::string path = lua_tostring(L, 1);
 	sceneHandler->setScene(new Scene(), path);
 
+	return 0;
+}
+
+int SceneLua::lua_iterateView(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+
+	// Sanity check
+	if (!lua_istable(L, 1) || !lua_istable(L, 2) || lua_isnil(L, 3))
+	{
+		std::cout << "Error: iterate view arguments" << std::endl;
+		return 0;
+	}
+
+	std::string behaviourPath;
+	std::vector<CompType> compTypes;
+
+	lua_pushvalue(L, 2);
+	lua_pushnil(L);
+	while (lua_next(L, -2))
+	{
+		lua_pushvalue(L, -2);
+
+		if (lua_isstring(L, -2) && !behaviourPath.size())
+		{
+			behaviourPath = lua_tostring(L, -2);
+			compTypes.push_back(CompType::BEHAVIOUR);
+		}
+		else if (lua_isnumber(L, -2))
+		{
+			compTypes.push_back((CompType)lua_tointeger(L, -2));
+		}
+
+		lua_pop(L, 2);
+	}
+	lua_pop(L, 1);
+
+	std::vector<int> entitiesToIterate;
+
+	const entt::entity* data = scene->getSceneReg().data();
+	const int size = scene->getEntityCount();
+	for (int i = 0; i < size; i++)
+	{
+		int entity = (int)data[i];
+		bool addToList =
+			std::find(compTypes.begin(), compTypes.end(), CompType::TRANSFORM) != compTypes.end() && scene->hasComponents<Transform>(entity) &&
+			std::find(compTypes.begin(), compTypes.end(), CompType::MESH) != compTypes.end() && scene->hasComponents<MeshComponent>(entity) &&
+			std::find(compTypes.begin(), compTypes.end(), CompType::BEHAVIOUR) != compTypes.end() && scene->hasComponents<Behaviour>(entity);
+			
+
+		if (behaviourPath.size() && addToList)
+		{
+			Behaviour& behaviour = scene->getComponent<Behaviour>(entity);
+			addToList = addToList && behaviour.path == behaviourPath;
+		}
+		if (addToList) { entitiesToIterate.push_back(entity); }
+	}
+
+	for (const auto& entity : entitiesToIterate)
+	{
+		lua_pushvalue(L, -1); // Function
+		lua_pushvalue(L, 1); // Own table
+		for (const auto& type : compTypes)
+		{
+			switch (type)
+			{
+			case CompType::TRANSFORM:
+				lua_pushtransform(L, scene->getComponent<Transform>(entity));
+				break;
+			case CompType::MESH:
+				lua_pushmesh(L, scene->getComponent<MeshComponent>(entity));
+				break;
+			case CompType::BEHAVIOUR:
+				lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Behaviour>(entity).luaRef);
+				break;
+			default:
+				break;
+			}
+		}
+
+		LUA_ERR_CHECK(L, lua_pcall(L, (int)compTypes.size() + 1, 0, 0));
+	}
+
+	return 0;
+}
+
+int SceneLua::lua_createPrefab(lua_State* L)
+{
+	if (lua_isstring(L, 1)) // Prefab file
+	{
+		
+	}
 	return 0;
 }
 
@@ -104,6 +205,10 @@ int SceneLua::lua_getComponent(lua_State* L)
 	{
 		lua_pushtransform(L, scene->getComponent<Transform>(entity));
 	}
+	else if ((CompType)type == CompType::MESH && scene->hasComponents<MeshComponent>(entity))
+	{
+		lua_pushmesh(L, scene->getComponent<MeshComponent>(entity));
+	}
 	else if ((CompType)type == CompType::BEHAVIOUR && scene->hasComponents<Behaviour>(entity))
 	{
 		lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Behaviour>(entity).luaRef);
@@ -157,8 +262,6 @@ int SceneLua::lua_setComponent(lua_State* L)
 			lua_pushtransform(L, scene->getComponent<Transform>(entity));
 			lua_setfield(L, -2, "transform");
 
-			// right, up, forward
-
 			scene->setComponent<Behaviour>(entity, path.c_str(), luaRef);
 
 			lua_getfield(L, -1, "init");
@@ -210,6 +313,7 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 	luaL_Reg methods[] = {
 		{ "createSystem", lua_createSystem },
 		{ "setScene", lua_setScene },
+		{ "iterateView", lua_iterateView },
 		{ "getMainCamera", lua_getMainCamera },
 		{ "setMainCamera", lua_setMainCamera },
 		{ "getEntityCount", lua_getEntityCount },

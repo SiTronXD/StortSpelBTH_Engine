@@ -1,8 +1,10 @@
 #pragma once
 
 #include <string>
+#include <vector>
 
 struct lua_State;
+struct LuaSystem;
 class SceneHandler;
 
 class ScriptHandler
@@ -24,7 +26,7 @@ public:
 	void setSceneHandler(SceneHandler* sceneHandler);
 
 	bool runScript(std::string& path);
-	bool loadScript(std::string& path);
+	void updateSystems(std::vector<LuaSystem>& vec);
 
 	void update();
 	void cleanup();

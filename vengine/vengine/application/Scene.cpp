@@ -26,6 +26,7 @@ Scene::~Scene()
 		delete this->systems[i];
 	}
 	this->systems.clear();
+	this->luaSystems.clear();
 }
 
 Camera* Scene::getMainCamera()
@@ -43,6 +44,11 @@ int Scene::getMainCameraID()
 void Scene::setMainCamera(int entity)
 {
 	if (this->hasComponents<Camera>(entity)) { this->mainCamera = entity; }
+}
+
+void Scene::createSystem(std::string& path)
+{
+	this->luaSystems.push_back(LuaSystem { path, -1 });
 }
 
 void Scene::updateSystems()

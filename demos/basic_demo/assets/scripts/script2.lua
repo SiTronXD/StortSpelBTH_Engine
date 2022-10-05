@@ -2,7 +2,7 @@ local script = {}
 
 function script:init()
 	print("init with ID: " .. self.ID)
-	self.speed = 5
+	self.health = 100
 end
 
 function script:update(dt)
@@ -10,7 +10,7 @@ function script:update(dt)
 	local z = core.btoi(input.isKeyDown(Keys.W)) - core.btoi(input.isKeyDown(Keys.S))
 	local moveVec = vector(x, 0, z)
 
-	self.transform.position = self.transform.position + moveVec * dt * self.speed
+	self.transform.position = self.transform.position + moveVec * dt * 5
 end
 
 return script;

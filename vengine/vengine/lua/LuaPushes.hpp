@@ -3,6 +3,7 @@
 #include "dev/LuaHelper.hpp"
 #include "glm/glm.hpp"
 #include "../components/Transform.hpp"
+#include "../components/MeshComponent.hpp"
 
 static glm::vec3 lua_tovector(lua_State* L, int index)
 {
@@ -117,4 +118,28 @@ static void lua_pushtransform(lua_State* L, const Transform& transform)
 	};
 
 	luaL_setfuncs(L, methods, 0);
+}
+
+static MeshComponent lua_tomesh(lua_State* L, int index)
+{
+	MeshComponent mesh;
+	// Sanity check
+	if (!lua_istable(L, index)) {
+		std::cout << "Error: not table" << std::endl;
+		return mesh;
+	}
+
+	lua_getfield(L, index, "meshID");
+	mesh.meshID = lua_tointeger(L, -1);
+	lua_pop(L, 1);
+
+	return mesh;
+}
+
+static void lua_pushmesh(lua_State* L, const MeshComponent& mesh)
+{
+	lua_newtable(L);
+
+	lua_pushinteger(L, mesh.meshID);
+	lua_setfield(L, -2, "meshID");
 }

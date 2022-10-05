@@ -27,6 +27,8 @@ private:
 
 	static int lua_createSystem(lua_State* L);
 	static int lua_setScene(lua_State* L);
+	static int lua_iterateView(lua_State* L);
+	static int lua_createPrefab(lua_State* L);
 
 	static int lua_getMainCamera(lua_State* L);
 	static int lua_setMainCamera(lua_State* L);
