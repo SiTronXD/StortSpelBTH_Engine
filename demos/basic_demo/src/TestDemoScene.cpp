@@ -49,7 +49,7 @@ void TestDemoScene::init()
 		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(newTestEntity);
 		if (i <= 1)
 		{
-			newTransform.position = glm::vec3(-7.f - i * 3.5f, 0.f, 30.f);
+			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
@@ -57,7 +57,7 @@ void TestDemoScene::init()
 		}
 		else
 		{
-			newTransform.position = glm::vec3(-7.f - i * 3.5f, 0.f, 30.f);
+			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
 			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
