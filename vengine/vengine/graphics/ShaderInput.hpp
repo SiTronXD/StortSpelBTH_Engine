@@ -57,7 +57,7 @@ private:
 	std::vector<uint32_t> samplersTextureIndex;
 
 	std::vector<vk::DescriptorSetLayout> bindDescriptorSetLayouts;
-	std::vector<vk::DescriptorSet> bindDescriptorSets;
+	std::vector<vk::DescriptorSet*> bindDescriptorSets;
 
 	uint32_t pushConstantSize;
 	vk::ShaderStageFlagBits pushConstantShaderStage;
@@ -112,7 +112,7 @@ public:
 	inline const uint32_t& getPushConstantSize() const { return this->pushConstantSize; }
 	inline const std::vector<vk::DescriptorSetLayout>& getBindDescriptorSetLayouts() const
 		{ return this->bindDescriptorSetLayouts; }
-	inline const std::vector<vk::DescriptorSet>& getBindDescriptorSets() const 
+	inline const std::vector<vk::DescriptorSet*>& getBindDescriptorSets() const 
 		{ return this->bindDescriptorSets; }
 	inline const PipelineLayout& getPipelineLayout() const 
 		{ return this->pipelineLayout; }

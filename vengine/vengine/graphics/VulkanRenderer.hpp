@@ -77,7 +77,6 @@ class VulkanRenderer
 
     // Default pipeline
     UniformBufferID viewProjectionUB;
-    StorageBufferID testSB;
     SamplerID sampler;
     ShaderInput shaderInput;
     Pipeline pipeline;

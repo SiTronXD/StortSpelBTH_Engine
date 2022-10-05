@@ -85,18 +85,23 @@ void CommandBuffer::bindShaderInputFrequency(
     const ShaderInput& shaderInput,
     const DescriptorFrequency& descriptorFrequency)
 {
-    const std::vector<vk::DescriptorSet>& descriptorSetGroup =
+    const uint32_t frequencyIndex = (uint32_t)descriptorFrequency;
+
+    const std::vector<vk::DescriptorSet*>& descriptorSetGroup =
         shaderInput.getBindDescriptorSets();
 
-    // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
-    this->commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
-        shaderInput.getPipelineLayout().getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
-        (uint32_t) descriptorFrequency,                               // Which Set is the first we want to use? 
-        1, // How many Descriptor Sets where going to go through?
-        &descriptorSetGroup[(uint32_t) descriptorFrequency],                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
-        0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
-        nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
+    // Bind descriptor set, if it can
+    if (descriptorSetGroup[frequencyIndex] != nullptr)
+    {
+        this->commandBuffer.bindDescriptorSets(
+            vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
+            shaderInput.getPipelineLayout().getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
+            frequencyIndex,                               // Which Set is the first we want to use? 
+            1, // How many Descriptor Sets where going to go through?
+            descriptorSetGroup[frequencyIndex],                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
+            0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
+            nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
+    }
 }
 
 void CommandBuffer::drawIndexed(

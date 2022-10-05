@@ -15,16 +15,6 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform UboViewProjection
     mat4 view;    
 } uboViewProjection;
 
-// Storage buffer
-struct StorageBufferData
-{
-    mat4 storageMat;
-};
-layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer TestStorageBuffer
-{
-    StorageBufferData data[];
-} storageBuffer;
-
 // Push Constant to update the model Matrix! 
 layout(push_constant) uniform PushConstant_Model
 {
@@ -40,7 +30,6 @@ void main()
     gl_Position = 
         uboViewProjection.projection *
         uboViewProjection.view *
-        storageBuffer.data[1].storageMat * 
         pushConstant_Model.model *
         vec4(pos, 1.0);
 

@@ -446,8 +446,6 @@ void VulkanRenderer::initMeshes(Scene* scene)
 	);
 	this->viewProjectionUB =
 	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
-    this->shaderInput.setNumShaderStorageBuffers(1);
-	this->testSB = this->shaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
 	this->sampler = this->shaderInput.addSampler();
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
@@ -915,16 +913,6 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 this->viewProjectionUB,
                 (void*)&this->uboViewProjection
             );
-
-            // TODO: remove this
-            glm::mat4 testMats[2];
-            testMats[0] = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 1.0f, 1.0f));
-            testMats[1] = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-            this->shaderInput.updateStorageBuffer(
-                this->testSB,
-                (void*)&testMats[0]
-            );
-            this->shaderInput.setStorageBuffer(this->testSB);
 
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
