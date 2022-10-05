@@ -38,6 +38,7 @@ void Engine::run(Scene* startScene)
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
     this->audioHandler.setSceneHandler(&sceneHandler);
+    this->matrixHandler.setSceneHandler(&sceneHandler);
 
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
@@ -79,6 +80,7 @@ void Engine::run(Scene* startScene)
         this->sceneHandler.update();
         this->networkHandler.updateNetwork();
         this->audioHandler.update();
+        this->matrixHandler.update();
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);

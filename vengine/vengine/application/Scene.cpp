@@ -1,6 +1,5 @@
 #include "Scene.hpp"
 #include "SceneHandler.hpp"
-#include "../systems/UpdateMatricesSystem.hpp"
 #include "../network/NetworkHandler.h"
 #include "Time.hpp"
 
@@ -17,7 +16,6 @@ NetworkHandler* Scene::getNetworkHandler()
 Scene::Scene()
 	: sceneHandler(nullptr)
 {
-	this->createSystem<UpdateMatricesSystem>();
 }
 
 Scene::~Scene()

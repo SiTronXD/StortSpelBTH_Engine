@@ -4,6 +4,7 @@
 #include "network/NetworkHandler.h"
 #include "application/SceneHandler.hpp"
 #include "ResourceManagement/ResourceManager.hpp"
+#include "application/MatrixHandler.hpp"
 
 class Engine
 {
@@ -19,6 +20,7 @@ public:
     ResourceManager resourceMan;
 	NetworkHandler networkHandler;
 	AudioHandler audioHandler;
+    MatrixHandler matrixHandler;
 };
 
 
