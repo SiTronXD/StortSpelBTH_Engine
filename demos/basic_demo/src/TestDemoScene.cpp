@@ -49,6 +49,9 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(testEntity2);
 	meshComp2.meshID = Scene::getResourceManager()->addMesh("Amogus/source/1.fbx");
+	// meshComp2.meshID = Scene::getResourceManager()->addMesh("Stormtrooper/source/silly_dancing.fbx");
+
+	this->setComponent<AnimationComponent>(testEntity2);
 }
 
 void TestDemoScene::update()

@@ -30,6 +30,7 @@
 #include "../application/Scene.hpp"
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
+#include "../components/AnimationComponent.hpp"
 #include "../dev/Log.hpp"
 #include "../ResourceManagement/ResourceManager.hpp"
 #include "../ResourceManagement/loaders/MeshLoader.hpp"
@@ -490,29 +491,52 @@ void VulkanRenderer::initMeshes(Scene* scene)
 	);
     this->animShaderInput.setNumShaderStorageBuffers(1);
 
-    // Temporary solution for "hasAnimations" and "numAnimTransforms"
-    auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
-    tView.each([&](Transform& transform, MeshComponent& meshComponent)
+    // Add shader inputs for animations
+    auto tView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
+    tView.each([&](
+        const Transform& transform, 
+        const MeshComponent& meshComponent, 
+        AnimationComponent& animationComponent)
         {
-            // Mesh
-            Mesh& currentMesh =
-                this->resourceManager->getMesh(meshComponent.meshID);
+            // Extract mesh information
+            Mesh& currentMesh = this->resourceManager->getMesh(meshComponent.meshID);
+            std::vector<Bone>& bones = currentMesh.getMeshData().bones;
+            uint32_t numAnimationBones = currentMesh.getMeshData().bones.size();
 
-            // Check for number of animation bones
-            uint32_t meshNumAnimationBones =
-                currentMesh
-                .getMeshData()
-                .bones.size();
+            // Add new storage buffer for animations
+            StorageBufferID newStorageBufferID =
+                this->animShaderInput.addStorageBuffer(
+                    numAnimationBones * sizeof(glm::mat4));
 
-            // Animations found
-            meshComponent.hasAnimations = meshNumAnimationBones > 0;
-            if (meshComponent.hasAnimations)
+            // Update mesh with storage buffer ID
+            currentMesh.setAnimTransformsBufferID(newStorageBufferID);
+
+            // Set end time
+            float maxTimeStamp = 0.0f;
+            for (size_t i = 0; i < bones.size(); ++i)
             {
-                StorageBufferID newStorageBufferID =
-                    this->animShaderInput.addStorageBuffer(
-                        meshNumAnimationBones * sizeof(glm::mat4));
-                currentMesh.setAnimTransformsBufferID(newStorageBufferID);
+                // Translation
+                for (size_t j = 0; j < bones[i].translationStamps.size(); ++j)
+                {
+                    if (bones[i].translationStamps[j].first > maxTimeStamp)
+                        maxTimeStamp = bones[i].translationStamps[j].first;
+                }
+
+                // Rotation
+                for (size_t j = 0; j < bones[i].rotationStamps.size(); ++j)
+                {
+                    if (bones[i].rotationStamps[j].first > maxTimeStamp)
+                        maxTimeStamp = bones[i].rotationStamps[j].first;
+                }
+
+                // Scale
+                for (size_t j = 0; j < bones[i].scaleStamps.size(); ++j)
+                {
+                    if (bones[i].scaleStamps[j].first > maxTimeStamp)
+                        maxTimeStamp = bones[i].scaleStamps[j].first;
+                }
             }
+            animationComponent.endTime = maxTimeStamp;
         }
     );
 
@@ -1036,49 +1060,48 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 );
                 
                 // For every non-animating mesh we have
-                auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
-                tView.each([&](const Transform& transform, const MeshComponent& meshComponent)
+                auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent>);
+                meshView.each([&](
+                    const Transform& transform, 
+                    const MeshComponent& meshComponent)
                     {
-                        if (!meshComponent.hasAnimations)
+                        auto& currModel =
+                            this->resourceManager->getMesh(meshComponent.meshID);
+
+                        const glm::mat4& modelMatrix = transform.matrix;
+
+                        // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                        currentCommandBuffer.pushConstant(
+                            this->shaderInput, (void*)&modelMatrix
+                        );
+
+                        // Bind vertex buffer
+                        currentCommandBuffer.bindVertexBuffers2(
+                            currModel.getVertexBuffer()
+                        );
+
+                        // Bind index buffer
+                        currentCommandBuffer.bindIndexBuffer(
+                            currModel.getIndexBuffer()
+                        );
+
+                        const std::vector<SubmeshData>& submeshes =
+                            currModel.getSubmeshData();
+                        for (size_t i = 0; i < submeshes.size(); ++i)
                         {
-                            auto& currModel =
-                                this->resourceManager->getMesh(meshComponent.meshID);
+                            const SubmeshData& currentSubmesh = submeshes[i];
 
-                            const glm::mat4& modelMatrix = transform.matrix;
-
-                            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                            currentCommandBuffer.pushConstant(
-                                this->shaderInput, (void*)&modelMatrix
+                            // Update for descriptors
+                            this->shaderInput.setCurrentFrame(this->currentFrame);
+                            this->shaderInput.setTexture(
+                                this->sampler, currentSubmesh.materialIndex
                             );
+                            currentCommandBuffer.bindShaderInput(this->shaderInput);
 
-                            // Bind vertex buffer
-                            currentCommandBuffer.bindVertexBuffers2(
-                                currModel.getVertexBuffer()
+                            // Draw
+                            currentCommandBuffer.drawIndexed(
+                                currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
                             );
-
-                            // Bind index buffer
-                            currentCommandBuffer.bindIndexBuffer(
-                                currModel.getIndexBuffer()
-                            );
-
-                            const std::vector<SubmeshData>& submeshes =
-                                currModel.getSubmeshData();
-                            for (size_t i = 0; i < submeshes.size(); ++i)
-                            {
-                                const SubmeshData& currentSubmesh = submeshes[i];
-
-                                // Update for descriptors
-                                this->shaderInput.setCurrentFrame(this->currentFrame);
-                                this->shaderInput.setTexture(
-                                    this->sampler, currentSubmesh.materialIndex
-                                );
-                                currentCommandBuffer.bindShaderInput(this->shaderInput);
-
-                                // Draw
-                                currentCommandBuffer.drawIndexed(
-                                    currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
-                                );
-                            }
                         }
                     }
                 );
@@ -1086,117 +1109,110 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 // Bind Pipeline to be used in render pass
                 currentCommandBuffer.bindGraphicsPipeline(this->animPipeline);
 
-			    tempTimer += Time::getDT() * 24.0f;
-			    if (tempTimer >= 60.0f)
-			    {
-				    tempTimer = 0.0f;
-                }
-
                 // For every animating mesh we have
-                tView.each(
+                auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
+                animView.each(
                     [&](const Transform& transform,
-                        const MeshComponent& meshComponent)
+                        const MeshComponent& meshComponent,
+                        const AnimationComponent& animationComponent)
                     {
-                        if (meshComponent.hasAnimations)
-                        {
-                            Mesh& currentMesh =
-                                this->resourceManager->getMesh(meshComponent.meshID);
+                        Mesh& currentMesh =
+                            this->resourceManager->getMesh(meshComponent.meshID);
 
-                            MeshData& currentMeshData =
-					            currentMesh.getMeshData();
+                        MeshData& currentMeshData =
+					        currentMesh.getMeshData();
 
-                            // Transformations
-					        glm::mat4* boneTransforms =
-					            new glm::mat4[currentMeshData.bones.size()];
-					        for (size_t i = 0; i < currentMeshData.bones.size();
-					             ++i)
-					        {
-						        Bone& currentBone = currentMeshData.bones[i];
+                        // Transformations
+					    glm::mat4* boneTransforms =
+					        new glm::mat4[currentMeshData.bones.size()];
+					    for (size_t i = 0; i < currentMeshData.bones.size();
+					            ++i)
+					    {
+						    Bone& currentBone = currentMeshData.bones[i];
 
-                                // Reset to identity matrix
-						        glm::mat4 finalTransform =
-						            currentBone.inverseBindPoseMatrix;
-						        glm::mat4 deltaTransform = glm::mat4(1.0f);
+                            // Reset to identity matrix
+						    glm::mat4 finalTransform =
+						        currentBone.inverseBindPoseMatrix;
+						    glm::mat4 deltaTransform = glm::mat4(1.0f);
 
-                                // Apply transformation from parent
-						        if (currentBone.parentIndex >= 0)
-						        {
-							        deltaTransform =
-							            currentMeshData
-							                .bones[currentBone.parentIndex]
-							                .finalMatrix;
-                                }
-
-                                // Apply this local transformation
-						        deltaTransform = 
-                                    deltaTransform *
-                                    this->getLocalBoneTransform(
-						                currentBone,
-                                        tempTimer
-						            );
-
-                                currentBone.finalMatrix = deltaTransform;
-
-                                // Apply inverse bind and local transform
-						        finalTransform =
-                                    deltaTransform * finalTransform;
-
-                                // Apply final transform to array element
-						        boneTransforms[i] = finalTransform;
-					        }
-
-					        this->animShaderInput.updateStorageBuffer(
-					            this->animTransformsSB,
-					            (void *)&boneTransforms[0],
-					            this->currentFrame
-					        );
-                            this->animShaderInput.setStorageBuffer(
-                                currentMesh.getAnimTransformsBufferID());
-					        delete[] boneTransforms;
-
-
-
-
-                            const glm::mat4& modelMatrix = transform.matrix;
-
-                            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                            currentCommandBuffer.pushConstant(
-                                this->animShaderInput, (void*)&modelMatrix
-                            );
-
-                            // Bind vertex buffer
-                            currentCommandBuffer.bindVertexBuffers2(
-					            currentMesh.getVertexBuffer()
-                            );
-
-                            // Bind index buffer
-                            currentCommandBuffer.bindIndexBuffer(
-					            currentMesh.getIndexBuffer()
-                            );
-
-                            const std::vector<SubmeshData>& submeshes =
-					            currentMesh.getSubmeshData();
-                            for (size_t i = 0; i < submeshes.size(); ++i)
-                            {
-                                const SubmeshData& currentSubmesh = submeshes[i];
-
-                                // Update for descriptors
-                                this->animShaderInput.setCurrentFrame(
-                                    this->currentFrame
-                                );
-                                this->animShaderInput.setTexture(
-                                    this->animSampler, 
-                                    currentSubmesh.materialIndex
-                                );
-                                currentCommandBuffer.bindShaderInput(
-                                    this->animShaderInput
-                                );
-
-                                // Draw
-                                currentCommandBuffer.drawIndexed(
-                                    currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
-                                );
+                            // Apply transformation from parent
+						    if (currentBone.parentIndex >= 0)
+						    {
+							    deltaTransform =
+							        currentMeshData
+							            .bones[currentBone.parentIndex]
+							            .finalMatrix;
                             }
+
+                            // Apply this local transformation
+						    deltaTransform = 
+                                deltaTransform *
+                                this->getLocalBoneTransform(
+						            currentBone,
+                                    animationComponent.timer
+						        );
+
+                            currentBone.finalMatrix = deltaTransform;
+
+                            // Apply inverse bind and local transform
+						    finalTransform =
+                                deltaTransform * finalTransform;
+
+                            // Apply final transform to array element
+						    boneTransforms[i] = finalTransform;
+					    }
+
+					    this->animShaderInput.updateStorageBuffer(
+					        this->animTransformsSB,
+					        (void *)&boneTransforms[0],
+					        this->currentFrame
+					    );
+                        this->animShaderInput.setStorageBuffer(
+                            currentMesh.getAnimTransformsBufferID());
+					    delete[] boneTransforms;
+
+
+
+
+                        const glm::mat4& modelMatrix = transform.matrix;
+
+                        // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                        currentCommandBuffer.pushConstant(
+                            this->animShaderInput, (void*)&modelMatrix
+                        );
+
+                        // Bind vertex buffer
+                        currentCommandBuffer.bindVertexBuffers2(
+					        currentMesh.getVertexBuffer()
+                        );
+
+                        // Bind index buffer
+                        currentCommandBuffer.bindIndexBuffer(
+					        currentMesh.getIndexBuffer()
+                        );
+
+                        const std::vector<SubmeshData>& submeshes =
+					        currentMesh.getSubmeshData();
+                        for (size_t i = 0; i < submeshes.size(); ++i)
+                        {
+                            const SubmeshData& currentSubmesh = submeshes[i];
+
+                            // Update for descriptors
+                            this->animShaderInput.setCurrentFrame(
+                                this->currentFrame
+                            );
+                            this->animShaderInput.setTexture(
+                                this->animSampler, 
+                                currentSubmesh.materialIndex
+                            );
+                            currentCommandBuffer.bindShaderInput(
+                                this->animShaderInput
+                            );
+
+                            // Draw
+                            currentCommandBuffer.drawIndexed(
+                                currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
+                            );
                         }
                     }
                 );

@@ -1,6 +1,7 @@
 #include "SceneHandler.hpp"
 #include "Time.hpp"
 #include "../graphics/VulkanRenderer.hpp"
+#include "../components/AnimationComponent.hpp"
 
 SceneHandler::SceneHandler()
 	: scene(nullptr),
@@ -18,6 +19,19 @@ void SceneHandler::update()
 {
 	this->scene->updateSystems();
 	this->scene->update();
+
+	// Update animation timer
+	auto animView = scene->getSceneReg().view<AnimationComponent>();
+	animView.each([&]
+			(AnimationComponent& animationComponent)
+		{
+			animationComponent.timer += Time::getDT() * 24.0f;
+			if (animationComponent.timer >= animationComponent.endTime)
+			{
+				animationComponent.timer -= animationComponent.endTime;
+			}
+		}
+	);
 }
 
 void SceneHandler::updateToNextScene()

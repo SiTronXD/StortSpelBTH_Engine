@@ -3,5 +3,4 @@
 struct MeshComponent
 {
 	int meshID;
-	bool hasAnimations;
 };

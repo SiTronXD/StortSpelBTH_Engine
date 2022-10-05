@@ -114,6 +114,7 @@
     <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
+    <ClInclude Include="vengine\components\AnimationComponent.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

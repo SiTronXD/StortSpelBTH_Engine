@@ -150,7 +150,6 @@ private:
 
 
     // TODO: remove this
-	float tempTimer = 0.0f;
 	void getLerp(
         const std::vector<std::pair<float, glm::vec3>>& stamps,
         const float& timer,
