@@ -35,6 +35,7 @@ void Engine::run(Scene* startScene)
 {
     this->sceneHandler.setScene(startScene);
     this->sceneHandler.updateToNextScene();
+    this->physEngine.setSceneHandler(&this->sceneHandler);
 
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
@@ -74,6 +75,7 @@ void Engine::run(Scene* startScene)
 
         Time::updateDeltaTime();
         this->sceneHandler.update();
+        this->physEngine.update();
 
         // ------------------------------------
 

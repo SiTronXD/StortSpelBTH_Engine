@@ -2,7 +2,6 @@
 #include "TestDemoScene.h"
 #include "glm/gtx/string_cast.hpp"
 #include "glm/glm.hpp"
-#include "glm/gtx/string_cast.hpp"
 
 TestDemoScene::TestDemoScene()
 	: testEntity(-1), testEntity2(-1), physEngine()
@@ -49,9 +48,21 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
 
-	physEngine.createSphereCol(glm::vec3(0.f, 0.f, 25.f), 20.f);
-	physEngine.createCapsuleCol(transform2.position, glm::vec3(20.f, 20.f, 20.f), 1.f, transform2.rotation);
-	physEngine.createBoxCol(glm::vec3(0.f, -100.f, 0.f), glm::vec3(200.f, 10.f, 200.f));
+	// Collider components
+	this->setComponent<SphereCollider>(this->testEntity2);
+	SphereCollider& sphere = this->getComponent<SphereCollider>(this->testEntity2);
+	sphere = { .pos = {0.f, 0.f, 25.f}, .radius = 20.f };
+
+	this->setComponent<CapsuleCollider>(this->testEntity2);
+	CapsuleCollider& capsule = this->getComponent<CapsuleCollider>(this->testEntity2);
+	capsule = { .pos = transform2.position, .rot = transform2.rotation, .height = 20.f, .radius = 10.f };
+	this->setComponent<RigidBody>(this->testEntity2);
+	RigidBody& rigidBody = this->getComponent<RigidBody>(this->testEntity2);
+	rigidBody = { .pos = transform2.position, .rot = transform2.rotation };
+
+	this->setComponent<BoxCollider>(this->testEntity2);
+	BoxCollider& box = this->getComponent<BoxCollider>(this->testEntity2);
+	box = { .pos = {0.f, -100.f, 0.f}, .halfExtents = {200.f, 10.f, 200.f} };
 }
 
 void TestDemoScene::update()
@@ -59,15 +70,14 @@ void TestDemoScene::update()
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
 	//transform2.position.x += Time::getDT();
 
-	physEngine.update(*this, this->testEntity2);
-	if (Input::isKeyDown(Keys::E))
-	{
-		physEngine.applyForce(glm::vec3(0, 100, 0));
-	}
-	else
-	{
-		physEngine.applyForce(glm::vec3(0, -50, 0));
-	}
+	//if (Input::isKeyDown(Keys::E))
+	//{
+	//	physEngine.applyForce(glm::vec3(0, 100, 0));
+	//}
+	//else
+	//{
+	//	physEngine.applyForce(glm::vec3(0, -50, 0));
+	//}
 	if (Input::isKeyDown(Keys::T))
 	{
 		physEngine.shootRay(glm::vec3(0, 0, -60), glm::vec3(0, 0, 60));

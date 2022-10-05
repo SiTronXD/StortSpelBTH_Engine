@@ -5,81 +5,71 @@
 PhysicsEngine::PhysicsEngine()
 	:colShapes(), timer(0.f), timeStep(1.f / 30.f)
 {
-	collconfig = new btDefaultCollisionConfiguration();
-	collDisp = new btCollisionDispatcher(collconfig);
-	bpInterface = new btDbvtBroadphase();
-	solver = new btSequentialImpulseConstraintSolver;
-	dynWorld = new btDiscreteDynamicsWorld(collDisp, bpInterface, solver, collconfig);
-	dynWorld->setGravity(btVector3(0, -10, 0));
+	this->collconfig = new btDefaultCollisionConfiguration();
+	this->collDisp = new btCollisionDispatcher(this->collconfig);
+	this->bpInterface = new btDbvtBroadphase();
+	this->solver = new btSequentialImpulseConstraintSolver;
+	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
+	this->dynWorld->setGravity(btVector3(0, -10, 0));
 }
 
 PhysicsEngine::~PhysicsEngine()
 {
 	//remove the rigidbodies from the dynamics world and delete them
-	for (int i = dynWorld->getNumCollisionObjects() - 1; i >= 0; i--)
+	for (int i = this->dynWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
-		btCollisionObject* obj = dynWorld->getCollisionObjectArray()[i];
+		btCollisionObject* obj = this->dynWorld->getCollisionObjectArray()[i];
 		btRigidBody* body = btRigidBody::upcast(obj);
 		if (body && body->getMotionState())
 		{
 			delete body->getMotionState();
 		}
-		dynWorld->removeCollisionObject(obj);
+		this->dynWorld->removeCollisionObject(obj);
 		delete obj;
 	}
 
 	//delete collision shapes
-	for (int j = 0; j < colShapes.size(); j++)
+	for (int j = 0; j < this->colShapes.size(); j++)
 	{
-		btCollisionShape* shape = colShapes[j];
-		colShapes[j] = 0;
+		btCollisionShape* shape = this->colShapes[j];
+		this->colShapes[j] = 0;
 		delete shape;
 	}
 
 	//delete dynamics world
-	delete dynWorld;
+	delete this->dynWorld;
 
 	//delete solver
-	delete solver;
+	delete this->solver;
 
 	//delete broadphase
-	delete bpInterface;
+	delete this->bpInterface;
 
 	//delete dispatcher
-	delete collDisp;
+	delete this->collDisp;
 
-	delete collconfig;
+	delete this->collconfig;
 
 	//next line is optional: it will be cleared by the destructor when the array goes out of scope
-	colShapes.clear();
+	this->colShapes.clear();
 }
 
-btVector3 from(10, 0, 0);
-btVector3 to(20, 0, 0);
-
-void PhysicsEngine::update(Scene& scene, int id)
+void PhysicsEngine::update()
 {
-	timer += Time::getDT();
-
-	Transform& trans = scene.getComponent<Transform>(id);
-	btVector3 colTrans = dynWorld->getCollisionObjectArray()[1]->getWorldTransform().getOrigin();
-	btQuaternion colRot = dynWorld->getCollisionObjectArray()[1]->getWorldTransform().getRotation();
-	trans.position = { colTrans.x(), colTrans.y(), colTrans.z()};
-	btScalar x, y, z;
-	colRot.getEulerZYX(y, x, z);
-	trans.rotation.x = glm::degrees(z);
-	trans.rotation.y = glm::degrees(x);
-	trans.rotation.z = glm::degrees(y);
+	updateSphere();
+	updateBox();
+	updateCapsule();
 	
-	while (timer >= timeStep)
+	this->timer += Time::getDT();
+	while (this->timer >= this->timeStep)
 	{
-		dynWorld->stepSimulation(btScalar(timeStep), 1);
-		dynWorld->updateAabbs();
-		dynWorld->computeOverlappingPairs();
+		this->dynWorld->stepSimulation(btScalar(this->timeStep), 1);
+		this->dynWorld->updateAabbs();
+		this->dynWorld->computeOverlappingPairs();
 
-		for (int j = dynWorld->getNumCollisionObjects() - 1; j >= 0; j--)
+		for (int j = this->dynWorld->getNumCollisionObjects() - 1; j > -1; j--)
 		{
-			btCollisionObject* obj = dynWorld->getCollisionObjectArray()[j];
+			btCollisionObject* obj = this->dynWorld->getCollisionObjectArray()[j];
 			btRigidBody* body = btRigidBody::upcast(obj);
 			btTransform trans;
 			if (body && body->getMotionState())
@@ -124,24 +114,128 @@ void PhysicsEngine::update(Scene& scene, int id)
 			//}
 
 		}
-		timer -= timeStep;
-		std::cout << std::to_string(timer) << std::endl;
+		this->timer -= this->timeStep;
 	}
 }
 
-void PhysicsEngine::createRigidBody(glm::vec3 pos, float weight, glm::vec3 rot)
+void PhysicsEngine::updateSphere()
 {
-	btScalar mass(weight);
+	auto view = this->sceneHandler->getScene()->getSceneReg().view<Transform, SphereCollider>();
+	auto foo = [&](Transform& transform, SphereCollider& sphere)
+	{
+		if (sphere.ID == -1)
+		{
+			createSphereCol(sphere);
+		}
+		else
+		{
+			btVector3 colTrans = this->dynWorld->getCollisionObjectArray()[sphere.ID]->getWorldTransform().getOrigin();
+			btQuaternion colRot = this->dynWorld->getCollisionObjectArray()[sphere.ID]->getWorldTransform().getRotation();
+			transform.position = { colTrans.x(), colTrans.y(), colTrans.z() };
+			btScalar x, y, z;
+			colRot.getEulerZYX(y, x, z);
+			transform.rotation.x = glm::degrees(z);
+			transform.rotation.y = glm::degrees(x);
+			transform.rotation.z = glm::degrees(y);
+		}
+	};
+	view.each(foo);
+}
+
+void PhysicsEngine::updateBox()
+{
+	auto view = this->sceneHandler->getScene()->getSceneReg().view<Transform, BoxCollider>();
+	auto foo = [&](Transform& transform, BoxCollider& box)
+	{
+		if (box.ID == -1)
+		{
+			createBoxCol(box);
+		}
+		else
+		{
+			btVector3 colTrans = this->dynWorld->getCollisionObjectArray()[box.ID]->getWorldTransform().getOrigin();
+			btQuaternion colRot = this->dynWorld->getCollisionObjectArray()[box.ID]->getWorldTransform().getRotation();
+			transform.position = { colTrans.x(), colTrans.y(), colTrans.z() };
+			btScalar x, y, z;
+			colRot.getEulerZYX(y, x, z);
+			transform.rotation.x = glm::degrees(z);
+			transform.rotation.y = glm::degrees(x);
+			transform.rotation.z = glm::degrees(y);
+		}
+	};
+	view.each(foo);
+}
+
+void PhysicsEngine::updateCapsule()
+{
+	auto view = this->sceneHandler->getScene()->getSceneReg().view<Transform, CapsuleCollider>();
+	auto foo = [&](Transform& transform, CapsuleCollider& capsule)
+	{
+		if (capsule.ID == -1)
+		{
+			createCapsuleCol(capsule);
+		}
+		else
+		{
+			btVector3 colTrans = this->dynWorld->getCollisionObjectArray()[capsule.ID]->getWorldTransform().getOrigin();
+			btQuaternion colRot = this->dynWorld->getCollisionObjectArray()[capsule.ID]->getWorldTransform().getRotation();
+			transform.position = { colTrans.x(), colTrans.y(), colTrans.z() };
+			btScalar x, y, z;
+			colRot.getEulerZYX(y, x, z);
+			transform.rotation.x = glm::degrees(z);
+			transform.rotation.y = glm::degrees(x);
+			transform.rotation.z = glm::degrees(y);
+		}
+	};
+	view.each(foo);
+}
+
+void PhysicsEngine::updateRigidBody()
+{
+	auto view = this->sceneHandler->getScene()->getSceneReg().view<Transform, RigidBody>();
+	auto foo = [&](Transform& transform, RigidBody& rigidBody)
+	{
+		if (rigidBody.ID == -1)
+		{
+			createRigidBody(rigidBody);
+		}
+		else
+		{
+			btVector3 colTrans = this->dynWorld->getCollisionObjectArray()[rigidBody.ID]->getWorldTransform().getOrigin();
+			btQuaternion colRot = this->dynWorld->getCollisionObjectArray()[rigidBody.ID]->getWorldTransform().getRotation();
+			transform.position = { colTrans.x(), colTrans.y(), colTrans.z() };
+			btScalar x, y, z;
+			colRot.getEulerZYX(y, x, z);
+			transform.rotation.x = glm::degrees(z);
+			transform.rotation.y = glm::degrees(x);
+			transform.rotation.z = glm::degrees(y);
+		}
+	};
+	view.each(foo);
+}
+
+void PhysicsEngine::createRigidBody(RigidBody& rigidBody)
+{
+	btScalar mass(rigidBody.weight);
 
 	btTransform transform;
 	transform.setIdentity();
-	transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
+	transform.setOrigin(btVector3(rigidBody.pos.x, rigidBody.pos.y, rigidBody.pos.z));
+	btScalar x, y, z;
+	x = glm::radians(rigidBody.rot.x);
+	y = glm::radians(rigidBody.rot.y);
+	z = glm::radians(rigidBody.rot.z);
+	btQuaternion rotation(y, x, z);
+	transform.setRotation(rotation);
 
 	btDefaultMotionState* motionState = new btDefaultMotionState(transform);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(mass, motionState, NULL);
 	btRigidBody* body = new btRigidBody(rbInfo);
 
-	dynWorld->addRigidBody(body);
+	this->dynWorld->addRigidBody(body);
+
+	rigidBody.ID = this->dynWorld->getCollisionObjectArray().size() - 1;
+	rigidBodyVec.emplace_back(rigidBody);
 }
 
 void PhysicsEngine::createRigidBody(glm::vec3 pos, btCollisionShape* shape, float weight, glm::vec3 rot, bool passThrough)
@@ -169,97 +263,151 @@ void PhysicsEngine::createRigidBody(glm::vec3 pos, btCollisionShape* shape, floa
 		body->setCollisionFlags(4);
 	}
 
-	dynWorld->addRigidBody(body);
+	this->dynWorld->addRigidBody(body);
 }
 
-void PhysicsEngine::createSphereCol(glm::vec3 pos, float radius, bool passThrough, glm::vec3 rot)
+void PhysicsEngine::createSphereCol(SphereCollider& collider)
 {
-	btCollisionShape* sphereShape = new btSphereShape(radius);
-	colShapes.push_back(sphereShape);
+	btCollisionShape* sphereShape = new btSphereShape(collider.radius);
+	this->colShapes.push_back(sphereShape);
 
-	btCollisionObject* sphere = new btCollisionObject;
-	if (passThrough)
+	if (collider.hasRigidBody)
 	{
-		sphere->setCollisionFlags(4);
+		createRigidBody(collider.pos, sphereShape, collider.weight, collider.rot, collider.isTrigger);
+		collider.ID = this->dynWorld->getCollisionObjectArray().size() - 1;
 	}
-	sphere->setCollisionShape(sphereShape);
-
-	btTransform transform;
-	transform.setIdentity();
-	transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-
-	sphere->setWorldTransform(transform);
-	dynWorld->addCollisionObject(sphere);
-}
-
-void PhysicsEngine::createSphereCol(glm::vec3 pos, float radius, float weight, glm::vec3 rot, bool passThrough)
-{
-	btCollisionShape* sphereShape = new btSphereShape(radius);
-	colShapes.push_back(sphereShape);
-
-	createRigidBody(pos, sphereShape, weight, rot, passThrough);
-}
-
-void PhysicsEngine::createBoxCol(glm::vec3 pos, glm::vec3 halfExtents, bool passThrough, glm::vec3 rot)
-{
-	btCollisionShape* boxShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
-	colShapes.push_back(boxShape);
-	
-	btCollisionObject* box = new btCollisionObject;
-	if (passThrough)
+	else
 	{
-		box->setCollisionFlags(4);
+		btCollisionObject* sphere = new btCollisionObject;
+		if (collider.isTrigger)
+		{
+			sphere->setCollisionFlags(4);
+		}
+		sphere->setCollisionShape(sphereShape);
+
+		btTransform transform;
+		transform.setIdentity();
+		transform.setOrigin(btVector3(collider.pos.x, collider.pos.y, collider.pos.z));
+		btScalar x, y, z;
+		x = glm::radians(collider.rot.x);
+		y = glm::radians(collider.rot.y);
+		z = glm::radians(collider.rot.z);
+		btQuaternion rotation(y, x, z);
+		transform.setRotation(rotation);
+
+		sphere->setWorldTransform(transform);
+		this->dynWorld->addCollisionObject(sphere);
+
+		collider.ID = this->dynWorld->getCollisionObjectArray().size() - 1;
+		sphereVec.emplace_back(collider);
 	}
-	box->setCollisionShape(boxShape);
-
-	btTransform transform;
-	transform.setIdentity();
-	transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-
-	box->setWorldTransform(transform);
-	dynWorld->addCollisionObject(box);
 }
 
-void PhysicsEngine::createBoxCol(glm::vec3 pos, glm::vec3 halfExtents, float weight, glm::vec3 rot, bool passThrough)
+void PhysicsEngine::createBoxCol(BoxCollider& collider)
 {
-	btCollisionShape* boxShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
-	colShapes.push_back(boxShape);
+	btCollisionShape* boxShape = new btBoxShape(btVector3(collider.halfExtents.x, collider.halfExtents.y, collider.halfExtents.z));
+	this->colShapes.push_back(boxShape);
 
-	createRigidBody(pos, boxShape, weight, rot, passThrough);
-}
-
-void PhysicsEngine::createCapsuleCol(glm::vec3 pos, glm::vec3 halfExtents, bool passThrough, glm::vec3 rot)
-{
-	btCollisionShape* capsuleShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
-	colShapes.push_back(capsuleShape);
-
-	btCollisionObject* capsule = new btCollisionObject;
-	if (passThrough)
+	if (collider.hasRigidBody)
 	{
-		capsule->setCollisionFlags(4);
+		createRigidBody(collider.pos, boxShape, collider.weight, collider.rot, collider.isTrigger);
+		collider.ID = this->dynWorld->getCollisionObjectArray().size() - 1;
 	}
-	capsule->setCollisionShape(capsuleShape);
+	else
+	{
+		btCollisionObject* box = new btCollisionObject;
+		if (collider.isTrigger)
+		{
+			box->setCollisionFlags(4);
+		}
+		box->setCollisionShape(boxShape);
 
-	btTransform transform;
-	transform.setIdentity();
-	transform.setOrigin(btVector3(pos.x, pos.y, pos.z));
-	btScalar x, y, z;
-	x = glm::radians(rot.y);
-	y = glm::radians(rot.x);
-	z = glm::radians(rot.z);
-	btQuaternion rotation(x, y, z);
-	transform.setRotation(rotation);
+		btTransform transform;
+		transform.setIdentity();
+		transform.setOrigin(btVector3(collider.pos.x, collider.pos.y, collider.pos.z));
+		btScalar x, y, z;
+		x = glm::radians(collider.rot.x);
+		y = glm::radians(collider.rot.y);
+		z = glm::radians(collider.rot.z);
+		btQuaternion rotation(y, x, z);
+		transform.setRotation(rotation);
 
-	capsule->setWorldTransform(transform);
-	dynWorld->addCollisionObject(capsule);
+		box->setWorldTransform(transform);
+		dynWorld->addCollisionObject(box);
+
+		collider.ID = this->dynWorld->getCollisionObjectArray().size() - 1;
+		boxVec.emplace_back(collider);
+	}
 }
 
-void PhysicsEngine::createCapsuleCol(glm::vec3 pos, glm::vec3 halfExtents, float weight, glm::vec3 rot, bool passThrough)
+void PhysicsEngine::createCapsuleCol(CapsuleCollider& collider)
 {
-	btCollisionShape* capsuleShape = new btBoxShape(btVector3(halfExtents.x, halfExtents.y, halfExtents.z));
-	colShapes.push_back(capsuleShape);
+	btCollisionShape* capsuleShape = new btCapsuleShape(collider.radius, collider.radius);
+	this->colShapes.push_back(capsuleShape);
 
-	createRigidBody(pos, capsuleShape, weight, rot, passThrough);
+	if (collider.hasRigidBody)
+	{
+		createRigidBody(collider.pos, capsuleShape, collider.weight, collider.rot, collider.isTrigger);
+		collider.ID = dynWorld->getCollisionObjectArray().size() - 1;
+	}
+	else
+	{
+		btCollisionObject* capsule = new btCollisionObject;
+		if (collider.isTrigger)
+		{
+			capsule->setCollisionFlags(4);
+		}
+		capsule->setCollisionShape(capsuleShape);
+
+		btTransform transform;
+		transform.setIdentity();
+		transform.setOrigin(btVector3(collider.pos.x, collider.pos.y, collider.pos.z));
+		btScalar x, y, z;
+		x = glm::radians(collider.rot.y);
+		y = glm::radians(collider.rot.x);
+		z = glm::radians(collider.rot.z);
+		btQuaternion rotation(x, y, z);
+		transform.setRotation(rotation);
+
+		capsule->setWorldTransform(transform);
+		this->dynWorld->addCollisionObject(capsule);
+
+		collider.ID = this->dynWorld->getCollisionObjectArray().size() - 1;
+		capsuleVec.emplace_back(collider);
+	}
+}
+
+bool PhysicsEngine::removeCollider(int ID)
+{
+	int tempID = this->dynWorld->getCollisionObjectArray().size() - 1;
+
+	delete this->dynWorld->getCollisionObjectArray()[ID];
+
+	for (size_t i = 0; i < sphereVec.size(); i++)
+	{
+		if (this->sphereVec[i].ID == tempID)
+		{
+			this->sphereVec[i].ID = ID;
+			return true;
+		}
+	}
+	for (size_t i = 0; i < boxVec.size(); i++)
+	{
+		if (this->boxVec[i].ID == tempID)
+		{
+			this->boxVec[i].ID = ID;
+			return true;
+		}
+	}
+	for (size_t i = 0; i < capsuleVec.size(); i++)
+	{
+		if (this->capsuleVec[i].ID == tempID)
+		{
+			this->capsuleVec[i].ID = ID;
+			return true;
+		}
+	}
+	return false;
 }
 
 void PhysicsEngine::shootRay(glm::vec3 pos, glm::vec3 dir, float distance)
@@ -272,7 +420,7 @@ void PhysicsEngine::shootRay(glm::vec3 pos, glm::vec3 dir, float distance)
 	btCollisionWorld::ClosestRayResultCallback closestResults(ray.pos, ray.dir);
 	closestResults.m_flags |= btTriangleRaycastCallback::kF_FilterBackfaces;
 
-	dynWorld->rayTest(ray.pos, ray.dir, closestResults);
+	this->dynWorld->rayTest(ray.pos, ray.dir, closestResults);
 
 	if (closestResults.hasHit())
 	{
@@ -285,5 +433,10 @@ void PhysicsEngine::shootRay(glm::vec3 pos, glm::vec3 dir, float distance)
 void PhysicsEngine::applyForce(glm::vec3 force)
 {
 	btVector3 btForce = { force.x, force.y, force.z };
-	dynWorld->getNonStaticRigidBodies().at(0)->applyForce(btForce, btVector3(0, 0, 0));
+	this->dynWorld->getNonStaticRigidBodies().at(0)->applyForce(btForce, btVector3(0, 0, 0));
+}
+
+void PhysicsEngine::setSceneHandler(SceneHandler* sceneHandler)
+{
+	this->sceneHandler = sceneHandler;
 }
