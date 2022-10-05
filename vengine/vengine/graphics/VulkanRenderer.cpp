@@ -952,6 +952,12 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     this->pipeline
                 );
                 
+                // Update for descriptors
+                currentCommandBuffer.bindShaderInputFrequency(
+                    this->shaderInput,
+                    DescriptorFrequency::PER_FRAME
+                );
+
                 // For every non-animating mesh we have
                 auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent>);
                 meshView.each([&](
@@ -978,6 +984,12 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             currModel.getIndexBuffer()
                         );
 
+                        // Update for descriptors
+                        currentCommandBuffer.bindShaderInputFrequency(
+                            this->shaderInput,
+                            DescriptorFrequency::PER_MESH
+                        );
+
                         const std::vector<SubmeshData>& submeshes =
                             currModel.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
@@ -988,7 +1000,10 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             this->shaderInput.setTexture(
                                 this->sampler, currentSubmesh.materialIndex
                             );
-                            currentCommandBuffer.bindShaderInput(this->shaderInput);
+                            currentCommandBuffer.bindShaderInputFrequency(
+                                this->shaderInput,
+                                DescriptorFrequency::PER_DRAW_CALL
+                            );
 
                             // Draw
                             currentCommandBuffer.drawIndexed(
@@ -1000,6 +1015,12 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                 // Bind Pipeline to be used in render pass
                 currentCommandBuffer.bindGraphicsPipeline(this->animPipeline);
+
+                // Update for descriptors
+                currentCommandBuffer.bindShaderInputFrequency(
+                    this->animShaderInput,
+                    DescriptorFrequency::PER_FRAME
+                );
 
                 // For every animating mesh we have
                 auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
@@ -1044,6 +1065,12 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 					        currentMesh.getIndexBuffer()
                         );
 
+                        // Update for descriptors
+                        currentCommandBuffer.bindShaderInputFrequency(
+                            this->animShaderInput,
+                            DescriptorFrequency::PER_MESH
+                        );
+
                         const std::vector<SubmeshData>& submeshes =
 					        currentMesh.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
@@ -1055,8 +1082,9 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                                 this->animSampler, 
                                 currentSubmesh.materialIndex
                             );
-                            currentCommandBuffer.bindShaderInput(
-                                this->animShaderInput
+                            currentCommandBuffer.bindShaderInputFrequency(
+                                this->animShaderInput,
+                                DescriptorFrequency::PER_DRAW_CALL
                             );
 
                             // Draw
