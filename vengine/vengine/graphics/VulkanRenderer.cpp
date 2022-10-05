@@ -65,6 +65,13 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
 
     try 
     {
+        // Print out a clear message if validation layers are enabled
+        if (isValidationLayersEnabled())
+        {
+            Log::write("Validation layers are enabled.\n");
+        }
+
+        // Create the vulkan instance
         this->instance.createInstance(*this->window);
 
         // Create the surface
