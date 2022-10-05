@@ -113,11 +113,78 @@ int SceneLua::lua_iterateView(lua_State* L)
 
 int SceneLua::lua_createPrefab(lua_State* L)
 {
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+
 	if (lua_isstring(L, 1)) // Prefab file
 	{
-		
+		std::string path = lua_tostring(L, 1);
+		if (luaL_dofile(L, path.c_str()) != LUA_OK)
+		{
+			LuaH::dumpError(L);
+			return 0;
+		}
 	}
-	return 0;
+
+	if (!lua_istable(L, -1)) { return 0; }
+
+	int entity = scene->createEntity();
+
+	lua_getfield(L, -1, "Transform");
+	if (!lua_isnil(L, -1))
+	{
+		scene->setComponent<Transform>(entity, lua_totransform(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "Mesh");
+	if (!lua_isnil(L, -1))
+	{
+		scene->setComponent<MeshComponent>(entity, (int)lua_tointeger(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "Camera");
+	if (!lua_isnil(L, -1))
+	{
+		scene->setComponent<Camera>(entity, (float)lua_tonumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "Behaviour");
+	if (!lua_isnil(L, -1))
+	{
+		std::string path = lua_tostring(L, -1);
+		if (luaL_dofile(L, path.c_str()) != LUA_OK)
+		{ LuaH::dumpError(L); }
+		else
+		{
+			lua_pushvalue(L, -1);
+			int luaRef = luaL_ref(L, LUA_REGISTRYINDEX);
+
+			lua_pushinteger(L, entity);
+			lua_setfield(L, -2, "ID");
+
+			lua_pushstring(L, path.c_str());
+			lua_setfield(L, -2, "path");
+
+			Transform& t = scene->getComponent<Transform>(entity);
+			lua_pushtransform(L, scene->getComponent<Transform>(entity));
+			lua_setfield(L, -2, "transform");
+
+			scene->setComponent<Behaviour>(entity, path.c_str(), luaRef);
+
+			lua_getfield(L, -1, "init");
+			if (lua_type(L, -1) != LUA_TNIL)
+			{
+				lua_pushvalue(L, -2);
+				LUA_ERR_CHECK(L, lua_pcall(L, 1, 0, 0));
+			}
+		}
+	}
+	lua_pop(L, 1);
+
+	lua_pushnumber(L, entity);
+	return 1;
 }
 
 int SceneLua::lua_getMainCamera(lua_State* L)
@@ -153,8 +220,7 @@ int SceneLua::lua_entityValid(lua_State* L)
 
 int SceneLua::lua_createEntity(lua_State* L)
 {
-	SceneHandler* sh = (SceneHandler*)lua_touserdata(L, lua_upvalueindex(1));
-	Scene* scene = sh->getScene();
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
 	lua_pushnumber(L, scene->createEntity());
 	return 1;
 }
@@ -314,6 +380,7 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "createSystem", lua_createSystem },
 		{ "setScene", lua_setScene },
 		{ "iterateView", lua_iterateView },
+		{ "createPrefab", lua_createPrefab },
 		{ "getMainCamera", lua_getMainCamera },
 		{ "setMainCamera", lua_setMainCamera },
 		{ "getEntityCount", lua_getEntityCount },

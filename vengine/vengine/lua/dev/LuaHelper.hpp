@@ -72,6 +72,8 @@ namespace LuaH
 
 	static void printTable(lua_State* L, int index)
 	{
+		if (!lua_istable(L, index)) { return; }
+
 		lua_pushvalue(L, index);
 		lua_pushnil(L);
 		while (lua_next(L, -2))
