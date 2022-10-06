@@ -5,7 +5,7 @@
 #include "vulkan/VulkanDbg.hpp"
 #include "../dev/defs.hpp"
 #include "../dev/tracyHelper.hpp"
-#include "../ResourceManagement/Configurator.hpp"
+#include "../resource_management/Configurator.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -30,9 +30,9 @@
 #include "../application/Scene.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../dev/Log.hpp"
-#include "../ResourceManagement/ResourceManager.hpp"
-#include "../ResourceManagement/loaders/MeshLoader.hpp"
-#include "../ResourceManagement/loaders/TextureLoader.hpp"
+#include "../resource_management/ResourceManager.hpp"
+#include "../resource_management/loaders/MeshLoader.hpp"
+#include "../resource_management/loaders/TextureLoader.hpp"
 
 static void checkVkResult(VkResult err)
 {

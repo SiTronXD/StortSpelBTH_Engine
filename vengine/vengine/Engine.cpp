@@ -14,7 +14,7 @@
 #include "application/Input.hpp"
 #include "application/Time.hpp"
 #include "graphics/VulkanRenderer.hpp"
-#include "ResourceManagement/Configurator.hpp"
+#include "resource_management/Configurator.hpp"
 
 #include <chrono>
 #include <functional>
@@ -38,13 +38,14 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
-    this->audioHandler.setSceneHandler(&sceneHandler);
-    this->matrixHandler.setSceneHandler(&sceneHandler);
 
     // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
+
+    // Temporary, should be called before creating the scene
+    this->audioHandler.setSceneHandler(&sceneHandler);
 
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
@@ -58,7 +59,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     
     // Creating Vulkan Renderer Instance
     auto renderer = VulkanRenderer();
-    if (renderer.init(&window, std::move(appName), &this->resourceMan) == 1)
+    if (renderer.init(&window, std::move(appName), &this->resourceManager) == 1)
     {
         std::cout << "EXIT_FAILURE" << std::endl;
     }
@@ -87,7 +88,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         this->sceneHandler.update();
         this->networkHandler.updateNetwork();
         this->audioHandler.update();
-        this->matrixHandler.update();
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);

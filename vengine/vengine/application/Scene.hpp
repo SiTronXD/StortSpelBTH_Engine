@@ -5,7 +5,7 @@
 #include "../components/Camera.hpp"
 #include "../components/AudioSource.hpp"
 #include "../components/AudioListener.hpp"
-#include "../ResourceManagement/Configurator.hpp"
+#include "../resource_management/Configurator.hpp"
 
 #include <entt.hpp>
 #include <vector>
