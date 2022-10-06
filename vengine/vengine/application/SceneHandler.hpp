@@ -28,6 +28,7 @@ public:
 	NetworkHandler* getNetworkHandler();
 
 	void setScriptHandler(ScriptHandler* scriptHandler);
+	ScriptHandler* getScriptHandler();
 
 	Scene* getScene() const;
 };

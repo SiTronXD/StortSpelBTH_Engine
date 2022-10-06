@@ -65,7 +65,7 @@ namespace LuaH
 	{
 		if (lua_gettop(L) && lua_isstring(L, -1))
 		{
-			std::cout << "Lua Error: " << lua_tostring(L, -1) << std::endl;
+			std::cout << "Lua Error: " << lua_tostring(L, -1) << "\n";
 			lua_pop(L, 1);
 		}
 	}

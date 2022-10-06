@@ -2,7 +2,7 @@ local script = {}
 
 function script:init()
 	print("init with ID: " .. self.ID)
-	self.health = 100
+	print("Script2")
 end
 
 function script:update(dt)

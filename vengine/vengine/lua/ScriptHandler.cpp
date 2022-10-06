@@ -22,9 +22,9 @@ void ScriptHandler::lua_openmetatables(lua_State* L)
 void ScriptHandler::updateScripts()
 {
 	entt::registry& reg = this->sceneHandler->getScene()->getSceneReg();
-	auto view = reg.view<Transform, Behaviour>();
+	auto view = reg.view<Transform, Script>();
 
-	auto func = [&](Transform& transform, const Behaviour& script)
+	auto func = [&](Transform& transform, const Script& script)
 	{
 		lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
 		if (luaL_dofile(L, script.path) != LUA_OK)
@@ -45,6 +45,9 @@ void ScriptHandler::updateScripts()
 			return;
 		}
 
+		lua_pushtransform(L, transform);
+		lua_setfield(L, -3, "transform");
+
 		lua_pushvalue(L, -2);
 		lua_pushnumber(L, Time::getDT());
 
@@ -52,10 +55,11 @@ void ScriptHandler::updateScripts()
 		LUA_ERR_CHECK(L, lua_pcall(L, 2, 0, 0));
 
 		lua_getfield(L, -1, "transform");
-		Transform transformLua = lua_totransform(L, -1);
+		if (!lua_isnil(L, -1))
+		{
+			transform = lua_totransform(L, -1);
+		}
 		lua_pop(L, 2);
-
-		transform = transformLua;
 	};
 	view.each(func);
 }
@@ -84,6 +88,46 @@ bool ScriptHandler::runScript(std::string& path)
 	bool result = luaL_dofile(L, path.c_str()) == LUA_OK;
 	if (!result) { LuaH::dumpError(L); }
 	return result;
+}
+
+void ScriptHandler::setScriptComponent(int entity, std::string& path)
+{
+	Scene* scene = this->sceneHandler->getScene();
+
+	if (luaL_dofile(L, path.c_str()) != LUA_OK) { LuaH::dumpError(L); }
+	else
+	{
+		lua_pushvalue(L, -1);
+		int luaRef = luaL_ref(L, LUA_REGISTRYINDEX);
+
+		lua_pushinteger(L, entity);
+		lua_setfield(L, -2, "ID");
+
+		lua_pushstring(L, path.c_str());
+		lua_setfield(L, -2, "path");
+
+		Transform& t = scene->getComponent<Transform>(entity);
+		lua_pushtransform(L, scene->getComponent<Transform>(entity));
+		lua_setfield(L, -2, "transform");
+
+		scene->setComponent<Script>(entity, path.c_str(), luaRef);
+
+		lua_getfield(L, -1, "init");
+		if (lua_type(L, -1) == LUA_TNIL) { lua_pop(L, 2); }
+
+		lua_pushvalue(L, -2);
+		if (lua_pcall(L, 1, 0, 0) != LUA_OK) { LuaH::dumpError(L); }
+		else
+		{
+			lua_getfield(L, -1, "transform");
+			if (!lua_isnil(L, -1))
+			{
+				scene->setComponent<Transform>(entity, lua_totransform(L, -1));
+			}
+			lua_pop(L, 1);
+		}
+		lua_pop(L, 1);
+	}
 }
 
 void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)
@@ -130,7 +174,7 @@ void ScriptHandler::update()
 {
 	this->updateScripts();
 
-	if (Input::isKeyPressed(Keys::R))
+	if (Input::isKeyPressed(Keys::R) && Input::isKeyDown(Keys::CTRL))
 	{
 		this->sceneHandler->reloadScene();
 	}

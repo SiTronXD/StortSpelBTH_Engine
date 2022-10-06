@@ -1,6 +1,7 @@
 #include "Scene.hpp"
 #include "SceneHandler.hpp"
 #include "../network/NetworkHandler.h"
+#include "../lua/ScriptHandler.h"
 #include "Time.hpp"
 
 void Scene::switchScene(Scene* scene, std::string path)
@@ -11,6 +12,11 @@ void Scene::switchScene(Scene* scene, std::string path)
 NetworkHandler* Scene::getNetworkHandler()
 {
 	return sceneHandler->getNetworkHandler();
+}
+
+ScriptHandler* Scene::getScriptHandler()
+{
+	return sceneHandler->getScriptHandler();
 }
 
 Scene::Scene()
@@ -25,6 +31,7 @@ Scene::~Scene()
 	{
 		delete this->systems[i];
 	}
+	this->reg.clear();
 	this->systems.clear();
 	this->luaSystems.clear();
 }
@@ -49,6 +56,11 @@ void Scene::setMainCamera(int entity)
 void Scene::createSystem(std::string& path)
 {
 	this->luaSystems.push_back(LuaSystem { path, -1 });
+}
+
+void Scene::setScriptComponent(int entity, std::string path)
+{
+	this->getScriptHandler()->setScriptComponent(entity, path);
 }
 
 void Scene::updateSystems()

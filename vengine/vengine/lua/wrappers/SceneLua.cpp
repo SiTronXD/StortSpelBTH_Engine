@@ -39,7 +39,7 @@ int SceneLua::lua_iterateView(lua_State* L)
 		return 0;
 	}
 
-	std::string behaviourPath;
+	std::string scriptPath;
 	std::vector<CompType> compTypes;
 
 	lua_pushvalue(L, 2);
@@ -48,10 +48,10 @@ int SceneLua::lua_iterateView(lua_State* L)
 	{
 		lua_pushvalue(L, -2);
 
-		if (lua_isstring(L, -2) && !behaviourPath.size())
+		if (lua_isstring(L, -2) && !scriptPath.size())
 		{
-			behaviourPath = lua_tostring(L, -2);
-			compTypes.push_back(CompType::BEHAVIOUR);
+			scriptPath = lua_tostring(L, -2);
+			compTypes.push_back(CompType::SCRIPT);
 		}
 		else if (lua_isnumber(L, -2))
 		{
@@ -72,13 +72,13 @@ int SceneLua::lua_iterateView(lua_State* L)
 		bool addToList =
 			std::find(compTypes.begin(), compTypes.end(), CompType::TRANSFORM) != compTypes.end() && scene->hasComponents<Transform>(entity) &&
 			std::find(compTypes.begin(), compTypes.end(), CompType::MESH) != compTypes.end() && scene->hasComponents<MeshComponent>(entity) &&
-			std::find(compTypes.begin(), compTypes.end(), CompType::BEHAVIOUR) != compTypes.end() && scene->hasComponents<Behaviour>(entity);
+			std::find(compTypes.begin(), compTypes.end(), CompType::SCRIPT) != compTypes.end() && scene->hasComponents<Script>(entity);
 			
 
-		if (behaviourPath.size() && addToList)
+		if (scriptPath.size() && addToList)
 		{
-			Behaviour& behaviour = scene->getComponent<Behaviour>(entity);
-			addToList = addToList && behaviour.path == behaviourPath;
+			Script& script = scene->getComponent<Script>(entity);
+			addToList = addToList && script.path == scriptPath;
 		}
 		if (addToList) { entitiesToIterate.push_back(entity); }
 	}
@@ -97,8 +97,8 @@ int SceneLua::lua_iterateView(lua_State* L)
 			case CompType::MESH:
 				lua_pushmesh(L, scene->getComponent<MeshComponent>(entity));
 				break;
-			case CompType::BEHAVIOUR:
-				lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Behaviour>(entity).luaRef);
+			case CompType::SCRIPT:
+				lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Script>(entity).luaRef);
 				break;
 			default:
 				break;
@@ -137,7 +137,7 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	lua_pop(L, 1);
 
 	lua_getfield(L, -1, "Mesh");
-	if (!lua_isnil(L, -1))
+	if (lua_isnumber(L, -1))
 	{
 		scene->setComponent<MeshComponent>(entity, (int)lua_tointeger(L, -1));
 	}
@@ -146,40 +146,14 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	lua_getfield(L, -1, "Camera");
 	if (!lua_isnil(L, -1))
 	{
-		scene->setComponent<Camera>(entity, (float)lua_tonumber(L, -1));
+		scene->setComponent<Camera>(entity, 1.0f);
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "Behaviour");
-	if (!lua_isnil(L, -1))
+	lua_getfield(L, -1, "Script");
+	if (lua_isstring(L, -1))
 	{
-		std::string path = lua_tostring(L, -1);
-		if (luaL_dofile(L, path.c_str()) != LUA_OK)
-		{ LuaH::dumpError(L); }
-		else
-		{
-			lua_pushvalue(L, -1);
-			int luaRef = luaL_ref(L, LUA_REGISTRYINDEX);
-
-			lua_pushinteger(L, entity);
-			lua_setfield(L, -2, "ID");
-
-			lua_pushstring(L, path.c_str());
-			lua_setfield(L, -2, "path");
-
-			Transform& t = scene->getComponent<Transform>(entity);
-			lua_pushtransform(L, scene->getComponent<Transform>(entity));
-			lua_setfield(L, -2, "transform");
-
-			scene->setComponent<Behaviour>(entity, path.c_str(), luaRef);
-
-			lua_getfield(L, -1, "init");
-			if (lua_type(L, -1) != LUA_TNIL)
-			{
-				lua_pushvalue(L, -2);
-				LUA_ERR_CHECK(L, lua_pcall(L, 1, 0, 0));
-			}
-		}
+		scene->setScriptComponent(entity, lua_tostring(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -247,8 +221,8 @@ int SceneLua::lua_hasComponent(lua_State* L)
 	case CompType::MESH:
 		hasComp = scene->hasComponents<MeshComponent>(entity);
 		break;
-	case CompType::BEHAVIOUR:
-		hasComp = scene->hasComponents<Behaviour>(entity);
+	case CompType::SCRIPT:
+		hasComp = scene->hasComponents<Script>(entity);
 		break;
 	case CompType::CAMERA:
 		hasComp = scene->hasComponents<Camera>(entity);
@@ -275,9 +249,9 @@ int SceneLua::lua_getComponent(lua_State* L)
 	{
 		lua_pushmesh(L, scene->getComponent<MeshComponent>(entity));
 	}
-	else if ((CompType)type == CompType::BEHAVIOUR && scene->hasComponents<Behaviour>(entity))
+	else if ((CompType)type == CompType::SCRIPT && scene->hasComponents<Script>(entity))
 	{
-		lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Behaviour>(entity).luaRef);
+		lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Script>(entity).luaRef);
 	}
 	else { lua_pushnil(L); }
 	return 1;
@@ -294,49 +268,13 @@ int SceneLua::lua_setComponent(lua_State* L)
 	{
 	case CompType::TRANSFORM:
 		scene->setComponent<Transform>(entity, lua_totransform(L, 3));
-		if (scene->hasComponents<Behaviour>(entity))
-		{
-			const Behaviour& script = scene->getComponent<Behaviour>(entity);
-
-			lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
-			lua_pushtransform(L, scene->getComponent<Transform>(entity));
-			lua_setfield(L, -2, "transform");
-
-			lua_pop(L, 1);
-		}
 		break;
 	case CompType::MESH:
 		// Get from resource manager
 		scene->setComponent<MeshComponent>(entity, /*lua_tostring(L, 3)*/0);
 		break;
-	case CompType::BEHAVIOUR:
-		path = lua_tostring(L, 3);
-		if (luaL_dofile(L, path.c_str()) != LUA_OK)
-		{ LuaH::dumpError(L); }
-		else
-		{
-			lua_pushvalue(L, -1);
-			int luaRef = luaL_ref(L, LUA_REGISTRYINDEX);
-
-			lua_pushinteger(L, entity);
-			lua_setfield(L, -2, "ID");
-
-			lua_pushstring(L, path.c_str());
-			lua_setfield(L, -2, "path");
-
-			Transform& t = scene->getComponent<Transform>(entity);
-			lua_pushtransform(L, scene->getComponent<Transform>(entity));
-			lua_setfield(L, -2, "transform");
-
-			scene->setComponent<Behaviour>(entity, path.c_str(), luaRef);
-
-			lua_getfield(L, -1, "init");
-			if (lua_type(L, -1) != LUA_TNIL)
-			{
-				lua_pushvalue(L, -2);
-				LUA_ERR_CHECK(L, lua_pcall(L, 1, 0, 0));
-			}
-		}
+	case CompType::SCRIPT:
+		scene->setScriptComponent(entity, lua_tostring(L, 3));
 		break;
 	case CompType::CAMERA:
 		scene->setComponent<Camera>(entity, 1.0f);
@@ -359,8 +297,8 @@ int SceneLua::lua_removeComponent(lua_State* L)
 	case CompType::MESH:
 		scene->removeComponent<MeshComponent>(entity);
 		break;
-	case CompType::BEHAVIOUR:
-		scene->removeComponent<Behaviour>(entity);
+	case CompType::SCRIPT:
+		scene->removeComponent<Script>(entity);
 		break;
 	case CompType::CAMERA:
 		scene->removeComponent<Camera>(entity);

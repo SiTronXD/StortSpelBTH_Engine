@@ -156,7 +156,7 @@
     <ClInclude Include="vengine\lua\wrappers\SceneLua.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="vengine\components\Behaviour.hpp">
+    <ClInclude Include="vengine\components\Script.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="vengine\lua\wrappers\InputLua.h">

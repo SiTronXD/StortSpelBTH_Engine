@@ -86,6 +86,11 @@ void SceneHandler::setScriptHandler(ScriptHandler* scriptHandler)
 	this->scriptHandler = scriptHandler;
 }
 
+ScriptHandler* SceneHandler::getScriptHandler()
+{
+	return this->scriptHandler;
+}
+
 Scene* SceneHandler::getScene() const
 {
 	return this->scene;

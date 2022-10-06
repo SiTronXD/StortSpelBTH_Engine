@@ -4,7 +4,7 @@
 #include <string>
 #include "../dev/LuaHelper.hpp"
 #include "../../application/SceneHandler.hpp"
-#include "../../components/Behaviour.hpp"
+#include "../../components/Script.hpp"
 #include "../../components/MeshComponent.hpp"
 #include "../LuaPushes.hpp"
 
@@ -12,11 +12,11 @@ class SceneLua
 {
 private:
 	// COUNT: Getting the number of Components
-	enum class CompType { TRANSFORM, MESH, BEHAVIOUR, CAMERA, COUNT };
+	enum class CompType { TRANSFORM, MESH, SCRIPT, CAMERA, COUNT };
 	inline static const std::vector<std::string> compTypes {
 		"Transform",
 		"Mesh",
-		"Behaviour",
+		"Script",
 		"Camera"
 	};
 

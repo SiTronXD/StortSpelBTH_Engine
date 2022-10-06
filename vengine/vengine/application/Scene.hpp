@@ -7,8 +7,9 @@
 #include <entt.hpp>
 #include <vector>
 
-class NetworkHandler;
 class SceneHandler;
+class NetworkHandler;
+class ScriptHandler;
 
 struct LuaSystem
 {
@@ -29,6 +30,7 @@ private:
 protected:
 	void switchScene(Scene* scene, std::string path = "");
 	NetworkHandler* getNetworkHandler();
+	ScriptHandler* getScriptHandler();
 
 public:
 	Scene();
@@ -39,6 +41,7 @@ public:
 	void setMainCamera(int entity);
 
 	void createSystem(std::string& path);
+	void setScriptComponent(int entity, std::string path);
 
 	template <typename T, typename ...Args>
 	void createSystem(Args... args);

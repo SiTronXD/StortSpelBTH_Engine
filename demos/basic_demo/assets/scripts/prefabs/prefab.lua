@@ -5,5 +5,5 @@ return {
 		scale = vector.fill(1)
 	},
 	Mesh = 0,
-	Behaviour = "assets/scripts/script.lua"
+	Script = "assets/scripts/script.lua"
 }

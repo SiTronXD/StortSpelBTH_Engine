@@ -309,7 +309,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
     <ClInclude Include="vengine\lua\wrappers\InputLua.h" />
-    <ClInclude Include="vengine\components\Behaviour.hpp" />
+    <ClInclude Include="vengine\components\Script.hpp" />
     <ClInclude Include="vengine\lua\ScriptHandler.h" />
     <ClInclude Include="vengine.h" />
     <ClInclude Include="vengine\application\Input.hpp" />

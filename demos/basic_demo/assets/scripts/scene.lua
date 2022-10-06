@@ -11,9 +11,9 @@ local prefab = {
 		scale = vector.fill(1)
 	},
 	Mesh = 0,
-	Behaviour = "assets/scripts/script.lua"
+	Script = "assets/scripts/script.lua"
 }
-local e = scene.createPrefab(prefab)
+scene.createPrefab(prefab)
 
 prefab.Transform = {
 	position = vector(-3, 0, 5),

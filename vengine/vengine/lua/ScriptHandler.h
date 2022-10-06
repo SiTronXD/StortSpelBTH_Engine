@@ -26,6 +26,7 @@ public:
 	void setSceneHandler(SceneHandler* sceneHandler);
 
 	bool runScript(std::string& path);
+	void setScriptComponent(int entity, std::string& path);
 	void updateSystems(std::vector<LuaSystem>& vec);
 
 	void update();
