@@ -91,6 +91,16 @@ ScriptHandler* SceneHandler::getScriptHandler()
 	return this->scriptHandler;
 }
 
+void SceneHandler::setResourceManager(ResourceManager* resourceManager)
+{
+	this->resourceManager = resourceManager;
+}
+
+ResourceManager * SceneHandler::getResourceManager()
+{
+	return this->resourceManager;
+}
+
 Scene* SceneHandler::getScene() const
 {
 	return this->scene;

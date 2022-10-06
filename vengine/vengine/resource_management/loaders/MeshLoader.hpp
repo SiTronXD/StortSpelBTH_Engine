@@ -29,7 +29,7 @@ private:
     aiNode* findParentBoneNode(std::unordered_map<std::string_view, int>& bones, aiNode* node);
 
 public: 
-    void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager* resourceMan);
+    void init(VmaAllocator* vma, vk::PhysicalDevice* physiscalDev, Device* dev, vk::Queue* transQueue, vk::CommandPool* transCmdPool, ResourceManager* resourceMan);
     void setTextureLoader(TextureLoader* textureLoader);
 
     Mesh createMesh(std::string path);

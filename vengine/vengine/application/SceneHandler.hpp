@@ -1,8 +1,6 @@
 #pragma once
 #include "Scene.hpp"
 
-class ScriptHandler;
-
 class SceneHandler
 {
 private:
@@ -13,6 +11,7 @@ private:
 
 	NetworkHandler* networkHandler;
 	ScriptHandler* scriptHandler;
+	ResourceManager* resourceManager;
 	
 public:
 	SceneHandler();
@@ -29,6 +28,9 @@ public:
 
 	void setScriptHandler(ScriptHandler* scriptHandler);
 	ScriptHandler* getScriptHandler();
+
+	void setResourceManager(ResourceManager* resourceManager);
+	ResourceManager* getResourceManager();
 
 	Scene* getScene() const;
 };

@@ -6,6 +6,7 @@
 struct lua_State;
 struct LuaSystem;
 class SceneHandler;
+class ResourceManager;
 
 class ScriptHandler
 {
@@ -24,6 +25,7 @@ public:
 	virtual ~ScriptHandler();
 
 	void setSceneHandler(SceneHandler* sceneHandler);
+	void setResourceManager(ResourceManager* resourceManager);
 
 	bool runScript(std::string& path);
 	void setScriptComponent(int entity, std::string& path);

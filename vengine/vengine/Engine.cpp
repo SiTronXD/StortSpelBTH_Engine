@@ -33,20 +33,6 @@ Engine::~Engine()
 
 void Engine::run(std::string appName, std::string startScenePath, Scene* startScene)
 {
-    // Set references to other systems
-    this->sceneHandler.setNetworkHandler(&networkHandler);
-    this->sceneHandler.setScriptHandler(&scriptHandler);
-    this->networkHandler.setSceneHandler(&sceneHandler);
-    this->scriptHandler.setSceneHandler(&sceneHandler);
-
-    // Initialize the start scene
-    if (startScene == nullptr) { startScene = new Scene(); }
-    this->sceneHandler.setScene(startScene, startScenePath);
-    this->sceneHandler.updateToNextScene();
-
-    // Temporary, should be called before creating the scene
-    this->audioHandler.setSceneHandler(&sceneHandler);
-
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
 
@@ -65,6 +51,22 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     }
 
     window.registerResizeEvent(renderer.getWindowResized());
+
+    // Set references to other systems
+    this->sceneHandler.setNetworkHandler(&networkHandler);
+    this->sceneHandler.setScriptHandler(&scriptHandler);
+    this->sceneHandler.setResourceManager(&resourceManager);
+    this->networkHandler.setSceneHandler(&sceneHandler);
+    this->scriptHandler.setSceneHandler(&sceneHandler);
+    this->scriptHandler.setResourceManager(&resourceManager);
+
+    // Initialize the start scene
+    if (startScene == nullptr) { startScene = new Scene(); }
+    this->sceneHandler.setScene(startScene, startScenePath);
+    this->sceneHandler.updateToNextScene();
+
+    // Temporary, should be called before creating the scene
+    this->audioHandler.setSceneHandler(&sceneHandler);
 
     renderer.initMeshes(this->sceneHandler.getScene());
 

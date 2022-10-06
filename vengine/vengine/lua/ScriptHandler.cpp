@@ -7,6 +7,7 @@
 
 #include "wrappers/SceneLua.h"
 #include "wrappers/InputLua.h"
+#include "wrappers/ResourceManagerLua.h"
 
 void ScriptHandler::lua_openmetatables(lua_State* L)
 {
@@ -81,6 +82,11 @@ void ScriptHandler::setSceneHandler(SceneHandler* sceneHandler)
 {
 	this->sceneHandler = sceneHandler;
 	SceneLua::lua_openscene(L, sceneHandler);
+}
+
+void ScriptHandler::setResourceManager(ResourceManager* resourceManager)
+{
+	ResourceManagerLua::lua_openresources(L, resourceManager);
 }
 
 bool ScriptHandler::runScript(std::string& path)

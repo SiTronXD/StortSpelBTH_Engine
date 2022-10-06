@@ -480,13 +480,14 @@ void VulkanRenderer::draw(Scene* scene)
 #endif        
 }
 
+// Should probably be removed...
 void VulkanRenderer::initMeshes(Scene* scene)
 {
-    auto tView = scene->getSceneReg().view<MeshComponent>();
+    /*auto tView = scene->getSceneReg().view<MeshComponent>();
     tView.each([this](MeshComponent& meshComponent)
     {
           meshComponent.meshID = this->resourceManager->addMesh(meshComponent.filePath);
-    });
+    });*/
 
     // Add all textures for possible use in the shader
     size_t numTextures = this->resourceManager->getNumTextures();

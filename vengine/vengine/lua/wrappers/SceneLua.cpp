@@ -1,7 +1,6 @@
 #include "SceneLua.h"
 #include "../../application/Time.hpp"
 
-
 int SceneLua::lua_createSystem(lua_State* L)
 {
 	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
@@ -113,7 +112,8 @@ int SceneLua::lua_iterateView(lua_State* L)
 
 int SceneLua::lua_createPrefab(lua_State* L)
 {
-	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	SceneHandler* sceneHandler = (SceneHandler*)lua_touserdata(L, lua_upvalueindex(1));
+	Scene* scene = sceneHandler->getScene();
 
 	if (lua_isstring(L, 1)) // Prefab file
 	{
@@ -140,6 +140,10 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	if (lua_isnumber(L, -1))
 	{
 		scene->setComponent<MeshComponent>(entity, (int)lua_tointeger(L, -1));
+	}
+	else if (lua_isstring(L, -1))
+	{
+		scene->setComponent<MeshComponent>(entity, (int)sceneHandler->getResourceManager()->addMesh(lua_tostring(L, -1)));
 	}
 	lua_pop(L, 1);
 
@@ -259,7 +263,9 @@ int SceneLua::lua_getComponent(lua_State* L)
 
 int SceneLua::lua_setComponent(lua_State* L)
 {
-	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	SceneHandler* sceneHandler = (SceneHandler*)lua_touserdata(L, lua_upvalueindex(1));
+	Scene* scene = sceneHandler->getScene();
+
 	int entity = (int)lua_tointeger(L, 1);
 	int type = (int)lua_tointeger(L, 2);
 	std::string path;
@@ -270,11 +276,17 @@ int SceneLua::lua_setComponent(lua_State* L)
 		scene->setComponent<Transform>(entity, lua_totransform(L, 3));
 		break;
 	case CompType::MESH:
-		// Get from resource manager
-		scene->setComponent<MeshComponent>(entity, /*lua_tostring(L, 3)*/0);
+		if (lua_isnumber(L, -1))
+		{
+			scene->setComponent<MeshComponent>(entity, (int)lua_tointeger(L, 3));
+		}
+		else if (lua_isstring(L, -1))
+		{
+			scene->setComponent<MeshComponent>(entity, (int)sceneHandler->getResourceManager()->addMesh(lua_tostring(L, 3)));
+		}
 		break;
 	case CompType::SCRIPT:
-		scene->setScriptComponent(entity, lua_tostring(L, 3));
+		if(lua_isstring(L, 3)) { scene->setScriptComponent(entity, lua_tostring(L, 3)); }
 		break;
 	case CompType::CAMERA:
 		scene->setComponent<Camera>(entity, 1.0f);

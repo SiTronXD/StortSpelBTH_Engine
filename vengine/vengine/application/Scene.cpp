@@ -19,6 +19,11 @@ ScriptHandler* Scene::getScriptHandler()
 	return sceneHandler->getScriptHandler();
 }
 
+ResourceManager * Scene::getResourceManager()
+{
+	return sceneHandler->getResourceManager();
+}
+
 Scene::Scene()
 	: sceneHandler(nullptr), mainCamera(-1)
 {

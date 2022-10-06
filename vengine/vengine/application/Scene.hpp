@@ -6,6 +6,7 @@
 #include "../components/AudioSource.hpp"
 #include "../components/AudioListener.hpp"
 #include "../resource_management/Configurator.hpp"
+#include "../resource_management/ResourceManager.hpp"
 
 #include <entt.hpp>
 #include <vector>
@@ -34,6 +35,7 @@ protected:
 	void switchScene(Scene* scene, std::string path = "");
 	NetworkHandler* getNetworkHandler();
 	ScriptHandler* getScriptHandler();
+	ResourceManager* getResourceManager();
 
     template <typename T> T getConfigValue(std::string_view name)
     {

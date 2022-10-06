@@ -55,6 +55,7 @@
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
     <ClCompile Include="vengine\lua\ScriptHandler.cpp" />
     <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\ResourceManagerLua.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="imgui\backends\imgui_impl_sdl.h" />
@@ -105,6 +106,7 @@
     <ClInclude Include="vengine\systems\System.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
+    <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
