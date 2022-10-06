@@ -155,8 +155,7 @@ void Swapchain::createDepthBuffer()
                 .format = this->depthFormat,
                 .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
                 .useFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment     // Image will be used as a Depth Stencil
-                            | vk::ImageUsageFlagBits::eInputAttachment,
-                .property = vk::MemoryPropertyFlagBits::eDeviceLocal,            // Image is local to the device, it will not be changed by the HOST (CPU)
+                            | vk::ImageUsageFlagBits::eInputAttachment,        // Image is local to the device, it will not be changed by the HOST (CPU)
                 .imageMemory = &this->depthBufferImageMemory[i]
             },
             "depthBufferImage"

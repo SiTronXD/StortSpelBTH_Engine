@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -269,7 +269,14 @@ call compile_shaders.bat</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\NetworkTestScene.cpp" />
     <ClCompile Include="src\TestDemoScene.cpp" />
+    <ClCompile Include="src\TheServerGame.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\NetworkTestScene.h" />
+    <ClInclude Include="src\TestDemoScene.h" />
+    <ClInclude Include="src\TheServerGame.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\vengine\vengine.vcxproj">
@@ -277,7 +284,7 @@ call compile_shaders.bat</Command>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\TestDemoScene.h" />
+    <None Include="..\..\vengine\.clang-format" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -2,6 +2,7 @@
 
 #include "vengine/application/Input.hpp"
 #include "vengine/application/Time.hpp"
+#include "vengine/ResourceManagement/ResourceManager.hpp"
 #include "vengine/components/MeshComponent.hpp"
 #include "vengine/dev/Log.hpp"
 //#include "vengine/test/TestScene.hpp"
