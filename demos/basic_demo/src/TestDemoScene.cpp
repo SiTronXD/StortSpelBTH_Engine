@@ -52,10 +52,10 @@ void TestDemoScene::init()
 		if (i <= 1)
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
-			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+			newTransform.rotation = glm::vec3(0.0f, 0.0f, -90.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh("Amogus/source/1.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Amogus/source/1.fbx");
 		}
 		else
 		{
@@ -63,7 +63,7 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh("Stormtrooper/source/silly_dancing.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
 		}
 
 		this->setComponent<AnimationComponent>(newTestEntity);

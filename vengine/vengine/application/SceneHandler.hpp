@@ -24,7 +24,6 @@ public:
 	void reloadScene();
 
 	void setNetworkHandler(NetworkHandler* networkHandler);
-	void setResourceManager(ResourceManager* resourceManager);
 	inline NetworkHandler* getNetworkHandler()
 	{ return this->networkHandler; }
 	inline ResourceManager* getResourceManager() 
@@ -34,7 +33,6 @@ public:
 	ScriptHandler* getScriptHandler();
 
 	void setResourceManager(ResourceManager* resourceManager);
-	ResourceManager* getResourceManager();
 
 	Scene* getScene() const;
 };

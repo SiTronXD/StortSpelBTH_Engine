@@ -14,19 +14,14 @@ NetworkHandler* Scene::getNetworkHandler()
 	return this->sceneHandler->getNetworkHandler();
 }
 
-ResourceManager* Scene::getResourceManager()
-{
-	return this->sceneHandler->getResourceManager();
-}
-
 ScriptHandler* Scene::getScriptHandler()
 {
 	return sceneHandler->getScriptHandler();
 }
 
-ResourceManager * Scene::getResourceManager()
+ResourceManager* Scene::getResourceManager()
 {
-	return sceneHandler->getResourceManager();
+	return this->sceneHandler->getResourceManager();
 }
 
 Scene::Scene()

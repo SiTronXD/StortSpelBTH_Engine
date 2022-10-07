@@ -1,5 +1,6 @@
 #include "SceneHandler.hpp"
 #include "Time.hpp"
+#include "../components/AnimationComponent.hpp"
 #include "../graphics/VulkanRenderer.hpp"
 #include "../lua/ScriptHandler.h"
 
@@ -23,7 +24,7 @@ void SceneHandler::update()
 	this->scene->update();
 
 	// Update animation timer
-	auto animView = scene->getSceneReg().view<AnimationComponent>();
+	auto animView = this->scene->getSceneReg().view<AnimationComponent>();
 	animView.each([&]
 			(AnimationComponent& animationComponent)
 		{
@@ -92,11 +93,6 @@ void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
 	this->networkHandler = networkHandler;
 }
 
-void SceneHandler::setResourceManager(ResourceManager* resourceManager)
-{
-	this->resourceManager = resourceManager;
-}
-
 void SceneHandler::setScriptHandler(ScriptHandler* scriptHandler)
 {
 	this->scriptHandler = scriptHandler;
@@ -110,11 +106,6 @@ ScriptHandler* SceneHandler::getScriptHandler()
 void SceneHandler::setResourceManager(ResourceManager* resourceManager)
 {
 	this->resourceManager = resourceManager;
-}
-
-ResourceManager * SceneHandler::getResourceManager()
-{
-	return this->resourceManager;
 }
 
 Scene* SceneHandler::getScene() const
