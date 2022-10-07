@@ -281,8 +281,8 @@
     <ClInclude Include="vengine\VengineMath.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include=".clang-format" />
     <None Include="vengine_assets\shaders\shader.frag" />
     <None Include="vengine_assets\shaders\shader.vert" />
+    <None Include=".clang-format" />
   </ItemGroup>
 </Project>

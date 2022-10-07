@@ -18,7 +18,7 @@ private:
     TextureLoader*       textureLoader  = nullptr;
 
     MeshData assimpImport(const std::string& modelFile);
-    MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materailToTexture);   
+    MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materialToTexture);   
 
     std::vector<MeshData> getMeshesFromNodeTree(const aiScene * scene, const std::vector<uint32_t>& matToTex);
     MeshData loadMesh(aiMesh* mesh, uint32_t& lastVertice, uint32_t& lastIndex, std::vector<uint32_t> matToTex);
@@ -32,6 +32,7 @@ public:
     void init(VmaAllocator* vma, vk::PhysicalDevice* physiscalDev, Device* dev, vk::Queue* transQueue, vk::CommandPool* transCmdPool, ResourceManager* resourceMan);
     void setTextureLoader(TextureLoader* textureLoader);
 
-    Mesh createMesh(std::string path);
+    MeshData importMeshData(std::string& path);
+    Mesh createMesh(MeshData& data);
 
 };

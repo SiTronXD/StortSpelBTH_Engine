@@ -181,8 +181,8 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
         this->initResourceManager();
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
-        this->resourceManager->addTexture("missing_texture.png");
-
+        this->resourceManager->addTexture(DEF<std::string>(P_TEXTURES) + "missing_texture.png");
+        this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
     }
     catch(std::runtime_error &e)
     {

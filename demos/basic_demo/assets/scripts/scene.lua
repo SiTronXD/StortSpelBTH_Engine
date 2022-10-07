@@ -1,4 +1,4 @@
-local ghost = resources.addMesh("ghost.obj")
+local ghost = resources.addMesh("assets/models/ghost.obj")
 print(ghost)
 
 local cam = scene.createEntity()
@@ -13,7 +13,7 @@ local prefab = {
 		rotation = vector(0, 45, -90),
 		scale = vector.fill(1)
 	},
-	Mesh = ghost,
+	Mesh = 0,
 	Script = "assets/scripts/script.lua"
 }
 scene.createPrefab(prefab)

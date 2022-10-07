@@ -9,7 +9,7 @@
 
 
 class Mesh{
-private: 
+private:
     std::vector<SubmeshData>    submeshData;
     Device&         device; 
     VmaAllocator&   vma;     
@@ -18,7 +18,7 @@ private:
     vk::Buffer  indexBuffer{};
     VmaAllocation vertexBufferMemory{};
     VmaAllocation indexBufferMemory{};
-public:     
+public:
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
     void createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs);

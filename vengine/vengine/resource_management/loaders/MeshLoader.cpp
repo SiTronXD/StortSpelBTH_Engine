@@ -30,17 +30,18 @@ void MeshLoader::setTextureLoader(TextureLoader* textureLoader)
     this->textureLoader = textureLoader;
 }
 
-
-Mesh MeshLoader::createMesh(std::string modelFile) 
+MeshData MeshLoader::importMeshData(std::string& path) 
 {
-    auto meshData = this->assimpImport(modelFile);
+    return this->assimpImport(path);
+}
 
-    return std::move(Mesh(std::move(meshData), this->importStructs));
+Mesh MeshLoader::createMesh(MeshData& data) 
+{
+    return std::move(Mesh(std::move(data), this->importStructs));
 }
 
 MeshData MeshLoader::assimpImport(const std::string &modelFile) 
 {
-
     // Import Model Scene
     using namespace vengine_helper::config;
     const aiScene *scene = this->importer.ReadFile(
@@ -50,27 +51,28 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
             | aiProcess_FlipUVs // Flips the texture UV values, to be same as how
                                 // we use them
             | aiProcess_JoinIdenticalVertices // Saves memory by making sure no
-                                            // dublicate vertices exists
+                                            // duplicate vertices exists
     );
     if (scene == nullptr) {
-    throw std::runtime_error("Failed to load model (" + modelFile + ")");
+        Log::warning("Failed to load model (" + modelFile + ")");
+        return MeshData();
+        //throw std::runtime_error("Failed to load model (" + modelFile + ")");
     }
-    std::vector<uint32_t> materailToTexture;
-    this->textureLoader->assimpTextureImport(scene, materailToTexture);
+    std::vector<uint32_t> materialToTexture;
+    this->textureLoader->assimpTextureImport(scene, materialToTexture);
     
-    MeshData meshData = this->assimpMeshImport(scene, materailToTexture);
+    MeshData meshData = this->assimpMeshImport(scene, materialToTexture);
     this->importer.FreeScene();
     return meshData;
 }
 
 
 
-MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
-    std::vector<uint32_t> &materailToTexture)
+MeshData MeshLoader::assimpMeshImport(const aiScene *scene, std::vector<uint32_t>& materialToTexture)
 {  
     // Load in all meshes
     std::vector<MeshData> modelMeshes =
-        this->getMeshesFromNodeTree(scene, materailToTexture);
+        this->getMeshesFromNodeTree(scene, materialToTexture);
 
     MeshData data;
     for (auto mesh : modelMeshes) {

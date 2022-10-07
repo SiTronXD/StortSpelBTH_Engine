@@ -4,6 +4,6 @@ return {
 		rotation = vector(0, 0, -90),
 		scale = vector.fill(1)
 	},
-	Mesh = "ghost.obj",
+	Mesh = "assets/models/ghost.obj",
 	Script = "assets/scripts/script.lua"
 }

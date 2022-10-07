@@ -37,10 +37,13 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
     {
         //TODO: should be able to log what mesh
         Log::warning("Mesh \""+meshPath+"\" was already added!");                
-        
         return this->meshPaths[meshPath];        
     } 
-        
+    
+    MeshData meshData = this->meshLoader.importMeshData(meshPath);
+    // No mesh imported, send default mesh back
+    if (meshData.vertices.size() == 0) { return 0; }
+
     //NOTE: prevSize as key only works if we never remove resources the map...
     this->meshPaths.insert({meshPath,this->meshPaths.size()}); 
 
@@ -48,10 +51,10 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
     // Create mesh, insert into map of meshes
     meshes.insert({
         meshes.size(),
-        meshLoader.createMesh(DEF<std::string>(P_MODELS) + meshPath)}        
+        meshLoader.createMesh(meshData)}        
         ); 
 
-    return meshes.size() -1;
+    return meshes.size() - 1;
 }
 
 uint32_t ResourceManager::addTexture(std::string&& texturePath)
@@ -61,20 +64,25 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
     if(this->texturePaths.count(texturePath) != 0)
     {
         Log::warning("Texture ["+texturePath+"] was already added!");                          
-        
         return this->texturePaths[texturePath];
     }
     
+    // Check if texture exists
+    if (!this->textureLoader.doesTextureExist(texturePath))
+    {
+        Log::warning("Could not find texture: " + texturePath);
+        return 0;
+    }
+
     //NOTE: texturePaths.size() as key only works if we never remove resources the map...
     this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
 
-    //NOTE: meshes.size as key only works if we never remove resources the map...    
-    // Create mesh, insert into map of meshes
+    //NOTE: textures.size as key only works if we never remove resources the map...    
+    // Create texture, insert into map of textures
     textures.insert(
         {
-            textures.size(),
-            textureLoader.createTexture(
-                DEF<std::string>(P_TEXTURES) + texturePath)
+            textures.size(), 
+            textureLoader.createTexture(texturePath)
         }
     );
 
