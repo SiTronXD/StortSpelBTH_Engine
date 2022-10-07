@@ -41,10 +41,11 @@ private:
 
 	SceneHandler* sceneHandler;
 
-	std::vector<SphereCollider> sphereVec;
-	std::vector<BoxCollider> boxVec;
-	std::vector<CapsuleCollider> capsuleVec;
-	std::vector<RigidBody> rigidBodyVec;
+	std::vector<SphereCollider*> sphereVec;
+	std::vector<BoxCollider*> boxVec;
+	std::vector<CapsuleCollider*> capsuleVec;
+	std::vector<RigidBody*> rigidBodyVec;
+	std::vector<RigidBody*> rigidBodyNoColliderVec;
 
 public:
 
@@ -61,12 +62,17 @@ public:
 
 	// Creation of rigid bodies and colliders
 	void createRigidBody(RigidBody& rigidBody);
-	void createRigidBody(glm::vec3 pos, btCollisionShape* shape, float weight, glm::vec3 rot = glm::vec3(0.f, 0.f, 0.f), bool passThrough = false);
+	void createRigidBody(RigidBody& rigidBody, SphereCollider& shape);
+	void createRigidBody(RigidBody& rigidBody, BoxCollider& shape);
+	void createRigidBody(RigidBody& rigidBody, CapsuleCollider& shape);
+
 	void createSphereCol(SphereCollider& collider);
 	void createBoxCol(BoxCollider& collider);
 	void createCapsuleCol(CapsuleCollider& collider);
 
-	bool removeCollider(int ID);
+	bool removeSphereCollider(int ID);
+	bool removeBoxCollider(int ID);
+	bool removeCapsuleCollider(int ID);
 
 	void shootRay(glm::vec3 pos, glm::vec3 dir, float distance = 300.f);
 

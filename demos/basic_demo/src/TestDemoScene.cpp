@@ -4,7 +4,7 @@
 #include "glm/glm.hpp"
 
 TestDemoScene::TestDemoScene()
-	: testEntity(-1), testEntity2(-1), physEngine()
+	: testEntity(-1), testEntity2(-1), testEntity3(-1), testEntity4(-1), physEngine()
 {
 }
 
@@ -49,19 +49,24 @@ void TestDemoScene::init()
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
 
 	// Collider components
-	this->setComponent<SphereCollider>(this->testEntity2);
-	SphereCollider& sphere = this->getComponent<SphereCollider>(this->testEntity2);
+	this->testEntity3 = this->createEntity();
+
+	this->setComponent<SphereCollider>(this->testEntity3);
+	SphereCollider& sphere = this->getComponent<SphereCollider>(this->testEntity3);
 	sphere = { .pos = {0.f, 0.f, 25.f}, .radius = 20.f };
 
 	this->setComponent<CapsuleCollider>(this->testEntity2);
 	CapsuleCollider& capsule = this->getComponent<CapsuleCollider>(this->testEntity2);
 	capsule = { .pos = transform2.position, .rot = transform2.rotation, .height = 20.f, .radius = 10.f };
+
 	this->setComponent<RigidBody>(this->testEntity2);
 	RigidBody& rigidBody = this->getComponent<RigidBody>(this->testEntity2);
 	rigidBody = { .pos = transform2.position, .rot = transform2.rotation };
 
-	this->setComponent<BoxCollider>(this->testEntity2);
-	BoxCollider& box = this->getComponent<BoxCollider>(this->testEntity2);
+	this->testEntity4 = this->createEntity();
+
+	this->setComponent<BoxCollider>(this->testEntity4);
+	BoxCollider& box = this->getComponent<BoxCollider>(this->testEntity4);
 	box = { .pos = {0.f, -100.f, 0.f}, .halfExtents = {200.f, 10.f, 200.f} };
 }
 

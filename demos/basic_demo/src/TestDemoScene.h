@@ -9,6 +9,8 @@ class TestDemoScene : public Scene
 private:
 	int testEntity;
 	int testEntity2;
+	int testEntity3;
+	int testEntity4;
 
 	PhysicsEngine physEngine;
 

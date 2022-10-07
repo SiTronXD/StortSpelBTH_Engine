@@ -11,5 +11,4 @@ struct BoxCollider
 	glm::vec3 halfExtents;
 	float weight = 1.f;
 	bool isTrigger = false;
-	bool hasRigidBody = false;
 };
