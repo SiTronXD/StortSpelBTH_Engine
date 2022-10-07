@@ -28,9 +28,7 @@ private:
     template <typename T>
     void createSeparateVertexBuffer(
         const std::vector<T>& dataStream,
-        const VulkanImportStructs& importStructs,
-        vk::Buffer& outputVertexBuffer,
-        VmaAllocation& outputVertexBufferMemory);
+        const VulkanImportStructs& importStructs);
 
     void getAnimLerp(
         const std::vector<std::pair<float, glm::vec3>>& stamps,

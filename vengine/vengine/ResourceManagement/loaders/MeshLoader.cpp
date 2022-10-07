@@ -84,9 +84,6 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
             .numIndicies = static_cast<uint32_t>(mesh.indicies.size()),
         });
 
-        data.aniVertices.insert(data.aniVertices.end(), mesh.aniVertices.begin(),
-                                mesh.aniVertices.end());
-
         data.bones.insert(data.bones.end(), mesh.bones.begin(), mesh.bones.end());
     }
 
@@ -95,23 +92,13 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
         (uint32_t)VertexData::COLOR |
         (uint32_t)VertexData::TEX_COORDS;
 
-    // Move pos, col and tex to aniVertices
-    if (data.aniVertices.size() > 0)
+    // Mark this mesh data as having bone weights and indices
+    if (data.bones.size() > 0)
     {
-        for (size_t i = 0; i < data.aniVertices.size(); ++i)
-        {
-            data.aniVertices[i].pos = data.vertices[i].pos;
-            data.aniVertices[i].col = data.vertices[i].col;
-            data.aniVertices[i].tex = data.vertices[i].tex;
-        }
-
-        data.vertices.clear();
-
         data.availableVertexData |=
             (uint32_t)VertexData::BONE_WEIGHTS |
             (uint32_t)VertexData::BONE_INDICES;
     }
-
 
     return data;
 }
@@ -275,7 +262,6 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
         return false;
     }
 
-    outBoneData.aniVertices.resize(outBoneData.vertices.size());
     outBoneData.bones.resize(mesh->mNumBones);
 
     // Topologically sort bones for iterative tree traversal
@@ -297,7 +283,7 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
         // Set weights & boneIndex
         for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
             aiVertexWeight& aiWeight = mesh->mBones[i]->mWeights[k];
-            AnimVertex&     vertex   = outBoneData.aniVertices[aiWeight.mVertexId];
+            Vertex& vertex = outBoneData.vertices[aiWeight.mVertexId];
 
             if      (vertex.weights[0] < 0.f) { vertex.weights[0] = aiWeight.mWeight; vertex.bonesIndex[0] = i; }
             else if (vertex.weights[1] < 0.f) { vertex.weights[1] = aiWeight.mWeight; vertex.bonesIndex[1] = i; }
@@ -351,12 +337,12 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
     }
 
     // Normalize & fix invalid weights
-    for (AnimVertex& vertex : outBoneData.aniVertices) {
-
-         if (vertex.weights[0] < 0.f) vertex.weights[0] = 0.f;
-         if (vertex.weights[1] < 0.f) vertex.weights[1] = 0.f;
-         if (vertex.weights[2] < 0.f) vertex.weights[2] = 0.f;
-         if (vertex.weights[3] < 0.f) vertex.weights[3] = 0.f;
+    for (Vertex& vertex : outBoneData.vertices) 
+    {
+        if (vertex.weights[0] < 0.f) vertex.weights[0] = 0.f;
+        if (vertex.weights[1] < 0.f) vertex.weights[1] = 0.f;
+        if (vertex.weights[2] < 0.f) vertex.weights[2] = 0.f;
+        if (vertex.weights[3] < 0.f) vertex.weights[3] = 0.f;
 
         float inverseSum = vertex.weights[0] + vertex.weights[1] + vertex.weights[2] + vertex.weights[3];
         if (inverseSum == 0.f) {

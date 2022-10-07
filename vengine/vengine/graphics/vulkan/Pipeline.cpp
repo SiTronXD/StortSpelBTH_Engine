@@ -87,7 +87,6 @@ void Pipeline::createPipeline(
     // How the data for a single vertex (including info such as position, colour, texture coords, normals, etc)
     // is as a whole.
     Vertex dummyVertex{};
-    AnimVertex dummyAnimVertex{};
     std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
     bindingDescriptions.push_back(vk::VertexInputBindingDescription());
     bindingDescriptions[0].setBinding(uint32_t(0));                 // Can bind multiple streams of data, this defines which one.
@@ -108,12 +107,12 @@ void Pipeline::createPipeline(
     {
         bindingDescriptions.push_back(vk::VertexInputBindingDescription());
         bindingDescriptions[3].setBinding(uint32_t(3));
-        bindingDescriptions[3].setStride(sizeof(dummyAnimVertex.weights));
+        bindingDescriptions[3].setStride(sizeof(dummyVertex.weights));
         bindingDescriptions[3].setInputRate(vk::VertexInputRate::eVertex);
 
         bindingDescriptions.push_back(vk::VertexInputBindingDescription());
         bindingDescriptions[4].setBinding(uint32_t(4));
-        bindingDescriptions[4].setStride(sizeof(dummyAnimVertex.bonesIndex));
+        bindingDescriptions[4].setStride(sizeof(dummyVertex.bonesIndex));
         bindingDescriptions[4].setInputRate(vk::VertexInputRate::eVertex);
     }
 

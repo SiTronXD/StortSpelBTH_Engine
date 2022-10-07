@@ -8,10 +8,11 @@
 template <typename T>
 void Mesh::createSeparateVertexBuffer(
     const std::vector<T>& dataStream,
-    const VulkanImportStructs& importStructs,
-    vk::Buffer& outputVertexBuffer,
-    VmaAllocation& outputVertexBufferMemory)
+    const VulkanImportStructs& importStructs)
 {
+    this->vertexBuffers.push_back(vk::Buffer());
+    this->vertexBufferMemories.push_back(VmaAllocation());
+
     /// Temporary buffer to "Stage" vertex data before transferring to GPU
     vk::Buffer stagingBuffer;    
     VmaAllocation stagingBufferMemory{};
@@ -72,8 +73,8 @@ void Mesh::createSeparateVertexBuffer(
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eVertexBuffer,    //// This is a Vertex Buffer
             .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-            .buffer = &outputVertexBuffer,
-            .bufferMemory = &outputVertexBufferMemory,
+            .buffer = &this->vertexBuffers[this->vertexBuffers.size() - 1],
+            .bufferMemory = &this->vertexBufferMemories[this->vertexBufferMemories.size() - 1],
             .allocationInfo = &allocInfo_deviceOnly,
             .vma = importStructs.vma
 
@@ -85,7 +86,7 @@ void Mesh::createSeparateVertexBuffer(
         *importStructs.transferQueue,
         *importStructs.transferCommandPool,
         stagingBuffer,
-        outputVertexBuffer,
+        this->vertexBuffers[this->vertexBuffers.size() - 1],
         bufferSize);
 
     /// Clean up Staging Buffer stuff
@@ -218,64 +219,59 @@ void Mesh::createVertexBuffers(
 #endif    
     
     /// Get size of buffers needed for Vertices
-    bool hasAnimations = meshData.aniVertices.size() > 0;
-    size_t numVerts = !hasAnimations ?
-        meshData.vertices.size() :
-        meshData.aniVertices.size();
+    size_t numVerts = meshData.vertices.size();
+    const AvailableVertexData& availableVertexData = 
+        meshData.availableVertexData;
 
-    std::vector<glm::vec3> positions(numVerts);
-    std::vector<glm::vec3> colors(numVerts);
-    std::vector<glm::vec2> texCoords(numVerts);
-    
+    uint32_t vertexBufferIndex = 0;
+
     // Create one vertex buffer per data stream
-    if (!hasAnimations)
+    if (availableVertexData & (uint32_t)VertexData::POSITION)
     {
-        this->vertexBuffers.resize(3);
-        this->vertexBufferMemories.resize(3);
-
+        std::vector<glm::vec3> positions(numVerts);
         for (size_t i = 0; i < numVerts; ++i)
             positions[i] = meshData.vertices[i].pos;
+        this->createSeparateVertexBuffer(positions, importStructs);
+    }
+
+    if (availableVertexData & (uint32_t)VertexData::COLOR)
+    {
+        std::vector<glm::vec3> colors(numVerts);
         for (size_t i = 0; i < numVerts; ++i)
             colors[i] = meshData.vertices[i].col;
+        this->createSeparateVertexBuffer(colors, importStructs);
+    }
+
+    if (availableVertexData & (uint32_t)VertexData::TEX_COORDS)
+    {
+        std::vector<glm::vec2> texCoords(numVerts);
         for (size_t i = 0; i < numVerts; ++i)
             texCoords[i] = meshData.vertices[i].tex;
-
-        this->createSeparateVertexBuffer(positions, importStructs, this->vertexBuffers[0], this->vertexBufferMemories[0]);
-        this->createSeparateVertexBuffer(colors, importStructs, this->vertexBuffers[1], this->vertexBufferMemories[1]);
-        this->createSeparateVertexBuffer(texCoords, importStructs, this->vertexBuffers[2], this->vertexBufferMemories[2]);
+        this->createSeparateVertexBuffer(texCoords, importStructs);
     }
-    else
+    
+    if (availableVertexData & (uint32_t)VertexData::BONE_WEIGHTS)
     {
         std::vector<glm::vec4> boneWeights(numVerts);
-        std::vector<glm::uvec4> boneIndices(numVerts);
-
-        this->vertexBuffers.resize(5);
-        this->vertexBufferMemories.resize(5);
-
-        for (size_t i = 0; i < numVerts; ++i)
-            positions[i] = meshData.aniVertices[i].pos;
-        for (size_t i = 0; i < numVerts; ++i)
-            colors[i] = meshData.aniVertices[i].col;
-        for (size_t i = 0; i < numVerts; ++i)
-            texCoords[i] = meshData.aniVertices[i].tex;
         for (size_t i = 0; i < numVerts; ++i)
             boneWeights[i] = glm::vec4(
-                meshData.aniVertices[i].weights[0],
-                meshData.aniVertices[i].weights[1],
-                meshData.aniVertices[i].weights[2],
-                meshData.aniVertices[i].weights[3]);
+                meshData.vertices[i].weights[0],
+                meshData.vertices[i].weights[1],
+                meshData.vertices[i].weights[2],
+                meshData.vertices[i].weights[3]);
+        this->createSeparateVertexBuffer(boneWeights, importStructs);
+    }
+
+    if (availableVertexData & (uint32_t)VertexData::BONE_INDICES)
+    {
+        std::vector<glm::uvec4> boneIndices(numVerts);
         for (size_t i = 0; i < numVerts; ++i)
             boneIndices[i] = glm::uvec4(
-                meshData.aniVertices[i].bonesIndex[0],
-                meshData.aniVertices[i].bonesIndex[1],
-                meshData.aniVertices[i].bonesIndex[2],
-                meshData.aniVertices[i].bonesIndex[3]);
-
-        this->createSeparateVertexBuffer(positions, importStructs, this->vertexBuffers[0], this->vertexBufferMemories[0]);
-        this->createSeparateVertexBuffer(colors, importStructs, this->vertexBuffers[1], this->vertexBufferMemories[1]);
-        this->createSeparateVertexBuffer(texCoords, importStructs, this->vertexBuffers[2], this->vertexBufferMemories[2]);
-        this->createSeparateVertexBuffer(boneWeights, importStructs, this->vertexBuffers[3], this->vertexBufferMemories[3]);
-        this->createSeparateVertexBuffer(boneIndices, importStructs, this->vertexBuffers[4], this->vertexBufferMemories[4]);
+                meshData.vertices[i].bonesIndex[0],
+                meshData.vertices[i].bonesIndex[1],
+                meshData.vertices[i].bonesIndex[2],
+                meshData.vertices[i].bonesIndex[3]);
+        this->createSeparateVertexBuffer(boneIndices, importStructs);
     }
 
     // Vertex buffer offsets when binding
