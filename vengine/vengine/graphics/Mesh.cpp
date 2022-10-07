@@ -5,6 +5,94 @@
 #include "Buffer.hpp"
 #include <map>
 
+template <typename T>
+void Mesh::createSeparateVertexBuffer(
+    const std::vector<T>& dataStream,
+    const VulkanImportStructs& importStructs,
+    vk::Buffer& outputVertexBuffer,
+    VmaAllocation& outputVertexBufferMemory)
+{
+    /// Temporary buffer to "Stage" vertex data before transferring to GPU
+    vk::Buffer stagingBuffer;    
+    VmaAllocation stagingBufferMemory{};
+    VmaAllocationInfo allocInfo_staging;
+
+    vk::DeviceSize bufferSize = sizeof(dataStream[0]) * dataStream.size();
+
+    Buffer::createBuffer(
+        {
+            .bufferSize = bufferSize,
+            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       /// This buffers vertex data will be transfered somewhere else!
+            .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+            .buffer = &stagingBuffer,
+            .bufferMemory = &stagingBufferMemory,
+            .allocationInfo = &allocInfo_staging,
+            .vma = importStructs.vma
+        });
+
+    /// -- Map memory to our Temporary Staging Vertex Buffer -- 
+    void* data{};
+    if (vmaMapMemory(*importStructs.vma, stagingBufferMemory, &data) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to allocate Mesh Staging Vertex Buffer Using VMA!");
+    };
+
+    memcpy(
+        data,
+        dataStream.data(),
+        (size_t)bufferSize
+    );
+
+    /*if (!hasAnimations)
+    {
+        memcpy(
+            data,
+            meshData.vertices.data(),
+            (size_t)bufferSize
+        );
+    }
+    else
+    {
+        memcpy(
+            data,
+            meshData.aniVertices.data(),
+            (size_t)bufferSize
+        );
+    }*/
+
+    vmaUnmapMemory(*importStructs.vma, stagingBufferMemory);
+
+    VmaAllocationInfo allocInfo_deviceOnly;
+    /// Create Buffer with TRANSFER_DST_BIT to mark as recipient of transfer data (also VERTEX_BUFFER)
+    /// Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
+    Buffer::createBuffer(
+        {
+            .bufferSize = bufferSize,
+            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
+                                | vk::BufferUsageFlagBits::eVertexBuffer,    //// This is a Vertex Buffer
+            .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+            .buffer = &outputVertexBuffer,
+            .bufferMemory = &outputVertexBufferMemory,
+            .allocationInfo = &allocInfo_deviceOnly,
+            .vma = importStructs.vma
+
+        });
+
+    /// Copy Staging Buffer to Vertex Buffer on GPU
+    Buffer::copyBuffer(
+        importStructs.device->getVkDevice(),
+        *importStructs.transferQueue,
+        *importStructs.transferCommandPool,
+        stagingBuffer,
+        outputVertexBuffer,
+        bufferSize);
+
+    /// Clean up Staging Buffer stuff
+    importStructs.device->getVkDevice().destroyBuffer(stagingBuffer);
+    vmaFreeMemory(*importStructs.vma, stagingBufferMemory);
+}
+
 void Mesh::getAnimLerp(
     const std::vector<std::pair<float, glm::vec3>>& stamps,
     const float& timer,
@@ -100,7 +188,7 @@ Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
     device(*importStructs.device),
     vma(*importStructs.vma)
 {  
-    this->createVertexBuffer(meshData, importStructs);
+    this->createVertexBuffers(meshData, importStructs);
     this->createIndexBuffer( meshData, importStructs);
 
     this->boneTransforms.resize(meshData.bones.size());
@@ -111,99 +199,87 @@ Mesh::Mesh(Mesh&& ref)
     meshData(std::move(ref.meshData)),
     device(ref.device),
     vma(ref.vma),
-    vertexBuffer(std::move(ref.vertexBuffer)),
+    boneTransforms(std::move(ref.boneTransforms)),
+    vertexBufferOffsets(std::move(ref.vertexBufferOffsets)),
+    vertexBuffers(std::move(ref.vertexBuffers)),
     indexBuffer(std::move(ref.indexBuffer)),
-    vertexBufferMemory(std::move(ref.vertexBufferMemory)),
+    vertexBufferMemories(std::move(ref.vertexBufferMemories)),
     indexBufferMemory(std::move(ref.indexBufferMemory))
 {
     this->boneTransforms.resize(meshData.bones.size());
 }
 
-void Mesh::createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs)
+void Mesh::createVertexBuffers(
+    MeshData& meshData, 
+    VulkanImportStructs& importStructs)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif    
-    /// Temporary buffer to "Stage" vertex data before transferring to GPU
-    vk::Buffer stagingBuffer;    
-    VmaAllocation stagingBufferMemory{};
-
-    VmaAllocationInfo allocInfo_staging;
-
+    
     /// Get size of buffers needed for Vertices
     bool hasAnimations = meshData.aniVertices.size() > 0;
+    size_t numVerts = !hasAnimations ?
+        meshData.vertices.size() :
+        meshData.aniVertices.size();
 
-    vk::DeviceSize bufferSize =
-        !hasAnimations ? 
-        sizeof(meshData.vertices[0]) * meshData.vertices.size() : 
-        sizeof(meshData.aniVertices[0]) * meshData.aniVertices.size();
-
-    Buffer::createBuffer(
-        {
-            .bufferSize     = bufferSize,  
-            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       /// This buffers vertex data will be transfered somewhere else!
-            .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-            .buffer         = &stagingBuffer,
-            .bufferMemory   = &stagingBufferMemory,
-            .allocationInfo = &allocInfo_staging,
-            .vma = importStructs.vma
-        });    
+    std::vector<glm::vec3> positions(numVerts);
+    std::vector<glm::vec3> colors(numVerts);
+    std::vector<glm::vec2> texCoords(numVerts);
     
-    /// -- Map memory to our Temporary Staging Vertex Buffer -- 
-    void * data{};
-    if(vmaMapMemory(*importStructs.vma, stagingBufferMemory, &data) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to allocate Mesh Staging Vertex Buffer Using VMA!");
-    };
-
+    // Create one vertex buffer per data stream
     if (!hasAnimations)
     {
-        memcpy(
-            data,
-            meshData.vertices.data(),
-            (size_t) bufferSize
-        );
+        this->vertexBuffers.resize(3);
+        this->vertexBufferMemories.resize(3);
+
+        for (size_t i = 0; i < numVerts; ++i)
+            positions[i] = meshData.vertices[i].pos;
+        for (size_t i = 0; i < numVerts; ++i)
+            colors[i] = meshData.vertices[i].col;
+        for (size_t i = 0; i < numVerts; ++i)
+            texCoords[i] = meshData.vertices[i].tex;
+
+        this->createSeparateVertexBuffer(positions, importStructs, this->vertexBuffers[0], this->vertexBufferMemories[0]);
+        this->createSeparateVertexBuffer(colors, importStructs, this->vertexBuffers[1], this->vertexBufferMemories[1]);
+        this->createSeparateVertexBuffer(texCoords, importStructs, this->vertexBuffers[2], this->vertexBufferMemories[2]);
     }
     else
     {
-        memcpy(
-            data,
-            meshData.aniVertices.data(), 
-            (size_t) bufferSize
-        );
+        std::vector<glm::vec4> boneWeights(numVerts);
+        std::vector<glm::uvec4> boneIndices(numVerts);
+
+        this->vertexBuffers.resize(5);
+        this->vertexBufferMemories.resize(5);
+
+        for (size_t i = 0; i < numVerts; ++i)
+            positions[i] = meshData.aniVertices[i].pos;
+        for (size_t i = 0; i < numVerts; ++i)
+            colors[i] = meshData.aniVertices[i].col;
+        for (size_t i = 0; i < numVerts; ++i)
+            texCoords[i] = meshData.aniVertices[i].tex;
+        for (size_t i = 0; i < numVerts; ++i)
+            boneWeights[i] = glm::vec4(
+                meshData.aniVertices[i].weights[0],
+                meshData.aniVertices[i].weights[1],
+                meshData.aniVertices[i].weights[2],
+                meshData.aniVertices[i].weights[3]);
+        for (size_t i = 0; i < numVerts; ++i)
+            boneIndices[i] = glm::uvec4(
+                meshData.aniVertices[i].bonesIndex[0],
+                meshData.aniVertices[i].bonesIndex[1],
+                meshData.aniVertices[i].bonesIndex[2],
+                meshData.aniVertices[i].bonesIndex[3]);
+
+        this->createSeparateVertexBuffer(positions, importStructs, this->vertexBuffers[0], this->vertexBufferMemories[0]);
+        this->createSeparateVertexBuffer(colors, importStructs, this->vertexBuffers[1], this->vertexBufferMemories[1]);
+        this->createSeparateVertexBuffer(texCoords, importStructs, this->vertexBuffers[2], this->vertexBufferMemories[2]);
+        this->createSeparateVertexBuffer(boneWeights, importStructs, this->vertexBuffers[3], this->vertexBufferMemories[3]);
+        this->createSeparateVertexBuffer(boneIndices, importStructs, this->vertexBuffers[4], this->vertexBufferMemories[4]);
     }
-    
-    vmaUnmapMemory(*importStructs.vma, stagingBufferMemory); 
 
-    VmaAllocationInfo allocInfo_deviceOnly;
-    /// Create Buffer with TRANSFER_DST_BIT to mark as recipient of transfer data (also VERTEX_BUFFER)
-    /// Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
-    Buffer::createBuffer(
-        {
-            .bufferSize     = bufferSize, 
-            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
-                                | vk::BufferUsageFlagBits::eVertexBuffer,    //// This is a Vertex Buffer
-            .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-            .buffer         = &this->vertexBuffer, 
-            .bufferMemory   = &this->vertexBufferMemory,
-            .allocationInfo = &allocInfo_deviceOnly,
-            .vma = importStructs.vma
-
-        });
-
-    /// Copy Staging Buffer to Vertex Buffer on GPU
-    Buffer::copyBuffer(
-        importStructs.device->getVkDevice(), 
-        *importStructs.transferQueue, 
-        *importStructs.transferCommandPool, 
-        stagingBuffer, 
-        this->vertexBuffer, 
-        bufferSize);
-
-    /// Clean up Staging Buffer stuff
-    importStructs.device->getVkDevice().destroyBuffer(stagingBuffer);
-    vmaFreeMemory(*importStructs.vma, stagingBufferMemory);
+    // Vertex buffer offsets when binding
+    this->vertexBufferOffsets.resize(this->vertexBuffers.size());
 }
 
 void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStructs)
@@ -304,8 +380,11 @@ const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer)
 
 void Mesh::cleanup()
 {
-    this->device.getVkDevice().destroyBuffer(this->vertexBuffer);
+    for (size_t i = 0; i < this->vertexBuffers.size(); ++i)
+    {
+        this->device.getVkDevice().destroyBuffer(this->vertexBuffers[i]);
+        vmaFreeMemory(this->vma, this->vertexBufferMemories[i]);
+    }
     this->device.getVkDevice().destroyBuffer(this->indexBuffer);
     vmaFreeMemory(this->vma, this->indexBufferMemory);
-    vmaFreeMemory(this->vma, this->vertexBufferMemory);
 }

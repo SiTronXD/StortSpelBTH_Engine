@@ -952,7 +952,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     const Transform& transform, 
                     const MeshComponent& meshComponent)
                     {
-                        auto& currModel =
+                        Mesh& currentMesh =
                             this->resourceManager->getMesh(meshComponent.meshID);
 
                         const glm::mat4& modelMatrix = transform.matrix;
@@ -964,12 +964,13 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Bind vertex buffer
                         currentCommandBuffer.bindVertexBuffers2(
-                            currModel.getVertexBuffer()
+                            currentMesh.getVertexBufferOffsets(),
+                            currentMesh.getVertexBuffers()
                         );
 
                         // Bind index buffer
                         currentCommandBuffer.bindIndexBuffer(
-                            currModel.getIndexBuffer()
+                            currentMesh.getIndexBuffer()
                         );
 
                         // Update for descriptors
@@ -979,7 +980,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                         );
 
                         const std::vector<SubmeshData>& submeshes =
-                            currModel.getSubmeshData();
+                            currentMesh.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
                         {
                             const SubmeshData& currentSubmesh = submeshes[i];
@@ -1045,7 +1046,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Bind vertex buffer
                         currentCommandBuffer.bindVertexBuffers2(
-					        currentMesh.getVertexBuffer()
+                            currentMesh.getVertexBufferOffsets(),
+					        currentMesh.getVertexBuffers()
                         );
 
                         // Bind index buffer

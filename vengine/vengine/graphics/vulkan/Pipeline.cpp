@@ -86,15 +86,38 @@ void Pipeline::createPipeline(
 
     // How the data for a single vertex (including info such as position, colour, texture coords, normals, etc)
     // is as a whole.
-    vk::VertexInputBindingDescription bindingDescription;
-    bindingDescription.setBinding(uint32_t(0));                 // Can bind multiple streams of data, this defines which one.
-    bindingDescription.setStride(sizeof(Vertex));    // Size of a single Vertex Object
-    bindingDescription.setInputRate(vk::VertexInputRate::eVertex); // How to move between data after each vertex...
+    Vertex dummyVertex{};
+    AnimVertex dummyAnimVertex{};
+    std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
+    bindingDescriptions.push_back(vk::VertexInputBindingDescription());
+    bindingDescriptions[0].setBinding(uint32_t(0));                 // Can bind multiple streams of data, this defines which one.
+    bindingDescriptions[0].setStride(sizeof(dummyVertex.pos));    // Size of a single Vertex Object
+    bindingDescriptions[0].setInputRate(vk::VertexInputRate::eVertex); // How to move between data after each vertex...
+
+    bindingDescriptions.push_back(vk::VertexInputBindingDescription());
+    bindingDescriptions[1].setBinding(uint32_t(1));                 // Can bind multiple streams of data, this defines which one.
+    bindingDescriptions[1].setStride(sizeof(dummyVertex.col));    // Size of a single Vertex Object
+    bindingDescriptions[1].setInputRate(vk::VertexInputRate::eVertex); // How to move between data after each vertex...
+
+    bindingDescriptions.push_back(vk::VertexInputBindingDescription());
+    bindingDescriptions[2].setBinding(uint32_t(2));                 // Can bind multiple streams of data, this defines which one.
+    bindingDescriptions[2].setStride(sizeof(dummyVertex.tex));    // Size of a single Vertex Object
+    bindingDescriptions[2].setInputRate(vk::VertexInputRate::eVertex); // How to move between data after each vertex...
 
     if (hasAnimations)
-        bindingDescription.setStride(sizeof(AnimVertex));
+    {
+        bindingDescriptions.push_back(vk::VertexInputBindingDescription());
+        bindingDescriptions[3].setBinding(uint32_t(3));
+        bindingDescriptions[3].setStride(sizeof(dummyAnimVertex.weights));
+        bindingDescriptions[3].setInputRate(vk::VertexInputRate::eVertex);
 
-    // How the Data  for an attribute is definied within a vertex    
+        bindingDescriptions.push_back(vk::VertexInputBindingDescription());
+        bindingDescriptions[4].setBinding(uint32_t(4));
+        bindingDescriptions[4].setStride(sizeof(dummyAnimVertex.bonesIndex));
+        bindingDescriptions[4].setInputRate(vk::VertexInputRate::eVertex);
+    }
+
+    // How the data for an attribute is definied within a vertex    
     std::vector<vk::VertexInputAttributeDescription> attributeDescriptions{};
 
     // Positions
@@ -102,43 +125,43 @@ void Pipeline::createPipeline(
     attributeDescriptions[0].setBinding(uint32_t(0));                           // which binding the data is at (should be same as above)
     attributeDescriptions[0].setLocation(uint32_t(0));                           // Which Location in shader where data will be read from
     attributeDescriptions[0].setFormat(vk::Format::eR32G32B32Sfloat);  // Format the data will take (also helps define size of data)
-    attributeDescriptions[0].setOffset(offsetof(Vertex, pos));       // Sets the offset of our struct member Pos (where this attribute is defined for a single vertex...)
+    attributeDescriptions[0].setOffset(0);       // Sets the offset of our struct member Pos (where this attribute is defined for a single vertex...)
 
     // Colors
     attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
-    attributeDescriptions[1].setBinding(uint32_t(0));
+    attributeDescriptions[1].setBinding(uint32_t(1));
     attributeDescriptions[1].setLocation(uint32_t(1));
     attributeDescriptions[1].setFormat(vk::Format::eR32G32B32Sfloat);
-    attributeDescriptions[1].setOffset(offsetof(Vertex, col));
+    attributeDescriptions[1].setOffset(0);
 
     // Texture coordinates
     attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
-    attributeDescriptions[2].setBinding(uint32_t(0));
+    attributeDescriptions[2].setBinding(uint32_t(2));
     attributeDescriptions[2].setLocation(uint32_t(2));
     attributeDescriptions[2].setFormat(vk::Format::eR32G32Sfloat);      // Note; only RG, since it's a 2D image we don't use the depth and thus we only need RG and not RGB
-    attributeDescriptions[2].setOffset(offsetof(Vertex, tex));
+    attributeDescriptions[2].setOffset(0);
 
     if (hasAnimations)
     {
         // Bone weights
         attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
-        attributeDescriptions[3].setBinding(uint32_t(0));
+        attributeDescriptions[3].setBinding(uint32_t(3));
         attributeDescriptions[3].setLocation(uint32_t(3));
         attributeDescriptions[3].setFormat(vk::Format::eR32G32B32A32Sfloat);
-        attributeDescriptions[3].setOffset(offsetof(AnimVertex, weights));
+        attributeDescriptions[3].setOffset(0);
 
         // Bone indices
         attributeDescriptions.push_back(vk::VertexInputAttributeDescription());
-        attributeDescriptions[4].setBinding(uint32_t(0));
+        attributeDescriptions[4].setBinding(uint32_t(4));
         attributeDescriptions[4].setLocation(uint32_t(4));
         attributeDescriptions[4].setFormat(vk::Format::eR32G32B32A32Uint);
-        attributeDescriptions[4].setOffset(offsetof(AnimVertex, bonesIndex));
+        attributeDescriptions[4].setOffset(0);
     }
 
     // -- VERTEX INPUT --
     vk::PipelineVertexInputStateCreateInfo vertexInputCreateInfo;
-    vertexInputCreateInfo.setVertexBindingDescriptionCount(uint32_t(1));
-    vertexInputCreateInfo.setPVertexBindingDescriptions(&bindingDescription);
+    vertexInputCreateInfo.setVertexBindingDescriptionCount(static_cast<uint32_t>(bindingDescriptions.size()));
+    vertexInputCreateInfo.setPVertexBindingDescriptions(bindingDescriptions.data());
     vertexInputCreateInfo.setVertexAttributeDescriptionCount(static_cast<uint32_t>(attributeDescriptions.size()));
     vertexInputCreateInfo.setPVertexAttributeDescriptions(attributeDescriptions.data());
 

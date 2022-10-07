@@ -18,10 +18,19 @@ private:
 
     std::vector<glm::mat4> boneTransforms;
 
-    vk::Buffer  vertexBuffer{};
-    vk::Buffer  indexBuffer{};
-    VmaAllocation vertexBufferMemory{};
+    // One vertex buffer per data stream
+    std::vector<vk::DeviceSize> vertexBufferOffsets;
+    std::vector<vk::Buffer> vertexBuffers;
+    std::vector<VmaAllocation> vertexBufferMemories;
+    vk::Buffer indexBuffer{};
     VmaAllocation indexBufferMemory{};
+
+    template <typename T>
+    void createSeparateVertexBuffer(
+        const std::vector<T>& dataStream,
+        const VulkanImportStructs& importStructs,
+        vk::Buffer& outputVertexBuffer,
+        VmaAllocation& outputVertexBufferMemory);
 
     void getAnimLerp(
         const std::vector<std::pair<float, glm::vec3>>& stamps,
@@ -41,12 +50,13 @@ public:
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
     
-    void createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs);
+    void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
     const std::vector<glm::mat4>& getBoneTransforms(const float& timer);
 
-    inline const vk::Buffer& getVertexBuffer() const;
+    inline const std::vector<vk::DeviceSize>& getVertexBufferOffsets() const;
+    inline const std::vector<vk::Buffer>& getVertexBuffers() const;
     inline const vk::Buffer& getIndexBuffer() const;
 	inline MeshData& getMeshData();
     inline const std::vector<SubmeshData>& getSubmeshData() const;
@@ -54,9 +64,14 @@ public:
     void cleanup();
 };
 
-const vk::Buffer& Mesh::getVertexBuffer() const
+const std::vector<vk::DeviceSize>& Mesh::getVertexBufferOffsets() const
 {
-    return this->vertexBuffer;
+    return this->vertexBufferOffsets;
+}
+
+const std::vector<vk::Buffer>& Mesh::getVertexBuffers() const
+{
+    return this->vertexBuffers;
 }
 
 const vk::Buffer& Mesh::getIndexBuffer() const
