@@ -2,14 +2,14 @@
 
 #include <vulkan/vulkan.hpp>
 
-#include "../ResourceManagement/ResourceManagerStructs.hpp"
+#include "../resource_management/ResourceManagerStructs.hpp"
 #include "MeshData.hpp"
 #include "glm/matrix.hpp"
 #include "../graphics/vulkan/VmaUsage.hpp"
 
 
 class Mesh{
-private: 
+private:
     std::vector<SubmeshData>    submeshData;
     Device&         device; 
     VmaAllocator&   vma;     
@@ -18,7 +18,7 @@ private:
     vk::Buffer  indexBuffer{};
     VmaAllocation vertexBufferMemory{};
     VmaAllocation indexBufferMemory{};
-public:     
+public:
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
     void createVertexBuffer(MeshData& meshData, VulkanImportStructs& importStructs);

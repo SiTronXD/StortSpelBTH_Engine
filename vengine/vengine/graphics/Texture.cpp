@@ -5,7 +5,7 @@
 
 Texture::Texture(Device& device, VmaAllocator& vma) 
     : device(&device), vma(&vma) 
-{}
+{ }
 
 Texture::~Texture()
 { }

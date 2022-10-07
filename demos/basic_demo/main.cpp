@@ -9,6 +9,7 @@
 
 
 #include "vengine.h"
+#include "vengine/test/TestScene2.hpp"
 #include "src/TestDemoScene.h"
 #include "src/NetworkTestScene.h"
 
@@ -19,10 +20,10 @@ int main(int argc, char* argv[])
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif // _WIN32 && _DEBUG
 
-	{
-		Engine engine;
-		engine.run(new TestDemoScene());
-	}
+    {
+        Engine engine;
+        engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
+    }
 
 	return EXIT_SUCCESS;
 }

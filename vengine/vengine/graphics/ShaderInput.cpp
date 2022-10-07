@@ -2,7 +2,7 @@
 #include "vulkan/PhysicalDevice.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/VulkanDbg.hpp"
-#include "../ResourceManagement/ResourceManager.hpp"
+#include "../resource_management/ResourceManager.hpp"
 #include "Texture.hpp"
 #include "../dev/Log.hpp"
 

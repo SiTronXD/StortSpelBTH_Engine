@@ -104,7 +104,7 @@
     <TargetName>$(ProjectName)</TargetName>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
-    <PublicIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include;$(VULKAN_SDK)\Include\;$(PublicIncludeDirectories)</PublicIncludeDirectories>
+    <PublicIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</PublicIncludeDirectories>
     <PublicModuleDirectories>
     </PublicModuleDirectories>
     <AllProjectBMIsArePublic>false</AllProjectBMIsArePublic>
@@ -115,7 +115,7 @@
     <TargetName>$(ProjectName)</TargetName>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
-    <PublicIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\sdl\include\;$(VULKAN_SDK)\Include\;$(PublicIncludeDirectories)</PublicIncludeDirectories>
+    <PublicIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</PublicIncludeDirectories>
     <PublicModuleDirectories>
     </PublicModuleDirectories>
     <AllProjectBMIsArePublic>false</AllProjectBMIsArePublic>
@@ -126,7 +126,7 @@
     <TargetName>$(ProjectName)</TargetName>
     <CustomBuildBeforeTargets>
     </CustomBuildBeforeTargets>
-    <PublicIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\sdl\include\;$(VULKAN_SDK)\Include\;$(PublicIncludeDirectories)</PublicIncludeDirectories>
+    <PublicIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</PublicIncludeDirectories>
     <PublicModuleDirectories>
     </PublicModuleDirectories>
     <AllProjectBMIsArePublic>false</AllProjectBMIsArePublic>
@@ -182,7 +182,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;TRACY_ENABLE;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <UndefinePreprocessorDefinitions>
@@ -193,8 +193,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc143-mtd.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;sfml-network-d.lib;sfml-system-d.lib;sfml-audio-d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib;$(ProjectDir)..\deps\lua\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;assimp-vc143-mtd.lib;sfml-network-d.lib;sfml-system-d.lib;sfml-audio-d.lib;lua_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
       <Command>
@@ -223,7 +223,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;TRACY_ENABLE;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(VULKAN_SDK)\Include\;$(ProjectDir)..\deps\SFMLNetwork\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -237,8 +237,8 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
       <AdditionalDependencies>assimp-vc143-mt.lib;TracyClient.lib;VulkanMemoryAllocator.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(VULKAN_SDK)\Lib\;$(ProjectDir)..\deps\SFMLNetwork\lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;sfml-network.lib;sfml-system.lib;sfml-audio.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib;$(ProjectDir)..\deps\lua\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;assimp-vc143-mt.lib;sfml-network.lib;sfml-system.lib;sfml-audio.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
       <Command>
@@ -267,7 +267,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
       <PreprocessorDefinitions>VENGINE_NO_PROFILING;NDEBUG;_CONSOLE;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;VENGINE_NO_PROFILING;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
     </ClCompile>
@@ -278,8 +278,8 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>assimp-vc143-mt.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib;$(ProjectDir)..\deps\lua\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;assimp-vc143-mt.lib;sfml-network.lib;sfml-system.lib;sfml-audio.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
       <Command>
@@ -300,7 +300,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="vengine\application\MatrixHandler.hpp" />
+    <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
     <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\CommandBufferArray.hpp" />
     <ClInclude Include="imgui\backends\imgui_impl_sdl.h" />
@@ -311,6 +311,9 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="vengine\lua\wrappers\InputLua.h" />
+    <ClInclude Include="vengine\components\Script.hpp" />
+    <ClInclude Include="vengine\lua\ScriptHandler.h" />
     <ClInclude Include="vengine\audio\AudioHandler.h" />
     <ClInclude Include="vengine\components\AudioListener.hpp" />
     <ClInclude Include="vengine\components\AudioSource.hpp" />
@@ -347,6 +350,9 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\graphics\vulkan\VulkanDbg.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\VulkanInstance.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\VulkanValidation.hpp" />
+    <ClInclude Include="vengine\lua\dev\LuaHelper.hpp" />
+    <ClInclude Include="vengine\lua\LuaPushes.hpp" />
+    <ClInclude Include="vengine\lua\wrappers\SceneLua.h" />
     <ClInclude Include="vengine\network\Client.h" />
     <ClInclude Include="vengine\network\NetworkEnumAndDefines.h" />
     <ClInclude Include="vengine\network\NetworkHandler.h" />
@@ -354,11 +360,11 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\network\ServerGame.h" />
     <ClInclude Include="vengine\network\ServerGames\DefaultServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
-    <ClInclude Include="vengine\ResourceManagement\Configurator.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\loaders\TextureLoader.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\ResourceManager.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\ResourceManagerStructs.hpp" />
+    <ClInclude Include="vengine\resource_management\Configurator.hpp" />
+    <ClInclude Include="vengine\resource_management\loaders\MeshLoader.hpp" />
+    <ClInclude Include="vengine\resource_management\loaders\TextureLoader.hpp" />
+    <ClInclude Include="vengine\resource_management\ResourceManager.hpp" />
+    <ClInclude Include="vengine\resource_management\ResourceManagerStructs.hpp" />
     <ClInclude Include="vengine\systems\System.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
@@ -372,7 +378,9 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
-    <ClCompile Include="vengine\application\MatrixHandler.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\ResourceManagerLua.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
+    <ClCompile Include="vengine\lua\ScriptHandler.cpp" />
     <ClCompile Include="vengine\audio\AudioHandler.cpp" />
     <ClCompile Include="vengine\graphics\Buffer.cpp" />
     <ClCompile Include="vengine\graphics\ShaderInput.cpp" />
@@ -405,16 +413,17 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="vengine\graphics\vulkan\VulkanDbg.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\VulkanInstance.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\VulkanValidation.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp" />
     <ClCompile Include="vengine\network\Client.cpp" />
     <ClCompile Include="vengine\network\NetworkHandler.cpp" />
     <ClCompile Include="vengine\network\Server.cpp" />
     <ClCompile Include="vengine\network\ServerGame.cpp" />
     <ClCompile Include="vengine\network\ServerGames\DefaultServerGame.cpp" />
     <ClCompile Include="vengine\network\Timer.cpp" />
-    <ClCompile Include="vengine\ResourceManagement\Configurator.cpp" />
-    <ClCompile Include="vengine\ResourceManagement\loaders\MeshLoader.cpp" />
-    <ClCompile Include="vengine\ResourceManagement\loaders\TextureLoader.cpp" />
-    <ClCompile Include="vengine\ResourceManagement\ResourceManager.cpp" />
+    <ClCompile Include="vengine\resource_management\Configurator.cpp" />
+    <ClCompile Include="vengine\resource_management\loaders\MeshLoader.cpp" />
+    <ClCompile Include="vengine\resource_management\loaders\TextureLoader.cpp" />
+    <ClCompile Include="vengine\resource_management\ResourceManager.cpp" />
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
   </ItemGroup>
