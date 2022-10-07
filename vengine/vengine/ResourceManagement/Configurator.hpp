@@ -24,7 +24,8 @@ constexpr std::string_view P_TEXTURES   = "path_textures" ;
 constexpr std::string_view P_SHADERS    = "path_shaders" ;
 constexpr std::string_view SAMPL_MAX_ANISOSTROPY    = "max_anisotropy" ;
 constexpr std::string_view USE_BUILTIN_VALIDATION   = "use_builtin_validation_layers" ;
-constexpr std::string_view ROOM_SIZE   = "room_size" ;
+constexpr std::string_view ROOM_SIZE    = "room_size";
+constexpr std::string_view TILE_TYPES   = "tile_types";
 
 
 namespace vengine_helper::config::defaults
@@ -38,8 +39,8 @@ namespace vengine_helper::config::defaults
     const float CAM_TARGET_X= 0.F ;
     const float CAM_TARGET_Y= 10.F;
     const float CAM_TARGET_Z= 0.F ;
-    const int W_WIDTH  = 800;    
-    const int W_HEIGHT = 600;    
+    const int W_WIDTH       = 800;    
+    const int W_HEIGHT      = 600;    
     const std::string P_ASSETS      = "vengine_assets/" ;           //:NOLINT: Nothing but const std::string works as intended...
     const std::string P_MODELS      = "vengine_assets/models/";     //:NOLINT:
     const std::string P_TEXTURES    = "vengine_assets/textures/";   //:NOLINT:
@@ -47,6 +48,7 @@ namespace vengine_helper::config::defaults
     const float SAMPL_MAX_ANISOSTROPY = 16.F ;
     const bool USE_BUILTIN_VALIDATION = false ;
     const int ROOM_SIZE     = 10;
+    const int TILE_TYPES    = 4;
     }
 
 namespace vengine_helper::config
@@ -85,7 +87,8 @@ namespace vengine_helper::config
             {P_SHADERS,{(defaults::P_SHADERS), Type::string_t }},
             {SAMPL_MAX_ANISOSTROPY,{(defaults::SAMPL_MAX_ANISOSTROPY), Type::float_t }},
             {USE_BUILTIN_VALIDATION,{(defaults::USE_BUILTIN_VALIDATION), Type::bool_t }},
-            {ROOM_SIZE, {(defaults::ROOM_SIZE),Type::int_t}},
+            {ROOM_SIZE, {defaults::ROOM_SIZE, Type::int_t}},
+            {TILE_TYPES, {defaults::TILE_TYPES, Type::int_t}},
         };
     };
     extern configHolder conf;
