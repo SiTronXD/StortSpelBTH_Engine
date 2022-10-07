@@ -14,6 +14,7 @@ struct ServerEntity
     int       type;
 };
 
+//change naming to serverMode?
 class ServerGame
 {
 protected:
