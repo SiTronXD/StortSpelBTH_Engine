@@ -90,6 +90,11 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
         data.bones.insert(data.bones.end(), mesh.bones.begin(), mesh.bones.end());
     }
 
+    data.availableVertexData = 
+        (uint32_t)VertexData::POSITION |
+        (uint32_t)VertexData::COLOR |
+        (uint32_t)VertexData::TEX_COORDS;
+
     // Move pos, col and tex to aniVertices
     if (data.aniVertices.size() > 0)
     {
@@ -101,6 +106,10 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
         }
 
         data.vertices.clear();
+
+        data.availableVertexData |=
+            (uint32_t)VertexData::BONE_WEIGHTS |
+            (uint32_t)VertexData::BONE_INDICES;
     }
 
 

@@ -51,6 +51,7 @@
     <ClCompile Include="vengine\ResourceManagement\ResourceManager.cpp" />
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
+    <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />
@@ -115,6 +116,7 @@
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
+    <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
