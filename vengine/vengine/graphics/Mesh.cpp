@@ -49,23 +49,6 @@ void Mesh::createSeparateVertexBuffer(
         (size_t)bufferSize
     );
 
-    /*if (!hasAnimations)
-    {
-        memcpy(
-            data,
-            meshData.vertices.data(),
-            (size_t)bufferSize
-        );
-    }
-    else
-    {
-        memcpy(
-            data,
-            meshData.aniVertices.data(),
-            (size_t)bufferSize
-        );
-    }*/
-
     vmaUnmapMemory(*importStructs.vma, stagingBufferMemory);
 
     VmaAllocationInfo allocInfo_deviceOnly;

@@ -25,7 +25,7 @@ void SceneHandler::update()
 	animView.each([&]
 			(AnimationComponent& animationComponent)
 		{
-			animationComponent.timer += Time::getDT() * 24.0f;
+			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
 			if (animationComponent.timer >= animationComponent.endTime)
 			{
 				animationComponent.timer -= animationComponent.endTime;

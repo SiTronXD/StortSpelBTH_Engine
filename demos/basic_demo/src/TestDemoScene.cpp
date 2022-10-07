@@ -67,6 +67,7 @@ void TestDemoScene::init()
 		this->setComponent<AnimationComponent>(newTestEntity);
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(newTestEntity);
 		newAnimComp.timer += 24.0f * 0.6f * i;
+		newAnimComp.timeScale += i % 2;
 	}
 }
 
