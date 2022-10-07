@@ -5,6 +5,8 @@
 class MeshDataInfo
 {
 public:
+	static bool areStreamsValid(
+		const VertexStreams& vertexStreams);
 	static size_t getVertexSize(
-		const MeshData& meshData);
+		const VertexStreams& vertexStreams);
 };

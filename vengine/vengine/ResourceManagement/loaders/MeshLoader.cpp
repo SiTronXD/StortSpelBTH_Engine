@@ -10,6 +10,7 @@
 #include "../ResourceManager.hpp" // Importing mesh with Assimp needs to add Textures Sampler index
 #include "../../graphics/Mesh.hpp"
 #include "../../graphics/MeshData.hpp"
+#include "../../graphics/MeshDataInfo.hpp"
 
 void MeshLoader::init(VmaAllocator *vma,
     vk::PhysicalDevice *physiscalDev,
@@ -59,6 +60,13 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
     
     MeshData meshData = this->assimpMeshImport(scene, materailToTexture);
     this->importer.FreeScene();
+
+    // Make sure the streams are valid
+    if (!MeshDataInfo::areStreamsValid(meshData.vertexStreams))
+    {
+        Log::error("There are different non-zero number of elements in certain vertex streams. This will cause issues when rendering the mesh...");
+    }
+
     return meshData;
 }
 
