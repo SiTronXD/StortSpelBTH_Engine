@@ -24,6 +24,7 @@ constexpr std::string_view P_TEXTURES   = "path_textures" ;
 constexpr std::string_view P_SHADERS    = "path_shaders" ;
 constexpr std::string_view SAMPL_MAX_ANISOSTROPY    = "max_anisotropy" ;
 constexpr std::string_view USE_BUILTIN_VALIDATION   = "use_builtin_validation_layers" ;
+constexpr std::string_view ROOM_SIZE   = "room_size" ;
 
 
 namespace vengine_helper::config::defaults
@@ -45,7 +46,8 @@ namespace vengine_helper::config::defaults
     const std::string P_SHADERS     = "vengine_assets/shaders/";    //:NOLINT:
     const float SAMPL_MAX_ANISOSTROPY = 16.F ;
     const bool USE_BUILTIN_VALIDATION = false ;
-}
+    const int ROOM_SIZE     = 10;
+    }
 
 namespace vengine_helper::config
 {   
@@ -83,6 +85,7 @@ namespace vengine_helper::config
             {P_SHADERS,{(defaults::P_SHADERS), Type::string_t }},
             {SAMPL_MAX_ANISOSTROPY,{(defaults::SAMPL_MAX_ANISOSTROPY), Type::float_t }},
             {USE_BUILTIN_VALIDATION,{(defaults::USE_BUILTIN_VALIDATION), Type::bool_t }},
+            {ROOM_SIZE, {(defaults::ROOM_SIZE),Type::int_t}},
         };
     };
     extern configHolder conf;
