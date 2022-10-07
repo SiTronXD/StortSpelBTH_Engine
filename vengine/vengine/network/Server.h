@@ -59,7 +59,7 @@ private:
 	std::vector<sf::Packet> serverToClientPacketUdp;
 
 
-	ServerGame serverGame;
+	ServerGame *serverGame;
 
 	//help functions
 	template <typename T> void getToAllExeptIDTCP(int clientID, T var)
@@ -80,7 +80,7 @@ private:
 	}
 
 public:
-	Server();
+	Server(ServerGame* serverGame = nullptr);
 	~Server();
 	void        start();
 	bool        update(float dt);

@@ -18,7 +18,7 @@ private:
     TextureLoader*       textureLoader  = nullptr;
 
     MeshData assimpImport(const std::string& modelFile);
-    MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materailToTexture);   
+    MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materialToTexture);   
 
     template <typename T>
     void insertStream(std::vector<T>& inStream, std::vector<T>& outputStream);
@@ -32,9 +32,10 @@ private:
     aiNode* findParentBoneNode(std::unordered_map<std::string_view, int>& bones, aiNode* node);
 
 public: 
-    void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager* resourceMan);
+    void init(VmaAllocator* vma, vk::PhysicalDevice* physiscalDev, Device* dev, vk::Queue* transQueue, vk::CommandPool* transCmdPool, ResourceManager* resourceMan);
     void setTextureLoader(TextureLoader* textureLoader);
 
-    Mesh createMesh(std::string path);
+    MeshData importMeshData(std::string& path);
+    Mesh createMesh(MeshData& data);
 
 };

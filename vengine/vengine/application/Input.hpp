@@ -2,6 +2,7 @@
 
 #include <map>
 #include <SDL2/SDL.h>
+#include <string>
 
 enum class Keys
 {
@@ -31,8 +32,24 @@ enum class Keys
 	X = SDLK_x,
 	Y = SDLK_y,
 	Z = SDLK_z,
+	RIGHT = SDLK_RIGHT,
+	LEFT = SDLK_LEFT,
+	UP = SDLK_UP,
+	DOWN = SDLK_DOWN,
+	ONE = SDLK_1,
+	TWO = SDLK_2,
+	THREE = SDLK_3,
+	FOUR = SDLK_4,
+	FIVE = SDLK_5,
+	SIX = SDLK_6,
+	SEVEN = SDLK_7,
+	EIGHT = SDLK_8,
+	NINE = SDLK_9,
+	ZERO = SDLK_0,
 
-	HOME = SDLK_HOME
+	HOME = SDLK_HOME,
+	SHIFT = SDLK_LSHIFT,
+	CTRL = SDLK_LCTRL
 };
 
 enum class Mouse
@@ -46,6 +63,44 @@ class Input
 {
 private:
 	friend class Window;
+	friend class InputLua;
+
+    inline static const std::map<std::string, int> keysMap {
+		{ "A" , SDLK_a },
+		{ "B" , SDLK_b },
+		{ "C" , SDLK_c },
+		{ "D" , SDLK_d },
+		{ "E" , SDLK_e },
+		{ "F" , SDLK_f },
+		{ "G" , SDLK_g },
+		{ "H" , SDLK_h },
+		{ "I" , SDLK_i },
+		{ "J" , SDLK_j },
+		{ "K" , SDLK_k },
+		{ "L" , SDLK_l },
+		{ "M" , SDLK_m },
+		{ "N" , SDLK_n },
+		{ "O" , SDLK_o },
+		{ "P" , SDLK_p },
+		{ "Q" , SDLK_q },
+		{ "R" , SDLK_r },
+		{ "S" , SDLK_s },
+		{ "T" , SDLK_t },
+		{ "U" , SDLK_u },
+		{ "V" , SDLK_v },
+		{ "W" , SDLK_w },
+		{ "X" , SDLK_x },
+		{ "Y" , SDLK_y },
+		{ "Z" , SDLK_z },
+		{ "HOME" , SDLK_HOME },
+		{ "SHIFT" , SDLK_LSHIFT },
+		{ "CTRL" , SDLK_LCTRL }
+    };
+    inline static const std::map<std::string, int> mouseMap {
+        { "LEFT", SDL_BUTTON_LEFT },
+        { "MIDDLE", SDL_BUTTON_MIDDLE },
+        { "RIGHT", SDL_BUTTON_RIGHT }
+    };
 
 	static std::map<Keys, bool> keyDown;
 	static std::map<Keys, bool> lastKeyDown;
@@ -67,8 +122,10 @@ private:
 public:
 	static inline bool isKeyDown(const Keys& key) { return Input::keyDown[key]; }
 	static inline bool isKeyPressed(const Keys& key) { return Input::keyDown[key] && !Input::lastKeyDown[key]; }
+	static inline bool isKeyReleased(const Keys& key) { return !Input::keyDown[key] && Input::lastKeyDown[key]; }
 	static inline bool isMouseButtonDown(const Mouse& mouse) { return Input::mouseButtonDown[mouse]; }
 	static inline bool isMouseButtonPressed(const Mouse& mouse) { return Input::mouseButtonDown[mouse] && !Input::lastmouseButtonDown[mouse]; }
+	static inline bool isMouseButtonReleased(const Mouse& mouse) { return !Input::mouseButtonDown[mouse] && Input::lastmouseButtonDown[mouse]; }
 	static inline const int& getMouseX() { return Input::cursorX; }
 	static inline const int& getMouseY() { return Input::cursorY; }
 	static inline const int getMouseDeltaX() { return Input::lastCursorX - Input::cursorX; }

@@ -5,7 +5,7 @@
 #include "vulkan/VulkanDbg.hpp"
 #include "../dev/defs.hpp"
 #include "../dev/tracyHelper.hpp"
-#include "../ResourceManagement/Configurator.hpp"
+#include "../resource_management/Configurator.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <cstring>
@@ -32,9 +32,9 @@
 #include "../components/MeshComponent.hpp"
 #include "../components/AnimationComponent.hpp"
 #include "../dev/Log.hpp"
-#include "../ResourceManagement/ResourceManager.hpp"
-#include "../ResourceManagement/loaders/MeshLoader.hpp"
-#include "../ResourceManagement/loaders/TextureLoader.hpp"
+#include "../resource_management/ResourceManager.hpp"
+#include "../resource_management/loaders/MeshLoader.hpp"
+#include "../resource_management/loaders/TextureLoader.hpp"
 
 static void checkVkResult(VkResult err)
 {
@@ -67,6 +67,13 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
 
     try 
     {
+        // Print out a clear message if validation layers are enabled
+        if (isValidationLayersEnabled())
+        {
+            Log::write("Validation layers are enabled.\n");
+        }
+
+        // Create the vulkan instance
         this->instance.createInstance(*this->window);
 
         // Create the surface
@@ -149,8 +156,8 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
         this->initResourceManager();
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
-        this->resourceManager->addTexture("missing_texture.png");
-
+        this->resourceManager->addTexture(DEF<std::string>(P_TEXTURES) + "missing_texture.png");
+        this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
     }
     catch(std::runtime_error &e)
     {
@@ -435,6 +442,7 @@ void VulkanRenderer::draw(Scene* scene)
 #endif        
 }
 
+// Should probably be removed...
 void VulkanRenderer::initMeshes(Scene* scene)
 {
     // Engine "specifics"

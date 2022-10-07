@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.hpp>
 
-#include "../ResourceManagement/ResourceManagerStructs.hpp"
+#include "../resource_management/ResourceManagerStructs.hpp"
 #include "MeshData.hpp"
 #include "glm/matrix.hpp"
 #include "../graphics/vulkan/VmaUsage.hpp"

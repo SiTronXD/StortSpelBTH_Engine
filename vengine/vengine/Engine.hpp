@@ -1,9 +1,10 @@
 #pragma once
 
-#include "audio/AudioHandler.h"
-#include "network/NetworkHandler.h"
 #include "application/SceneHandler.hpp"
-#include "ResourceManagement/ResourceManager.hpp"
+#include "network/NetworkHandler.h"
+#include "lua/ScriptHandler.h"
+#include "audio/AudioHandler.h"
+#include "resource_management/ResourceManager.hpp"
 
 class Engine
 {
@@ -13,11 +14,12 @@ public:
 	Engine();
 	virtual ~Engine();
 
-	void run(Scene* startScene);
+	void run(std::string appName, std::string startScenePath, Scene* startScene = nullptr);
 
 	SceneHandler    sceneHandler;
-    ResourceManager resourceMan;
+    ResourceManager resourceManager;
 	NetworkHandler networkHandler;
+	ScriptHandler scriptHandler;
 	AudioHandler audioHandler;
 };
 

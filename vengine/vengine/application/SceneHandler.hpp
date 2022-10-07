@@ -6,9 +6,13 @@ class SceneHandler
 private:
 	Scene* scene;
 	Scene* nextScene;
-	NetworkHandler* networkHandler;
-	ResourceManager* resourceManager;
+	std::string luaScript;
+	std::string nextLuaScript;
 
+	NetworkHandler* networkHandler;
+	ScriptHandler* scriptHandler;
+	ResourceManager* resourceManager;
+	
 public:
 	SceneHandler();
 	virtual ~SceneHandler();
@@ -16,13 +20,21 @@ public:
 	void update();
 	void updateToNextScene();
 
-	void setScene(Scene* scene);
+	void setScene(Scene* scene, std::string path = "");
+	void reloadScene();
+
 	void setNetworkHandler(NetworkHandler* networkHandler);
 	void setResourceManager(ResourceManager* resourceManager);
 	inline NetworkHandler* getNetworkHandler()
 	{ return this->networkHandler; }
 	inline ResourceManager* getResourceManager() 
 	{ return this->resourceManager; }
+
+	void setScriptHandler(ScriptHandler* scriptHandler);
+	ScriptHandler* getScriptHandler();
+
+	void setResourceManager(ResourceManager* resourceManager);
+	ResourceManager* getResourceManager();
 
 	Scene* getScene() const;
 };

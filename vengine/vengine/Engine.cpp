@@ -14,7 +14,7 @@
 #include "application/Input.hpp"
 #include "application/Time.hpp"
 #include "graphics/VulkanRenderer.hpp"
-#include "ResourceManagement/Configurator.hpp"
+#include "resource_management/Configurator.hpp"
 
 #include <chrono>
 #include <functional>
@@ -22,45 +22,53 @@
 #include "imgui_impl_vulkan.h"
 #include "backends/imgui_impl_vulkan.h"
 
+
 Engine::Engine()
 {
-	
 }
 
 Engine::~Engine()
 {
 }
 
-void Engine::run(Scene* startScene)
+void Engine::run(std::string appName, std::string startScenePath, Scene* startScene)
 {
-    this->sceneHandler.setScene(startScene);
-    this->sceneHandler.setResourceManager(&this->resourceMan);
-    this->sceneHandler.setNetworkHandler(&this->networkHandler);
-    this->networkHandler.setSceneHandler(&this->sceneHandler);
-
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
 
     // Window
     Window window;
     window.initWindow(
-        "Some Program", 
+        appName, 
         DEF<int>(W_WIDTH), 
         DEF<int>(W_HEIGHT)
     );
     
     // Creating Vulkan Renderer Instance
     auto renderer = VulkanRenderer();
-    if (renderer.init(&window, "Some Program", &this->resourceMan) == 1)
+    if (renderer.init(&window, std::move(appName), &this->resourceManager) == 1)
     {
         std::cout << "EXIT_FAILURE" << std::endl;
     }
 
     window.registerResizeEvent(renderer.getWindowResized());
 
-    // Start scene
+    // Set references to other systems
+    this->sceneHandler.setNetworkHandler(&networkHandler);
+    this->sceneHandler.setScriptHandler(&scriptHandler);
+    this->sceneHandler.setResourceManager(&resourceManager);
+    this->networkHandler.setSceneHandler(&sceneHandler);
+    this->scriptHandler.setSceneHandler(&sceneHandler);
+    this->scriptHandler.setResourceManager(&resourceManager);
+
+    // Initialize the start scene
+    if (startScene == nullptr) { startScene = new Scene(); }
+    this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
-    this->audioHandler.setSceneHandler(&this->sceneHandler);
+
+    // Temporary, should be called before creating the scene
+    this->audioHandler.setSceneHandler(&sceneHandler);
+
     renderer.initMeshes(this->sceneHandler.getScene());
 
     // Game loop
@@ -79,6 +87,7 @@ void Engine::run(Scene* startScene)
         ImGui::NewFrame();
 
         Time::updateDeltaTime();
+        this->scriptHandler.update();
         this->sceneHandler.update();
         this->networkHandler.updateNetwork();
         this->audioHandler.update();
@@ -102,6 +111,7 @@ void Engine::run(Scene* startScene)
 #endif
     }
     this->networkHandler.deleteServer();
+    this->scriptHandler.cleanup();
 
     renderer.cleanup();
 }
