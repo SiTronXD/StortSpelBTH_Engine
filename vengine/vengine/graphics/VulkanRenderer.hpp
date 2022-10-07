@@ -82,6 +82,7 @@ class VulkanRenderer
     Pipeline pipeline;
 
     // Animations pipeline
+	bool hasAnimations;
     UniformBufferID animViewProjectionUB;
     SamplerID animSampler;
     ShaderInput animShaderInput;

@@ -232,8 +232,11 @@ void VulkanRenderer::cleanup()
 
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
-    this->animPipeline.cleanup();
-    this->animShaderInput.cleanup();
+    if (this->hasAnimations)
+	{
+		this->animPipeline.cleanup();
+		this->animShaderInput.cleanup();
+    }
 
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
@@ -476,86 +479,105 @@ void VulkanRenderer::initMeshes(Scene* scene)
 	);
 
 	// Animation shader inputs
-    VertexStreams animStream{};
-    animStream.positions.resize(1);
-    animStream.colors.resize(1);
-    animStream.texCoords.resize(1);
-    animStream.boneWeights.resize(1);
-    animStream.boneIndices.resize(1);
-
-	this->animShaderInput.beginForInput(
-	    this->physicalDevice,
-	    this->device,
-	    this->vma,
-	    *this->resourceManager,
-	    MAX_FRAMES_IN_FLIGHT
+	uint32_t numAnimMeshes = 0;
+	auto tView =
+	    scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
+	tView.each(
+	    [&](const Transform& transform,
+	        const MeshComponent& meshComponent,
+	        AnimationComponent& animationComponent) 
+        { 
+            numAnimMeshes++;
+	    }
 	);
-	this->animShaderInput.addPushConstant(
-	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
-	);
-    this->animShaderInput.setNumShaderStorageBuffers(1);
+	this->hasAnimations = numAnimMeshes > 0;
 
-    // Add shader inputs for animations
-    auto tView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
-    tView.each([&](
-        const Transform& transform, 
-        const MeshComponent& meshComponent, 
-        AnimationComponent& animationComponent)
-        {
-            // Extract mesh information
-            Mesh& currentMesh = this->resourceManager->getMesh(meshComponent.meshID);
-            std::vector<Bone>& bones = currentMesh.getMeshData().bones;
-            uint32_t numAnimationBones = currentMesh.getMeshData().bones.size();
+    // Make sure animated meshes actually exists
+    if (this->hasAnimations)
+	{
+		VertexStreams animStream{};
+		animStream.positions.resize(1);
+		animStream.colors.resize(1);
+		animStream.texCoords.resize(1);
+		animStream.boneWeights.resize(1);
+		animStream.boneIndices.resize(1);
 
-            // Add new storage buffer for animations
-            StorageBufferID newStorageBufferID =
-                this->animShaderInput.addStorageBuffer(
-                    numAnimationBones * sizeof(glm::mat4));
+		this->animShaderInput.beginForInput(
+		    this->physicalDevice,
+		    this->device,
+		    this->vma,
+		    *this->resourceManager,
+		    MAX_FRAMES_IN_FLIGHT
+		);
+		this->animShaderInput.addPushConstant(
+		    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+		);
+		this->animShaderInput.setNumShaderStorageBuffers(1);
 
-            // Update animation component with storage buffer ID
-            animationComponent.boneTransformsID = newStorageBufferID;
+		// Add shader inputs for animations
+		tView.each(
+		    [&](const Transform& transform,
+		        const MeshComponent& meshComponent,
+		        AnimationComponent& animationComponent)
+		    {
+			    // Extract mesh information
+			    Mesh& currentMesh =
+			        this->resourceManager->getMesh(meshComponent.meshID);
+			    std::vector<Bone>& bones = currentMesh.getMeshData().bones;
+			    uint32_t numAnimationBones =
+			        currentMesh.getMeshData().bones.size();
 
-            // Set end time
-            float maxTimeStamp = 0.0f;
-            for (size_t i = 0; i < bones.size(); ++i)
-            {
-                // Translation
-                for (size_t j = 0; j < bones[i].translationStamps.size(); ++j)
-                {
-                    if (bones[i].translationStamps[j].first > maxTimeStamp)
-                        maxTimeStamp = bones[i].translationStamps[j].first;
-                }
+			    // Add new storage buffer for animations
+			    StorageBufferID newStorageBufferID =
+			        this->animShaderInput.addStorageBuffer(
+			            numAnimationBones * sizeof(glm::mat4)
+			        );
 
-                // Rotation
-                for (size_t j = 0; j < bones[i].rotationStamps.size(); ++j)
-                {
-                    if (bones[i].rotationStamps[j].first > maxTimeStamp)
-                        maxTimeStamp = bones[i].rotationStamps[j].first;
-                }
+			    // Update animation component with storage buffer ID
+			    animationComponent.boneTransformsID = newStorageBufferID;
 
-                // Scale
-                for (size_t j = 0; j < bones[i].scaleStamps.size(); ++j)
-                {
-                    if (bones[i].scaleStamps[j].first > maxTimeStamp)
-                        maxTimeStamp = bones[i].scaleStamps[j].first;
-                }
-            }
-            animationComponent.endTime = maxTimeStamp;
-        }
-    );
+			    // Set end time
+			    float maxTimeStamp = 0.0f;
+			    for (size_t i = 0; i < bones.size(); ++i)
+			    {
+				    // Translation
+				    for (size_t j = 0; j < bones[i].translationStamps.size();
+				         ++j)
+				    {
+					    if (bones[i].translationStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = bones[i].translationStamps[j].first;
+				    }
 
-	this->animViewProjectionUB =
-	    this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
-	this->animSampler = this->animShaderInput.addSampler();
-	this->animShaderInput.endForInput();
-	this->animPipeline.createPipeline(
-	    this->device, 
-        this->animShaderInput, 
-        this->renderPassBase, 
-        animStream,
-        "shaderAnim.vert.spv"
-	);
+				    // Rotation
+				    for (size_t j = 0; j < bones[i].rotationStamps.size(); ++j)
+				    {
+					    if (bones[i].rotationStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = bones[i].rotationStamps[j].first;
+				    }
 
+				    // Scale
+				    for (size_t j = 0; j < bones[i].scaleStamps.size(); ++j)
+				    {
+					    if (bones[i].scaleStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = bones[i].scaleStamps[j].first;
+				    }
+			    }
+			    animationComponent.endTime = maxTimeStamp;
+		    }
+		);
+
+		this->animViewProjectionUB =
+		    this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+		this->animSampler = this->animShaderInput.addSampler();
+		this->animShaderInput.endForInput();
+		this->animPipeline.createPipeline(
+		    this->device,
+		    this->animShaderInput,
+		    this->renderPassBase,
+		    animStream,
+		    "shaderAnim.vert.spv"
+		);
+	}
     // Add all textures for possible use in the shader
     size_t numTextures = this->resourceManager->getNumTextures();
     for (size_t i = 0; i < numTextures; ++i) 
@@ -564,7 +586,11 @@ void VulkanRenderer::initMeshes(Scene* scene)
             i,
             this->textureSampler
         );
-        this->animShaderInput.addPossibleTexture(i, this->textureSampler);
+
+        if (this->hasAnimations)
+		{
+			this->animShaderInput.addPossibleTexture(i, this->textureSampler);
+		}
     }
 }
 
@@ -935,18 +961,21 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
         
         #pragma region commandBufferRecording
 
+            // Default shader input
             this->shaderInput.setCurrentFrame(this->currentFrame);
-            this->animShaderInput.setCurrentFrame(this->currentFrame);
-
-            // Update the Uniform Buffers
             this->shaderInput.updateUniformBuffer(
                 this->viewProjectionUB,
                 (void*)&this->uboViewProjection
             );
-            this->animShaderInput.updateUniformBuffer(
-                this->viewProjectionUB,
-                (void*)&this->uboViewProjection
-            );
+
+            // Animation shader input
+            if (this->hasAnimations)
+			{
+				this->animShaderInput.setCurrentFrame(this->currentFrame);
+				this->animShaderInput.updateUniformBuffer(
+				    this->viewProjectionUB, (void*)&this->uboViewProjection
+				);
+			}
 
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -1036,14 +1065,18 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     }
                 );
 
-                // Bind Pipeline to be used in render pass
-                currentCommandBuffer.bindGraphicsPipeline(this->animPipeline);
+                if (this->hasAnimations)
+			    {
+				    // Bind Pipeline to be used in render pass
+				    currentCommandBuffer.bindGraphicsPipeline(
+                        this->animPipeline
+				    );
 
-                // Update for descriptors
-                currentCommandBuffer.bindShaderInputFrequency(
-                    this->animShaderInput,
-                    DescriptorFrequency::PER_FRAME
-                );
+				    // Update for descriptors
+				    currentCommandBuffer.bindShaderInputFrequency(
+				        this->animShaderInput, DescriptorFrequency::PER_FRAME
+				    );
+			    }
 
                 // For every animating mesh we have
                 auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
