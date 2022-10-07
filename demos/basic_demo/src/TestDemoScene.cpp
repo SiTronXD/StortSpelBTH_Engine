@@ -37,7 +37,42 @@ void TestDemoScene::init()
 	//this->setComponent<MeshComponent>(this->testEntity);
 	this->setComponent<MeshComponent>(this->testEntity);
 	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
-	memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
+
+	meshComp.meshID = Scene::getResourceManager()->addMesh("ghost.obj");
+
+	// Create other test entities
+	for (uint32_t i = 0; i < 4; ++i)
+	{
+		int newTestEntity = this->createEntity();
+
+		Transform& newTransform = this->getComponent<Transform>(newTestEntity);
+
+		this->setComponent<MeshComponent>(newTestEntity);
+		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(newTestEntity);
+		if (i <= 1)
+		{
+			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
+			newTransform.rotation = glm::vec3(0.0f, 0.0f, -90.0f);
+			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
+
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Amogus/source/1.fbx");
+		}
+		else
+		{
+			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
+			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
+			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
+		}
+
+		this->setComponent<AnimationComponent>(newTestEntity);
+		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(newTestEntity);
+		newAnimComp.timer += 24.0f * 0.6f * i;
+		newAnimComp.timeScale += i % 2;
+	}
+
+	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
  
 	// // Create entity2 (already has transform)
 	this->testEntity2 = this->createEntity();
@@ -50,7 +85,7 @@ void TestDemoScene::init()
 
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
-	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
+	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
 }
 
 void TestDemoScene::update()

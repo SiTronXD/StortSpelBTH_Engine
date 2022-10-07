@@ -28,7 +28,9 @@
 
 #include "../application/Input.hpp"
 #include "../application/Scene.hpp"
+#include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
+#include "../components/AnimationComponent.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../resource_management/loaders/MeshLoader.hpp"
@@ -136,39 +138,12 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
             this->commandPool, 
             MAX_FRAMES_IN_FLIGHT
         );
-        
-        // Engine "specifics"
 
-        // Shader inputs
-        this->shaderInput.beginForInput(
-            this->physicalDevice,
-            this->device,
-            this->vma,
-            *this->resourceManager,
-            MAX_FRAMES_IN_FLIGHT
-        );
-        this->shaderInput.addPushConstant(
-            sizeof(ModelMatrix),
-            vk::ShaderStageFlagBits::eVertex
-        );
         this->createTextureSampler();
-        this->sampler0 = 
-            this->shaderInput.addSampler();
-        this->viewProjectionUB = 
-            this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
-        this->testStorageBufferID = 
-            this->shaderInput.addStorageBuffer(2 * sizeof(glm::mat4));
-        this->shaderInput.endForInput();
 
-        this->pipeline.createPipeline(
-            this->device, 
-            this->shaderInput,
-            this->renderPassBase
-        );
-        
         this->createSynchronisation();        
 
-        this->updateUboProjection(); //TODO: Allow for more cameras! 
+        this->updateUboProjection();
         this->updateUboView(
             glm::vec3(DEF<float>(CAM_EYE_X),DEF<float>(CAM_EYE_Y),DEF<float>(CAM_EYE_Z)),
             glm::vec3(DEF<float>(CAM_TARGET_X),DEF<float>(CAM_TARGET_Y), DEF<float>(CAM_TARGET_Z)));
@@ -257,8 +232,13 @@ void VulkanRenderer::cleanup()
 
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
-    this->pipeline.cleanup();
+    if (this->hasAnimations)
+	{
+		this->animPipeline.cleanup();
+		this->animShaderInput.cleanup();
+    }
 
+    this->pipeline.cleanup();
     this->shaderInput.cleanup();
 
     this->getVkDevice().destroyRenderPass(this->renderPassBase);
@@ -373,23 +353,7 @@ void VulkanRenderer::draw(Scene* scene)
     uboViewProjection.projection = camera->projection;
     if (deleteCamera) { delete camera; }
 
-    // Update the Uniform Buffers
-    this->shaderInput.updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->uboViewProjection,
-        this->currentFrame
-    );
-
-    glm::mat4 testMats[2];
-    testMats[0] = glm::scale(glm::mat4(1.0f), glm::vec3(0.2f, 1.0f, 1.0f));
-    testMats[1] = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f, 1.0f, 1.0f));
-    this->shaderInput.updateStorageBuffer(
-        this->testStorageBufferID,
-        (void*) &testMats[0],
-        this->currentFrame
-    );
-
-    // ReRecord the current CommandBuffer! In order to update any Push Constants
+    // Record the current commandBuffer
     recordRenderPassCommandsBase(scene, imageIndex);
     
     // Submit to graphics queue
@@ -402,18 +366,14 @@ void VulkanRenderer::draw(Scene* scene)
         //2. Submit command buffer to queue for execution, making sure it waits for the image to be signalled as 
         //   available before drawing and signals when it has finished renedering. 
         
-        std::array<vk::PipelineStageFlags2, 1> waitStages = {   // Definies What stages the Semaphore have to wait on.        
-            vk::PipelineStageFlagBits2::eColorAttachmentOutput  // Stage: Start drawing to the Framebuffer...
-        };
-        
-        vk::SemaphoreSubmitInfo wait_semaphoreSubmitInfo;
-        wait_semaphoreSubmitInfo.setSemaphore(this->imageAvailable[this->currentFrame]);
-        wait_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);         
-        wait_semaphoreSubmitInfo.setDeviceIndex(uint32_t(1));                    // 0: sets all devices in group 1 to valid... bad or good?
+        vk::SemaphoreSubmitInfo waitSemaphoreSubmitInfo;
+        waitSemaphoreSubmitInfo.setSemaphore(this->imageAvailable[this->currentFrame]);
+        waitSemaphoreSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);         
+        // waitSemaphoreSubmitInfo.setDeviceIndex(uint32_t(1));                    // 0: sets all devices in group 1 to valid... bad or good?
 
-        vk::SemaphoreSubmitInfo signal_semaphoreSubmitInfo;
-        signal_semaphoreSubmitInfo.setSemaphore(this->renderFinished[this->currentFrame]);
-        signal_semaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
+        vk::SemaphoreSubmitInfo signalSemaphoreSubmitInfo;
+        signalSemaphoreSubmitInfo.setSemaphore(this->renderFinished[this->currentFrame]);
+        signalSemaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
 
         std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos
         {
@@ -425,18 +385,23 @@ void VulkanRenderer::draw(Scene* scene)
         
         vk::SubmitInfo2 submitInfo {};      
         submitInfo.setWaitSemaphoreInfoCount(uint32_t(1));
-        // !!!submitInfo.setWaitSemaphoreInfos(const vk::ArrayProxyNoTemporaries<const vk::SemaphoreSubmitInfo> &waitSemaphoreInfos_)
-        submitInfo.setPWaitSemaphoreInfos(&wait_semaphoreSubmitInfo);       // Pointer to the semaphore to wait on.
+        submitInfo.setPWaitSemaphoreInfos(&waitSemaphoreSubmitInfo);       // Pointer to the semaphore to wait on.
         submitInfo.setCommandBufferInfoCount(commandBufferSubmitInfos.size()); 
         submitInfo.setPCommandBufferInfos(commandBufferSubmitInfos.data()); // Pointer to the CommandBuffer to execute
         submitInfo.setSignalSemaphoreInfoCount(uint32_t(1));
-        submitInfo.setPSignalSemaphoreInfos(&signal_semaphoreSubmitInfo);   // Semaphore that will be signaled when CommandBuffer is finished
+        submitInfo.setPSignalSemaphoreInfos(&signalSemaphoreSubmitInfo);   // Semaphore that will be signaled when CommandBuffer is finished
 
         // Submit The CommandBuffers to the Queue to begin drawing to the framebuffers
-        this->queueFamilies.getGraphicsQueue().submit2(
-            submitInfo, 
-            this->drawFences[this->currentFrame]
+        vk::Result graphicsQueueResult = 
+            this->queueFamilies.getGraphicsQueue().submit2(
+                uint32_t(1),
+                &submitInfo, 
+                this->drawFences[this->currentFrame]
         ); // drawing, signal this Fence to open!
+        if (graphicsQueueResult != vk::Result::eSuccess)
+        {
+            Log::error("Failed to submit graphics commands.");
+        }
     }
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
@@ -483,12 +448,136 @@ void VulkanRenderer::draw(Scene* scene)
 // Should probably be removed...
 void VulkanRenderer::initMeshes(Scene* scene)
 {
-    /*auto tView = scene->getSceneReg().view<MeshComponent>();
-    tView.each([this](MeshComponent& meshComponent)
-    {
-          meshComponent.meshID = this->resourceManager->addMesh(meshComponent.filePath);
-    });*/
+    // Engine "specifics"
 
+	// Default shader inputs
+    VertexStreams defaultStream{};
+    defaultStream.positions.resize(1);
+    defaultStream.colors.resize(1);
+    defaultStream.texCoords.resize(1);
+
+	this->shaderInput.beginForInput(
+	    this->physicalDevice,
+	    this->device,
+	    this->vma,
+	    *this->resourceManager,
+	    MAX_FRAMES_IN_FLIGHT
+	);
+	this->shaderInput.addPushConstant(
+	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+	);
+	this->viewProjectionUB =
+	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
+	this->sampler = this->shaderInput.addSampler();
+	this->shaderInput.endForInput();
+	this->pipeline.createPipeline(
+	    this->device, 
+        this->shaderInput, 
+        this->renderPassBase,
+        defaultStream,
+        "shader.vert.spv"
+	);
+
+	// Animation shader inputs
+	uint32_t numAnimMeshes = 0;
+	auto tView =
+	    scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
+	tView.each(
+	    [&](const Transform& transform,
+	        const MeshComponent& meshComponent,
+	        AnimationComponent& animationComponent) 
+        { 
+            numAnimMeshes++;
+	    }
+	);
+	this->hasAnimations = numAnimMeshes > 0;
+
+    // Make sure animated meshes actually exists
+    if (this->hasAnimations)
+	{
+		VertexStreams animStream{};
+		animStream.positions.resize(1);
+		animStream.colors.resize(1);
+		animStream.texCoords.resize(1);
+		animStream.boneWeights.resize(1);
+		animStream.boneIndices.resize(1);
+
+		this->animShaderInput.beginForInput(
+		    this->physicalDevice,
+		    this->device,
+		    this->vma,
+		    *this->resourceManager,
+		    MAX_FRAMES_IN_FLIGHT
+		);
+		this->animShaderInput.addPushConstant(
+		    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+		);
+		this->animShaderInput.setNumShaderStorageBuffers(1);
+
+		// Add shader inputs for animations
+		tView.each(
+		    [&](const Transform& transform,
+		        const MeshComponent& meshComponent,
+		        AnimationComponent& animationComponent)
+		    {
+			    // Extract mesh information
+			    Mesh& currentMesh =
+			        this->resourceManager->getMesh(meshComponent.meshID);
+			    std::vector<Bone>& bones = currentMesh.getMeshData().bones;
+			    uint32_t numAnimationBones =
+			        currentMesh.getMeshData().bones.size();
+
+			    // Add new storage buffer for animations
+			    StorageBufferID newStorageBufferID =
+			        this->animShaderInput.addStorageBuffer(
+			            numAnimationBones * sizeof(glm::mat4)
+			        );
+
+			    // Update animation component with storage buffer ID
+			    animationComponent.boneTransformsID = newStorageBufferID;
+
+			    // Set end time
+			    float maxTimeStamp = 0.0f;
+			    for (size_t i = 0; i < bones.size(); ++i)
+			    {
+				    // Translation
+				    for (size_t j = 0; j < bones[i].translationStamps.size();
+				         ++j)
+				    {
+					    if (bones[i].translationStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = bones[i].translationStamps[j].first;
+				    }
+
+				    // Rotation
+				    for (size_t j = 0; j < bones[i].rotationStamps.size(); ++j)
+				    {
+					    if (bones[i].rotationStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = bones[i].rotationStamps[j].first;
+				    }
+
+				    // Scale
+				    for (size_t j = 0; j < bones[i].scaleStamps.size(); ++j)
+				    {
+					    if (bones[i].scaleStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = bones[i].scaleStamps[j].first;
+				    }
+			    }
+			    animationComponent.endTime = maxTimeStamp;
+		    }
+		);
+
+		this->animViewProjectionUB =
+		    this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+		this->animSampler = this->animShaderInput.addSampler();
+		this->animShaderInput.endForInput();
+		this->animPipeline.createPipeline(
+		    this->device,
+		    this->animShaderInput,
+		    this->renderPassBase,
+		    animStream,
+		    "shaderAnim.vert.spv"
+		);
+	}
     // Add all textures for possible use in the shader
     size_t numTextures = this->resourceManager->getNumTextures();
     for (size_t i = 0; i < numTextures; ++i) 
@@ -497,6 +586,11 @@ void VulkanRenderer::initMeshes(Scene* scene)
             i,
             this->textureSampler
         );
+
+        if (this->hasAnimations)
+		{
+			this->animShaderInput.addPossibleTexture(i, this->textureSampler);
+		}
     }
 }
 
@@ -670,7 +764,6 @@ void VulkanRenderer::createRenderPassImgui()
     subpassDependecy.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput); // Wait until all other graphics have been rendered
     subpassDependecy.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
     subpassDependecy.setSrcAccessMask(vk::AccessFlags());
-    //subpassDependecy.setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentWrite); //TODO: check this...
     subpassDependecy.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
 
     vk::RenderPassCreateInfo2 renderpassCreateinfo{};
@@ -752,8 +845,7 @@ void VulkanRenderer::createTextureSampler()
     samplerCreateInfo.setMinLod(0.F);                                        // Minimum level of Detail to pick mip level
     samplerCreateInfo.setMaxLod(VK_LOD_CLAMP_NONE);                          // Maxiumum level of Detail to pick mip level
     samplerCreateInfo.setAnisotropyEnable(VK_TRUE);                          // Enable Anisotropy; take into account the angle of a surface is being viewed from and decide details based on that (??)
-    //samplerCreateInfo.setAnisotropyEnable(VK_FALSE);                       // Disable Anisotropy; Cause Performance Issues according to validation... 
-                                                                             // TODO: Check how anisotrophy can be used without causing validation errors... ? 
+                                                                             
     samplerCreateInfo.setMaxAnisotropy(DEF<float>(SAMPL_MAX_ANISOSTROPY));   // Level of Anisotropy; 16 is a common option in the settings for alot of Games 
 
     this->textureSampler = this->getVkDevice().createSampler(samplerCreateInfo);
@@ -766,21 +858,8 @@ void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::Command
     commandPoolCreateInfo.setFlags(flags);
     commandPoolCreateInfo.setQueueFamilyIndex(this->queueFamilies.getGraphicsIndex());
     commandPool = this->getVkDevice().createCommandPool(commandPoolCreateInfo);
+
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(commandPool)));
-
-    //TODO: automatic trash collection
-}
-
-void VulkanRenderer::createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::CommandPool& commandPool, std::string&&  name = "NoName")
-{
-    vk::CommandBufferAllocateInfo commandBuffferAllocationInfo{};
-    commandBuffferAllocationInfo.setCommandPool(commandPool);
-    commandBuffferAllocationInfo.setLevel(vk::CommandBufferLevel::ePrimary);
-    commandBuffferAllocationInfo.setCommandBufferCount(uint32_t(1));
-    
-    commandBuffer = this->getVkDevice().allocateCommandBuffers(commandBuffferAllocationInfo)[0];
-    VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandBuffer, reinterpret_cast<uint64_t>(vk::CommandBuffer::CType(commandBuffer)));
-    //TODO: automatic trash collection    
 }
 
 void VulkanRenderer::createFramebuffer(
@@ -882,6 +961,22 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
         
         #pragma region commandBufferRecording
 
+            // Default shader input
+            this->shaderInput.setCurrentFrame(this->currentFrame);
+            this->shaderInput.updateUniformBuffer(
+                this->viewProjectionUB,
+                (void*)&this->uboViewProjection
+            );
+
+            // Animation shader input
+            if (this->hasAnimations)
+			{
+				this->animShaderInput.setCurrentFrame(this->currentFrame);
+				this->animShaderInput.updateUniformBuffer(
+				    this->viewProjectionUB, (void*)&this->uboViewProjection
+				);
+			}
+
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
             currentCommandBuffer.beginRenderPass2(
@@ -908,58 +1003,154 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     this->pipeline
                 );
                 
-                // For every Mesh we have
-                auto tView = scene->getSceneReg().view<Transform, MeshComponent>();
-                tView.each([&](const Transform& transform, const MeshComponent& meshComponent)
-                {
-                    auto& currModel = this->resourceManager->getMesh(meshComponent.meshID);                    
+                // Update for descriptors
+                currentCommandBuffer.bindShaderInputFrequency(
+                    this->shaderInput,
+                    DescriptorFrequency::PER_FRAME
+                );
 
-                    const glm::mat4& modelMatrix = transform.matrix;
-
-                    // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                    currentCommandBuffer.pushConstant(
-                        this->shaderInput,
-                        (void*) &modelMatrix
-                    );
-
-                    // Bind vertex buffer
-                    currentCommandBuffer.bindVertexBuffers2(currModel.getVertexBuffer());
-
-                    // Bind index buffer
-                    currentCommandBuffer.bindIndexBuffer(currModel.getIndexBuffer());
-
-                    const std::vector<SubmeshData>& submeshes = 
-                        currModel.getSubmeshData();
-                    for(size_t i = 0; i < submeshes.size(); ++i)
+                // For every non-animating mesh we have
+                auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent>);
+                meshView.each([&](
+                    const Transform& transform, 
+                    const MeshComponent& meshComponent)
                     {
-                        const SubmeshData& currentSubmesh = submeshes[i];
+                        Mesh& currentMesh =
+                            this->resourceManager->getMesh(meshComponent.meshID);
 
-                        // We're going to bind Two descriptorSets! put them in array...
-                        /*std::array<vk::DescriptorSet, 2> descriptorSetGroup
-                        {
-                            this->shaderInput.getDescriptorSet(this->currentFrame),                // Use the descriptor set for the Image                            
-                            this->shaderInput.getSamplerDescriptorSet(modelPart.second.textureID)   // Use the Texture which the current mesh has
-                        };*/
+                        const glm::mat4& modelMatrix = transform.matrix;
+
+                        // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                        currentCommandBuffer.pushConstant(
+                            this->shaderInput, (void*)&modelMatrix
+                        );
+
+                        // Bind vertex buffer
+                        currentCommandBuffer.bindVertexBuffers2(
+                            currentMesh.getVertexBufferOffsets(),
+                            currentMesh.getVertexBuffers()
+                        );
+
+                        // Bind index buffer
+                        currentCommandBuffer.bindIndexBuffer(
+                            currentMesh.getIndexBuffer()
+                        );
 
                         // Update for descriptors
-                        this->shaderInput.setCurrentFrame(this->currentFrame);
-                        this->shaderInput.setTexture(
-                            this->sampler0, 
-                            currentSubmesh.materialIndex
-                        );
-                        currentCommandBuffer.bindShaderInput(
-                            this->shaderInput
+                        currentCommandBuffer.bindShaderInputFrequency(
+                            this->shaderInput,
+                            DescriptorFrequency::PER_MESH
                         );
 
-                        // Draw
-                        currentCommandBuffer.drawIndexed(
-                            currentSubmesh.numIndicies,
-                            1,
-                            currentSubmesh.startIndex
-                        );
+                        const std::vector<SubmeshData>& submeshes =
+                            currentMesh.getSubmeshData();
+                        for (size_t i = 0; i < submeshes.size(); ++i)
+                        {
+                            const SubmeshData& currentSubmesh = submeshes[i];
+
+                            // Update for descriptors
+                            this->shaderInput.setTexture(
+                                this->sampler, currentSubmesh.materialIndex
+                            );
+                            currentCommandBuffer.bindShaderInputFrequency(
+                                this->shaderInput,
+                                DescriptorFrequency::PER_DRAW_CALL
+                            );
+
+                            // Draw
+                            currentCommandBuffer.drawIndexed(
+                                currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
+                            );
+                        }
                     }
+                );
 
-                });
+                if (this->hasAnimations)
+			    {
+				    // Bind Pipeline to be used in render pass
+				    currentCommandBuffer.bindGraphicsPipeline(
+                        this->animPipeline
+				    );
+
+				    // Update for descriptors
+				    currentCommandBuffer.bindShaderInputFrequency(
+				        this->animShaderInput, DescriptorFrequency::PER_FRAME
+				    );
+			    }
+
+                // For every animating mesh we have
+                auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
+                animView.each(
+                    [&](const Transform& transform,
+                        const MeshComponent& meshComponent,
+                        const AnimationComponent& animationComponent)
+                    {
+                        Mesh& currentMesh =
+                            this->resourceManager->getMesh(meshComponent.meshID);
+
+                        MeshData& currentMeshData =
+					        currentMesh.getMeshData();
+
+                        // Get bone transformations
+                        const std::vector<glm::mat4>& boneTransforms =
+                            currentMesh.getBoneTransforms(animationComponent.timer);
+
+                        // Update transformations in storage buffer
+					    this->animShaderInput.updateStorageBuffer(
+                            animationComponent.boneTransformsID,
+					        (void *)&boneTransforms[0]
+					    );
+                        this->animShaderInput.setStorageBuffer(
+                            animationComponent.boneTransformsID
+                        );
+
+                        const glm::mat4& modelMatrix = transform.matrix;
+
+                        // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                        currentCommandBuffer.pushConstant(
+                            this->animShaderInput, (void*)&modelMatrix
+                        );
+
+                        // Bind vertex buffer
+                        currentCommandBuffer.bindVertexBuffers2(
+                            currentMesh.getVertexBufferOffsets(),
+					        currentMesh.getVertexBuffers()
+                        );
+
+                        // Bind index buffer
+                        currentCommandBuffer.bindIndexBuffer(
+					        currentMesh.getIndexBuffer()
+                        );
+
+                        // Update for descriptors
+                        currentCommandBuffer.bindShaderInputFrequency(
+                            this->animShaderInput,
+                            DescriptorFrequency::PER_MESH
+                        );
+
+                        const std::vector<SubmeshData>& submeshes =
+					        currentMesh.getSubmeshData();
+                        for (size_t i = 0; i < submeshes.size(); ++i)
+                        {
+                            const SubmeshData& currentSubmesh = submeshes[i];
+
+                            // Update for descriptors
+                            this->animShaderInput.setTexture(
+                                this->animSampler, 
+                                currentSubmesh.materialIndex
+                            );
+                            currentCommandBuffer.bindShaderInputFrequency(
+                                this->animShaderInput,
+                                DescriptorFrequency::PER_DRAW_CALL
+                            );
+
+                            // Draw
+                            currentCommandBuffer.drawIndexed(
+                                currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
+                            );
+                        }
+                    }
+                );
 
             // End Render Pass!
             vk::SubpassEndInfo subpassEndInfo;
@@ -1093,13 +1284,13 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.Device = this->getVkDevice();
     imguiInitInfo.QueueFamily = this->queueFamilies.getGraphicsIndex();
     imguiInitInfo.Queue = this->queueFamilies.getGraphicsQueue();
-    imguiInitInfo.PipelineCache = VK_NULL_HANDLE;       //TODO: Imgui Pipeline Should have its own Cache! 
+    imguiInitInfo.PipelineCache = VK_NULL_HANDLE;
     imguiInitInfo.DescriptorPool = this->descriptorPoolImgui;
     imguiInitInfo.Subpass = 0; 
     imguiInitInfo.MinImageCount = this->swapchain.getNumMinimumImages();
     imguiInitInfo.ImageCount = this->swapchain.getNumImages();
-    imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;  //TODO: check correctness    
-    imguiInitInfo.Allocator = nullptr;                  //TODO: Can/should I pass in something VMA related here?
+    imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+    imguiInitInfo.Allocator = nullptr;
     imguiInitInfo.CheckVkResultFn = checkVkResult;
     ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPassImgui);
 

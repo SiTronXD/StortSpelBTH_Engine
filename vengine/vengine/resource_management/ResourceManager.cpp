@@ -42,7 +42,7 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
     
     MeshData meshData = this->meshLoader.importMeshData(meshPath);
     // No mesh imported, send default mesh back
-    if (meshData.vertices.size() == 0) { return 0; }
+    if (meshData.vertexStreams.positions.size() == 0) { return 0; }
 
     //NOTE: prevSize as key only works if we never remove resources the map...
     this->meshPaths.insert({meshPath,this->meshPaths.size()}); 

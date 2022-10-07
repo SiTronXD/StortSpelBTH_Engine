@@ -1,6 +1,10 @@
 #pragma once
 
+#include <map>
+#include <typeindex>
+#include <typeinfo>
 #include "../ShaderInput.hpp"
+#include "../MeshData.hpp"
 
 class Device;
 
@@ -14,6 +18,19 @@ private:
 	vk::ShaderModule createShaderModule(
 		const std::vector<char>& code);
 
+	template <typename T>
+	void insertBindingFromStream(
+		const std::vector<T>& dataStream,
+		std::vector<vk::VertexInputBindingDescription>& 
+			outputBindingDescs);
+
+	template <typename T>
+	void insertAttributeFromStream(
+		const std::vector<T>& dataStream,
+		const vk::Format& format,
+		std::vector<vk::VertexInputAttributeDescription>& 
+			outputAttributeDescs);
+
 public:
 	Pipeline();
 	~Pipeline();
@@ -21,7 +38,9 @@ public:
 	void createPipeline(
 		Device& device,
 		ShaderInput& shaderInput,
-		vk::RenderPass& renderPass);
+		vk::RenderPass& renderPass,
+		const VertexStreams& targetVertexStream,
+		const std::string& vertexShaderName);
 
 	void cleanup();
 

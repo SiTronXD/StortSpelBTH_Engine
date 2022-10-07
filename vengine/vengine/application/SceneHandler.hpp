@@ -24,13 +24,15 @@ public:
 	void reloadScene();
 
 	void setNetworkHandler(NetworkHandler* networkHandler);
-	NetworkHandler* getNetworkHandler();
+	inline NetworkHandler* getNetworkHandler()
+	{ return this->networkHandler; }
+	inline ResourceManager* getResourceManager() 
+	{ return this->resourceManager; }
 
 	void setScriptHandler(ScriptHandler* scriptHandler);
 	ScriptHandler* getScriptHandler();
 
 	void setResourceManager(ResourceManager* resourceManager);
-	ResourceManager* getResourceManager();
 
 	Scene* getScene() const;
 };

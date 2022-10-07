@@ -42,7 +42,7 @@ std::vector<std::string> TextureLoader::assimpGetTextures(const aiScene *scene)
         /// get the Path of the texture file
         aiString path;
         if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
-        textureList[textureIndex] = std::string(path.C_Str());
+            textureList[textureIndex] = std::string(path.C_Str());
         }
     }
     textureIndex++; /// Which Material the
@@ -242,20 +242,25 @@ void TextureLoader::createTextureImage(const std::string &filename,
 
 bool TextureLoader::doesTextureExist(const std::string& filePath)
 {
-  // Easy and cross-platform way of checking if the texture exists
+    // Easy and cross-platform way of checking if the texture exists
 
-  int width = 0;
-  int height = 0;
-  int channels = 0;
+    int width = 0;
+    int height = 0;
+    int channels = 0;
 
-  // Load pixel data from file to image
-  stbi_uc* imageData =
-      stbi_load(filePath.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+    // Load pixel data from file to image
+    stbi_uc* imageData = stbi_load(
+        filePath.c_str(), 
+        &width, 
+        &height,
+        &channels,
+        STBI_rgb_alpha
+    ); 
 
-  bool doesImageExist = imageData != nullptr;
+    bool doesImageExist = imageData != nullptr;
 
-  // Deallocate pixel data
-  stbi_image_free(imageData);
+    // Deallocate pixel data
+    stbi_image_free(imageData);
 
-  return doesImageExist;
+    return doesImageExist;
 }

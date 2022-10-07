@@ -72,6 +72,20 @@ void CommandBuffer::bindVertexBuffers2(const vk::Buffer& vertexBuffer)
     );
 }
 
+void CommandBuffer::bindVertexBuffers2(
+    const std::vector<vk::DeviceSize> vertexBufferOffsets,
+    const std::vector<vk::Buffer>& vertexBuffers)
+{
+    this->commandBuffer.bindVertexBuffers2(
+        uint32_t(0),
+        static_cast<uint32_t>(vertexBuffers.size()),
+        vertexBuffers.data(),
+        vertexBufferOffsets.data(),
+        nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
+        nullptr         //NOTE: Could also be a pointer to an array of buffer strides
+    );
+}
+
 void CommandBuffer::bindIndexBuffer(const vk::Buffer& indexBuffer)
 {
     this->commandBuffer.bindIndexBuffer(
@@ -81,20 +95,27 @@ void CommandBuffer::bindIndexBuffer(const vk::Buffer& indexBuffer)
     );
 }
 
-void CommandBuffer::bindShaderInput(const ShaderInput& shaderInput)
+void CommandBuffer::bindShaderInputFrequency(
+    const ShaderInput& shaderInput,
+    const DescriptorFrequency& descriptorFrequency)
 {
-    const std::vector<vk::DescriptorSet>& descriptorSetGroup =
+    const uint32_t frequencyIndex = (uint32_t)descriptorFrequency;
+
+    const std::vector<vk::DescriptorSet*>& descriptorSetGroup =
         shaderInput.getBindDescriptorSets();
 
-    // Bind Descriptor Sets; this will be the binging for both the Dynamic Uniform Buffers and the non dynamic...
-    this->commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
-        shaderInput.getPipelineLayout().getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
-        0,                               // Which Set is the first we want to use? We want to use the First set (thus 0)
-        static_cast<uint32_t>(descriptorSetGroup.size()),// How many Descriptor Sets where going to go through? DescriptorSet for View and Projection, and one for Texture
-        descriptorSetGroup.data(),                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
-        0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
-        nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
+    // Bind descriptor set, if it can
+    if (descriptorSetGroup[frequencyIndex] != nullptr)
+    {
+        this->commandBuffer.bindDescriptorSets(
+            vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
+            shaderInput.getPipelineLayout().getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
+            frequencyIndex,                               // Which Set is the first we want to use? 
+            1, // How many Descriptor Sets where going to go through?
+            descriptorSetGroup[frequencyIndex],                       // The Descriptor Set to be used (Remember, 1:1 relationship with CommandBuffers/Images)
+            0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
+            nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
+    }
 }
 
 void CommandBuffer::drawIndexed(

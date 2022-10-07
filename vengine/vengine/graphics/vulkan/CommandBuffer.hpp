@@ -5,6 +5,7 @@
 class Pipeline;
 class PipelineLayout;
 class ShaderInput;
+enum class DescriptorFrequency;
 
 class CommandBuffer
 {
@@ -25,8 +26,14 @@ public:
         ShaderInput& shaderInput,
         void* data);
     void bindVertexBuffers2(const vk::Buffer& vertexBuffer);
+    void bindVertexBuffers2(
+        const std::vector<vk::DeviceSize> vertexBufferOffsets,
+        const std::vector<vk::Buffer>& vertexBuffers);
     void bindIndexBuffer(const vk::Buffer& indexBuffer);
-    void bindShaderInput(const ShaderInput& shaderInput);
+    //void bindShaderInput(const ShaderInput& shaderInput);
+    void bindShaderInputFrequency(
+        const ShaderInput& shaderInput,
+        const DescriptorFrequency& descriptorFrequency);
     void drawIndexed(
         const uint32_t& indexCount,
         const uint32_t& instanceCount = 1,

@@ -7,9 +7,9 @@ layout(location = 1) in vec2 fragTex;
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
 
-layout(location = 0) out vec4 outColour; // final output color (must also have location)
+layout(location = 0) out vec4 outColor; // final output color (must also have location)
 
 void main() 
 {
-	outColour = texture(textureSampler0, fragTex);
+	outColor = texture(textureSampler0, fragTex);
 }

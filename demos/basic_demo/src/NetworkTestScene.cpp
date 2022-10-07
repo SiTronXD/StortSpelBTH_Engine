@@ -1,5 +1,6 @@
 #include <iostream>
 #include "NetworkTestScene.h"
+#include "TheServerGame.h"
 #include "glm/gtx/string_cast.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"

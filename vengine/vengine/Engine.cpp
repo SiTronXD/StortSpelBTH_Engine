@@ -36,6 +36,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
 
+    // Window
     Window window;
     window.initWindow(
         appName, 

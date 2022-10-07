@@ -20,9 +20,12 @@ private:
     MeshData assimpImport(const std::string& modelFile);
     MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materialToTexture);   
 
+    template <typename T>
+    void insertStream(std::vector<T>& inStream, std::vector<T>& outputStream);
+    void topologicallySortBones(aiMesh* mesh, aiNode* node, uint32_t& globalIndex);
     std::vector<MeshData> getMeshesFromNodeTree(const aiScene * scene, const std::vector<uint32_t>& matToTex);
     MeshData loadMesh(aiMesh* mesh, uint32_t& lastVertice, uint32_t& lastIndex, std::vector<uint32_t> matToTex);
-    bool loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData);
+    bool loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outMeshData);
 
     aiNodeAnim* findAnimationNode(aiNodeAnim** nodeAnims, unsigned int numNodes, std::string_view name);
     aiNode* findNode(aiNode* rootNode, std::string_view boneName);

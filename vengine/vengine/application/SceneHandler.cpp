@@ -1,10 +1,15 @@
 #include "SceneHandler.hpp"
 #include "Time.hpp"
+#include "../components/AnimationComponent.hpp"
 #include "../graphics/VulkanRenderer.hpp"
 #include "../lua/ScriptHandler.h"
 
 SceneHandler::SceneHandler()
-	: scene(nullptr), nextScene(nullptr), networkHandler(nullptr), scriptHandler(nullptr)
+	: scene(nullptr), 
+	nextScene(nullptr), 
+	networkHandler(nullptr), 
+	scriptHandler(nullptr),
+	resourceManager(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -18,6 +23,18 @@ void SceneHandler::update()
 	this->scriptHandler->updateSystems(this->scene->getLuaSystems());
 	this->scene->update();
 
+	// Update animation timer
+	auto animView = this->scene->getSceneReg().view<AnimationComponent>();
+	animView.each([&]
+			(AnimationComponent& animationComponent)
+		{
+			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
+			if (animationComponent.timer >= animationComponent.endTime)
+			{
+				animationComponent.timer -= animationComponent.endTime;
+			}
+		}
+	);
 	auto view = this->scene->getSceneReg().view<Transform>();
 	auto func = [](Transform& transform)
 	{
@@ -76,11 +93,6 @@ void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
 	this->networkHandler = networkHandler;
 }
 
-NetworkHandler* SceneHandler::getNetworkHandler()
-{
-	return this->networkHandler;
-}
-
 void SceneHandler::setScriptHandler(ScriptHandler* scriptHandler)
 {
 	this->scriptHandler = scriptHandler;
@@ -94,11 +106,6 @@ ScriptHandler* SceneHandler::getScriptHandler()
 void SceneHandler::setResourceManager(ResourceManager* resourceManager)
 {
 	this->resourceManager = resourceManager;
-}
-
-ResourceManager * SceneHandler::getResourceManager()
-{
-	return this->resourceManager;
 }
 
 Scene* SceneHandler::getScene() const

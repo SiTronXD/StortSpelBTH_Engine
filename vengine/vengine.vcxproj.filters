@@ -52,6 +52,9 @@
     <ClCompile Include="vengine\resource_management\ResourceManager.cpp" />
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
+    <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
     <ClCompile Include="vengine\lua\ScriptHandler.cpp" />
     <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp" />
@@ -268,6 +271,20 @@
     <ClInclude Include="vengine\network\NetworkHandler.h" />
     <ClInclude Include="vengine\network\Server.h" />
     <ClInclude Include="vengine\network\ServerGame.h" />
+    <ClInclude Include="vengine\network\Timer.h" />
+    <ClInclude Include="vengine\ResourceManagement\Configurator.hpp" />
+    <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp" />
+    <ClInclude Include="vengine\ResourceManagement\loaders\TextureLoader.hpp" />
+    <ClInclude Include="vengine\ResourceManagement\ResourceManager.hpp" />
+    <ClInclude Include="vengine\ResourceManagement\ResourceManagerStructs.hpp" />
+    <ClInclude Include="vengine\systems\System.hpp" />
+    <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp" />
+    <ClInclude Include="vengine\test\TestScene.hpp" />
+    <ClInclude Include="vengine\test\TestScene2.hpp" />
+    <ClInclude Include="vengine\components\AnimationComponent.hpp" />
+    <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="vengine\network\ServerGames\DefaultServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
     <ClInclude Include="vengine\resource_management\Configurator.hpp" />

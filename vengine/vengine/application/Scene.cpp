@@ -11,7 +11,7 @@ void Scene::switchScene(Scene* scene, std::string path)
 
 NetworkHandler* Scene::getNetworkHandler()
 {
-	return sceneHandler->getNetworkHandler();
+	return this->sceneHandler->getNetworkHandler();
 }
 
 ScriptHandler* Scene::getScriptHandler()
@@ -19,9 +19,9 @@ ScriptHandler* Scene::getScriptHandler()
 	return sceneHandler->getScriptHandler();
 }
 
-ResourceManager * Scene::getResourceManager()
+ResourceManager* Scene::getResourceManager()
 {
-	return sceneHandler->getResourceManager();
+	return this->sceneHandler->getResourceManager();
 }
 
 Scene::Scene()

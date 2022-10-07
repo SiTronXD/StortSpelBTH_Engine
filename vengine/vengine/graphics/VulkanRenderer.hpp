@@ -75,13 +75,18 @@ class VulkanRenderer
     vk::CommandPool commandPool{};
     CommandBufferArray commandBuffers;
 
+    // Default pipeline
     UniformBufferID viewProjectionUB;
-    SamplerID sampler0;
-
-    StorageBufferID testStorageBufferID;
-
+    SamplerID sampler;
     ShaderInput shaderInput;
     Pipeline pipeline;
+
+    // Animations pipeline
+	bool hasAnimations;
+    UniformBufferID animViewProjectionUB;
+    SamplerID animSampler;
+    ShaderInput animShaderInput;
+    Pipeline animPipeline;
 
     // - Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
@@ -128,7 +133,6 @@ private:
 
     // Newer Create functions! 
     void createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name);
-    void createCommandBuffer(vk::CommandBuffer& commandBuffer,vk::CommandPool& commandPool, std::string&& name);
     void createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
 
     void updateUboProjection();
