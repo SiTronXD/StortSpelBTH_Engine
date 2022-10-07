@@ -382,10 +382,16 @@ void VulkanRenderer::draw(Scene* scene)
         submitInfo.setPSignalSemaphoreInfos(&signalSemaphoreSubmitInfo);   // Semaphore that will be signaled when CommandBuffer is finished
 
         // Submit The CommandBuffers to the Queue to begin drawing to the framebuffers
-        this->queueFamilies.getGraphicsQueue().submit2(
-            submitInfo, 
-            this->drawFences[this->currentFrame]
+        vk::Result graphicsQueueResult = 
+            this->queueFamilies.getGraphicsQueue().submit2(
+                uint32_t(1),
+                &submitInfo, 
+                this->drawFences[this->currentFrame]
         ); // drawing, signal this Fence to open!
+        if (graphicsQueueResult != vk::Result::eSuccess)
+        {
+            Log::error("Failed to submit graphics commands.");
+        }
     }
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
     {
@@ -434,6 +440,11 @@ void VulkanRenderer::initMeshes(Scene* scene)
     // Engine "specifics"
 
 	// Default shader inputs
+    VertexStreams defaultStream{};
+    defaultStream.positions.resize(1);
+    defaultStream.colors.resize(1);
+    defaultStream.texCoords.resize(1);
+
 	this->shaderInput.beginForInput(
 	    this->physicalDevice,
 	    this->device,
@@ -449,10 +460,21 @@ void VulkanRenderer::initMeshes(Scene* scene)
 	this->sampler = this->shaderInput.addSampler();
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
-	    this->device, this->shaderInput, this->renderPassBase
+	    this->device, 
+        this->shaderInput, 
+        this->renderPassBase,
+        defaultStream,
+        "shader.vert.spv"
 	);
 
 	// Animation shader inputs
+    VertexStreams animStream{};
+    animStream.positions.resize(1);
+    animStream.colors.resize(1);
+    animStream.texCoords.resize(1);
+    animStream.boneWeights.resize(1);
+    animStream.boneIndices.resize(1);
+
 	this->animShaderInput.beginForInput(
 	    this->physicalDevice,
 	    this->device,
@@ -519,7 +541,11 @@ void VulkanRenderer::initMeshes(Scene* scene)
 	this->animSampler = this->animShaderInput.addSampler();
 	this->animShaderInput.endForInput();
 	this->animPipeline.createPipeline(
-	    this->device, this->animShaderInput, this->renderPassBase, true
+	    this->device, 
+        this->animShaderInput, 
+        this->renderPassBase, 
+        animStream,
+        "shaderAnim.vert.spv"
 	);
 
     // Add all textures for possible use in the shader

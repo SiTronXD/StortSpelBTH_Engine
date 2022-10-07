@@ -6,30 +6,18 @@
 #include <glm/mat4x4.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-using AvailableVertexData = uint32_t;
-
-enum class VertexData
-{
-    POSITION = 1,
-    COLOR = 2,
-    TEX_COORDS = 4,
-    BONE_WEIGHTS = 8,
-    BONE_INDICES = 16
-};
-
 struct ModelMatrix 
 {
     glm::mat4 model; 
 };
 
-struct Vertex
+struct VertexStreams
 {
-    glm::vec3 pos;  /// Vertex Position (x,y,z)
-    glm::vec3 col;  /// Vertex Color    (r,g,b)
-    //glm::vec3 nor;      /// Vertex normal (x,y,z)      //TODO: Add?
-    glm::vec2 tex;  /// Texture coords  (u,v)
-    float weights[4]{ -1.f, -1.f, -1.f, -1.f };
-    unsigned int bonesIndex[4]{};
+    std::vector<glm::vec3> positions;
+    std::vector<glm::vec3> colors;
+    std::vector<glm::vec2> texCoords;
+    std::vector<glm::vec4> boneWeights;
+    std::vector<glm::uvec4> boneIndices;
 };
 
 struct Bone 
@@ -51,9 +39,8 @@ struct SubmeshData
 
 struct MeshData
 {
-    AvailableVertexData availableVertexData;
     std::vector<SubmeshData> submeshes;
-    std::vector<Vertex> vertices;
+    VertexStreams vertexStreams;
     std::vector<uint32_t> indicies;
     std::vector<Bone> bones;
 };

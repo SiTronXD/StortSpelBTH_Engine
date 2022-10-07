@@ -72,35 +72,65 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene,
         this->getMeshesFromNodeTree(scene, materailToTexture);
 
     MeshData data;
-    for (auto mesh : modelMeshes) {
-        data.vertices.insert(data.vertices.end(), mesh.vertices.begin(),
-                                mesh.vertices.end());
-        data.indicies.insert(data.indicies.end(), mesh.indicies.begin(),
-                                mesh.indicies.end());
+    for (auto mesh : modelMeshes) 
+    {
+        // Vertex streams
+        this->insertStream(
+            mesh.vertexStreams.positions,
+            data.vertexStreams.positions
+        );
+        this->insertStream(
+            mesh.vertexStreams.colors,
+            data.vertexStreams.colors
+        );
+        this->insertStream(
+            mesh.vertexStreams.texCoords,
+            data.vertexStreams.texCoords
+        );
+        this->insertStream(
+            mesh.vertexStreams.boneWeights,
+            data.vertexStreams.boneWeights
+        );
+        this->insertStream(
+            mesh.vertexStreams.boneIndices,
+            data.vertexStreams.boneIndices
+        );
 
+        // Indices
+        data.indicies.insert(
+            data.indicies.end(), 
+            mesh.indicies.begin(),
+            mesh.indicies.end()
+        );
+
+        // Submeshes
         data.submeshes.push_back(SubmeshData{
             .materialIndex = mesh.submeshes[0].materialIndex,
             .startIndex = mesh.submeshes[0].startIndex,
             .numIndicies = static_cast<uint32_t>(mesh.indicies.size()),
         });
 
-        data.bones.insert(data.bones.end(), mesh.bones.begin(), mesh.bones.end());
-    }
-
-    data.availableVertexData = 
-        (uint32_t)VertexData::POSITION |
-        (uint32_t)VertexData::COLOR |
-        (uint32_t)VertexData::TEX_COORDS;
-
-    // Mark this mesh data as having bone weights and indices
-    if (data.bones.size() > 0)
-    {
-        data.availableVertexData |=
-            (uint32_t)VertexData::BONE_WEIGHTS |
-            (uint32_t)VertexData::BONE_INDICES;
+        // Bones
+        data.bones.insert(
+            data.bones.end(), 
+            mesh.bones.begin(), 
+            mesh.bones.end()
+        );
     }
 
     return data;
+}
+
+template <typename T>
+void MeshLoader::insertStream(
+    std::vector<T>& inStream, 
+    std::vector<T>& outputStream)
+{
+    outputStream.insert(
+        outputStream.end(),
+        inStream.begin(),
+        inStream.end()
+    );
 }
 
 void MeshLoader::topologicallySortBones(
@@ -190,79 +220,100 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
   ZoneScoped; //: NOLINT
 #endif
 
-  uint32_t initialIndex = lastIndex;
-  uint32_t initialVertex = lastVertice;
+    uint32_t initialIndex = lastIndex;
+    uint32_t initialVertex = lastVertice;
 
-  std::vector<Vertex> vertices;
-  std::vector<uint32_t> indices;
+    VertexStreams vertexStreams;
+    std::vector<uint32_t> indices;
 
-  const unsigned int sizeOTextureCoordsElement = 8;
-  auto textureCordinates =
-      std::span<aiVector3D *>(static_cast<aiVector3D **>(mesh->mTextureCoords),
-                              sizeOTextureCoordsElement);
+    const unsigned int sizeOTextureCoordsElement = 8;
+    auto textureCordinates =
+        std::span<aiVector3D *>(static_cast<aiVector3D **>(mesh->mTextureCoords),
+                                sizeOTextureCoordsElement);
 
-  /// Resize vertex list to hold all vertices for mesh
-  vertices.resize(mesh->mNumVertices);
-  int vertex_index = 0;
-  int index_index = 0;
+    /// Resize vertex list to hold all vertices for mesh
+    vertexStreams.positions.resize(mesh->mNumVertices);
+    vertexStreams.colors.resize(mesh->mNumVertices);
+    vertexStreams.texCoords.resize(mesh->mNumVertices);
+    int vertex_index = 0;
+    int index_index = 0;
 
-  /// For each veretx in our assimp mesh, define the Vertex in our format
-  for (auto ai_vertice :
-       std::span<aiVector3D>(mesh->mVertices, mesh->mNumVertices)) {
-    /// copy the position vertex
-    vertices[vertex_index].pos = {ai_vertice.x, ai_vertice.y, ai_vertice.z};
-    /// copy the tex coordinate, if model have textures
-    if (mesh->mTextureCoords[0] != nullptr) {
-      vertices[vertex_index].tex = {textureCordinates[0][vertex_index].x,
-                                    textureCordinates[0][vertex_index].y};
-    } else { /// If no texture exists, then use 0,0 as default
-      vertices[vertex_index].tex = {0.F, 0.F};
+    /// For each veretx in our assimp mesh, define the Vertex in our format
+    for (auto ai_vertice :
+        std::span<aiVector3D>(mesh->mVertices, mesh->mNumVertices)) 
+    {
+        /// copy the position vertex
+        vertexStreams.positions[vertex_index] = {ai_vertice.x, ai_vertice.y, ai_vertice.z};
+        
+        /// copy the tex coordinate, if model have textures
+        if (mesh->mTextureCoords[0] != nullptr) 
+        {
+            vertexStreams.texCoords[vertex_index] =
+            {
+                textureCordinates[0][vertex_index].x,
+                textureCordinates[0][vertex_index].y
+            };
+        } 
+        else 
+        { 
+            /// If no texture exists, then use 0,0 as default
+            vertexStreams.texCoords[vertex_index] = {0.F, 0.F};
+        }
+
+        /// set Color, if we want to use it later...
+        vertexStreams.colors[vertex_index] = { 1.f, 1.f, 1.f }; /// Color is white
+        vertex_index++;
     }
 
-    /// set Color, if we want to use it later...
-    vertices[vertex_index].col = {1.F, 1.F, 1.F}; /// Color is white
-    vertex_index++;
-  }
-
-  auto meshFaces = std::span<aiFace>(mesh->mFaces, mesh->mNumFaces);
-  /// Copy Indicies
-  for (size_t i = 0; i < mesh->mNumFaces; i++) {
-    /// For every face, add it's indicies to our indicies list
-    aiFace face = meshFaces[i];
-    auto faceIndicies =
-        std::span<unsigned int>(face.mIndices, face.mNumIndices);
-    for (size_t j = 0; j < face.mNumIndices; j++) {
-      indices.push_back(faceIndicies[j] + initialVertex);
-      index_index++;
+    auto meshFaces = std::span<aiFace>(mesh->mFaces, mesh->mNumFaces);
+    /// Copy Indicies
+    for (size_t i = 0; i < mesh->mNumFaces; i++) 
+    {
+        /// For every face, add it's indicies to our indicies list
+        aiFace face = meshFaces[i];
+        auto faceIndicies =
+            std::span<unsigned int>(face.mIndices, face.mNumIndices);
+        for (size_t j = 0; j < face.mNumIndices; j++) 
+        {
+            indices.push_back(faceIndicies[j] + initialVertex);
+            index_index++;
+        }
     }
-  }
 
-  lastVertice += vertex_index;
-  lastIndex += indices.size();
+    lastVertice += vertex_index;
+    lastIndex += indices.size();
   
-  /// Construct MeshData and return it
-  MeshData meshData{
-      .submeshes = std::vector<SubmeshData>{
-          SubmeshData{
-          .materialIndex = matToTex[mesh->mMaterialIndex],
-          .startIndex = initialIndex,
-          .numIndicies = static_cast<uint32_t>(indices.size()),
-      }},
-      .vertices = vertices,
-      .indicies = indices,
-  };
+    /// Construct MeshData and return it
+    MeshData meshData
+    {
+        .submeshes = std::vector<SubmeshData>
+        {
+            SubmeshData
+            {
+                .materialIndex = matToTex[mesh->mMaterialIndex],
+                .startIndex = initialIndex,
+                .numIndicies = static_cast<uint32_t>(indices.size()),
+            }
+        },
+        .vertexStreams = vertexStreams,
+        .indicies = indices,
+    };
 
-  return meshData;
+    return meshData;
 }
 
-bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBoneData)
+bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, 
+    MeshData& outMeshData)
 {
     aiAnimation* ani = scene->mAnimations[0];
-    if (!ani) {
+    if (!ani) 
+    {
         return false;
     }
 
-    outBoneData.bones.resize(mesh->mNumBones);
+    outMeshData.vertexStreams.boneWeights.resize(mesh->mNumVertices);
+    outMeshData.vertexStreams.boneIndices.resize(mesh->mNumVertices);
+    outMeshData.bones.resize(mesh->mNumBones);
 
     // Topologically sort bones for iterative tree traversal
     // when playing the animation
@@ -274,7 +325,7 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
 
     for (unsigned int i = 0; i < mesh->mNumBones; i++) {
         boneIndices[mesh->mBones[i]->mName.C_Str()] = i;
-        Bone& bone = outBoneData.bones[i];
+        Bone& bone = outMeshData.bones[i];
 
         // Get the inverse bind pose matrix
         memcpy(&bone.inverseBindPoseMatrix, &mesh->mBones[i]->mOffsetMatrix, sizeof(glm::mat4));
@@ -283,12 +334,13 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
         // Set weights & boneIndex
         for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
             aiVertexWeight& aiWeight = mesh->mBones[i]->mWeights[k];
-            Vertex& vertex = outBoneData.vertices[aiWeight.mVertexId];
+            glm::vec4& vertexBoneWeights = outMeshData.vertexStreams.boneWeights[aiWeight.mVertexId];
+            glm::uvec4& vertexBoneIndices = outMeshData.vertexStreams.boneIndices[aiWeight.mVertexId];
 
-            if      (vertex.weights[0] < 0.f) { vertex.weights[0] = aiWeight.mWeight; vertex.bonesIndex[0] = i; }
-            else if (vertex.weights[1] < 0.f) { vertex.weights[1] = aiWeight.mWeight; vertex.bonesIndex[1] = i; }
-            else if (vertex.weights[2] < 0.f) { vertex.weights[2] = aiWeight.mWeight; vertex.bonesIndex[2] = i; }
-            else if (vertex.weights[3] < 0.f) { vertex.weights[3] = aiWeight.mWeight; vertex.bonesIndex[3] = i; }
+            if      (vertexBoneWeights.x <= 0.f) { vertexBoneWeights.x = aiWeight.mWeight; vertexBoneIndices.x = i; }
+            else if (vertexBoneWeights.y <= 0.f) { vertexBoneWeights.y = aiWeight.mWeight; vertexBoneIndices.y = i; }
+            else if (vertexBoneWeights.z <= 0.f) { vertexBoneWeights.z = aiWeight.mWeight; vertexBoneIndices.z = i; }
+            else if (vertexBoneWeights.w <= 0.f) { vertexBoneWeights.w = aiWeight.mWeight; vertexBoneIndices.w = i; }
         }
 
         // The order of aiMesh::mBones does not always match aiAnimation::mChannels
@@ -328,33 +380,26 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outBone
     for (unsigned int i = 0; i < mesh->mNumBones; i++) {
         aiNode* boneNode = findNode(scene->mRootNode, mesh->mBones[i]->mName.C_Str());
         if (!boneNode) {
-            outBoneData.bones[i].parentIndex = -1;
+            outMeshData.bones[i].parentIndex = -1;
             continue;
         }
 
         aiNode* parent = findParentBoneNode(boneIndices, boneNode);
-        outBoneData.bones[i].parentIndex = parent ? boneIndices[parent->mName.C_Str()] : -1;
+        outMeshData.bones[i].parentIndex = parent ? boneIndices[parent->mName.C_Str()] : -1;
     }
 
     // Normalize & fix invalid weights
-    for (Vertex& vertex : outBoneData.vertices) 
+    for (glm::vec4& boneWeights : outMeshData.vertexStreams.boneWeights)
     {
-        if (vertex.weights[0] < 0.f) vertex.weights[0] = 0.f;
-        if (vertex.weights[1] < 0.f) vertex.weights[1] = 0.f;
-        if (vertex.weights[2] < 0.f) vertex.weights[2] = 0.f;
-        if (vertex.weights[3] < 0.f) vertex.weights[3] = 0.f;
-
-        float inverseSum = vertex.weights[0] + vertex.weights[1] + vertex.weights[2] + vertex.weights[3];
+        float inverseSum = boneWeights.x + boneWeights.y + boneWeights.z + boneWeights.w;
         if (inverseSum == 0.f) {
             continue;
         }
 
         inverseSum = 1.f / inverseSum;
 
-        vertex.weights[0] *= inverseSum;
-        vertex.weights[1] *= inverseSum;
-        vertex.weights[2] *= inverseSum;
-        vertex.weights[3] *= inverseSum;
+        // Apply to all components
+        boneWeights *= inverseSum;
     }
 
     return true;

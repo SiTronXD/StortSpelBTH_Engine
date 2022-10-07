@@ -10,6 +10,10 @@ void Mesh::createSeparateVertexBuffer(
     const std::vector<T>& dataStream,
     const VulkanImportStructs& importStructs)
 {
+    // Empty data stream
+    if (dataStream.size() <= 0)
+        return;
+
     this->vertexBuffers.push_back(vk::Buffer());
     this->vertexBufferMemories.push_back(VmaAllocation());
 
@@ -218,61 +222,37 @@ void Mesh::createVertexBuffers(
     ZoneScoped; //:NOLINT
 #endif    
     
-    /// Get size of buffers needed for Vertices
-    size_t numVerts = meshData.vertices.size();
-    const AvailableVertexData& availableVertexData = 
-        meshData.availableVertexData;
-
-    uint32_t vertexBufferIndex = 0;
-
     // Create one vertex buffer per data stream
-    if (availableVertexData & (uint32_t)VertexData::POSITION)
-    {
-        std::vector<glm::vec3> positions(numVerts);
-        for (size_t i = 0; i < numVerts; ++i)
-            positions[i] = meshData.vertices[i].pos;
-        this->createSeparateVertexBuffer(positions, importStructs);
-    }
-
-    if (availableVertexData & (uint32_t)VertexData::COLOR)
-    {
-        std::vector<glm::vec3> colors(numVerts);
-        for (size_t i = 0; i < numVerts; ++i)
-            colors[i] = meshData.vertices[i].col;
-        this->createSeparateVertexBuffer(colors, importStructs);
-    }
-
-    if (availableVertexData & (uint32_t)VertexData::TEX_COORDS)
-    {
-        std::vector<glm::vec2> texCoords(numVerts);
-        for (size_t i = 0; i < numVerts; ++i)
-            texCoords[i] = meshData.vertices[i].tex;
-        this->createSeparateVertexBuffer(texCoords, importStructs);
-    }
     
-    if (availableVertexData & (uint32_t)VertexData::BONE_WEIGHTS)
-    {
-        std::vector<glm::vec4> boneWeights(numVerts);
-        for (size_t i = 0; i < numVerts; ++i)
-            boneWeights[i] = glm::vec4(
-                meshData.vertices[i].weights[0],
-                meshData.vertices[i].weights[1],
-                meshData.vertices[i].weights[2],
-                meshData.vertices[i].weights[3]);
-        this->createSeparateVertexBuffer(boneWeights, importStructs);
-    }
+    // Positions
+    this->createSeparateVertexBuffer(
+        meshData.vertexStreams.positions, 
+        importStructs
+    );
 
-    if (availableVertexData & (uint32_t)VertexData::BONE_INDICES)
-    {
-        std::vector<glm::uvec4> boneIndices(numVerts);
-        for (size_t i = 0; i < numVerts; ++i)
-            boneIndices[i] = glm::uvec4(
-                meshData.vertices[i].bonesIndex[0],
-                meshData.vertices[i].bonesIndex[1],
-                meshData.vertices[i].bonesIndex[2],
-                meshData.vertices[i].bonesIndex[3]);
-        this->createSeparateVertexBuffer(boneIndices, importStructs);
-    }
+    // Colors
+    this->createSeparateVertexBuffer(
+        meshData.vertexStreams.colors, 
+        importStructs
+    );
+
+    // Texture coordinates
+    this->createSeparateVertexBuffer(
+        meshData.vertexStreams.texCoords, 
+        importStructs
+    );
+
+    // Bone weights
+    this->createSeparateVertexBuffer(
+        meshData.vertexStreams.boneWeights, 
+        importStructs
+    );
+
+    // Bone indices
+    this->createSeparateVertexBuffer(
+        meshData.vertexStreams.boneIndices, 
+        importStructs
+    );
 
     // Vertex buffer offsets when binding
     this->vertexBufferOffsets.resize(this->vertexBuffers.size());

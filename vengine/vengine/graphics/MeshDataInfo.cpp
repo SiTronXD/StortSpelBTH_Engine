@@ -1,29 +1,14 @@
 #include "MeshDataInfo.hpp"
 #include "../dev/Log.hpp"
 
-size_t MeshDataInfo::getVertexSize(
-    const AvailableVertexData& availableVertexData)
-{
-    /*Vertex dummyVertex{};
-    uint64_t vertexSize = 0;
-    vertexSize += sizeof(dummyVertex.pos) *
-        (availableVertexData & (uint32_t)VertexData::POSITION);
-    vertexSize += sizeof(dummyVertex.col) *
-        (availableVertexData & (uint32_t)VertexData::COLOR);
-    vertexSize += sizeof(dummyVertex.tex) *
-        (availableVertexData & (uint32_t)VertexData::TEX_COORDS);
-    vertexSize += sizeof(dummyVertex.weights) *
-        (availableVertexData & (uint32_t)VertexData::BONE_WEIGHTS);
-    vertexSize += sizeof(dummyVertex.bonesIndex) *
-        (availableVertexData & (uint32_t)VertexData::BONE_INDICES);
-
-    return vertexSize;*/
-
-    Log::error("DONT CALL THIS FUNCTION");
-    return 0;
-}
-
 size_t MeshDataInfo::getVertexSize(const MeshData& meshData)
 {
-    return MeshDataInfo::getVertexSize(meshData.availableVertexData);
+    size_t vertexSize = 0;
+    if (meshData.vertexStreams.positions.size() > 0) vertexSize += sizeof(meshData.vertexStreams.positions[0]);
+    if (meshData.vertexStreams.colors.size() > 0) vertexSize += sizeof(meshData.vertexStreams.colors[0]);
+    if (meshData.vertexStreams.texCoords.size() > 0) vertexSize += sizeof(meshData.vertexStreams.texCoords[0]);
+    if (meshData.vertexStreams.boneWeights.size() > 0) vertexSize += sizeof(meshData.vertexStreams.boneWeights[0]);
+    if (meshData.vertexStreams.boneIndices.size() > 0) vertexSize += sizeof(meshData.vertexStreams.boneIndices[0]);
+
+    return vertexSize;
 }
