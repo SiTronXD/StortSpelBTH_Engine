@@ -17,13 +17,11 @@ void Log::warning(const std::string& message)
 	std::cout << "[Log Warning]: " << message << std::endl;
 }
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <Windows.h>
 void Log::error(const std::string& errorMessage)
 {
 	std::cout << "[Log Error]: " << errorMessage << std::endl;
-
-	/*
 
 	// Convert const char* to LPCWSTR
 	wchar_t* wString = new wchar_t[4096];
@@ -35,8 +33,6 @@ void Log::error(const std::string& errorMessage)
 	);
 
 	delete[] wString;
-
-	*/
 }
 #else
 void Log::error(const std::string& message)
