@@ -89,7 +89,6 @@ void InputLua::lua_openinput(lua_State* L)
 		{ NULL , NULL }
 	};
 
-	lua_newtable(L);
 	luaL_setfuncs(L, methods, 0);
 	lua_setglobal(L, "input");
 

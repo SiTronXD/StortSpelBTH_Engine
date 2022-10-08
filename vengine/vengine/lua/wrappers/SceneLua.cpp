@@ -32,7 +32,7 @@ int SceneLua::lua_iterateView(lua_State* L)
 	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
 
 	// Sanity check
-	if (!lua_istable(L, 1) || !lua_istable(L, 2) || lua_isnil(L, 3))
+	if (!lua_istable(L, 1) || !lua_isfunction(L, 2))
 	{
 		std::cout << "Error: iterate view arguments" << std::endl;
 		return 0;
@@ -41,7 +41,7 @@ int SceneLua::lua_iterateView(lua_State* L)
 	std::string scriptPath;
 	std::vector<CompType> compTypes;
 
-	lua_pushvalue(L, 2);
+	lua_pushvalue(L, 1);
 	lua_pushnil(L);
 	while (lua_next(L, -2))
 	{
@@ -82,10 +82,11 @@ int SceneLua::lua_iterateView(lua_State* L)
 		if (addToList) { entitiesToIterate.push_back(entity); }
 	}
 
+	bool useAddtionalTable = lua_istable(L, 3);
 	for (const auto& entity : entitiesToIterate)
 	{
-		lua_pushvalue(L, -1); // Function
-		lua_pushvalue(L, 1); // Own table
+		lua_pushvalue(L, 2); // Function
+		if(useAddtionalTable) { lua_pushvalue(L, 3); } // Own table
 		for (const auto& type : compTypes)
 		{
 			switch (type)
@@ -104,7 +105,7 @@ int SceneLua::lua_iterateView(lua_State* L)
 			}
 		}
 
-		LUA_ERR_CHECK(L, lua_pcall(L, (int)compTypes.size() + 1, 0, 0));
+		LUA_ERR_CHECK(L, lua_pcall(L, (int)compTypes.size() + (useAddtionalTable), 0, 0));
 	}
 
 	return 0;
