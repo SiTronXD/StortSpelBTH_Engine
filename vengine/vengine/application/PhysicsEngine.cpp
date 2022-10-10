@@ -262,8 +262,13 @@ void PhysicsEngine::createRigidBody(RigidBody& rigidBody)
 
 void PhysicsEngine::createRigidBody(RigidBody& rigidBody, SphereCollider& collider)
 {
-	dynWorld->removeCollisionObject(dynWorld->getCollisionObjectArray().at(collider.ID));
+	if (collider.ID != -1)
+	{
+		dynWorld->removeCollisionObject(dynWorld->getCollisionObjectArray().at(collider.ID));
+	}
+
 	btCollisionShape* sphereShape = new btSphereShape(collider.radius);
+	colShapes.push_back(sphereShape);
 
 	btScalar mass(rigidBody.weight);
 	bool isDynamic = (mass != 0.f);
@@ -296,8 +301,13 @@ void PhysicsEngine::createRigidBody(RigidBody& rigidBody, SphereCollider& collid
 
 void PhysicsEngine::createRigidBody(RigidBody& rigidBody, BoxCollider& collider)
 {
-	dynWorld->removeCollisionObject(dynWorld->getCollisionObjectArray().at(collider.ID));
+	if (collider.ID != -1)
+	{
+		dynWorld->removeCollisionObject(dynWorld->getCollisionObjectArray().at(collider.ID));
+	}
+
 	btCollisionShape* boxShape = new btBoxShape(btVector3(collider.halfExtents.x, collider.halfExtents.y, collider.halfExtents.z));
+	colShapes.push_back(boxShape);
 
 	btScalar mass(rigidBody.weight);
 	bool isDynamic = (mass != 0.f);
@@ -330,8 +340,13 @@ void PhysicsEngine::createRigidBody(RigidBody& rigidBody, BoxCollider& collider)
 
 void PhysicsEngine::createRigidBody(RigidBody& rigidBody, CapsuleCollider& collider)
 {
-	//dynWorld->removeCollisionObject(dynWorld->getCollisionObjectArray().at(collider.ID));
+	if (collider.ID != -1)
+	{
+		dynWorld->removeCollisionObject(dynWorld->getCollisionObjectArray().at(collider.ID));
+	}
+
 	btCollisionShape* capsuleShape = new btCapsuleShape(collider.radius, collider.height);
+	colShapes.push_back(capsuleShape);
 
 	btScalar mass(rigidBody.weight);
 	bool isDynamic = (mass != 0.f);
@@ -441,12 +456,11 @@ void PhysicsEngine::createCapsuleCol(CapsuleCollider& collider)
 	z = glm::radians(collider.rot.z);
 	btQuaternion rotation(x, y, z);
 	transform.setRotation(rotation);
-
 	capsule->setWorldTransform(transform);
-	this->dynWorld->addCollisionObject(capsule);
 
+	this->dynWorld->addCollisionObject(capsule);
 	collider.ID = this->dynWorld->getCollisionObjectArray().size() - 1;
-	capsuleVec.emplace_back(&collider);
+	this->capsuleVec.emplace_back(&collider);
 }
 
 bool PhysicsEngine::removeSphereCollider(int ID)
