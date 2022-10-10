@@ -1178,7 +1178,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                 // UI draw
                 currentCommandBuffer.draw(
-                    3
+                    this->uiRenderer.getNumRenderVerts()
                 );
 
             // End Render Pass!

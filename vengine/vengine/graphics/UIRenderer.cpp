@@ -14,10 +14,16 @@ void UIRenderer::createVertexBuffers(
     // Temporary positions
     std::vector<glm::vec3> dataStream =
     {
-        glm::vec3(0.5f, 0.5f, 0.5f),
         glm::vec3(-0.5f, 0.5f, 0.5f),
-        glm::vec3(-0.5f, -0.5f, 0.5f)
+        glm::vec3(-0.5f, -0.5f, 0.5f),
+        glm::vec3(0.5f, 0.5f, 0.5f),
+
+        glm::vec3(0.5f, 0.5f, 0.5f),
+        glm::vec3(-0.5f, -0.5f, 0.5f),
+        glm::vec3(0.5f, -0.5f, 0.5f)
     };
+
+    this->numRenderVerts = dataStream.size();
 
     // Create one vertex buffer for each frame in flight
     for (uint32_t i = 0; i < framesInFlight; ++i)
@@ -88,7 +94,8 @@ void UIRenderer::createVertexBuffers(
 }
 
 UIRenderer::UIRenderer()
-    : device(nullptr),
+    : numRenderVerts(0),
+    device(nullptr),
     vma(nullptr)
 {
 }
