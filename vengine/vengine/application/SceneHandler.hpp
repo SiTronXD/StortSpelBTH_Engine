@@ -1,6 +1,8 @@
 #pragma once
 #include "Scene.hpp"
 
+class UIRenderer;
+
 class SceneHandler
 {
 private:
@@ -12,7 +14,8 @@ private:
 	NetworkHandler* networkHandler;
 	ScriptHandler* scriptHandler;
 	ResourceManager* resourceManager;
-	
+	UIRenderer* uiRenderer;
+
 public:
 	SceneHandler();
 	virtual ~SceneHandler();
@@ -33,6 +36,9 @@ public:
 	ScriptHandler* getScriptHandler();
 
 	void setResourceManager(ResourceManager* resourceManager);
+
+	void setUIRenderer(UIRenderer* uiRenderer);
+	UIRenderer* getUIRenderer();
 
 	Scene* getScene() const;
 };

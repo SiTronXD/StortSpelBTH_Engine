@@ -178,3 +178,28 @@ void UIRenderer::setUiTexture(const uint32_t& textureIndex)
         textureIndex
     );
 }
+
+void UIRenderer::beginUI()
+{
+    this->currentElementIndex = 0;
+}
+
+void UIRenderer::renderTexture(
+    const float& x, 
+    const float& y, 
+    const float& width, 
+    const float& height)
+{
+    if (this->currentElementIndex >= START_NUM_MAX_ELEMENTS)
+    {
+        Log::error("Reached maximum number of ui elements.");
+        return;
+    }
+
+    this->currentElementIndex++;
+}
+
+void UIRenderer::endUI()
+{
+
+}

@@ -56,13 +56,18 @@ void VulkanRenderer::initResourceManager()
 }
 
 using namespace vengine_helper::config;
-int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManager* resourceMan)
+int VulkanRenderer::init(
+    Window* window, 
+    std::string&& windowName, 
+    ResourceManager* resourceMan,
+    UIRenderer* uiRenderer)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif        
 
     this->resourceManager = resourceMan;
+    this->uiRenderer = uiRenderer;
     this->window = window;
 
     try 
@@ -160,7 +165,7 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
 
         // Create ui renderer
-        this->uiRenderer.create(
+        this->uiRenderer->create(
             this->physicalDevice, 
             this->device,
             this->vma,
@@ -244,7 +249,7 @@ void VulkanRenderer::cleanup()
 
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
-    this->uiRenderer.cleanup();
+    this->uiRenderer->cleanup();
 
     if (this->hasAnimations)
 	{
@@ -609,12 +614,12 @@ void VulkanRenderer::initMeshes(Scene* scene)
             );
 		}
 
-        this->uiRenderer.getShaderInput().addPossibleTexture(
+        this->uiRenderer->getShaderInput().addPossibleTexture(
             i,
             this->textureSampler
         );
     }
-    this->uiRenderer.setUiTexture(0);
+    this->uiRenderer->setUiTexture(0);
 }
 
 void VulkanRenderer::setupDebugMessenger() 
@@ -677,7 +682,9 @@ void VulkanRenderer::cleanupRenderPassBase()
 }
 
 VulkanRenderer::VulkanRenderer()
-    : resourceManager(nullptr), window(nullptr)
+    : resourceManager(nullptr), 
+    uiRenderer(nullptr), 
+    window(nullptr)
 {
     loadConfIntoMemory();
 }
@@ -1177,23 +1184,23 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                 // UI rendering
                 currentCommandBuffer.bindGraphicsPipeline(
-                    this->uiRenderer.getPipeline()
+                    this->uiRenderer->getPipeline()
                 );
 
                 // UI vertex buffer
                 currentCommandBuffer.bindVertexBuffers2(
-                    this->uiRenderer.getVertexBuffer(this->currentFrame)
+                    this->uiRenderer->getVertexBuffer(this->currentFrame)
                 );
 
                 // UI shader input
                 currentCommandBuffer.bindShaderInputFrequency(
-                    this->uiRenderer.getShaderInput(),
+                    this->uiRenderer->getShaderInput(),
                     DescriptorFrequency::PER_DRAW_CALL
                 );
 
                 // UI draw
                 currentCommandBuffer.draw(
-                    this->uiRenderer.getNumRenderVerts()
+                    this->uiRenderer->getNumRenderVerts()
                 );
 
             // End Render Pass!

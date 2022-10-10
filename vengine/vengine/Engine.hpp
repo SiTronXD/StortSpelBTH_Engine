@@ -5,6 +5,7 @@
 #include "lua/ScriptHandler.h"
 #include "audio/AudioHandler.h"
 #include "resource_management/ResourceManager.hpp"
+#include "graphics/UIRenderer.hpp"
 
 class Engine
 {
@@ -21,6 +22,7 @@ public:
 	NetworkHandler networkHandler;
 	ScriptHandler scriptHandler;
 	AudioHandler audioHandler;
+	UIRenderer uiRenderer;
 };
 
 

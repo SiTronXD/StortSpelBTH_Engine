@@ -9,7 +9,8 @@ SceneHandler::SceneHandler()
 	nextScene(nullptr), 
 	networkHandler(nullptr), 
 	scriptHandler(nullptr),
-	resourceManager(nullptr)
+	resourceManager(nullptr),
+	uiRenderer(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -106,6 +107,16 @@ ScriptHandler* SceneHandler::getScriptHandler()
 void SceneHandler::setResourceManager(ResourceManager* resourceManager)
 {
 	this->resourceManager = resourceManager;
+}
+
+void SceneHandler::setUIRenderer(UIRenderer* uiRenderer)
+{
+	this->uiRenderer = uiRenderer;
+}
+
+UIRenderer* SceneHandler::getUIRenderer()
+{
+	return this->uiRenderer;
 }
 
 Scene* SceneHandler::getScene() const

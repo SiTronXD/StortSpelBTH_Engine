@@ -5,8 +5,7 @@
 class TestScene2 : public Scene
 {
 private:
-	int testEntity2;
-
+	
 public:
 	TestScene2();
 	virtual ~TestScene2();

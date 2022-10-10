@@ -20,6 +20,7 @@
 
 class Scene;
 class Camera;
+class UIRenderer;
 
 #include <functional>
 using stbi_uc = unsigned char;
@@ -31,6 +32,7 @@ class VulkanRenderer
     const int MAX_FRAMES_IN_FLIGHT = 3;
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
     ResourceManager* resourceManager;
+    UIRenderer* uiRenderer;
 
     Window* window;
     VmaAllocator vma = nullptr;
@@ -86,9 +88,6 @@ class VulkanRenderer
     SamplerID animSampler;
     ShaderInput animShaderInput;
     Pipeline animPipeline;
-
-    // TODO: remove this
-    UIRenderer uiRenderer;
 
     // - Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
@@ -160,7 +159,11 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int init(Window* window, std::string&& windowName, ResourceManager* resourceMan);
+    int init(
+        Window* window, 
+        std::string&& windowName, 
+        ResourceManager* resourceMan,
+        UIRenderer* uiRenderer);
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);
 
