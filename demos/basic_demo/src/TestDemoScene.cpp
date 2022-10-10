@@ -37,8 +37,16 @@ void TestDemoScene::init()
 	//this->setComponent<MeshComponent>(this->testEntity);
 	this->setComponent<MeshComponent>(this->testEntity);
 	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
-
 	meshComp.meshID = Scene::getResourceManager()->addMesh("ghost.obj");
+
+	// AudioSource component
+	int soundID = AudioHandler::loadFile("assets/sounds/test-audio.wav");
+	if (soundID != -1)
+	{
+		this->setComponent<AudioSource>(this->testEntity);
+		this->getComponent<AudioSource>(this->testEntity).sound.setBuffer(*AudioHandler::getBuffer(soundID));
+	}
+
 
 	// Create other test entities
 	for (uint32_t i = 0; i < 4; ++i)
@@ -52,7 +60,7 @@ void TestDemoScene::init()
 		if (i <= 1)
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
-			newTransform.rotation = glm::vec3(0.0f, 0.0f, -90.0f);
+			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Amogus/source/1.fbx");
@@ -60,7 +68,7 @@ void TestDemoScene::init()
 		else
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
-			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
+			//newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
@@ -99,4 +107,49 @@ void TestDemoScene::update()
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
 	}
+
+	if (ImGui::Begin("Sound"))
+	{
+		ImGui::PushItemWidth(-100.f);
+
+		static float volume = 0.f, master = 0.f;
+		static bool loop = false, hasListener = false;
+
+		if (this->hasComponents<AudioSource>(this->testEntity))
+		{
+			AudioSource& source = this->getComponent<AudioSource>(this->testEntity);
+
+			if (ImGui::Button("Play"))
+			{
+				source.sound.play();
+			}
+			ImGui::SameLine();
+			if (ImGui::Checkbox("Loop", &loop))
+			{
+				source.sound.setLoop(loop);
+			}
+
+			ImGui::DragFloat("Source volume", &volume, 1.f, 0.f, 100.f);
+
+			source.sound.setVolume(volume);
+		}
+
+
+		if (ImGui::Checkbox("Listener", &hasListener))
+		{
+			if (hasListener) this->setComponent<AudioListener>(this->getMainCameraID());
+			else this->removeComponent<AudioListener>(this->getMainCameraID());
+		}
+		ImGui::DragFloat("Master volume", &master, 1.f, 0.f, 100.f);
+
+		if (this->hasComponents<AudioListener>(this->getMainCameraID()))
+		{
+			AudioListener& listener = this->getComponent<AudioListener>(this->getMainCameraID());
+
+			listener.setVolume(master);	
+		}
+
+		ImGui::PopItemWidth();
+	}
+	ImGui::End();
 }

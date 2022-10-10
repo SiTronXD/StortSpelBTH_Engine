@@ -18,25 +18,30 @@ AudioHandler::~AudioHandler()
 void AudioHandler::setSceneHandler(SceneHandler* sceneHandler)
 {
 	this->sceneHandler = sceneHandler;
-	this->sceneHandler->getScene()->setComponent<AudioListener>(this->sceneHandler->getScene()->getMainCameraID());
 }
 
 void AudioHandler::update()
 {
 	Scene* scene = sceneHandler->getScene();
-	const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>();
 
-	for (entt::entity entity : sourceView)
+	const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>();
+	for (const entt::entity& entity : sourceView)
 	{
 		sourceView.get<AudioSource>(entity).setPosition(sourceView.get<Transform>(entity).position);
 	}
 
 	const int camID = scene->getMainCameraID();
-	AudioListener& listener = scene->getComponent<AudioListener>(camID);
-	Transform& camTra = scene->getComponent<Transform>(camID);
-
-	listener.setPosition(camTra.position);
-	listener.setOrientation(camTra.forward(), camTra.up());
+	if (scene->hasComponents<AudioListener>(camID))
+	{
+		AudioListener& listener = scene->getComponent<AudioListener>(camID);
+		Transform& camTra = scene->getComponent<Transform>(camID);
+		listener.setPosition(camTra.position);
+		listener.setOrientation(camTra.forward(), camTra.up());
+	}
+	else
+	{
+		sf::Listener::setGlobalVolume(0.f);
+	}
 }
 
 int AudioHandler::loadFile(const char* filePath)
@@ -57,7 +62,15 @@ int AudioHandler::loadFile(const char* filePath)
 
 void AudioHandler::setMasterVolume(float volume)
 {
-	sf::Listener::setGlobalVolume(volume);
+	Scene* scene = sceneHandler->getScene();
+	if (scene->hasComponents<AudioListener>(scene->getMainCameraID()))
+	{
+		scene->getComponent<AudioListener>(scene->getMainCameraID()).setVolume(volume);
+	}
+	else
+	{
+		sf::Listener::setGlobalVolume(volume);
+	}
 }
 
 void AudioHandler::setMusicBuffer(const sf::SoundBuffer& musicBuffer)
