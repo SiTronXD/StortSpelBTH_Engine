@@ -14,8 +14,8 @@ void UIRenderer::createVertexBuffers(
     // Temporary positions
     std::vector<glm::vec3> dataStream =
     {
+        glm::vec3(0.5f, 0.5f, 0.5f),
         glm::vec3(-0.5f, 0.5f, 0.5f),
-        glm::vec3( 0.5f, 0.5f, 0.5f),
         glm::vec3(-0.5f, -0.5f, 0.5f)
     };
 
