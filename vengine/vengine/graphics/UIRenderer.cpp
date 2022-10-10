@@ -14,13 +14,23 @@ void UIRenderer::createVertexBuffers(
     // Temporary positions
     std::vector<glm::vec3> dataStream =
     {
-        glm::vec3(-0.5f, 0.5f, 0.5f),
-        glm::vec3(-0.5f, -0.5f, 0.5f),
-        glm::vec3(0.5f, 0.5f, 0.5f),
+        // Quad 1
+        glm::vec3(-0.5f - 0.5f, 0.5f, 0.5f),
+        glm::vec3(-0.5f - 0.5f, -0.5f, 0.5f),
+        glm::vec3(0.5f - 0.5f, 0.5f, 0.5f),
 
-        glm::vec3(0.5f, 0.5f, 0.5f),
-        glm::vec3(-0.5f, -0.5f, 0.5f),
-        glm::vec3(0.5f, -0.5f, 0.5f)
+        glm::vec3(0.5f - 0.5f, 0.5f, 0.5f),
+        glm::vec3(-0.5f - 0.5f, -0.5f, 0.5f),
+        glm::vec3(0.5f - 0.5f, -0.5f, 0.5f),
+
+        // Quad 2
+        glm::vec3(-0.5f + 0.5f, 0.5f - 0.3f, 0.5f),
+        glm::vec3(-0.5f + 0.5f, -0.5f - 0.3f, 0.5f),
+        glm::vec3(0.5f + 0.5f, 0.5f - 0.3f, 0.5f),
+
+        glm::vec3(0.5f + 0.5f, 0.5f - 0.3f, 0.5f),
+        glm::vec3(-0.5f + 0.5f, -0.5f - 0.3f, 0.5f),
+        glm::vec3(0.5f + 0.5f, -0.5f - 0.3f, 0.5f)
     };
 
     this->numRenderVerts = dataStream.size();

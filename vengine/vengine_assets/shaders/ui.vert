@@ -19,5 +19,5 @@ void main()
         vec2(1.0, 1.0)
     );
 
-    uv = uvs[gl_VertexIndex];
+    uv = uvs[gl_VertexIndex % 6];
 }
