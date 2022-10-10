@@ -41,7 +41,8 @@ public:
 		vk::RenderPass& renderPass,
 		const VertexStreams& targetVertexStream,
 		const std::string& vertexShaderName,
-		const std::string& fragmentShaderName = "shader.frag.spv");
+		const std::string& fragmentShaderName = "shader.frag.spv",
+		const bool& depthTestingEnabled = true);
 
 	void cleanup();
 

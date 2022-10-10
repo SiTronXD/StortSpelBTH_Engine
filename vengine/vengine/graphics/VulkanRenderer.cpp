@@ -614,7 +614,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
             this->textureSampler
         );
     }
-    this->uiRenderer.setUiTexture(1);
+    this->uiRenderer.setUiTexture(0);
 }
 
 void VulkanRenderer::setupDebugMessenger() 

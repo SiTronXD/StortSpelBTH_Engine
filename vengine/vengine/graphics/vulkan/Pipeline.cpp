@@ -81,7 +81,8 @@ void Pipeline::createPipeline(
     vk::RenderPass& renderPass,
     const VertexStreams& targetVertexStream,
     const std::string& vertexShaderName,
-    const std::string& fragmentShaderName)
+    const std::string& fragmentShaderName,
+    const bool& depthTestingEnabled)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -211,7 +212,7 @@ void Pipeline::createPipeline(
 
     // --- DEPTH STENCIL TESING ---
     vk::PipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
-    depthStencilCreateInfo.setDepthTestEnable(VK_TRUE);              // Enable Depth Testing; Check the Depth to determine if it should write to the fragment
+    depthStencilCreateInfo.setDepthTestEnable(depthTestingEnabled ? VK_TRUE : VK_FALSE);              // Enable Depth Testing; Check the Depth to determine if it should write to the fragment
     depthStencilCreateInfo.setDepthWriteEnable(VK_TRUE);              // enable writing to Depth Buffer; To make sure it replaces old values
     depthStencilCreateInfo.setDepthCompareOp(vk::CompareOp::eLess);   // Describes that we want to replace the old values IF new values are smaller/lesser.
     depthStencilCreateInfo.setDepthBoundsTestEnable(VK_FALSE);             // In case we want to use as Min and a Max Depth; if depth Values exist between two bounds... 

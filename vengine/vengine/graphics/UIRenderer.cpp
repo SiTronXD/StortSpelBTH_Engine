@@ -15,22 +15,22 @@ void UIRenderer::createVertexBuffers(
     std::vector<glm::vec3> dataStream =
     {
         // Quad 1
-        glm::vec3(-0.5f - 0.5f, 0.5f, 0.5f),
-        glm::vec3(-0.5f - 0.5f, -0.5f, 0.5f),
-        glm::vec3(0.5f - 0.5f, 0.5f, 0.5f),
+        glm::vec3(-0.5f - 0.5f, 0.5f, 0.99f),
+        glm::vec3(-0.5f - 0.5f, -0.5f, 0.99f),
+        glm::vec3(0.5f - 0.5f, 0.5f, 0.99f),
 
-        glm::vec3(0.5f - 0.5f, 0.5f, 0.5f),
-        glm::vec3(-0.5f - 0.5f, -0.5f, 0.5f),
-        glm::vec3(0.5f - 0.5f, -0.5f, 0.5f),
+        glm::vec3(0.5f - 0.5f, 0.5f, 0.99f),
+        glm::vec3(-0.5f - 0.5f, -0.5f, 0.99f),
+        glm::vec3(0.5f - 0.5f, -0.5f, 0.99f),
 
         // Quad 2
-        glm::vec3(-0.5f + 0.5f, 0.5f - 0.3f, 0.5f),
-        glm::vec3(-0.5f + 0.5f, -0.5f - 0.3f, 0.5f),
-        glm::vec3(0.5f + 0.5f, 0.5f - 0.3f, 0.5f),
+        glm::vec3(-0.5f + 0.5f, 0.5f - 0.3f, 0.99f),
+        glm::vec3(-0.5f + 0.5f, -0.5f - 0.3f, 0.99f),
+        glm::vec3(0.5f + 0.5f, 0.5f - 0.3f, 0.99f),
 
-        glm::vec3(0.5f + 0.5f, 0.5f - 0.3f, 0.5f),
-        glm::vec3(-0.5f + 0.5f, -0.5f - 0.3f, 0.5f),
-        glm::vec3(0.5f + 0.5f, -0.5f - 0.3f, 0.5f)
+        glm::vec3(0.5f + 0.5f, 0.5f - 0.3f, 0.99f),
+        glm::vec3(-0.5f + 0.5f, -0.5f - 0.3f, 0.99f),
+        glm::vec3(0.5f + 0.5f, -0.5f - 0.3f, 0.99f)
     };
 
     this->numRenderVerts = dataStream.size();
@@ -105,6 +105,7 @@ void UIRenderer::createVertexBuffers(
 
 UIRenderer::UIRenderer()
     : numRenderVerts(0),
+    uiSamplerID(~0u),
     device(nullptr),
     vma(nullptr)
 {
@@ -144,7 +145,8 @@ void UIRenderer::create(
 		renderPass,
 		targetVertexStream,
 		"ui.vert.spv",
-		"ui.frag.spv"
+		"ui.frag.spv",
+        false
 	);
 
     // Create vertex buffer for each frame in flight
