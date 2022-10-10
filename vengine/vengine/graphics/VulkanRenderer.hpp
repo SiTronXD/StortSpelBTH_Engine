@@ -16,11 +16,10 @@
 #include "../resource_management/ResourceManager.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
+#include "UIRenderer.hpp"
 
 class Scene;
 class Camera;
-
-
 
 #include <functional>
 using stbi_uc = unsigned char;
@@ -87,6 +86,9 @@ class VulkanRenderer
     SamplerID animSampler;
     ShaderInput animShaderInput;
     Pipeline animPipeline;
+
+    // TODO: remove this
+    UIRenderer uiRenderer;
 
     // - Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};

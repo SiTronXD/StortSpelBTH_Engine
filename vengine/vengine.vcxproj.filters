@@ -53,6 +53,7 @@
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
     <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
+    <ClCompile Include="vengine\graphics\UIRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -110,6 +111,7 @@
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
+    <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -272,13 +274,7 @@
     <ClInclude Include="vengine\network\Server.h" />
     <ClInclude Include="vengine\network\ServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
-    <ClInclude Include="vengine\ResourceManagement\Configurator.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\loaders\TextureLoader.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\ResourceManager.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\ResourceManagerStructs.hpp" />
     <ClInclude Include="vengine\systems\System.hpp" />
-    <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
@@ -298,8 +294,6 @@
     <ClInclude Include="vengine\VengineMath.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="vengine_assets\shaders\shader.frag" />
-    <None Include="vengine_assets\shaders\shader.vert" />
     <None Include=".clang-format" />
   </ItemGroup>
 </Project>

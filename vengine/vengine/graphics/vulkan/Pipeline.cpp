@@ -80,7 +80,8 @@ void Pipeline::createPipeline(
     ShaderInput& shaderInput,
     vk::RenderPass& renderPass,
     const VertexStreams& targetVertexStream,
-    const std::string& vertexShaderName)
+    const std::string& vertexShaderName,
+    const std::string& fragmentShaderName)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -89,14 +90,8 @@ void Pipeline::createPipeline(
 	this->device = &device;
 
     // read in SPIR-V code of shaders
-    //auto vertexShaderCode = vengine_helper::readShaderFile("shader.vert.spv");
     auto vertexShaderCode = vengine_helper::readShaderFile(vertexShaderName);
-    auto fragShaderCode = vengine_helper::readShaderFile("shader.frag.spv");
-
-    /*if (hasAnimations)
-    {
-        vertexShaderCode = vengine_helper::readShaderFile("shaderAnim.vert.spv");
-    }*/
+    auto fragShaderCode = vengine_helper::readShaderFile(fragmentShaderName);
 
     // Build Shader Modules to link to Graphics Pipeline
     // Create Shader Modules

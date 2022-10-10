@@ -118,6 +118,20 @@ void CommandBuffer::bindShaderInputFrequency(
     }
 }
 
+void CommandBuffer::draw(
+    const uint32_t& vertexCount,
+    const uint32_t& instanceCount,
+    const uint32_t& firstVertex,
+    const uint32_t& firstInstance)
+{
+    this->commandBuffer.draw(
+        vertexCount, 
+        instanceCount,
+        firstVertex, 
+        firstInstance
+    );
+}
+
 void CommandBuffer::drawIndexed(
     const uint32_t& indexCount,
     const uint32_t& instanceCount,

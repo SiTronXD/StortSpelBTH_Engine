@@ -302,6 +302,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
   <ItemGroup>
     <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
+    <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
     <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\CommandBufferArray.hpp" />
@@ -380,6 +381,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="vengine\graphics\UIRenderer.cpp" />
     <ClCompile Include="vengine\lua\wrappers\ResourceManagerLua.cpp" />
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
     <ClCompile Include="vengine\lua\ScriptHandler.cpp" />

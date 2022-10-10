@@ -158,6 +158,18 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
         this->resourceManager->addTexture(DEF<std::string>(P_TEXTURES) + "missing_texture.png");
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
+
+        // Create ui renderer
+        this->uiRenderer.create(
+            this->physicalDevice, 
+            this->device,
+            this->vma,
+            *this->resourceManager,
+            this->renderPassBase,
+            this->queueFamilies.getGraphicsQueue(),
+            this->commandPool,
+            MAX_FRAMES_IN_FLIGHT
+        );
     }
     catch(std::runtime_error &e)
     {
@@ -232,6 +244,8 @@ void VulkanRenderer::cleanup()
 
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
+    this->uiRenderer.cleanup();
+
     if (this->hasAnimations)
 	{
 		this->animPipeline.cleanup();
@@ -1150,6 +1164,21 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             );
                         }
                     }
+                );
+
+                // UI rendering
+                currentCommandBuffer.bindGraphicsPipeline(
+                    this->uiRenderer.getPipeline()
+                );
+
+                // UI vertex buffer
+                currentCommandBuffer.bindVertexBuffers2(
+                    this->uiRenderer.getVertexBuffer(this->currentFrame)
+                );
+
+                // UI draw
+                currentCommandBuffer.draw(
+                    3
                 );
 
             // End Render Pass!
