@@ -603,9 +603,18 @@ void VulkanRenderer::initMeshes(Scene* scene)
 
         if (this->hasAnimations)
 		{
-			this->animShaderInput.addPossibleTexture(i, this->textureSampler);
+			this->animShaderInput.addPossibleTexture(
+                i, 
+                this->textureSampler
+            );
 		}
+
+        this->uiRenderer.getShaderInput().addPossibleTexture(
+            i,
+            this->textureSampler
+        );
     }
+    this->uiRenderer.setUiTexture(1);
 }
 
 void VulkanRenderer::setupDebugMessenger() 
@@ -1174,6 +1183,12 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 // UI vertex buffer
                 currentCommandBuffer.bindVertexBuffers2(
                     this->uiRenderer.getVertexBuffer(this->currentFrame)
+                );
+
+                // UI shader input
+                currentCommandBuffer.bindShaderInputFrequency(
+                    this->uiRenderer.getShaderInput(),
+                    DescriptorFrequency::PER_DRAW_CALL
                 );
 
                 // UI draw

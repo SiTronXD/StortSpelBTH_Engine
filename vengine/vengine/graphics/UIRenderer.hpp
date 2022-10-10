@@ -13,6 +13,7 @@ class ResourceManager;
 class UIRenderer
 {
 private:
+    SamplerID uiSamplerID;
     ShaderInput uiShaderInput;
     Pipeline uiPipeline;
 
@@ -46,7 +47,10 @@ public:
 
     void cleanup();
 
+    void setUiTexture(const uint32_t& textureIndex);
+
     inline const uint32_t& getNumRenderVerts() const { return this->numRenderVerts; }
     inline const vk::Buffer& getVertexBuffer(const uint32_t& index) const { return this->vertexBuffers[index]; }
+    inline /*const*/ ShaderInput& getShaderInput() /*const*/ { return this->uiShaderInput; }
     inline const Pipeline& getPipeline() const { return this->uiPipeline; }
 };

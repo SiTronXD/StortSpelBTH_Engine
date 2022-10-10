@@ -4,7 +4,7 @@
 layout(location = 0) in vec3 pos;
 
 // Output data
-layout(location = 0) out vec2 uv;
+layout(location = 0) out vec2 fragUV;
 
 void main()
 {
@@ -19,5 +19,5 @@ void main()
         vec2(1.0, 1.0)
     );
 
-    uv = uvs[gl_VertexIndex % 6];
+    fragUV = uvs[gl_VertexIndex % 6];
 }

@@ -134,6 +134,7 @@ void UIRenderer::create(
 		vma,
 		resourceManager,
 		framesInFlight);
+    this->uiSamplerID = this->uiShaderInput.addSampler();
 	this->uiShaderInput.endForInput();
 
 	// Pipeline
@@ -166,4 +167,12 @@ void UIRenderer::cleanup()
 
 	this->uiPipeline.cleanup();
 	this->uiShaderInput.cleanup();
+}
+
+void UIRenderer::setUiTexture(const uint32_t& textureIndex)
+{
+    this->uiShaderInput.setTexture(
+        this->uiSamplerID, 
+        textureIndex
+    );
 }
