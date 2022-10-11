@@ -16,6 +16,7 @@ function(setup_vengine_definitions)
 
     # Vengine Path Constants
     set_parentScope(VENGINE_ASSETS_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/vengine/vengine_assets       )
+    set_parentScope(VENGINE_DEMO_ASSET_LINK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/demos/basic_demo/assets      )
     set_parentScope(VENGINE_DEPS_DIR            ${CMAKE_CURRENT_SOURCE_DIR}/deps         )
     set_parentScope(VENGINE_SOURCE_DIR          ${CMAKE_CURRENT_SOURCE_DIR}/vengine/vengine  )
     set_parentScope(VENGINE_TESTS_SOURCE_DIR    ${CMAKE_CURRENT_SOURCE_DIR}/test_src     )
@@ -24,10 +25,12 @@ function(setup_vengine_definitions)
 
     # Paths used for Symbolic Link for assets
     set_parentScope(VENGINE_ASSET_LINK_SRC "${VENGINE_ASSETS_DIR}"              )
+    set_parentScope(VENGINE_DEMO_ASSET_LINK_SRC "${VENGINE_DEMO_ASSET_LINK_DIR}"              )
     if(${WIN32}) 
     set_parentScope(VENGINE_ASSET_LINK_DST "${CMAKE_CURRENT_BINARY_DIR}/Debug/assets" )
     else()
-    set_parentScope(VENGINE_ASSET_LINK_DST "${CMAKE_CURRENT_BINARY_DIR}/assets" )
+    set_parentScope(VENGINE_ASSET_LINK_DST "${CMAKE_CURRENT_BINARY_DIR}/vengine_assets" )
+    set_parentScope(VENGINE_DEMO_ASSET_LINK_DST "${CMAKE_CURRENT_BINARY_DIR}/assets" )
     endif()
 
     # Directory Structure for assets and deps folder

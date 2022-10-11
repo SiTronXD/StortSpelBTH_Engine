@@ -11,7 +11,10 @@
             "name": "Debug",
             "program": "${workspaceFolder}/build/debug_unix_lldb/vengine_demo",
             "args": [],
-            "cwd": "${workspaceFolder}/vengine",
+            "cwd": "${workspaceFolder}/build/debug_unix_lldb/"
+            //"cwd": "${workspaceFolder}",
+            //"cwd": "${workspaceFolder}/demos/basic_demo/",
+            //"cwd": "${workspaceFolder}/vengine",
         }
     ]
 }

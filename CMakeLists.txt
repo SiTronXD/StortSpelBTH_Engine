@@ -186,12 +186,15 @@ else() # Use Git Submodules
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src)
-
+    
     find_package(SDL2 REQUIRED)
     target_include_directories(vengine PRIVATE ${SDL2_INCLUDE_DIRS})
     
     find_package(SFML REQUIRED network audio)    
 
+    find_package(Lua REQUIRED)
+    target_include_directories(vengine PRIVATE ${LUA_INCLUDE_DIR})
+    
     #set(vengine_vma VulkanMemoryAllocator) 
     set(vengine_stb "") #part of sources, no need to use as lib...
 
@@ -263,6 +266,11 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:DebugWCallStackProfiling>
 target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_COMPILE_TIME_DEFINITIONS_debug}>" ) 
 # NOTE! STB_IMAGE_IMPLEMENTATION  <-- Cant be used here! for some reason!
 
+# Replace non portable functions with portable functions...
+if(${UNIX})
+    #define strcpy_s strcpy
+    target_compile_definitions(vengine PRIVATE "strcpy_s=strcpy" )
+endif()
 
 
 # Link all libraries to vengine target
@@ -278,6 +286,7 @@ target_link_libraries(
     assimp::assimp
     ${vengine_stb}
     ${vengine_vma}
+    ${LUA_LIBRARIES}
 )
 
 
@@ -312,7 +321,8 @@ target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src)
 
 # Make a target for generation of symbolic links, so we know when creation of it is needed
-add_custom_target(generate_symbolic_links ALL DEPENDS ${VENGINE_ASSET_LINK_DST})
+add_custom_target(generate_symbolic_links      ALL DEPENDS ${VENGINE_ASSET_LINK_DST})
+add_custom_target(generate_symbolic_links_demo ALL DEPENDS ${VENGINE_DEMO_ASSET_LINK_DST})
 
 set(VENGINE_INSTALL_ASSETS_PATH "not_set" CACHE STRING "If 'not_set' then the sample assets wont be installed anywhere.")
 if(NOT (${VENGINE_INSTALL_ASSETS_PATH} MATCHES "not_set"))
@@ -355,6 +365,7 @@ if(${WIN32})
     endif()
 else()
     create_symlink_now(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
+    create_symlink_now(${VENGINE_DEMO_ASSET_LINK_SRC} ${VENGINE_DEMO_ASSET_LINK_DST})
 endif()
 
 # setting up the required asset folder structure for the user
