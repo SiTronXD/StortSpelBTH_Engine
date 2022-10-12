@@ -272,13 +272,7 @@
     <ClInclude Include="vengine\network\Server.h" />
     <ClInclude Include="vengine\network\ServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
-    <ClInclude Include="vengine\ResourceManagement\Configurator.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\loaders\MeshLoader.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\loaders\TextureLoader.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\ResourceManager.hpp" />
-    <ClInclude Include="vengine\ResourceManagement\ResourceManagerStructs.hpp" />
     <ClInclude Include="vengine\systems\System.hpp" />
-    <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
@@ -298,8 +292,6 @@
     <ClInclude Include="vengine\VengineMath.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="vengine_assets\shaders\shader.frag" />
-    <None Include="vengine_assets\shaders\shader.vert" />
     <None Include=".clang-format" />
   </ItemGroup>
 </Project>
