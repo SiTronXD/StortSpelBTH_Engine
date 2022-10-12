@@ -4,6 +4,9 @@
 UIRenderer::UIRenderer()
     : currentElementIndex(0),
     numRenderVerts(0),
+    uiTextureIndex(~0u),
+    uiTextureWidth(0),
+    uiTextureHeight(0),
     uiSamplerID(~0u),
     storageBufferID(~0u),
     device(nullptr),
@@ -27,8 +30,8 @@ void UIRenderer::create(
     this->resourceManager = &resourceManager;
 
 	// Target data from the vertex buffers
-    this->uiTransforms.clear();
-    this->uiTransforms.resize(START_NUM_MAX_ELEMENTS);
+    this->uiElementData.clear();
+    this->uiElementData.resize(START_NUM_MAX_ELEMENTS);
 
 	// Shader input, with no inputs for now
 	this->uiShaderInput.beginForInput(
@@ -40,8 +43,8 @@ void UIRenderer::create(
     this->uiSamplerID = this->uiShaderInput.addSampler();
     this->uiShaderInput.setNumShaderStorageBuffers(1);
     this->storageBufferID = this->uiShaderInput.addStorageBuffer(
-        this->uiTransforms.size() *
-            sizeof(this->uiTransforms[0])
+        this->uiElementData.size() *
+            sizeof(this->uiElementData[0])
     );
 	this->uiShaderInput.endForInput();
 
@@ -76,8 +79,8 @@ void UIRenderer::setUiTexture(const uint32_t& textureIndex)
     Texture& uiTexture = 
         this->resourceManager->getTexture(this->uiTextureIndex);
 
-    this->uiTextureWidth = uiTexture.getWidth();
-    this->uiTextureHeight = uiTexture.getHeight();
+    this->uiTextureWidth = static_cast<float>(uiTexture.getWidth());
+    this->uiTextureHeight = static_cast<float>(uiTexture.getHeight());
 }
 
 void UIRenderer::beginUI()
@@ -86,6 +89,7 @@ void UIRenderer::beginUI()
 }
 
 void UIRenderer::renderTexture(
+    glm::vec4 subTextureRect,
     const float& x, 
     const float& y, 
     const float& width, 
@@ -97,9 +101,18 @@ void UIRenderer::renderTexture(
         return;
     }
 
+    // Normalized texture coordinates
+    subTextureRect.x /= this->uiTextureWidth;
+    subTextureRect.z /= this->uiTextureWidth;
+    subTextureRect.y /= this->uiTextureHeight;
+    subTextureRect.w /= this->uiTextureHeight;
+
     // Set element data
-    this->uiTransforms[this->currentElementIndex] =
-        glm::vec4(x, y, width, height);
+    this->uiElementData[this->currentElementIndex] =
+    {
+        subTextureRect,
+        glm::vec4(x, y, width, height)
+    };
 
     // Next ui element
     this->currentElementIndex++;

@@ -3,20 +3,27 @@
 #define FREQ_PER_MESH 1
 
 // Storage buffer
-struct UITransformsData
+struct UIElementData
 {
-    vec4 uiTransform;
+    vec4 subTextureRect;
+    vec4 transform;
 };
-layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer UITransformsBuffer
+layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer UIElementDataBuffer
 {
-    UITransformsData transforms[];
-} uiTransforms;
+    UIElementData data[];
+} ui;
 
 // Output data
 layout(location = 0) out vec2 fragUV;
 
 void main()
 {
+    // Extract element data
+    UIElementData uiData = ui.data[uint(gl_VertexIndex / 6)];
+    vec4 uiSubTextureRect = uiData.subTextureRect;
+    vec4 uiTransform = uiData.transform;
+
+    // Position
     const vec2 positions[6] = vec2[](
         vec2(-1.0,  1.0),
         vec2(-1.0, -1.0),
@@ -25,24 +32,20 @@ void main()
         vec2(-1.0, -1.0),
         vec2( 1.0, -1.0)
     );
-
-    vec4 uiTran = 
-        uiTransforms.transforms[uint(gl_VertexIndex / 6)].uiTransform;
-
     gl_Position = vec4(
-        uiTran.xy + (positions[gl_VertexIndex % 6] * 0.5f * uiTran.zw), 
+        uiTransform.xy + (positions[gl_VertexIndex % 6] * 0.5f * uiTransform.zw), 
         0.5f, 
         1.0f
     );
 
-    const vec2 uvs[6] = vec2[](
-        vec2(0.0, 0.0),
-        vec2(0.0, 1.0),
-        vec2(1.0, 0.0),
-        vec2(1.0, 0.0),
-        vec2(0.0, 1.0),
-        vec2(1.0, 1.0)
+    // Uv coordinates
+    vec2 uvs[6] = vec2[](
+        vec2(uiSubTextureRect.x,                        uiSubTextureRect.y),
+        vec2(uiSubTextureRect.x,                        uiSubTextureRect.y + uiSubTextureRect.w),
+        vec2(uiSubTextureRect.x + uiSubTextureRect.z,   uiSubTextureRect.y),
+        vec2(uiSubTextureRect.x + uiSubTextureRect.z,   uiSubTextureRect.y),
+        vec2(uiSubTextureRect.x,                        uiSubTextureRect.y + uiSubTextureRect.w),
+        vec2(uiSubTextureRect.x + uiSubTextureRect.z,   uiSubTextureRect.y + uiSubTextureRect.w)
     );
-
     fragUV = uvs[gl_VertexIndex % 6];
 }

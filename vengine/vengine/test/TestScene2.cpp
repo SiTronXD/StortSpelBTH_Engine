@@ -35,7 +35,11 @@ void TestScene2::update()
 	}
 
 	Scene::getUIRenderer()->beginUI();
-	Scene::getUIRenderer()->renderTexture(-0.25f, 0.0f, 1.0f, 1.0f);
-	Scene::getUIRenderer()->renderTexture(0.25f, 0.3f, 1.0f, 1.0f);
+	Scene::getUIRenderer()->renderTexture(
+		glm::vec4(0, 0, 16, 16),
+		-0.25f, 0.0f, 1.0f, 1.0f);
+	Scene::getUIRenderer()->renderTexture(
+		glm::vec4(16, 0, 16, 16),
+		0.25f, 0.3f, 1.0f, 1.0f);
 	Scene::getUIRenderer()->endUI();
 }

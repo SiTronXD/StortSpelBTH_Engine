@@ -10,12 +10,20 @@ class PhysicalDevice;
 class Device;
 class ResourceManager;
 
+struct UIElementData
+{
+    glm::vec4 subTextureRect;
+
+    // vec4(x, y, scaleX, scaleY)
+    glm::vec4 transform;
+};
+
 class UIRenderer
 {
 private:
     const uint32_t START_NUM_MAX_ELEMENTS = 2;
 
-    std::vector<glm::vec4> uiTransforms;
+    std::vector<UIElementData> uiElementData;
 
     SamplerID uiSamplerID;
     StorageBufferID storageBufferID;
@@ -30,8 +38,8 @@ private:
     uint32_t numRenderVerts;
     uint32_t uiTextureIndex;
 
-    uint32_t uiTextureWidth;
-    uint32_t uiTextureHeight;
+    float uiTextureWidth;
+    float uiTextureHeight;
 
     Device* device;
     VmaAllocator* vma;
@@ -56,6 +64,7 @@ public:
 
     void beginUI();
     void renderTexture(
+        glm::vec4 subTextureRect,
         const float& x,
         const float& y,
         const float& width,
@@ -65,7 +74,7 @@ public:
 
     inline const StorageBufferID& getStorageBufferID() const { return this->storageBufferID; }
     inline const SamplerID& getSamplerID() const { return this->uiSamplerID; }
-    inline std::vector<glm::vec4>& getUiGpuData() { return this->uiTransforms; }
+    inline std::vector<UIElementData>& getUiElementData() { return this->uiElementData; }
     inline const uint32_t& getNumRenderVerts() const { return this->numRenderVerts; }
     inline const uint32_t& getUiTextureIndex() const { return this->uiTextureIndex; }
     inline const vk::Buffer& getVertexBuffer(const uint32_t& index) const { return this->vertexBuffers[index]; }
