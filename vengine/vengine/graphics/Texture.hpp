@@ -21,17 +21,26 @@ private:
     Device* device;
     VmaAllocator* vma;
 
+	vk::ImageView imageView;
+
+	uint32_t width;
+	uint32_t height;
+
 public:
-    vk::ImageView imageView;
     VmaAllocation imageMemory;
     vk::Image image;
 
 	Texture(Device& device, VmaAllocator& vma);
 	~Texture();
 
+	void setImageView(const vk::ImageView& imageView);
+	void setSize(const uint32_t& width, const uint32_t& height);
+
 	void cleanup();
 
 	inline const vk::ImageView& getImageView() const { return this->imageView; }
+	inline const uint32_t& getWidth() const { return this->width; }
+	inline const uint32_t& getHeight() const { return this->height; }
 
 	static vk::Format chooseSupportedFormat(
 		PhysicalDevice& physicalDevice,

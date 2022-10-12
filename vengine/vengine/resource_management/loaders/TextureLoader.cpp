@@ -82,24 +82,27 @@ Texture TextureLoader::createTexture(const std::string &filename) {
         *this->importStructs.vma
     );
 
-    // Create Texture Image and get its Location in array
+    // Create Texture Image
+    uint32_t width = 0;
+    uint32_t height = 0;
     this->createTextureImage(
         filename, 
         createdTexture.image, 
-        createdTexture.imageMemory);
+        createdTexture.imageMemory,
+        width,
+        height
+    );
+    createdTexture.setSize(width, height);
 
     // Create Image View
-    createdTexture.imageView = Texture::createImageView(
-        *this->importStructs.device,
-        // textureImages[textureImageLoc],          // The location of the Image
-        // in our textureImages vector
-        createdTexture.image, // The location of the Image in our textureImages vector
-        vk::Format::eR8G8B8A8Unorm, // Format for rgba
-        vk::ImageAspectFlagBits::eColor);
-
-    // Create Texture Descriptor
-    /*createdTexture.descriptorLocation =
-        this->createTextureDescriptor(createdTexture.imageView);*/
+    createdTexture.setImageView(
+        Texture::createImageView(
+            *this->importStructs.device,
+            createdTexture.image,
+            vk::Format::eR8G8B8A8Unorm, // Format for rgba
+            vk::ImageAspectFlagBits::eColor
+        )
+    );
 
     // Return index of Texture Descriptor that was just created
     return createdTexture;
@@ -135,9 +138,13 @@ stbi_uc *TextureLoader::loadTextureFile(const std::string &filename, int *width,
     return image;
 }
 
-void TextureLoader::createTextureImage(const std::string &filename,
-                                       vk::Image &imageRef,
-                                       VmaAllocation &allocRef) {
+void TextureLoader::createTextureImage(
+    const std::string &filename,
+    vk::Image &imageRef,
+    VmaAllocation &allocRef,
+    uint32_t& outputWidth,
+    uint32_t& outputHeight) 
+{
 #ifndef VENGINE_NO_PROFILING
   ZoneScoped; //: NOLINT
 #endif
@@ -147,6 +154,9 @@ void TextureLoader::createTextureImage(const std::string &filename,
     vk::DeviceSize imageSize = 0;
     stbi_uc *imageData =
         this->loadTextureFile(filename, &width, &height, &imageSize);
+
+    outputWidth = static_cast<uint32_t>(width);
+    outputHeight = static_cast<uint32_t>(height);
 
     // Create Staging buffer to hold loaded data, ready to copy to device
     vk::Buffer imageStagingBuffer = nullptr;

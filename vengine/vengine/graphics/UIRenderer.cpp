@@ -1,113 +1,14 @@
 #include "UIRenderer.hpp"
 #include "../resource_management/ResourceManager.hpp"
 
-void UIRenderer::createVertexBuffers(
-    Device& device,
-    VmaAllocator& vma,
-    vk::Queue& transferQueue,
-    vk::CommandPool& transferCommandPool,
-    const uint32_t& framesInFlight)
-{
-    this->vertexBuffers.resize(framesInFlight);
-    this->vertexBufferMemories.resize(framesInFlight);
-
-    // Temporary positions
-    std::vector<glm::vec3> dataStream =
-    {
-        // Quad 1
-        glm::vec3(-0.5f - 0.5f, 0.5f, 0.99f),
-        glm::vec3(-0.5f - 0.5f, -0.5f, 0.99f),
-        glm::vec3(0.5f - 0.5f, 0.5f, 0.99f),
-
-        glm::vec3(0.5f - 0.5f, 0.5f, 0.99f),
-        glm::vec3(-0.5f - 0.5f, -0.5f, 0.99f),
-        glm::vec3(0.5f - 0.5f, -0.5f, 0.99f),
-
-        // Quad 2
-        glm::vec3(-0.5f + 0.5f, 0.5f - 0.3f, 0.99f),
-        glm::vec3(-0.5f + 0.5f, -0.5f - 0.3f, 0.99f),
-        glm::vec3(0.5f + 0.5f, 0.5f - 0.3f, 0.99f),
-
-        glm::vec3(0.5f + 0.5f, 0.5f - 0.3f, 0.99f),
-        glm::vec3(-0.5f + 0.5f, -0.5f - 0.3f, 0.99f),
-        glm::vec3(0.5f + 0.5f, -0.5f - 0.3f, 0.99f)
-    };
-
-    this->numRenderVerts = dataStream.size();
-
-    // Create one vertex buffer for each frame in flight
-    for (uint32_t i = 0; i < framesInFlight; ++i)
-    {
-        // Temporary buffer to "Stage" vertex data before transferring to GPU
-        vk::Buffer stagingBuffer;
-        VmaAllocation stagingBufferMemory{};
-        VmaAllocationInfo allocInfo_staging;
-
-        vk::DeviceSize bufferSize = sizeof(dataStream[0]) * dataStream.size();
-
-        Buffer::createBuffer(
-            {
-                .bufferSize = bufferSize,
-                .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       // This buffers vertex data will be transfered somewhere else!
-                .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                    | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-                .buffer = &stagingBuffer,
-                .bufferMemory = &stagingBufferMemory,
-                .allocationInfo = &allocInfo_staging,
-                .vma = &vma
-            });
-
-        // -- Map memory to our Temporary Staging Vertex Buffer -- 
-        void* data{};
-        if (vmaMapMemory(vma, stagingBufferMemory, &data) != VK_SUCCESS)
-        {
-            throw std::runtime_error("Failed to allocate Mesh Staging Vertex Buffer Using VMA!");
-        };
-
-        memcpy(
-            data,
-            dataStream.data(),
-            (size_t)bufferSize
-        );
-
-        vmaUnmapMemory(vma, stagingBufferMemory);
-
-        VmaAllocationInfo allocInfo_deviceOnly;
-        // Create Buffer with TRANSFER_DST_BIT to mark as recipient of transfer data (also VERTEX_BUFFER)
-        // Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
-        Buffer::createBuffer(
-            {
-                .bufferSize = bufferSize,
-                .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        // Destination Buffer to be transfered to
-                                    | vk::BufferUsageFlagBits::eVertexBuffer,    // This is a Vertex Buffer
-                .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-                .buffer = &this->vertexBuffers[i],
-                .bufferMemory = &this->vertexBufferMemories[i],
-                .allocationInfo = &allocInfo_deviceOnly,
-                .vma = &vma
-            });
-
-        // Copy Staging Buffer to Vertex Buffer on GPU
-        Buffer::copyBuffer(
-            device.getVkDevice(),
-            transferQueue,
-            transferCommandPool,
-            stagingBuffer,
-            this->vertexBuffers[i],
-            bufferSize
-        );
-
-        // Clean up Staging Buffer stuff
-        device.getVkDevice().destroyBuffer(stagingBuffer);
-        vmaFreeMemory(vma, stagingBufferMemory);
-    }
-}
-
 UIRenderer::UIRenderer()
-    : numRenderVerts(0),
+    : currentElementIndex(0),
+    numRenderVerts(0),
     uiSamplerID(~0u),
+    storageBufferID(~0u),
     device(nullptr),
-    vma(nullptr)
+    vma(nullptr),
+    resourceManager(nullptr)
 {
 }
 
@@ -123,10 +24,11 @@ void UIRenderer::create(
 {
     this->device = &device;
     this->vma = &vma;
+    this->resourceManager = &resourceManager;
 
 	// Target data from the vertex buffers
-	VertexStreams targetVertexStream{};
-	targetVertexStream.positions.resize(1);
+	this->vertexStream = {};
+    this->vertexStream.uiTransforms.resize(START_NUM_MAX_ELEMENTS);
 
 	// Shader input, with no inputs for now
 	this->uiShaderInput.beginForInput(
@@ -136,6 +38,11 @@ void UIRenderer::create(
 		resourceManager,
 		framesInFlight);
     this->uiSamplerID = this->uiShaderInput.addSampler();
+    this->uiShaderInput.setNumShaderStorageBuffers(1);
+    this->storageBufferID = this->uiShaderInput.addStorageBuffer(
+        this->vertexStream.uiTransforms.size() * 
+            sizeof(this->vertexStream.uiTransforms[0])
+    );
 	this->uiShaderInput.endForInput();
 
 	// Pipeline
@@ -143,20 +50,11 @@ void UIRenderer::create(
 		device,
 		this->uiShaderInput,
 		renderPass,
-		targetVertexStream,
+        VertexStreams{},
 		"ui.vert.spv",
 		"ui.frag.spv",
         false
 	);
-
-    // Create vertex buffer for each frame in flight
-	this->createVertexBuffers(
-        device,
-        vma,
-        transferQueue,
-        transferCommandPool,
-        framesInFlight
-    );
 }
 
 void UIRenderer::cleanup()
@@ -173,10 +71,13 @@ void UIRenderer::cleanup()
 
 void UIRenderer::setUiTexture(const uint32_t& textureIndex)
 {
-    this->uiShaderInput.setTexture(
-        this->uiSamplerID, 
-        textureIndex
-    );
+    this->uiTextureIndex = textureIndex;
+
+    Texture& uiTexture = 
+        this->resourceManager->getTexture(this->uiTextureIndex);
+
+    this->uiTextureWidth = uiTexture.getWidth();
+    this->uiTextureHeight = uiTexture.getHeight();
 }
 
 void UIRenderer::beginUI()
@@ -196,10 +97,15 @@ void UIRenderer::renderTexture(
         return;
     }
 
+    // Set element data
+    this->vertexStream.uiTransforms[this->currentElementIndex] =
+        glm::vec4(x, y, width, height);
+
+    // Next ui element
     this->currentElementIndex++;
 }
 
 void UIRenderer::endUI()
 {
-
+    this->numRenderVerts = this->currentElementIndex * 6;
 }

@@ -17,7 +17,7 @@ private:
 
     std::vector<std::string> assimpGetTextures(const aiScene* scene);
 
-    void      createTextureImage(const std::string &filename, vk::Image& ref, VmaAllocation& allocRef);
+    void      createTextureImage(const std::string &filename, vk::Image& ref, VmaAllocation& allocRef, uint32_t& outputWidth, uint32_t& outputHeight);
     stbi_uc*  loadTextureFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize);
 public:
     

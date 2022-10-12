@@ -19,6 +19,11 @@ TestScene2::~TestScene2()
 void TestScene2::init()
 {
 	std::cout << "Test scene 2 init" << std::endl;
+
+	// Set texture for ui renderer
+	Scene::getUIRenderer()->setUiTexture(
+		Scene::getResourceManager()->addTexture("assets/textures/testBitmapFont.png")
+	);
 }
 
 void TestScene2::update()
@@ -30,7 +35,7 @@ void TestScene2::update()
 	}
 
 	Scene::getUIRenderer()->beginUI();
-	Scene::getUIRenderer()->renderTexture(0, 0, 100, 100);
-	Scene::getUIRenderer()->renderTexture(150, 0, 100, 100);
+	Scene::getUIRenderer()->renderTexture(-0.25f, 0.0f, 1.0f, 1.0f);
+	Scene::getUIRenderer()->renderTexture(0.25f, 0.3f, 1.0f, 1.0f);
 	Scene::getUIRenderer()->endUI();
 }

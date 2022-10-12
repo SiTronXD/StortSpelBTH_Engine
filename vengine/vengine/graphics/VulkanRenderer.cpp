@@ -619,7 +619,10 @@ void VulkanRenderer::initMeshes(Scene* scene)
             this->textureSampler
         );
     }
-    this->uiRenderer->setUiTexture(0);
+    this->uiRenderer->getShaderInput().setTexture(
+        this->uiRenderer->getSamplerID(),
+        this->uiRenderer->getUiTextureIndex()
+    );
 }
 
 void VulkanRenderer::setupDebugMessenger() 
@@ -1007,6 +1010,15 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 				);
 			}
 
+            // UI shader input
+            this->uiRenderer->getShaderInput().setCurrentFrame(
+                this->currentFrame
+            );
+            this->uiRenderer->getShaderInput().updateStorageBuffer(
+                this->uiRenderer->getStorageBufferID(),
+                this->uiRenderer->getVertexStream().uiTransforms.data()
+            );
+
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
             currentCommandBuffer.beginRenderPass2(
@@ -1187,12 +1199,16 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     this->uiRenderer->getPipeline()
                 );
 
-                // UI vertex buffer
-                currentCommandBuffer.bindVertexBuffers2(
-                    this->uiRenderer->getVertexBuffer(this->currentFrame)
+                // UI storage buffer
+                this->uiRenderer->getShaderInput().setStorageBuffer(
+                    this->uiRenderer->getStorageBufferID()
                 );
 
                 // UI shader input
+                currentCommandBuffer.bindShaderInputFrequency(
+                    this->uiRenderer->getShaderInput(),
+                    DescriptorFrequency::PER_MESH
+                );
                 currentCommandBuffer.bindShaderInputFrequency(
                     this->uiRenderer->getShaderInput(),
                     DescriptorFrequency::PER_DRAW_CALL

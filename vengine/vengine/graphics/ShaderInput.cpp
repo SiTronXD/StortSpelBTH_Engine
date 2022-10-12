@@ -532,8 +532,11 @@ void ShaderInput::setCurrentFrame(const uint32_t& currentFrame)
     this->currentFrame = currentFrame;
 
     // Bind descriptor set
-    this->bindDescriptorSets[(uint32_t) DescriptorFrequency::PER_FRAME] =
-        &this->perFrameDescriptorSets[currentFrame];
+    if (this->perFrameDescriptorSets.size() > 0)
+    {
+        this->bindDescriptorSets[(uint32_t) DescriptorFrequency::PER_FRAME] =
+            &this->perFrameDescriptorSets[currentFrame];
+    }
 }
 
 void ShaderInput::setStorageBuffer(
