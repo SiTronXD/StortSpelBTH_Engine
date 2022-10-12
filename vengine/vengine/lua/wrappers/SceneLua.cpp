@@ -141,7 +141,9 @@ int SceneLua::lua_setComponent(lua_State* L)
 	case CompType::BEHAVIOUR:
 		path = lua_tostring(L, 3);
 		if (luaL_dofile(L, path.c_str()) != LUA_OK)
-		{ LuaH::dumpError(L); }
+		{
+			LuaH::dumpError(L);
+		}
 		else
 		{
 			lua_pushvalue(L, -1);
@@ -203,6 +205,34 @@ int SceneLua::lua_removeComponent(lua_State* L)
 	return 0;
 }
 
+int SceneLua::lua_sendPolygons(lua_State* L) 
+{
+	//define things
+	NetworkHandler* networkHandler = ((NetworkHandler*)lua_touserdata(L, lua_upvalueindex(1)));
+	std::vector<glm::vec2> points;
+
+	lua_pushnil(L);
+	while (lua_next(L, -1))
+	{
+		// stack now contains: -1 => value; -2 => key; -3 => table
+		// copy the key so that lua_tostring does not modify the original
+		lua_pushvalue(L, -1);
+		// stack now contains: -1 => key; -2 => value; -3 => key; -4 => table
+		glm::vec3 point = lua_tovector(L, -1);
+
+		points.push_back(glm::vec2(point.x, point.z));
+
+		// pop value + copy of key, leaving original key
+		lua_pop(L, 1);
+	}
+
+	lua_pop(L, 1);
+	if (networkHandler->hasServer()) {
+		networkHandler->sendAIPolygons(points);
+	}
+	return 0;
+}
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -242,4 +272,19 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		lua_setfield(L, -2, compTypes[i].c_str());
 	}
 	lua_setglobal(L, "CompType");
+}
+
+
+void SceneLua::lua_openNetworkScene(lua_State* L, NetworkHandler* networkHandler)
+{
+	lua_newtable(L);
+
+	luaL_Reg methods[] = {
+		{ "sendPolygons", lua_sendPolygons },
+		{ NULL , NULL }
+	};
+
+	lua_pushlightuserdata(L, networkHandler);
+	luaL_setfuncs(L, methods, 1);
+	lua_setglobal(L, "network");
 }

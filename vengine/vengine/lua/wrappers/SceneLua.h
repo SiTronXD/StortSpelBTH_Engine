@@ -4,6 +4,7 @@
 #include <string>
 #include "../dev/LuaHelper.hpp"
 #include "../../application/SceneHandler.hpp"
+#include "../../network/NetworkHandler.h"
 #include "../../components/Behaviour.hpp"
 #include "../../components/MeshComponent.hpp"
 #include "../LuaPushes.hpp"
@@ -40,6 +41,10 @@ private:
 	static int lua_getComponent(lua_State* L);
 	static int lua_setComponent(lua_State* L);
 	static int lua_removeComponent(lua_State* L);
+
+	//network
+	static int lua_sendPolygons(lua_State* L);
 public:
 	static void lua_openscene(lua_State* L, SceneHandler* sceneHandler);
+	static void lua_openNetworkScene(lua_State* L, NetworkHandler* networkHandler);
 };

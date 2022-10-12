@@ -38,6 +38,7 @@ void Engine::run(std::string appName, std::string startScenePath)
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
+    this->scriptHandler.setNetworkHandler(&networkHandler);
 
     // Initialize the start scene
     this->sceneHandler.setScene(startScenePath);

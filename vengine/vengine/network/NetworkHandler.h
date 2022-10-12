@@ -22,8 +22,10 @@ public:
 
 	void updateNetwork();
 	void sendTCPDataToClient(TCPPacketEvent tcpP);
+	void sendAIPolygons(std::vector<glm::vec2> points);
 	//little cheating here but only one event from client to server via udp
 	void sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot);
+	bool hasServer();
 private:
 
 	std::thread* serverThread;

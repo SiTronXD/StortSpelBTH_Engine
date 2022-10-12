@@ -1,6 +1,7 @@
 #include "ScriptHandler.h"
 #include "../dev/Log.hpp"
 #include "../application/SceneHandler.hpp"
+#include "../network/NetworkHandler.h"
 #include "../application/Input.hpp"
 #include "../application/Time.hpp"
 #include "dev/LuaHelper.hpp"
@@ -77,6 +78,11 @@ void ScriptHandler::setSceneHandler(SceneHandler* sceneHandler)
 {
 	this->sceneHandler = sceneHandler;
 	SceneLua::lua_openscene(L, sceneHandler);
+}
+
+void ScriptHandler::setNetworkHandler(NetworkHandler* networkHandler) {
+	this->networkHandler = networkHandler;
+	SceneLua::lua_openNetworkScene(L, networkHandler);
 }
 
 bool ScriptHandler::runScript(std::string& path)

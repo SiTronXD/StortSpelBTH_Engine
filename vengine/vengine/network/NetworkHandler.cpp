@@ -2,14 +2,14 @@
 #include "Timer.h"
 #include <iostream>
 
-int serverMain(bool &shutDownServer) {
+int serverMain(bool& shutDownServer) {
 	Timer serverTime;
 	Server s;
 	bool serverIsDone = false;
 
 	while (!shutDownServer && !serverIsDone) {
 		serverIsDone = s.update(serverTime.getDT());
- 		serverTime.updateDeltaTime();
+		serverTime.updateDeltaTime();
 	}
 	return 1;
 }
@@ -89,7 +89,7 @@ void NetworkHandler::connectClient(std::string serverIP)
 
 void NetworkHandler::updateNetwork()
 {
-	
+
 	if (client == nullptr) {
 		return;
 	}
@@ -101,7 +101,7 @@ void NetworkHandler::updateNetwork()
 		cTCPP >> gameEvent;
 		if (gameEvent == GameEvents::DISCONNECT) {
 			cTCPP >> ix;
-			if(ix == -1){//we got kicked
+			if (ix == -1) {//we got kicked
 				this->disconnectClient();
 			}
 		}
@@ -120,7 +120,7 @@ void NetworkHandler::updateNetwork()
 			monsters.push_back(iy);
 
 			sceneHandler->getScene()->setComponent<MeshComponent>(iy);
-			
+
 			cTCPP >> fx >> fy >> fz;
 			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
 			transform.position = glm::vec3(fx, fy, fz);
@@ -193,8 +193,8 @@ void NetworkHandler::updateNetwork()
 		}
 	}
 
-	
-		
+
+
 }
 
 void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
@@ -211,7 +211,17 @@ void NetworkHandler::sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot)
 	}
 }
 
+void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
+{
+	//TODO : send polygons to the server
 
+	std::cout << "we got " << points.size() << " points" << std::endl;
+}
+
+bool NetworkHandler::hasServer()
+{
+	return serverThread != nullptr;
+}
 
 void NetworkHandler::disconnectClient()
 {

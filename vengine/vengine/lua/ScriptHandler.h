@@ -4,6 +4,7 @@
 
 struct lua_State;
 class SceneHandler;
+class NetworkHandler;
 
 class ScriptHandler
 {
@@ -12,6 +13,7 @@ private:
 
 	lua_State* L;
 	SceneHandler* sceneHandler;
+	NetworkHandler* networkHandler;
 
 	void lua_openmetatables(lua_State* L);
 
@@ -22,6 +24,7 @@ public:
 	virtual ~ScriptHandler();
 
 	void setSceneHandler(SceneHandler* sceneHandler);
+	void setNetworkHandler(NetworkHandler* networkHandler);
 
 	bool runScript(std::string& path);
 	bool loadScript(std::string& path);
