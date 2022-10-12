@@ -54,6 +54,7 @@
     <ClCompile Include="vengine\test\TestScene2.cpp" />
     <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
     <ClCompile Include="vengine\graphics\UIRenderer.cpp" />
+    <ClCompile Include="vengine\graphics\TextureSampler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -112,6 +113,7 @@
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
     <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
+    <ClInclude Include="vengine\graphics\TextureSampler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

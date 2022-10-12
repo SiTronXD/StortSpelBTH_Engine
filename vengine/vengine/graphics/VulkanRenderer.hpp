@@ -63,8 +63,6 @@ class VulkanRenderer
     
     Swapchain swapchain;
     
-    vk::Sampler textureSampler{}; // Sampler used to sample images in order to present (??)
-
     // - Assets    
 
     std::vector<vk::Image>        textureImages;
@@ -123,7 +121,6 @@ private:
     void createRenderPassImgui();
     void createCommandPool();   //TODO: Deprecate! 
     void createSynchronisation();
-    void createTextureSampler();
 
     // initializations of subsystems
     void initResourceManager();

@@ -10,15 +10,16 @@ Texture::Texture(Device& device, VmaAllocator& vma)
 Texture::~Texture()
 { }
 
-void Texture::setImageView(const vk::ImageView& imageView)
+void Texture::init(
+    const vk::ImageView& imageView,
+    const uint32_t& width,
+    const uint32_t& height,
+    const uint32_t& textureSamplerIndex)
 {
     this->imageView = imageView;
-}
-
-void Texture::setSize(const uint32_t& width, const uint32_t& height)
-{
     this->width = width;
     this->height = height;
+    this->textureSamplerIndex = textureSamplerIndex;
 }
 
 void Texture::cleanup() 

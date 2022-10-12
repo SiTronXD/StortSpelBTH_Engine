@@ -73,7 +73,10 @@ void TextureLoader::assimpTextureImport(
     }
 }
 
-Texture TextureLoader::createTexture(const std::string &filename) {
+Texture TextureLoader::createTexture(
+    const std::string &filename, 
+    const uint32_t& textureSamplerIndex)
+{
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //: NOLINT
 #endif
@@ -92,16 +95,18 @@ Texture TextureLoader::createTexture(const std::string &filename) {
         width,
         height
     );
-    createdTexture.setSize(width, height);
 
     // Create Image View
-    createdTexture.setImageView(
+    createdTexture.init(
         Texture::createImageView(
             *this->importStructs.device,
             createdTexture.image,
             vk::Format::eR8G8B8A8Unorm, // Format for rgba
             vk::ImageAspectFlagBits::eColor
-        )
+        ),
+        width, 
+        height,
+        textureSamplerIndex
     );
 
     // Return index of Texture Descriptor that was just created

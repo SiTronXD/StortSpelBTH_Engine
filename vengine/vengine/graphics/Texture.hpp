@@ -23,6 +23,7 @@ private:
 
 	vk::ImageView imageView;
 
+	uint32_t textureSamplerIndex;
 	uint32_t width;
 	uint32_t height;
 
@@ -33,14 +34,18 @@ public:
 	Texture(Device& device, VmaAllocator& vma);
 	~Texture();
 
-	void setImageView(const vk::ImageView& imageView);
-	void setSize(const uint32_t& width, const uint32_t& height);
+	void init(
+		const vk::ImageView& imageView, 
+		const uint32_t& width, 
+		const uint32_t& height,
+		const uint32_t& textureSamplerIndex);
 
 	void cleanup();
 
 	inline const vk::ImageView& getImageView() const { return this->imageView; }
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }
+	inline const uint32_t& getSamplerIndex() const { return this->textureSamplerIndex; }
 
 	static vk::Format chooseSupportedFormat(
 		PhysicalDevice& physicalDevice,

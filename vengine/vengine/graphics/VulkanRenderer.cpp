@@ -144,8 +144,6 @@ int VulkanRenderer::init(
             MAX_FRAMES_IN_FLIGHT
         );
 
-        this->createTextureSampler();
-
         this->createSynchronisation();        
 
         this->updateUboProjection();
@@ -230,8 +228,6 @@ void VulkanRenderer::cleanup()
         TracyVkDestroy(tracy_context);
     }
 #endif
-
-    this->getVkDevice().destroySampler(this->textureSampler);
 
     for(size_t i = 0; i < this->textureImages.size();i++)
     {
@@ -601,22 +597,28 @@ void VulkanRenderer::initMeshes(Scene* scene)
     size_t numTextures = this->resourceManager->getNumTextures();
     for (size_t i = 0; i < numTextures; ++i) 
     {
+        // Get texture sampler for this texture
+        TextureSampler& textureSampler = 
+            this->resourceManager->getTextureSampler(
+                this->resourceManager->getTexture(i).getSamplerIndex()
+            );
+
         this->shaderInput.addPossibleTexture(
             i,
-            this->textureSampler
+            textureSampler
         );
 
         if (this->hasAnimations)
 		{
 			this->animShaderInput.addPossibleTexture(
                 i, 
-                this->textureSampler
+                textureSampler
             );
 		}
 
         this->uiRenderer->getShaderInput().addPossibleTexture(
             i,
-            this->textureSampler
+            textureSampler
         );
     }
 }
@@ -853,32 +855,6 @@ void VulkanRenderer::createSynchronisation()
         this->drawFences[i] = getVkDevice().createFence(fenceCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Fence drawFences["+std::to_string(i)+"]", vk::ObjectType::eFence, reinterpret_cast<uint64_t>(vk::Fence::CType(this->drawFences[i])));
     }
-}
-
-void VulkanRenderer::createTextureSampler()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Sampler Creation info;
-    vk::SamplerCreateInfo samplerCreateInfo;
-    samplerCreateInfo.setMagFilter(vk::Filter::eLinear);                     // How the sampler will sample from a texture when it's getting closer
-    samplerCreateInfo.setMinFilter(vk::Filter::eLinear);                     // How the sampler will sample from a texture when it's getting further away
-    samplerCreateInfo.setAddressModeU(vk::SamplerAddressMode::eRepeat);      // How the texture will be Wrapped in U (x) direction
-    samplerCreateInfo.setAddressModeV(vk::SamplerAddressMode::eRepeat);      // How the texture will be Wrapped in V (y) direction
-    samplerCreateInfo.setAddressModeW(vk::SamplerAddressMode::eRepeat);      // How the texture will be Wrapped in W (z) direction
-    samplerCreateInfo.setBorderColor(vk::BorderColor::eIntOpaqueBlack);      // Color of what is around the texture (in case of Repeat, it wont be used)
-    samplerCreateInfo.setUnnormalizedCoordinates(VK_FALSE);                  // We want to used Normalised Coordinates (between 0 and 1), so unnormalized coordinates must be false... 
-    samplerCreateInfo.setMipmapMode(vk::SamplerMipmapMode::eLinear);         // How the mipmap mode will switch between the mipmap images (interpolate between images), (we dont use it, but we set it up)
-    samplerCreateInfo.setMipLodBias(0.F);                                    // Level of detail bias for mip level...
-    samplerCreateInfo.setMinLod(0.F);                                        // Minimum level of Detail to pick mip level
-    samplerCreateInfo.setMaxLod(VK_LOD_CLAMP_NONE);                          // Maxiumum level of Detail to pick mip level
-    samplerCreateInfo.setAnisotropyEnable(VK_TRUE);                          // Enable Anisotropy; take into account the angle of a surface is being viewed from and decide details based on that (??)
-                                                                             
-    samplerCreateInfo.setMaxAnisotropy(DEF<float>(SAMPL_MAX_ANISOSTROPY));   // Level of Anisotropy; 16 is a common option in the settings for alot of Games 
-
-    this->textureSampler = this->getVkDevice().createSampler(samplerCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("Texture Sampler", vk::ObjectType::eSampler, reinterpret_cast<uint64_t>(vk::Sampler::CType(this->textureSampler)));
 }
 
 void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")

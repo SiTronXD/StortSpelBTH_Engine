@@ -2,6 +2,7 @@
 #include "vulkan/PhysicalDevice.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/VulkanDbg.hpp"
+#include "TextureSampler.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "Texture.hpp"
 #include "../dev/Log.hpp"
@@ -295,7 +296,7 @@ void ShaderInput::updateDescriptorSets()
 
 int ShaderInput::addPossibleTexture(
     const uint32_t& textureIndex,
-    vk::Sampler& textureSampler)
+    TextureSampler& textureSampler)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -325,7 +326,7 @@ int ShaderInput::addPossibleTexture(
     imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);     // The Image Layout when it is in use
     imageInfo.setImageView(
         this->resourceManager->getTexture(textureIndex).getImageView()); // Image to be bind to set
-    imageInfo.setSampler(textureSampler);                         // the Sampler to use for this Descriptor Set
+    imageInfo.setSampler(textureSampler.getVkSampler());                         // the Sampler to use for this Descriptor Set
 
     // Descriptor Write Info
     vk::WriteDescriptorSet writeDescriptorSet;

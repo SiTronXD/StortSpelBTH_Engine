@@ -23,8 +23,10 @@ void TestScene2::init()
 	std::cout << "Test scene 2 init" << std::endl;
 
 	// Add textures for ui renderer
-	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_A.png");
-	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png");
+	TextureSamplerSettings samplerSettings{};
+	samplerSettings.filterMode = vk::Filter::eNearest;
+	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_A.png", samplerSettings);
+	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
 }
 
 void TestScene2::update()
