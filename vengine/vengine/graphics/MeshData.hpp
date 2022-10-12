@@ -21,9 +21,6 @@ struct VertexStreams
     // Animated meshes
     std::vector<glm::vec4> boneWeights;
     std::vector<glm::uvec4> boneIndices;
-
-    // UI elements
-    std::vector<glm::vec4> uiTransforms;
 };
 
 struct Bone 

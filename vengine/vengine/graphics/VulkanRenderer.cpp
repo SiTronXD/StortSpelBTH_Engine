@@ -1016,7 +1016,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
             );
             this->uiRenderer->getShaderInput().updateStorageBuffer(
                 this->uiRenderer->getStorageBufferID(),
-                this->uiRenderer->getVertexStream().uiTransforms.data()
+                this->uiRenderer->getUiGpuData().data()
             );
 
             // Begin Render Pass!    

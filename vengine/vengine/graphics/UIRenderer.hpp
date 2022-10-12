@@ -15,7 +15,7 @@ class UIRenderer
 private:
     const uint32_t START_NUM_MAX_ELEMENTS = 2;
 
-    VertexStreams vertexStream{};
+    std::vector<glm::vec4> uiTransforms;
 
     SamplerID uiSamplerID;
     StorageBufferID storageBufferID;
@@ -65,7 +65,7 @@ public:
 
     inline const StorageBufferID& getStorageBufferID() const { return this->storageBufferID; }
     inline const SamplerID& getSamplerID() const { return this->uiSamplerID; }
-    inline VertexStreams& getVertexStream() { return this->vertexStream; }
+    inline std::vector<glm::vec4>& getUiGpuData() { return this->uiTransforms; }
     inline const uint32_t& getNumRenderVerts() const { return this->numRenderVerts; }
     inline const uint32_t& getUiTextureIndex() const { return this->uiTextureIndex; }
     inline const vk::Buffer& getVertexBuffer(const uint32_t& index) const { return this->vertexBuffers[index]; }

@@ -27,8 +27,8 @@ void UIRenderer::create(
     this->resourceManager = &resourceManager;
 
 	// Target data from the vertex buffers
-	this->vertexStream = {};
-    this->vertexStream.uiTransforms.resize(START_NUM_MAX_ELEMENTS);
+    this->uiTransforms.clear();
+    this->uiTransforms.resize(START_NUM_MAX_ELEMENTS);
 
 	// Shader input, with no inputs for now
 	this->uiShaderInput.beginForInput(
@@ -40,8 +40,8 @@ void UIRenderer::create(
     this->uiSamplerID = this->uiShaderInput.addSampler();
     this->uiShaderInput.setNumShaderStorageBuffers(1);
     this->storageBufferID = this->uiShaderInput.addStorageBuffer(
-        this->vertexStream.uiTransforms.size() * 
-            sizeof(this->vertexStream.uiTransforms[0])
+        this->uiTransforms.size() *
+            sizeof(this->uiTransforms[0])
     );
 	this->uiShaderInput.endForInput();
 
@@ -98,7 +98,7 @@ void UIRenderer::renderTexture(
     }
 
     // Set element data
-    this->vertexStream.uiTransforms[this->currentElementIndex] =
+    this->uiTransforms[this->currentElementIndex] =
         glm::vec4(x, y, width, height);
 
     // Next ui element
