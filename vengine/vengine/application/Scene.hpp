@@ -3,11 +3,23 @@
 #include "../systems/System.hpp"
 #include "../components/Transform.hpp"
 #include "../components/Camera.hpp"
+#include "../components/AudioSource.hpp"
+#include "../components/AudioListener.hpp"
+#include "../resource_management/Configurator.hpp"
+#include "../resource_management/ResourceManager.hpp"
 
 #include <entt.hpp>
 #include <vector>
 
 class SceneHandler;
+class NetworkHandler;
+class ScriptHandler;
+
+struct LuaSystem
+{
+	std::string path;
+	int luaRef;
+};
 
 class Scene
 {
@@ -16,18 +28,30 @@ private:
 
 	entt::registry reg;
 	std::vector<System*> systems;
+	std::vector<LuaSystem> luaSystems;
 	int mainCamera;
 
 protected:
-	void switchScene(Scene* nextScene);
+	void switchScene(Scene* scene, std::string path = "");
+	NetworkHandler* getNetworkHandler();
+	ScriptHandler* getScriptHandler();
+	ResourceManager* getResourceManager();
 
-public:
+    template <typename T> T getConfigValue(std::string_view name)
+    {
+        return vengine_helper::config::DEF<T>(name);
+    }
+
+    public:
 	Scene();
 	virtual ~Scene();
 
 	Camera* getMainCamera();
 	int getMainCameraID();
 	void setMainCamera(int entity);
+
+	void createSystem(std::string& path);
+	void setScriptComponent(int entity, std::string path);
 
 	template <typename T, typename ...Args>
 	void createSystem(Args... args);
@@ -55,10 +79,11 @@ public:
 	template <typename T>
 	void removeComponent(int entity);
 
-	virtual void init() = 0;
-	virtual void update() = 0;
+	virtual void init();
+	virtual void update();
 
 	inline entt::registry& getSceneReg() { return this->reg; }
+	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }
 
 	void setSceneHandler(SceneHandler& sceneHandler);
 };

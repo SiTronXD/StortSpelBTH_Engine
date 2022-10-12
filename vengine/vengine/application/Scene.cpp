@@ -1,20 +1,35 @@
 #include "Scene.hpp"
 #include "SceneHandler.hpp"
-#include "../systems/UpdateMatricesSystem.hpp"
+#include "../network/NetworkHandler.h"
+#include "PhysicsEngine.h"
+#include "../lua/ScriptHandler.h"
 #include "Time.hpp"
 
-#include "PhysicsEngine.h"
-
-void Scene::switchScene(Scene* nextScene)
+void Scene::switchScene(Scene* scene, std::string path)
 {
-	this->sceneHandler->setScene(nextScene);
+	this->sceneHandler->setScene(scene, path);
 	PhysicsEngine hej;
 }
 
-Scene::Scene()
-	: sceneHandler(nullptr)
+NetworkHandler* Scene::getNetworkHandler()
 {
-	this->createSystem<UpdateMatricesSystem>();
+	return this->sceneHandler->getNetworkHandler();
+}
+
+ScriptHandler* Scene::getScriptHandler()
+{
+	return sceneHandler->getScriptHandler();
+}
+
+ResourceManager* Scene::getResourceManager()
+{
+	return this->sceneHandler->getResourceManager();
+}
+
+Scene::Scene()
+	: sceneHandler(nullptr), mainCamera(-1)
+{
+	this->reg.clear();
 }
 
 Scene::~Scene()
@@ -23,7 +38,9 @@ Scene::~Scene()
 	{
 		delete this->systems[i];
 	}
+	this->reg.clear();
 	this->systems.clear();
+	this->luaSystems.clear();
 }
 
 Camera* Scene::getMainCamera()
@@ -41,6 +58,16 @@ int Scene::getMainCameraID()
 void Scene::setMainCamera(int entity)
 {
 	if (this->hasComponents<Camera>(entity)) { this->mainCamera = entity; }
+}
+
+void Scene::createSystem(std::string& path)
+{
+	this->luaSystems.push_back(LuaSystem { path, -1 });
+}
+
+void Scene::setScriptComponent(int entity, std::string path)
+{
+	this->getScriptHandler()->setScriptComponent(entity, path);
 }
 
 void Scene::updateSystems()
@@ -81,6 +108,16 @@ bool Scene::removeEntity(int entity)
 	bool valid = this->entityValid(entity);
 	if (valid) { this->reg.destroy((entt::entity)entity); }
 	return valid;
+}
+
+void Scene::init()
+{
+
+}
+
+void Scene::update()
+{
+
 }
 
 void Scene::setSceneHandler(SceneHandler& sceneHandler)

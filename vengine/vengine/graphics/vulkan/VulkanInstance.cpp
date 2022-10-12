@@ -131,13 +131,7 @@ void VulkanInstance::createInstance(Window& window)
 
     vk::ValidationFeaturesEXT validationFeatures{};
     std::vector<vk::ValidationFeatureEnableEXT> disabledValidationFeatures{};
-    std::vector<vk::ValidationFeatureEnableEXT> enabledValidationFeatures{ // TODO: extract to a cfg file for easy configuration
-        vk::ValidationFeatureEnableEXT::eBestPractices,
-        vk::ValidationFeatureEnableEXT::eDebugPrintf,
-        vk::ValidationFeatureEnableEXT::eSynchronizationValidation,
-        vk::ValidationFeatureEnableEXT::eGpuAssisted,
-        vk::ValidationFeatureEnableEXT::eGpuAssistedReserveBindingSlot,
-    };
+    
 
     // Enable Debugging in createInstance function (special Case...)
     if (isValidationLayersEnabled())

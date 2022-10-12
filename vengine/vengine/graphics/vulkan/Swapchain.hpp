@@ -8,6 +8,28 @@ class PhysicalDevice;
 class Device;
 class QueueFamilies;
 
+// Defines what kind of surface we can create with our given surface
+struct SwapchainDetails
+{
+	vk::SurfaceCapabilities2KHR surfaceCapabilities;       // Surface Properties, Image size/extent
+	/*!Describes Information about what the surface can handle:
+	 * - minImageCount/maxImageCount         : defines the min/max amount of image our surface can handle
+	 * - currentExtent/minExtent/maxExtent   : defines the size of a image
+	 * - supportedTransforms/currentTransform: ...
+	 * */
+	std::vector<vk::SurfaceFormat2KHR> Format;          // Surface Image Formats, RGBA and colorspace (??)
+	/*!Describes the format for the Color Space and how the data is represented...
+	 * */
+	std::vector<vk::PresentModeKHR> presentationMode; // The presentation mode that our Swapchain will use.
+	/*!How images should be presented to screen...
+	 * */
+
+	[[nodiscard]]
+	bool isValid() const {
+		return !Format.empty() && !presentationMode.empty();
+	}
+};
+
 class Swapchain
 {
 private:
