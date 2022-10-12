@@ -268,6 +268,7 @@ void Server::handlePacketFromUser(int ClientID, bool tcp)
 	int gameEvent;
 	float packetHelper1;
 	int packetHelper2;
+	std::vector<float> points;
 	if (tcp) {
 		while (!clientToServerPacketTcp[ClientID].endOfPacket()) {
 
@@ -305,6 +306,21 @@ void Server::handlePacketFromUser(int ClientID, bool tcp)
 			case GameEvents::A_Button_Was_Pressed_On_Client:
 				std::cout << "Server: client pressed Button wow (TCP)" << std::endl;
 				break;
+			case GameEvents::POLYGON_DATA:
+				std::cout << "Server: client sent polygon data" << std::endl;
+				clientToServerPacketTcp[ClientID] >> packetHelper2;
+				points.reserve(packetHelper2);
+				for (int i = 0; i < packetHelper2 * 2; i++) {
+					clientToServerPacketTcp[ClientID] >> packetHelper1;
+					points.push_back(packetHelper1);
+				}
+				sGame.addPolygon(points);
+				points.clear();
+				break;
+			case GameEvents::REMOVE_POLYGON_DATA:
+				std::cout << "We shall start over with polygon data" << std::endl;
+				sGame.removeAllPolygons();
+				
 			}
 		}
 	}

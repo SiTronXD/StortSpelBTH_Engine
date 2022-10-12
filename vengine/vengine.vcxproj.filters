@@ -168,6 +168,27 @@
     <ClInclude Include="vengine\lua\LuaPushes.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="vengine\ai\PathFinding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ai\lib\cone_of_vision.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ai\lib\path_finder.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ai\lib\point.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ai\lib\pointf.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ai\lib\polygon.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="vengine\ai\lib\segment.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -285,6 +306,24 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ai\PathFinding.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ai\lib\cone_of_vision.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ai\lib\path_finder.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ai\lib\point.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ai\lib\polygon.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\ai\lib\segment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

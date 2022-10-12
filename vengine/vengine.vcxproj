@@ -308,6 +308,13 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="imgui\imstb_rectpack.h" />
     <ClInclude Include="imgui\imstb_textedit.h" />
     <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="vengine\ai\lib\cone_of_vision.h" />
+    <ClInclude Include="vengine\ai\lib\path_finder.h" />
+    <ClInclude Include="vengine\ai\lib\point.h" />
+    <ClInclude Include="vengine\ai\lib\pointf.h" />
+    <ClInclude Include="vengine\ai\lib\polygon.h" />
+    <ClInclude Include="vengine\ai\lib\segment.h" />
+    <ClInclude Include="vengine\ai\PathFinding.h" />
     <ClInclude Include="vengine\lua\wrappers\InputLua.h" />
     <ClInclude Include="vengine\components\Behaviour.hpp" />
     <ClInclude Include="vengine\lua\ScriptHandler.h" />
@@ -358,6 +365,12 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="vengine\ai\lib\cone_of_vision.cpp" />
+    <ClCompile Include="vengine\ai\lib\path_finder.cpp" />
+    <ClCompile Include="vengine\ai\lib\point.cpp" />
+    <ClCompile Include="vengine\ai\lib\polygon.cpp" />
+    <ClCompile Include="vengine\ai\lib\segment.cpp" />
+    <ClCompile Include="vengine\ai\PathFinding.cpp" />
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
     <ClCompile Include="vengine\lua\ScriptHandler.cpp" />
     <ClCompile Include="vengine\application\Input.cpp" />

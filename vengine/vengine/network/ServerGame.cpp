@@ -12,10 +12,7 @@ void ServerGame::update(float dt)
         addEvent({ (int)GameEvents::SpawnEnemy, 1 }, { 0.f, 0.f, 70.f });
     }
     for (int i = 0; i < serverEntities.size(); i++) {
-        serverEntities[i].rotation.x += dt * 5 * (i + 1);
-        if (serverEntities[i].rotation.x > 360) {
-            serverEntities[i].rotation.x = 0;
-        }
+        serverEntities[i].position += (pf.getDirTo(serverEntities[i].position, players[0].position) * dt);
     }
 }
 
@@ -41,4 +38,20 @@ std::vector<ServerEntity>& ServerGame::getServerPlayers()
 void ServerGame::GivePacketInfo(std::vector<sf::Packet>& serverToClient)
 {
     this->serverToClient = &serverToClient;
+}
+
+void ServerGame::addPolygon(NavMesh::Polygon& polygon) {
+    pf.addPolygon(polygon);
+}
+
+void ServerGame::addPolygon(const std::vector<float>& polygon) {
+    NavMesh::Polygon p;
+    for (size_t i = 0; i < polygon.size(); i += 2) {
+        p.AddPoint(polygon[i], polygon[i + 1]);
+    }
+    pf.addPolygon(p);
+}
+
+void ServerGame::removeAllPolygons() {
+    pf.removeAllPolygons();
 }

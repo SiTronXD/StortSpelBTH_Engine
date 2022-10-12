@@ -212,25 +212,33 @@ int SceneLua::lua_sendPolygons(lua_State* L)
 	std::vector<glm::vec2> points;
 
 	lua_pushnil(L);
-	while (lua_next(L, -1))
+
+	while (lua_next(L, -2))
 	{
-		// stack now contains: -1 => value; -2 => key; -3 => table
-		// copy the key so that lua_tostring does not modify the original
-		lua_pushvalue(L, -1);
-		// stack now contains: -1 => key; -2 => value; -3 => key; -4 => table
-		glm::vec3 point = lua_tovector(L, -1);
+		lua_pushvalue(L, -2);
+		const char* key = lua_tostring(L, -1);
+		glm::vec3 point = lua_tovector(L, -2);
 
 		points.push_back(glm::vec2(point.x, point.z));
 
-		// pop value + copy of key, leaving original key
-		lua_pop(L, 1);
+		lua_pop(L, 2);
 	}
 
 	lua_pop(L, 1);
+	//if we are on the server side send 
 	if (networkHandler->hasServer()) {
 		networkHandler->sendAIPolygons(points);
 	}
 	return 0;
+}
+
+int SceneLua::lua_isServer(lua_State* L)
+{
+	NetworkHandler* networkHandler = ((NetworkHandler*)lua_touserdata(L, lua_upvalueindex(1)));
+
+	lua_pushboolean(L, networkHandler->hasServer());
+
+	return 1;
 }
 
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
@@ -281,6 +289,7 @@ void SceneLua::lua_openNetworkScene(lua_State* L, NetworkHandler* networkHandler
 
 	luaL_Reg methods[] = {
 		{ "sendPolygons", lua_sendPolygons },
+		{ "isServer", lua_isServer },
 		{ NULL , NULL }
 	};
 

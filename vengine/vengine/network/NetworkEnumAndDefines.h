@@ -41,6 +41,8 @@ enum GameEvents {
 	START,
 	DISCONNECT,
 	END,
+	POLYGON_DATA,
+	REMOVE_POLYGON_DATA,
 
 	//UDP
 	UpdatePlayerPos,

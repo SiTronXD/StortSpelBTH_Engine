@@ -214,11 +214,22 @@ void NetworkHandler::sendUDPDataToClient(glm::vec3 pos, glm::vec3 rot)
 void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
 {
 	//TODO : send polygons to the server
+	TCPPacketEvent polygonEvent;
 
-	std::cout << "we got " << points.size() << " points" << std::endl;
+	polygonEvent.gameEvent = GameEvents::POLYGON_DATA;//change this
+	polygonEvent.floats.reserve(points.size() * 2);
+	polygonEvent.ints[0] = (int)points.size();
+	for (int i = 0; i < points.size(); i++) {
+		polygonEvent.floats.push_back((float)points[i].x);
+		polygonEvent.floats.push_back((float)points[i].y);
+	}
+
+	polygonEvent.nrOfInts = 1;
+
+	client->sendTCPEvent(polygonEvent);
 }
 
-bool NetworkHandler::hasServer()
+const bool NetworkHandler::hasServer()
 {
 	return serverThread != nullptr;
 }

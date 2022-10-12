@@ -44,6 +44,7 @@ private:
 
 	//network
 	static int lua_sendPolygons(lua_State* L);
+	static int lua_isServer(lua_State* L);
 public:
 	static void lua_openscene(lua_State* L, SceneHandler* sceneHandler);
 	static void lua_openNetworkScene(lua_State* L, NetworkHandler* networkHandler);
