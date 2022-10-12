@@ -115,12 +115,12 @@ else()
     # Add stb headers 
     FILE(GLOB STB_HEADERS CONFIGURE_DEPENDS            
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb_image.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h #?
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h 
     )
     # Add stb headers 
     FILE(GLOB STB_HEADERS CONFIGURE_DEPENDS            
         ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb_image.h
-        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h #?
+        ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src/stb.h 
     )
 
 endif()
@@ -164,7 +164,7 @@ if( NOT (VENGINE_USE_GIT_SUBMODULES))
     target_include_directories(vengine PUBLIC ${imgui_include_dirs})
     target_include_directories(vengine PUBLIC ${tracy_include_dirs})
     target_include_directories(vengine PUBLIC ${vma_include_dirs})
-    target_include_directories(vengine PUBLIC ${assimp_include_dirs})
+    target_include_directories(vengine PUBLIC ${assimp_include_dirs})    
 
     set(vengine_stb "stb::stb")
 
@@ -178,18 +178,22 @@ else() # Use Git Submodules
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src)
     #Sdl should be installed through systems own package manager...
 
-    
     target_include_directories(vengine PRIVATE ${VENGINE_SOURCE_DIR}/../)
+    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src)
-
+    
     find_package(SDL2 REQUIRED)
     target_include_directories(vengine PRIVATE ${SDL2_INCLUDE_DIRS})
+    
+    find_package(SFML REQUIRED network audio)    
 
+    find_package(Lua REQUIRED)
+    target_include_directories(vengine PRIVATE ${LUA_INCLUDE_DIR})
     
     #set(vengine_vma VulkanMemoryAllocator) 
     set(vengine_stb "") #part of sources, no need to use as lib...
@@ -202,8 +206,9 @@ target_sources(vengine PRIVATE
     
     ${VENGINE_SOURCES} 
     ${IMGUI_HEADERS}    
-    ${IMGUI_SOURCES}
+    ${IMGUI_SOURCES}    
     ${ENTT_HEADERS}
+    
     )
 
 # Linker Options 
@@ -261,24 +266,36 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:DebugWCallStackProfiling>
 target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_COMPILE_TIME_DEFINITIONS_debug}>" ) 
 # NOTE! STB_IMAGE_IMPLEMENTATION  <-- Cant be used here! for some reason!
 
+# Replace non portable functions with portable functions...
+if(${UNIX})
+    #define strcpy_s strcpy
+    target_compile_definitions(vengine PRIVATE "strcpy_s=strcpy" )
+endif()
+
+
 # Link all libraries to vengine target
 target_link_libraries(
     vengine 
     PUBLIC
     ${vengine_tracy}
     ${SDL2_LIBRARIES}
+    sfml-network
+    sfml-audio
     PRIVATE
     ${Vulkan_LIBRARIES}
     assimp::assimp
     ${vengine_stb}
     ${vengine_vma}
+    ${LUA_LIBRARIES}
 )
+
 
 # Sources for executable demo
 FILE(GLOB VENGINE_DEMO_SOURCES CONFIGURE_DEPENDS            
     demos/basic_demo/src/*.cpp    
     demos/basic_demo/src/*.hpp
     demos/basic_demo/src/*.h
+    demos/basic_demo/main.cpp
 )
 
 # Build demo, for developers
@@ -296,6 +313,7 @@ set_target_properties(vengine_demo PROPERTIES
 target_link_libraries(vengine_demo PUBLIC vengine)
 target_include_directories(vengine_demo PRIVATE ${VENGINE_SOURCE_DIR}/../)
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src/include)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/include)
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
@@ -303,7 +321,8 @@ target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src)
 
 # Make a target for generation of symbolic links, so we know when creation of it is needed
-add_custom_target(generate_symbolic_links ALL DEPENDS ${VENGINE_ASSET_LINK_DST})
+add_custom_target(generate_symbolic_links      ALL DEPENDS ${VENGINE_ASSET_LINK_DST})
+add_custom_target(generate_symbolic_links_demo ALL DEPENDS ${VENGINE_DEMO_ASSET_LINK_DST})
 
 set(VENGINE_INSTALL_ASSETS_PATH "not_set" CACHE STRING "If 'not_set' then the sample assets wont be installed anywhere.")
 if(NOT (${VENGINE_INSTALL_ASSETS_PATH} MATCHES "not_set"))
@@ -346,6 +365,7 @@ if(${WIN32})
     endif()
 else()
     create_symlink_now(${VENGINE_ASSET_LINK_SRC} ${VENGINE_ASSET_LINK_DST})
+    create_symlink_now(${VENGINE_DEMO_ASSET_LINK_SRC} ${VENGINE_DEMO_ASSET_LINK_DST})
 endif()
 
 # setting up the required asset folder structure for the user

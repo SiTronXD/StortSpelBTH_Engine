@@ -30,9 +30,9 @@
             "description": "Build with clang to debug with lldb",
             "inherits":[ "debug_unix_base"],
             "cacheVariables": {
-                "CMAKE_CXX_COMPILER": "clang++",
-                "CMAKE_BUILD_TYPE": "Debug",                
-                "VENGINE_USE_PROFILING": true
+                "CMAKE_CXX_COMPILER": "clang++",                
+                "CMAKE_BUILD_TYPE": "Debug",
+                "VENGINE_USE_PROFILING": true                
                 
             }
         },     
@@ -41,7 +41,7 @@
             "displayName": "release_unix",
             "description": "Build with clang to release with lldb",
             "inherits":[ "debug_unix_base"],
-            "cacheVariables": {
+            "cacheVariables": {                
                 "CMAKE_CXX_COMPILER": "clang++",
                 "CMAKE_BUILD_TYPE": "Release"
                 
@@ -53,8 +53,8 @@
             "description": "Build vengine libs in debug mode using windows default generator",
             "binaryDir": "${sourceDir}/build/${presetName}",
             "generator": "Visual Studio 17 2022",
-            "installDir": "${sourceDir}/install",
-            "cacheVariables": {
+            "installDir": "${sourceDir}/install",            
+            "cacheVariables": {                
                 "CMAKE_INSTALL_PREFIX": "${sourceDir}/install",
                 "CMAKE_BUILD_TYPE": "Debug"
                 

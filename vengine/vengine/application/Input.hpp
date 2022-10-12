@@ -32,8 +32,24 @@ enum class Keys
 	X = SDLK_x,
 	Y = SDLK_y,
 	Z = SDLK_z,
+	RIGHT = SDLK_RIGHT,
+	LEFT = SDLK_LEFT,
+	UP = SDLK_UP,
+	DOWN = SDLK_DOWN,
+	ONE = SDLK_1,
+	TWO = SDLK_2,
+	THREE = SDLK_3,
+	FOUR = SDLK_4,
+	FIVE = SDLK_5,
+	SIX = SDLK_6,
+	SEVEN = SDLK_7,
+	EIGHT = SDLK_8,
+	NINE = SDLK_9,
+	ZERO = SDLK_0,
 
-	HOME = SDLK_HOME
+	HOME = SDLK_HOME,
+	SHIFT = SDLK_LSHIFT,
+	CTRL = SDLK_LCTRL
 };
 
 enum class Mouse
@@ -76,7 +92,9 @@ private:
 		{ "X" , SDLK_x },
 		{ "Y" , SDLK_y },
 		{ "Z" , SDLK_z },
-		{ "HOME" , SDLK_HOME }
+		{ "HOME" , SDLK_HOME },
+		{ "SHIFT" , SDLK_LSHIFT },
+		{ "CTRL" , SDLK_LCTRL }
     };
     inline static const std::map<std::string, int> mouseMap {
         { "LEFT", SDL_BUTTON_LEFT },

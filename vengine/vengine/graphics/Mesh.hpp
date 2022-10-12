@@ -1,74 +1,88 @@
-#pragma once
+#pragma once 
 
-#include "Utilities.hpp"
+#include <vulkan/vulkan.hpp>
 
+#include "../resource_management/ResourceManagerStructs.hpp"
+#include "MeshData.hpp"
+#include "glm/matrix.hpp"
+#include "../graphics/vulkan/VmaUsage.hpp"
+#include "ShaderInput.hpp"
 
-
-/// Model used to Define the Model Matrix of a mesh...
-//// Previously it was a UniformBuffer (we called it UboModel)
-//// Right now it's a Push Constant, but we will just call it Model from now on...
-struct ModelMatrix { 
-    glm::mat4 model; 
-};
-
-class Mesh 
+class Mesh
 {
-public:
-    //~Mesh();
-    Mesh() = default;
-    Mesh(VmaAllocator *vma,
-        vk::PhysicalDevice newPhysicalDevice, vk::Device newDevice,
-        vk::Queue transferQueue, vk::CommandPool transferCommandPool, 
-        std::vector<Vertex> * vertices, 
-        std::vector<uint32_t> * indicies,
-        int newTextureID);
-
-    void setModelMatrix(glm::mat4 newModel);
-    ModelMatrix* getModelMatrix();
-
-    [[nodiscard]] 
-    int getTextureId() const;
-
-    [[nodiscard]] 
-    uint32_t getVertexCount() const;
-    vk::Buffer getVertexBuffer();
-
-    [[nodiscard]] 
-    std::vector<Vertex>& getVertex_vector();
-    std::vector<uint32_t>& getIndicies_vector();
-
-    [[nodiscard]] 
-    uint32_t getIndexCount() const;
-    vk::Buffer getIndexBuffer();
-
-    void destroyBuffers();
-
 private: 
-    ModelMatrix model{}; 
+    std::vector<SubmeshData> submeshData;
+    MeshData meshData;
+    Device&         device; 
+    VmaAllocator&   vma;
 
-    int texId = -1; //index of the Texture
-    VmaAllocator *vma;
+    std::vector<glm::mat4> boneTransforms;
 
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indicies;
-
-    uint32_t vertexCount = 0;    
-    vk::Buffer vertexBuffer{};
-    //vk::DeviceMemory vertexBufferMemory{};
-    VmaAllocation vertexBufferMemory{};
-
-
-    uint32_t indexCount = 0;
+    // One vertex buffer per data stream
+    std::vector<vk::DeviceSize> vertexBufferOffsets;
+    std::vector<vk::Buffer> vertexBuffers;
+    std::vector<VmaAllocation> vertexBufferMemories;
     vk::Buffer indexBuffer{};
-    //vk::DeviceMemory indexBufferMemory{};
     VmaAllocation indexBufferMemory{};
 
-    vk::PhysicalDevice physicalDevice{};
-    vk::Device device{};
+    template <typename T>
+    void createSeparateVertexBuffer(
+        const std::vector<T>& dataStream,
+        const VulkanImportStructs& importStructs);
 
-    vk::Queue transferQueue{};
-    vk::CommandPool transferCommandPool{};
+    void getAnimLerp(
+        const std::vector<std::pair<float, glm::vec3>>& stamps,
+        const float& timer,
+        glm::vec3& outputValue);
+    void getAnimSlerp(
+        const std::vector<std::pair<float, glm::quat>>& stamps,
+        const float& timer,
+        glm::quat& outputValue);
+    void getLocalBoneTransform(
+        const Bone& bone,
+        const float& timer,
+        glm::mat4& outputMatrix
+    );
 
-    void createVertexBuffer(std::vector<Vertex>* vertices);    
-    void createIndexBuffer(std::vector<uint32_t>* indicies);
+public:     
+    Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
+    Mesh(Mesh&& ref);
+    
+    void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
+    void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
+    
+    const std::vector<glm::mat4>& getBoneTransforms(const float& timer);
+
+    inline const std::vector<vk::DeviceSize>& getVertexBufferOffsets() const;
+    inline const std::vector<vk::Buffer>& getVertexBuffers() const;
+    inline const vk::Buffer& getIndexBuffer() const;
+	inline MeshData& getMeshData();
+    inline const std::vector<SubmeshData>& getSubmeshData() const;
+    
+    void cleanup();
 };
+
+const std::vector<vk::DeviceSize>& Mesh::getVertexBufferOffsets() const
+{
+    return this->vertexBufferOffsets;
+}
+
+const std::vector<vk::Buffer>& Mesh::getVertexBuffers() const
+{
+    return this->vertexBuffers;
+}
+
+const vk::Buffer& Mesh::getIndexBuffer() const
+{
+    return this->indexBuffer;
+}
+
+MeshData& Mesh::getMeshData()
+{
+	return this->meshData;
+}
+
+const std::vector<SubmeshData>& Mesh::getSubmeshData() const
+{
+    return this->submeshData;
+}

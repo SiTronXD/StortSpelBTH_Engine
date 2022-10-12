@@ -5,45 +5,47 @@
 #include "glm/vec3.hpp"
 
 class Client {
-public:
-	Client(std::string name = "BOB");
-	virtual ~Client();
-	bool connect(std::string serverIP = SERVER_IP);
-	bool isConnected();
-	void update(float dt);
-
-	bool hasStarted();
-	void starting();
-	int getNumberOfPlayers();
-	void disconnect();
-
-	//send events
-	void sendTCPEvent(TCPPacketEvent eventTCP);
-	//only exist one udp event from client to server
-	void sendUDPEvent(GameEvents gameEvent, glm::vec3 pos, glm::vec3 rot);
-	sf::Packet& getTcpPacket();
-
-	sf::Packet getTCPDataFromServer();
-	sf::Packet getUDPDataFromServer();
-
 private:
-	sf::TcpSocket tcpSocket;
-	sf::TcpListener tcpListener;
-	sf::UdpSocket udpSocket;
+    //data
+    std::string clientName;
+    std::string serverIP;
+    bool        isConnectedToServer;
 
+    StartingEnum startingEnum;
+    float        currentTimeToSendDataToServer;
+    float        timeToSendDataToServer;
 
-	std::string serverIP;
-	bool connected;
-	StartingEnum m_starting;
-	float currentTimeToSendDataToServer;
-	float timeToSendDataToServer;
-	sf::Packet tcpPacketSend;
-	sf::Packet udpPacketSend;
+    sf::Packet clientTcpPacketSend;
+    sf::Packet clientUdpPacketSend;
 
-	void sendDataToServer();
-	void cleanPackageAndGameEvents();
+    //sockets
+    sf::TcpSocket   tcpSocket;
+    sf::TcpListener tcpListener;
+    sf::UdpSocket   udpSocket;
 
+    //functions
+    void sendDataToServer();
+    void cleanPackageAndGameEvents();
 
+public:
+    Client(const std::string& clientName = "BOB");
+    virtual ~Client();
+    bool connect(const std::string& serverIP = SERVER_IP, int tries = -1);
+    void update(const float& dt);
 
-	std::string name;
+    bool isConnected() const;
+    bool hasStarted() const;
+
+    void starting();
+    void disconnect();
+
+    //send events
+    void sendTCPEvent(TCPPacketEvent& eventTCP);
+    //only exist one udp event from client to server
+    void sendUDPEvent(const GameEvents& gameEvent, const glm::vec3& pos, const glm::vec3& rot);
+
+    sf::Packet& getTcpPacket();
+
+    sf::Packet getTCPDataFromServer();
+    sf::Packet getUDPDataFromServer();
 };

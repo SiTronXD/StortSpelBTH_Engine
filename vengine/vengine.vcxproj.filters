@@ -1,194 +1,136 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
-    </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
-    </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
-    </Filter>
-    <Filter Include="Header Files\NetWork">
-      <UniqueIdentifier>{544514c8-9f22-472c-b689-55575a724abc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Network">
-      <UniqueIdentifier>{2265214b-711e-4cd8-8640-a84393d1fce1}</UniqueIdentifier>
-    </Filter>
+    <ClCompile Include="imgui\backends\imgui_impl_sdl.cpp" />
+    <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="imgui\imgui.cpp" />
+    <ClCompile Include="imgui\imgui_demo.cpp" />
+    <ClCompile Include="imgui\imgui_draw.cpp" />
+    <ClCompile Include="imgui\imgui_tables.cpp" />
+    <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="vengine\audio\AudioHandler.cpp" />
+    <ClCompile Include="vengine\graphics\Buffer.cpp" />
+    <ClCompile Include="vengine\graphics\ShaderInput.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\CommandBuffer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\CommandBufferArray.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\PipelineLayout.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\Pipeline.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\StorageBuffer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\UniformBuffer.cpp" />
+    <ClCompile Include="vengine\application\Input.cpp" />
+    <ClCompile Include="vengine\application\Scene.cpp" />
+    <ClCompile Include="vengine\application\SceneHandler.cpp" />
+    <ClCompile Include="vengine\application\Time.cpp" />
+    <ClCompile Include="vengine\application\Window.cpp" />
+    <ClCompile Include="vengine\dev\defs.cpp" />
+    <ClCompile Include="vengine\dev\Log.cpp" />
+    <ClCompile Include="vengine\dev\TracyClient.cpp" />
+    <ClCompile Include="vengine\dev\tracyHelper.cpp" />
+    <ClCompile Include="vengine\Engine.cpp" />
+    <ClCompile Include="vengine\graphics\Mesh.cpp" />
+    <ClCompile Include="vengine\graphics\stb.cpp" />
+    <ClCompile Include="vengine\graphics\Texture.cpp" />
+    <ClCompile Include="vengine\graphics\Utilities.cpp" />
+    <ClCompile Include="vengine\graphics\VulkanRenderer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\Device.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\PhysicalDevice.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\QueueFamilies.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\Swapchain.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VmaUsage.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VulkanDbg.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VulkanInstance.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\VulkanValidation.cpp" />
+    <ClCompile Include="vengine\network\Client.cpp" />
+    <ClCompile Include="vengine\network\NetworkHandler.cpp" />
+    <ClCompile Include="vengine\network\Server.cpp" />
+    <ClCompile Include="vengine\network\ServerGame.cpp" />
+    <ClCompile Include="vengine\network\ServerGames\DefaultServerGame.cpp" />
+    <ClCompile Include="vengine\network\Timer.cpp" />
+    <ClCompile Include="vengine\resource_management\Configurator.cpp" />
+    <ClCompile Include="vengine\resource_management\loaders\MeshLoader.cpp" />
+    <ClCompile Include="vengine\resource_management\loaders\TextureLoader.cpp" />
+    <ClCompile Include="vengine\resource_management\ResourceManager.cpp" />
+    <ClCompile Include="vengine\test\TestScene.cpp" />
+    <ClCompile Include="vengine\test\TestScene2.cpp" />
+    <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vengine.h">
-      <Filter>Header Files</Filter>
+    <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
+    <ClCompile Include="vengine\lua\ScriptHandler.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\ResourceManagerLua.cpp" />
     </ClInclude>
-    <ClInclude Include="imgui\backends\imgui_impl_sdl.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\backends\imgui_impl_vulkan.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imconfig.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imgui.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imgui_internal.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imstb_rectpack.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imstb_textedit.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="imgui\imstb_truetype.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\application\Input.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\application\Scene.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\application\SceneHandler.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\application\Time.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\application\Window.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\components\Camera.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\components\MeshComponent.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\components\Transform.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\dev\defs.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\dev\Log.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\dev\tracyHelper.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\vulkan\Device.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\vulkan\PhysicalDevice.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\vulkan\QueueFamilies.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\vulkan\Swapchain.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\vulkan\VulkanDbg.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\vulkan\VulkanInstance.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\vulkan\VulkanValidation.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\Mesh.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\Model.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\TempPCH.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\Texture.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\Utilities.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\graphics\VulkanRenderer.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\loaders\Configurator.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\systems\System.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\Engine.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\network\Client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\network\NetworkEnumAndDefines.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\network\NetworkHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\network\Server.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\network\ServerGame.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\network\Timer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\lua\ScriptHandler.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\lua\dev\LuaHelper.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\lua\wrappers\SceneLua.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\components\Behaviour.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\lua\wrappers\InputLua.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\lua\LuaPushes.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\ai\PathFinding.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\ai\lib\cone_of_vision.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\ai\lib\path_finder.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\ai\lib\point.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\ai\lib\pointf.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="vengine\ai\lib\polygon.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="vengine\ai\lib\segment.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
+      <Filter>Header Files</Filter>
+    <ClInclude Include="vengine\ai\lib\polygon.h">
+    </ClInclude>
+      <Filter>Header Files</Filter>
+    <ClInclude Include="vengine\ai\lib\pointf.h">
+    </ClInclude>
+      <Filter>Header Files</Filter>
+    <ClInclude Include="vengine\ai\lib\point.h">
+    </ClInclude>
+      <Filter>Header Files</Filter>
+    <ClInclude Include="vengine\ai\lib\path_finder.h">
+    </ClInclude>
+      <Filter>Header Files</Filter>
+    <ClInclude Include="vengine\ai\lib\cone_of_vision.h">
+    </ClInclude>
+      <Filter>Header Files</Filter>
+    <ClInclude Include="vengine\ai\PathFinding.h">
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="imgui\backends\imgui_impl_sdl.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_vulkan.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\imstb_rectpack.h" />
+    <ClInclude Include="imgui\imstb_textedit.h" />
+    <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="vengine\lua\wrappers\InputLua.h" />
+    <ClInclude Include="vengine\components\Script.hpp" />
+    <ClInclude Include="vengine\lua\ScriptHandler.h" />
+    <ClInclude Include="vengine.h" />
+    <ClInclude Include="vengine\application\Input.hpp" />
+    <ClInclude Include="vengine\application\Scene.hpp" />
+    <ClInclude Include="vengine\application\SceneHandler.hpp" />
+    <ClInclude Include="vengine\application\Time.hpp" />
+    <ClInclude Include="vengine\application\Window.hpp" />
+    <ClInclude Include="vengine\components\Camera.hpp" />
+    <ClInclude Include="vengine\components\MeshComponent.hpp" />
+    <ClInclude Include="vengine\components\Transform.hpp" />
+    <ClInclude Include="vengine\dev\defs.hpp" />
+    <ClInclude Include="vengine\dev\Log.hpp" />
+    <ClInclude Include="vengine\dev\tracyHelper.hpp" />
+    <ClInclude Include="vengine\Engine.hpp" />
+    <ClInclude Include="vengine\graphics\Mesh.hpp" />
+    <ClInclude Include="vengine\graphics\TempPCH.hpp" />
+    <ClInclude Include="vengine\graphics\Texture.hpp" />
+    <ClInclude Include="vengine\graphics\Utilities.hpp" />
+    <ClInclude Include="vengine\graphics\VulkanRenderer.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\Device.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\PhysicalDevice.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\QueueFamilies.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\Swapchain.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanDbg.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanInstance.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanValidation.hpp" />
+    <ClInclude Include="vengine\lua\dev\LuaHelper.hpp" />
+    <ClInclude Include="vengine\lua\LuaPushes.hpp" />
+    <ClInclude Include="vengine\lua\wrappers\SceneLua.h" />
+    <ClInclude Include="vengine\network\Client.h" />
+    <ClInclude Include="vengine\network\NetworkEnumAndDefines.h" />
+    <ClInclude Include="vengine\network\NetworkHandler.h" />
+    <ClInclude Include="vengine\network\Server.h" />
+    <ClInclude Include="vengine\network\ServerGame.h" />
+    <ClInclude Include="vengine\network\Timer.h" />
+    <ClInclude Include="vengine\systems\System.hpp" />
+    <ClInclude Include="vengine\test\TestScene.hpp" />
+    <ClInclude Include="vengine\test\TestScene2.hpp" />
+    <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -263,9 +205,6 @@
     <ClCompile Include="vengine\graphics\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vengine\graphics\Model.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vengine\graphics\stb.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -276,9 +215,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\graphics\VulkanRenderer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vengine\loaders\Configurator.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\Engine.cpp">
@@ -299,13 +235,10 @@
     <ClCompile Include="vengine\network\Timer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vengine\lua\ScriptHandler.cpp">
+    <ClCompile Include="vengine\test\TestScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vengine\lua\wrappers\InputLua.cpp">
+    <ClCompile Include="vengine\test\TestScene2.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\ai\PathFinding.cpp">
@@ -326,5 +259,78 @@
     <ClCompile Include="vengine\ai\lib\segment.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\CommandBufferArray.hpp" />
+    <ClInclude Include="imgui\backends\imgui_impl_sdl.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_vulkan.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\imstb_rectpack.h" />
+    <ClInclude Include="imgui\imstb_textedit.h" />
+    <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="vengine\audio\AudioHandler.h" />
+    <ClInclude Include="vengine\components\AudioListener.hpp" />
+    <ClInclude Include="vengine\components\AudioSource.hpp" />
+    <ClInclude Include="vengine\graphics\MeshData.hpp" />
+    <ClInclude Include="vengine\graphics\ShaderInput.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\CommandBuffer.hpp" />
+    <ClInclude Include="vengine\graphics\Buffer.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\PipelineLayout.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\Pipeline.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\UniformBuffer.hpp" />
+    <ClInclude Include="vengine.h" />
+    <ClInclude Include="vengine\application\Input.hpp" />
+    <ClInclude Include="vengine\application\Scene.hpp" />
+    <ClInclude Include="vengine\application\SceneHandler.hpp" />
+    <ClInclude Include="vengine\application\Time.hpp" />
+    <ClInclude Include="vengine\application\Window.hpp" />
+    <ClInclude Include="vengine\components\Camera.hpp" />
+    <ClInclude Include="vengine\components\MeshComponent.hpp" />
+    <ClInclude Include="vengine\components\Transform.hpp" />
+    <ClInclude Include="vengine\dev\defs.hpp" />
+    <ClInclude Include="vengine\dev\Log.hpp" />
+    <ClInclude Include="vengine\dev\tracyHelper.hpp" />
+    <ClInclude Include="vengine\Engine.hpp" />
+    <ClInclude Include="vengine\graphics\Mesh.hpp" />
+    <ClInclude Include="vengine\graphics\TempPCH.hpp" />
+    <ClInclude Include="vengine\graphics\Texture.hpp" />
+    <ClInclude Include="vengine\graphics\Utilities.hpp" />
+    <ClInclude Include="vengine\graphics\VulkanRenderer.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\Device.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\PhysicalDevice.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\QueueFamilies.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\Swapchain.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VmaUsage.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanDbg.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanInstance.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanValidation.hpp" />
+    <ClInclude Include="vengine\network\Client.h" />
+    <ClInclude Include="vengine\network\NetworkEnumAndDefines.h" />
+    <ClInclude Include="vengine\network\NetworkHandler.h" />
+    <ClInclude Include="vengine\network\Server.h" />
+    <ClInclude Include="vengine\network\ServerGame.h" />
+    <ClInclude Include="vengine\network\Timer.h" />
+    <ClInclude Include="vengine\systems\System.hpp" />
+    <ClInclude Include="vengine\test\TestScene.hpp" />
+    <ClInclude Include="vengine\test\TestScene2.hpp" />
+    <ClInclude Include="vengine\components\AnimationComponent.hpp" />
+    <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="vengine\network\ServerGames\DefaultServerGame.h" />
+    <ClInclude Include="vengine\network\Timer.h" />
+    <ClInclude Include="vengine\resource_management\Configurator.hpp" />
+    <ClInclude Include="vengine\resource_management\loaders\MeshLoader.hpp" />
+    <ClInclude Include="vengine\resource_management\loaders\TextureLoader.hpp" />
+    <ClInclude Include="vengine\resource_management\ResourceManager.hpp" />
+    <ClInclude Include="vengine\resource_management\ResourceManagerStructs.hpp" />
+    <ClInclude Include="vengine\systems\System.hpp" />
+    <ClInclude Include="vengine\test\TestScene.hpp" />
+    <ClInclude Include="vengine\test\TestScene2.hpp" />
+    <ClInclude Include="vengine\VengineMath.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=".clang-format" />
   </ItemGroup>
 </Project>

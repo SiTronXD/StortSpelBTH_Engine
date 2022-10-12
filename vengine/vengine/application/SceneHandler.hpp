@@ -1,8 +1,6 @@
 #pragma once
 #include "Scene.hpp"
 
-class ScriptHandler;
-
 class SceneHandler
 {
 private:
@@ -13,6 +11,7 @@ private:
 
 	NetworkHandler* networkHandler;
 	ScriptHandler* scriptHandler;
+	ResourceManager* resourceManager;
 	
 public:
 	SceneHandler();
@@ -21,13 +20,19 @@ public:
 	void update();
 	void updateToNextScene();
 
-	void setScene(std::string& path);
+	void setScene(Scene* scene, std::string path = "");
 	void reloadScene();
 
 	void setNetworkHandler(NetworkHandler* networkHandler);
-	NetworkHandler* getNetworkHandler();
+	inline NetworkHandler* getNetworkHandler()
+	{ return this->networkHandler; }
+	inline ResourceManager* getResourceManager() 
+	{ return this->resourceManager; }
 
 	void setScriptHandler(ScriptHandler* scriptHandler);
+	ScriptHandler* getScriptHandler();
+
+	void setResourceManager(ResourceManager* resourceManager);
 
 	Scene* getScene() const;
 };

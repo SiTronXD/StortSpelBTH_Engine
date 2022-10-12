@@ -17,24 +17,24 @@ void VulkanDbg::registerVkObjectDbgInfo(
 	vk::ObjectType type, 
 	uint64_t objectHandle)
 {
-#ifdef DEBUG
+    if (isValidationLayersEnabled())
+    {
+        vk::DebugUtilsObjectNameInfoEXT objInfo;
+        objInfo.setPObjectName(name.c_str());
+        objInfo.setObjectType(type);
+        objInfo.setObjectHandle(objectHandle); //NOLINT: reinterpret cast is ok here...
+        objInfo.setPNext(nullptr);
 
-    vk::DebugUtilsObjectNameInfoEXT objInfo;
-    objInfo.setPObjectName(name.c_str());
-    objInfo.setObjectType(type);
-    objInfo.setObjectHandle(objectHandle); //NOLINT: reinterpret cast is ok here...
-    objInfo.setPNext(nullptr);
+        auto pfnSetDebugUtilsObjectNameEXT =
+            (PFN_vkSetDebugUtilsObjectNameEXT)vkGetInstanceProcAddr(
+                VulkanDbg::instance->getVkInstance(),
+                "vkSetDebugUtilsObjectNameEXT"
+            ); //(!!)
 
-    auto pfnSetDebugUtilsObjectNameEXT = 
-        (PFN_vkSetDebugUtilsObjectNameEXT) vkGetInstanceProcAddr(
-            VulkanDbg::instance->getVkInstance(), 
-            "vkSetDebugUtilsObjectNameEXT"
-        ); //(!!)
+        auto temp = VkDebugUtilsObjectNameInfoEXT(objInfo);
+        pfnSetDebugUtilsObjectNameEXT(VulkanDbg::device->getVkDevice(), &temp); //(!!)
 
-    auto temp = VkDebugUtilsObjectNameInfoEXT(objInfo);
-    pfnSetDebugUtilsObjectNameEXT(VulkanDbg::device->getVkDevice(), &temp); //(!!)
-
-#endif  
+    }
 }
 
 void VulkanDbg::populateDebugMessengerCreateInfo(
@@ -45,8 +45,8 @@ void VulkanDbg::populateDebugMessengerCreateInfo(
 #endif
 
     createInfo.messageSeverity
-        = vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
-        | vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
+        = /*vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose
+        |*/ vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning
         | vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
 
     createInfo.messageType

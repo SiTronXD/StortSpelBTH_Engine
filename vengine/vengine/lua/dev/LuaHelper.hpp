@@ -65,9 +65,28 @@ namespace LuaH
 	{
 		if (lua_gettop(L) && lua_isstring(L, -1))
 		{
-			std::cout << "Lua Error: " << lua_tostring(L, -1) << std::endl;
+			std::cout << "Lua Error: " << lua_tostring(L, -1) << "\n";
 			lua_pop(L, 1);
 		}
+	}
+
+	static void printTable(lua_State* L, int index)
+	{
+		if (!lua_istable(L, index)) { return; }
+
+		lua_pushvalue(L, index);
+		lua_pushnil(L);
+		while (lua_next(L, -2))
+		{
+			lua_pushvalue(L, -2);
+
+			const char* key = lua_tostring(L, -1);
+			const char* value = lua_tostring(L, -2);
+			printf("%s => %s\n", key, value);
+
+			lua_pop(L, 2);
+		}
+		lua_pop(L, 1);
 	}
 }
 

@@ -1,23 +1,20 @@
 #pragma once
-
+#include <vector>
 #pragma region PORTS_AND_OTHER
 
-#define UDP_PORT_CLIENT 55001
-#define UDP_PORT_SERVER 55002
-#define TCP_PORT_SERVER 55003
-#define TCP_PORT_CLIENT 55004
-//#define SERVER_IP ""
-//#define SERVER_IP "192.168.142.16"
-#define SERVER_IP "192.168.1.104"
-//#define SERVER_IP "194.47.150.162"
-#define ServerUpdateRate 1/24.f
+#define UDP_PORT_CLIENT  55001
+#define UDP_PORT_SERVER  55002
+#define TCP_PORT_SERVER  55003
+#define TCP_PORT_CLIENT  55004
+#define SERVER_IP        "192.168.1.104"
+#define ServerUpdateRate 1 / 24.f
 
 #pragma endregion
 
 struct TCPPacketEvent {
-	int gameEvent;
-	int nrOfInts;
-	int ints[3];//max nr of ints is 3
+	int                gameEvent;
+	int                nrOfInts;
+	int                ints[3]; //max nr of ints is 3
 	std::vector<float> floats;
 };
 
@@ -26,15 +23,15 @@ enum StartingEnum { WaitingForUsers, Start, Running };
 #pragma region GAMEEVENTS_NETWORK
 
 enum GameEvents {
-	EMPTY = 0,
+	EMPTY		 = 0,
 	//TCP
-	SpawnEnemy = 1,
+	SpawnEnemy   = 1,
 	SpawnEnemies = 2,
-	Explosion,
-	MonsterDied,
-	PlayerShoot,
-	HitMonster,
-	PlayerDied,
+	Explosion    = 3,
+	MonsterDied  = 4,
+	PlayerShoot  = 5,
+	HitMonster	 = 6,
+	PlayerDied	 = 7,
 
 	PlayerJoined,
 	GAMEDATA,
@@ -58,23 +55,24 @@ enum GameEvents {
 
 //events tcp server -> client
 //SpawnEnemy		: Type(int), Position(float x,y,z);
-//SpawnEnemies		: Type(int), NrOfEnemies(int), Position(list/array)(float x,y,z)   (can only spawn one type of enemy in spawnEnemies) 
-//Explosion			: Radious(float), Position(float x,y,z) 
+//SpawnEnemies		: Type(int), NrOfEnemies(int), Position(list/array)(float x,y,z)   (can only spawn one type of enemy in spawnEnemies)
+//Explosion			: Radious(float), Position(float x,y,z)
 //MonsterDied		: Monster_id
 // SendSeed         : int
 //PlayerDied		: PlayerID
 //Disconnected		: PlayerID
-// PlayerJoined		: PlayerID?, name(sfml fix size of string)
+// PlayerJoined		: name(sfml fix size of string)
+// ID				: ID, nrOfPlayers connected - 1
 
 //events tcp client -> server
-//PlayerShoot		: Type(int), Direction (float x,y,z), 
+//PlayerShoot		: Type(int), Direction (float x,y,z),
 //HitMonster		: Monster_id, Damage
 //HitMonsters		: Monster_ids(list/array), Damage
-// 
+//
 //PlayerDied		: int id
 //Disconnected		: (nothig)
 //Start				: (nothing)
-//GAMEDATA			: NrOfPlayers, seed, 
+//GAMEDATA			: NrOfPlayers - 1, PlayerIDs (list, not yours), seed,
 
 //updates/events udp server -> client
 //UpdatePlayerPos	: nrOfPlayers, position(list/array), rotation(list/array)

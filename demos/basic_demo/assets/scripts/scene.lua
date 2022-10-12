@@ -1,14 +1,28 @@
+local ghost = resources.addMesh("assets/models/ghost.obj")
+print(ghost)
+
 local cam = scene.createEntity()
 scene.setComponent(cam, CompType.Camera)
 scene.setMainCamera(cam)
 
-local e = scene.createEntity()
-scene.setComponent(e, CompType.Mesh)
+local p = scene.createPrefab("assets/scripts/prefabs/prefab.lua")
 
-local transform = {
-	position = vector(0, 0, 3),
-	rotation = vector(-90, 0, 0),
+local prefab = {
+	Transform = {
+		position = vector(3, 0, 5),
+		rotation = vector(0, 45, -90),
+		scale = vector.fill(1)
+	},
+	Mesh = 0,
+	Script = "assets/scripts/script.lua"
+}
+scene.createPrefab(prefab)
+
+prefab.Transform = {
+	position = vector(-3, 0, 5),
+	rotation = vector(0, -45, -90),
 	scale = vector.fill(1)
 }
-scene.setComponent(e, CompType.Transform, transform)
-scene.setComponent(e, CompType.Behaviour, "assets/scripts/script.lua")
+scene.createPrefab(prefab)
+
+scene.createSystem("assets/scripts/system.lua")
