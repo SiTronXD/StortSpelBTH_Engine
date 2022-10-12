@@ -9,6 +9,8 @@
 #include "../graphics/UIRenderer.hpp"
 
 TestScene2::TestScene2()
+	: uiTextureIndex0(~0u),
+	uiTextureIndex1(~0u)
 {
 }
 
@@ -20,10 +22,9 @@ void TestScene2::init()
 {
 	std::cout << "Test scene 2 init" << std::endl;
 
-	// Set texture for ui renderer
-	Scene::getUIRenderer()->setUiTexture(
-		Scene::getResourceManager()->addTexture("assets/textures/testBitmapFont.png")
-	);
+	// Add textures for ui renderer
+	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_A.png");
+	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png");
 }
 
 void TestScene2::update()
@@ -35,11 +36,10 @@ void TestScene2::update()
 	}
 
 	Scene::getUIRenderer()->beginUI();
-	Scene::getUIRenderer()->renderTexture(
-		glm::vec4(0, 0, 16, 16),
-		-0.25f, 0.0f, 1.0f, 1.0f);
-	Scene::getUIRenderer()->renderTexture(
-		glm::vec4(16, 0, 16, 16),
-		0.25f, 0.3f, 1.0f, 1.0f);
+	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
+	Scene::getUIRenderer()->renderTexture(-0.25f, 0.0f, 1.0f, 1.0f);
+	Scene::getUIRenderer()->renderTexture(-0.25f, -0.5f, 1.0f, 1.0f);
+	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
+	Scene::getUIRenderer()->renderTexture(0.25f, 0.3f, 1.0f, 1.0f);
 	Scene::getUIRenderer()->endUI();
 }

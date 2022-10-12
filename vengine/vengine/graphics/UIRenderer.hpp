@@ -12,18 +12,24 @@ class ResourceManager;
 
 struct UIElementData
 {
-    glm::vec4 subTextureRect;
-
     // vec4(x, y, scaleX, scaleY)
     glm::vec4 transform;
+};
+
+struct UIDrawCallData
+{
+    uint32_t textureIndex;
+    uint32_t startVertex;
+    uint32_t numVertices;
 };
 
 class UIRenderer
 {
 private:
-    const uint32_t START_NUM_MAX_ELEMENTS = 2;
+    const uint32_t START_NUM_MAX_ELEMENTS = 4;
 
     std::vector<UIElementData> uiElementData;
+    std::vector<UIDrawCallData> uiDrawCallData;
 
     SamplerID uiSamplerID;
     StorageBufferID storageBufferID;
@@ -35,7 +41,6 @@ private:
     std::vector<VmaAllocation> vertexBufferMemories;
 
     uint32_t currentElementIndex;
-    uint32_t numRenderVerts;
     uint32_t uiTextureIndex;
 
     float uiTextureWidth;
@@ -60,11 +65,9 @@ public:
 
     void cleanup();
 
-    void setUiTexture(const uint32_t& textureIndex);
-
     void beginUI();
+    void setTexture(const uint32_t& textureIndex);
     void renderTexture(
-        glm::vec4 subTextureRect,
         const float& x,
         const float& y,
         const float& width,
@@ -75,7 +78,7 @@ public:
     inline const StorageBufferID& getStorageBufferID() const { return this->storageBufferID; }
     inline const SamplerID& getSamplerID() const { return this->uiSamplerID; }
     inline std::vector<UIElementData>& getUiElementData() { return this->uiElementData; }
-    inline const uint32_t& getNumRenderVerts() const { return this->numRenderVerts; }
+    inline const std::vector<UIDrawCallData>& getUiDrawCallData() const { return this->uiDrawCallData; }
     inline const uint32_t& getUiTextureIndex() const { return this->uiTextureIndex; }
     inline const vk::Buffer& getVertexBuffer(const uint32_t& index) const { return this->vertexBuffers[index]; }
     inline ShaderInput& getShaderInput() { return this->uiShaderInput; }

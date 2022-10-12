@@ -619,10 +619,6 @@ void VulkanRenderer::initMeshes(Scene* scene)
             this->textureSampler
         );
     }
-    this->uiRenderer->getShaderInput().setTexture(
-        this->uiRenderer->getSamplerID(),
-        this->uiRenderer->getUiTextureIndex()
-    );
 }
 
 void VulkanRenderer::setupDebugMessenger() 
@@ -1014,10 +1010,6 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
             this->uiRenderer->getShaderInput().setCurrentFrame(
                 this->currentFrame
             );
-            this->uiRenderer->getShaderInput().updateStorageBuffer(
-                this->uiRenderer->getStorageBufferID(),
-                this->uiRenderer->getUiElementData().data()
-            );
 
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -1203,21 +1195,39 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 this->uiRenderer->getShaderInput().setStorageBuffer(
                     this->uiRenderer->getStorageBufferID()
                 );
-
-                // UI shader input
                 currentCommandBuffer.bindShaderInputFrequency(
                     this->uiRenderer->getShaderInput(),
                     DescriptorFrequency::PER_MESH
                 );
-                currentCommandBuffer.bindShaderInputFrequency(
-                    this->uiRenderer->getShaderInput(),
-                    DescriptorFrequency::PER_DRAW_CALL
+
+                // UI update storage buffer
+                this->uiRenderer->getShaderInput().updateStorageBuffer(
+                    this->uiRenderer->getStorageBufferID(),
+                    this->uiRenderer->getUiElementData().data()
                 );
 
-                // UI draw
-                currentCommandBuffer.draw(
-                    this->uiRenderer->getNumRenderVerts()
-                );
+                // One draw call for all ui elements with the same texture
+                const std::vector<UIDrawCallData>& drawCallData =
+                    this->uiRenderer->getUiDrawCallData();
+                for (size_t i = 0; i < drawCallData.size(); ++i)
+                {
+                    // UI texture
+                    this->uiRenderer->getShaderInput().setTexture(
+                        this->uiRenderer->getSamplerID(),
+                        drawCallData[i].textureIndex
+                    );
+                    currentCommandBuffer.bindShaderInputFrequency(
+                        this->uiRenderer->getShaderInput(),
+                        DescriptorFrequency::PER_DRAW_CALL
+                    );
+
+                    // UI draw
+                    currentCommandBuffer.draw(
+                        drawCallData[i].numVertices,
+                        1,
+                        drawCallData[i].startVertex
+                    );
+                }
 
             // End Render Pass!
             vk::SubpassEndInfo subpassEndInfo;

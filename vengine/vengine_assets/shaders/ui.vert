@@ -5,7 +5,6 @@
 // Storage buffer
 struct UIElementData
 {
-    vec4 subTextureRect;
     vec4 transform;
 };
 layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer UIElementDataBuffer
@@ -20,7 +19,6 @@ void main()
 {
     // Extract element data
     UIElementData uiData = ui.data[uint(gl_VertexIndex / 6)];
-    vec4 uiSubTextureRect = uiData.subTextureRect;
     vec4 uiTransform = uiData.transform;
 
     // Position
@@ -40,12 +38,13 @@ void main()
 
     // Uv coordinates
     vec2 uvs[6] = vec2[](
-        vec2(uiSubTextureRect.x,                        uiSubTextureRect.y),
-        vec2(uiSubTextureRect.x,                        uiSubTextureRect.y + uiSubTextureRect.w),
-        vec2(uiSubTextureRect.x + uiSubTextureRect.z,   uiSubTextureRect.y),
-        vec2(uiSubTextureRect.x + uiSubTextureRect.z,   uiSubTextureRect.y),
-        vec2(uiSubTextureRect.x,                        uiSubTextureRect.y + uiSubTextureRect.w),
-        vec2(uiSubTextureRect.x + uiSubTextureRect.z,   uiSubTextureRect.y + uiSubTextureRect.w)
+        vec2(0.0f, 0.0f),
+        vec2(0.0f, 1.0f),
+        vec2(1.0f, 0.0f),
+
+        vec2(1.0f, 0.0f),
+        vec2(0.0f, 1.0f),
+        vec2(1.0f, 1.0f)
     );
     fragUV = uvs[gl_VertexIndex % 6];
 }

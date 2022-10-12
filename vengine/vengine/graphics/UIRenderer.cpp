@@ -3,7 +3,6 @@
 
 UIRenderer::UIRenderer()
     : currentElementIndex(0),
-    numRenderVerts(0),
     uiTextureIndex(~0u),
     uiTextureWidth(0),
     uiTextureHeight(0),
@@ -30,8 +29,8 @@ void UIRenderer::create(
     this->resourceManager = &resourceManager;
 
 	// Target data from the vertex buffers
-    this->uiElementData.clear();
     this->uiElementData.resize(START_NUM_MAX_ELEMENTS);
+    this->uiDrawCallData.reserve(START_NUM_MAX_ELEMENTS);
 
 	// Shader input, with no inputs for now
 	this->uiShaderInput.beginForInput(
@@ -72,24 +71,32 @@ void UIRenderer::cleanup()
 	this->uiShaderInput.cleanup();
 }
 
-void UIRenderer::setUiTexture(const uint32_t& textureIndex)
-{
-    this->uiTextureIndex = textureIndex;
-
-    Texture& uiTexture = 
-        this->resourceManager->getTexture(this->uiTextureIndex);
-
-    this->uiTextureWidth = static_cast<float>(uiTexture.getWidth());
-    this->uiTextureHeight = static_cast<float>(uiTexture.getHeight());
-}
-
 void UIRenderer::beginUI()
 {
     this->currentElementIndex = 0;
+    this->uiDrawCallData.clear();
+}
+
+void UIRenderer::setTexture(const uint32_t& textureIndex)
+{
+    // Add data for unique draw call
+    UIDrawCallData drawCallData{};
+    drawCallData.textureIndex = textureIndex;
+    drawCallData.startVertex = this->currentElementIndex * 6;
+
+    // Set number of vertices for previous draw call
+    if (this->uiDrawCallData.size() > 0)
+    {
+        // Num vertices for last draw call
+        this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
+            this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
+    }
+
+    // Set draw call
+    this->uiDrawCallData.push_back(drawCallData);
 }
 
 void UIRenderer::renderTexture(
-    glm::vec4 subTextureRect,
     const float& x, 
     const float& y, 
     const float& width, 
@@ -97,22 +104,13 @@ void UIRenderer::renderTexture(
 {
     if (this->currentElementIndex >= START_NUM_MAX_ELEMENTS)
     {
-        Log::error("Reached maximum number of ui elements.");
+        Log::error("Reached maximum number of rendered ui elements.");
         return;
     }
 
-    // Normalized texture coordinates
-    subTextureRect.x /= this->uiTextureWidth;
-    subTextureRect.z /= this->uiTextureWidth;
-    subTextureRect.y /= this->uiTextureHeight;
-    subTextureRect.w /= this->uiTextureHeight;
-
     // Set element data
-    this->uiElementData[this->currentElementIndex] =
-    {
-        subTextureRect,
-        glm::vec4(x, y, width, height)
-    };
+    this->uiElementData[this->currentElementIndex].transform =
+        glm::vec4(x, y, width, height);
 
     // Next ui element
     this->currentElementIndex++;
@@ -120,5 +118,7 @@ void UIRenderer::renderTexture(
 
 void UIRenderer::endUI()
 {
-    this->numRenderVerts = this->currentElementIndex * 6;
+    // Num vertices for last draw call
+    this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
+        this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
 }
