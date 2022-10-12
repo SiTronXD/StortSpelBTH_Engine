@@ -593,6 +593,7 @@ void VulkanRenderer::initMeshes(Scene* scene)
 		    "shaderAnim.vert.spv"
 		);
 	}
+
     // Add all textures for possible use in the shader
     size_t numTextures = this->resourceManager->getNumTextures();
     for (size_t i = 0; i < numTextures; ++i) 
