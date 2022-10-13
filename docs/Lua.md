@@ -317,14 +317,11 @@ local bool = network.isServer()
 ~~~
 
 #### sendTCPData
-Send data to server through the TCP protocol.
-Aruments: 
-	callType: what type of call we shall tell the server, for more info check NetworkEnumAndDefines.h -> GameEvents
-	table.int: describes the data that server is going to get or/and the actuall data, for more info check NetworkEnumAndDefines.h -> Comments
-	table.int: describes the data that server is going to get, for more info check NetworkEnumAndDefines.h -> Comments
+Send data to server through the TCP protocol.	
 ~~~ Lua
 sendTCPData(int : callType, table.int : data, table.float : data)
 ~~~
+For more info check NetworkEnumAndDefines.h
 
 #### sendUDPData
 Sends data to server through the UDP protocol.
