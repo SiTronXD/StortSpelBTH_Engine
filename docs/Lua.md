@@ -299,7 +299,7 @@ The network global that has been created in the lua enviroment is the main inter
 ### Functions
 List of functions related to the *network* global.
 
-### sendPolygons
+#### sendPolygons
 Sends in a table of vectors to the server if the current client has a server. The polygons is then used for the AI to navigate the map.
 ~~~ Lua
 local points = {
@@ -310,13 +310,13 @@ local points = {
 network.sendPolygons(pols)
 ~~~
 
-### isServer
+#### isServer
 Return a bool if the current user is a host to a server or not
 ~~~ Lua
 local bool = network.isServer()
 ~~~
 
-### sendTCPData
+#### sendTCPData
 Send data to server through the TCP protocol.
 Aruments: 
 	callType: what type of call we shall tell the server, for more info check NetworkEnumAndDefines.h -> GameEvents
@@ -326,7 +326,7 @@ Aruments:
 sendTCPData(int : callType, table.int : data, table.float : data)
 ~~~
 
-### sendUDPData
+#### sendUDPData
 Sends data to server through the UDP protocol.
 In this specific project, you are only able to send your player position and rotation.
 Arguments:
@@ -336,7 +336,7 @@ Arguments:
 sendUDPData(vector : player_position, vector : player_rotation)
 ~~~
 
-### getNetworkData
+#### getNetworkData
 In progress...
 
 ## Scene Files
