@@ -12,8 +12,6 @@ class NetworkHandler {
     Client*       client;
     SceneHandler* sceneHandler;
     int ID;
-	const bool hasServer();
-	void sendAIPolygons(std::vector<glm::vec2> points);
 
     //HELPERS
     float fx, fy, fz, fa, fb, fc;
@@ -25,6 +23,9 @@ class NetworkHandler {
     std::vector<int> otherPlayersServerId;
     std::vector<int> monsters;
 
+	std::vector<int> lua_ints;
+	std::vector<float> lua_floats;
+
   public:
     NetworkHandler();
     virtual ~NetworkHandler();
@@ -33,6 +34,7 @@ class NetworkHandler {
     //SERVER
     void createServer(ServerGame* serverGame = nullptr); //create new server on a new thread
     void deleteServer();
+
     //CLIENT
     Client* createClient(const std::string &name = "BOB"); //should return a client
     Client* getClient();
@@ -40,8 +42,12 @@ class NetworkHandler {
     void    connectClient(const std::string &serverIP);
     void    disconnectClient();
 
+    const bool hasServer();
+	void sendAIPolygons(std::vector<glm::vec2> points);
     void updateNetwork();
     void sendTCPDataToClient(TCPPacketEvent tcpP);
+
+	void getLuaData(std::vector<int>& ints, std::vector<float>& floats);
     //little cheating here but only one event from client to server via udp
     void sendUDPDataToClient(const glm::vec3 &pos, const glm::vec3 &rot);
     int  getServerSeed();

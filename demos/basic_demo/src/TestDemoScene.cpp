@@ -79,21 +79,8 @@ void TestDemoScene::init()
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
 	}
-
-	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
- 
-	// // Create entity2 (already has transform)
-	this->testEntity2 = this->createEntity();
-
-	// Transform component
-	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	transform2.position = glm::vec3(0.f, 0.f, 20.f);
-	transform2.rotation = glm::vec3(-90.0f, 40.0f, 0.0f);
-	transform2.scale = glm::vec3(10.0f, 10.0f, 10.0f);
-
-	// Mesh component
-	this->setComponent<MeshComponent>(this->testEntity2);
-	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
+	int a = this->createEntity();
+	this->setScriptComponent(a, "assets/scripts/script2.lua");
 }
 
 void TestDemoScene::update()
@@ -152,4 +139,13 @@ void TestDemoScene::update()
 		ImGui::PopItemWidth();
 	}
 	ImGui::End();
+
+	if (Input::isKeyPressed(Keys::O)) {
+		this->getNetworkHandler()->createServer();
+		this->getNetworkHandler()->createClient();
+		this->getNetworkHandler()->connectClientToThis();
+	}
+	if (Input::isKeyPressed(Keys::I)) {
+		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
+	}
 }

@@ -9,6 +9,7 @@
 #include "wrappers/SceneLua.h"
 #include "wrappers/InputLua.h"
 #include "wrappers/ResourceManagerLua.h"
+#include "wrappers/NetworkHandlerLua.h"
 
 void ScriptHandler::lua_openmetatables(lua_State* L)
 {
@@ -92,7 +93,7 @@ void ScriptHandler::setResourceManager(ResourceManager* resourceManager)
 
 void ScriptHandler::setNetworkHandler(NetworkHandler* networkHandler) {
 	this->networkHandler = networkHandler;
-	SceneLua::lua_openNetworkScene(L, networkHandler);
+	NetworkHandlerLua::lua_openNetworkScene(L, networkHandler);
 }
 
 bool ScriptHandler::runScript(std::string& path)

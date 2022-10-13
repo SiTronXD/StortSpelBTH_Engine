@@ -39,7 +39,8 @@ void ServerGame::addPolygon(NavMesh::Polygon& polygon) {
 
 void ServerGame::addPolygon(const std::vector<float>& polygon) {
     NavMesh::Polygon p;
-    for (size_t i = 0; i < polygon.size(); i += 2) {
+	for (size_t i = 0; i < polygon.size(); i += 2)
+	{  
         p.AddPoint(polygon[i], polygon[i + 1]);
     }
     pf.addPolygon(p);

@@ -104,7 +104,7 @@ void Client::sendTCPEvent(TCPPacketEvent& eventTCP)
         this->clientTcpPacketSend << eventTCP.ints[i];
     }
     for (int i = 0; i < eventTCP.floats.size(); i++) {
-        this->clientTcpPacketSend << eventTCP.ints[i];
+        this->clientTcpPacketSend << eventTCP.floats[i];
     }
 }
 

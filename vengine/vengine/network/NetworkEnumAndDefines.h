@@ -32,6 +32,7 @@ enum GameEvents {
 	PlayerShoot  = 5,
 	HitMonster	 = 6,
 	PlayerDied	 = 7,
+	ID,
 
 	PlayerJoined,
 	GAMEDATA,
