@@ -9,6 +9,7 @@ This file contains everything lua related that has been implemented in to Vengin
 	* [Scene](#Scene)
 	* [Input](#Input)
 	* [Resource Manager](#Resource-Manager)
+	* [Network](#Network)
 * [Scene Files](#Scene-Files)
 * [Prefabs](#Prefabs)
 * [Script Component](#Script-Component)
@@ -291,6 +292,52 @@ This functions loads and creates a texture to be used in the engine. It returns 
 ~~~ Lua
 resources.addTexture(string : texture_path) -- Returns the texture ID
 ~~~
+
+## Network
+The network global that has been created in the lua enviroment is the main interface of the network handler in C++. 
+
+### Functions
+List of functions related to the *network* global.
+
+### sendPolygons
+Sends in a table of vectors to the server, if the current client has a server. The polygons is then used for the AI to navigate the map.
+~~~ Lua
+local points = {
+	vector(-1,0,-1),
+	vector(1,0,-1),
+	vector(-1,0,1),
+}
+network.sendPolygons(pols)
+~~~
+
+### isServer
+Return a bool if the current user is a host to a server or not
+~~~ Lua
+local bool = network.isServer()
+~~~
+
+### sendTCPData
+Send data to server through the TCP protocol.
+Aruments: 
+	callType: what type of call we shall tell the server, for more info check NetworkEnumAndDefines.h -> GameEvents
+	table.int: describes the data that server is going to get or/and the actuall data, for more info check NetworkEnumAndDefines.h -> Comments
+	table.int: describes the data that server is going to get, for more info check NetworkEnumAndDefines.h -> Comments
+~~~ Lua
+sendTCPData(int : callType, table.int : data, table.float : data)
+~~~
+
+### sendUDPData
+Sends data to server through the UDP protocol.
+In this specific project, you are only able to send your player position and rotation.
+Arguments:
+	Position: vector with players position
+	Rotation: vector with players rotation
+~~~ Lua
+sendUDPData(vector : player_position, vector : player_rotation)
+~~~
+
+### getNetworkData
+In progress...
 
 ## Scene Files
 Scene files are lua scripts that describe the initilization of a scene and is mostly used in that context. What is done in the lua file is up to the user, but creating entities and setting components within the [Scene](#Scene). Currently these are called when creating a new scene in C++ and via the [setScene](#setScene) function in lua.
