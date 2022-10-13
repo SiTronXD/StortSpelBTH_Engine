@@ -300,7 +300,7 @@ The network global that has been created in the lua enviroment is the main inter
 List of functions related to the *network* global.
 
 ### sendPolygons
-Sends in a table of vectors to the server, if the current client has a server. The polygons is then used for the AI to navigate the map.
+Sends in a table of vectors to the server if the current client has a server. The polygons is then used for the AI to navigate the map.
 ~~~ Lua
 local points = {
 	vector(-1,0,-1),
