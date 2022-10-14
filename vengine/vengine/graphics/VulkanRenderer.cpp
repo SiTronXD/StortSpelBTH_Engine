@@ -622,6 +622,20 @@ void VulkanRenderer::initMeshes(Scene* scene)
             textureSampler
         );
     }
+
+    // Set aspect ratio for the main camera
+    Camera* mainCam = scene->getMainCamera();
+    if (mainCam)
+    {
+        // Aspect ratio
+        int width = 0;
+        int height = 0;
+        window->getSize(width, height);
+        mainCam->aspectRatio = (float) width / height;
+
+        // Recalculate projection matrix
+        mainCam->calculateProjectionMatrix();
+    }
 }
 
 void VulkanRenderer::setupDebugMessenger() 
