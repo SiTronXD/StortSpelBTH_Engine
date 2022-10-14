@@ -83,19 +83,19 @@ Client* NetworkHandler::getClient()
 	return client;
 }
 
-void NetworkHandler::connectClientToThis()
+bool NetworkHandler::connectClientToThis()
 {
-	this->connectClient(sf::IpAddress::getLocalAddress().toString());
+	return this->connectClient(sf::IpAddress::getLocalAddress().toString());
 }
 
-void NetworkHandler::connectClient(const std::string& serverIP)
+bool NetworkHandler::connectClient(const std::string& serverIP)
 {
 	if (client == nullptr)
 	{
 		std::cout << "client doesn't exist" << std::endl;
-		return;
+		return false;
 	}
-	client->connect(serverIP);
+	return client->connect(serverIP);
 }
 
 void NetworkHandler::updateNetwork()

@@ -38,8 +38,8 @@ class NetworkHandler {
     //CLIENT
     Client* createClient(const std::string &name = "BOB"); //should return a client
     Client* getClient();
-    void    connectClientToThis();
-    void    connectClient(const std::string &serverIP);
+    bool    connectClientToThis();
+    bool    connectClient(const std::string &serverIP);
     void    disconnectClient();
 
     const bool hasServer();
