@@ -958,8 +958,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
     {   // Scope for Tracy Vulkan Zone...
         #ifndef VENGINE_NO_PROFILING
         TracyVkZone(
-            this->tracyContext[imageIndex],
-            this->commandBuffers.getCommandBuffer(imageIndex).getVkCommandBuffer(),
+            this->tracyContext[this->currentFrame],
+            this->commandBuffers.getCommandBuffer(this->currentFrame).getVkCommandBuffer(),
             "Render Record Commands");
         #endif
         {
@@ -1275,8 +1275,8 @@ void VulkanRenderer::initTracy()
     auto pfnvkGetCalibratedTimestampsEXT = dl.getProcAddress<PFN_vkGetCalibratedTimestampsEXT>("vkGetCalibratedTimestampsEXT");
 
     // Create Tracy Vulkan Context
-    this->tracyContext.resize(this->swapchain.getNumImages());
-    for(size_t i = 0 ; i < this->swapchain.getNumImages(); i++){
+    this->tracyContext.resize(this->commandBuffers.getNumCommandBuffers());
+    for(size_t i = 0 ; i < this->commandBuffers.getNumCommandBuffers(); i++){
         
         this->tracyContext[i] = TracyVkContextCalibrated(
             this->physicalDevice.getVkPhysicalDevice(),
