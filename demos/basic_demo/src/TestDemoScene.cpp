@@ -72,6 +72,13 @@ void TestDemoScene::init()
 		newAnimComp.timeScale += i % 2;
 	}
 
+
+	// Add textures for ui renderer
+	TextureSamplerSettings samplerSettings{};
+	samplerSettings.filterMode = vk::Filter::eNearest;
+	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_A.png", samplerSettings);
+	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
+
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
  
 	// // Create entity2 (already has transform)
@@ -99,4 +106,12 @@ void TestDemoScene::update()
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
 	}
+
+	Scene::getUIRenderer()->beginUI();
+	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
+	Scene::getUIRenderer()->renderTexture(-0.45f, 0.5f, 0.2f, 0.2f);
+	Scene::getUIRenderer()->renderTexture(-0.25f, 0.5f, 0.2f, 0.2f);
+	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
+	Scene::getUIRenderer()->renderTexture(-0.05f, 0.5f, 0.2f, 0.2f);
+	Scene::getUIRenderer()->endUI();
 }

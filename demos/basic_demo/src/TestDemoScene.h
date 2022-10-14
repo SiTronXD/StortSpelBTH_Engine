@@ -7,6 +7,10 @@ class TestDemoScene : public Scene
 private:
 	int testEntity;
 	int testEntity2;
+
+	uint32_t uiTextureIndex0;
+	uint32_t uiTextureIndex1;
+
 public:
 	TestDemoScene();
 	virtual ~TestDemoScene();
