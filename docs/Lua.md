@@ -32,7 +32,11 @@ vector(x, y, z) -- Constructor
 vector.new(x, y, z) -- Also constructor
 vector.fill(v) -- Returns a vector where all values are "v" (vector(v, v, v))
 vector:length() -- Returns length of vector
+vector:cross(v) -- Return the cross product between itself and vector v
 vector:normalize() -- Normalizes the vector
+vector:rotate(x, y, z) -- Rotates the vector based on values
+vector:randomVector(scalar) --Makes this vector random between -1 and 1 times scalar (scalar variable is optional)
+vector:randomVectorPositive(scalar) --Makes this vector random between 0 and 1 times scalar (scalar variable is optional)
 ~~~
 
 ## Exposed Systems
