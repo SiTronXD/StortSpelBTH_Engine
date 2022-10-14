@@ -5,6 +5,7 @@
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "QueueFamilies.hpp"
+#include "../ResTranslator.hpp"
 #include "../../application/Window.hpp"
 #include "../../dev/Log.hpp"
 #include "../Texture.hpp"
@@ -342,9 +343,15 @@ void Swapchain::createSwapchain(
         {
             this->device->getVkDevice().destroySwapchainKHR(oldSwapchain);
         }
-    }
 
-    this->createDepthBuffer();
+        this->createDepthBuffer();
+
+        // Update resolution translator
+        ResTranslator::update(
+            static_cast<uint32_t>(imageExtent.width),
+            static_cast<uint32_t>(imageExtent.height)
+        );
+    }
 }
 
 void Swapchain::createFramebuffers(vk::RenderPass& renderPass)

@@ -660,8 +660,10 @@ void VulkanRenderer::recreateSwapchain(Camera* camera)
 {
     this->device.waitIdle();
     
+    // Cleanup framebuffers
     cleanupFramebufferImgui();
 
+    // Recreate swapchain and framebuffers
     this->swapchain.recreateSwapchain(this->renderPassBase);
     createFramebufferImgui();
 
