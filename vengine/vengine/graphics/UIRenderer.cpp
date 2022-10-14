@@ -9,9 +9,12 @@ UIRenderer::UIRenderer()
     uiTextureHeight(0),
     uiSamplerID(~0u),
     storageBufferID(~0u),
+    physicalDevice(nullptr),
     device(nullptr),
     vma(nullptr),
-    resourceManager(nullptr)
+    resourceManager(nullptr),
+    renderPass(nullptr),
+    framesInFlight(0)
 {
 }
 
@@ -25,49 +28,52 @@ void UIRenderer::create(
     vk::CommandPool& transferCommandPool,
 	const uint32_t& framesInFlight)
 {
+    this->physicalDevice = &physicalDevice;
     this->device = &device;
     this->vma = &vma;
     this->resourceManager = &resourceManager;
+    this->renderPass = &renderPass;
+    this->framesInFlight = framesInFlight;
 
 	// Target data from the vertex buffers
     this->uiElementData.resize(START_NUM_MAX_ELEMENTS);
     this->uiDrawCallData.reserve(START_NUM_MAX_ELEMENTS);
+}
 
-	// Shader input, with no inputs for now
-	this->uiShaderInput.beginForInput(
-		physicalDevice,
-		device,
-		vma,
-		resourceManager,
-		framesInFlight);
+void UIRenderer::initForScene()
+{
+    // Cleanup ui shader input if possible
+    this->cleanup();
+
+    // UI renderer shader input
+    this->uiShaderInput.beginForInput(
+        *this->physicalDevice,
+        *this->device,
+        *this->vma,
+        *this->resourceManager,
+        this->framesInFlight);
     this->uiSamplerID = this->uiShaderInput.addSampler();
     this->uiShaderInput.setNumShaderStorageBuffers(1);
     this->storageBufferID = this->uiShaderInput.addStorageBuffer(
         this->uiElementData.size() *
-            sizeof(this->uiElementData[0])
+        sizeof(this->uiElementData[0])
     );
-	this->uiShaderInput.endForInput();
+    this->uiShaderInput.endForInput();
 
-	// Pipeline
-	this->uiPipeline.createPipeline(
-		device,
-		this->uiShaderInput,
-		renderPass,
+    // Pipeline
+    this->uiPipeline.createPipeline(
+        *this->device,
+        this->uiShaderInput,
+        *this->renderPass,
         VertexStreams{},
-		"ui.vert.spv",
-		"ui.frag.spv",
+        "ui.vert.spv",
+        "ui.frag.spv",
         false
-	);
+    );
 }
 
 void UIRenderer::cleanup()
 {
-    for (size_t i = 0; i < this->vertexBuffers.size(); ++i)
-    {
-        this->device->getVkDevice().destroyBuffer(this->vertexBuffers[i]);
-        vmaFreeMemory(*this->vma, this->vertexBufferMemories[i]);
-    }
-
 	this->uiPipeline.cleanup();
 	this->uiShaderInput.cleanup();
 }

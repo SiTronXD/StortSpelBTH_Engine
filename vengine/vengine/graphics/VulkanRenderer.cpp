@@ -460,10 +460,16 @@ void VulkanRenderer::draw(Scene* scene)
 #endif        
 }
 
-// Should probably be removed...
-void VulkanRenderer::initMeshes(Scene* scene)
+void VulkanRenderer::initForScene(Scene* scene)
 {
-    // Engine "specifics"
+    // Try to cleanup before creating new objects
+    this->shaderInput.cleanup();
+    this->pipeline.cleanup();
+    this->animShaderInput.cleanup();
+    this->animPipeline.cleanup();
+
+    // UI renderer
+    this->uiRenderer->initForScene();
 
 	// Default shader inputs
     VertexStreams defaultStream{};

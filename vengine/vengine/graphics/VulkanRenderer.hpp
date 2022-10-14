@@ -164,7 +164,7 @@ public:
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);
 
-    void initMeshes(Scene* scene);
+    void initForScene(Scene* scene);
     
     void cleanup();
 

@@ -10,6 +10,7 @@ SceneHandler::SceneHandler()
 	networkHandler(nullptr), 
 	scriptHandler(nullptr),
 	resourceManager(nullptr),
+	vulkanRenderer(nullptr),
 	uiRenderer(nullptr)
 { }
 
@@ -58,12 +59,15 @@ void SceneHandler::updateToNextScene()
 		this->nextScene = nullptr;
 		this->luaScript = this->nextLuaScript;
 
+		// Init scene
 		this->scene->init();
 		if (this->luaScript.size() != 0)
 		{
 			this->scriptHandler->runScript(this->luaScript);
 		}
 
+		// Init renderer for scene
+		this->vulkanRenderer->initForScene(this->scene);
 		Time::reset();
 	}
 }
@@ -117,6 +121,16 @@ void SceneHandler::setUIRenderer(UIRenderer* uiRenderer)
 UIRenderer* SceneHandler::getUIRenderer()
 {
 	return this->uiRenderer;
+}
+
+void SceneHandler::setVulkanRenderer(VulkanRenderer* vulkanRenderer)
+{
+	this->vulkanRenderer = vulkanRenderer;
+}
+
+VulkanRenderer* SceneHandler::getVulkanRenderer()
+{
+	return this->vulkanRenderer;
 }
 
 Scene* SceneHandler::getScene() const

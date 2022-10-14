@@ -64,6 +64,8 @@ private:
 	vk::ShaderStageFlagBits pushConstantShaderStage;
     bool usePushConstant;
 
+	bool hasBeenCreated;
+
 	void createDescriptorSetLayout();
 	void createDescriptorPool();
 	void allocateDescriptorSets();

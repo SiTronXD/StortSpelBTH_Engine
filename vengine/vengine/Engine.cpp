@@ -61,6 +61,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->sceneHandler.setResourceManager(&resourceManager);
+    this->sceneHandler.setVulkanRenderer(&renderer);
     this->sceneHandler.setUIRenderer(&uiRenderer);
     this->networkHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
@@ -73,8 +74,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
     // Temporary, should be called before creating the scene
     this->audioHandler.setSceneHandler(&sceneHandler);
-
-    renderer.initMeshes(this->sceneHandler.getScene());
 
     // Game loop
     while (window.getIsRunning())

@@ -31,6 +31,8 @@ private:
 		std::vector<vk::VertexInputAttributeDescription>& 
 			outputAttributeDescs);
 
+	bool hasBeenCreated;
+
 public:
 	Pipeline();
 	~Pipeline();

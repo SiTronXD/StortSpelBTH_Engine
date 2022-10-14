@@ -36,19 +36,19 @@ private:
     ShaderInput uiShaderInput;
     Pipeline uiPipeline;
 
-    // One vertex buffer per frame in flight
-    std::vector<vk::Buffer> vertexBuffers;
-    std::vector<VmaAllocation> vertexBufferMemories;
-
     uint32_t currentElementIndex;
     uint32_t uiTextureIndex;
 
     float uiTextureWidth;
     float uiTextureHeight;
 
+    uint32_t framesInFlight;
+
+    PhysicalDevice* physicalDevice;
     Device* device;
     VmaAllocator* vma;
     ResourceManager* resourceManager;
+    vk::RenderPass* renderPass;
 
 public:
     UIRenderer();
@@ -62,7 +62,7 @@ public:
         vk::Queue& transferQueue,
         vk::CommandPool& transferCommandPool,
         const uint32_t& framesInFlight);
-
+    void initForScene();
     void cleanup();
 
     void beginUI();
@@ -80,7 +80,6 @@ public:
     inline std::vector<UIElementData>& getUiElementData() { return this->uiElementData; }
     inline const std::vector<UIDrawCallData>& getUiDrawCallData() const { return this->uiDrawCallData; }
     inline const uint32_t& getUiTextureIndex() const { return this->uiTextureIndex; }
-    inline const vk::Buffer& getVertexBuffer(const uint32_t& index) const { return this->vertexBuffers[index]; }
     inline ShaderInput& getShaderInput() { return this->uiShaderInput; }
     inline const Pipeline& getPipeline() const { return this->uiPipeline; }
 };

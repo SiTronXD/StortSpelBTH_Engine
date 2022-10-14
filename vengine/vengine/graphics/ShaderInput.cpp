@@ -361,7 +361,8 @@ ShaderInput::ShaderInput()
     currentFrame(~0u),
     pushConstantSize(0),
     pushConstantShaderStage(vk::ShaderStageFlagBits::eAll), 
-    usePushConstant(false)
+    usePushConstant(false),
+    hasBeenCreated(false)
 { }
 
 ShaderInput::~ShaderInput()
@@ -478,14 +479,21 @@ void ShaderInput::endForInput()
         this->bindDescriptorSets[i] = nullptr;
     }
 
+    // Pipeline layout
     this->pipelineLayout.createPipelineLayout(
         *this->device,
         *this
     );
+
+    this->hasBeenCreated = true;
 }
 
 void ShaderInput::cleanup()
 {
+    // Don't cleanup if nothing has been created
+    if (!this->hasBeenCreated)
+        return;
+
     // Uniform buffers
     for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
     {
@@ -501,6 +509,9 @@ void ShaderInput::cleanup()
     this->addedStorageBuffers.clear();
 
     // Descriptor pools
+    this->perFrameDescriptorSets.clear();
+    this->perMeshDescriptorSets.clear();
+    this->perDrawDescriptorSets.clear();
     this->device->getVkDevice().destroyDescriptorPool(this->perFramePool);
     this->device->getVkDevice().destroyDescriptorPool(this->perMeshPool);
     this->device->getVkDevice().destroyDescriptorPool(this->perDrawPool);
@@ -512,6 +523,13 @@ void ShaderInput::cleanup()
 
     // Pipeline layout
     this->pipelineLayout.cleanup();
+
+    // Sampler texture indices
+    this->samplersTextureIndex.clear();
+
+    // Vectors for binding during rendering
+    this->bindDescriptorSetLayouts.clear();
+    this->bindDescriptorSets.clear();
 }
 
 void ShaderInput::updateUniformBuffer(

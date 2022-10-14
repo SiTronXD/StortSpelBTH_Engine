@@ -67,7 +67,8 @@ void Pipeline::insertAttributeFromStream(
 }
 
 Pipeline::Pipeline()
-	: device(nullptr)
+	: device(nullptr),
+    hasBeenCreated(false)
 {
 }
 
@@ -254,9 +255,14 @@ void Pipeline::createPipeline(
     //Destroy Shader Moduels, no longer needed after pipeline created
     this->device->getVkDevice().destroyShaderModule(vertexShaderModule);
     this->device->getVkDevice().destroyShaderModule(fragmentShaderModule);
+
+    this->hasBeenCreated = true;
 }
 
 void Pipeline::cleanup()
 {
+    // Only cleanup if a pipeline has been created
+    if (!this->hasBeenCreated) return;
+
 	this->device->getVkDevice().destroyPipeline(this->pipeline);
 }

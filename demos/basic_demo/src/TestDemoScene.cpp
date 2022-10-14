@@ -5,6 +5,8 @@
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
 
+#include "vengine/test/TestScene2.hpp"
+
 TestDemoScene::TestDemoScene()
 	: testEntity(-1)//, testEntity2(-1)
 {
@@ -113,6 +115,11 @@ void TestDemoScene::update()
 		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), 0.0f, Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
+	}
+
+	if (Input::isKeyPressed(Keys::T))
+	{
+		Scene::switchScene(new TestScene2(), "assets/scripts/scene.lua");
 	}
 
 	Scene::getUIRenderer()->beginUI();

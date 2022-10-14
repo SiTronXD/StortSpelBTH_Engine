@@ -14,6 +14,7 @@ private:
 	NetworkHandler* networkHandler;
 	ScriptHandler* scriptHandler;
 	ResourceManager* resourceManager;
+	VulkanRenderer* vulkanRenderer;
 	UIRenderer* uiRenderer;
 
 public:
@@ -39,6 +40,9 @@ public:
 
 	void setUIRenderer(UIRenderer* uiRenderer);
 	UIRenderer* getUIRenderer();
+
+	void setVulkanRenderer(VulkanRenderer* vulkanRenderer);
+	VulkanRenderer* getVulkanRenderer();
 
 	Scene* getScene() const;
 };
