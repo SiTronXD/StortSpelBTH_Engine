@@ -89,6 +89,8 @@ public:
 
 	void cleanup(bool destroySwapchain = true);
 
+	bool canCreateValidSwapchain();
+
 	inline const uint32_t& getWidth() { return this->swapchainExtent.width; }
 	inline const uint32_t& getHeight() { return this->swapchainExtent.height; }
 	inline const uint32_t& getNumMinimumImages() { return this->numMinimumImages; }

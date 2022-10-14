@@ -64,7 +64,7 @@ void SceneHandler::updateToNextScene()
 			this->scriptHandler->runScript(this->luaScript);
 		}
 
-		Time::init();
+		Time::reset();
 	}
 }
 

@@ -464,3 +464,18 @@ void Swapchain::cleanup(bool destroySwapchain)
     }
     this->swapchainFrameBuffers.resize(0);
 }
+
+bool Swapchain::canCreateValidSwapchain()
+{
+    // Get details
+    SwapchainDetails swapchainDetails{};
+    Swapchain::getDetails(
+        this->physicalDevice->getVkPhysicalDevice(),
+        *this->surface,
+        swapchainDetails
+    );
+
+    // Make sure the size is larger than 0
+    return swapchainDetails.surfaceCapabilities.surfaceCapabilities.maxImageExtent.width > 0 ||
+        swapchainDetails.surfaceCapabilities.surfaceCapabilities.maxImageExtent.height > 0;
+}

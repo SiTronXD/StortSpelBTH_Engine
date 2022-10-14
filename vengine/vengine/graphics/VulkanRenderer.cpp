@@ -670,6 +670,17 @@ void VulkanRenderer::recreateSwapchain(Camera* camera)
 {
     this->device.waitIdle();
     
+    // Busy wait until swapchain has an actual resolution.
+    // For example when the window is minimized.
+    while (!this->swapchain.canCreateValidSwapchain())
+    {
+        this->window->update();
+    }
+
+    // Reset delta time, just to make sure not too much time 
+    // has passed to create precision errors.
+    Time::reset();
+
     // Cleanup framebuffers
     cleanupFramebufferImgui();
 
