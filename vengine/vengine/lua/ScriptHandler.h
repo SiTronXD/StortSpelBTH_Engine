@@ -7,6 +7,7 @@ struct lua_State;
 struct LuaSystem;
 class SceneHandler;
 class ResourceManager;
+class NetworkHandler;
 
 class ScriptHandler
 {
@@ -15,6 +16,7 @@ private:
 
 	lua_State* L;
 	SceneHandler* sceneHandler;
+	NetworkHandler* networkHandler;
 
 	void lua_openmetatables(lua_State* L);
 
@@ -26,6 +28,7 @@ public:
 
 	void setSceneHandler(SceneHandler* sceneHandler);
 	void setResourceManager(ResourceManager* resourceManager);
+	void setNetworkHandler(NetworkHandler* networkHandler);
 
 	bool runScript(std::string& path);
 	void setScriptComponent(int entity, std::string& path);
