@@ -2,8 +2,6 @@
 
 #include "vengine.h"
 
-#include "vengine/application/PhysicsEngine.h"
-
 class TestDemoScene : public Scene
 {
 private:
@@ -11,8 +9,6 @@ private:
 	int testEntity2;
 	int testEntity3;
 	int testEntity4;
-
-	PhysicsEngine physEngine;
 
 public:
 	TestDemoScene();
