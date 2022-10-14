@@ -3,6 +3,7 @@
 #include "glm/vec3.hpp"
 #include "SFML/Network.hpp"
 #include "NetworkEnumAndDefines.h"
+#include "../ai/PathFinding.h"
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
@@ -24,7 +25,11 @@ protected:
     int                       seed;
 
 public:
-    std::string n;
+	void addPolygon(NavMesh::Polygon& polygon);
+	void addPolygon(const std::vector<float>& polygon);
+	void removeAllPolygons();
+	//AI things
+	PathFindingManager pf;
 
     ServerGame();
     virtual ~ServerGame();

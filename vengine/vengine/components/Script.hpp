@@ -10,6 +10,6 @@ struct Script
 	Script(const char* path, int luaRef) : luaRef(luaRef)
 	{
 		memset(this->path, '\0', 64);
-		strcpy_s(this->path, path);
+		strcpy(this->path, path);
 	}
 };

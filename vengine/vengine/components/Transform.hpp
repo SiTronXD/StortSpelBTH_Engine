@@ -22,9 +22,10 @@ struct Transform
 	void updateMatrix() // Only useful before right, up, forward or rendering the object
 	{
 		this->matrix = glm::translate(glm::mat4(1.0f), this->position) *
-			glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.z), glm::vec3(1.0f, 0.0f, 0.0f)) *
+			glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
 			glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
-			glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.x), glm::vec3(0.0f, 0.0f, 1.0f)) *
+			glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f)) *
 			glm::scale(glm::mat4(1.0f), this->scale);
 	}
+	
 };

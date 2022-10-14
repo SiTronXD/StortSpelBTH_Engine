@@ -1,6 +1,7 @@
 #include "ScriptHandler.h"
 #include "../dev/Log.hpp"
 #include "../application/SceneHandler.hpp"
+#include "../network/NetworkHandler.h"
 #include "../application/Input.hpp"
 #include "../application/Time.hpp"
 #include "dev/LuaHelper.hpp"
@@ -8,6 +9,7 @@
 #include "wrappers/SceneLua.h"
 #include "wrappers/InputLua.h"
 #include "wrappers/ResourceManagerLua.h"
+#include "wrappers/NetworkHandlerLua.h"
 
 void ScriptHandler::lua_openmetatables(lua_State* L)
 {
@@ -87,6 +89,11 @@ void ScriptHandler::setSceneHandler(SceneHandler* sceneHandler)
 void ScriptHandler::setResourceManager(ResourceManager* resourceManager)
 {
 	ResourceManagerLua::lua_openresources(L, resourceManager);
+}
+
+void ScriptHandler::setNetworkHandler(NetworkHandler* networkHandler) {
+	this->networkHandler = networkHandler;
+	NetworkHandlerLua::lua_openNetworkScene(L, networkHandler);
 }
 
 bool ScriptHandler::runScript(std::string& path)

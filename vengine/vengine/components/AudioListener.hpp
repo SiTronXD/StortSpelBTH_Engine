@@ -4,8 +4,23 @@
 
 struct AudioListener
 {
-	// Problems arose when the struct was empty
-	char variable{};
+	// Ranges from 0 - 100
+	float volume;
+
+	AudioListener(float volume = sf::Listener::getGlobalVolume())
+	{
+		this->volume = volume;
+	}
+
+	void setVolume(float volume)
+	{
+		this->volume = volume;
+		sf::Listener::setGlobalVolume(volume);
+	}
+	float getVolume() const
+	{
+		return volume;
+	}
 
 	void setPosition(float x, float y, float z)
 	{

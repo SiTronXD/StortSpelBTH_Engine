@@ -323,6 +323,8 @@ int SceneLua::lua_removeComponent(lua_State* L)
 	return 0;
 }
 
+
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -365,3 +367,4 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 	}
 	lua_setglobal(L, "CompType");
 }
+
