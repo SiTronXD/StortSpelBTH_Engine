@@ -5,22 +5,22 @@
 
 struct Camera
 {
-	float aspectRatio;
 	float fov;
 
 	glm::mat4 view;
 	glm::mat4 projection;
 	glm::mat4 invProjection;
 
-	Camera(float aspectRatio = 1.0f, float fov = 90.0f):
-		aspectRatio(aspectRatio), fov(fov), view(1.0f)
-	{
-		this->calculateProjectionMatrix();
-	}
+	Camera(float fov = 90.0f):
+		fov(fov), view(1.0f), projection(1.0f), invProjection(1.0f)
+	{ }
 
-	void calculateProjectionMatrix()
+	void calculateProjectionMatrix(
+		float aspectRatio, 
+		float nearPlane = 0.1f, 
+		float farPlane = 1000.0f)
 	{
-		this->projection = glm::perspective(fov, aspectRatio, 0.01f, 1000.0f);
+		this->projection = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
 		this->invProjection = glm::inverse(this->projection);
 	}
 };

@@ -627,14 +627,10 @@ void VulkanRenderer::initMeshes(Scene* scene)
     Camera* mainCam = scene->getMainCamera();
     if (mainCam)
     {
-        // Aspect ratio
-        int width = 0;
-        int height = 0;
-        window->getSize(width, height);
-        mainCam->aspectRatio = (float) width / height;
-
         // Recalculate projection matrix
-        mainCam->calculateProjectionMatrix();
+        mainCam->calculateProjectionMatrix(
+            (float) this->swapchain.getWidth()  / this->swapchain.getHeight()
+        );
     }
 }
 
@@ -684,9 +680,9 @@ void VulkanRenderer::recreateSwapchain(Camera* camera)
     ImGui_ImplVulkan_SetMinImageCount(this->swapchain.getNumMinimumImages());
 
     // Take new aspect ratio into account for the camera
-    camera->aspectRatio = (float) this->swapchain.getWidth() / (float)swapchain.getHeight();
-    camera->projection = glm::perspective(camera->fov, camera->aspectRatio, 0.1f, 100.0f);
-    camera->invProjection = glm::inverse(camera->projection);
+    camera->calculateProjectionMatrix(
+        (float) this->swapchain.getWidth() / swapchain.getHeight()
+    );
 }
 
 void VulkanRenderer::cleanupRenderPassImgui()
