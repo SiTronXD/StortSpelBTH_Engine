@@ -87,6 +87,62 @@ function vector:normalize()
 	end
 end
 
+function vector:rotateX(xrot)
+	self.x = self.x
+	self.y = self.y * math.cos(xrot) - self.z * math.sin(xrot)
+	self.z = self.y * math.sin(xrot) + self.z * math.cos(xrot)
+	return self
+end
+
+function vector:rotateY(yrot)
+	self.x = self.x * math.cos(yrot) + self.z * math.sin(yrot)
+	self.y = self.y
+	self.z = -self.x * math.sin(yrot) + self.z * math.cos(yrot)
+	return self
+end
+
+function vector:rotateZ(zrot)
+	self.x = self.x * math.cos(zrot) - self.y * math.sin(zrot)
+	self.y = self.x * math.sin(zrot) + self.z * math.cos(zrot)
+	self.z = self.z
+	return self
+end
+
+function vector:rotate(xrot, yrot, zrot)
+	self:rotateZ(zrot)
+	self:rotateY(yrot)
+	self:rotateX(xrot)
+	return self
+end
+
+function vector:cross(other)
+	return vector(
+		(self.y * other.z) - (self.z * other.y),
+		(self.z * other.x) - (self.x * other.z),
+		(self.x * other.y) - (self.y * other.x)
+		)
+end
+
+function vector:randomVector(scalar)
+	if(scalar == nil)then
+		scalar = 1
+	end
+	self.x = (math.random() * 2 - 1) * scalar
+	self.y = (math.random() * 2 - 1) * scalar
+	self.z = (math.random() * 2 - 1) * scalar
+
+end
+
+function vector:randomVectorPositive(scalar)
+	if(scalar == nil)then
+		scalar = 1
+	end
+	self.x = math.random() * scalar
+	self.y = math.random() * scalar
+	self.z = math.random() * scalar
+
+end
+
 return setmetatable(vector, {
 	__call = function(_, ...)
 	return vector.new(...)
