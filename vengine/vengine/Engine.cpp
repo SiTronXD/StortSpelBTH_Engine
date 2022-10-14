@@ -5,7 +5,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_vulkan.h>
 
-///We need to take care of ALL error messages... vulkan does not report by default...
+// /We need to take care of ALL error messages... vulkan does not report by default...
 #include "glm/ext/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include <vector>
@@ -34,9 +34,9 @@ Engine::~Engine()
 void Engine::run(std::string appName, std::string startScenePath, Scene* startScene)
 {
     using namespace vengine_helper::config;
-    loadConfIntoMemory(); // load config data into memory
+    loadConfIntoMemory(); //  load config data into memory
 
-    // Window
+    //  Window
     Window window;
     window.initWindow(
         appName, 
@@ -44,7 +44,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         DEF<int>(W_HEIGHT)
     );
     
-    // Creating Vulkan Renderer Instance
+    //  Creating Vulkan Renderer Instance
     auto renderer = VulkanRenderer();
     if (renderer.init(&window, std::move(appName), &this->resourceManager) == 1)
     {
@@ -53,7 +53,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
     window.registerResizeEvent(renderer.getWindowResized());
 
-    // Set references to other systems
+    //  Set references to other systems
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->sceneHandler.setResourceManager(&resourceManager);
@@ -62,17 +62,17 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
 
-    // Initialize the start scene
+    //  Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
 
-    // Temporary, should be called before creating the scene
+    //  Temporary, should be called before creating the scene
     this->audioHandler.setSceneHandler(&sceneHandler);
 
     renderer.initMeshes(this->sceneHandler.getScene());
 
-    // Game loop
+    //  Game loop
     while (window.getIsRunning())
     {
         window.update();
@@ -97,13 +97,13 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         static bool open = true;
         ImGui::ShowDemoWindow(&open);
 
-        ImGui::Begin("Another Window", &open);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+        ImGui::Begin("Another Window", &open);   //  Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
         ImGui::Text("Hello from another window!");
         if (ImGui::Button("Close Me"))
             open = false;
         ImGui::End();
         
-        // ------------------------------------
+        //  ------------------------------------
         this->sceneHandler.updateToNextScene();
 
         renderer.draw(this->sceneHandler.getScene());

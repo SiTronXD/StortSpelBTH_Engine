@@ -2,7 +2,7 @@
 
 #include "application/SceneHandler.hpp"
 #include "network/NetworkHandler.h"
-#include "application/PhysicsEngine.h"
+#include "physics/PhysicsEngine.h"
 #include "lua/ScriptHandler.h"
 #include "audio/AudioHandler.h"
 #include "resource_management/ResourceManager.hpp"

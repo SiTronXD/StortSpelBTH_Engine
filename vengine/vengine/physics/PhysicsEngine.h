@@ -4,21 +4,17 @@
 #include <btBulletDynamicsCommon.h>
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "BulletCollision/Gimpact/btGImpactShape.h"
-#include "LinearMath/btAlignedObjectArray.h"
 
-#include <glm/glm.hpp>
-#include "Time.hpp"
-
+#include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/Transform.hpp"
-#include "SceneHandler.hpp"
+#include "../application/SceneHandler.hpp"
+#include "../components/BoxCollider.h"
+#include "../components/SphereCollider.h"
+#include "../components/CapsuleCollider.h"
+#include "../components/RigidBody.h"
 
-#include "../components/BoxCollider.h";
-#include "../components/SphereCollider.h";
-#include "../components/CapsuleCollider.h";
-#include "../components/RigidBody.h";
-
-struct Rays
+struct Ray
 {
 	btVector3 pos;
 	btVector3 dir;
@@ -27,6 +23,10 @@ struct Rays
 class PhysicsEngine
 {
 private:
+	SceneHandler* sceneHandler;
+
+	float timer;
+	const float timeStep;
 
 	btDefaultCollisionConfiguration* collconfig;
 	btCollisionDispatcher* collDisp;
@@ -36,23 +36,11 @@ private:
 
 	btAlignedObjectArray<btCollisionShape*> colShapes;
 
-	float timer;
-	const float timeStep;
-
-	SceneHandler* sceneHandler;
-
 	std::vector<SphereCollider*> sphereVec;
 	std::vector<BoxCollider*> boxVec;
 	std::vector<CapsuleCollider*> capsuleVec;
 	std::vector<RigidBody*> rigidBodyVec;
 	std::vector<RigidBody*> rigidBodyNoColliderVec;
-
-public:
-
-	PhysicsEngine();
-	~PhysicsEngine();
-
-	void update();
 
 	// Update transforms and rotations for colliders.
 	void updateSphere();
@@ -74,9 +62,13 @@ public:
 	bool removeBoxCollider(int ID);
 	bool removeCapsuleCollider(int ID);
 
-	void shootRay(glm::vec3 pos, glm::vec3 dir, float distance = 300.f);
+public:
 
-	void applyForce(glm::vec3 force);
+	PhysicsEngine();
+	~PhysicsEngine();
 
 	void setSceneHandler(SceneHandler* sceneHandler);
+
+	void update();
+	void shootRay(glm::vec3 pos, glm::vec3 dir, float distance = 100.f);
 };

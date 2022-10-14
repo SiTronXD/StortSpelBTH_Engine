@@ -53,7 +53,7 @@
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
     <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
-    <ClCompile Include="vengine\application\PhysicsEngine.cpp" />
+    <ClCompile Include="vengine\physics\PhysicsEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -151,7 +151,8 @@
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
-    <ClInclude Include="vengine\application\PhysicsEngine.h" />
+    <ClInclude Include="vengine\physics\PhysicsEngine.h" />
+    <ClInclude Include="vengine\physics\BulletHelper.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -318,7 +319,6 @@
     <ClInclude Include="vengine\network\ServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
     <ClInclude Include="vengine\systems\System.hpp" />
-    <ClInclude Include="vengine\systems\UpdateMatricesSystem.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
