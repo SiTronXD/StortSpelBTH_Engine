@@ -347,7 +347,7 @@ void Swapchain::createSwapchain(
         this->createDepthBuffer();
 
         // Update resolution translator
-        ResTranslator::update(
+        ResTranslator::updateWindowSize(
             static_cast<uint32_t>(imageExtent.width),
             static_cast<uint32_t>(imageExtent.height)
         );

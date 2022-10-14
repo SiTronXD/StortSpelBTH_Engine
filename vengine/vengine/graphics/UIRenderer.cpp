@@ -1,4 +1,5 @@
 #include "UIRenderer.hpp"
+#include "ResTranslator.hpp"
 #include "../resource_management/ResourceManager.hpp"
 
 UIRenderer::UIRenderer()
@@ -110,7 +111,7 @@ void UIRenderer::renderTexture(
 
     // Set element data
     this->uiElementData[this->currentElementIndex].transform =
-        glm::vec4(x, y, width, height);
+        ResTranslator::transformRect(x, y, width, height);
 
     // Next ui element
     this->currentElementIndex++;
