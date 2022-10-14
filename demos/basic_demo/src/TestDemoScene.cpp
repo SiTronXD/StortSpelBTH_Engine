@@ -79,8 +79,6 @@ void TestDemoScene::init()
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
 	}
-	int a = this->createEntity();
-	this->setScriptComponent(a, "assets/scripts/script2.lua");
 }
 
 void TestDemoScene::update()
