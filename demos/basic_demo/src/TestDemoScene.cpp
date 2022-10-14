@@ -20,7 +20,7 @@ void TestDemoScene::init()
 
 	// Camera
 	int camEntity = this->createEntity();
-	this->setComponent<Camera>(camEntity, 1.0f);
+	this->setComponent<Camera>(camEntity);
 	this->setMainCamera(camEntity);
 
 	// Create entity (already has transform)
@@ -79,6 +79,28 @@ void TestDemoScene::init()
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
 	}
+
+
+	// Add textures for ui renderer
+	TextureSamplerSettings samplerSettings{};
+	samplerSettings.filterMode = vk::Filter::eNearest;
+	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_UV.png", samplerSettings);
+	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
+
+	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
+ 
+	// // Create entity2 (already has transform)
+	this->testEntity2 = this->createEntity();
+
+	// Transform component
+	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
+	transform2.position = glm::vec3(0.f, 0.f, 20.f);
+	transform2.rotation = glm::vec3(-90.0f, 40.0f, 0.0f);
+	transform2.scale = glm::vec3(10.0f, 10.0f, 10.0f);
+
+	// Mesh component
+	this->setComponent<MeshComponent>(this->testEntity2);
+	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
 }
 
 void TestDemoScene::update()
@@ -92,6 +114,14 @@ void TestDemoScene::update()
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
 	}
+
+	Scene::getUIRenderer()->beginUI();
+	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
+	Scene::getUIRenderer()->renderTexture(-960.0f,  540.0f, 200.0f, 200.0f);
+	Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
+	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
+	Scene::getUIRenderer()->renderTexture(200.0f, 0.0f, 200.0f, 200.0f);
+	Scene::getUIRenderer()->endUI();
 
 	if (ImGui::Begin("Sound"))
 	{

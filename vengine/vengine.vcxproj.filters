@@ -63,12 +63,135 @@
     <ClCompile Include="vengine\resource_management\ResourceManager.cpp" />
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
+    <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
+    <ClCompile Include="vengine\graphics\UIRenderer.cpp" />
+    <ClCompile Include="vengine\graphics\TextureSampler.cpp" />
+    <ClCompile Include="vengine\graphics\ResTranslator.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
+    <ClCompile Include="vengine\lua\ScriptHandler.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\ResourceManagerLua.cpp" />
     <ClCompile Include="vengine\lua\wrappers\NetworkHandlerLua.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
+    <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
+    <ClInclude Include="vengine\graphics\TextureSampler.hpp" />
+    <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\backends\imgui_impl_sdl.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="imgui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\application\Input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\application\Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\application\SceneHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\application\Time.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\application\Window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\dev\defs.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\dev\Log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\dev\TracyClient.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\dev\tracyHelper.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\Device.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\PhysicalDevice.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\QueueFamilies.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\Swapchain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\VulkanDbg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\VulkanInstance.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\vulkan\VulkanValidation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\Mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\stb.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\Texture.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\Utilities.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\graphics\VulkanRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\Engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\network\Client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\network\NetworkHandler.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\network\Server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\network\ServerGame.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\network\Timer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\test\TestScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\test\TestScene2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\CommandBufferArray.hpp" />
     <ClInclude Include="imgui\backends\imgui_impl_sdl.h" />
@@ -133,6 +256,14 @@
     <ClInclude Include="vengine\network\NetworkHandler.h" />
     <ClInclude Include="vengine\network\Server.h" />
     <ClInclude Include="vengine\network\ServerGame.h" />
+    <ClInclude Include="vengine\network\Timer.h" />
+    <ClInclude Include="vengine\systems\System.hpp" />
+    <ClInclude Include="vengine\test\TestScene.hpp" />
+    <ClInclude Include="vengine\test\TestScene2.hpp" />
+    <ClInclude Include="vengine\components\AnimationComponent.hpp" />
+    <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
+  </ItemGroup>
+  <ItemGroup>
     <ClInclude Include="vengine\network\ServerGames\DefaultServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
     <ClInclude Include="vengine\resource_management\Configurator.hpp" />

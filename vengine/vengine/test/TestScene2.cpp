@@ -6,8 +6,11 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "../components/MeshComponent.hpp"
+#include "../graphics/UIRenderer.hpp"
 
 TestScene2::TestScene2()
+	: uiTextureIndex0(~0u),
+	uiTextureIndex1(~0u)
 {
 }
 
@@ -19,18 +22,11 @@ void TestScene2::init()
 {
 	std::cout << "Test scene 2 init" << std::endl;
 
-	// Create entity2 (already has transform)
-	this->testEntity2 = this->createEntity();
-
-	// Transform component
-	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	transform2.position = glm::vec3(20.F, 20.F, -100.F);
-	transform2.rotation = glm::vec3(-90.0f, 40.0f, 0.0f);
-	transform2.scale = glm::vec3(10.0f, 5.0f, 5.0f);
-
-	// Mesh component
-	this->setComponent<MeshComponent>(this->testEntity2);
-	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);
+	// Add textures for ui renderer
+	TextureSamplerSettings samplerSettings{};
+	samplerSettings.filterMode = vk::Filter::eNearest;
+	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_A.png", samplerSettings);
+	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
 }
 
 void TestScene2::update()
@@ -41,6 +37,11 @@ void TestScene2::update()
 			Input::getMouseY() << ")" << std::endl;
 	}
 
-	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	transform2.position.x += Time::getDT();
+	Scene::getUIRenderer()->beginUI();
+	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
+	Scene::getUIRenderer()->renderTexture(-0.25f, 0.0f, 0.1f, 0.1f);
+	Scene::getUIRenderer()->renderTexture(-0.25f, -0.5f, 0.1f, 0.1f);
+	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
+	Scene::getUIRenderer()->renderTexture(0.25f, 0.3f, 0.1f, 0.1f);
+	Scene::getUIRenderer()->endUI();
 }

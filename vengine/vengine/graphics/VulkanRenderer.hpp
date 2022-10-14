@@ -16,11 +16,11 @@
 #include "../resource_management/ResourceManager.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
+#include "UIRenderer.hpp"
 
 class Scene;
 class Camera;
-
-
+class UIRenderer;
 
 #include <functional>
 using stbi_uc = unsigned char;
@@ -32,6 +32,7 @@ class VulkanRenderer
     const int MAX_FRAMES_IN_FLIGHT = 3;
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
     ResourceManager* resourceManager;
+    UIRenderer* uiRenderer;
 
     Window* window;
     VmaAllocator vma = nullptr;
@@ -62,8 +63,6 @@ class VulkanRenderer
     
     Swapchain swapchain;
     
-    vk::Sampler textureSampler{}; // Sampler used to sample images in order to present (??)
-
     // - Assets    
 
     std::vector<vk::Image>        textureImages;
@@ -122,7 +121,6 @@ private:
     void createRenderPassImgui();
     void createCommandPool();   //TODO: Deprecate! 
     void createSynchronisation();
-    void createTextureSampler();
 
     // initializations of subsystems
     void initResourceManager();
@@ -158,7 +156,11 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int init(Window* window, std::string&& windowName, ResourceManager* resourceMan);
+    int init(
+        Window* window, 
+        std::string&& windowName, 
+        ResourceManager* resourceMan,
+        UIRenderer* uiRenderer);
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);
 

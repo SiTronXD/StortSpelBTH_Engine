@@ -13,9 +13,12 @@ struct ModelMatrix
 
 struct VertexStreams
 {
+    // "Default" meshes
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> colors;
     std::vector<glm::vec2> texCoords;
+
+    // Animated meshes
     std::vector<glm::vec4> boneWeights;
     std::vector<glm::uvec4> boneIndices;
 };

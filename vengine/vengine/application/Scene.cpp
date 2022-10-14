@@ -2,6 +2,7 @@
 #include "SceneHandler.hpp"
 #include "../network/NetworkHandler.h"
 #include "../lua/ScriptHandler.h"
+#include "../graphics/UIRenderer.hpp"
 #include "Time.hpp"
 
 void Scene::switchScene(Scene* scene, std::string path)
@@ -22,6 +23,11 @@ ScriptHandler* Scene::getScriptHandler()
 ResourceManager* Scene::getResourceManager()
 {
 	return this->sceneHandler->getResourceManager();
+}
+
+UIRenderer* Scene::getUIRenderer()
+{
+	return this->sceneHandler->getUIRenderer();
 }
 
 Scene::Scene()

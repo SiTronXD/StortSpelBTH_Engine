@@ -45,19 +45,23 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         DEF<int>(W_HEIGHT)
     );
     
-    // Creating Vulkan Renderer Instance
-    auto renderer = VulkanRenderer();
-    if (renderer.init(&window, std::move(appName), &this->resourceManager) == 1)
+    // Create vulkan renderer instance
+    VulkanRenderer renderer;
+    if (renderer.init(
+        &window, 
+        std::move(appName), 
+        &this->resourceManager,
+        &this->uiRenderer) == 1)
     {
         std::cout << "EXIT_FAILURE" << std::endl;
     }
-
     window.registerResizeEvent(renderer.getWindowResized());
 
     // Set references to other systems
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->sceneHandler.setResourceManager(&resourceManager);
+    this->sceneHandler.setUIRenderer(&uiRenderer);
     this->networkHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);

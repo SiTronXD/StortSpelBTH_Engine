@@ -2,6 +2,7 @@
 #include "vulkan/PhysicalDevice.hpp"
 #include "vulkan/Device.hpp"
 #include "vulkan/VulkanDbg.hpp"
+#include "TextureSampler.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "Texture.hpp"
 #include "../dev/Log.hpp"
@@ -90,30 +91,32 @@ void ShaderInput::createDescriptorPool()
     ZoneScoped; //:NOLINT
 #endif
 
-    // --------- Descriptor pool for per frame descriptor sets ---------
-    vk::DescriptorPoolSize perFramePoolSize{};
-    perFramePoolSize.setType(vk::DescriptorType::eUniformBuffer);                                     // Descriptors in Set will be of Type Uniform Buffer
-    perFramePoolSize.setDescriptorCount(
-        this->framesInFlight * this->addedUniformBuffers.size()); 
-
-    std::vector<vk::DescriptorPoolSize> perFramePoolSizes
+    if (this->addedUniformBuffers.size() > 0)
     {
-        perFramePoolSize
-    };
+        // --------- Descriptor pool for per frame descriptor sets ---------
+        vk::DescriptorPoolSize perFramePoolSize{};
+        perFramePoolSize.setType(vk::DescriptorType::eUniformBuffer);                                     // Descriptors in Set will be of Type Uniform Buffer
+        perFramePoolSize.setDescriptorCount(
+            this->framesInFlight * this->addedUniformBuffers.size());
 
-    vk::DescriptorPoolCreateInfo perFramePoolCreateInfo{};
-    perFramePoolCreateInfo.setMaxSets(
-        this->framesInFlight * this->addedUniformBuffers.size());             // Max Nr Of descriptor Sets that can be created from the pool,
-    perFramePoolCreateInfo.setPoolSizeCount(
-        static_cast<uint32_t>(perFramePoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
-    perFramePoolCreateInfo.setPPoolSizes(
-        perFramePoolSizes.data());                        // PoolSizes to create the Descriptor Pool with
-    
-    // Create descriptor pool
-    this->perFramePool = this->device->getVkDevice().createDescriptorPool(
-        perFramePoolCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool PerFrame", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perFramePool)));
+        std::vector<vk::DescriptorPoolSize> perFramePoolSizes
+        {
+            perFramePoolSize
+        };
 
+        vk::DescriptorPoolCreateInfo perFramePoolCreateInfo{};
+        perFramePoolCreateInfo.setMaxSets(
+            this->framesInFlight * this->addedUniformBuffers.size());             // Max Nr Of descriptor Sets that can be created from the pool,
+        perFramePoolCreateInfo.setPoolSizeCount(
+            static_cast<uint32_t>(perFramePoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
+        perFramePoolCreateInfo.setPPoolSizes(
+            perFramePoolSizes.data());                        // PoolSizes to create the Descriptor Pool with
+
+        // Create descriptor pool
+        this->perFramePool = this->device->getVkDevice().createDescriptorPool(
+            perFramePoolCreateInfo);
+        VulkanDbg::registerVkObjectDbgInfo("DescriptorPool PerFrame", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perFramePool)));
+    }
 
     // --------- Descriptor pool for per mesh descriptor sets ---------
     if (this->addedStorageBuffers.size() > 0)
@@ -155,27 +158,28 @@ void ShaderInput::createDescriptorPool()
 void ShaderInput::allocateDescriptorSets()
 {
     // --------- Descriptor sets per frame ---------
+    if (this->addedUniformBuffers.size() > 0)
+    {
+        // One descriptor set per frame in flight
+        this->perFrameDescriptorSets.resize(this->framesInFlight);
 
-    // One descriptor set per frame in flight
-    this->perFrameDescriptorSets.resize(this->framesInFlight);
+        // Copy our layout so we have one per set
+        std::vector<vk::DescriptorSetLayout> perFrameLayouts(
+            this->perFrameDescriptorSets.size(),
+            this->perFrameSetLayout
+        );
 
-    // Copy our layout so we have one per set
-    std::vector<vk::DescriptorSetLayout> perFrameLayouts(
-        this->perFrameDescriptorSets.size(),
-        this->perFrameSetLayout
-    );
+        vk::DescriptorSetAllocateInfo perFrameAllocInfo;
+        perFrameAllocInfo.setDescriptorPool(this->perFramePool);                                   // Pool to allocate descriptors (Set?) from   
+        perFrameAllocInfo.setDescriptorSetCount(
+            static_cast<uint32_t>(this->perFrameDescriptorSets.size()));
+        perFrameAllocInfo.setPSetLayouts(perFrameLayouts.data());                               // Layouts to use to allocate sets (1:1 relationship)
 
-    vk::DescriptorSetAllocateInfo perFrameAllocInfo;
-    perFrameAllocInfo.setDescriptorPool(this->perFramePool);                                   // Pool to allocate descriptors (Set?) from   
-    perFrameAllocInfo.setDescriptorSetCount(
-        static_cast<uint32_t>(this->perFrameDescriptorSets.size()));
-    perFrameAllocInfo.setPSetLayouts(perFrameLayouts.data());                               // Layouts to use to allocate sets (1:1 relationship)
-
-    // Allocate descriptor sets
-    this->perFrameDescriptorSets = 
-        this->device->getVkDevice().allocateDescriptorSets(
-            perFrameAllocInfo);
-
+        // Allocate descriptor sets
+        this->perFrameDescriptorSets =
+            this->device->getVkDevice().allocateDescriptorSets(
+                perFrameAllocInfo);
+    }
 
     // --------- Descriptor sets per mesh ---------
     if (this->addedStorageBuffers.size() > 0)
@@ -292,7 +296,7 @@ void ShaderInput::updateDescriptorSets()
 
 int ShaderInput::addPossibleTexture(
     const uint32_t& textureIndex,
-    vk::Sampler& textureSampler)
+    TextureSampler& textureSampler)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -322,7 +326,7 @@ int ShaderInput::addPossibleTexture(
     imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);     // The Image Layout when it is in use
     imageInfo.setImageView(
         this->resourceManager->getTexture(textureIndex).getImageView()); // Image to be bind to set
-    imageInfo.setSampler(textureSampler);                         // the Sampler to use for this Descriptor Set
+    imageInfo.setSampler(textureSampler.getVkSampler());                         // the Sampler to use for this Descriptor Set
 
     // Descriptor Write Info
     vk::WriteDescriptorSet writeDescriptorSet;
@@ -529,8 +533,11 @@ void ShaderInput::setCurrentFrame(const uint32_t& currentFrame)
     this->currentFrame = currentFrame;
 
     // Bind descriptor set
-    this->bindDescriptorSets[(uint32_t) DescriptorFrequency::PER_FRAME] =
-        &this->perFrameDescriptorSets[currentFrame];
+    if (this->perFrameDescriptorSets.size() > 0)
+    {
+        this->bindDescriptorSets[(uint32_t) DescriptorFrequency::PER_FRAME] =
+            &this->perFrameDescriptorSets[currentFrame];
+    }
 }
 
 void ShaderInput::setStorageBuffer(

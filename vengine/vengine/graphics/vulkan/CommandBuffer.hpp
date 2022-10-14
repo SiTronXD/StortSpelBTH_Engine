@@ -34,6 +34,11 @@ public:
     void bindShaderInputFrequency(
         const ShaderInput& shaderInput,
         const DescriptorFrequency& descriptorFrequency);
+    void draw(
+        const uint32_t& vertexCount,
+        const uint32_t& instanceCount = 1,
+        const uint32_t& firstVertex = 0,
+        const uint32_t& firstInstance = 0);
     void drawIndexed(
         const uint32_t& indexCount,
         const uint32_t& instanceCount = 1,

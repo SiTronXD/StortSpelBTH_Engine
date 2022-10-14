@@ -19,7 +19,7 @@ void NetworkTestScene::init()
 
 	// Camera
 	int camEntity = this->createEntity();
-	this->setComponent<Camera>(camEntity, 1.0f);
+	this->setComponent<Camera>(camEntity);
 	this->setMainCamera(camEntity);
 
 	///////////////DEBUG OF DEBUG//////////////

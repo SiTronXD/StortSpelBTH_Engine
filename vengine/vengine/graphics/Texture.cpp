@@ -10,6 +10,18 @@ Texture::Texture(Device& device, VmaAllocator& vma)
 Texture::~Texture()
 { }
 
+void Texture::init(
+    const vk::ImageView& imageView,
+    const uint32_t& width,
+    const uint32_t& height,
+    const uint32_t& textureSamplerIndex)
+{
+    this->imageView = imageView;
+    this->width = width;
+    this->height = height;
+    this->textureSamplerIndex = textureSamplerIndex;
+}
+
 void Texture::cleanup() 
 {
     this->device->getVkDevice().destroyImageView(this->imageView);

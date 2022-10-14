@@ -14,6 +14,7 @@
 class SceneHandler;
 class NetworkHandler;
 class ScriptHandler;
+class UIRenderer;
 
 struct LuaSystem
 {
@@ -36,6 +37,7 @@ protected:
 	NetworkHandler* getNetworkHandler();
 	ScriptHandler* getScriptHandler();
 	ResourceManager* getResourceManager();
+	UIRenderer* getUIRenderer();
 
     template <typename T> T getConfigValue(std::string_view name)
     {

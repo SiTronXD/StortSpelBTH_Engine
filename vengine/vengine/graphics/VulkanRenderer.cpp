@@ -56,13 +56,18 @@ void VulkanRenderer::initResourceManager()
 }
 
 using namespace vengine_helper::config;
-int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManager* resourceMan)
+int VulkanRenderer::init(
+    Window* window, 
+    std::string&& windowName, 
+    ResourceManager* resourceMan,
+    UIRenderer* uiRenderer)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif        
 
     this->resourceManager = resourceMan;
+    this->uiRenderer = uiRenderer;
     this->window = window;
 
     try 
@@ -139,8 +144,6 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
             MAX_FRAMES_IN_FLIGHT
         );
 
-        this->createTextureSampler();
-
         this->createSynchronisation();        
 
         this->updateUboProjection();
@@ -158,6 +161,18 @@ int VulkanRenderer::init(Window* window, std::string&& windowName, ResourceManag
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
         this->resourceManager->addTexture(DEF<std::string>(P_TEXTURES) + "missing_texture.png");
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
+
+        // Create ui renderer
+        this->uiRenderer->create(
+            this->physicalDevice, 
+            this->device,
+            this->vma,
+            *this->resourceManager,
+            this->renderPassBase,
+            this->queueFamilies.getGraphicsQueue(),
+            this->commandPool,
+            MAX_FRAMES_IN_FLIGHT
+        );
     }
     catch(std::runtime_error &e)
     {
@@ -214,8 +229,6 @@ void VulkanRenderer::cleanup()
     }
 #endif
 
-    this->getVkDevice().destroySampler(this->textureSampler);
-
     for(size_t i = 0; i < this->textureImages.size();i++)
     {
         this->getVkDevice().destroyImageView(this->textureImageViews[i]);
@@ -232,6 +245,8 @@ void VulkanRenderer::cleanup()
 
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
+    this->uiRenderer->cleanup();
+
     if (this->hasAnimations)
 	{
 		this->animPipeline.cleanup();
@@ -578,19 +593,44 @@ void VulkanRenderer::initMeshes(Scene* scene)
 		    "shaderAnim.vert.spv"
 		);
 	}
+
     // Add all textures for possible use in the shader
     size_t numTextures = this->resourceManager->getNumTextures();
     for (size_t i = 0; i < numTextures; ++i) 
     {
+        // Get texture sampler for this texture
+        TextureSampler& textureSampler = 
+            this->resourceManager->getTextureSampler(
+                this->resourceManager->getTexture(i).getSamplerIndex()
+            );
+
         this->shaderInput.addPossibleTexture(
             i,
-            this->textureSampler
+            textureSampler
         );
 
         if (this->hasAnimations)
 		{
-			this->animShaderInput.addPossibleTexture(i, this->textureSampler);
+			this->animShaderInput.addPossibleTexture(
+                i, 
+                textureSampler
+            );
 		}
+
+        this->uiRenderer->getShaderInput().addPossibleTexture(
+            i,
+            textureSampler
+        );
+    }
+
+    // Set aspect ratio for the main camera
+    Camera* mainCam = scene->getMainCamera();
+    if (mainCam)
+    {
+        // Recalculate projection matrix
+        mainCam->calculateProjectionMatrix(
+            (float) this->swapchain.getWidth()  / this->swapchain.getHeight()
+        );
     }
 }
 
@@ -630,17 +670,19 @@ void VulkanRenderer::recreateSwapchain(Camera* camera)
 {
     this->device.waitIdle();
     
+    // Cleanup framebuffers
     cleanupFramebufferImgui();
 
+    // Recreate swapchain and framebuffers
     this->swapchain.recreateSwapchain(this->renderPassBase);
     createFramebufferImgui();
 
     ImGui_ImplVulkan_SetMinImageCount(this->swapchain.getNumMinimumImages());
 
     // Take new aspect ratio into account for the camera
-    camera->aspectRatio = (float) this->swapchain.getWidth() / (float)swapchain.getHeight();
-    camera->projection = glm::perspective(camera->fov, camera->aspectRatio, 0.1f, 100.0f);
-    camera->invProjection = glm::inverse(camera->projection);
+    camera->calculateProjectionMatrix(
+        (float) this->swapchain.getWidth() / swapchain.getHeight()
+    );
 }
 
 void VulkanRenderer::cleanupRenderPassImgui()
@@ -654,7 +696,9 @@ void VulkanRenderer::cleanupRenderPassBase()
 }
 
 VulkanRenderer::VulkanRenderer()
-    : resourceManager(nullptr), window(nullptr)
+    : resourceManager(nullptr), 
+    uiRenderer(nullptr), 
+    window(nullptr)
 {
     loadConfIntoMemory();
 }
@@ -826,32 +870,6 @@ void VulkanRenderer::createSynchronisation()
     }
 }
 
-void VulkanRenderer::createTextureSampler()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    // Sampler Creation info;
-    vk::SamplerCreateInfo samplerCreateInfo;
-    samplerCreateInfo.setMagFilter(vk::Filter::eLinear);                     // How the sampler will sample from a texture when it's getting closer
-    samplerCreateInfo.setMinFilter(vk::Filter::eLinear);                     // How the sampler will sample from a texture when it's getting further away
-    samplerCreateInfo.setAddressModeU(vk::SamplerAddressMode::eRepeat);      // How the texture will be Wrapped in U (x) direction
-    samplerCreateInfo.setAddressModeV(vk::SamplerAddressMode::eRepeat);      // How the texture will be Wrapped in V (y) direction
-    samplerCreateInfo.setAddressModeW(vk::SamplerAddressMode::eRepeat);      // How the texture will be Wrapped in W (z) direction
-    samplerCreateInfo.setBorderColor(vk::BorderColor::eIntOpaqueBlack);      // Color of what is around the texture (in case of Repeat, it wont be used)
-    samplerCreateInfo.setUnnormalizedCoordinates(VK_FALSE);                  // We want to used Normalised Coordinates (between 0 and 1), so unnormalized coordinates must be false... 
-    samplerCreateInfo.setMipmapMode(vk::SamplerMipmapMode::eLinear);         // How the mipmap mode will switch between the mipmap images (interpolate between images), (we dont use it, but we set it up)
-    samplerCreateInfo.setMipLodBias(0.F);                                    // Level of detail bias for mip level...
-    samplerCreateInfo.setMinLod(0.F);                                        // Minimum level of Detail to pick mip level
-    samplerCreateInfo.setMaxLod(VK_LOD_CLAMP_NONE);                          // Maxiumum level of Detail to pick mip level
-    samplerCreateInfo.setAnisotropyEnable(VK_TRUE);                          // Enable Anisotropy; take into account the angle of a surface is being viewed from and decide details based on that (??)
-                                                                             
-    samplerCreateInfo.setMaxAnisotropy(DEF<float>(SAMPL_MAX_ANISOSTROPY));   // Level of Anisotropy; 16 is a common option in the settings for alot of Games 
-
-    this->textureSampler = this->getVkDevice().createSampler(samplerCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("Texture Sampler", vk::ObjectType::eSampler, reinterpret_cast<uint64_t>(vk::Sampler::CType(this->textureSampler)));
-}
-
 void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")
 {
     vk::CommandPoolCreateInfo commandPoolCreateInfo; 
@@ -950,8 +968,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
     {   // Scope for Tracy Vulkan Zone...
         #ifndef VENGINE_NO_PROFILING
         TracyVkZone(
-            this->tracyContext[imageIndex],
-            this->commandBuffers.getCommandBuffer(imageIndex).getVkCommandBuffer(),
+            this->tracyContext[this->currentFrame],
+            this->commandBuffers.getCommandBuffer(this->currentFrame).getVkCommandBuffer(),
             "Render Record Commands");
         #endif
         {
@@ -976,6 +994,11 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 				    this->viewProjectionUB, (void*)&this->uboViewProjection
 				);
 			}
+
+            // UI shader input
+            this->uiRenderer->getShaderInput().setCurrentFrame(
+                this->currentFrame
+            );
 
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -1152,6 +1175,49 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     }
                 );
 
+                // UI rendering
+                currentCommandBuffer.bindGraphicsPipeline(
+                    this->uiRenderer->getPipeline()
+                );
+
+                // UI storage buffer
+                this->uiRenderer->getShaderInput().setStorageBuffer(
+                    this->uiRenderer->getStorageBufferID()
+                );
+                currentCommandBuffer.bindShaderInputFrequency(
+                    this->uiRenderer->getShaderInput(),
+                    DescriptorFrequency::PER_MESH
+                );
+
+                // UI update storage buffer
+                this->uiRenderer->getShaderInput().updateStorageBuffer(
+                    this->uiRenderer->getStorageBufferID(),
+                    this->uiRenderer->getUiElementData().data()
+                );
+
+                // One draw call for all ui elements with the same texture
+                const std::vector<UIDrawCallData>& drawCallData =
+                    this->uiRenderer->getUiDrawCallData();
+                for (size_t i = 0; i < drawCallData.size(); ++i)
+                {
+                    // UI texture
+                    this->uiRenderer->getShaderInput().setTexture(
+                        this->uiRenderer->getSamplerID(),
+                        drawCallData[i].textureIndex
+                    );
+                    currentCommandBuffer.bindShaderInputFrequency(
+                        this->uiRenderer->getShaderInput(),
+                        DescriptorFrequency::PER_DRAW_CALL
+                    );
+
+                    // UI draw
+                    currentCommandBuffer.draw(
+                        drawCallData[i].numVertices,
+                        1,
+                        drawCallData[i].startVertex
+                    );
+                }
+
             // End Render Pass!
             vk::SubpassEndInfo subpassEndInfo;
             currentCommandBuffer.endRenderPass2(subpassEndInfo);
@@ -1219,8 +1285,8 @@ void VulkanRenderer::initTracy()
     auto pfnvkGetCalibratedTimestampsEXT = dl.getProcAddress<PFN_vkGetCalibratedTimestampsEXT>("vkGetCalibratedTimestampsEXT");
 
     // Create Tracy Vulkan Context
-    this->tracyContext.resize(this->swapchain.getNumImages());
-    for(size_t i = 0 ; i < this->swapchain.getNumImages(); i++){
+    this->tracyContext.resize(this->commandBuffers.getNumCommandBuffers());
+    for(size_t i = 0 ; i < this->commandBuffers.getNumCommandBuffers(); i++){
         
         this->tracyContext[i] = TracyVkContextCalibrated(
             this->physicalDevice.getVkPhysicalDevice(),

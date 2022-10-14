@@ -17,7 +17,7 @@ private:
 
     std::vector<std::string> assimpGetTextures(const aiScene* scene);
 
-    void      createTextureImage(const std::string &filename, vk::Image& ref, VmaAllocation& allocRef);
+    void      createTextureImage(const std::string &filename, vk::Image& ref, VmaAllocation& allocRef, uint32_t& outputWidth, uint32_t& outputHeight);
     stbi_uc*  loadTextureFile(const std::string &filename, int* width, int* height, vk::DeviceSize* imageSize);
 public:
     
@@ -25,6 +25,6 @@ public:
     void      assimpTextureImport(const aiScene* scene, std::vector<uint32_t>& materialToTexture);
     inline const void setVulkanRenderer(VulkanRenderer* ref) { this->TEMP = ref; };  /// TODO: REMOVE VulkanRenderer
     void init(VmaAllocator*vma,vk::PhysicalDevice*physiscalDev,Device*dev,vk::Queue*transQueue,vk::CommandPool*transCmdPool, ResourceManager*);
-    Texture createTexture(const std::string &filename);
+    Texture createTexture(const std::string &filename, const uint32_t& textureSamplerIndex);
     bool doesTextureExist(const std::string& filePath);
 };
