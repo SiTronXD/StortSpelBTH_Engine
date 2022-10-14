@@ -18,7 +18,7 @@ glm::vec4 ResTranslator::transformRect(
 	const float& width,
 	const float& height)
 {
-	glm::vec4 result(x, y, width, height);
+	glm::vec4 result(0.0f);
 
 	float aspectRatio = (float) windowWidth / windowHeight;
 	float internalAspectRatio = (float)INTERNAL_WIDTH / INTERNAL_HEIGHT;
@@ -27,12 +27,12 @@ glm::vec4 ResTranslator::transformRect(
 
 
 	// Scale
-	result.z *= screenSizeScaleY / screenSizeScaleX / internalAspectRatio;
-	result.w *= 1.0f;
+	result.z = width / INTERNAL_HEIGHT * 2.0f * screenSizeScaleY / screenSizeScaleX / internalAspectRatio;
+	result.w = height / INTERNAL_HEIGHT * 2.0f;
 
 	// Position
-	result.x = result.x / INTERNAL_WIDTH * 2.0f * screenSizeScaleY / screenSizeScaleX;
-	result.y = result.y / INTERNAL_HEIGHT * 2.0f;
+	result.x = x / INTERNAL_WIDTH * 2.0f * screenSizeScaleY / screenSizeScaleX;
+	result.y = y / INTERNAL_HEIGHT * 2.0f;
 
 	return result;
 }
