@@ -2,6 +2,7 @@
 #include "Scene.hpp"
 
 class UIRenderer;
+class DebugRenderer;
 
 class SceneHandler
 {
@@ -16,6 +17,7 @@ private:
 	ResourceManager* resourceManager;
 	VulkanRenderer* vulkanRenderer;
 	UIRenderer* uiRenderer;
+	DebugRenderer* debugRenderer;
 
 public:
 	SceneHandler();
@@ -40,6 +42,9 @@ public:
 
 	void setUIRenderer(UIRenderer* uiRenderer);
 	UIRenderer* getUIRenderer();
+
+	void setDebugRenderer(DebugRenderer* debugRenderer);
+	DebugRenderer* getDebugRenderer();
 
 	void setVulkanRenderer(VulkanRenderer* vulkanRenderer);
 	VulkanRenderer* getVulkanRenderer();

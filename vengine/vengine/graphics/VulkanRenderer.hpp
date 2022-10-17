@@ -17,10 +17,10 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 #include "UIRenderer.hpp"
+#include "DebugRenderer.hpp"
 
 class Scene;
 class Camera;
-class UIRenderer;
 
 #include <functional>
 using stbi_uc = unsigned char;
@@ -33,6 +33,7 @@ class VulkanRenderer
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
     ResourceManager* resourceManager;
     UIRenderer* uiRenderer;
+    DebugRenderer* debugRenderer;
 
     Window* window;
     VmaAllocator vma = nullptr;
@@ -160,7 +161,8 @@ public:
         Window* window, 
         std::string&& windowName, 
         ResourceManager* resourceMan,
-        UIRenderer* uiRenderer);
+        UIRenderer* uiRenderer,
+        DebugRenderer* debugRenderer);
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);
 

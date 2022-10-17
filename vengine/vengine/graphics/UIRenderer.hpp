@@ -59,8 +59,6 @@ public:
         VmaAllocator& vma,
         ResourceManager& resourceManager,
         vk::RenderPass& renderPass,
-        vk::Queue& transferQueue,
-        vk::CommandPool& transferCommandPool,
         const uint32_t& framesInFlight);
     void initForScene();
     void cleanup();

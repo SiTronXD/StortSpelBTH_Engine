@@ -24,8 +24,6 @@ void UIRenderer::create(
 	VmaAllocator& vma,
 	ResourceManager& resourceManager,
 	vk::RenderPass& renderPass,
-    vk::Queue& transferQueue,
-    vk::CommandPool& transferCommandPool,
 	const uint32_t& framesInFlight)
 {
     this->physicalDevice = &physicalDevice;

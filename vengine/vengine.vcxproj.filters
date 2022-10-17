@@ -67,6 +67,7 @@
     <ClCompile Include="vengine\graphics\UIRenderer.cpp" />
     <ClCompile Include="vengine\graphics\TextureSampler.cpp" />
     <ClCompile Include="vengine\graphics\ResTranslator.cpp" />
+    <ClCompile Include="vengine\graphics\DebugRenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
     <ClInclude Include="vengine\graphics\TextureSampler.hpp" />
     <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
+    <ClInclude Include="vengine\graphics\DebugRenderer.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
