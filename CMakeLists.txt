@@ -172,7 +172,7 @@ else() # Use Git Submodules
     message("Using Git Submodules for dependencies!") 
 
     option(TRACY_ENABLE "" ON)    
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/src)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src)
@@ -180,7 +180,7 @@ else() # Use Git Submodules
 
     target_include_directories(vengine PRIVATE ${VENGINE_SOURCE_DIR}/../)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/include)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/src/include)
+    #target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/src/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
