@@ -103,6 +103,11 @@ void Device::createDevice(
     outputQueueFamilies.setPresentQueue(this->device.getQueue2(presentationQueueInfo));
 }
 
+void Device::destroyBuffer(vk::Buffer& buffer)
+{
+    this->device.destroyBuffer(buffer);
+}
+
 void Device::waitIdle()
 {
     this->device.waitIdle();

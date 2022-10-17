@@ -48,8 +48,8 @@ void DebugRenderer::initForScene()
         this->shaderInput,
         *this->renderPass,
         VertexStreams{},
-        "xdddddddddd",
-        "xdddddddddd",
+        "dbgLine.vert.spv",
+        "dbgLine.frag.spv",
         false
     );
 }

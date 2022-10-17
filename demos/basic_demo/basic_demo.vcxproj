@@ -186,11 +186,7 @@ robocopy $(SolutionDir)vengine\vengine_assets vengine_assets /s
 mkdir $(OutDir)assets
 robocopy $(ProjectDir)assets $(OutDir)assets /s
 
-cd $(ProjectDir)assets\shaders\
-call compile_shaders.bat
-
-cd $(OutDir)assets\shaders\
-call compile_shaders.bat</Command>
+SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -223,11 +219,7 @@ robocopy $(SolutionDir)vengine\vengine_assets vengine_assets /s
 mkdir $(OutDir)assets
 robocopy $(ProjectDir)assets $(OutDir)assets /s
 
-cd $(ProjectDir)assets\shaders\
-call compile_shaders.bat
-
-cd $(OutDir)assets\shaders\
-call compile_shaders.bat</Command>
+SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Distribution|x64'">
@@ -260,11 +252,7 @@ robocopy $(SolutionDir)vengine\vengine_assets vengine_assets /s
 mkdir $(OutDir)assets
 robocopy $(ProjectDir)assets $(OutDir)assets /s
 
-cd $(ProjectDir)assets\shaders\
-call compile_shaders.bat
-
-cd $(OutDir)assets\shaders\
-call compile_shaders.bat</Command>
+SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>

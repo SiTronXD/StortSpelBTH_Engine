@@ -7,6 +7,7 @@
 #include "glm/matrix.hpp"
 #include "../graphics/vulkan/VmaUsage.hpp"
 #include "ShaderInput.hpp"
+#include "VertexBufferArray.hpp"
 
 class Mesh
 {
@@ -20,15 +21,9 @@ private:
 
     // One vertex buffer per data stream
     std::vector<vk::DeviceSize> vertexBufferOffsets;
-    std::vector<vk::Buffer> vertexBuffers;
-    std::vector<VmaAllocation> vertexBufferMemories;
+    VertexBufferArray vertexBuffers;
     vk::Buffer indexBuffer{};
     VmaAllocation indexBufferMemory{};
-
-    template <typename T>
-    void createSeparateVertexBuffer(
-        const std::vector<T>& dataStream,
-        const VulkanImportStructs& importStructs);
 
     void getAnimLerp(
         const std::vector<std::pair<float, glm::vec3>>& stamps,
@@ -69,7 +64,7 @@ const std::vector<vk::DeviceSize>& Mesh::getVertexBufferOffsets() const
 
 const std::vector<vk::Buffer>& Mesh::getVertexBuffers() const
 {
-    return this->vertexBuffers;
+    return this->vertexBuffers.getVertexBuffers();
 }
 
 const vk::Buffer& Mesh::getIndexBuffer() const

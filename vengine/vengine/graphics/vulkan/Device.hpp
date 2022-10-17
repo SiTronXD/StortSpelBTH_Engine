@@ -22,6 +22,7 @@ public:
 		// TODO: remove this
 		vk::DispatchLoaderDynamic& outputDynamicDispatch);
 
+	void destroyBuffer(vk::Buffer& buffer);
 	void waitIdle();
 	void cleanup();
 
