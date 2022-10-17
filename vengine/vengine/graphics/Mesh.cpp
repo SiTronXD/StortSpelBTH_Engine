@@ -356,38 +356,54 @@ void Mesh::outputRigDebugInfo(const std::string& filePath)
     // Create file
     std::ofstream file(filePath);
     
-    // Bones
-    file << "Bones (" << this->meshData.bones.size() <<  "):" << std::endl;
+    // Write
     for (size_t i = 0; i < this->meshData.bones.size(); ++i)
     {
-        file << "[" << i << "] (" << this->meshData.bones[i].boneName << "): parent index: " <<
-            this->meshData.bones[i].parentIndex << std::endl;
-    }
-    file << std::endl;
+        file << "bone [" << i << "]: " << std::endl;
+        file << "InvBindPose: ";
+        for (uint32_t a = 0; a < 4; ++a)
+        {
+            for (uint32_t b = 0; b < 4; ++b)
+            {
+                file << this->meshData.bones[i].inverseBindPoseMatrix[a][b] << " ";
+            }
+        }
+        file << std::endl;
+        file << "translations (" << this->meshData.bones[i].translationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].translationStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].translationStamps[j].first << "](" <<
+                this->meshData.bones[i].translationStamps[j].second.x << ", " <<
+                this->meshData.bones[i].translationStamps[j].second.y << ", " <<
+                this->meshData.bones[i].translationStamps[j].second.z << ")" <<
+                std::endl;
+        }
 
-    // Bone indices
-    file << "Vertex bone indices(" << 
-        this->meshData.vertexStreams.boneIndices.size() << "):" << std::endl;
-    for (size_t i = 0; i < this->meshData.vertexStreams.boneIndices.size(); ++i)
-    {
-        file << "[" << i << "]: (" <<
-            this->meshData.vertexStreams.boneIndices[i].x << ", " <<
-            this->meshData.vertexStreams.boneIndices[i].y << ", " <<
-            this->meshData.vertexStreams.boneIndices[i].z << ", " << 
-            this->meshData.vertexStreams.boneIndices[i].w << ")" << std::endl;
-    }
-    file << std::endl;
+        file << "rotation (" << this->meshData.bones[i].rotationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].rotationStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].rotationStamps[j].first << "](" <<
+                this->meshData.bones[i].rotationStamps[j].second.x << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.y << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.z << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.w << ")" <<
+                std::endl;
+        }
 
-    // Bone weights
-    file << "Vertex bone weights (" <<
-        this->meshData.vertexStreams.boneWeights.size() << "):" << std::endl;
-    for (size_t i = 0; i < this->meshData.vertexStreams.boneWeights.size(); ++i)
-    {
-        file << "[" << i << "]: (" <<
-            this->meshData.vertexStreams.boneWeights[i].x << ", " <<
-            this->meshData.vertexStreams.boneWeights[i].y << ", " <<
-            this->meshData.vertexStreams.boneWeights[i].z << ", " <<
-            this->meshData.vertexStreams.boneWeights[i].w << ")" << std::endl;
+        file << "scale (" << this->meshData.bones[i].scaleStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].scaleStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].scaleStamps[j].first << "](" <<
+                this->meshData.bones[i].scaleStamps[j].second.x << ", " <<
+                this->meshData.bones[i].scaleStamps[j].second.y << ", " <<
+                this->meshData.bones[i].scaleStamps[j].second.z << ")" <<
+                std::endl;
+        }
+
+        file << std::endl;
     }
     file << std::endl;
 
