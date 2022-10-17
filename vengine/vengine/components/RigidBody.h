@@ -2,12 +2,14 @@
 
 #include "glm/glm.hpp"
 
-struct RigidBody
+struct Rigidbody
 {
-	int ID = -1;
+	float weight = 1.0f;
+	glm::vec3 posConstraints = glm::vec3(0.0f);
+	glm::vec3 rotConstraints = glm::vec3(0.0f);
 
-	glm::vec3 pos;
-	glm::vec3 rot = { 0.f, 0.f, 0.f };
-	float weight = 1.f;
-	bool isTrigger = false;
+	glm::vec3 acceleration = glm::vec3(0.0f);
+	glm::vec3 velocity = glm::vec3(0.0f);
+
+	int ID = -1;
 };

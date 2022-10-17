@@ -7,7 +7,7 @@
 
 #include "../components/Transform.hpp"
 
-namespace BtH
+namespace BulletH
 {
 	static glm::vec3 glmvec(btVector3& vec)
 	{
