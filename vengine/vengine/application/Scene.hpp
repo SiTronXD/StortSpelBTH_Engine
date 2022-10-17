@@ -7,6 +7,7 @@
 #include "../components/AudioListener.hpp"
 #include "../resource_management/Configurator.hpp"
 #include "../resource_management/ResourceManager.hpp"
+#include "../lua/ScriptHandler.h"
 
 #include <entt.hpp>
 #include <vector>

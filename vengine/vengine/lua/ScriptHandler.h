@@ -3,6 +3,8 @@
 #include <string>
 #include <vector>
 
+#include "../components/Script.hpp"
+
 typedef int Entity;
 struct lua_State;
 struct LuaSystem;
@@ -37,5 +39,8 @@ public:
 
 	void update();
 	void cleanup();
-};
 
+	bool getScriptComponentValue(Script& script, int& ret, std::string name);
+	bool getScriptComponentValue(Script& script, float& ret, std::string name);
+	bool getScriptComponentValue(Script& script, std::string& ret, std::string name);
+};

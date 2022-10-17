@@ -197,3 +197,34 @@ void ScriptHandler::cleanup()
 {
 	lua_close(L);
 }
+
+bool ScriptHandler::getScriptComponentValue(Script& script, int& ret, std::string name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_getfield(L, -1, name.c_str());
+
+
+	bool result = lua_isnumber(L, -1);
+	if (result) { ret = (int)lua_tointeger(L, -1); }
+	return result;
+}
+
+bool ScriptHandler::getScriptComponentValue(Script& script, float& ret, std::string name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_getfield(L, -1, name.c_str());
+
+	bool result = lua_isnumber(L, -1);
+	if (result) { ret = (float)lua_tonumber(L, -1); }
+	return result;
+}
+
+bool ScriptHandler::getScriptComponentValue(Script& script, std::string& ret, std::string name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_getfield(L, -1, name.c_str());
+
+	bool result = lua_isstring(L, -1);
+	if (result) { ret = lua_tostring(L, -1); }
+	return result;
+}

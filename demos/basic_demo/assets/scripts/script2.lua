@@ -1,16 +1,11 @@
 local script = {}
 
 function script:init()
-	print("init with ID: " .. self.ID)
-	print("Script2")
+	print("Cam: " .. self.ID)
 end
 
-function script:update(dt)
-	local x = core.btoi(input.isKeyDown(Keys.A)) - core.btoi(input.isKeyDown(Keys.D))
-	local z = core.btoi(input.isKeyDown(Keys.W)) - core.btoi(input.isKeyDown(Keys.S))
-	local moveVec = vector(x, 0, z)
+function script:update()
 
-	self.transform.position = self.transform.position + moveVec * dt * 5
 end
 
 return script;
