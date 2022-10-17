@@ -301,6 +301,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\components\Collider.h" />
     <ClInclude Include="vengine\physics\BulletHelper.hpp" />
     <ClInclude Include="vengine\physics\PhysicsEngine.h" />
     <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
@@ -339,7 +340,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\components\Camera.hpp" />
     <ClInclude Include="vengine\components\CapsuleCollider.h" />
     <ClInclude Include="vengine\components\MeshComponent.hpp" />
-    <ClInclude Include="vengine\components\RigidBody.h" />
+    <ClInclude Include="vengine\components\Rigidbody.h" />
     <ClInclude Include="vengine\components\SphereCollider.h" />
     <ClInclude Include="vengine\components\Transform.hpp" />
     <ClInclude Include="vengine\dev\defs.hpp" />
