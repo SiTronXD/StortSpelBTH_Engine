@@ -1,5 +1,6 @@
 #include "path_finder.h"
 
+#include <algorithm>
 #include <queue>
 
 

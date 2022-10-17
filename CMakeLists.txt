@@ -272,6 +272,7 @@ if(${UNIX})
     target_compile_definitions(vengine PRIVATE "strcpy_s=strcpy" )
 endif()
 
+target_compile_definitions(vengine PRIVATE "NO_VALIDATION")
 
 # Link all libraries to vengine target
 target_link_libraries(
