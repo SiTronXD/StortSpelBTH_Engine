@@ -5,11 +5,14 @@
 class TestDemoScene : public Scene
 {
 private:
-	int testEntity;
-	int testEntity2;
+	Entity testEntity;
+	Entity testEntity2;
 
 	uint32_t uiTextureIndex0;
 	uint32_t uiTextureIndex1;
+
+	Entity aniIDs[4];
+	bool aniActive[4];
 
 public:
 	TestDemoScene();

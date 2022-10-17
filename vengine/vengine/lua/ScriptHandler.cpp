@@ -25,7 +25,7 @@ void ScriptHandler::lua_openmetatables(lua_State* L)
 void ScriptHandler::updateScripts()
 {
 	entt::registry& reg = this->sceneHandler->getScene()->getSceneReg();
-	auto view = reg.view<Transform, Script>();
+	auto view = reg.view<Transform, Script>(entt::exclude<Inactive>);
 
 	auto func = [&](Transform& transform, const Script& script)
 	{

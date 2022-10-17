@@ -318,6 +318,11 @@ void VulkanRenderer::draw(Scene* scene)
             transform.position + transform.forward(),
             transform.up()
         );
+
+        if (!scene->isActive(scene->getMainCameraID()))
+        {
+            Log::warning("Main camera is inactive!");
+        }
     }
     else
     {
@@ -1050,7 +1055,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 );
 
                 // For every non-animating mesh we have
-                auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent>);
+                auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent, Inactive>);
                 meshView.each([&](
                     const Transform& transform, 
                     const MeshComponent& meshComponent)
@@ -1119,7 +1124,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 			    }
 
                 // For every animating mesh we have
-                auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
+                auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<Inactive>);
                 animView.each(
                     [&](const Transform& transform,
                         const MeshComponent& meshComponent,
