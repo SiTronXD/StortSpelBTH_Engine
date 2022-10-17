@@ -1,4 +1,5 @@
 #pragma once 
+#include <string>
 #include <vector>
 #include <array>
 #include <glm/vec3.hpp>
@@ -25,6 +26,10 @@ struct VertexStreams
 
 struct Bone 
 {
+#if defined(_DEBUG) || defined(DEBUG)
+    std::string boneName;
+#endif
+
     int parentIndex;
     glm::mat4 inverseBindPoseMatrix;
     glm::mat4 boneMatrix;
