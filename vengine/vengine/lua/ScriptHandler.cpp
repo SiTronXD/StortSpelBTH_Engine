@@ -103,7 +103,7 @@ bool ScriptHandler::runScript(std::string& path)
 	return result;
 }
 
-void ScriptHandler::setScriptComponent(int entity, std::string& path)
+void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 {
 	Scene* scene = this->sceneHandler->getScene();
 

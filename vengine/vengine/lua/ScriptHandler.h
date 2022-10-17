@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 
+typedef int Entity;
 struct lua_State;
 struct LuaSystem;
 class SceneHandler;
@@ -31,7 +32,7 @@ public:
 	void setNetworkHandler(NetworkHandler* networkHandler);
 
 	bool runScript(std::string& path);
-	void setScriptComponent(int entity, std::string& path);
+	void setScriptComponent(Entity entity, std::string& path);
 	void updateSystems(std::vector<LuaSystem>& vec);
 
 	void update();
