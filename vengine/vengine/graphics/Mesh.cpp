@@ -347,3 +347,51 @@ void Mesh::cleanup()
     this->device.getVkDevice().destroyBuffer(this->indexBuffer);
     vmaFreeMemory(this->vma, this->indexBufferMemory);
 }
+
+#include <fstream>
+#include <iostream>
+void Mesh::outputRigDebugInfo(const std::string& filePath)
+{
+#if defined(_DEBUG) || defined(DEBUG)
+    // Create file
+    std::ofstream file(filePath);
+    
+    // Bones
+    file << "Bones (" << this->meshData.bones.size() <<  "):" << std::endl;
+    for (size_t i = 0; i < this->meshData.bones.size(); ++i)
+    {
+        file << "[" << i << "] (" << this->meshData.bones[i].boneName << "): parent index: " <<
+            this->meshData.bones[i].parentIndex << std::endl;
+    }
+    file << std::endl;
+
+    // Bone indices
+    file << "Vertex bone indices(" << 
+        this->meshData.vertexStreams.boneIndices.size() << "):" << std::endl;
+    for (size_t i = 0; i < this->meshData.vertexStreams.boneIndices.size(); ++i)
+    {
+        file << "[" << i << "]: (" <<
+            this->meshData.vertexStreams.boneIndices[i].x << ", " <<
+            this->meshData.vertexStreams.boneIndices[i].y << ", " <<
+            this->meshData.vertexStreams.boneIndices[i].z << ", " << 
+            this->meshData.vertexStreams.boneIndices[i].w << ")" << std::endl;
+    }
+    file << std::endl;
+
+    // Bone weights
+    file << "Vertex bone weights (" <<
+        this->meshData.vertexStreams.boneWeights.size() << "):" << std::endl;
+    for (size_t i = 0; i < this->meshData.vertexStreams.boneWeights.size(); ++i)
+    {
+        file << "[" << i << "]: (" <<
+            this->meshData.vertexStreams.boneWeights[i].x << ", " <<
+            this->meshData.vertexStreams.boneWeights[i].y << ", " <<
+            this->meshData.vertexStreams.boneWeights[i].z << ", " <<
+            this->meshData.vertexStreams.boneWeights[i].w << ")" << std::endl;
+    }
+    file << std::endl;
+
+    // Close file
+    file.close();
+#endif
+}

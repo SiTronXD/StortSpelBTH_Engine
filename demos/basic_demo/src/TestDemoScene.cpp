@@ -51,6 +51,7 @@ void TestDemoScene::init()
 
 
 	// Create other test entities
+	uint32_t amogusMeshID = ~0u;
 	for (uint32_t i = 0; i < 4; ++i)
 	{
 		int newTestEntity = this->createEntity();
@@ -66,6 +67,7 @@ void TestDemoScene::init()
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Amogus/source/1.fbx");
+			amogusMeshID = newMeshComp.meshID;
 		}
 		else
 		{
@@ -81,7 +83,8 @@ void TestDemoScene::init()
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
 	}
-
+	// Output test
+	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
 
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};
