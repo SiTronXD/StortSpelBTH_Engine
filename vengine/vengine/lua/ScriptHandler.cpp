@@ -25,7 +25,7 @@ void ScriptHandler::lua_openmetatables(lua_State* L)
 void ScriptHandler::updateScripts()
 {
 	entt::registry& reg = this->sceneHandler->getScene()->getSceneReg();
-	auto view = reg.view<Transform, Script>();
+	auto view = reg.view<Transform, Script>(entt::exclude<Inactive>);
 
 	auto func = [&](Transform& transform, const Script& script)
 	{
@@ -103,7 +103,7 @@ bool ScriptHandler::runScript(std::string& path)
 	return result;
 }
 
-void ScriptHandler::setScriptComponent(int entity, std::string& path)
+void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 {
 	Scene* scene = this->sceneHandler->getScene();
 
@@ -196,4 +196,35 @@ void ScriptHandler::update()
 void ScriptHandler::cleanup()
 {
 	lua_close(L);
+}
+
+bool ScriptHandler::getScriptComponentValue(Script& script, int& ret, std::string name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_getfield(L, -1, name.c_str());
+
+
+	bool result = lua_isnumber(L, -1);
+	if (result) { ret = (int)lua_tointeger(L, -1); }
+	return result;
+}
+
+bool ScriptHandler::getScriptComponentValue(Script& script, float& ret, std::string name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_getfield(L, -1, name.c_str());
+
+	bool result = lua_isnumber(L, -1);
+	if (result) { ret = (float)lua_tonumber(L, -1); }
+	return result;
+}
+
+bool ScriptHandler::getScriptComponentValue(Script& script, std::string& ret, std::string name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_getfield(L, -1, name.c_str());
+
+	bool result = lua_isstring(L, -1);
+	if (result) { ret = lua_tostring(L, -1); }
+	return result;
 }

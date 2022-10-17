@@ -36,6 +36,15 @@ void TestScene2::update()
 		std::cout << "(" << Input::getMouseX() << " " << 
 			Input::getMouseY() << ")" << std::endl;
 	}
+	
+	Entity mainCameraID = this->getMainCameraID();
+	if (this->hasComponents<Script>(mainCameraID))
+	{
+		if (this->getScriptHandler()->getScriptComponentValue(this->getComponent<Script>(mainCameraID), this->playerID, "playerID"))
+		{
+			Log::write("PlayerID: " + std::to_string(this->playerID));
+		}
+	}
 
 	Scene::getUIRenderer()->beginUI();
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
