@@ -10,6 +10,7 @@ private:
 	// pos_0, uv_0, pos_1, uv_1, ... , pos_FiF-1, uv_FiF-1
 	std::vector<vk::Buffer> vertexBuffers;
 	std::vector<VmaAllocation> vertexBufferMemories;
+    std::vector<vk::DeviceSize> vertexBufferOffsets;
 
 	Device* device;
 	VmaAllocator* vma;
@@ -37,6 +38,7 @@ public:
 
         this->vertexBuffers.push_back(vk::Buffer());
         this->vertexBufferMemories.push_back(VmaAllocation());
+        this->vertexBufferOffsets.push_back(0);
 
         // Temporary buffer to "Stage" vertex data before transferring to GPU
         vk::Buffer stagingBuffer;
@@ -106,6 +108,8 @@ public:
 	void cleanup();
 
 	inline const size_t getNumVertexBuffers() const { return this->vertexBuffers.size(); }
+    inline const std::vector<vk::DeviceSize>& getVertexBufferOffsets() const
+    { return this->vertexBufferOffsets; }
 	inline const std::vector<vk::Buffer>& getVertexBuffers() const
 	{ return this->vertexBuffers; }
 };

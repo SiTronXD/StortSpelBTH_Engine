@@ -44,7 +44,9 @@ public:
 		const VertexStreams& targetVertexStream,
 		const std::string& vertexShaderName,
 		const std::string& fragmentShaderName = "shader.frag.spv",
-		const bool& depthTestingEnabled = true);
+		const bool& depthTestingEnabled = true,
+		const vk::PrimitiveTopology& topology = 
+			vk::PrimitiveTopology::eTriangleList);
 
 	void cleanup();
 

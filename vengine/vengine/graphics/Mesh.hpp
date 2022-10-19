@@ -20,7 +20,6 @@ private:
     std::vector<glm::mat4> boneTransforms;
 
     // One vertex buffer per data stream
-    std::vector<vk::DeviceSize> vertexBufferOffsets;
     VertexBufferArray vertexBuffers;
     vk::Buffer indexBuffer{};
     VmaAllocation indexBufferMemory{};
@@ -48,8 +47,7 @@ public:
     
     const std::vector<glm::mat4>& getBoneTransforms(const float& timer);
 
-    inline const std::vector<vk::DeviceSize>& getVertexBufferOffsets() const;
-    inline const std::vector<vk::Buffer>& getVertexBuffers() const;
+    inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;
 	inline MeshData& getMeshData();
     inline const std::vector<SubmeshData>& getSubmeshData() const;
@@ -57,14 +55,9 @@ public:
     void cleanup();
 };
 
-const std::vector<vk::DeviceSize>& Mesh::getVertexBufferOffsets() const
+const VertexBufferArray& Mesh::getVertexBufferArray() const
 {
-    return this->vertexBufferOffsets;
-}
-
-const std::vector<vk::Buffer>& Mesh::getVertexBuffers() const
-{
-    return this->vertexBuffers.getVertexBuffers();
+    return this->vertexBuffers;
 }
 
 const vk::Buffer& Mesh::getIndexBuffer() const

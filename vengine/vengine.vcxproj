@@ -348,6 +348,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
     <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\UniformBufferStructs.hpp" />
     <ClInclude Include="vengine\lua\wrappers\NetworkHandlerLua.h" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
     <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />

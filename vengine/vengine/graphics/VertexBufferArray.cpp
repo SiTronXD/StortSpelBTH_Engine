@@ -15,7 +15,8 @@ VertexBufferArray::VertexBufferArray(VertexBufferArray&& ref)
     transferQueue(ref.transferQueue),
     transferCommandPool(ref.transferCommandPool),
     vertexBuffers(std::move(ref.vertexBuffers)),
-    vertexBufferMemories(std::move(ref.vertexBufferMemories))
+    vertexBufferMemories(std::move(ref.vertexBufferMemories)),
+    vertexBufferOffsets(std::move(ref.vertexBufferOffsets))
 {
 
 }

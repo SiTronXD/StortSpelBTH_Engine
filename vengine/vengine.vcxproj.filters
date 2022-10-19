@@ -86,6 +86,7 @@
     <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
     <ClInclude Include="vengine\graphics\DebugRenderer.hpp" />
     <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\UniformBufferStructs.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

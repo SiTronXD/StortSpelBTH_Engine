@@ -181,6 +181,8 @@ int VulkanRenderer::init(
             this->vma,
             *this->resourceManager,
             this->renderPassBase,
+            this->queueFamilies.getGraphicsQueue(),
+            this->commandPool,
             MAX_FRAMES_IN_FLIGHT
         );
     }
@@ -1036,6 +1038,10 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
             this->debugRenderer->getShaderInput().setCurrentFrame(
                 this->currentFrame
             );
+            this->debugRenderer->getShaderInput().updateUniformBuffer(
+                this->viewProjectionUB,
+                (void*)&this->uboViewProjection
+            );
 
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -1087,8 +1093,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Bind vertex buffer
                         currentCommandBuffer.bindVertexBuffers2(
-                            currentMesh.getVertexBufferOffsets(),
-                            currentMesh.getVertexBuffers()
+                            currentMesh.getVertexBufferArray()
                         );
 
                         // Bind index buffer
@@ -1173,8 +1178,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Bind vertex buffer
                         currentCommandBuffer.bindVertexBuffers2(
-                            currentMesh.getVertexBufferOffsets(),
-					        currentMesh.getVertexBuffers()
+					        currentMesh.getVertexBufferArray()
                         );
 
                         // Bind index buffer
@@ -1264,6 +1268,20 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     currentCommandBuffer.bindGraphicsPipeline(
                         this->debugRenderer->getPipeline()
                     );
+
+                    // Bind shader input per frame
+                    currentCommandBuffer.bindShaderInputFrequency(
+                        this->debugRenderer->getShaderInput(),
+                        DescriptorFrequency::PER_FRAME
+                    );
+
+                    // Bind vertex buffer
+                    currentCommandBuffer.bindVertexBuffers2(
+                        this->debugRenderer->getVertexBufferArray()
+                    );
+
+                    // Draw
+                    currentCommandBuffer.draw(this->debugRenderer->getNumVertices());
                 }
 
             // End Render Pass!

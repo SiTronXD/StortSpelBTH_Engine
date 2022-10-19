@@ -112,7 +112,6 @@ Mesh::Mesh(Mesh&& ref)
     device(ref.device),
     vma(ref.vma),
     boneTransforms(std::move(ref.boneTransforms)),
-    vertexBufferOffsets(std::move(ref.vertexBufferOffsets)),
     vertexBuffers(std::move(ref.vertexBuffers)),
     indexBuffer(std::move(ref.indexBuffer)),
     indexBufferMemory(std::move(ref.indexBufferMemory))
@@ -161,9 +160,6 @@ void Mesh::createVertexBuffers(
     this->vertexBuffers.addVertexBuffer(
         meshData.vertexStreams.boneIndices
     );
-
-    // Vertex buffer offsets when binding
-    this->vertexBufferOffsets.resize(this->vertexBuffers.getNumVertexBuffers());
 }
 
 void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStructs)
