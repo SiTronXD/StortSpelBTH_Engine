@@ -83,7 +83,8 @@ void Pipeline::createPipeline(
     const VertexStreams& targetVertexStream,
     const std::string& vertexShaderName,
     const std::string& fragmentShaderName,
-    const bool& depthTestingEnabled)
+    const bool& depthTestingEnabled,
+    const vk::PrimitiveTopology& topology)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -152,7 +153,7 @@ void Pipeline::createPipeline(
 
     // -- INPUT ASSEMBLY --
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
-    inputAssemblyStateCreateInfo.setTopology(vk::PrimitiveTopology::eTriangleList);        // Primitive type to assemble primitives from ;
+    inputAssemblyStateCreateInfo.setTopology(topology);        // Primitive type to assemble primitives from ;
     inputAssemblyStateCreateInfo.setPrimitiveRestartEnable(VK_FALSE);                     // Allow overrideing tof "strip" topology to start new primitives
 
     // -- VIEWPORT & SCISSOR ---

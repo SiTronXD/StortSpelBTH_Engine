@@ -60,7 +60,8 @@ int VulkanRenderer::init(
     Window* window, 
     std::string&& windowName, 
     ResourceManager* resourceMan,
-    UIRenderer* uiRenderer)
+    UIRenderer* uiRenderer,
+    DebugRenderer* debugRenderer)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -68,6 +69,7 @@ int VulkanRenderer::init(
 
     this->resourceManager = resourceMan;
     this->uiRenderer = uiRenderer;
+    this->debugRenderer = debugRenderer;
     this->window = window;
 
     try 
@@ -169,6 +171,16 @@ int VulkanRenderer::init(
             this->vma,
             *this->resourceManager,
             this->renderPassBase,
+            MAX_FRAMES_IN_FLIGHT
+        );
+
+        // Create debug renderer
+        this->debugRenderer->create(
+            this->physicalDevice,
+            this->device,
+            this->vma,
+            *this->resourceManager,
+            this->renderPassBase,
             this->queueFamilies.getGraphicsQueue(),
             this->commandPool,
             MAX_FRAMES_IN_FLIGHT
@@ -245,6 +257,7 @@ void VulkanRenderer::cleanup()
 
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
+    this->debugRenderer->cleanup();
     this->uiRenderer->cleanup();
 
     if (this->hasAnimations)
@@ -475,6 +488,9 @@ void VulkanRenderer::initForScene(Scene* scene)
 
     // UI renderer
     this->uiRenderer->initForScene();
+
+    // Debug renderer
+    this->debugRenderer->initForScene();
 
 	// Default shader inputs
     VertexStreams defaultStream{};
@@ -720,6 +736,7 @@ void VulkanRenderer::cleanupRenderPassBase()
 VulkanRenderer::VulkanRenderer()
     : resourceManager(nullptr), 
     uiRenderer(nullptr), 
+    debugRenderer(nullptr),
     window(nullptr)
 {
     loadConfIntoMemory();
@@ -1018,8 +1035,19 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 			}
 
             // UI shader input
+            this->uiRenderer->prepareForGPU();
             this->uiRenderer->getShaderInput().setCurrentFrame(
                 this->currentFrame
+            );
+
+            // Debug renderer shader input
+            this->debugRenderer->prepareGPU(this->currentFrame);
+            this->debugRenderer->getShaderInput().setCurrentFrame(
+                this->currentFrame
+            );
+            this->debugRenderer->getShaderInput().updateUniformBuffer(
+                this->viewProjectionUB,
+                (void*)&this->uboViewProjection
             );
 
             // Begin Render Pass!    
@@ -1072,8 +1100,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Bind vertex buffer
                         currentCommandBuffer.bindVertexBuffers2(
-                            currentMesh.getVertexBufferOffsets(),
-                            currentMesh.getVertexBuffers()
+                            currentMesh.getVertexBufferArray(),
+                            this->currentFrame
                         );
 
                         // Bind index buffer
@@ -1158,8 +1186,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Bind vertex buffer
                         currentCommandBuffer.bindVertexBuffers2(
-                            currentMesh.getVertexBufferOffsets(),
-					        currentMesh.getVertexBuffers()
+					        currentMesh.getVertexBufferArray(),
+                            this->currentFrame
                         );
 
                         // Bind index buffer
@@ -1198,47 +1226,75 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 );
 
                 // UI rendering
-                currentCommandBuffer.bindGraphicsPipeline(
-                    this->uiRenderer->getPipeline()
-                );
-
-                // UI storage buffer
-                this->uiRenderer->getShaderInput().setStorageBuffer(
-                    this->uiRenderer->getStorageBufferID()
-                );
-                currentCommandBuffer.bindShaderInputFrequency(
-                    this->uiRenderer->getShaderInput(),
-                    DescriptorFrequency::PER_MESH
-                );
-
-                // UI update storage buffer
-                this->uiRenderer->getShaderInput().updateStorageBuffer(
-                    this->uiRenderer->getStorageBufferID(),
-                    this->uiRenderer->getUiElementData().data()
-                );
-
-                // One draw call for all ui elements with the same texture
-                const std::vector<UIDrawCallData>& drawCallData =
-                    this->uiRenderer->getUiDrawCallData();
-                for (size_t i = 0; i < drawCallData.size(); ++i)
                 {
-                    // UI texture
-                    this->uiRenderer->getShaderInput().setTexture(
-                        this->uiRenderer->getSamplerID(),
-                        drawCallData[i].textureIndex
+                    // UI pipeline
+                    currentCommandBuffer.bindGraphicsPipeline(
+                        this->uiRenderer->getPipeline()
+                    );
+
+                    // UI storage buffer
+                    this->uiRenderer->getShaderInput().setStorageBuffer(
+                        this->uiRenderer->getStorageBufferID()
                     );
                     currentCommandBuffer.bindShaderInputFrequency(
                         this->uiRenderer->getShaderInput(),
-                        DescriptorFrequency::PER_DRAW_CALL
+                        DescriptorFrequency::PER_MESH
                     );
 
-                    // UI draw
-                    currentCommandBuffer.draw(
-                        drawCallData[i].numVertices,
-                        1,
-                        drawCallData[i].startVertex
+                    // UI update storage buffer
+                    this->uiRenderer->getShaderInput().updateStorageBuffer(
+                        this->uiRenderer->getStorageBufferID(),
+                        this->uiRenderer->getUiElementData().data()
                     );
+
+                    // One draw call for all ui elements with the same texture
+                    const std::vector<UIDrawCallData>& drawCallData =
+                        this->uiRenderer->getUiDrawCallData();
+                    for (size_t i = 0; i < drawCallData.size(); ++i)
+                    {
+                        // UI texture
+                        this->uiRenderer->getShaderInput().setTexture(
+                            this->uiRenderer->getSamplerID(),
+                            drawCallData[i].textureIndex
+                        );
+                        currentCommandBuffer.bindShaderInputFrequency(
+                            this->uiRenderer->getShaderInput(),
+                            DescriptorFrequency::PER_DRAW_CALL
+                        );
+
+                        // UI draw
+                        currentCommandBuffer.draw(
+                            drawCallData[i].numVertices,
+                            1,
+                            drawCallData[i].startVertex
+                        );
+                    }
                 }
+                this->uiRenderer->resetRender();
+
+                // Debug rendering
+                {
+                    // Debug pipeline
+                    currentCommandBuffer.bindGraphicsPipeline(
+                        this->debugRenderer->getPipeline()
+                    );
+
+                    // Bind shader input per frame
+                    currentCommandBuffer.bindShaderInputFrequency(
+                        this->debugRenderer->getShaderInput(),
+                        DescriptorFrequency::PER_FRAME
+                    );
+
+                    // Bind vertex buffer
+                    currentCommandBuffer.bindVertexBuffers2(
+                        this->debugRenderer->getVertexBufferArray(),
+                        this->currentFrame
+                    );
+
+                    // Draw
+                    currentCommandBuffer.draw(this->debugRenderer->getNumVertices());
+                }
+                this->debugRenderer->resetRender();
 
             // End Render Pass!
             vk::SubpassEndInfo subpassEndInfo;

@@ -2,6 +2,19 @@
 #include "ResTranslator.hpp"
 #include "../resource_management/ResourceManager.hpp"
 
+void UIRenderer::prepareForGPU()
+{
+    // Num vertices for last draw call
+    this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
+        this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
+}
+
+void UIRenderer::resetRender()
+{
+    this->currentElementIndex = 0;
+    this->uiDrawCallData.clear();
+}
+
 UIRenderer::UIRenderer()
     : currentElementIndex(0),
     uiTextureIndex(~0u),
@@ -24,8 +37,6 @@ void UIRenderer::create(
 	VmaAllocator& vma,
 	ResourceManager& resourceManager,
 	vk::RenderPass& renderPass,
-    vk::Queue& transferQueue,
-    vk::CommandPool& transferCommandPool,
 	const uint32_t& framesInFlight)
 {
     this->physicalDevice = &physicalDevice;
@@ -78,12 +89,6 @@ void UIRenderer::cleanup()
 	this->uiShaderInput.cleanup();
 }
 
-void UIRenderer::beginUI()
-{
-    this->currentElementIndex = 0;
-    this->uiDrawCallData.clear();
-}
-
 void UIRenderer::setTexture(const uint32_t& textureIndex)
 {
     // Add data for unique draw call
@@ -121,11 +126,4 @@ void UIRenderer::renderTexture(
 
     // Next ui element
     this->currentElementIndex++;
-}
-
-void UIRenderer::endUI()
-{
-    // Num vertices for last draw call
-    this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
-        this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
 }

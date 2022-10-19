@@ -46,11 +46,10 @@ void TestScene2::update()
 		}
 	}
 
-	Scene::getUIRenderer()->beginUI();
+	// Render UI
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
 	Scene::getUIRenderer()->renderTexture(-0.25f, 0.0f, 0.1f, 0.1f);
 	Scene::getUIRenderer()->renderTexture(-0.25f, -0.5f, 0.1f, 0.1f);
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(0.25f, 0.3f, 0.1f, 0.1f);
-	Scene::getUIRenderer()->endUI();
 }

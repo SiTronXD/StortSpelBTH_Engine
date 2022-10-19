@@ -7,6 +7,7 @@
 #include "glm/matrix.hpp"
 #include "../graphics/vulkan/VmaUsage.hpp"
 #include "ShaderInput.hpp"
+#include "VertexBufferArray.hpp"
 
 class Mesh
 {
@@ -19,16 +20,9 @@ private:
     std::vector<glm::mat4> boneTransforms;
 
     // One vertex buffer per data stream
-    std::vector<vk::DeviceSize> vertexBufferOffsets;
-    std::vector<vk::Buffer> vertexBuffers;
-    std::vector<VmaAllocation> vertexBufferMemories;
+    VertexBufferArray vertexBuffers;
     vk::Buffer indexBuffer{};
     VmaAllocation indexBufferMemory{};
-
-    template <typename T>
-    void createSeparateVertexBuffer(
-        const std::vector<T>& dataStream,
-        const VulkanImportStructs& importStructs);
 
     void getAnimLerp(
         const std::vector<std::pair<float, glm::vec3>>& stamps,
@@ -53,8 +47,7 @@ public:
     
     const std::vector<glm::mat4>& getBoneTransforms(const float& timer);
 
-    inline const std::vector<vk::DeviceSize>& getVertexBufferOffsets() const;
-    inline const std::vector<vk::Buffer>& getVertexBuffers() const;
+    inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;
 	inline MeshData& getMeshData();
     inline const std::vector<SubmeshData>& getSubmeshData() const;
@@ -65,12 +58,7 @@ public:
     void outputRigDebugInfo(const std::string& filePath);
 };
 
-const std::vector<vk::DeviceSize>& Mesh::getVertexBufferOffsets() const
-{
-    return this->vertexBufferOffsets;
-}
-
-const std::vector<vk::Buffer>& Mesh::getVertexBuffers() const
+const VertexBufferArray& Mesh::getVertexBufferArray() const
 {
     return this->vertexBuffers;
 }

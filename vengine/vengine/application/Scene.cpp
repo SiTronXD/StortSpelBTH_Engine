@@ -30,6 +30,11 @@ UIRenderer* Scene::getUIRenderer()
 	return this->sceneHandler->getUIRenderer();
 }
 
+DebugRenderer* Scene::getDebugRenderer()
+{
+	return this->sceneHandler->getDebugRenderer();
+}
+
 Scene::Scene()
 	: sceneHandler(nullptr), mainCamera(-1)
 {

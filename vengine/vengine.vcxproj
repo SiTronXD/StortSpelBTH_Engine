@@ -201,18 +201,32 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>cd $(ProjectDir)vengine_assets\shaders\
-call compile_shaders.bat
-
-mkdir $(OutDir)vengine_assets
+      <Command>mkdir $(OutDir)vengine_assets
 robocopy $(ProjectDir)vengine_assets $(Outdir)vengine_assets /s
 
-copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
+copy $(ProjectDir)..\deps\DLLs\ $(OutDir)
+
+SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
       </Command>
+      <Outputs>
+      </Outputs>
+      <Inputs>
+      </Inputs>
     </CustomBuildStep>
+    <CustomBuild>
+      <Command>glslangValidator -V %(FullPath) -o $(ProjectDir)\vengine_assets\shaders\%(Filename)%(Extension).spv</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>%(Filename)%(Extension).spv</Outputs>
+    </CustomBuild>
+    <CustomBuild>
+      <AdditionalInputs>%(Fullpath)</AdditionalInputs>
+      <RootFolder>
+      </RootFolder>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -245,18 +259,32 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>cd $(ProjectDir)vengine_assets\shaders\
-call compile_shaders.bat
-
-mkdir $(OutDir)vengine_assets
+      <Command>mkdir $(OutDir)vengine_assets
 robocopy $(ProjectDir)vengine_assets $(Outdir)vengine_assets /s
 
-copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
+copy $(ProjectDir)..\deps\DLLs\ $(OutDir)
+
+SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
       </Command>
+      <Outputs>
+      </Outputs>
+      <Inputs>
+      </Inputs>
     </CustomBuildStep>
+    <CustomBuild>
+      <Command>glslangValidator -V %(FullPath) -o $(ProjectDir)\vengine_assets\shaders\%(Filename)%(Extension).spv</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>%(Filename)%(Extension).spv</Outputs>
+    </CustomBuild>
+    <CustomBuild>
+      <AdditionalInputs>%(Fullpath)</AdditionalInputs>
+      <RootFolder>
+      </RootFolder>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Distribution|x64'">
     <ClCompile>
@@ -286,25 +314,41 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>cd $(ProjectDir)vengine_assets\shaders\
-call compile_shaders.bat
-
-mkdir $(OutDir)vengine_assets
+      <Command>mkdir $(OutDir)vengine_assets
 robocopy $(ProjectDir)vengine_assets $(Outdir)vengine_assets /s
 
-copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
+copy $(ProjectDir)..\deps\DLLs\ $(OutDir)
+
+SET ERRORLEVEL = 0</Command>
     </PostBuildEvent>
     <CustomBuildStep>
       <Command>
       </Command>
+      <Outputs>
+      </Outputs>
+      <Inputs>
+      </Inputs>
     </CustomBuildStep>
+    <CustomBuild>
+      <Command>glslangValidator -V %(FullPath) -o $(ProjectDir)\vengine_assets\shaders\%(Filename)%(Extension).spv</Command>
+    </CustomBuild>
+    <CustomBuild>
+      <Outputs>%(Filename)%(Extension).spv</Outputs>
+    </CustomBuild>
+    <CustomBuild>
+      <AdditionalInputs>%(Fullpath)</AdditionalInputs>
+      <RootFolder>
+      </RootFolder>
+    </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\graphics\DebugRenderer.hpp" />
     <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
     <ClInclude Include="vengine\graphics\TextureSampler.hpp" />
     <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
     <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\UniformBufferStructs.hpp" />
     <ClInclude Include="vengine\lua\wrappers\NetworkHandlerLua.h" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
     <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />
@@ -382,6 +426,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClInclude Include="vengine\VengineMath.hpp" />
+    <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_sdl.cpp" />
@@ -391,6 +436,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="imgui\imgui_draw.cpp" />
     <ClCompile Include="imgui\imgui_tables.cpp" />
     <ClCompile Include="imgui\imgui_widgets.cpp" />
+    <ClCompile Include="vengine\graphics\DebugRenderer.cpp" />
     <ClCompile Include="vengine\graphics\ResTranslator.cpp" />
     <ClCompile Include="vengine\graphics\TextureSampler.cpp" />
     <ClCompile Include="vengine\graphics\UIRenderer.cpp" />
@@ -400,6 +446,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClCompile Include="vengine\ai\lib\polygon.cpp" />
     <ClCompile Include="vengine\ai\lib\segment.cpp" />
     <ClCompile Include="vengine\ai\PathFinding.cpp" />
+    <ClCompile Include="vengine\graphics\VertexBufferArray.cpp" />
     <ClCompile Include="vengine\lua\wrappers\NetworkHandlerLua.cpp" />
     <ClCompile Include="vengine\lua\wrappers\ResourceManagerLua.cpp" />
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -453,6 +500,27 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <CustomBuild Include="vengine_assets\shaders\dbgLine.frag">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\dbgLine.vert">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\shader.frag">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\shader.vert">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\shaderAnim.vert">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\ui.frag">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\ui.vert">
+      <FileType>Document</FileType>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
