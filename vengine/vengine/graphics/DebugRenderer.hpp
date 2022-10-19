@@ -12,6 +12,17 @@ class Device;
 class ResourceManager;
 class VulkanRenderer;
 
+struct DebugMeshPushConstantData
+{
+    glm::mat4 transform;
+};
+
+struct DebugMeshDrawCallData
+{
+    uint32_t meshID;
+    DebugMeshPushConstantData pushConstantData;
+};
+
 class DebugRenderer
 {
 private:
@@ -19,14 +30,20 @@ private:
 
     const uint32_t START_NUM_MAX_ELEMENTS = 64;
 
-    // Vertex buffers
-    VertexStreams vertexStreams{};
-    VertexBufferArray vertexBuffers;
+    std::vector<DebugMeshDrawCallData> meshDrawData;
 
-    // Shader input
-    UniformBufferID viewProjectionUB;
-    ShaderInput shaderInput;
-    Pipeline pipeline;
+    // Vertex buffers
+    VertexStreams lineVertexStreams{};
+    VertexBufferArray lineVertexBuffers;
+
+    // Shader inputs
+    UniformBufferID lineViewProjectionUB;
+    ShaderInput lineShaderInput;
+    Pipeline linePipeline;
+
+    UniformBufferID meshViewProjectionUB;
+    ShaderInput meshShaderInput;
+    Pipeline meshPipeline;
 
     // Vulkan
     PhysicalDevice* physicalDevice;
@@ -39,6 +56,8 @@ private:
 
     uint32_t numVertices;
     uint32_t framesInFlight;
+
+    uint32_t sphereMeshID;
 
     void prepareGPU(const uint32_t& currentFrame);
     void resetRender();
@@ -62,9 +81,15 @@ public:
         const glm::vec3& pos0, 
         const glm::vec3& pos1,
         const glm::vec3& color);
+    void renderSphere(
+        const glm::vec3& position,
+        const float& radius);
 
-    inline ShaderInput& getShaderInput() { return this->shaderInput; }
-    inline const Pipeline& getPipeline() const { return this->pipeline; }
-    inline const VertexBufferArray& getVertexBufferArray() const { return this->vertexBuffers; }
+    inline const std::vector<DebugMeshDrawCallData>& getMeshDrawCallData() const { return this->meshDrawData; }
+    inline ShaderInput& getLineShaderInput() { return this->lineShaderInput; }
+    inline ShaderInput& getMeshShaderInput() { return this->meshShaderInput; }
+    inline const Pipeline& getLinePipeline() const { return this->linePipeline; }
+    inline const Pipeline& getMeshPipeline() const { return this->meshPipeline; }
+    inline const VertexBufferArray& getLineVertexBufferArray() const { return this->lineVertexBuffers; }
     inline size_t getNumVertices() { return this->numVertices; }
 };

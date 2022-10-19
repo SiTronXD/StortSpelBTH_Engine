@@ -147,6 +147,16 @@ void TestDemoScene::update()
 		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
 		glm::vec3(0.0f, 0.0f, 0.0f)
 	);
+	Scene::getDebugRenderer()->renderSphere(
+		glm::vec3(0.f, 0.f, 30.f),
+		1.0f/*,
+		glm::vec3(1.0f, 1.0f, 0.0f)*/
+	);
+	Scene::getDebugRenderer()->renderSphere(
+		glm::vec3(3.f, 0.f, 30.f),
+		2.0f/*,
+		glm::vec3(1.0f, 1.0f, 0.0f)*/
+	);
 	this->timer += Time::getDT();
 
 	if (ImGui::Begin("Sound"))

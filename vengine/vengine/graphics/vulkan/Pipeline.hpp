@@ -45,6 +45,7 @@ public:
 		const std::string& vertexShaderName,
 		const std::string& fragmentShaderName = "shader.frag.spv",
 		const bool& depthTestingEnabled = true,
+		const bool& wireframe = false,
 		const vk::PrimitiveTopology& topology = 
 			vk::PrimitiveTopology::eTriangleList);
 

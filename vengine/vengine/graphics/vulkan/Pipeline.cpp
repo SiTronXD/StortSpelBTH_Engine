@@ -84,6 +84,7 @@ void Pipeline::createPipeline(
     const std::string& vertexShaderName,
     const std::string& fragmentShaderName,
     const bool& depthTestingEnabled,
+    const bool& wireframe,
     const vk::PrimitiveTopology& topology)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -177,8 +178,8 @@ void Pipeline::createPipeline(
     vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
     rasterizationStateCreateInfo.setDepthClampEnable(VK_FALSE);         // Change if fragments beyond near/far planes are clipped / clamped  (Requires depthclamp as a device features...)
     rasterizationStateCreateInfo.setRasterizerDiscardEnable(VK_FALSE);// Wether to discard data or skip rasterizzer. Never creates fragments, only suitable for pipleine without framebuffer output
-    rasterizationStateCreateInfo.setPolygonMode(vk::PolygonMode::eFill);// How to handle filling point betweeen vertices...
-    rasterizationStateCreateInfo.setLineWidth(1.F);                  // how thiock lines should be when drawn (other than 1 requires device features...)
+    rasterizationStateCreateInfo.setPolygonMode(wireframe ? vk::PolygonMode::eLine : vk::PolygonMode::eFill);// How to handle filling point betweeen vertices...
+    rasterizationStateCreateInfo.setLineWidth(1.F);                  // how thick lines should be when drawn (other than 1 requires device features...)
     rasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eBack);  // Which face of tri to cull
     rasterizationStateCreateInfo.setFrontFace(vk::FrontFace::eCounterClockwise);// Since our Projection matrix now has a inverted Y-axis (GLM is right handed, but vulkan is left handed)
     // winding order to determine which side is front

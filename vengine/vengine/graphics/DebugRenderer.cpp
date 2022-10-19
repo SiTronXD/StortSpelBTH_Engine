@@ -1,19 +1,20 @@
 #include "DebugRenderer.hpp"
 #include "vulkan/UniformBufferStructs.hpp"
 #include "../dev/Log.hpp"
+#include "../resource_management/ResourceManager.hpp"
 
 void DebugRenderer::prepareGPU(const uint32_t& currentFrame)
 {
     // Update vertex buffers on gpu
-    this->vertexBuffers.cpuUpdate(
+    this->lineVertexBuffers.cpuUpdate(
         0,
         currentFrame,
-        this->vertexStreams.positions
+        this->lineVertexStreams.positions
     );
-    this->vertexBuffers.cpuUpdate(
+    this->lineVertexBuffers.cpuUpdate(
         1,
         currentFrame,
-        this->vertexStreams.colors
+        this->lineVertexStreams.colors
     );
 }
 
@@ -21,6 +22,8 @@ void DebugRenderer::resetRender()
 {
     // Clear for batch of render commands next frame
     this->numVertices = 0;
+
+    this->meshDrawData.clear();
 }
 
 DebugRenderer::DebugRenderer()
@@ -60,48 +63,87 @@ void DebugRenderer::initForScene()
     // Cleanup shader input if possible
     this->cleanup();
 
-    // Vertex buffers
-    this->vertexBuffers.createForCpu(
+    // Line vertex buffers
+    this->lineVertexBuffers.createForCpu(
         *this->device,
         *this->vma,
         *this->transferQueue,
         *this->transferCommandPool,
         this->framesInFlight
     );
-    this->vertexStreams.positions.resize(START_NUM_MAX_ELEMENTS);
-    this->vertexStreams.colors.resize(START_NUM_MAX_ELEMENTS);
-    this->vertexBuffers.addCpuVertexBuffer(this->vertexStreams.positions);
-    this->vertexBuffers.addCpuVertexBuffer(this->vertexStreams.colors);
+    this->lineVertexStreams.positions.resize(START_NUM_MAX_ELEMENTS);
+    this->lineVertexStreams.colors.resize(START_NUM_MAX_ELEMENTS);
+    this->lineVertexBuffers.addCpuVertexBuffer(this->lineVertexStreams.positions);
+    this->lineVertexBuffers.addCpuVertexBuffer(this->lineVertexStreams.colors);
 
-    // Shader input
-    this->shaderInput.beginForInput(
+    // Line shader input
+    this->lineShaderInput.beginForInput(
         *this->physicalDevice,
         *this->device,
         *this->vma,
         *this->resourceManager,
         this->framesInFlight);
-    this->viewProjectionUB =
-        this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
-    this->shaderInput.endForInput();
+    this->lineViewProjectionUB =
+        this->lineShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+    this->lineShaderInput.endForInput();
 
-    // Pipeline
-    this->pipeline.createPipeline(
+    // Line pipeline
+    this->linePipeline.createPipeline(
         *this->device,
-        this->shaderInput,
+        this->lineShaderInput,
         *this->renderPass,
-        vertexStreams,
+        this->lineVertexStreams,
         "dbgLine.vert.spv",
-        "dbgLine.frag.spv",
+        "dbg.frag.spv",
+        false,
         false,
         vk::PrimitiveTopology::eLineList
     );
+
+    // Mesh shader input
+    this->meshShaderInput.beginForInput(
+        *this->physicalDevice,
+        *this->device,
+        *this->vma,
+        *this->resourceManager,
+        this->framesInFlight);
+    this->meshViewProjectionUB = 
+        this->meshShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+    this->meshShaderInput.addPushConstant(
+        sizeof(DebugMeshPushConstantData), 
+        vk::ShaderStageFlagBits::eVertex
+    );
+    this->meshShaderInput.endForInput();
+
+    // Mesh pipeline
+    VertexStreams meshVertexStreams{};
+    meshVertexStreams.positions.resize(1);
+    this->meshPipeline.createPipeline(
+        *this->device,
+        this->meshShaderInput,
+        *this->renderPass,
+        meshVertexStreams,
+        "dbgMesh.vert.spv",
+        "dbg.frag.spv",
+        false,
+        true
+    );
+
+    // Add meshes for debug rendering
+    this->sphereMeshID = 
+        this->resourceManager->addMesh("vengine_assets/models/icoSphere.obj");
 }
 
 void DebugRenderer::cleanup()
 {
-    this->vertexBuffers.cleanup();
-    this->pipeline.cleanup();
-    this->shaderInput.cleanup();
+    // Mesh rendering
+    this->meshPipeline.cleanup();
+    this->meshShaderInput.cleanup();
+
+    // Line rendering
+    this->lineVertexBuffers.cleanup();
+    this->linePipeline.cleanup();
+    this->lineShaderInput.cleanup();
 }
 
 void DebugRenderer::renderLine(
@@ -116,10 +158,23 @@ void DebugRenderer::renderLine(
     }
 
     // Add positions/colors
-    this->vertexStreams.positions[this->numVertices] = pos0;
-    this->vertexStreams.colors[this->numVertices] = color;
+    this->lineVertexStreams.positions[this->numVertices] = pos0;
+    this->lineVertexStreams.colors[this->numVertices] = color;
     this->numVertices++;
-    this->vertexStreams.positions[this->numVertices] = pos1;
-    this->vertexStreams.colors[this->numVertices] = color;
+    this->lineVertexStreams.positions[this->numVertices] = pos1;
+    this->lineVertexStreams.colors[this->numVertices] = color;
     this->numVertices++;
+}
+
+void DebugRenderer::renderSphere(
+    const glm::vec3& position,
+    const float& radius)
+{
+    // Add draw call data
+    DebugMeshDrawCallData drawCallData{};
+    drawCallData.meshID = this->sphereMeshID;
+    drawCallData.pushConstantData.transform = 
+        glm::translate(glm::mat4(1.0f), position) * 
+        glm::scale(glm::mat4(1.0f), glm::vec3(radius));
+    this->meshDrawData.push_back(drawCallData);
 }

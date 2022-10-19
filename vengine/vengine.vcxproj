@@ -500,9 +500,6 @@ SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
-    <CustomBuild Include="vengine_assets\shaders\dbgLine.frag">
-      <FileType>Document</FileType>
-    </CustomBuild>
     <CustomBuild Include="vengine_assets\shaders\dbgLine.vert">
       <FileType>Document</FileType>
     </CustomBuild>
@@ -519,6 +516,12 @@ SET ERRORLEVEL = 0</Command>
       <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Include="vengine_assets\shaders\ui.vert">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\dbgMesh.vert">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\dbg.frag">
       <FileType>Document</FileType>
     </CustomBuild>
   </ItemGroup>
