@@ -1093,7 +1093,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Bind vertex buffer
                         currentCommandBuffer.bindVertexBuffers2(
-                            currentMesh.getVertexBufferArray()
+                            currentMesh.getVertexBufferArray(),
+                            this->currentFrame
                         );
 
                         // Bind index buffer
@@ -1178,7 +1179,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Bind vertex buffer
                         currentCommandBuffer.bindVertexBuffers2(
-					        currentMesh.getVertexBufferArray()
+					        currentMesh.getVertexBufferArray(),
+                            this->currentFrame
                         );
 
                         // Bind index buffer
@@ -1277,7 +1279,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                     // Bind vertex buffer
                     currentCommandBuffer.bindVertexBuffers2(
-                        this->debugRenderer->getVertexBufferArray()
+                        this->debugRenderer->getVertexBufferArray(),
+                        this->currentFrame
                     );
 
                     // Draw

@@ -8,7 +8,8 @@ DebugRenderer::DebugRenderer()
     vma(nullptr),
     resourceManager(nullptr),
     renderPass(nullptr),
-    framesInFlight(0)
+    framesInFlight(0),
+    currentFrame(0)
 {
 
 }
@@ -39,16 +40,16 @@ void DebugRenderer::initForScene()
     this->cleanup();
 
     // Vertex buffers
-    this->vertexBuffers.create(
+    this->vertexBuffers.createForCpu(
         *this->device,
         *this->vma,
         *this->transferQueue,
-        *this->transferCommandPool
+        *this->transferCommandPool,
+        this->framesInFlight
     );
-    this->vertexStreams.positions.reserve(START_NUM_MAX_ELEMENTS);
-    this->vertexStreams.positions.push_back(glm::vec3(-10.0f, -10.0f, 35.0f));
-    this->vertexStreams.positions.push_back(glm::vec3(10.0f, 10.0f, 25.0f));
-    this->vertexBuffers.addVertexBuffer(this->vertexStreams.positions);
+    //this->vertexStreams.positions.resize(START_NUM_MAX_ELEMENTS);
+    this->vertexStreams.positions.resize(2);
+    this->vertexBuffers.addCpuVertexBuffer(this->vertexStreams.positions);
 
     // Shader input
     this->shaderInput.beginForInput(
@@ -104,5 +105,10 @@ void DebugRenderer::renderLine(
 
 void DebugRenderer::endDebugRender()
 {
+    this->vertexBuffers.cpuUpdate(
+        0, 
+        this->currentFrame, 
+        this->vertexStreams.positions);
 
+    this->currentFrame = (this->currentFrame + 1) % this->framesInFlight;
 }

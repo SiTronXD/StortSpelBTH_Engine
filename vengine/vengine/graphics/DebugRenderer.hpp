@@ -36,6 +36,9 @@ private:
 
     uint32_t framesInFlight;
 
+    // TODO: remove this
+    uint32_t currentFrame;
+
 public:
     DebugRenderer();
 

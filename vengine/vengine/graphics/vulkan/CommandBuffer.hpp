@@ -33,7 +33,8 @@ public:
         const std::vector<vk::DeviceSize>& vertexBufferOffsets,
         const std::vector<vk::Buffer>& vertexBuffers);
     void bindVertexBuffers2(
-        const VertexBufferArray& vertexBufferArray);
+        const VertexBufferArray& vertexBufferArray,
+        const uint32_t& currentFrame);
 
     void bindIndexBuffer(const vk::Buffer& indexBuffer);
 

@@ -132,7 +132,8 @@ void Mesh::createVertexBuffers(
         *importStructs.device, 
         *importStructs.vma,
         *importStructs.transferQueue,
-        *importStructs.transferCommandPool);
+        *importStructs.transferCommandPool
+    );
 
     // Create one vertex buffer per data stream
     

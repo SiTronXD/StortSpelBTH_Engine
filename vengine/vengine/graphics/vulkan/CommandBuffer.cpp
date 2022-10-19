@@ -88,16 +88,18 @@ void CommandBuffer::bindVertexBuffers2(
 }
 
 void CommandBuffer::bindVertexBuffers2(
-    const VertexBufferArray& vertexBufferArray)
+    const VertexBufferArray& vertexBufferArray,
+    const uint32_t& currentFrame)
 {
-    const std::vector<vk::DeviceSize>& bufferOffsets = vertexBufferArray.getVertexBufferOffsets();
-    const std::vector<vk::Buffer>& buffers = vertexBufferArray.getVertexBuffers();
+    uint32_t vertexBufferFifOffset =
+        vertexBufferArray.getVertexBufferFifOffset(currentFrame);
+    uint32_t numVertexBuffers = vertexBufferArray.getNumVertexBuffers();
 
     this->commandBuffer.bindVertexBuffers2(
         uint32_t(0),
-        static_cast<uint32_t>(buffers.size()),
-        buffers.data(),
-        bufferOffsets.data(),
+        numVertexBuffers,
+        &vertexBufferArray.getVertexBuffers()[vertexBufferFifOffset],
+        vertexBufferArray.getVertexBufferOffsets().data(),
         nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
         nullptr         //NOTE: Could also be a pointer to an array of buffer strides
     );

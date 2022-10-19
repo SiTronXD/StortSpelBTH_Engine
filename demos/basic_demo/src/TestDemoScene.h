@@ -11,6 +11,8 @@ private:
 	uint32_t uiTextureIndex0;
 	uint32_t uiTextureIndex1;
 
+	float timer;
+
 public:
 	TestDemoScene();
 	virtual ~TestDemoScene();
