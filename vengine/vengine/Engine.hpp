@@ -17,10 +17,10 @@ public:
 
 	void run(std::string appName, std::string startScenePath, Scene* startScene = nullptr);
 
-	SceneHandler    sceneHandler;
+	SceneHandler sceneHandler;
     ResourceManager resourceManager;
 	NetworkHandler networkHandler;
-	PhysicsEngine physEngine;
+	PhysicsEngine physicsEngine;
 	ScriptHandler scriptHandler;
 	AudioHandler audioHandler;
 };

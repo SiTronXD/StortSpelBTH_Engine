@@ -57,8 +57,9 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->sceneHandler.setResourceManager(&resourceManager);
+    this->sceneHandler.setPhysicsEngine(&physicsEngine);
     this->networkHandler.setSceneHandler(&sceneHandler);
-	this->physEngine.setSceneHandler(&this->sceneHandler);
+	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
 
@@ -89,7 +90,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
         Time::updateDeltaTime();
         this->scriptHandler.update();
-		this->physEngine.update();
+		this->physicsEngine.update();
 		this->networkHandler.updateNetwork();
         this->audioHandler.update();
         this->sceneHandler.update();

@@ -4,9 +4,11 @@
 
 struct Rigidbody
 {
-	float weight = 1.0f;
-	glm::vec3 posConstraints = glm::vec3(0.0f);
-	glm::vec3 rotConstraints = glm::vec3(0.0f);
+	float mass = 1.0f;
+	float gravityMult = 1.0f;
+	float friction = 0.0f;
+	glm::vec3 posFactor = glm::vec3(1.0f);
+	glm::vec3 rotFactor = glm::vec3(1.0f);
 
 	glm::vec3 acceleration = glm::vec3(0.0f);
 	glm::vec3 velocity = glm::vec3(0.0f);

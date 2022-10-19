@@ -12,6 +12,7 @@ private:
 	NetworkHandler* networkHandler;
 	ScriptHandler* scriptHandler;
 	ResourceManager* resourceManager;
+	PhysicsEngine* physicsEngine;
 	
 public:
 	SceneHandler();
@@ -24,13 +25,14 @@ public:
 	void reloadScene();
 
 	void setNetworkHandler(NetworkHandler* networkHandler);
-	inline NetworkHandler* getNetworkHandler()
-	{ return this->networkHandler; }
-	inline ResourceManager* getResourceManager() 
-	{ return this->resourceManager; }
+	inline NetworkHandler* getNetworkHandler() { return this->networkHandler; }
+	inline ResourceManager* getResourceManager() { return this->resourceManager; }
 
 	void setScriptHandler(ScriptHandler* scriptHandler);
 	ScriptHandler* getScriptHandler();
+
+	void setPhysicsEngine(PhysicsEngine* physicsEngine);
+	inline PhysicsEngine* getPhysicsEngine() { return this->physicsEngine; }
 
 	void setResourceManager(ResourceManager* resourceManager);
 

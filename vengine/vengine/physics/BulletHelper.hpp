@@ -45,9 +45,12 @@ namespace BulletH
 	static btTransform toBulletTransform(Transform& transform)
 	{
 		btTransform t;
-		t.setOrigin(bulletVec(transform.position));
-
 		glm::vec3 rot = glm::radians(transform.rotation);
+
+		t.setIdentity();
+		t.setOrigin(bulletVec(transform.position));
 		t.setRotation(bulletQuat(rot));
+
+		return t;
 	}
 }

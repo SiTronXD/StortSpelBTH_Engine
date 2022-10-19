@@ -7,6 +7,7 @@
 #include "../components/AudioListener.hpp"
 #include "../resource_management/Configurator.hpp"
 #include "../resource_management/ResourceManager.hpp"
+#include "../physics/PhysicsEngine.h"
 
 #include <entt.hpp>
 #include <vector>
@@ -36,6 +37,7 @@ protected:
 	NetworkHandler* getNetworkHandler();
 	ScriptHandler* getScriptHandler();
 	ResourceManager* getResourceManager();
+	PhysicsEngine* getPhysicsEngine();
 
     template <typename T> T getConfigValue(std::string_view name)
     {

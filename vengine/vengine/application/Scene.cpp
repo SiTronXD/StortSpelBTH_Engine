@@ -1,14 +1,12 @@
 #include "Scene.hpp"
 #include "SceneHandler.hpp"
 #include "../network/NetworkHandler.h"
-#include "PhysicsEngine.h"
 #include "../lua/ScriptHandler.h"
 #include "Time.hpp"
 
 void Scene::switchScene(Scene* scene, std::string path)
 {
 	this->sceneHandler->setScene(scene, path);
-	PhysicsEngine hej;
 }
 
 NetworkHandler* Scene::getNetworkHandler()
@@ -24,6 +22,11 @@ ScriptHandler* Scene::getScriptHandler()
 ResourceManager* Scene::getResourceManager()
 {
 	return this->sceneHandler->getResourceManager();
+}
+
+PhysicsEngine* Scene::getPhysicsEngine()
+{
+	return this->sceneHandler->getPhysicsEngine();
 }
 
 Scene::Scene()

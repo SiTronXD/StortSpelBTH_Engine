@@ -6,14 +6,17 @@ enum class ColType { SPHERE, BOX, CAPSULE, COUNT };
 
 struct Collider
 {
-	ColType type;
-	int ID = -1;
 	bool isTrigger = false;
 
-	// Type specific
+	// NOTE: Can't be changed after creation, create new collider component instead
+	ColType type;
+	// Type specific 
 	float radius; // Sphere and Capsule
 	float height; // Capsule
 	glm::vec3 extents; // Box, half extents
+
+	int ColID = -1;
+	int ShapeID = -1;
 
 	// Constructor functions
 	static Collider createSphere(float radius)

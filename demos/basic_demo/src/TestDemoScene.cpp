@@ -30,14 +30,28 @@ void TestDemoScene::init()
 	Transform& transform = this->getComponent<Transform>(this->testEntity);
 	transform.position = glm::vec3(10.f, 0.f, 30.f);
 	transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+	this->setComponent<MeshComponent>(this->testEntity, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->setComponent<Collider>(this->testEntity, Collider::createBox(glm::vec3(0.5f)));
+	this->setComponent<Rigidbody>(this->testEntity, 1.0f, 0.0f);
+
+	// Floor
+	int floor = this->createEntity();
+	Transform& floorT = this->getComponent<Transform>(floor);
+	floorT.position.y = -25.0f;
+	floorT.scale = glm::vec3(100.0f, 1.0f, 100.0f);
+	this->setComponent<MeshComponent>(floor, 0);
+	//this->setComponent<Rigidbody>(floor, 0.0f);
+	//this->setComponent<Collider>(floor, Collider::createBox(glm::vec3(10.0f, 1.0f, 10.0f)));
+
+	//Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
+
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
-	this->setComponent<RigidBody>(this->testEntity);
-	this->setComponent<CapsuleCollider>(this->testEntity);
+	//this->setComponent<RigidBody>(this->testEntity);
+	//this->setComponent<CapsuleCollider>(this->testEntity);
 
 	//  Mesh component
 	// this->setComponent<MeshComponent>(this->testEntity);
-	this->setComponent<MeshComponent>(this->testEntity, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
 	// MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
 	// meshComp.meshID = this->getResourceManager()->addMesh("ghost.obj");
 
@@ -87,17 +101,27 @@ void TestDemoScene::update()
 	// Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
 	// transform2.position.x += Time::getDT();
 
-	// if (Input::isKeyDown(Keys::E))
-	// {
-	// 	physEngine.applyForce(glm::vec3(0, 100, 0));
-	// }
-	// else
-	// {
-	// 	physEngine.applyForce(glm::vec3(0, -50, 0));
-	// }
-	if (Input::isKeyDown(Keys::T))
+	Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
+	glm::vec3 vec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), 0.0f, Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
+	rb.velocity = vec * 0.5f * Time::getDT();
+
+	if (Input::isKeyDown(Keys::E))
 	{
-		// physEngine.shootRay(glm::vec3(0, 0, -60), glm::vec3(0, 0, 60));
+		rb.acceleration = glm::vec3(0.0f, 25.0f, 0.0f);
+	}
+
+	if (Input::isKeyDown(Keys::T) && this->entityValid(this->getMainCameraID()))
+	{
+		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
+		RayPayload payload = this->getPhysicsEngine()->shootRay(Ray{ camTransform.position, camTransform.forward() });
+
+		if (payload.hit)
+		{
+			Log::write("Hit raycast at pos (" +
+				std::to_string(payload.hitPoint.x) + ", " +
+				std::to_string(payload.hitPoint.y) + ", " +
+				std::to_string(payload.hitPoint.z) + ")");
+		}
 	}
 
 	if (this->entityValid(this->getMainCameraID()))

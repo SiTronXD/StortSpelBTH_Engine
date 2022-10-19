@@ -10,7 +10,6 @@
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/Transform.hpp"
-#include "../application/SceneHandler.hpp"
 #include "../components/BoxCollider.h"
 #include "../components/SphereCollider.h"
 #include "../components/CapsuleCollider.h"
@@ -18,10 +17,20 @@
 #include "../components/Rigidbody.h"
 #include "../components/Collider.h"
 
+class SceneHandler;
+
 struct Ray
 {
 	glm::vec3 pos;
 	glm::vec3 dir;
+};
+
+struct RayPayload
+{
+	bool hit = false;
+	int entity = -1;
+	glm::vec3 hitPoint = glm::vec3(0.0f);
+	glm::vec3 hitNormal = glm::vec3(0.0f);
 };
 
 class PhysicsEngine
@@ -40,14 +49,14 @@ private:
 
 	btAlignedObjectArray<btCollisionShape*> colShapes;
 
-	std::vector<SphereCollider*> sphereVec;
+	/*std::vector<SphereCollider*> sphereVec;
 	std::vector<BoxCollider*> boxVec;
 	std::vector<CapsuleCollider*> capsuleVec;
 	std::vector<Rigidbody*> rigidBodyVec;
 	std::vector<Rigidbody*> rigidBodyNoColliderVec;
 
 	std::vector<Collider*> colVector;
-	std::vector<Rigidbody*> rbVector;
+	std::vector<Rigidbody*> rbVector;*/
 
 	// Update transforms and rotations for colliders.
 	//void updateSphere();
@@ -71,9 +80,14 @@ private:
 	void updateColliders();
 	void updateRigidbodies();
 
-	void createCollider(Collider& col);
-	void createRigidbody(Rigidbody& rb, Collider& col);
+	btCollisionShape* createShape(const int& entity, Collider& col);
+	void createCollider(const int& entity, Collider& col);
+	void createRigidbody(const int& entity, Rigidbody& rb, Collider& col);
 
+	void removeCollider(btCollisionObject* obj);
+	void removeRigidbody(const int& entity, Rigidbody& rb);
+	
+	void cleanup();
 public:
 
 	PhysicsEngine();
@@ -81,6 +95,7 @@ public:
 
 	void setSceneHandler(SceneHandler* sceneHandler);
 
+	void init();
 	void update();
-	bool shootRay(Ray ray, float maxDist = 100.0f);
+	RayPayload shootRay(Ray ray, float maxDist = 100.0f);
 };
