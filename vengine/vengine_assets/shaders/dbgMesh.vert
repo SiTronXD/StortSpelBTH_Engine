@@ -13,10 +13,11 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform UboViewProjection
 } uboViewProjection;
 
 // Push constant to update the model matrix
-layout(push_constant) uniform PushConstant_Model
+layout(push_constant) uniform PushConstantData
 {
     mat4 model;
-} pushConstantModel;
+    vec4 color;
+} pushConstantData;
 
 // Output data
 layout(location = 0) out vec3 fragCol;
@@ -26,8 +27,8 @@ void main()
     gl_Position = 
         uboViewProjection.projection *
         uboViewProjection.view *
-        pushConstantModel.model *
+        pushConstantData.model *
         vec4(pos, 1.0);
 
-    fragCol = vec3(1.0f, 0.0f, 0.0f);
+    fragCol = pushConstantData.color.rgb;
 }

@@ -15,6 +15,7 @@ class VulkanRenderer;
 struct DebugMeshPushConstantData
 {
     glm::mat4 transform;
+    glm::vec4 color;
 };
 
 struct DebugMeshDrawCallData
@@ -83,7 +84,8 @@ public:
         const glm::vec3& color);
     void renderSphere(
         const glm::vec3& position,
-        const float& radius);
+        const float& radius,
+        const glm::vec3& color);
 
     inline const std::vector<DebugMeshDrawCallData>& getMeshDrawCallData() const { return this->meshDrawData; }
     inline ShaderInput& getLineShaderInput() { return this->lineShaderInput; }

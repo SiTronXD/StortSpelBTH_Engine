@@ -168,13 +168,18 @@ void DebugRenderer::renderLine(
 
 void DebugRenderer::renderSphere(
     const glm::vec3& position,
-    const float& radius)
+    const float& radius,
+    const glm::vec3& color)
 {
     // Add draw call data
     DebugMeshDrawCallData drawCallData{};
+
     drawCallData.meshID = this->sphereMeshID;
     drawCallData.pushConstantData.transform = 
         glm::translate(glm::mat4(1.0f), position) * 
         glm::scale(glm::mat4(1.0f), glm::vec3(radius));
+    drawCallData.pushConstantData.color = glm::vec4(color, 1.0f);
+
+
     this->meshDrawData.push_back(drawCallData);
 }
