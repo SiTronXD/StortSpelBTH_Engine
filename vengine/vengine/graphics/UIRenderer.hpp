@@ -9,6 +9,7 @@
 class PhysicalDevice;
 class Device;
 class ResourceManager;
+class VulkanRenderer;
 
 struct UIElementData
 {
@@ -26,6 +27,8 @@ struct UIDrawCallData
 class UIRenderer
 {
 private:
+    friend VulkanRenderer;
+
     const uint32_t START_NUM_MAX_ELEMENTS = 4;
 
     std::vector<UIElementData> uiElementData;
@@ -50,6 +53,9 @@ private:
     ResourceManager* resourceManager;
     vk::RenderPass* renderPass;
 
+    void prepareForGPU();
+    void resetRender();
+
 public:
     UIRenderer();
 
@@ -63,7 +69,6 @@ public:
     void initForScene();
     void cleanup();
 
-    void beginUI();
     void setTexture(const uint32_t& textureIndex);
     void renderTexture(
         const float& x,
@@ -71,7 +76,6 @@ public:
         const float& width,
         const float& height
     );
-    void endUI();
 
     inline const StorageBufferID& getStorageBufferID() const { return this->storageBufferID; }
     inline const SamplerID& getSamplerID() const { return this->uiSamplerID; }

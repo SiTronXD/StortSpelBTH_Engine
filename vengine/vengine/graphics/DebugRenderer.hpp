@@ -10,10 +10,13 @@
 class PhysicalDevice;
 class Device;
 class ResourceManager;
+class VulkanRenderer;
 
 class DebugRenderer
 {
 private:
+    friend VulkanRenderer;
+
     const uint32_t START_NUM_MAX_ELEMENTS = 64;
 
     // Vertex buffers
@@ -34,10 +37,11 @@ private:
     vk::Queue* transferQueue;
     vk::CommandPool* transferCommandPool;
 
+    uint32_t numVertices;
     uint32_t framesInFlight;
 
-    // TODO: remove this
-    uint32_t currentFrame;
+    void prepareGPU(const uint32_t& currentFrame);
+    void resetRender();
 
 public:
     DebugRenderer();
@@ -54,12 +58,10 @@ public:
     void initForScene();
     void cleanup();
 
-    void beginDebugRender();
     void renderLine(const glm::vec3& pos0, const glm::vec3& pos1);
-    void endDebugRender();
 
     inline ShaderInput& getShaderInput() { return this->shaderInput; }
     inline const Pipeline& getPipeline() const { return this->pipeline; }
     inline const VertexBufferArray& getVertexBufferArray() const { return this->vertexBuffers; }
-    inline size_t getNumVertices() { return this->vertexStreams.positions.size(); }
+    inline size_t getNumVertices() { return this->numVertices; }
 };

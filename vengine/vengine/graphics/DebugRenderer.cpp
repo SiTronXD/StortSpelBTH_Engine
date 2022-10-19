@@ -2,6 +2,22 @@
 #include "vulkan/UniformBufferStructs.hpp"
 #include "../dev/Log.hpp"
 
+void DebugRenderer::prepareGPU(const uint32_t& currentFrame)
+{
+    // Update buffer on gpu
+    this->vertexBuffers.cpuUpdate(
+        0,
+        currentFrame,
+        this->vertexStreams.positions
+    );
+}
+
+void DebugRenderer::resetRender()
+{
+    // Clear for batch of render commands next frame
+    this->numVertices = 0;
+}
+
 DebugRenderer::DebugRenderer()
     : physicalDevice(nullptr),
     device(nullptr),
@@ -9,7 +25,7 @@ DebugRenderer::DebugRenderer()
     resourceManager(nullptr),
     renderPass(nullptr),
     framesInFlight(0),
-    currentFrame(0)
+    numVertices(0)
 {
 
 }
@@ -47,8 +63,7 @@ void DebugRenderer::initForScene()
         *this->transferCommandPool,
         this->framesInFlight
     );
-    //this->vertexStreams.positions.resize(START_NUM_MAX_ELEMENTS);
-    this->vertexStreams.positions.resize(2);
+    this->vertexStreams.positions.resize(START_NUM_MAX_ELEMENTS);
     this->vertexBuffers.addCpuVertexBuffer(this->vertexStreams.positions);
 
     // Shader input
@@ -82,33 +97,17 @@ void DebugRenderer::cleanup()
     this->shaderInput.cleanup();
 }
 
-void DebugRenderer::beginDebugRender()
-{
-    // Clear CPU buffer contents
-    this->vertexStreams.positions.clear();
-}
-
 void DebugRenderer::renderLine(
     const glm::vec3& pos0, 
     const glm::vec3& pos1)
 {
-    if (this->vertexStreams.positions.size() >= START_NUM_MAX_ELEMENTS)
+    if (this->numVertices >= START_NUM_MAX_ELEMENTS)
     {
-        Log::error("Reached maximum number of rendered ui elements.");
+        Log::error("Reached maximum number of rendered debug elements.");
         return;
     }
 
     // Add positions
-    this->vertexStreams.positions.push_back(pos0);
-    this->vertexStreams.positions.push_back(pos1);
-}
-
-void DebugRenderer::endDebugRender()
-{
-    this->vertexBuffers.cpuUpdate(
-        0, 
-        this->currentFrame, 
-        this->vertexStreams.positions);
-
-    this->currentFrame = (this->currentFrame + 1) % this->framesInFlight;
+    this->vertexStreams.positions[this->numVertices++] = pos0;
+    this->vertexStreams.positions[this->numVertices++] = pos1;
 }

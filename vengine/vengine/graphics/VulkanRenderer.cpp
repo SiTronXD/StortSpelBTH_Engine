@@ -1030,11 +1030,13 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 			}
 
             // UI shader input
+            this->uiRenderer->prepareForGPU();
             this->uiRenderer->getShaderInput().setCurrentFrame(
                 this->currentFrame
             );
 
             // Debug renderer shader input
+            this->debugRenderer->prepareGPU(this->currentFrame);
             this->debugRenderer->getShaderInput().setCurrentFrame(
                 this->currentFrame
             );
@@ -1263,6 +1265,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                         );
                     }
                 }
+                this->uiRenderer->resetRender();
 
                 // Debug rendering
                 {
@@ -1286,6 +1289,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     // Draw
                     currentCommandBuffer.draw(this->debugRenderer->getNumVertices());
                 }
+                this->debugRenderer->resetRender();
 
             // End Render Pass!
             vk::SubpassEndInfo subpassEndInfo;

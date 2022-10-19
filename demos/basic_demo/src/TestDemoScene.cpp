@@ -125,21 +125,21 @@ void TestDemoScene::update()
 	}
 
 	// UI
-	Scene::getUIRenderer()->beginUI();
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
 	Scene::getUIRenderer()->renderTexture(-960.0f,  540.0f, 200.0f, 200.0f);
 	Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
-	Scene::getUIRenderer()->endUI();
 
 	// Debug
-	Scene::getDebugRenderer()->beginDebugRender();
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
 		glm::vec3(10.0f, 10.0f, 25.0f)
 	);
-	Scene::getDebugRenderer()->endDebugRender();
+	Scene::getDebugRenderer()->renderLine(
+		glm::vec3(0.0f, -10.0f, 35.0f),
+		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f)
+	);
 	this->timer += Time::getDT();
 
 	if (ImGui::Begin("Sound"))
