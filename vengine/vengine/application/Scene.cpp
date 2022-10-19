@@ -59,12 +59,12 @@ Camera* Scene::getMainCamera()
 	return cam;
 }
 
-int Scene::getMainCameraID()
+Entity Scene::getMainCameraID()
 {
 	return this->mainCamera;
 }
 
-void Scene::setMainCamera(int entity)
+void Scene::setMainCamera(Entity entity)
 {
 	if (this->hasComponents<Camera>(entity)) { this->mainCamera = entity; }
 }
@@ -74,7 +74,7 @@ void Scene::createSystem(std::string& path)
 	this->luaSystems.push_back(LuaSystem { path, -1 });
 }
 
-void Scene::setScriptComponent(int entity, std::string path)
+void Scene::setScriptComponent(Entity entity, std::string path)
 {
 	this->getScriptHandler()->setScriptComponent(entity, path);
 }
@@ -100,23 +100,38 @@ int Scene::getEntityCount() const
 	return (int)this->reg.alive();
 }
 
-bool Scene::entityValid(int entity) const
+bool Scene::entityValid(Entity entity) const
 {
 	return this->reg.valid((entt::entity)entity);
 }
 
-int Scene::createEntity()
+Entity Scene::createEntity()
 {
 	int entity = (int)this->reg.create();
 	this->setComponent<Transform>(entity);
 	return entity;
 }
 
-bool Scene::removeEntity(int entity)
+bool Scene::removeEntity(Entity entity)
 {
 	bool valid = this->entityValid(entity);
 	if (valid) { this->reg.destroy((entt::entity)entity); }
 	return valid;
+}
+
+void Scene::setInactive(Entity entity)
+{
+	this->setComponent<Inactive>(entity);
+}
+
+void Scene::setActive(Entity entity)
+{
+	this->removeComponent<Inactive>(entity);
+}
+
+bool Scene::isActive(Entity entity)
+{
+	return !this->hasComponents<Inactive>(entity);
 }
 
 void Scene::init()

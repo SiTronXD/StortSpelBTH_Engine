@@ -24,14 +24,14 @@ void AudioHandler::update()
 {
 	Scene* scene = sceneHandler->getScene();
 
-	const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>();
+	const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>(entt::exclude<Inactive>);
 	for (const entt::entity& entity : sourceView)
 	{
 		sourceView.get<AudioSource>(entity).setPosition(sourceView.get<Transform>(entity).position);
 	}
 
 	const int camID = scene->getMainCameraID();
-	if (scene->hasComponents<AudioListener>(camID))
+	if (scene->hasComponents<AudioListener>(camID) && scene->isActive(camID))
 	{
 		AudioListener& listener = scene->getComponent<AudioListener>(camID);
 		Transform& camTra = scene->getComponent<Transform>(camID);
@@ -63,7 +63,8 @@ int AudioHandler::loadFile(const char* filePath)
 void AudioHandler::setMasterVolume(float volume)
 {
 	Scene* scene = sceneHandler->getScene();
-	if (scene->hasComponents<AudioListener>(scene->getMainCameraID()))
+	const Entity camID = scene->getMainCameraID();
+	if (scene->hasComponents<AudioListener>(camID) && scene->isActive(camID))
 	{
 		scene->getComponent<AudioListener>(scene->getMainCameraID()).setVolume(volume);
 	}

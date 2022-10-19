@@ -7,7 +7,10 @@ scene.setMainCamera(cam)
 
 local p = scene.createPrefab("assets/scripts/prefabs/prefab.lua")
 
-local prefab = {
+scene.setComponent(cam, CompType.Script, "assets/scripts/script2.lua")
+scene.getComponent(cam, CompType.Script).playerID = p
+
+--[[local prefab = {
 	Transform = {
 		position = vector(3, 0, 5),
 		rotation = vector(0, 45, -90),
@@ -25,4 +28,4 @@ prefab.Transform = {
 }
 scene.createPrefab(prefab)
 
-scene.createSystem("assets/scripts/system.lua")
+scene.createSystem("assets/scripts/system.lua")]]--

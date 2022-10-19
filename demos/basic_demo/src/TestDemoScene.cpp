@@ -9,6 +9,8 @@
 
 TestDemoScene::TestDemoScene()
 	: testEntity(-1)//, testEntity2(-1)
+	, aniIDs{-1, -1, -1, -1}
+	, aniActive{true, true, true, true}
 {
 }
 
@@ -23,7 +25,7 @@ void TestDemoScene::init()
 	this->timer = 0.0f;
 
 	// Camera
-	int camEntity = this->createEntity();
+	Entity camEntity = this->createEntity();
 	this->setComponent<Camera>(camEntity);
 	this->setMainCamera(camEntity);
 
@@ -53,14 +55,15 @@ void TestDemoScene::init()
 
 
 	// Create other test entities
+	uint32_t amogusMeshID = ~0u;
 	for (uint32_t i = 0; i < 4; ++i)
 	{
-		int newTestEntity = this->createEntity();
+		aniIDs[i] = this->createEntity();
 
-		Transform& newTransform = this->getComponent<Transform>(newTestEntity);
+		Transform& newTransform = this->getComponent<Transform>(aniIDs[i]);
 
-		this->setComponent<MeshComponent>(newTestEntity);
-		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(newTestEntity);
+		this->setComponent<MeshComponent>(aniIDs[i]);
+		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(aniIDs[i]);
 		if (i <= 1)
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
@@ -68,6 +71,7 @@ void TestDemoScene::init()
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Amogus/source/1.fbx");
+			amogusMeshID = newMeshComp.meshID;
 		}
 		else
 		{
@@ -78,12 +82,13 @@ void TestDemoScene::init()
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
 		}
 
-		this->setComponent<AnimationComponent>(newTestEntity);
-		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(newTestEntity);
+		this->setComponent<AnimationComponent>(aniIDs[i]);
+		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
 	}
-
+	// Output test
+	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
 
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};
@@ -186,6 +191,33 @@ void TestDemoScene::update()
 		}
 
 		ImGui::PopItemWidth();
+	}
+	ImGui::End();
+
+	if (ImGui::Begin("Set Active"))
+	{
+		for (int i = 0; i < 4; i++)
+		{
+			if (ImGui::Checkbox(("Animated entity: " + std::to_string(i)).c_str(), &aniActive[i]))
+			{
+				if (aniActive[i]) this->setActive(aniIDs[i]);
+				else this->setInactive(aniIDs[i]);
+			}
+		}
+
+		static bool entityOne = true, mainCamera = true;
+		if (ImGui::Checkbox("testEntity", &entityOne))
+		{
+			if (entityOne) this->setActive(testEntity);
+			else this->setInactive(testEntity);
+		}
+
+		if (ImGui::Checkbox("Main Camera", &mainCamera))
+		{
+			if (mainCamera) this->setActive(this->getMainCameraID());
+			else this->setInactive(this->getMainCameraID());
+		}
+
 	}
 	ImGui::End();
 

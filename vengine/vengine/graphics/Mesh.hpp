@@ -53,6 +53,9 @@ public:
     inline const std::vector<SubmeshData>& getSubmeshData() const;
     
     void cleanup();
+
+    // Debug
+    void outputRigDebugInfo(const std::string& filePath);
 };
 
 const VertexBufferArray& Mesh::getVertexBufferArray() const

@@ -18,11 +18,12 @@ void serverMain(bool& shutDownServer, ServerGame* game)
 
 NetworkHandler::NetworkHandler()
 {
-	fx = fy = fz = fa = fb = fc = 0.f;
-	ix = iy = iz = ia = ib = ic = 0;
-	shutDownServer = false;
-	client = nullptr;
-	serverThread = nullptr;
+	this->fx = fy = fz = fa = fb = fc = 0.f;
+	this->ix = iy = iz = ia = ib = ic = 0;
+	this->shutDownServer = false;
+	this->client = nullptr;
+	this->serverThread = nullptr;
+	this->player = -1;
 }
 
 NetworkHandler::~NetworkHandler()
@@ -104,6 +105,19 @@ void NetworkHandler::updateNetwork()
 	{
 		return;
 	}
+
+	if (player != -1)
+	{
+		this->sendUDPDataToClient(
+		    this->sceneHandler->getScene()
+		        ->getComponent<Transform>(this->player)
+		        .position,
+		    this->sceneHandler->getScene()
+		        ->getComponent<Transform>(this->player)
+		        .rotation
+		);
+	}
+
 	client->update(Time::getDT());
 	//tcp
 	sf::Packet cTCPP = client->getTCPDataFromServer();
@@ -301,6 +315,11 @@ void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
 	}
 }
 
+void NetworkHandler::getPlayer(int playerID)
+{
+	this->player = playerID;
+}
+
 void NetworkHandler::sendUDPDataToClient(
     const glm::vec3& pos, const glm::vec3& rot
 )
@@ -334,7 +353,9 @@ void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
 	client->sendTCPEvent(polygonEvent);
 }
 
-void NetworkHandler::getLuaData(std::vector<int>& ints, std::vector<float>& floats)
+void NetworkHandler::getLuaData(
+    std::vector<int>& ints, std::vector<float>& floats
+)
 {
 	ints = this->lua_ints;
 	floats = this->lua_floats;

@@ -26,7 +26,7 @@ void SceneHandler::update()
 	this->scene->update();
 
 	// Update animation timer
-	auto animView = this->scene->getSceneReg().view<AnimationComponent>();
+	auto animView = this->scene->getSceneReg().view<AnimationComponent>(entt::exclude<Inactive>);
 	animView.each([&]
 			(AnimationComponent& animationComponent)
 		{
@@ -37,7 +37,7 @@ void SceneHandler::update()
 			}
 		}
 	);
-	auto view = this->scene->getSceneReg().view<Transform>();
+	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
 	auto func = [](Transform& transform)
 	{
 		transform.updateMatrix();

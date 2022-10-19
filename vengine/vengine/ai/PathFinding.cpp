@@ -7,7 +7,7 @@ glm::vec3 PathFindingManager::getDirTo(glm::vec3& from, glm::vec3& to)
   if (polygons.size() != pf.getSizeOfPolygons())
     {
       //hopefully this won't be called to often
-      pf.AddPolygons(polygons, 5);
+      pf.AddPolygons(polygons, -1);
       std::cout << "changed map" << std::endl;
       //change -1 based on how big our enemies are
     }

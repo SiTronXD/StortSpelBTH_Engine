@@ -1,5 +1,6 @@
 #include "path_finder.h"
 
+#include <algorithm>
 #include <queue>
 
 
@@ -112,7 +113,24 @@ namespace NavMesh {
 			vertex_ids_.erase(it);
 		}
 
-		ext_points_ = points_;
+		//check so we don't double 
+		for(size_t i = 0; i < points_.size(); i++)
+		{
+			auto it = vertex_ids_.find(points_[i]);
+			if(it != vertex_ids_.end())
+			{
+				ext_points_.push_back(points_[i] + NavMesh::Point(1,1));
+				for (size_t j = 0; j < polygons_.size(); ++j) {
+					if (i != j && polygons_[j].IsInside(ext_points_[ext_points_.size() - 1])) {
+						ext_points_[ext_points_.size() - 1] = ext_points_[ext_points_.size() - 1] - NavMesh::Point(-2,-2);
+						break;
+					}
+				}
+			}
+			else{
+				ext_points_.push_back(points_[i]);
+			}
+		}
 
 		std::vector<std::pair<int, int>> tangents(polygons_.size());
 		std::vector<bool> point_is_inside(points_.size(), false);

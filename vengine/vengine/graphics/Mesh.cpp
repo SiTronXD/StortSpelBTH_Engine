@@ -266,3 +266,67 @@ void Mesh::cleanup()
     this->device.getVkDevice().destroyBuffer(this->indexBuffer);
     vmaFreeMemory(this->vma, this->indexBufferMemory);
 }
+
+#include <fstream>
+#include <iostream>
+void Mesh::outputRigDebugInfo(const std::string& filePath)
+{
+#if defined(_DEBUG) || defined(DEBUG)
+    // Create file
+    std::ofstream file(filePath);
+    
+    // Write
+    for (size_t i = 0; i < this->meshData.bones.size(); ++i)
+    {
+        file << "bone [" << i << "]: " << std::endl;
+        file << "InvBindPose: ";
+        for (uint32_t a = 0; a < 4; ++a)
+        {
+            for (uint32_t b = 0; b < 4; ++b)
+            {
+                file << this->meshData.bones[i].inverseBindPoseMatrix[a][b] << " ";
+            }
+        }
+        file << std::endl;
+        file << "translations (" << this->meshData.bones[i].translationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].translationStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].translationStamps[j].first << "](" <<
+                this->meshData.bones[i].translationStamps[j].second.x << ", " <<
+                this->meshData.bones[i].translationStamps[j].second.y << ", " <<
+                this->meshData.bones[i].translationStamps[j].second.z << ")" <<
+                std::endl;
+        }
+
+        file << "rotation (" << this->meshData.bones[i].rotationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].rotationStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].rotationStamps[j].first << "](" <<
+                this->meshData.bones[i].rotationStamps[j].second.x << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.y << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.z << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.w << ")" <<
+                std::endl;
+        }
+
+        file << "scale (" << this->meshData.bones[i].scaleStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].scaleStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].scaleStamps[j].first << "](" <<
+                this->meshData.bones[i].scaleStamps[j].second.x << ", " <<
+                this->meshData.bones[i].scaleStamps[j].second.y << ", " <<
+                this->meshData.bones[i].scaleStamps[j].second.z << ")" <<
+                std::endl;
+        }
+
+        file << std::endl;
+    }
+    file << std::endl;
+
+    // Close file
+    file.close();
+#endif
+}
