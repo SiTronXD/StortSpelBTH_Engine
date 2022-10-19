@@ -4,11 +4,16 @@
 
 void DebugRenderer::prepareGPU(const uint32_t& currentFrame)
 {
-    // Update buffer on gpu
+    // Update vertex buffers on gpu
     this->vertexBuffers.cpuUpdate(
         0,
         currentFrame,
         this->vertexStreams.positions
+    );
+    this->vertexBuffers.cpuUpdate(
+        1,
+        currentFrame,
+        this->vertexStreams.colors
     );
 }
 
@@ -64,7 +69,9 @@ void DebugRenderer::initForScene()
         this->framesInFlight
     );
     this->vertexStreams.positions.resize(START_NUM_MAX_ELEMENTS);
+    this->vertexStreams.colors.resize(START_NUM_MAX_ELEMENTS);
     this->vertexBuffers.addCpuVertexBuffer(this->vertexStreams.positions);
+    this->vertexBuffers.addCpuVertexBuffer(this->vertexStreams.colors);
 
     // Shader input
     this->shaderInput.beginForInput(
@@ -99,7 +106,8 @@ void DebugRenderer::cleanup()
 
 void DebugRenderer::renderLine(
     const glm::vec3& pos0, 
-    const glm::vec3& pos1)
+    const glm::vec3& pos1,
+    const glm::vec3& color)
 {
     if (this->numVertices >= START_NUM_MAX_ELEMENTS)
     {
@@ -107,7 +115,11 @@ void DebugRenderer::renderLine(
         return;
     }
 
-    // Add positions
-    this->vertexStreams.positions[this->numVertices++] = pos0;
-    this->vertexStreams.positions[this->numVertices++] = pos1;
+    // Add positions/colors
+    this->vertexStreams.positions[this->numVertices] = pos0;
+    this->vertexStreams.colors[this->numVertices] = color;
+    this->numVertices++;
+    this->vertexStreams.positions[this->numVertices] = pos1;
+    this->vertexStreams.colors[this->numVertices] = color;
+    this->numVertices++;
 }

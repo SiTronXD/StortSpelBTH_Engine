@@ -204,7 +204,7 @@ public:
         const uint32_t& frame,
         const std::vector<T>& dataStream)
     {
-        uint32_t i = (this->getNumVertexBuffers() + vertexBufferOffset) * frame;
+        uint32_t i = this->getNumVertexBuffers() * frame + vertexBufferOffset;
         vk::DeviceSize bufferSize = sizeof(dataStream[0]) * dataStream.size();
 
         // Map memory for transfer to vertex buffer

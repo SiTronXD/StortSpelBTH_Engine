@@ -58,7 +58,10 @@ public:
     void initForScene();
     void cleanup();
 
-    void renderLine(const glm::vec3& pos0, const glm::vec3& pos1);
+    void renderLine(
+        const glm::vec3& pos0, 
+        const glm::vec3& pos1,
+        const glm::vec3& color);
 
     inline ShaderInput& getShaderInput() { return this->shaderInput; }
     inline const Pipeline& getPipeline() const { return this->pipeline; }

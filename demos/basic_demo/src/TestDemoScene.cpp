@@ -134,11 +134,13 @@ void TestDemoScene::update()
 	// Debug
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
-		glm::vec3(10.0f, 10.0f, 25.0f)
+		glm::vec3(10.0f, 10.0f, 25.0f),
+		glm::vec3(1.0f, 0.0f, 0.0f)
 	);
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(0.0f, -10.0f, 35.0f),
-		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f)
+		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
+		glm::vec3(0.0f, 0.0f, 0.0f)
 	);
 	this->timer += Time::getDT();
 
