@@ -7,7 +7,7 @@ DefaultServerGame::DefaultServerGame() {
 void DefaultServerGame::update(float dt)
 {
     static bool wentIn = false;
-    if (players[0].position.z > 50 && !wentIn)
+    if (players[0].position.z > 0 && !wentIn)
         {
             wentIn = true;
             serverEntities.push_back(ServerEntity { glm::vec3(0, 0, 70), glm::vec3(0, 0, 0), 1 });

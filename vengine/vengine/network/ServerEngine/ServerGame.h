@@ -2,8 +2,9 @@
 #include <vector>
 #include "glm/vec3.hpp"
 #include "SFML/Network.hpp"
-#include "NetworkEnumAndDefines.h"
-#include "../ai/PathFinding.h"
+#include "../NetworkEnumAndDefines.h"
+#include "../../ai/PathFinding.h"
+#include "NetworkScene.h"
 #include <stdlib.h>
 #include <time.h>
 #include <stdio.h>
@@ -16,23 +17,36 @@ struct ServerEntity
 };
 
 //change naming to serverMode?
-class ServerGame
+class ServerGameMode
 {
+private:
+    //do things faster and more reliaebly
+    void spawnEnemy(glm::vec3 pos);
+
+
+
 protected:
     //GameDATA
     std::vector<ServerEntity> serverEntities;
     std::vector<ServerEntity> players;
     int                       seed;
 
+    PathFindingManager        pf;
+
+    //handler + scene
+    NetworkScene *scene;
+    ScriptHandler* scriptHandler;
 public:
-	void addPolygon(NavMesh::Polygon& polygon);
+    void setScene(NetworkScene *scene);
+    void setScriptHandler(ScriptHandler* scriptHandler);
+
+	//AI things
+    void addPolygon(NavMesh::Polygon& polygon);
 	void addPolygon(const std::vector<float>& polygon);
 	void removeAllPolygons();
-	//AI things
-	PathFindingManager pf;
 
-    ServerGame();
-    virtual ~ServerGame();
+    ServerGameMode();
+    virtual ~ServerGameMode();
 
     virtual void               update(float dt) = 0;
     void                       createPlayer();

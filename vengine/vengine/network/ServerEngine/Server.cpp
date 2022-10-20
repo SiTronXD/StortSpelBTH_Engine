@@ -1,6 +1,6 @@
 #include "Server.h"
 #include <iostream>
-#include "ServerGames/DefaultServerGame.h"
+#include "../ServerGameModes/DefaultServerGame.h"
 
 //can I do this better?
 void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
@@ -98,8 +98,9 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
     client.resize(client.size() - 1);
 }
 
-Server::Server(ServerGame* serverGame)
+Server::Server(ServerGameMode* serverGame)
 {
+    this->scene.setScriptHandler(&this->scriptHandler);
     if (serverGame == nullptr)
     {
             this->serverGame = new DefaultServerGame();

@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../ServerGame.h"
+#include "../ServerEngine/ServerGame.h"
 
-class DefaultServerGame : public ServerGame
+class DefaultServerGame : public ServerGameMode
 {
 private:
 

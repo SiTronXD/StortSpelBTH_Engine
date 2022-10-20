@@ -2,8 +2,9 @@
 #include <SFML/Network.hpp>
 #include <vector>
 #include <thread>
-#include "NetworkEnumAndDefines.h"
+#include "../NetworkEnumAndDefines.h"
 #include "ServerGame.h"
+#include "NetworkScene.h"
 
 struct clientInfo {
 	clientInfo(std::string name)
@@ -28,22 +29,29 @@ private:
 	void cleanRecvPackages();
 	void cleanSendPackages();
 
-	//sendmessage To users
+	//To users
 	void sendDataToAllUsers();
-	void getDataFromUsers();
 	void handlePacketFromUser(const int& clientID, bool tcp = true);
+
+	//From users
+	void getDataFromUsers();
 	void createUDPPacketToClient(const int& clientID, sf::Packet& packet);
 
+	//serverMode
+	ServerGameMode *serverGame;
 
 	//print all users
 	void printAllUsers();
-
 	int getClientSize();
 
 	//varibles
 	StartingEnum starting;
 	float        currentTimeToSend;
 	float        timeToSend;
+
+	//engine objects
+	NetworkScene scene;
+	ScriptHandler scriptHandler;
 
 	//objects
 	std::thread* connectThread;
@@ -57,9 +65,6 @@ private:
 
 	std::vector<sf::Packet> clientToServerPacketUdp; //packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketUdp;
-
-
-	ServerGame *serverGame;
 
 	//help functions
 	template <typename T> void getToAllExeptIDTCP(int clientID, T var)
@@ -80,7 +85,7 @@ private:
 	}
 
 public:
-	Server(ServerGame* serverGame = nullptr);
+	Server(ServerGameMode* serverGame = nullptr);
 	~Server();
 	void        start();
 	bool        update(float dt);

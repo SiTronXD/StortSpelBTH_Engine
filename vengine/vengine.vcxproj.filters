@@ -53,10 +53,10 @@
     <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp" />
     <ClCompile Include="vengine\network\Client.cpp" />
     <ClCompile Include="vengine\network\NetworkHandler.cpp" />
-    <ClCompile Include="vengine\network\Server.cpp" />
-    <ClCompile Include="vengine\network\ServerGame.cpp" />
-    <ClCompile Include="vengine\network\ServerGames\DefaultServerGame.cpp" />
-    <ClCompile Include="vengine\network\Timer.cpp" />
+    <ClCompile Include="vengine\network\ServerEngine\Server.cpp" />
+    <ClCompile Include="vengine\network\ServerEngine\ServerGame.cpp" />
+    <ClCompile Include="vengine\network\ServerGameModes\DefaultServerGame.cpp" />
+    <ClCompile Include="vengine\network\ServerEngine\Timer.cpp" />
     <ClCompile Include="vengine\resource_management\Configurator.cpp" />
     <ClCompile Include="vengine\resource_management\loaders\MeshLoader.cpp" />
     <ClCompile Include="vengine\resource_management\loaders\TextureLoader.cpp" />
@@ -67,6 +67,7 @@
     <ClCompile Include="vengine\graphics\UIRenderer.cpp" />
     <ClCompile Include="vengine\graphics\TextureSampler.cpp" />
     <ClCompile Include="vengine\graphics\ResTranslator.cpp" />
+    <ClCompile Include="vengine\network\ServerEngine\NetworkScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -82,6 +83,7 @@
     <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
     <ClInclude Include="vengine\graphics\TextureSampler.hpp" />
     <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
+    <ClInclude Include="vengine\network\ServerEngine\NetworkScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -254,9 +256,9 @@
     <ClInclude Include="vengine\network\Client.h" />
     <ClInclude Include="vengine\network\NetworkEnumAndDefines.h" />
     <ClInclude Include="vengine\network\NetworkHandler.h" />
-    <ClInclude Include="vengine\network\Server.h" />
-    <ClInclude Include="vengine\network\ServerGame.h" />
-    <ClInclude Include="vengine\network\Timer.h" />
+    <ClInclude Include="vengine\network\ServerEngine\Server.h" />
+    <ClInclude Include="vengine\network\ServerEngine\ServerGame.h" />
+    <ClInclude Include="vengine\network\ServerEngine\Timer.h" />
     <ClInclude Include="vengine\systems\System.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
@@ -264,7 +266,7 @@
     <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="vengine\network\ServerGames\DefaultServerGame.h" />
+    <ClInclude Include="vengine\network\ServerGameModes\DefaultServerGame.h" />
     <ClInclude Include="vengine\network\Timer.h" />
     <ClInclude Include="vengine\resource_management\Configurator.hpp" />
     <ClInclude Include="vengine\resource_management\loaders\MeshLoader.hpp" />
