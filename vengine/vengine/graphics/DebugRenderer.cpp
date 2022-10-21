@@ -3,8 +3,10 @@
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../components/AnimationComponent.hpp"
+#include "../components/MeshComponent.hpp"
 #include "../components/Transform.hpp"
 #include "../VengineMath.hpp"
+#include "../application/SceneHandler.hpp"
 
 void DebugRenderer::prepareGPU(const uint32_t& currentFrame)
 {
@@ -36,9 +38,15 @@ DebugRenderer::DebugRenderer()
     resourceManager(nullptr),
     renderPass(nullptr),
     framesInFlight(0),
-    numVertices(0)
+    numVertices(0),
+    sceneHandler(nullptr)
 {
 
+}
+
+void DebugRenderer::setSceneHandler(SceneHandler* sceneHandler)
+{
+    this->sceneHandler = sceneHandler;
 }
 
 void DebugRenderer::create(
@@ -208,36 +216,52 @@ void DebugRenderer::renderBox(
 }
 
 void DebugRenderer::renderSkeleton(
-    const uint32_t& meshID,
-    const Transform& transformComp,
-    const AnimationComponent& animComp,
+    const Entity& entity,
     const glm::vec3& color)
 {
-    // Mesh info
-    Mesh& mesh = this->resourceManager->getMesh(meshID);
+    Scene* scene = this->sceneHandler->getScene();
+
+    // Make sure entity is valid
+    if (!scene->entityValid(entity))
+    {
+        Log::error("This entity is not valid when rendering skeleton.");
+        return;
+    }
+
+    // Make sure entity has mesh component
+    if (!scene->hasComponents<MeshComponent>(entity))
+    {
+        Log::error("This entity does not have a mesh component required for rendering the skeleton.");
+        return;
+    }
+
+    // Info
+    Mesh& mesh = this->resourceManager->getMesh(
+        scene->getComponent<MeshComponent>(entity).meshID);
     MeshData& meshData = mesh.getMeshData();
+    const glm::mat4& modelMat = scene->getComponent<Transform>(entity).matrix;
 
     // Loop through bones and render them as lines
     size_t numBones = meshData.bones.size();
+    glm::vec3 parentBonePos(0.0f);
     glm::vec3 bonePos(0.0f);
-    glm::vec3 boneDir(0.0f, 0.0f, 1.0f);
-    glm::mat4 boneLocalTransform(1.0f);
-    for (size_t i = 0; i < numBones; ++i)
+    glm::mat4* parentBoneTransform = nullptr;
+    glm::mat4* boneTransform = nullptr;
+    for (size_t i = 1; i < numBones; ++i)
     {
-        // Bone local transform
-        boneLocalTransform = meshData.bones[i].boneMatrix;
+        // Transforms
+        parentBoneTransform = &meshData.bones[meshData.bones[i].parentIndex].boneMatrix;
+        boneTransform = &meshData.bones[i].boneMatrix;
 
-        // Bone position
-        bonePos = SMath::extractTranslation(boneLocalTransform);
-
-        // Bone direction
-        boneDir = boneLocalTransform * glm::vec4(0.0f, 1.0f / transformComp.scale.y, 0.0f, 0.0f);
+        // Positions
+        parentBonePos = SMath::extractTranslation(*parentBoneTransform);
+        bonePos = SMath::extractTranslation(*boneTransform);
 
         // Transform by model matrix
-        bonePos = transformComp.matrix * glm::vec4(bonePos, 1.0f);
-        boneDir = transformComp.matrix * glm::vec4(boneDir, 0.0f);
+        parentBonePos = modelMat * glm::vec4(parentBonePos, 1.0f);
+        bonePos = modelMat * glm::vec4(bonePos, 1.0f);
 
         // Render line
-        this->renderLine(bonePos, bonePos + boneDir, color);
+        this->renderLine(parentBonePos, bonePos, color);
     }
 }

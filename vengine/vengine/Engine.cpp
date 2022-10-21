@@ -68,6 +68,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->networkHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
+    this->debugRenderer.setSceneHandler(&sceneHandler);
 
     // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }

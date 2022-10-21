@@ -6,11 +6,14 @@
 #include "ShaderInput.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "VertexBufferArray.hpp"
+#include "../Application/Scene.hpp"
 
 class PhysicalDevice;
 class Device;
 class ResourceManager;
 class VulkanRenderer;
+class SceneHandler;
+
 struct AnimationComponent;
 struct Transform;
 
@@ -57,6 +60,8 @@ private:
     vk::Queue* transferQueue;
     vk::CommandPool* transferCommandPool;
 
+    SceneHandler* sceneHandler;
+
     uint32_t numVertices;
     uint32_t framesInFlight;
 
@@ -69,6 +74,7 @@ private:
 public:
     DebugRenderer();
 
+    void setSceneHandler(SceneHandler* sceneHandler);
     void create(
         PhysicalDevice& physicalDevice,
         Device& device,
@@ -94,9 +100,7 @@ public:
         const glm::vec3& size,
         const glm::vec3& color);
     void renderSkeleton(
-        const uint32_t& meshID,
-        const Transform& transformComp,
-        const AnimationComponent& animComp,
+        const Entity& entity,
         const glm::vec3& color);
 
     inline const std::vector<DebugMeshDrawCallData>& getMeshDrawCallData() const { return this->meshDrawData; }

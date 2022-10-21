@@ -76,7 +76,7 @@ void TestDemoScene::init()
 		else
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
-			//newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
+			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
@@ -176,9 +176,7 @@ void TestDemoScene::update()
 
 	// Skeleton
 	Scene::getDebugRenderer()->renderSkeleton(
-		this->getComponent<MeshComponent>(this->aniIDs[0]).meshID,
-		this->getComponent<Transform>(this->aniIDs[0]),
-		this->getComponent<AnimationComponent>(this->aniIDs[0]),
+		this->aniIDs[2],
 		glm::vec3(1.0f, 1.0f, 0.0f)
 	);
 
