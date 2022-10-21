@@ -148,14 +148,24 @@ void TestDemoScene::update()
 		glm::vec3(0.0f, 0.0f, 0.0f)
 	);
 	Scene::getDebugRenderer()->renderSphere(
-		glm::vec3(0.f, 0.f, 30.f),
+		glm::vec3(0.0f, 0.0f, 30.0f),
 		1.0f,
 		glm::vec3(1.0f, 1.0f, 0.0f)
 	);
 	Scene::getDebugRenderer()->renderSphere(
-		glm::vec3(3.f, 0.f, 30.f),
+		glm::vec3(3.0f, 0.0f, 30.0f),
 		2.0f,
 		glm::vec3(0.0f, 1.0f, 0.0f)
+	);
+	Scene::getDebugRenderer()->renderBox(
+		glm::vec3(5.5f, 0.0f, 30.0f),
+		glm::vec3(1.0f, 1.0f, 1.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+	);
+	Scene::getDebugRenderer()->renderBox(
+		glm::vec3(6.25f, 0.0f, 30.0f),
+		glm::vec3(0.5f, 2.0f, 1.0f),
+		glm::vec3(0.0f, 1.0f, 1.0f)
 	);
 	this->timer += Time::getDT();
 

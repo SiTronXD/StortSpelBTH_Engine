@@ -132,6 +132,8 @@ void DebugRenderer::initForScene()
     // Add meshes for debug rendering
     this->sphereMeshID = 
         this->resourceManager->addMesh("vengine_assets/models/icoSphere.obj");
+    this->boxMeshID = 
+        this->resourceManager->addMesh("vengine_assets/models/box.obj");
 }
 
 void DebugRenderer::cleanup()
@@ -180,6 +182,22 @@ void DebugRenderer::renderSphere(
         glm::scale(glm::mat4(1.0f), glm::vec3(radius));
     drawCallData.pushConstantData.color = glm::vec4(color, 1.0f);
 
+    this->meshDrawData.push_back(drawCallData);
+}
+
+void DebugRenderer::renderBox(
+    const glm::vec3& position,
+    const glm::vec3& halfExtents,
+    const glm::vec3& color)
+{
+    // ADd draw call data
+    DebugMeshDrawCallData drawCallData{};
+
+    drawCallData.meshID = this->boxMeshID;
+    drawCallData.pushConstantData.transform = 
+        glm::translate(glm::mat4(1.0f), position) *
+        glm::scale(glm::mat4(1.0f), halfExtents);
+    drawCallData.pushConstantData.color = glm::vec4(color, 1.0f);
 
     this->meshDrawData.push_back(drawCallData);
 }

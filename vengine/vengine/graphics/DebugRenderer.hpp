@@ -59,6 +59,7 @@ private:
     uint32_t framesInFlight;
 
     uint32_t sphereMeshID;
+    uint32_t boxMeshID;
 
     void prepareGPU(const uint32_t& currentFrame);
     void resetRender();
@@ -85,6 +86,10 @@ public:
     void renderSphere(
         const glm::vec3& position,
         const float& radius,
+        const glm::vec3& color);
+    void renderBox(
+        const glm::vec3& position,
+        const glm::vec3& size,
         const glm::vec3& color);
 
     inline const std::vector<DebugMeshDrawCallData>& getMeshDrawCallData() const { return this->meshDrawData; }
