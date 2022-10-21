@@ -11,6 +11,8 @@ class PhysicalDevice;
 class Device;
 class ResourceManager;
 class VulkanRenderer;
+struct AnimationComponent;
+struct Transform;
 
 struct DebugMeshPushConstantData
 {
@@ -29,7 +31,7 @@ class DebugRenderer
 private:
     friend VulkanRenderer;
 
-    const uint32_t START_NUM_MAX_ELEMENTS = 64;
+    const uint32_t START_NUM_MAX_ELEMENTS = 256;
 
     std::vector<DebugMeshDrawCallData> meshDrawData;
 
@@ -90,6 +92,11 @@ public:
     void renderBox(
         const glm::vec3& position,
         const glm::vec3& size,
+        const glm::vec3& color);
+    void renderSkeleton(
+        const uint32_t& meshID,
+        const Transform& transformComp,
+        const AnimationComponent& animComp,
         const glm::vec3& color);
 
     inline const std::vector<DebugMeshDrawCallData>& getMeshDrawCallData() const { return this->meshDrawData; }

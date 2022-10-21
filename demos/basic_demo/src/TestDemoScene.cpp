@@ -136,7 +136,9 @@ void TestDemoScene::update()
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
 
-	// Debug
+	// Debug rendering
+
+	// Lines
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
 		glm::vec3(10.0f, 10.0f, 25.0f),
@@ -145,8 +147,10 @@ void TestDemoScene::update()
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(0.0f, -10.0f, 35.0f),
 		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f)
+		glm::vec3(1.0f, 0.0f, 0.0f)
 	);
+
+	// Spheres
 	Scene::getDebugRenderer()->renderSphere(
 		glm::vec3(0.0f, 0.0f, 30.0f),
 		1.0f,
@@ -157,6 +161,8 @@ void TestDemoScene::update()
 		2.0f,
 		glm::vec3(0.0f, 1.0f, 0.0f)
 	);
+
+	// Boxes
 	Scene::getDebugRenderer()->renderBox(
 		glm::vec3(5.5f, 0.0f, 30.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f),
@@ -167,6 +173,15 @@ void TestDemoScene::update()
 		glm::vec3(0.5f, 2.0f, 1.0f),
 		glm::vec3(0.0f, 1.0f, 1.0f)
 	);
+
+	// Skeleton
+	Scene::getDebugRenderer()->renderSkeleton(
+		this->getComponent<MeshComponent>(this->aniIDs[0]).meshID,
+		this->getComponent<Transform>(this->aniIDs[0]),
+		this->getComponent<AnimationComponent>(this->aniIDs[0]),
+		glm::vec3(1.0f, 1.0f, 0.0f)
+	);
+
 	this->timer += Time::getDT();
 
 	if (ImGui::Begin("Sound"))

@@ -2,6 +2,9 @@
 #include "vulkan/UniformBufferStructs.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
+#include "../components/AnimationComponent.hpp"
+#include "../components/Transform.hpp"
+#include "../VengineMath.hpp"
 
 void DebugRenderer::prepareGPU(const uint32_t& currentFrame)
 {
@@ -192,7 +195,7 @@ void DebugRenderer::renderBox(
     const glm::vec3& halfExtents,
     const glm::vec3& color)
 {
-    // ADd draw call data
+    // Add draw call data
     DebugMeshDrawCallData drawCallData{};
 
     drawCallData.meshID = this->boxMeshID;
@@ -202,4 +205,39 @@ void DebugRenderer::renderBox(
     drawCallData.pushConstantData.color = glm::vec4(color, 1.0f);
 
     this->meshDrawData.push_back(drawCallData);
+}
+
+void DebugRenderer::renderSkeleton(
+    const uint32_t& meshID,
+    const Transform& transformComp,
+    const AnimationComponent& animComp,
+    const glm::vec3& color)
+{
+    // Mesh info
+    Mesh& mesh = this->resourceManager->getMesh(meshID);
+    MeshData& meshData = mesh.getMeshData();
+
+    // Loop through bones and render them as lines
+    size_t numBones = meshData.bones.size();
+    glm::vec3 bonePos(0.0f);
+    glm::vec3 boneDir(0.0f, 0.0f, 1.0f);
+    glm::mat4 boneLocalTransform(1.0f);
+    for (size_t i = 0; i < numBones; ++i)
+    {
+        // Bone local transform
+        boneLocalTransform = meshData.bones[i].boneMatrix;
+
+        // Bone position
+        bonePos = SMath::extractTranslation(boneLocalTransform);
+
+        // Bone direction
+        boneDir = boneLocalTransform * glm::vec4(0.0f, 1.0f / transformComp.scale.y, 0.0f, 0.0f);
+
+        // Transform by model matrix
+        bonePos = transformComp.matrix * glm::vec4(bonePos, 1.0f);
+        boneDir = transformComp.matrix * glm::vec4(boneDir, 0.0f);
+
+        // Render line
+        this->renderLine(bonePos, bonePos + boneDir, color);
+    }
 }
