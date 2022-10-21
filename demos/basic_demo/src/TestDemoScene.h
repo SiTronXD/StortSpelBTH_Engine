@@ -10,6 +10,8 @@ private:
 	int testEntity3;
 	int testEntity4;
 
+	int floor;
+	bool rotDir = false;
 public:
 	TestDemoScene();
 	virtual ~TestDemoScene();

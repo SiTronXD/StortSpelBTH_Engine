@@ -17,7 +17,7 @@ namespace BulletH
 	static glm::vec3 glmvec(btQuaternion& quat)
 	{
 		btScalar x, y, z;
-		quat.getEulerZYX(y, x, z);
+		quat.getEulerZYX(z, y, x);
 		return glm::vec3{ x, y, z };
 	}
 

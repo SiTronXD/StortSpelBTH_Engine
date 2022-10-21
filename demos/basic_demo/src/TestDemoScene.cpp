@@ -31,17 +31,16 @@ void TestDemoScene::init()
 	transform.position = glm::vec3(10.f, 0.f, 30.f);
 	transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 	this->setComponent<MeshComponent>(this->testEntity, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
-	this->setComponent<Collider>(this->testEntity, Collider::createBox(glm::vec3(0.5f)));
-	this->setComponent<Rigidbody>(this->testEntity, 1.0f, 0.0f);
+	this->setComponent<Collider>(this->testEntity, Collider::createSphere(5.0f));
+	this->setComponent<Rigidbody>(this->testEntity, 1.0f, 1.0f);
 
 	// Floor
-	int floor = this->createEntity();
+	this->floor = this->createEntity();
 	Transform& floorT = this->getComponent<Transform>(floor);
-	floorT.position.y = -25.0f;
+	floorT.position = glm::vec3(10.0f, -25.0f, 30.0f);
 	floorT.scale = glm::vec3(100.0f, 1.0f, 100.0f);
 	this->setComponent<MeshComponent>(floor, 0);
-	//this->setComponent<Rigidbody>(floor, 0.0f);
-	//this->setComponent<Collider>(floor, Collider::createBox(glm::vec3(10.0f, 1.0f, 10.0f)));
+	this->setComponent<Collider>(floor, Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f)));
 
 	//Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
 
@@ -101,13 +100,21 @@ void TestDemoScene::update()
 	// Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
 	// transform2.position.x += Time::getDT();
 
-	Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
-	glm::vec3 vec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), 0.0f, Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
-	rb.velocity = vec * 0.5f * Time::getDT();
+	/*Transform& floorT = this->getComponent<Transform>(this->floor);
+	floorT.rotation.z += (this->rotDir * 2 - 1) * 25.0f * Time::getDT();
+	if (abs(floorT.rotation.z) > 20.0f) { this->rotDir = !this->rotDir; }*/
 
-	if (Input::isKeyDown(Keys::E))
+	Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
+	glm::vec3 mVec = glm::vec3(Input::isKeyDown(Keys::LEFT) - Input::isKeyDown(Keys::RIGHT), 0, Input::isKeyDown(Keys::UP) - Input::isKeyDown(Keys::DOWN));
+	rb.velocity = mVec * 5.0f * Time::getDT();
+	if (Input::isKeyDown(Keys::R))
 	{
 		rb.acceleration = glm::vec3(0.0f, 25.0f, 0.0f);
+	}
+	if (Input::isKeyPressed(Keys::F))
+	{
+		Collider& col = this->getComponent<Collider>(this->floor);
+		col.isTrigger = !col.isTrigger;
 	}
 
 	if (Input::isKeyDown(Keys::T) && this->entityValid(this->getMainCameraID()))
@@ -126,7 +133,7 @@ void TestDemoScene::update()
 
 	if (this->entityValid(this->getMainCameraID()))
 	{
-		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), 0.0f, Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
+		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
 	}

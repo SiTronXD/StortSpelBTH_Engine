@@ -19,28 +19,31 @@ struct Collider
 	int ShapeID = -1;
 
 	// Constructor functions
-	static Collider createSphere(float radius)
+	static Collider createSphere(float radius, bool isTrigger = false)
 	{
 		Collider col;
 		col.type = ColType::SPHERE;
 		col.radius = radius;
+		col.isTrigger = isTrigger;
 		return col;
 	}
 
-	static Collider createBox(glm::vec3 extents)
+	static Collider createBox(glm::vec3 extents, bool isTrigger = false)
 	{
 		Collider col;
 		col.type = ColType::BOX;
 		col.extents = extents;
+		col.isTrigger = isTrigger;
 		return col;
 	}
 
-	static Collider createCapsule(float radius, float height)
+	static Collider createCapsule(float radius, float height, bool isTrigger = false)
 	{
 		Collider col;
 		col.type = ColType::CAPSULE;
 		col.radius = radius;
 		col.height = height;
+		col.isTrigger = isTrigger;
 		return col;
 	}
 };

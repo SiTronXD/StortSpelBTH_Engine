@@ -36,6 +36,15 @@ struct RayPayload
 class PhysicsEngine
 {
 private:
+	struct ColShapeInfo
+	{
+		btCollisionShape* shape = nullptr;
+		ColType type;
+		float radius;
+		float height;
+		glm::vec3 extents;
+	};
+
 	SceneHandler* sceneHandler;
 
 	float timer;
@@ -47,7 +56,9 @@ private:
 	btDefaultCollisionConfiguration* collconfig;
 	btDiscreteDynamicsWorld* dynWorld;
 
-	btAlignedObjectArray<btCollisionShape*> colShapes;
+	btAlignedObjectArray<ColShapeInfo> colShapes;
+
+	std::vector<int> removeIndicies;
 
 	/*std::vector<SphereCollider*> sphereVec;
 	std::vector<BoxCollider*> boxVec;
@@ -84,8 +95,7 @@ private:
 	void createCollider(const int& entity, Collider& col);
 	void createRigidbody(const int& entity, Rigidbody& rb, Collider& col);
 
-	void removeCollider(btCollisionObject* obj);
-	void removeRigidbody(const int& entity, Rigidbody& rb);
+	void removeObject(btCollisionObject* obj, int index);
 	
 	void cleanup();
 public:
