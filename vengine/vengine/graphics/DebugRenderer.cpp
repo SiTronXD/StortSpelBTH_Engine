@@ -143,6 +143,12 @@ void DebugRenderer::initForScene()
     );
 
     // Add meshes for debug rendering
+    this->upperHemisphereMeshID = 
+        this->resourceManager->addMesh("vengine_assets/models/upperHemisphere.obj");
+    this->lowerHemisphereMeshID =
+        this->resourceManager->addMesh("vengine_assets/models/lowerHemisphere.obj");
+    this->capsuleBodyMeshID =
+        this->resourceManager->addMesh("vengine_assets/models/capsuleBody.obj");
     this->sphereMeshID = 
         this->resourceManager->addMesh("vengine_assets/models/icoSphere.obj");
     this->boxMeshID = 
@@ -200,19 +206,70 @@ void DebugRenderer::renderSphere(
 
 void DebugRenderer::renderBox(
     const glm::vec3& position,
+    const glm::vec3& rotation,
     const glm::vec3& halfExtents,
     const glm::vec3& color)
 {
     // Add draw call data
     DebugMeshDrawCallData drawCallData{};
 
+    glm::mat4 rotationMatrix = SMath::rotateEuler(rotation);
+
     drawCallData.meshID = this->boxMeshID;
     drawCallData.pushConstantData.transform = 
         glm::translate(glm::mat4(1.0f), position) *
+        rotationMatrix * 
         glm::scale(glm::mat4(1.0f), halfExtents);
     drawCallData.pushConstantData.color = glm::vec4(color, 1.0f);
 
     this->meshDrawData.push_back(drawCallData);
+}
+
+void DebugRenderer::renderCapsule(
+    const glm::vec3& position,
+    const glm::vec3& eulerRotation,
+    const float& height,
+    const float& radius,
+    const glm::vec3& color)
+{
+    glm::mat4 rotationMatrix = SMath::rotateEuler(eulerRotation);
+    glm::mat4 hemisphereScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(radius));
+
+    // Upper hemisphere draw call data
+    DebugMeshDrawCallData upperHemisphereData{};
+    upperHemisphereData.meshID = this->upperHemisphereMeshID;
+    upperHemisphereData.pushConstantData.transform =
+        glm::translate(glm::mat4(1.0f), position) *
+        rotationMatrix *
+        glm::translate(glm::mat4(1.0f), 
+            glm::vec3(0.0f, 0.0f, height * 0.5f)) *
+        hemisphereScaleMatrix;
+    upperHemisphereData.pushConstantData.color = glm::vec4(color, 1.0f);
+
+    // Lower hemisphere draw call data
+    DebugMeshDrawCallData lowerHemisphereData{};
+    lowerHemisphereData.meshID = this->lowerHemisphereMeshID;
+    lowerHemisphereData.pushConstantData.transform =
+        glm::translate(glm::mat4(1.0f), position) *
+        rotationMatrix *
+        glm::translate(glm::mat4(1.0f),
+            glm::vec3(0.0f, 0.0f, -height * 0.5f)) *
+        hemisphereScaleMatrix;
+    lowerHemisphereData.pushConstantData.color = glm::vec4(color, 1.0f);
+
+    // Capsule body draw call data
+    DebugMeshDrawCallData capsuleBodyData{};
+    capsuleBodyData.meshID = this->capsuleBodyMeshID;
+    capsuleBodyData.pushConstantData.transform =
+        glm::translate(glm::mat4(1.0f), position) *
+        rotationMatrix * 
+        glm::scale(glm::mat4(1.0f), glm::vec3(radius, radius, height));
+    capsuleBodyData.pushConstantData.color = glm::vec4(color, 1.0f);
+
+    // Add draw call data
+    this->meshDrawData.push_back(upperHemisphereData);
+    this->meshDrawData.push_back(lowerHemisphereData);
+    this->meshDrawData.push_back(capsuleBodyData);
 }
 
 void DebugRenderer::renderSkeleton(

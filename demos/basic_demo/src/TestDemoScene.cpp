@@ -165,13 +165,24 @@ void TestDemoScene::update()
 	// Boxes
 	Scene::getDebugRenderer()->renderBox(
 		glm::vec3(5.5f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 2.541f, 0.0f),
 		glm::vec3(1.0f, 1.0f, 1.0f),
 		glm::vec3(0.0f, 0.0f, 1.0f)
 	);
 	Scene::getDebugRenderer()->renderBox(
 		glm::vec3(6.25f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
 		glm::vec3(0.5f, 2.0f, 1.0f),
 		glm::vec3(0.0f, 1.0f, 1.0f)
+	);
+
+	// Capsules
+	Scene::getDebugRenderer()->renderCapsule(
+		glm::vec3(8.0f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
+		2.0f + sin(timer),
+		0.5f,
+		glm::vec3(1.0f, 0.0f, 0.0f)
 	);
 
 	// Skeleton

@@ -10,6 +10,9 @@ class SMath
 	 static glm::vec3 getRandomVector(float scalar);
 	 static glm::vec3 rotateVectorByQuaternion(const glm::quat& quaternion, const glm::vec3& vector);
      static glm::vec3 extractTranslation(const glm::mat4& mat);
+
+     static glm::mat4 rotateTowards(const glm::vec3& dir, const glm::vec3& up);
+     static glm::mat4 rotateEuler(const glm::vec3& angles);
 };
 
 inline glm::vec3 SMath::getRandomVector(float scalar) 
@@ -34,4 +37,36 @@ inline glm::vec3 SMath::extractTranslation(
         mat[3][1],
         mat[3][2]
     );
+}
+
+inline glm::mat4 SMath::rotateTowards(
+    const glm::vec3& dir, 
+    const glm::vec3& up)
+{
+    // Forward
+    glm::vec3 forwardVec = dir;
+    forwardVec = glm::normalize(forwardVec);
+
+    // Right
+    glm::vec3 rightVec = glm::cross(forwardVec, up);
+    rightVec = glm::normalize(rightVec);
+
+    // Up
+    glm::vec3 upVec = glm::cross(rightVec, forwardVec);
+    upVec = glm::normalize(upVec);
+
+    return glm::mat4(
+        glm::vec4(rightVec, 0.0f),
+        glm::vec4(upVec, 0.0f),
+        glm::vec4(forwardVec, 0.0f),
+        glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
+    );
+}
+
+inline glm::mat4 SMath::rotateEuler(const glm::vec3& angles)
+{
+    return 
+        glm::rotate(glm::mat4(1.0f), glm::radians(angles.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
+        glm::rotate(glm::mat4(1.0f), glm::radians(angles.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
+        glm::rotate(glm::mat4(1.0f), glm::radians(angles.x), glm::vec3(1.0f, 0.0f, 0.0f));
 }

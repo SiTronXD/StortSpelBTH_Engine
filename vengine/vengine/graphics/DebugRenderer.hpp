@@ -65,6 +65,9 @@ private:
     uint32_t numVertices;
     uint32_t framesInFlight;
 
+    uint32_t upperHemisphereMeshID;
+    uint32_t lowerHemisphereMeshID;
+    uint32_t capsuleBodyMeshID;
     uint32_t sphereMeshID;
     uint32_t boxMeshID;
 
@@ -97,7 +100,14 @@ public:
         const glm::vec3& color);
     void renderBox(
         const glm::vec3& position,
+        const glm::vec3& rotation,
         const glm::vec3& size,
+        const glm::vec3& color);
+    void renderCapsule(
+        const glm::vec3& position,
+        const glm::vec3& eulerRotation,
+        const float& height,
+        const float& radius,
         const glm::vec3& color);
     void renderSkeleton(
         const Entity& entity,
