@@ -15,35 +15,32 @@ NetworkTestScene::~NetworkTestScene()
 
 void NetworkTestScene::init()
 {
-	std::cout << "Test scene init" << std::endl;
+    int camEntity = this->createEntity();
+    this->setComponent<Camera>(camEntity, 1.0f);
+    this->setMainCamera(camEntity);
+    Transform& camTransform = this->getComponent<Transform>(camEntity);
+    camTransform.position   = glm::vec3(1.0f);
 
-	// Camera
-	int camEntity = this->createEntity();
-	this->setComponent<Camera>(camEntity);
-	this->setMainCamera(camEntity);
+    this->Player = this->createEntity();
 
-	///////////////DEBUG OF DEBUG//////////////
-	// stone
-	this->stone = this->createEntity();
-	// Transform component
-	Transform& stransform = this->getComponent<Transform>(this->stone);
-	stransform.position = glm::vec3(0.f, 0.f, 80.f);
-	stransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-	stransform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
-	/////////////////////////////////////////////
+    Transform& transform = this->getComponent<Transform>(this->Player);
+    transform.position = glm::vec3(0.f, 0.f, 5.f);
+    transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+    transform.scale = glm::vec3(5.0f);
 
-	// Create entity (already has transform)
-	this->Player = this->createEntity();
+    //ground
+    int ground = this->createEntity();
+    int groundMesh =
+        this->getResourceManager()->addMesh("vengine_assets/models/Cube.fbx");
 
-	// Transform component
-	Transform& transform = this->getComponent<Transform>(this->Player);
-	transform.position = glm::vec3(0.f, 0.f, 30.f);
-	transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-	transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
+    this->setComponent<Transform>(ground);
+    this->setComponent<MeshComponent>(ground, groundMesh);
+    Transform& transform2 = this->getComponent<Transform>(ground);
+    transform2.position = glm::vec3(0.0f, -10.0f, 0.0f);
+    transform2.scale = glm::vec3(100.f, 0.1f, 100.f);
 
-	// Mesh component
-	this->setComponent<MeshComponent>(this->Player);
-	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->Player);
+    int puzzleCreator = this->createEntity();
+    this->setScriptComponent(puzzleCreator, "src/Scripts/PuzzleCreatorLua.lua");
 
 }
 
@@ -51,35 +48,37 @@ void NetworkTestScene::init()
 
 void NetworkTestScene::update()
 {
-	if (this->entityValid(this->getMainCameraID()))
-	{
-		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), 0.0f, Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
-		Transform& transform = this->getComponent<Transform>(this->Player);
-		transform.position += moveVec * 25.0f * Time::getDT();
-		this->getNetworkHandler()->sendUDPDataToClient(transform.position, transform.rotation);
-	}
-	if (Input::isKeyPressed(Keys::P)) {
-		this->getNetworkHandler()->createServer(new TheServerGame());
-		this->getNetworkHandler()->createClient();
-		this->getNetworkHandler()->connectClientToThis();
-		Transform& transform = this->getComponent<Transform>(this->Player);
-		transform.rotation = glm::vec3(69, 69, 69);
-
-	}
-	if (Input::isKeyPressed(Keys::H)) {
-		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
-	}
-	else if (Input::isKeyPressed(Keys::L)) {
-		std::string ip, name;
-		std::cin >> name;
-		std::cin >> ip;
-		this->getNetworkHandler()->createClient(name);
-		this->getNetworkHandler()->connectClient(ip);
-		Transform& transform = this->getComponent<Transform>(this->Player);
-		transform.rotation = glm::vec3(77, 77, 77);
-	}
-	else if (Input::isKeyPressed(Keys::B)) {
-		Transform& transform = this->getComponent<Transform>(this->Player);
-		transform.position = glm::vec3(0, 0, 0);
-	}
+    if (Input::isKeyPressed(Keys::B)) {
+        this->getNetworkHandler()->createServer(new TheServerGame());
+        this->getNetworkHandler()->createClient();
+        if (this->getNetworkHandler()->connectClientToThis())
+          {
+            std::cout << "connect" << std::endl;
+          }
+        else
+          {
+            std::cout << "no Connect" << std::endl;
+        }
+        //no visulation that we connected
+    }
+    if (Input::isKeyPressed(Keys::N)) {
+        this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent { GameEvents::START });
+    }
+    if (Input::isKeyPressed(Keys::M)) {
+        this->getNetworkHandler()->createClient("Cli");
+        std::cout << "ip : ";
+        std::string ip;
+        std::cin >> ip;
+        if (ip == "a") {
+            ip = "192.168.1.104";
+        }
+        this->getNetworkHandler()->connectClient(ip);
+    }
+    if (Input::isKeyPressed(Keys::O)) {
+        std::cout << this->getComponent<Transform>(Player).position.z << std::endl;
+    }
+    this->getNetworkHandler()->sendUDPDataToClient(
+        this->getComponent<Transform>(Player).position,
+        this->getComponent<Transform>(Player).rotation
+    );
 }
