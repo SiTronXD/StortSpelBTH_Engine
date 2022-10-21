@@ -20,10 +20,10 @@ void TheServerGame::update(float dt)
     {
         std::cout << "step over 1" << std::endl;
         wentIn = true;
-        this->scene->createEnemy(1);
+        this->scene->createEnemy(1, "", glm::vec3(0,0,20));
     }
     for (int i = 0; i < this->scene->getEnemySize(); i++)
     {
-        this->scene->getComponent<Transform>(this->scene->getEnemies(i)).rotation += dt * 50 * (i + 1);
+        this->scene->getComponent<Transform>(this->scene->getEnemies(i)).rotation.x += dt * 50 * (i + 1);
     }
 }

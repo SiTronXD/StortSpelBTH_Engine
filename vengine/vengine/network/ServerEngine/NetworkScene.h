@@ -32,7 +32,7 @@ private:
 
 	int getEnemies(const int& whatEnemy);
 	const int getEnemySize();
-	int createEnemy(int type = -1, std::string script = "", glm::vec3 pos = glm::vec3(0,0,0), glm::vec3 rot = glm::vec3(0,0,0));
+	int createEnemy(int type = -1, const std::string &script = "", glm::vec3 pos = glm::vec3(0,0,0), glm::vec3 rot = glm::vec3(0,0,0));
 
 	//we don't have a scene handler here so this is it instead
 	void setScriptHandler(ServerScriptHandler* scriptHandler);

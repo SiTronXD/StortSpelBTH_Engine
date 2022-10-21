@@ -77,7 +77,14 @@ bool NetworkScene::removeEntity(Entity entity)
 	{
 		this->reg.destroy((entt::entity)entity);
 	}
-
+	for (size_t i = 0; i < enemies.size(); i++)
+	{
+		if (entity == enemies[i].first)
+		{
+			enemies.erase(enemies.begin() + entity);
+			break;
+		}
+	}
 	//TODO : check if an enemy was this entity?
 	
 	return valid;
@@ -133,7 +140,7 @@ const int NetworkScene::getEnemySize()
 	return this->enemies.size();
 }
 
-int NetworkScene::createEnemy(int type, std::string script, glm::vec3 pos, glm::vec3 rot)
+int NetworkScene::createEnemy(int type, const std::string &script, glm::vec3 pos, glm::vec3 rot)
 {
 	int e = this->createEntity();
 	this->setComponent<Transform>(e);

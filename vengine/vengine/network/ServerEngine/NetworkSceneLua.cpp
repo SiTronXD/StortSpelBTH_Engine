@@ -52,7 +52,7 @@ int NetworkSceneLua::lua_iterateView(lua_State* L)
 	}
 	lua_pop(L, 1);
 
-	std::vector<int> entitiesToIterate;
+	std::vector<Entity> entitiesToIterate;
 
 	const entt::entity* data = scene->getSceneReg().data();
 	const int size = scene->getEntityCount();
