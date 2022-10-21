@@ -21,7 +21,6 @@ void TheServerGame::update(float dt)
         std::cout << "step over 1" << std::endl;
         wentIn = true;
         this->scene->createEnemy(1);
-        addEvent({ (int)GameEvents::SpawnEnemy, 1 }, { 0.f, 0.f, 70.f });
     }
     for (int i = 0; i < this->scene->getEnemySize(); i++)
     {

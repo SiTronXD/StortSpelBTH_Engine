@@ -51,6 +51,7 @@ class NetworkSceneLua
 	static int lua_removeComponent(lua_State* L);
 	static int lua_getPlayer(lua_State* L);
 	static int lua_getPlayerCount(lua_State* L);
+	static int lua_addEvent(lua_State* L);
 
    public:
 	static void lua_openscene(lua_State* L, NetworkScene* scene);

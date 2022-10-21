@@ -117,7 +117,7 @@ Server::Server(ServerGameMode* serverGame)
 	this->serverGame->setScene(&this->scene);
 	this->serverGame->setScriptHandler(&this->scriptHandler);
 
-	this->serverGame->GivePacketInfo(this->serverToClientPacketTcp);
+	this->scene.GivePacketInfo(this->serverToClientPacketTcp);
 
 	this->starting = StartingEnum::WaitingForUsers;
 	this->currentTimeToSend = 0;

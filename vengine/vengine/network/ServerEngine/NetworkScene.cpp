@@ -77,12 +77,17 @@ bool NetworkScene::removeEntity(Entity entity)
 	{
 		this->reg.destroy((entt::entity)entity);
 	}
+
+	//TODO : check if an enemy was this entity?
+	
 	return valid;
 }
 
 void NetworkScene::removeAllEntitys()
 {
 	this->reg.clear();
+	players.clear();
+	enemies.clear();
 }
 
 void NetworkScene::setActive(Entity entity)
@@ -139,6 +144,7 @@ int NetworkScene::createEnemy(int type, std::string script, glm::vec3 pos, glm::
 		this->setScriptComponent(e, script);
 	}
 	this->enemies.push_back(std::pair<int,int>(e, type));
+	this->addEvent({(int)GameEvents::SpawnEnemy, type}, {pos.x, pos.y, pos.z, rot.x, rot.y, rot.z});
 	return e;
 }
 
@@ -148,4 +154,14 @@ int NetworkScene::createPlayer()
 	this->setComponent<Transform>(e);
 	this->players.push_back(e);
 	return e;
+}
+
+void NetworkScene::removePlayer(int playerID)
+{
+	players.erase(players.begin() + playerID);
+}
+
+void NetworkScene::GivePacketInfo(std::vector<sf::Packet>& serverToClient)
+{
+	this->serverToClient = &serverToClient;
 }
