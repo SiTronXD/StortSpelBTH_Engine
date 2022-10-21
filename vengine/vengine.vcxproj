@@ -459,7 +459,6 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
-    <None Include="vengine_assets\scripts\ServerLuaTest.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

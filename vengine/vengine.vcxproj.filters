@@ -275,6 +275,5 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
-    <None Include="vengine_assets\scripts\ServerLuaTest.lua" />
   </ItemGroup>
 </Project>
