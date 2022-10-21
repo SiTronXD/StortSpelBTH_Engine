@@ -5,8 +5,11 @@
 void UIRenderer::prepareForGPU()
 {
     // Num vertices for last draw call
-    this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
-        this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
+    if (this->uiDrawCallData.size() > 0)
+    {
+        this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
+            this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
+    }
 }
 
 void UIRenderer::resetRender()
