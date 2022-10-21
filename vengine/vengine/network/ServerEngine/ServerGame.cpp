@@ -43,7 +43,7 @@ void ServerGameMode::setScene(NetworkScene* scene)
 	this->scene = scene;
 }
 
-void ServerGameMode::setScriptHandler(ScriptHandler* scriptHandler)
+void ServerGameMode::setScriptHandler(ServerScriptHandler* scriptHandler)
 {
 	this->scriptHandler = scriptHandler;
 }

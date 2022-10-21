@@ -74,4 +74,11 @@ void NetworkTestScene::update()
         }
         this->getNetworkHandler()->connectClient(ip);
     }
+    if (Input::isKeyPressed(Keys::O)) {
+        std::cout << this->getComponent<Transform>(Player).position.z << std::endl;
+    }
+    this->getNetworkHandler()->sendUDPDataToClient(
+        this->getComponent<Transform>(Player).position,
+        this->getComponent<Transform>(Player).rotation
+    );
 }

@@ -35,10 +35,11 @@ protected:
 
     //handler + scene
     NetworkScene *scene;
-    ScriptHandler* scriptHandler;
-public:
+	ServerScriptHandler* scriptHandler;
+
+   public:
     void setScene(NetworkScene *scene);
-    void setScriptHandler(ScriptHandler* scriptHandler);
+	void setScriptHandler(ServerScriptHandler* scriptHandler);
 
 	//AI things
     void addPolygon(NavMesh::Polygon& polygon);

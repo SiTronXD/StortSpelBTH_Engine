@@ -5,6 +5,7 @@
 #include "../NetworkEnumAndDefines.h"
 #include "ServerGame.h"
 #include "NetworkScene.h"
+#include "ServerScriptHandler.h"
 
 struct clientInfo {
 	clientInfo(std::string name)
@@ -51,7 +52,7 @@ private:
 
 	//engine objects
 	NetworkScene scene;
-	ScriptHandler scriptHandler;
+	ServerScriptHandler scriptHandler;
 
 	//objects
 	std::thread* connectThread;

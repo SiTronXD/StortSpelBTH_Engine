@@ -68,6 +68,8 @@
     <ClCompile Include="vengine\graphics\TextureSampler.cpp" />
     <ClCompile Include="vengine\graphics\ResTranslator.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkScene.cpp" />
+    <ClCompile Include="vengine\network\ServerEngine\ServerScriptHandler.cpp" />
+    <ClCompile Include="vengine\network\ServerEngine\NetworkSceneLua.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -84,6 +86,8 @@
     <ClInclude Include="vengine\graphics\TextureSampler.hpp" />
     <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkScene.h" />
+    <ClInclude Include="vengine\network\ServerEngine\ServerScriptHandler.h" />
+    <ClInclude Include="vengine\network\ServerEngine\NetworkSceneLua.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -179,15 +183,6 @@
     <ClCompile Include="vengine\network\NetworkHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="vengine\network\Server.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vengine\network\ServerGame.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="vengine\network\Timer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="vengine\test\TestScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -267,7 +262,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vengine\network\ServerGameModes\DefaultServerGame.h" />
-    <ClInclude Include="vengine\network\Timer.h" />
     <ClInclude Include="vengine\resource_management\Configurator.hpp" />
     <ClInclude Include="vengine\resource_management\loaders\MeshLoader.hpp" />
     <ClInclude Include="vengine\resource_management\loaders\TextureLoader.hpp" />
@@ -281,5 +275,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="vengine_assets\scripts\ServerLuaTest.lua" />
   </ItemGroup>
 </Project>

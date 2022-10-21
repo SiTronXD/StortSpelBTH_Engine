@@ -1,20 +1,23 @@
 #pragma once
 #include "../../application/Scene.hpp"
+#include "ServerScriptHandler.h"
 
 class NetworkScene{
 private:
 	entt::registry reg;
 	std::vector<System*> systems;
 	std::vector<LuaSystem> luaSystems;
-	ScriptHandler* scriptHandler;
-protected:
-	ScriptHandler* getScriptHandler();
-public:
+	ServerScriptHandler* scriptHandler;
+
+   protected:
+	ServerScriptHandler* getScriptHandler();
+
+   public:
 	NetworkScene();
 	virtual ~NetworkScene();
 
 	//we don't have a scene handler here so this is it instead
-	void setScriptHandler(ScriptHandler* scriptHandler);
+	void setScriptHandler(ServerScriptHandler* scriptHandler);
 
 	void createSystem(std::string& path);
 	void setScriptComponent(Entity entity, std::string path);
@@ -50,8 +53,8 @@ public:
 	void setInactive(Entity entity);
 	bool isActive(Entity entity);
 
-	virtual void init();
-	virtual void update();
+	void init();
+	void update(float dt);
 
 	inline entt::registry& getSceneReg() { return this->reg; }
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }

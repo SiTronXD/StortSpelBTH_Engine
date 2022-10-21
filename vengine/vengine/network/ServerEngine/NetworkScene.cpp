@@ -1,6 +1,6 @@
 #include "NetworkScene.h"
 
-ScriptHandler* NetworkScene::getScriptHandler()
+ServerScriptHandler* NetworkScene::getScriptHandler()
 {
     return this->scriptHandler;
 }
@@ -21,7 +21,7 @@ NetworkScene::~NetworkScene()
 	this->luaSystems.clear();
 }
 
-void NetworkScene::setScriptHandler(ScriptHandler* scriptHandler)
+void NetworkScene::setScriptHandler(ServerScriptHandler* scriptHandler)
 {
     this->scriptHandler = scriptHandler;
 }
@@ -101,6 +101,8 @@ void NetworkScene::init()
 {
 }
 
-void NetworkScene::update()
+void NetworkScene::update(float dt)
 {
+	this->updateSystems(dt);
+	this->scriptHandler->updateSystems(this->luaSystems);
 }

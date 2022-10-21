@@ -101,6 +101,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 Server::Server(ServerGameMode* serverGame)
 {
     this->scene.setScriptHandler(&this->scriptHandler);
+	this->scriptHandler.setScene(&this->scene);
     if (serverGame == nullptr)
     {
             this->serverGame = new DefaultServerGame();
@@ -109,6 +110,10 @@ Server::Server(ServerGameMode* serverGame)
     {
             this->serverGame = serverGame;
     }
+
+    this->serverGame->setScene(&this->scene);
+	this->serverGame->setScriptHandler(&this->scriptHandler);
+
     this->serverGame->GivePacketInfo(this->serverToClientPacketTcp);
     this->starting          = StartingEnum::WaitingForUsers;
     this->currentTimeToSend = 0;
@@ -202,9 +207,17 @@ bool Server::update(float dt)
         if (clients.size() == 0) {
             return true;
         }
+
+
+
         getDataFromUsers();
         if (this->currentTimeToSend > this->timeToSend) {
+
+			this->scene.update(this->currentTimeToSend);
+			this->scriptHandler.update();
             this->serverGame->update(this->currentTimeToSend);
+
+
             this->seeIfUsersExist();
             this->sendDataToAllUsers();
             this->cleanSendPackages();
