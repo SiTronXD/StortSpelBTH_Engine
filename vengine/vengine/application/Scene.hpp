@@ -44,6 +44,7 @@ protected:
 	ResourceManager* getResourceManager();
 	UIRenderer* getUIRenderer();
 	DebugRenderer* getDebugRenderer();
+	SceneHandler* getSceneHandler();
 
     template <typename T> T getConfigValue(std::string_view name)
     {
