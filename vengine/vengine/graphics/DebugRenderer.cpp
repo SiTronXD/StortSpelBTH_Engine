@@ -97,6 +97,7 @@ void DebugRenderer::initForScene()
         "dbg.frag.spv",
         false,
         false,
+        true,
         vk::PrimitiveTopology::eLineList
     );
 
@@ -126,7 +127,8 @@ void DebugRenderer::initForScene()
         "dbgMesh.vert.spv",
         "dbg.frag.spv",
         false,
-        true
+        true,
+        false
     );
 
     // Add meshes for debug rendering
