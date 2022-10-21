@@ -8,5 +8,6 @@ private:
 
 public:
     DefaultServerGame();
+    void init();
     void update(float dt);
 };

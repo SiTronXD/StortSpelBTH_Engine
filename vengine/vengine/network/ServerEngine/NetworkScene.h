@@ -9,12 +9,25 @@ private:
 	std::vector<LuaSystem> luaSystems;
 	ServerScriptHandler* scriptHandler;
 
+	std::vector<int> players;
+						//id, type
+	std::vector<std::pair<int,int>> enemies;
+
    protected:
 	ServerScriptHandler* getScriptHandler();
 
    public:
 	NetworkScene();
 	virtual ~NetworkScene();
+
+	//custom function for server only
+	int getPlayer(const int &whatPlayer);
+	const int getPlayerSize();
+	int getEnemies(const int& whatEnemy);
+	const int getEnemySize();
+
+	int createEnemy(int type = -1, std::string script = "", glm::vec3 pos = glm::vec3(0,0,0), glm::vec3 rot = glm::vec3(0,0,0));
+	int createPlayer();
 
 	//we don't have a scene handler here so this is it instead
 	void setScriptHandler(ServerScriptHandler* scriptHandler);

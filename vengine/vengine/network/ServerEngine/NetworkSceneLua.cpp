@@ -1,10 +1,9 @@
-#include "../../application/Time.hpp"
 #include "NetworkSceneLua.h"
+#include "../../application/Time.hpp"
 
 int NetworkSceneLua::lua_createSystem(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 
 	if (lua_isstring(L, 1))  // Lua System
 	{
@@ -21,8 +20,7 @@ int NetworkSceneLua::lua_createSystem(lua_State* L)
 
 int NetworkSceneLua::lua_iterateView(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 
 	// Sanity check
 	if (!lua_istable(L, 1) || !lua_isfunction(L, 2))
@@ -61,17 +59,9 @@ int NetworkSceneLua::lua_iterateView(lua_State* L)
 	for (int i = 0; i < size; i++)
 	{
 		int entity = (int)data[i];
-		bool addToList =
-		    std::find(
-		        compTypes.begin(), compTypes.end(), CompType::TRANSFORM
-		    ) != compTypes.end() &&
-		    scene->hasComponents<Transform>(entity) &&
-		    std::find(compTypes.begin(), compTypes.end(), CompType::MESH) !=
-		        compTypes.end() &&
-		    scene->hasComponents<MeshComponent>(entity) &&
-		    std::find(compTypes.begin(), compTypes.end(), CompType::SCRIPT) !=
-		        compTypes.end() &&
-		    scene->hasComponents<Script>(entity);
+		bool addToList = std::find(compTypes.begin(), compTypes.end(), CompType::TRANSFORM) != compTypes.end() && scene->hasComponents<Transform>(entity) &&
+		                 std::find(compTypes.begin(), compTypes.end(), CompType::MESH) != compTypes.end() && scene->hasComponents<MeshComponent>(entity) &&
+		                 std::find(compTypes.begin(), compTypes.end(), CompType::SCRIPT) != compTypes.end() && scene->hasComponents<Script>(entity);
 
 		if (scriptPath.size() && addToList)
 		{
@@ -97,28 +87,20 @@ int NetworkSceneLua::lua_iterateView(lua_State* L)
 			switch (type)
 			{
 				case CompType::TRANSFORM:
-					lua_pushtransform(
-					    L, scene->getComponent<Transform>(entity)
-					);
+					lua_pushtransform(L, scene->getComponent<Transform>(entity));
 					break;
 				case CompType::MESH:
 					lua_pushmesh(L, scene->getComponent<MeshComponent>(entity));
 					break;
 				case CompType::SCRIPT:
-					lua_rawgeti(
-					    L,
-					    LUA_REGISTRYINDEX,
-					    scene->getComponent<Script>(entity).luaRef
-					);
+					lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Script>(entity).luaRef);
 					break;
 				default:
 					break;
 			}
 		}
 
-		LUA_ERR_CHECK(
-		    L, lua_pcall(L, (int)compTypes.size() + (useAddtionalTable), 0, 0)
-		);
+		LUA_ERR_CHECK(L, lua_pcall(L, (int)compTypes.size() + (useAddtionalTable), 0, 0));
 	}
 
 	return 0;
@@ -126,8 +108,7 @@ int NetworkSceneLua::lua_iterateView(lua_State* L)
 
 int NetworkSceneLua::lua_createPrefab(lua_State* L)
 {
-	NetworkScene* scene =
-	    (NetworkScene*)lua_touserdata(L, lua_upvalueindex(1));
+	NetworkScene* scene = (NetworkScene*)lua_touserdata(L, lua_upvalueindex(1));
 
 	if (lua_isstring(L, 1))  // Prefab file
 	{
@@ -153,7 +134,6 @@ int NetworkSceneLua::lua_createPrefab(lua_State* L)
 	}
 	lua_pop(L, 1);
 
-
 	lua_getfield(L, -1, "Script");
 	if (lua_isstring(L, -1))
 	{
@@ -167,40 +147,35 @@ int NetworkSceneLua::lua_createPrefab(lua_State* L)
 
 int NetworkSceneLua::lua_getEntityCount(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 	lua_pushnumber(L, scene->getEntityCount());
 	return 1;
 }
 
 int NetworkSceneLua::lua_entityValid(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 	lua_pushboolean(L, scene->entityValid((int)lua_tointeger(L, 1)));
 	return 1;
 }
 
 int NetworkSceneLua::lua_createEntity(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 	lua_pushnumber(L, scene->createEntity());
 	return 1;
 }
 
 int NetworkSceneLua::lua_removeEntity(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 	lua_pushboolean(L, scene->removeEntity((int)lua_tointeger(L, 1)));
 	return 1;
 }
 
 int NetworkSceneLua::lua_hasComponent(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 	int entity = (int)lua_tointeger(L, 1);
 	int type = (int)lua_tointeger(L, 2);
 	bool hasComp = false;
@@ -229,13 +204,11 @@ int NetworkSceneLua::lua_hasComponent(lua_State* L)
 
 int NetworkSceneLua::lua_getComponent(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 	int entity = (int)lua_tointeger(L, 1);
 	int type = (int)lua_tointeger(L, 2);
 
-	if ((CompType)type == CompType::TRANSFORM &&
-	    scene->hasComponents<Transform>(entity))
+	if ((CompType)type == CompType::TRANSFORM && scene->hasComponents<Transform>(entity))
 	{
 		lua_pushtransform(L, scene->getComponent<Transform>(entity));
 	}
@@ -245,9 +218,7 @@ int NetworkSceneLua::lua_getComponent(lua_State* L)
 	}
 	else if ((CompType)type == CompType::SCRIPT && scene->hasComponents<Script>(entity))
 	{
-		lua_rawgeti(
-		    L, LUA_REGISTRYINDEX, scene->getComponent<Script>(entity).luaRef
-		);
+		lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Script>(entity).luaRef);
 	}
 	else
 	{
@@ -258,8 +229,7 @@ int NetworkSceneLua::lua_getComponent(lua_State* L)
 
 int NetworkSceneLua::lua_setComponent(lua_State* L)
 {
-	NetworkScene* scene =
-	    (NetworkScene*)lua_touserdata(L, lua_upvalueindex(1));
+	NetworkScene* scene = (NetworkScene*)lua_touserdata(L, lua_upvalueindex(1));
 
 	int entity = (int)lua_tointeger(L, 1);
 	int type = (int)lua_tointeger(L, 2);
@@ -285,8 +255,7 @@ int NetworkSceneLua::lua_setComponent(lua_State* L)
 
 int NetworkSceneLua::lua_removeComponent(lua_State* L)
 {
-	NetworkScene* scene =
-	    ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 	int entity = (int)lua_tointeger(L, 1);
 	int type = (int)lua_tointeger(L, 2);
 
@@ -300,6 +269,20 @@ int NetworkSceneLua::lua_removeComponent(lua_State* L)
 	}
 
 	return 0;
+}
+
+int NetworkSceneLua::lua_getPlayer(lua_State* L)
+{
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	lua_pushnumber(L, scene->getPlayer((int)lua_tointeger(L, 1)));
+	return 1;
+}
+
+int NetworkSceneLua::lua_getPlayerCount(lua_State* L)
+{
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	lua_pushnumber(L, scene->getPlayerSize());
+	return 1;
 }
 
 void NetworkSceneLua::lua_openscene(lua_State* L, NetworkScene* scene)
@@ -318,6 +301,8 @@ void NetworkSceneLua::lua_openscene(lua_State* L, NetworkScene* scene)
 	    {"getComponent", lua_getComponent},
 	    {"setComponent", lua_setComponent},
 	    {"removeComponent", lua_removeComponent},
+	    {"getPlayer", lua_getPlayer},
+	    {"getPlayerCount", lua_getPlayerCount},
 	    {NULL, NULL}};
 
 	lua_pushlightuserdata(L, scene);

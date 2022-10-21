@@ -13,29 +13,15 @@ ServerGameMode::ServerGameMode()
 
 ServerGameMode::~ServerGameMode() {}
 
-void ServerGameMode::createPlayer()
-{
-	this->players.push_back(ServerEntity());
-}
-
-std::vector<ServerEntity>& ServerGameMode::getServerEntities()
-{
-	return this->serverEntities;
-}
-
-std::vector<ServerEntity>& ServerGameMode::getServerPlayers()
-{
-	return this->players;
-}
-
 void ServerGameMode::GivePacketInfo(std::vector<sf::Packet>& serverToClient)
 {
 	this->serverToClient = &serverToClient;
 }
 
-void ServerGameMode::spawnEnemy(glm::vec3 pos)
+void ServerGameMode::spawnEnemy(int type, std::string script, glm::vec3 pos, glm::vec3 rot)
 {
-	//this->
+	this->scene->createEnemy(type, script, pos, rot);
+	addEvent({(int)GameEvents::SpawnEnemy, type}, {pos.x, pos.y, pos.z});
 }
 
 void ServerGameMode::setScene(NetworkScene* scene)

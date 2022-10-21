@@ -9,35 +9,25 @@
 #include <time.h>
 #include <stdio.h>
 
-struct ServerEntity
-{
-    glm::vec3 position;
-    glm::vec3 rotation;
-    int       type;
-};
-
 //change naming to serverMode?
 class ServerGameMode
 {
 private:
     //do things faster and more reliaebly
-    void spawnEnemy(glm::vec3 pos);
+ void spawnEnemy(int type = -1, std::string script = "", glm::vec3 pos = glm::vec3(0, 0, 0), glm::vec3 rot = glm::vec3(0, 0, 0));
 
 
 
 protected:
     //GameDATA
-    std::vector<ServerEntity> serverEntities;
-    std::vector<ServerEntity> players;
     int                       seed;
-
     PathFindingManager        pf;
 
     //handler + scene
     NetworkScene *scene;
 	ServerScriptHandler* scriptHandler;
 
-   public:
+public:
     void setScene(NetworkScene *scene);
 	void setScriptHandler(ServerScriptHandler* scriptHandler);
 
@@ -50,9 +40,7 @@ protected:
     virtual ~ServerGameMode();
 
     virtual void               update(float dt) = 0;
-    void                       createPlayer();
-    std::vector<ServerEntity>& getServerEntities();
-    std::vector<ServerEntity>& getServerPlayers();
+	virtual void               init() = 0;
     void                       GivePacketInfo(std::vector<sf::Packet>& serverToClient);
     const int                  getSeed();
 
