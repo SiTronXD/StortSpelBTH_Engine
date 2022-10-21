@@ -14,13 +14,12 @@
 #include "imgui.h"              // Need to be included in header
 
 #include "../resource_management/ResourceManager.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/fwd.hpp"
 #include "UIRenderer.hpp"
+#include "DebugRenderer.hpp"
+#include "vulkan/UniformBufferStructs.hpp"
 
 class Scene;
 class Camera;
-class UIRenderer;
 
 #include <functional>
 using stbi_uc = unsigned char;
@@ -33,6 +32,7 @@ class VulkanRenderer
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
     ResourceManager* resourceManager;
     UIRenderer* uiRenderer;
+    DebugRenderer* debugRenderer;
 
     Window* window;
     VmaAllocator vma = nullptr;
@@ -41,12 +41,7 @@ class VulkanRenderer
 
     bool windowResized = false;
 
-    // Scene Settings
-    struct UboViewProjection 
-    {
-        glm::mat4 projection;   // How the Camera Views the world (Ortographic or Perspective)
-        glm::mat4 view;         // Where our Camera is viewing from and the direction it is viewing        
-    } uboViewProjection{};
+    UboViewProjection uboViewProjection{};
 
     //Vulkan Components
     // - Main
@@ -160,7 +155,8 @@ public:
         Window* window, 
         std::string&& windowName, 
         ResourceManager* resourceMan,
-        UIRenderer* uiRenderer);
+        UIRenderer* uiRenderer,
+        DebugRenderer* debugRenderer);
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);
 

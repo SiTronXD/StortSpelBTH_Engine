@@ -6,6 +6,7 @@
 #include "audio/AudioHandler.h"
 #include "resource_management/ResourceManager.hpp"
 #include "graphics/UIRenderer.hpp"
+#include "graphics/DebugRenderer.hpp"
 
 class Engine
 {
@@ -23,6 +24,7 @@ public:
 	ScriptHandler scriptHandler;
 	AudioHandler audioHandler;
 	UIRenderer uiRenderer;
+	DebugRenderer debugRenderer;
 };
 
 

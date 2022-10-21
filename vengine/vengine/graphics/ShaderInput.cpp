@@ -366,7 +366,9 @@ ShaderInput::ShaderInput()
 { }
 
 ShaderInput::~ShaderInput()
-{}
+{
+    
+}
 
 void ShaderInput::beginForInput(
     PhysicalDevice& physicalDevice,

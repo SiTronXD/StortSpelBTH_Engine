@@ -123,6 +123,16 @@ UIRenderer* SceneHandler::getUIRenderer()
 	return this->uiRenderer;
 }
 
+void SceneHandler::setDebugRenderer(DebugRenderer* debugRenderer)
+{
+	this->debugRenderer = debugRenderer;
+}
+
+DebugRenderer* SceneHandler::getDebugRenderer()
+{
+	return this->debugRenderer;
+}
+
 void SceneHandler::setVulkanRenderer(VulkanRenderer* vulkanRenderer)
 {
 	this->vulkanRenderer = vulkanRenderer;

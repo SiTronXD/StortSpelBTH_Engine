@@ -50,7 +50,8 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         &window, 
         std::move(appName), 
         &this->resourceManager,
-        &this->uiRenderer) == 1)
+        &this->uiRenderer,
+        &this->debugRenderer) == 1)
     {
         std::cout << "EXIT_FAILURE" << std::endl;
     }
@@ -62,6 +63,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setResourceManager(&resourceManager);
     this->sceneHandler.setVulkanRenderer(&renderer);
     this->sceneHandler.setUIRenderer(&uiRenderer);
+    this->sceneHandler.setDebugRenderer(&debugRenderer);
     this->networkHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
