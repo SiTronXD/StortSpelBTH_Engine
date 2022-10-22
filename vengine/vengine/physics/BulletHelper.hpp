@@ -3,35 +3,34 @@
 #include <glm/glm.hpp>
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
-#include <LinearMath/btAlignedObjectArray.h>
 
 #include "../components/Transform.hpp"
 
 namespace BulletH
 {
-	static glm::vec3 glmvec(btVector3& vec)
+	static glm::vec3 glmvec(const btVector3& vec)
 	{
 	    return glm::vec3{ vec.x(), vec.y(), vec.z() };
 	}
 
-	static glm::vec3 glmvec(btQuaternion& quat)
+	static glm::vec3 glmvec(const btQuaternion& quat)
 	{
 		btScalar x, y, z;
 		quat.getEulerZYX(z, y, x);
 		return glm::vec3{ x, y, z };
 	}
 
-	static btVector3 bulletVec(glm::vec3& vec)
+	static btVector3 bulletVec(const glm::vec3& vec)
 	{
 	    return btVector3(vec.x, vec.y, vec.z);
 	}
 
-	static btQuaternion bulletQuat(glm::vec3& vec)
+	static btQuaternion bulletQuat(const glm::vec3& vec)
 	{
 		return btQuaternion(vec.y, vec.x, vec.z);
 	}
 	
-	static Transform toTransform(btTransform& transform) 
+	static Transform toTransform(const btTransform& transform) 
 	{
 		Transform t;
 		t.position = glmvec(transform.getOrigin());
@@ -42,7 +41,7 @@ namespace BulletH
 		return t;
 	}
 
-	static btTransform toBulletTransform(Transform& transform)
+	static btTransform toBulletTransform(const Transform& transform)
 	{
 		btTransform t;
 		glm::vec3 rot = glm::radians(transform.rotation);

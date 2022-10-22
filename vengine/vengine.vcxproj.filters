@@ -54,6 +54,7 @@
     <ClCompile Include="vengine\test\TestScene2.cpp" />
     <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
     <ClCompile Include="vengine\physics\PhysicsEngine.cpp" />
+    <ClCompile Include="vengine\physics\ContactCallback.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -151,6 +152,7 @@
     <ClInclude Include="vengine\physics\PhysicsEngine.h" />
     <ClInclude Include="vengine\physics\BulletHelper.hpp" />
     <ClInclude Include="vengine\components\Collider.h" />
+    <ClInclude Include="vengine\physics\ContactCallback.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

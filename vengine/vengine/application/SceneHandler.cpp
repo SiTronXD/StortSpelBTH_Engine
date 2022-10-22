@@ -56,6 +56,7 @@ void SceneHandler::updateToNextScene()
 		this->scene = this->nextScene;
 		this->nextScene = nullptr;
 		this->luaScript = this->nextLuaScript;
+		this->physicsEngine->init();
 
 		this->scene->init();
 		if (this->luaScript.size() != 0)
@@ -80,12 +81,15 @@ void SceneHandler::setScene(Scene* scene, std::string path)
 void SceneHandler::reloadScene()
 {
 	this->scene->getSceneReg().clear();
+	this->physicsEngine->init();
 
 	this->scene->init();
 	if (this->luaScript.size() != 0)
 	{
 		this->scriptHandler->runScript(this->luaScript);
 	}
+
+	Time::init();
 }
 
 void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)

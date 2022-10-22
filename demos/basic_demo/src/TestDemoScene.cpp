@@ -23,10 +23,10 @@ void TestDemoScene::init()
 	this->setComponent<Camera>(camEntity, 1.0f);
 	this->setMainCamera(camEntity);
 
-	//  Create entity (already has transform)
+	// Create entity (already has transform)
 	this->testEntity = this->createEntity();
 
-	//  Transform component
+	// Transform component
 	Transform& transform = this->getComponent<Transform>(this->testEntity);
 	transform.position = glm::vec3(10.f, 0.f, 30.f);
 	transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
@@ -42,7 +42,22 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(floor, 0);
 	this->setComponent<Collider>(floor, Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f)));
 
-	//Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
+	// Create multiple test rigidbodies
+	for (int x = 0; x < 5; x++)
+	{
+		for (int z = 0; z < 5; z++)
+		{
+			int e = this->createEntity();
+			Transform& t = this->getComponent<Transform>(e);
+			t.position = glm::vec3(x, 7.5f, z) * 10.0f;
+			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
+			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
+
+			this->setComponent<Collider>(e, Collider::createBox(t.scale));
+			this->setComponent<Rigidbody>(e);
+			this->setComponent<MeshComponent>(e, 0);
+		}
+	}
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
@@ -97,30 +112,32 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
-	// Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	// transform2.position.x += Time::getDT();
-
-	/*Transform& floorT = this->getComponent<Transform>(this->floor);
-	floorT.rotation.z += (this->rotDir * 2 - 1) * 25.0f * Time::getDT();
-	if (abs(floorT.rotation.z) > 20.0f) { this->rotDir = !this->rotDir; }*/
-
-	Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
-	glm::vec3 mVec = glm::vec3(Input::isKeyDown(Keys::LEFT) - Input::isKeyDown(Keys::RIGHT), 0, Input::isKeyDown(Keys::UP) - Input::isKeyDown(Keys::DOWN));
-	rb.velocity = mVec * 5.0f * Time::getDT();
-	if (Input::isKeyDown(Keys::R))
+	// Movement with velocity
+	if (this->hasComponents<Collider, Rigidbody>(this->testEntity))
 	{
-		rb.acceleration = glm::vec3(0.0f, 25.0f, 0.0f);
-	}
-	if (Input::isKeyPressed(Keys::F))
-	{
-		Collider& col = this->getComponent<Collider>(this->floor);
-		col.isTrigger = !col.isTrigger;
+		Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
+		glm::vec3 vec = glm::vec3(Input::isKeyDown(Keys::LEFT) - Input::isKeyDown(Keys::RIGHT), 0.0f, Input::isKeyDown(Keys::UP) - Input::isKeyDown(Keys::DOWN));
+		float y = rb.velocity.y;
+		rb.velocity = vec * 10.0f;
+		rb.velocity.y = y;
 	}
 
+	// Test contact
+	if (Input::isKeyDown(Keys::F))
+	{
+		Collider col = Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f));
+		std::vector<int> hit = this->getPhysicsEngine()->testContact(col, glm::vec3(0.0f, 0.0f, 0.0f));
+		for (const int& e : hit)
+		{
+			this->getComponent<Rigidbody>(e).velocity.y += 5.0f;
+		}
+	}
+
+	// Test raycast
 	if (Input::isKeyDown(Keys::T) && this->entityValid(this->getMainCameraID()))
 	{
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
-		RayPayload payload = this->getPhysicsEngine()->shootRay(Ray{ camTransform.position, camTransform.forward() });
+		RayPayload payload = this->getPhysicsEngine()->raycast({ camTransform.position, camTransform.forward() });
 
 		if (payload.hit)
 		{

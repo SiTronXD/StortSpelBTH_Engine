@@ -1,23 +1,22 @@
 #pragma once
 
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
-#include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
-#include "BulletCollision/Gimpact/btGImpactShape.h"
-
-#include "BulletHelper.hpp"
+#include <glm/glm.hpp>
+#include <LinearMath/btAlignedObjectArray.h>
 
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/Transform.hpp"
-#include "../components/BoxCollider.h"
-#include "../components/SphereCollider.h"
-#include "../components/CapsuleCollider.h"
-
 #include "../components/Rigidbody.h"
 #include "../components/Collider.h"
 
 class SceneHandler;
+class btCollisionShape;
+class btCollisionObject;
+class btCollisionDispatcher;
+class btBroadphaseInterface;
+class btSequentialImpulseConstraintSolver;
+class btDefaultCollisionConfiguration;
+class btDiscreteDynamicsWorld;
 
 struct Ray
 {
@@ -57,36 +56,7 @@ private:
 	btDiscreteDynamicsWorld* dynWorld;
 
 	btAlignedObjectArray<ColShapeInfo> colShapes;
-
 	std::vector<int> removeIndicies;
-
-	/*std::vector<SphereCollider*> sphereVec;
-	std::vector<BoxCollider*> boxVec;
-	std::vector<CapsuleCollider*> capsuleVec;
-	std::vector<Rigidbody*> rigidBodyVec;
-	std::vector<Rigidbody*> rigidBodyNoColliderVec;
-
-	std::vector<Collider*> colVector;
-	std::vector<Rigidbody*> rbVector;*/
-
-	// Update transforms and rotations for colliders.
-	//void updateSphere();
-	//void updateBox();
-	//void updateCapsule();
-
-	//// Creation of rigid bodies and colliders
-	//void createRigidBody(Rigidbody& rigidBody);
-	//void createRigidBody(Rigidbody& rigidBody, SphereCollider& shape);
-	//void createRigidBody(Rigidbody& rigidBody, BoxCollider& shape);
-	//void createRigidBody(Rigidbody& rigidBody, CapsuleCollider& shape);
-
-	//void createSphereCol(SphereCollider& collider);
-	//void createBoxCol(BoxCollider& collider);
-	//void createCapsuleCol(CapsuleCollider& collider);
-
-	//bool removeSphereCollider(int ID);
-	//bool removeBoxCollider(int ID);
-	//bool removeCapsuleCollider(int ID);
 
 	void updateColliders();
 	void updateRigidbodies();
@@ -94,7 +64,6 @@ private:
 	btCollisionShape* createShape(const int& entity, Collider& col);
 	void createCollider(const int& entity, Collider& col);
 	void createRigidbody(const int& entity, Rigidbody& rb, Collider& col);
-
 	void removeObject(btCollisionObject* obj, int index);
 	
 	void cleanup();
@@ -107,5 +76,10 @@ public:
 
 	void init();
 	void update();
-	RayPayload shootRay(Ray ray, float maxDist = 100.0f);
+
+	// Raycast into the scene and get resulting hit
+	RayPayload raycast(Ray ray, float maxDist = 100.0f);
+	// Test contact of a collider within the scene. Get the resulting entities hit
+	// NOTE: The collider argument doesn't need to be attached to an entity for the function to work
+	std::vector<int> testContact(Collider& col, glm::vec3 position, glm::vec3 rotation = glm::vec3(0.0f));
 };

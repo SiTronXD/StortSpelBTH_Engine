@@ -301,6 +301,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     </CustomBuildStep>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\physics\ContactCallback.h" />
     <ClInclude Include="vengine\components\Collider.h" />
     <ClInclude Include="vengine\physics\BulletHelper.hpp" />
     <ClInclude Include="vengine\physics\PhysicsEngine.h" />
@@ -378,6 +379,7 @@ copy $(ProjectDir)..\deps\DLLs\ $(OutDir)</Command>
     <ClInclude Include="vengine\VengineMath.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="vengine\physics\ContactCallback.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_sdl.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp" />
     <ClCompile Include="imgui\imgui.cpp" />
