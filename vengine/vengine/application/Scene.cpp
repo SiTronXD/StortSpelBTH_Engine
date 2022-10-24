@@ -25,6 +25,11 @@ ResourceManager* Scene::getResourceManager()
 	return this->sceneHandler->getResourceManager();
 }
 
+PhysicsEngine* Scene::getPhysicsEngine()
+{
+	return this->sceneHandler->getPhysicsEngine();
+}
+
 UIRenderer* Scene::getUIRenderer()
 {
 	return this->sceneHandler->getUIRenderer();
@@ -140,6 +145,11 @@ bool Scene::isActive(Entity entity)
 }
 
 void Scene::init()
+{
+
+}
+
+void Scene::start()
 {
 
 }

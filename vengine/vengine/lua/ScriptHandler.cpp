@@ -205,7 +205,7 @@ bool ScriptHandler::getScriptComponentValue(Script& script, int& ret, std::strin
 
 
 	bool result = lua_isnumber(L, -1);
-	if (result) { ret = (int)lua_tointeger(L, -1); }
+	if (result) { ret = (int)lua_tonumber(L, -1); }
 	return result;
 }
 
@@ -223,6 +223,33 @@ bool ScriptHandler::getScriptComponentValue(Script& script, std::string& ret, st
 {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
 	lua_getfield(L, -1, name.c_str());
+
+	bool result = lua_isstring(L, -1);
+	if (result) { ret = lua_tostring(L, -1); }
+	return result;
+}
+
+bool ScriptHandler::getGlobal(int& ret, std::string& name)
+{
+	lua_getglobal(L, name.c_str());
+
+	bool result = lua_isnumber(L, -1);
+	if (result) { ret = (int)lua_tonumber(L, -1); }
+	return result;
+}
+
+bool ScriptHandler::getGlobal(float& ret, std::string& name)
+{
+	lua_getglobal(L, name.c_str());
+
+	bool result = lua_isnumber(L, -1);
+	if (result) { ret = (float)lua_tonumber(L, -1); }
+	return result;
+}
+
+bool ScriptHandler::getGlobal(std::string& ret, std::string& name)
+{
+	lua_getglobal(L, name.c_str());
 
 	bool result = lua_isstring(L, -1);
 	if (result) { ret = lua_tostring(L, -1); }

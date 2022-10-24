@@ -15,12 +15,14 @@ private:
 
 	Entity aniIDs[4];
 	bool aniActive[4];
-
+  
+  int floor;
+	bool rotDir = false;
 public:
 	TestDemoScene();
 	virtual ~TestDemoScene();
 
-	// Inherited via Scene
+	//  Inherited via Scene
 	virtual void init() override;
 	virtual void update() override;
 };

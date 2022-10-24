@@ -85,4 +85,7 @@ void VertexBufferArray::cleanup()
         this->device->destroyBuffer(this->vertexBuffers[i]);
         vmaFreeMemory(*this->vma, this->vertexBufferMemories[i]);
     }
+    this->vertexBufferOffsets.clear();
+    this->vertexBufferMemories.clear();
+    this->vertexBuffers.clear();
 }

@@ -34,25 +34,54 @@ void TestDemoScene::init()
 
 	// Transform component
 	Transform& transform = this->getComponent<Transform>(this->testEntity);
-	transform.position = glm::vec3(0.f, 0.f, 30.f);
+	transform.position = glm::vec3(10.f, 0.f, 30.f);
 	transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-	//transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
-	//transform.scale = glm::vec3(0.1f, .1f, .1f);
+	this->setComponent<MeshComponent>(this->testEntity, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->setComponent<Collider>(this->testEntity, Collider::createSphere(5.0f));
+	this->setComponent<Rigidbody>(this->testEntity, 1.0f, 1.0f);
 
-	// Mesh component
-	//this->setComponent<MeshComponent>(this->testEntity);
-	this->setComponent<MeshComponent>(this->testEntity);
-	MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
-	meshComp.meshID = Scene::getResourceManager()->addMesh("ghost.obj");
+	// Floor
+	this->floor = this->createEntity();
+	Transform& floorT = this->getComponent<Transform>(floor);
+	floorT.position = glm::vec3(10.0f, -25.0f, 30.0f);
+	floorT.scale = glm::vec3(100.0f, 1.0f, 100.0f);
+	this->setComponent<MeshComponent>(floor, 0);
+	this->setComponent<Collider>(floor, Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f)));
 
-	// AudioSource component
+	// Create multiple test rigidbodies
+	for (int x = 0; x < 5; x++)
+	{
+		for (int z = 0; z < 5; z++)
+		{
+			Entity e = this->createEntity();
+			Transform& t = this->getComponent<Transform>(e);
+			t.position = glm::vec3(x, 7.5f, z) * 10.0f;
+			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
+			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
+
+			this->setComponent<Collider>(e, Collider::createBox(t.scale));
+			this->setComponent<Rigidbody>(e);
+			this->setComponent<MeshComponent>(e, 0);
+		}
+	}
+
+	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
+	// transform.scale = glm::vec3(0.1f, .1f, .1f);
+	//this->setComponent<RigidBody>(this->testEntity);
+	//this->setComponent<CapsuleCollider>(this->testEntity);
+
+	//  Mesh component
+	// this->setComponent<MeshComponent>(this->testEntity);
+	// MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
+	// meshComp.meshID = this->getResourceManager()->addMesh("ghost.obj");
+
+	//  AudioSource component
 	int soundID = AudioHandler::loadFile("assets/sounds/test-audio.wav");
 	if (soundID != -1)
 	{
 		this->setComponent<AudioSource>(this->testEntity);
 		this->getComponent<AudioSource>(this->testEntity).sound.setBuffer(*AudioHandler::getBuffer(soundID));
 	}
-
 
 	// Create other test entities
 	uint32_t amogusMeshID = ~0u;
@@ -76,7 +105,7 @@ void TestDemoScene::init()
 		else
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
-			//newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
+			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
@@ -114,12 +143,52 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
-	//Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	//transform2.position.x += Time::getDT();
+	// Movement with velocity
+	if (this->hasComponents<Collider, Rigidbody>(this->testEntity))
+	{
+		Rigidbody& rb = this->getComponent<Rigidbody>(this->testEntity);
+		glm::vec3 vec = glm::vec3(Input::isKeyDown(Keys::LEFT) - Input::isKeyDown(Keys::RIGHT), 0.0f, Input::isKeyDown(Keys::UP) - Input::isKeyDown(Keys::DOWN));
+		float y = rb.velocity.y;
+		rb.velocity = vec * 10.0f;
+		rb.velocity.y = y;
+	}
+
+	// Test contact
+	if (Input::isKeyDown(Keys::F))
+	{
+		Collider col = Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f));
+		std::vector<Entity> hit = this->getPhysicsEngine()->testContact(col, glm::vec3(0.0f, 0.0f, 0.0f));
+		for (const Entity& e : hit)
+		{
+			if ((int)rand() & 1)
+			{
+				this->setComponent<Inactive>(e);
+			}
+			else
+			{
+				this->getComponent<Rigidbody>(e).velocity.y += 5.0f;
+			}
+		}
+	}
+
+	// Test raycast
+	if (Input::isKeyDown(Keys::T) && this->entityValid(this->getMainCameraID()))
+	{
+		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
+		RayPayload payload = this->getPhysicsEngine()->raycast({ camTransform.position, camTransform.forward() });
+
+		if (payload.hit)
+		{
+			Log::write("Hit raycast at pos (" +
+				std::to_string(payload.hitPoint.x) + ", " +
+				std::to_string(payload.hitPoint.y) + ", " +
+				std::to_string(payload.hitPoint.z) + ")");
+		}
+	}
 
 	if (this->entityValid(this->getMainCameraID()))
 	{
-		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), 0.0f, Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
+		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
 	}
@@ -136,7 +205,9 @@ void TestDemoScene::update()
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
 
-	// Debug
+	// Debug rendering
+
+	// Lines
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
 		glm::vec3(10.0f, 10.0f, 25.0f),
@@ -145,8 +216,50 @@ void TestDemoScene::update()
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(0.0f, -10.0f, 35.0f),
 		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f)
+		glm::vec3(1.0f, 0.0f, 0.0f)
 	);
+
+	// Spheres
+	Scene::getDebugRenderer()->renderSphere(
+		glm::vec3(0.0f, 0.0f, 30.0f),
+		1.0f,
+		glm::vec3(1.0f, 1.0f, 0.0f)
+	);
+	Scene::getDebugRenderer()->renderSphere(
+		glm::vec3(3.0f, 0.0f, 30.0f),
+		2.0f,
+		glm::vec3(0.0f, 1.0f, 0.0f)
+	);
+
+	// Boxes
+	Scene::getDebugRenderer()->renderBox(
+		glm::vec3(5.5f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 2.541f, 0.0f),
+		glm::vec3(1.0f, 1.0f, 1.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+	);
+	Scene::getDebugRenderer()->renderBox(
+		glm::vec3(6.25f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
+		glm::vec3(0.5f, 2.0f, 1.0f),
+		glm::vec3(0.0f, 1.0f, 1.0f)
+	);
+
+	// Capsules
+	Scene::getDebugRenderer()->renderCapsule(
+		glm::vec3(8.0f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
+		2.0f + sin(timer),
+		0.5f,
+		glm::vec3(1.0f, 0.0f, 0.0f)
+	);
+
+	// Skeleton
+	Scene::getDebugRenderer()->renderSkeleton(
+		this->aniIDs[2],
+		glm::vec3(1.0f, 1.0f, 0.0f)
+	);
+
 	this->timer += Time::getDT();
 
 	if (ImGui::Begin("Sound"))

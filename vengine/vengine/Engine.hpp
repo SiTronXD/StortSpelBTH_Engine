@@ -2,6 +2,7 @@
 
 #include "application/SceneHandler.hpp"
 #include "network/NetworkHandler.h"
+#include "physics/PhysicsEngine.h"
 #include "lua/ScriptHandler.h"
 #include "audio/AudioHandler.h"
 #include "resource_management/ResourceManager.hpp"
@@ -18,9 +19,10 @@ public:
 
 	void run(std::string appName, std::string startScenePath, Scene* startScene = nullptr);
 
-	SceneHandler    sceneHandler;
+	SceneHandler sceneHandler;
     ResourceManager resourceManager;
 	NetworkHandler networkHandler;
+	PhysicsEngine physicsEngine;
 	ScriptHandler scriptHandler;
 	AudioHandler audioHandler;
 	UIRenderer uiRenderer;

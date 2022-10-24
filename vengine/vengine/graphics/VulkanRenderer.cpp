@@ -480,6 +480,9 @@ void VulkanRenderer::draw(Scene* scene)
 
 void VulkanRenderer::initForScene(Scene* scene)
 {
+    // Wait idle before doing anything
+    this->device.waitIdle();
+
     // Try to cleanup before creating new objects
     this->shaderInput.cleanup();
     this->pipeline.cleanup();
@@ -1042,10 +1045,17 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
             // Debug renderer shader input
             this->debugRenderer->prepareGPU(this->currentFrame);
-            this->debugRenderer->getShaderInput().setCurrentFrame(
+            this->debugRenderer->getLineShaderInput().setCurrentFrame(
                 this->currentFrame
             );
-            this->debugRenderer->getShaderInput().updateUniformBuffer(
+            this->debugRenderer->getLineShaderInput().updateUniformBuffer(
+                this->viewProjectionUB,
+                (void*)&this->uboViewProjection
+            );
+            this->debugRenderer->getMeshShaderInput().setCurrentFrame(
+                this->currentFrame
+            );
+            this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
                 this->viewProjectionUB,
                 (void*)&this->uboViewProjection
             );
@@ -1274,25 +1284,75 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                 // Debug rendering
                 {
-                    // Debug pipeline
+                    // ---------- Lines ----------
+                    
+                    // Pipeline
                     currentCommandBuffer.bindGraphicsPipeline(
-                        this->debugRenderer->getPipeline()
+                        this->debugRenderer->getLinePipeline()
                     );
 
                     // Bind shader input per frame
                     currentCommandBuffer.bindShaderInputFrequency(
-                        this->debugRenderer->getShaderInput(),
+                        this->debugRenderer->getLineShaderInput(),
                         DescriptorFrequency::PER_FRAME
                     );
 
                     // Bind vertex buffer
                     currentCommandBuffer.bindVertexBuffers2(
-                        this->debugRenderer->getVertexBufferArray(),
+                        this->debugRenderer->getLineVertexBufferArray(),
                         this->currentFrame
                     );
 
                     // Draw
                     currentCommandBuffer.draw(this->debugRenderer->getNumVertices());
+
+                    // ---------- Meshes ----------
+
+                    // Pipeline
+                    currentCommandBuffer.bindGraphicsPipeline(
+                        this->debugRenderer->getMeshPipeline()
+                    );
+
+                    // Bind shader input per frame
+                    currentCommandBuffer.bindShaderInputFrequency(
+                        this->debugRenderer->getMeshShaderInput(),
+                        DescriptorFrequency::PER_FRAME
+                    );
+
+                    // Loop through meshes and render them
+                    const std::vector<DebugMeshDrawCallData>& debugDrawCallData
+                        = this->debugRenderer->getMeshDrawCallData();
+                    for (size_t i = 0; i < debugDrawCallData.size(); ++i)
+                    {
+                        const Mesh& currentMesh =
+                            this->resourceManager->getMesh(debugDrawCallData[i].meshID);
+                        const SubmeshData& currentSubmesh = 
+                            currentMesh.getSubmeshData()[0];
+
+                        // Push constant
+                        currentCommandBuffer.pushConstant(
+                            this->debugRenderer->getMeshShaderInput(),
+                            (void*) &debugDrawCallData[i].pushConstantData
+                        );
+
+                        // Bind vertex buffer
+                        currentCommandBuffer.bindVertexBuffers2(
+                            currentMesh.getVertexBufferArray(),
+                            this->currentFrame
+                        );
+
+                        // Bind index buffer
+                        currentCommandBuffer.bindIndexBuffer(
+                            currentMesh.getIndexBuffer()
+                        );
+
+                        // Draw
+                        currentCommandBuffer.drawIndexed(
+                            currentSubmesh.numIndicies, 
+                            1, 
+                            currentSubmesh.startIndex
+                        );
+                    }
                 }
                 this->debugRenderer->resetRender();
 
