@@ -21,6 +21,17 @@ NetworkScene::~NetworkScene()
 	this->luaSystems.clear();
 }
 
+void NetworkScene::setPathFindingManager(PathFindingManager* pf)
+{
+	this->pf = pf;
+}
+
+PathFindingManager* NetworkScene::getPathFindingManager()
+{
+	return this->pf;
+}
+
+
 void NetworkScene::setScriptHandler(ServerScriptHandler* scriptHandler)
 {
 	this->scriptHandler = scriptHandler;
@@ -118,6 +129,13 @@ void NetworkScene::update(float dt)
 {
 	this->updateSystems(dt);
 	this->scriptHandler->updateSystems(this->luaSystems);
+
+	auto view = this->getSceneReg().view<Transform>(entt::exclude<Inactive>);
+	auto func = [](Transform& transform)
+	{
+		transform.updateMatrix();
+	};
+	view.each(func);
 }
 
 int NetworkScene::getPlayer(const int& whatPlayer)

@@ -3,6 +3,7 @@
 #include "ServerScriptHandler.h"
 #include <SFML/Network.hpp>
 #include "../NetworkEnumAndDefines.h"
+#include "../../ai/PathFinding.h"
 
 class NetworkScene{
 private:
@@ -16,6 +17,7 @@ private:
 						//id, type
 	std::vector<std::pair<int,int>> enemies;
 	std::vector<int> players;
+	PathFindingManager *pf;
 
    protected:
 	ServerScriptHandler* getScriptHandler();
@@ -23,6 +25,9 @@ private:
    public:
 	NetworkScene();
 	virtual ~NetworkScene();
+
+	void setPathFindingManager(PathFindingManager* pf);
+	PathFindingManager* getPathFindingManager();
 
 	//custom function for server only
 	int createPlayer();
@@ -97,6 +102,7 @@ private:
 			}
 		}
 	}
+	
 	template <typename I, typename F>
 	void addEvent(std::vector<I> ints, std::vector<F> floats)
 	{
