@@ -480,6 +480,9 @@ void VulkanRenderer::draw(Scene* scene)
 
 void VulkanRenderer::initForScene(Scene* scene)
 {
+    // Wait idle before doing anything
+    this->device.waitIdle();
+
     // Try to cleanup before creating new objects
     this->shaderInput.cleanup();
     this->pipeline.cleanup();
