@@ -10,6 +10,9 @@ This file contains everything lua related that has been implemented in to Vengin
 	* [Input](#Input)
 	* [Resource Manager](#Resource-Manager)
 	* [Network](#Network)
+	* [Physics](#Physics)
+	* [UIRenderer](#UIRenderer)
+	* [DebugRenderer](#DebugRenderer)
 * [Scene Files](#Scene-Files)
 * [Prefabs](#Prefabs)
 * [Script Component](#Script-Component)
@@ -46,6 +49,10 @@ Names of the system globals in lua:
 * scene
 * input
 * resources
+* network
+* physics
+* uiRenderer
+* debugRenderer
 
 ## Scene
 The scene global that has been created in the lua environment is the main interface of the ECS, similarly to the C++ environment. It has multiple functions that is the same as in C++ and some extra functionality.
@@ -339,6 +346,41 @@ sendUDPData(vector : player_position, vector : player_rotation)
 
 #### getNetworkData
 In progress...
+
+## Physics
+The physics global that has been created for the lua environment is the main interface for simple physics functions such as [raycast](#raycast) and [contactTest](#contactTest).
+
+### Functions
+List of functions related to the *physics* global.
+
+## UIRenderer
+The uiRenderer global that has been created for the lua environment is the main interface to render textures to the screen as UI.
+
+### Functions
+List of functions related to the *uiRenderer* global.
+
+#### setTexture
+Sets the active texture resource to be rendered when calling [renderTexture](#renderTexture). It can be used with a texture ID or the path to the texture.
+~~~ Lua
+uiRenderer.setTexture(int : textureID)
+uiRenderer.setTexture(string : texture_path)
+~~~
+
+#### renderTexture
+Renders the active texture to the screen. [setTexture](#setTexture) should be called before. Takes a 2D position and width and height as the argument.
+~~~ Lua
+uiRenderer.renderTexture(float : x, float : y, float : width, float : height)
+
+--Example use
+uiRenderer.setTexture("test.png")
+uiRenderer.renderTexture(0, 0, 100, 100) -- 100x100 image in the middle of the screen
+~~~
+
+## DebugRenderer
+The debugRenderer global that has been created for the lua environment is the main interface to render debug lines and wireframe objects. This can be used in combination of [Physics](#Physics) for colliders and more.
+
+### Functions
+List of functions related to the *debugRenderer* global.
 
 ## Scene Files
 Scene files are lua scripts that describe the initilization of a scene and is mostly used in that context. What is done in the lua file is up to the user, but creating entities and setting components within the [Scene](#Scene). Currently these are called when creating a new scene in C++ and via the [setScene](#setScene) function in lua.

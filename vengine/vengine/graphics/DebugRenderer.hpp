@@ -120,4 +120,7 @@ public:
     inline const Pipeline& getMeshPipeline() const { return this->meshPipeline; }
     inline const VertexBufferArray& getLineVertexBufferArray() const { return this->lineVertexBuffers; }
     inline size_t getNumVertices() { return this->numVertices; }
+
+    // Mostly for Lua use
+    inline ResourceManager* getResourceManager() const { return this->resourceManager; }
 };

@@ -10,6 +10,7 @@
 #include "wrappers/InputLua.h"
 #include "wrappers/ResourceManagerLua.h"
 #include "wrappers/NetworkHandlerLua.h"
+#include "wrappers/UIRendererLua.h"
 
 void ScriptHandler::lua_openmetatables(lua_State* L)
 {
@@ -91,9 +92,25 @@ void ScriptHandler::setResourceManager(ResourceManager* resourceManager)
 	ResourceManagerLua::lua_openresources(L, resourceManager);
 }
 
-void ScriptHandler::setNetworkHandler(NetworkHandler* networkHandler) {
+void ScriptHandler::setNetworkHandler(NetworkHandler* networkHandler) 
+{
 	this->networkHandler = networkHandler;
 	NetworkHandlerLua::lua_openNetworkScene(L, networkHandler);
+}
+
+void ScriptHandler::setPhysicsEngine(PhysicsEngine* physicsEngine)
+{
+	
+}
+
+void ScriptHandler::setUIRenderer(UIRenderer* uiRenderer)
+{
+	UIRendererLua::lua_openui(L, uiRenderer);
+}
+
+void ScriptHandler::setDebugRenderer(DebugRenderer* debugRenderer)
+{
+
 }
 
 bool ScriptHandler::runScript(std::string& path)

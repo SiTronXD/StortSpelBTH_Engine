@@ -11,6 +11,9 @@ struct LuaSystem;
 class SceneHandler;
 class ResourceManager;
 class NetworkHandler;
+class PhysicsEngine;
+class UIRenderer;
+class DebugRenderer;
 
 class ScriptHandler
 {
@@ -32,6 +35,9 @@ public:
 	void setSceneHandler(SceneHandler* sceneHandler);
 	void setResourceManager(ResourceManager* resourceManager);
 	void setNetworkHandler(NetworkHandler* networkHandler);
+	void setPhysicsEngine(PhysicsEngine* physicsEngine);
+	void setUIRenderer(UIRenderer* uiRenderer);
+	void setDebugRenderer(DebugRenderer* debugRenderer);
 
 	bool runScript(std::string& path);
 	void setScriptComponent(Entity entity, std::string& path);
