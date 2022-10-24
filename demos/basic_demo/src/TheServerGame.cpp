@@ -11,6 +11,8 @@ void TheServerGame::init()
     this->scene->setComponent<Transform>(e);
     this->scene->setScriptComponent(e, "../../vengine/vengine_assets/scripts/ServerLuaTest.lua");
     std::cout << "made script" << std::endl;
+
+    int e = this->scene->createEnemy(1, "");
 }
 
 void TheServerGame::update(float dt)

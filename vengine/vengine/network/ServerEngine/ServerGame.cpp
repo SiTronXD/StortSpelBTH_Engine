@@ -9,6 +9,7 @@ ServerGameMode::ServerGameMode()
 	srand((unsigned)time(NULL));
 #endif
 	this->seed = rand();
+	this->scene->setPathFindingManager(&this->pf);
 }
 
 ServerGameMode::~ServerGameMode() {}

@@ -21,6 +21,17 @@ NetworkScene::~NetworkScene()
 	this->luaSystems.clear();
 }
 
+void NetworkScene::setPathFindingManager(PathFindingManager* pf)
+{
+	this->pf = pf;
+}
+
+PathFindingManager* NetworkScene::getPathFindingManager()
+{
+	return this->pf;
+}
+
+
 void NetworkScene::setScriptHandler(ServerScriptHandler* scriptHandler)
 {
 	this->scriptHandler = scriptHandler;
