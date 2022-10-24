@@ -172,6 +172,8 @@ void DebugRenderer::renderLine(
     const glm::vec3& pos1,
     const glm::vec3& color)
 {
+#if defined(_CONSOLE) // Debug/Release, but not distribution
+
     if (this->numVertices >= START_NUM_MAX_ELEMENTS)
     {
         Log::error("Reached maximum number of rendered debug elements.");
@@ -185,6 +187,8 @@ void DebugRenderer::renderLine(
     this->lineVertexStreams.positions[this->numVertices] = pos1;
     this->lineVertexStreams.colors[this->numVertices] = color;
     this->numVertices++;
+
+#endif
 }
 
 void DebugRenderer::renderSphere(
@@ -192,6 +196,8 @@ void DebugRenderer::renderSphere(
     const float& radius,
     const glm::vec3& color)
 {
+#if defined(_CONSOLE) // Debug/Release, but not distribution
+
     // Add draw call data
     DebugMeshDrawCallData drawCallData{};
 
@@ -202,18 +208,22 @@ void DebugRenderer::renderSphere(
     drawCallData.pushConstantData.color = glm::vec4(color, 1.0f);
 
     this->meshDrawData.push_back(drawCallData);
+
+#endif
 }
 
 void DebugRenderer::renderBox(
     const glm::vec3& position,
-    const glm::vec3& rotation,
+    const glm::vec3& eulerRotation,
     const glm::vec3& halfExtents,
     const glm::vec3& color)
 {
+#if defined(_CONSOLE) // Debug/Release, but not distribution
+
     // Add draw call data
     DebugMeshDrawCallData drawCallData{};
 
-    glm::mat4 rotationMatrix = SMath::rotateEuler(rotation);
+    glm::mat4 rotationMatrix = SMath::rotateEuler(eulerRotation);
 
     drawCallData.meshID = this->boxMeshID;
     drawCallData.pushConstantData.transform = 
@@ -223,6 +233,8 @@ void DebugRenderer::renderBox(
     drawCallData.pushConstantData.color = glm::vec4(color, 1.0f);
 
     this->meshDrawData.push_back(drawCallData);
+
+#endif
 }
 
 void DebugRenderer::renderCapsule(
@@ -232,6 +244,8 @@ void DebugRenderer::renderCapsule(
     const float& radius,
     const glm::vec3& color)
 {
+#if defined(_CONSOLE) // Debug/Release, but not distribution
+
     glm::mat4 rotationMatrix = SMath::rotateEuler(eulerRotation);
     glm::mat4 hemisphereScaleMatrix = glm::scale(glm::mat4(1.0f), glm::vec3(radius));
 
@@ -270,12 +284,16 @@ void DebugRenderer::renderCapsule(
     this->meshDrawData.push_back(upperHemisphereData);
     this->meshDrawData.push_back(lowerHemisphereData);
     this->meshDrawData.push_back(capsuleBodyData);
+
+#endif
 }
 
 void DebugRenderer::renderSkeleton(
     const Entity& entity,
     const glm::vec3& color)
 {
+#if defined(_CONSOLE) // Debug/Release, but not distribution
+
     Scene* scene = this->sceneHandler->getScene();
 
     // Make sure entity is valid
@@ -321,4 +339,6 @@ void DebugRenderer::renderSkeleton(
         // Render line
         this->renderLine(parentBonePos, bonePos, color);
     }
+
+#endif
 }

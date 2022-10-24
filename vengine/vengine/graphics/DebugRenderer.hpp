@@ -100,7 +100,7 @@ public:
         const glm::vec3& color);
     void renderBox(
         const glm::vec3& position,
-        const glm::vec3& rotation,
+        const glm::vec3& eulerRotation,
         const glm::vec3& size,
         const glm::vec3& color);
     void renderCapsule(
