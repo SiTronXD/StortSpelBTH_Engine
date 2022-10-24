@@ -343,6 +343,7 @@ SET ERRORLEVEL = 0</Command>
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\lua\wrappers\DebugRendererLua.h" />
     <ClInclude Include="vengine\lua\wrappers\UIRendererLua.h" />
     <ClInclude Include="vengine\physics\ContactCallback.h" />
     <ClInclude Include="vengine\components\Collider.h" />
@@ -439,6 +440,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="vengine\lua\wrappers\DebugRendererLua.cpp" />
     <ClCompile Include="vengine\lua\wrappers\UIRendererLua.cpp" />
     <ClCompile Include="vengine\physics\ContactCallback.cpp" />
     <ClCompile Include="imgui\backends\imgui_impl_sdl.cpp" />

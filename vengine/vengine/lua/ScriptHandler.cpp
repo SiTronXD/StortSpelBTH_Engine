@@ -11,6 +11,7 @@
 #include "wrappers/ResourceManagerLua.h"
 #include "wrappers/NetworkHandlerLua.h"
 #include "wrappers/UIRendererLua.h"
+#include "wrappers/DebugRendererLua.h"
 
 void ScriptHandler::lua_openmetatables(lua_State* L)
 {
@@ -110,7 +111,7 @@ void ScriptHandler::setUIRenderer(UIRenderer* uiRenderer)
 
 void ScriptHandler::setDebugRenderer(DebugRenderer* debugRenderer)
 {
-
+	DebugRendererLua::lua_open_debug_renderer(L, debugRenderer);
 }
 
 bool ScriptHandler::runScript(std::string& path)

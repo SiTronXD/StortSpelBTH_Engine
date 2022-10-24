@@ -24,6 +24,22 @@ Metatables within Lua is a way to share functionality between tables. The concep
 ### Core
 The core global contains common functionality that is useful in a variety of situations. Currently it's very small but later will be added upon after demand.
 
+#### Colors
+Core contains some default colors to be used in other global functions. It uses the [vector](#Vector) global. List of currently added colors:
+~~~ Lua
+-- Some default colors
+core.RED = vector(1, 0, 0)
+core.GREEN = vector(0, 1, 0)
+core.BLUE = vector(0, 0, 1)
+core.YELLOW = vector(1, 1, 0)
+core.MAGENTA = vector(1, 0, 1)
+core.CYAN = vector(0, 1, 1)
+core.BLACK = vector(0, 0, 0)
+core.WHITE = vector(1, 1, 1)
+core.GRAY = vector(0.5, 0.5, 0.5)
+core.LIGHTGRAY = vector(0.8, 0.8, 0.8)
+~~~
+
 ### Vector
 The vector lua table is one of the most used metatables in the lua environment. It is a table that contains a x, y and z value and functions and overloading of functions to match the vector classes used in C++. It's also used for a variation of components such as Transform.
 
@@ -34,12 +50,15 @@ Notable functions:
 vector(x, y, z) -- Constructor
 vector.new(x, y, z) -- Also constructor
 vector.fill(v) -- Returns a vector where all values are "v" (vector(v, v, v))
+vector.random(scalar) --Makes this vector random between -1 and 1 times scalar
+vector.randomPositive(scalar) --Makes this vector random between 0 and 1 times scalar
 vector:length() -- Returns length of vector
 vector:cross(v) -- Return the cross product between itself and vector v
 vector:normalize() -- Normalizes the vector
 vector:rotate(x, y, z) -- Rotates the vector based on values
-vector:randomVector(scalar) --Makes this vector random between -1 and 1 times scalar (scalar variable is optional)
-vector:randomVectorPositive(scalar) --Makes this vector random between 0 and 1 times scalar (scalar variable is optional)
+vector:rotateX(xrot) -- Rotates the vector on the X-axis
+vector:rotateY(yrot) -- Rotates the vector on the Y-axis
+vector:rotateZ(zrot) -- Rotates the vector on the Z-axis
 ~~~
 
 ## Exposed Systems
@@ -381,6 +400,53 @@ The debugRenderer global that has been created for the lua environment is the ma
 
 ### Functions
 List of functions related to the *debugRenderer* global.
+
+#### renderLine
+Renders a line of a designated color.
+~~~ Lua
+debugRenderer.renderLine(
+vector : pos0,
+vector : pos1,
+vector : color)
+~~~
+
+#### renderSphere
+Renders a sphere of a designated position, radius and color
+~~~ Lua
+debugRenderer.renderSphere(
+vector : position,
+float : radius,
+vector : color)
+~~~
+
+#### renderBox
+Renders a box of a designated position, rotation, size and color
+~~~ Lua
+debugRenderer.renderBox(
+vector : position,
+vector : rotation,
+vector : size,
+vector : color)
+~~~
+
+#### renderCapsule
+Renders a capsule of a designated position, rotation, height, radius and color
+~~~ Lua
+debugRenderer.renderCapsule(
+vector : position,
+vector : rotation,
+float : height,
+float : radius,
+vector : color)
+~~~
+
+#### renderSkeleton
+Renders a skeleton on an entity of a designated color.
+~~~ Lua
+debugRenderer.renderSkeleton(
+int : entityID,
+vector : color)
+~~~
 
 ## Scene Files
 Scene files are lua scripts that describe the initilization of a scene and is mostly used in that context. What is done in the lua file is up to the user, but creating entities and setting components within the [Scene](#Scene). Currently these are called when creating a new scene in C++ and via the [setScene](#setScene) function in lua.

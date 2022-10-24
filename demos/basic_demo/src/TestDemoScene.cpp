@@ -35,10 +35,11 @@ void TestDemoScene::init()
 	// Transform component
 	Transform& transform = this->getComponent<Transform>(this->testEntity);
 	transform.position = glm::vec3(10.f, 0.f, 30.f);
-	transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+	//transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 	this->setComponent<MeshComponent>(this->testEntity, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
-	this->setComponent<Collider>(this->testEntity, Collider::createSphere(5.0f));
-	this->setComponent<Rigidbody>(this->testEntity, 1.0f, 1.0f);
+	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
+	this->setComponent<Rigidbody>(this->testEntity);
+	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
 
 	// Floor
 	this->floor = this->createEntity();
@@ -143,6 +144,9 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
+	// Debug rendering on colliders
+	this->getPhysicsEngine()->renderDebugShapes(Input::isKeyDown(Keys::Y));
+
 	// Movement with velocity
 	if (this->hasComponents<Collider, Rigidbody>(this->testEntity))
 	{
@@ -150,7 +154,7 @@ void TestDemoScene::update()
 		glm::vec3 vec = glm::vec3(Input::isKeyDown(Keys::LEFT) - Input::isKeyDown(Keys::RIGHT), 0.0f, Input::isKeyDown(Keys::UP) - Input::isKeyDown(Keys::DOWN));
 		float y = rb.velocity.y;
 		rb.velocity = vec * 10.0f;
-		rb.velocity.y = y;
+		rb.velocity.y = y + Input::isKeyPressed(Keys::SPACE) * 5.0f;
 	}
 
 	// Test contact
@@ -172,7 +176,7 @@ void TestDemoScene::update()
 	}
 
 	// Test raycast
-	if (Input::isKeyDown(Keys::T) && this->entityValid(this->getMainCameraID()))
+	if (Input::isKeyDown(Keys::R) && this->entityValid(this->getMainCameraID()))
 	{
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		RayPayload payload = this->getPhysicsEngine()->raycast({ camTransform.position, camTransform.forward() });

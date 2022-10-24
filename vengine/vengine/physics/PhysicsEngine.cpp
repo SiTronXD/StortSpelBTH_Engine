@@ -1,5 +1,6 @@
 #include "PhysicsEngine.h"
 #include "../application/SceneHandler.hpp"
+#include "../graphics/DebugRenderer.hpp"
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -223,6 +224,8 @@ void PhysicsEngine::removeObject(btCollisionObject* obj, int index)
 
 void PhysicsEngine::cleanup()
 {
+	this->renderDebug = false;
+
 	// Remove the rigidbodies from the dynamics world and delete them
 	for (int i = this->dynWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
@@ -264,7 +267,7 @@ void PhysicsEngine::cleanup()
 }
 
 PhysicsEngine::PhysicsEngine()
-	:sceneHandler(nullptr), colShapes(), timer(0.f)
+	:sceneHandler(nullptr), colShapes(), timer(0.f), renderDebug(false)
 {
 	this->collconfig = new btDefaultCollisionConfiguration();
 	this->collDisp = new btCollisionDispatcher(this->collconfig);
@@ -369,6 +372,37 @@ void PhysicsEngine::update()
 		this->removeObject(this->dynWorld->getCollisionObjectArray()[index], index);
 	}
 	this->removeIndicies.clear();
+
+	// Render debug shapes
+	if (this->renderDebug)
+	{
+		DebugRenderer* debugRenderer = this->sceneHandler->getDebugRenderer();
+		glm::vec3 color = glm::vec3(0.0f, 0.5f, 0.5f);
+		for (int i = this->dynWorld->getNumCollisionObjects() - 1; i > -1; i--)
+		{
+			btCollisionObject* object = this->dynWorld->getCollisionObjectArray()[i];
+			Transform& transform = scene->getComponent<Transform>(object->getUserIndex());
+			Collider& col = scene->getComponent<Collider>(object->getUserIndex());
+
+			if (col.type == ColType::SPHERE)
+			{
+				debugRenderer->renderSphere(transform.position, col.radius, color);
+			}
+			else if (col.type == ColType::BOX)
+			{
+				debugRenderer->renderBox(transform.position, transform.rotation, transform.scale * 2.0f, color);
+			}
+			else if (col.type == ColType::CAPSULE)
+			{
+				debugRenderer->renderCapsule(transform.position, transform.rotation, col.height, col.radius, color);
+			}
+		}
+	}
+}
+
+void PhysicsEngine::renderDebugShapes(bool renderDebug)
+{
+	this->renderDebug = renderDebug;
 }
 
 RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)

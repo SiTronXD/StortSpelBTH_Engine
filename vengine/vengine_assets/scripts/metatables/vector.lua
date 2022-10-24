@@ -14,6 +14,18 @@ function vector.fill(v)
 	return vector.new(v, v, v)
 end
 
+function vector.random(scalar)
+	scalar = scalar or 1
+	local x, y, z = (math.random() * 2 - 1) * scalar, (math.random() * 2 - 1) * scalar, (math.random() * 2 - 1) * scalar
+	return vector.new(x, y, z)
+end
+
+function vector.randomPositive(scalar)
+	scalar = scalar or 1
+	local x, y, z = math.random() * scalar, math.random() * scalar, math.random() * scalar
+	return vector.new(x, y, z)
+end
+
 function vector.isvector(t)
 	return getmetatable(t) == vector
 end
@@ -121,26 +133,6 @@ function vector:cross(other)
 		(self.z * other.x) - (self.x * other.z),
 		(self.x * other.y) - (self.y * other.x)
 		)
-end
-
-function vector:randomVector(scalar)
-	if(scalar == nil)then
-		scalar = 1
-	end
-	self.x = (math.random() * 2 - 1) * scalar
-	self.y = (math.random() * 2 - 1) * scalar
-	self.z = (math.random() * 2 - 1) * scalar
-
-end
-
-function vector:randomVectorPositive(scalar)
-	if(scalar == nil)then
-		scalar = 1
-	end
-	self.x = math.random() * scalar
-	self.y = math.random() * scalar
-	self.z = math.random() * scalar
-
 end
 
 return setmetatable(vector, {

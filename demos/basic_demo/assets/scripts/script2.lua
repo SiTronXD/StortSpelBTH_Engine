@@ -8,6 +8,7 @@ end
 function script:update()
 	uiRenderer.setTexture(self.texture)
 	uiRenderer.renderTexture(0, 0, 100, 100)
+	debugRenderer.renderCapsule(vector(), vector(), 10, 3, core.LIGHTGRAY)
 end
 
 return script;
