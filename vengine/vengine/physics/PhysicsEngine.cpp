@@ -13,7 +13,7 @@
 void PhysicsEngine::updateColliders()
 {
 	Scene* scene = this->sceneHandler->getScene();
-	auto view = scene->getSceneReg().view<Collider>(entt::exclude<Rigidbody>);
+	auto view = scene->getSceneReg().view<Collider>(entt::exclude<Rigidbody, Inactive>);
 	auto func = [&](const auto& entity, Collider& col)
 	{
 		// Not assigned collider, create in bullet
@@ -41,7 +41,7 @@ void PhysicsEngine::updateColliders()
 void PhysicsEngine::updateRigidbodies()
 {
 	Scene* scene = this->sceneHandler->getScene();
-	auto view = scene->getSceneReg().view<Rigidbody, Collider>();
+	auto view = scene->getSceneReg().view<Rigidbody, Collider>(entt::exclude<Inactive>);
 	auto func = [&](const auto& entity, Rigidbody& rb, Collider& col)
 	{
 		// Not assigned rigidbody, create in physics engine
@@ -320,8 +320,10 @@ void PhysicsEngine::update()
 			{
 				this->removeIndicies.push_back(i);
 			}
-			// No instance of collider and rigidbody
-			else if (!scene->hasComponents<Collider>(body->getUserIndex()) && !scene->hasComponents<Rigidbody>(body->getUserIndex()))
+			// No instance of collider and rigidbody (or inactive)
+			else if (!scene->hasComponents<Collider>(body->getUserIndex()) && 
+					 !scene->hasComponents<Rigidbody>(body->getUserIndex()) || 
+					 scene->hasComponents<Inactive>(body->getUserIndex()))
 			{
 				this->removeIndicies.push_back(i);
 			}
@@ -388,7 +390,7 @@ RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)
 	return payload;
 }
 
-std::vector<int> PhysicsEngine::testContact(Collider& col, glm::vec3 position, glm::vec3 rotation)
+std::vector<Entity> PhysicsEngine::testContact(Collider& col, glm::vec3 position, glm::vec3 rotation)
 {
 	btCollisionShape* shape = nullptr;
 	btCollisionObject* object = new btCollisionObject();

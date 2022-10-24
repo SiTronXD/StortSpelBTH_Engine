@@ -94,7 +94,10 @@ public:
 	void setInactive(Entity entity);
 	bool isActive(Entity entity);
 
+	// When created
 	virtual void init();
+	// When starting (after lua)
+	virtual void start();
 	virtual void update();
 
 	inline entt::registry& getSceneReg() { return this->reg; }

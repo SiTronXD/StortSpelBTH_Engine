@@ -9,17 +9,18 @@ void SceneHandler::initSubsystems()
 	this->physicsEngine->init();
 
 	// Init scene
-	this->scene->init();
-	if (this->luaScript.size() != 0)
-	{
-		this->scriptHandler->runScript(this->luaScript);
-	}
+  this->scene->init();
+  if (this->luaScript.size() != 0)
+  {
+    this->scriptHandler->runScript(this->luaScript);
+  }
+  this->scene->start();
 
-	// Init renderer for scene
-	this->vulkanRenderer->initForScene(this->scene);
-
-	// Reset delta time counter
-	Time::reset();
+  // Init renderer for scene
+  this->vulkanRenderer->initForScene(this->scene);
+  
+  // Reset delta time counter
+  Time::reset();
 }
 
 SceneHandler::SceneHandler()
