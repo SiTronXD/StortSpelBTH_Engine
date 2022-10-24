@@ -31,12 +31,13 @@ public:
     Window& operator=(Window&&ref) noexcept   = delete;
     ~Window();
 
-    void initWindow(const std::string &name, int width, int height);
+    void initWindow(const std::string &name);
     void registerResizeEvent(bool& listener);
     void update();
 
     void initImgui();
     void shutdownImgui();
+    void setFullscreen(bool fullscreen);
 
     void createVulkanSurface(VulkanInstance& instance, vk::SurfaceKHR& outputSurface);
     void getVulkanExtensions(std::vector<const char*>& outputExtensions);

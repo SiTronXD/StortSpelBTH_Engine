@@ -7,6 +7,9 @@
 #include "Input.hpp"
 #include "../dev/Log.hpp"
 #include "../graphics/vulkan/VulkanInstance.hpp"
+#include "../resource_management/Configurator.hpp"
+
+using namespace vengine_helper::config;
 
 Window::Window()
     : windowHandle(nullptr),
@@ -14,9 +17,7 @@ Window::Window()
 {}
 
 void Window::initWindow(
-    const std::string &name, 
-    const int width, 
-    const int height)
+    const std::string &name)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -24,10 +25,14 @@ void Window::initWindow(
 
     this->titleName = name;
 
-    ///Initializes sdl window
+    // Initializes sdl window
     SDL_Init(SDL_INIT_VIDEO);
 
-    ///Configure SDL Window...    
+    // Get size from config
+    int width = DEF<int>(W_WIDTH);
+    int height = DEF<int>(W_HEIGHT);
+
+    // Configure SDL Window...    
     this->windowHandle = SDL_CreateWindow(
         this->titleName.c_str(),
         SDL_WINDOWPOS_CENTERED, 
@@ -98,6 +103,31 @@ void Window::shutdownImgui()
     ImGui_ImplSDL2_Shutdown();
 }
 
+void Window::setFullscreen(bool fullscreen)
+{
+    // Get size from config
+    int width = DEF<int>(W_WIDTH);
+    int height = DEF<int>(W_HEIGHT);
+
+    // Use display size when fullscreen
+    if (fullscreen)
+    {
+        SDL_DisplayMode dm{};
+        SDL_GetCurrentDisplayMode(0, &dm);
+        width = dm.w;
+        height = dm.h;
+    }
+
+    // Apply new size
+    SDL_SetWindowSize(this->windowHandle, width, height);
+
+    // Fullscreen
+    SDL_SetWindowFullscreen(
+        this->windowHandle,
+        fullscreen ? SDL_WINDOW_FULLSCREEN : 0
+    );
+}
+
 void Window::createVulkanSurface(
     VulkanInstance& instance,
     vk::SurfaceKHR& outputSurface)
@@ -120,17 +150,17 @@ void Window::createVulkanSurface(
 void Window::getVulkanExtensions(
     std::vector<const char*>& outputExtensions)
 {
-    unsigned int sdlExtensionCount = 0;        /// may require multiple extension  
+    unsigned int sdlExtensionCount = 0;        //  may require multiple extension  
     SDL_Vulkan_GetInstanceExtensions(
         this->windowHandle, 
         &sdlExtensionCount, 
         nullptr
     );
 
-    ///Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
+    // Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
     outputExtensions.resize(sdlExtensionCount);
 
-    /// Get SDL Extensions
+    //  Get SDL Extensions
     SDL_Vulkan_GetInstanceExtensions(
         this->windowHandle, 
         &sdlExtensionCount, 
@@ -148,7 +178,7 @@ Window::~Window() {
     SDL_DestroyWindow(this->windowHandle);
 }
 
-////__attribute__((unused))
+// /__attribute__((unused))
 [[maybe_unused]]
 int resizingEventWatcher(void* data, SDL_Event* event)
 {
