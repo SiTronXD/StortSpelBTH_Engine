@@ -68,6 +68,9 @@ void Device::createDevice(
     //Physical Device features the logical Device will be using...
     vk::PhysicalDeviceFeatures2 deviceFeatures{};
     deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);             // Enables the Anisotropy Feature, now a Sampler made for this Device can use Anisotropy!                 
+#if defined(_CONSOLE) // Debug/Release, but not distribution
+    deviceFeatures.features.setFillModeNonSolid(VK_TRUE);
+#endif
 
     // Get extension Features    
     vk::PhysicalDeviceSynchronization2Features physicalDeviceSyncFeatures{};

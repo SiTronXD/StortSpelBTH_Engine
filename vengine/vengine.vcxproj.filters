@@ -283,11 +283,12 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="vengine_assets\shaders\dbgLine.vert" />
-    <CustomBuild Include="vengine_assets\shaders\dbgLine.frag" />
     <CustomBuild Include="vengine_assets\shaders\shader.frag" />
     <CustomBuild Include="vengine_assets\shaders\shader.vert" />
     <CustomBuild Include="vengine_assets\shaders\shaderAnim.vert" />
     <CustomBuild Include="vengine_assets\shaders\ui.frag" />
     <CustomBuild Include="vengine_assets\shaders\ui.vert" />
+    <CustomBuild Include="vengine_assets\shaders\dbgMesh.vert" />
+    <CustomBuild Include="vengine_assets\shaders\dbg.frag" />
   </ItemGroup>
 </Project>

@@ -76,7 +76,7 @@ void TestDemoScene::init()
 		else
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
-			//newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
+			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
@@ -136,7 +136,9 @@ void TestDemoScene::update()
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
 
-	// Debug
+	// Debug rendering
+
+	// Lines
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
 		glm::vec3(10.0f, 10.0f, 25.0f),
@@ -145,8 +147,50 @@ void TestDemoScene::update()
 	Scene::getDebugRenderer()->renderLine(
 		glm::vec3(0.0f, -10.0f, 35.0f),
 		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
-		glm::vec3(0.0f, 0.0f, 0.0f)
+		glm::vec3(1.0f, 0.0f, 0.0f)
 	);
+
+	// Spheres
+	Scene::getDebugRenderer()->renderSphere(
+		glm::vec3(0.0f, 0.0f, 30.0f),
+		1.0f,
+		glm::vec3(1.0f, 1.0f, 0.0f)
+	);
+	Scene::getDebugRenderer()->renderSphere(
+		glm::vec3(3.0f, 0.0f, 30.0f),
+		2.0f,
+		glm::vec3(0.0f, 1.0f, 0.0f)
+	);
+
+	// Boxes
+	Scene::getDebugRenderer()->renderBox(
+		glm::vec3(5.5f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 2.541f, 0.0f),
+		glm::vec3(1.0f, 1.0f, 1.0f),
+		glm::vec3(0.0f, 0.0f, 1.0f)
+	);
+	Scene::getDebugRenderer()->renderBox(
+		glm::vec3(6.25f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
+		glm::vec3(0.5f, 2.0f, 1.0f),
+		glm::vec3(0.0f, 1.0f, 1.0f)
+	);
+
+	// Capsules
+	Scene::getDebugRenderer()->renderCapsule(
+		glm::vec3(8.0f, 0.0f, 30.0f),
+		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
+		2.0f + sin(timer),
+		0.5f,
+		glm::vec3(1.0f, 0.0f, 0.0f)
+	);
+
+	// Skeleton
+	Scene::getDebugRenderer()->renderSkeleton(
+		this->aniIDs[2],
+		glm::vec3(1.0f, 1.0f, 0.0f)
+	);
+
 	this->timer += Time::getDT();
 
 	if (ImGui::Begin("Sound"))
