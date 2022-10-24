@@ -25,9 +25,9 @@ namespace BulletH
 	    return btVector3(vec.x, vec.y, vec.z);
 	}
 
-	static btQuaternion bulletQuat(const glm::vec3& vec)
+	static btQuaternion bulletQuat(const glm::vec3& eulerVec)
 	{
-		return btQuaternion(vec.y, vec.x, vec.z);
+		return btQuaternion(eulerVec.y, eulerVec.x, eulerVec.z);
 	}
 	
 	static Transform toTransform(const btTransform& transform) 
