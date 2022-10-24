@@ -47,17 +47,18 @@ void SceneHandler::update()
 
 void SceneHandler::updateToNextScene()
 {
-	// Make sure a scene can be switched to
+	//  Make sure a scene can be switched to
 	if (this->nextScene != nullptr)
 	{
-		// Delete old scene
+		//  Delete old scene
 		delete this->scene;
 		this->scene = nullptr;
 
-		// Switch
+		//  Switch
 		this->scene = this->nextScene;
 		this->nextScene = nullptr;
 		this->luaScript = this->nextLuaScript;
+		this->physicsEngine->init();
 
 		// Init scene
 		this->scene->init();
@@ -85,12 +86,15 @@ void SceneHandler::setScene(Scene* scene, std::string path)
 void SceneHandler::reloadScene()
 {
 	this->scene->getSceneReg().clear();
+	this->physicsEngine->init();
 
 	this->scene->init();
 	if (this->luaScript.size() != 0)
 	{
 		this->scriptHandler->runScript(this->luaScript);
 	}
+
+	Time::init();
 }
 
 void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
@@ -106,6 +110,11 @@ void SceneHandler::setScriptHandler(ScriptHandler* scriptHandler)
 ScriptHandler* SceneHandler::getScriptHandler()
 {
 	return this->scriptHandler;
+}
+
+void SceneHandler::setPhysicsEngine(PhysicsEngine* physicsEngine)
+{
+	this->physicsEngine = physicsEngine;
 }
 
 void SceneHandler::setResourceManager(ResourceManager* resourceManager)

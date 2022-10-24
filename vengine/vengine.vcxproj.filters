@@ -64,6 +64,8 @@
     <ClCompile Include="vengine\test\TestScene.cpp" />
     <ClCompile Include="vengine\test\TestScene2.cpp" />
     <ClCompile Include="vengine\graphics\MeshDataInfo.cpp" />
+    <ClCompile Include="vengine\physics\PhysicsEngine.cpp" />
+    <ClCompile Include="vengine\physics\ContactCallback.cpp" />
     <ClCompile Include="vengine\graphics\UIRenderer.cpp" />
     <ClCompile Include="vengine\graphics\TextureSampler.cpp" />
     <ClCompile Include="vengine\graphics\ResTranslator.cpp" />
@@ -78,12 +80,53 @@
     <ClCompile Include="vengine\lua\ScriptHandler.cpp" />
     <ClCompile Include="vengine\lua\wrappers\SceneLua.cpp" />
     <ClCompile Include="vengine\lua\wrappers\ResourceManagerLua.cpp" />
+    <ClInclude Include="imgui\backends\imgui_impl_sdl.h" />
+    <ClInclude Include="imgui\backends\imgui_impl_vulkan.h" />
+    <ClInclude Include="imgui\imconfig.h" />
+    <ClInclude Include="imgui\imgui.h" />
+    <ClInclude Include="imgui\imgui_internal.h" />
+    <ClInclude Include="imgui\imstb_rectpack.h" />
+    <ClInclude Include="imgui\imstb_textedit.h" />
+    <ClInclude Include="imgui\imstb_truetype.h" />
+    <ClInclude Include="vengine.h" />
+    <ClInclude Include="vengine\application\Input.hpp" />
+    <ClInclude Include="vengine\application\Scene.hpp" />
+    <ClInclude Include="vengine\application\SceneHandler.hpp" />
+    <ClInclude Include="vengine\application\Time.hpp" />
+    <ClInclude Include="vengine\application\Window.hpp" />
+    <ClInclude Include="vengine\components\Camera.hpp" />
+    <ClInclude Include="vengine\components\MeshComponent.hpp" />
+    <ClInclude Include="vengine\components\Rigidbody.h" />
+    <ClInclude Include="vengine\components\Transform.hpp" />
+    <ClInclude Include="vengine\dev\defs.hpp" />
+    <ClInclude Include="vengine\dev\Log.hpp" />
+    <ClInclude Include="vengine\dev\tracyHelper.hpp" />
+    <ClInclude Include="vengine\Engine.hpp" />
+    <ClInclude Include="vengine\graphics\Mesh.hpp" />
+    <ClInclude Include="vengine\graphics\TempPCH.hpp" />
+    <ClInclude Include="vengine\graphics\Texture.hpp" />
+    <ClInclude Include="vengine\graphics\Utilities.hpp" />
+    <ClInclude Include="vengine\graphics\VulkanRenderer.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\Device.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\PhysicalDevice.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\QueueFamilies.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\Swapchain.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanDbg.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanInstance.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\VulkanValidation.hpp" />
+    <ClInclude Include="vengine\systems\System.hpp" />
+    <ClInclude Include="vengine\test\TestScene.hpp" />
+    <ClInclude Include="vengine\test\TestScene2.hpp" />
     <ClCompile Include="vengine\lua\wrappers\NetworkHandlerLua.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
+    <ClInclude Include="vengine\physics\PhysicsEngine.h" />
+    <ClInclude Include="vengine\physics\BulletHelper.hpp" />
+    <ClInclude Include="vengine\components\Collider.h" />
+    <ClInclude Include="vengine\physics\ContactCallback.h" />
     <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
     <ClInclude Include="vengine\graphics\TextureSampler.hpp" />
     <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
@@ -192,6 +235,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="vengine\test\TestScene2.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vengine\Engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />

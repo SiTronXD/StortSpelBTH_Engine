@@ -7,6 +7,7 @@
 #include "../components/AudioListener.hpp"
 #include "../resource_management/Configurator.hpp"
 #include "../resource_management/ResourceManager.hpp"
+#include "../physics/PhysicsEngine.h"
 #include "../lua/ScriptHandler.h"
 
 #include <entt.hpp>
@@ -42,6 +43,7 @@ protected:
 	NetworkHandler* getNetworkHandler();
 	ScriptHandler* getScriptHandler();
 	ResourceManager* getResourceManager();
+	PhysicsEngine* getPhysicsEngine();
 	UIRenderer* getUIRenderer();
 	DebugRenderer* getDebugRenderer();
 	SceneHandler* getSceneHandler();
