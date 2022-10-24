@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
     {
         Engine engine;
         //engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
-        engine.run("Demo Application", "luatestScene.lua", new NetworkTestScene());
+        engine.run("Demo Application", "luatestScene.lua", new TestDemoScene());
     }
 
 	return EXIT_SUCCESS;
