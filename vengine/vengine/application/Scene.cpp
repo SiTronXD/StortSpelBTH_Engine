@@ -2,6 +2,7 @@
 #include "SceneHandler.hpp"
 #include "../network/NetworkHandler.h"
 #include "../lua/ScriptHandler.h"
+#include "../graphics/UIRenderer.hpp"
 #include "Time.hpp"
 
 void Scene::switchScene(Scene* scene, std::string path)
@@ -29,6 +30,21 @@ PhysicsEngine* Scene::getPhysicsEngine()
 	return this->sceneHandler->getPhysicsEngine();
 }
 
+UIRenderer* Scene::getUIRenderer()
+{
+	return this->sceneHandler->getUIRenderer();
+}
+
+DebugRenderer* Scene::getDebugRenderer()
+{
+	return this->sceneHandler->getDebugRenderer();
+}
+
+SceneHandler* Scene::getSceneHandler()
+{
+	return this->sceneHandler;
+}
+
 Scene::Scene()
 	: sceneHandler(nullptr), mainCamera(-1)
 {
@@ -53,12 +69,12 @@ Camera* Scene::getMainCamera()
 	return cam;
 }
 
-int Scene::getMainCameraID()
+Entity Scene::getMainCameraID()
 {
 	return this->mainCamera;
 }
 
-void Scene::setMainCamera(int entity)
+void Scene::setMainCamera(Entity entity)
 {
 	if (this->hasComponents<Camera>(entity)) { this->mainCamera = entity; }
 }
@@ -68,7 +84,7 @@ void Scene::createSystem(std::string& path)
 	this->luaSystems.push_back(LuaSystem { path, -1 });
 }
 
-void Scene::setScriptComponent(int entity, std::string path)
+void Scene::setScriptComponent(Entity entity, std::string path)
 {
 	this->getScriptHandler()->setScriptComponent(entity, path);
 }
@@ -94,23 +110,38 @@ int Scene::getEntityCount() const
 	return (int)this->reg.alive();
 }
 
-bool Scene::entityValid(int entity) const
+bool Scene::entityValid(Entity entity) const
 {
 	return this->reg.valid((entt::entity)entity);
 }
 
-int Scene::createEntity()
+Entity Scene::createEntity()
 {
 	int entity = (int)this->reg.create();
 	this->setComponent<Transform>(entity);
 	return entity;
 }
 
-bool Scene::removeEntity(int entity)
+bool Scene::removeEntity(Entity entity)
 {
 	bool valid = this->entityValid(entity);
 	if (valid) { this->reg.destroy((entt::entity)entity); }
 	return valid;
+}
+
+void Scene::setInactive(Entity entity)
+{
+	this->setComponent<Inactive>(entity);
+}
+
+void Scene::setActive(Entity entity)
+{
+	this->removeComponent<Inactive>(entity);
+}
+
+bool Scene::isActive(Entity entity)
+{
+	return !this->hasComponents<Inactive>(entity);
 }
 
 void Scene::init()

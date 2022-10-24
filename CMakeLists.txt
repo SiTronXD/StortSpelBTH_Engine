@@ -50,18 +50,18 @@ set(CLANG_COMPILE_TIME_OPTIONS_release
 
 if(${VENGINE_USE_PROFILING})
     message("Building profiling ENABLED!")
-    set(CLANG_COMPILE_TIME_DEFINITIONS_debug                    "GLM_FORCE_RADIANS" "GLM_FORCE_DEPTH_ZERO_TO_ONE"   "TRACY_IMPORTS"  "TRACY_ENABLE=1" "DEBUG"  )
-    set(CLANG_COMPILE_TIME_DEFINITIONS_debugWCallStackProfiling "GLM_FORCE_RADIANS" "GLM_FORCE_DEPTH_ZERO_TO_ONE"   "TRACY_IMPORTS"  "TRACY_ENABLE=1" "DEBUG"  "TRACY_CALLSTACK=5" )
-    set(CLANG_COMPILE_TIME_DEFINITIONS_library                  "GLM_FORCE_RADIANS" "GLM_FORCE_DEPTH_ZERO_TO_ONE"   "TRACY_IMPORTS"  "TRACY_ENABLE=1" "NDEBUG" )
-    set(CLANG_COMPILE_TIME_DEFINITIONS_release                  "GLM_FORCE_RADIANS" "GLM_FORCE_DEPTH_ZERO_TO_ONE"   "TRACY_IMPORTS"  "TRACY_ENABLE=1" "NDEBUG" )
+    set(CLANG_COMPILE_TIME_DEFINITIONS_debug                    "GLM_FORCE_RADIANS" "GLM_FORCE_QUAT_DATA_WXYZ" "GLM_FORCE_DEPTH_ZERO_TO_ONE"   "TRACY_IMPORTS"  "TRACY_ENABLE=1" "DEBUG"  )
+    set(CLANG_COMPILE_TIME_DEFINITIONS_debugWCallStackProfiling "GLM_FORCE_RADIANS" "GLM_FORCE_QUAT_DATA_WXYZ" "GLM_FORCE_DEPTH_ZERO_TO_ONE"   "TRACY_IMPORTS"  "TRACY_ENABLE=1" "DEBUG"  "TRACY_CALLSTACK=5" )
+    set(CLANG_COMPILE_TIME_DEFINITIONS_library                  "GLM_FORCE_RADIANS" "GLM_FORCE_QUAT_DATA_WXYZ" "GLM_FORCE_DEPTH_ZERO_TO_ONE"   "TRACY_IMPORTS"  "TRACY_ENABLE=1" "NDEBUG" )
+    set(CLANG_COMPILE_TIME_DEFINITIONS_release                  "GLM_FORCE_RADIANS" "GLM_FORCE_QUAT_DATA_WXYZ" "GLM_FORCE_DEPTH_ZERO_TO_ONE"   "TRACY_IMPORTS"  "TRACY_ENABLE=1" "NDEBUG" )
     set(CLANG_COMPILE_TIME_OPTIONS_library ${CLANG_COMPILE_TIME_OPTIONS_release} "-fno-omit-frame-pointer")
 else()
     message("Building profiling DISABLED!")
     add_compile_definitions("VENGINE_NO_PROFILING") # This must be added globally if user does not want to use profiling...
-    set(CLANG_COMPILE_TIME_DEFINITIONS_debug                    "GLM_FORCE_RADIANS" "GLM_FORCE_DEPTH_ZERO_TO_ONE"     "VENGINE_NO_PROFILING"    "DEBUG"     )
-    set(CLANG_COMPILE_TIME_DEFINITIONS_debugWCallStackProfiling "GLM_FORCE_RADIANS" "GLM_FORCE_DEPTH_ZERO_TO_ONE"     "VENGINE_NO_PROFILING"    "DEBUG"  "TRACY_CALLSTACK=5" )
-    set(CLANG_COMPILE_TIME_DEFINITIONS_library                  "GLM_FORCE_RADIANS" "GLM_FORCE_DEPTH_ZERO_TO_ONE"     "VENGINE_NO_PROFILING"    "NDEBUG"    )
-    set(CLANG_COMPILE_TIME_DEFINITIONS_release                  "GLM_FORCE_RADIANS" "GLM_FORCE_DEPTH_ZERO_TO_ONE"     "VENGINE_NO_PROFILING"    "NDEBUG"    )
+    set(CLANG_COMPILE_TIME_DEFINITIONS_debug                    "GLM_FORCE_RADIANS" "GLM_FORCE_QUAT_DATA_WXYZ" "GLM_FORCE_DEPTH_ZERO_TO_ONE"     "VENGINE_NO_PROFILING"    "DEBUG"     )
+    set(CLANG_COMPILE_TIME_DEFINITIONS_debugWCallStackProfiling "GLM_FORCE_RADIANS" "GLM_FORCE_QUAT_DATA_WXYZ" "GLM_FORCE_DEPTH_ZERO_TO_ONE"     "VENGINE_NO_PROFILING"    "DEBUG"  "TRACY_CALLSTACK=5" )
+    set(CLANG_COMPILE_TIME_DEFINITIONS_library                  "GLM_FORCE_RADIANS" "GLM_FORCE_QUAT_DATA_WXYZ" "GLM_FORCE_DEPTH_ZERO_TO_ONE"     "VENGINE_NO_PROFILING"    "NDEBUG"    )
+    set(CLANG_COMPILE_TIME_DEFINITIONS_release                  "GLM_FORCE_RADIANS" "GLM_FORCE_QUAT_DATA_WXYZ" "GLM_FORCE_DEPTH_ZERO_TO_ONE"     "VENGINE_NO_PROFILING"    "NDEBUG"    )
     set(CLANG_COMPILE_TIME_OPTIONS_library ${CLANG_COMPILE_TIME_OPTIONS_release})
 endif()
 
@@ -172,15 +172,15 @@ else() # Use Git Submodules
     message("Using Git Submodules for dependencies!") 
 
     option(TRACY_ENABLE "" ON)    
-    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src)
+    add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src)
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src)
     #Sdl should be installed through systems own package manager...
 
     target_include_directories(vengine PRIVATE ${VENGINE_SOURCE_DIR}/../)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/include)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src/include)
+    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/include)
+    #target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/src/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
@@ -272,6 +272,7 @@ if(${UNIX})
     target_compile_definitions(vengine PRIVATE "strcpy_s=strcpy" )
 endif()
 
+target_compile_definitions(vengine PRIVATE "NO_VALIDATION")
 
 # Link all libraries to vengine target
 target_link_libraries(
@@ -312,8 +313,8 @@ set_target_properties(vengine_demo PROPERTIES
                 ) 
 target_link_libraries(vengine_demo PUBLIC vengine)
 target_include_directories(vengine_demo PRIVATE ${VENGINE_SOURCE_DIR}/../)
-target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/src/include)
-target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp/include)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/src/include)
+target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/include)
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
 target_include_directories(vengine_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)

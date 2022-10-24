@@ -8,13 +8,19 @@
 #include "../resource_management/Configurator.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../physics/PhysicsEngine.h"
+#include "../lua/ScriptHandler.h"
 
 #include <entt.hpp>
 #include <vector>
 
+typedef bool Inactive;
+typedef int Entity;
+
 class SceneHandler;
 class NetworkHandler;
 class ScriptHandler;
+class UIRenderer;
+class DebugRenderer;
 
 struct LuaSystem
 {
@@ -30,7 +36,7 @@ private:
 	entt::registry reg;
 	std::vector<System*> systems;
 	std::vector<LuaSystem> luaSystems;
-	int mainCamera;
+	Entity mainCamera;
 
 protected:
 	void switchScene(Scene* scene, std::string path = "");
@@ -38,22 +44,25 @@ protected:
 	ScriptHandler* getScriptHandler();
 	ResourceManager* getResourceManager();
 	PhysicsEngine* getPhysicsEngine();
+	UIRenderer* getUIRenderer();
+	DebugRenderer* getDebugRenderer();
+	SceneHandler* getSceneHandler();
 
     template <typename T> T getConfigValue(std::string_view name)
     {
         return vengine_helper::config::DEF<T>(name);
     }
 
-    public:
+public:
 	Scene();
 	virtual ~Scene();
 
 	Camera* getMainCamera();
-	int getMainCameraID();
-	void setMainCamera(int entity);
+	Entity getMainCameraID();
+	void setMainCamera(Entity entity);
 
 	void createSystem(std::string& path);
-	void setScriptComponent(int entity, std::string path);
+	void setScriptComponent(Entity entity, std::string path);
 
 	template <typename T, typename ...Args>
 	void createSystem(Args... args);
@@ -61,25 +70,29 @@ protected:
 	void updateSystems();
 
 	int getEntityCount() const;
-	bool entityValid(int entity) const;
+	bool entityValid(Entity entity) const;
 
-	int createEntity();
-	bool removeEntity(int entity);
+	Entity createEntity();
+	bool removeEntity(Entity entity);
 
 	template <typename ...Args>
-	bool hasComponents(int entity);
+	bool hasComponents(Entity entity);
 
 	template <typename T>
-	T& getComponent(int entity);
+	T& getComponent(Entity entity);
 
 	template <typename T>
-	void setComponent(int entity, const T&);
+	void setComponent(Entity entity, const T&);
 
 	template <typename T, typename ...Args>
-	void setComponent(int entity, Args... args);
+	void setComponent(Entity entity, Args... args);
 
 	template <typename T>
-	void removeComponent(int entity);
+	void removeComponent(Entity entity);
+
+	void setActive(Entity entity);
+	void setInactive(Entity entity);
+	bool isActive(Entity entity);
 
 	virtual void init();
 	virtual void update();
@@ -97,21 +110,21 @@ inline void Scene::createSystem(Args ...args)
 }
 
 template <typename ...Args>
-bool Scene::hasComponents(int entity)
+bool Scene::hasComponents(Entity entity)
 {
 	return this->reg.all_of<Args...>(
 		(entt::entity)entity);
 }
 
 template <typename T>
-T& Scene::getComponent(int entity)
+T& Scene::getComponent(Entity entity)
 {
 	return this->reg.get<T>(
 		(entt::entity)entity);
 }
 
 template <typename T>
-void Scene::setComponent(int entity,
+void Scene::setComponent(Entity entity,
 	const T& component)
 {
 	this->reg.emplace_or_replace<T>(
@@ -119,7 +132,7 @@ void Scene::setComponent(int entity,
 }
 
 template <typename T, typename ...Args>
-void Scene::setComponent(int entity,
+void Scene::setComponent(Entity entity,
 	Args... args)
 {
 	this->reg.emplace_or_replace<T>(
@@ -127,7 +140,7 @@ void Scene::setComponent(int entity,
 }
 
 template <typename T>
-void Scene::removeComponent(int entity)
+void Scene::removeComponent(Entity entity)
 {
 	// Don't remove transform
 	if (typeid(T) == typeid(Transform))

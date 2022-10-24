@@ -5,82 +5,6 @@
 #include "Buffer.hpp"
 #include <map>
 
-template <typename T>
-void Mesh::createSeparateVertexBuffer(
-    const std::vector<T>& dataStream,
-    const VulkanImportStructs& importStructs)
-{
-    // Empty data stream
-    if (dataStream.size() <= 0)
-        return;
-
-    this->vertexBuffers.push_back(vk::Buffer());
-    this->vertexBufferMemories.push_back(VmaAllocation());
-
-    /// Temporary buffer to "Stage" vertex data before transferring to GPU
-    vk::Buffer stagingBuffer;    
-    VmaAllocation stagingBufferMemory{};
-    VmaAllocationInfo allocInfo_staging;
-
-    vk::DeviceSize bufferSize = sizeof(dataStream[0]) * dataStream.size();
-
-    Buffer::createBuffer(
-        {
-            .bufferSize = bufferSize,
-            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       /// This buffers vertex data will be transfered somewhere else!
-            .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
-            .buffer = &stagingBuffer,
-            .bufferMemory = &stagingBufferMemory,
-            .allocationInfo = &allocInfo_staging,
-            .vma = importStructs.vma
-        });
-
-    /// -- Map memory to our Temporary Staging Vertex Buffer -- 
-    void* data{};
-    if (vmaMapMemory(*importStructs.vma, stagingBufferMemory, &data) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to allocate Mesh Staging Vertex Buffer Using VMA!");
-    };
-
-    memcpy(
-        data,
-        dataStream.data(),
-        (size_t)bufferSize
-    );
-
-    vmaUnmapMemory(*importStructs.vma, stagingBufferMemory);
-
-    VmaAllocationInfo allocInfo_deviceOnly;
-    /// Create Buffer with TRANSFER_DST_BIT to mark as recipient of transfer data (also VERTEX_BUFFER)
-    /// Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
-    Buffer::createBuffer(
-        {
-            .bufferSize = bufferSize,
-            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
-                                | vk::BufferUsageFlagBits::eVertexBuffer,    //// This is a Vertex Buffer
-            .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-            .buffer = &this->vertexBuffers[this->vertexBuffers.size() - 1],
-            .bufferMemory = &this->vertexBufferMemories[this->vertexBufferMemories.size() - 1],
-            .allocationInfo = &allocInfo_deviceOnly,
-            .vma = importStructs.vma
-
-        });
-
-    /// Copy Staging Buffer to Vertex Buffer on GPU
-    Buffer::copyBuffer(
-        importStructs.device->getVkDevice(),
-        *importStructs.transferQueue,
-        *importStructs.transferCommandPool,
-        stagingBuffer,
-        this->vertexBuffers[this->vertexBuffers.size() - 1],
-        bufferSize);
-
-    /// Clean up Staging Buffer stuff
-    importStructs.device->getVkDevice().destroyBuffer(stagingBuffer);
-    vmaFreeMemory(*importStructs.vma, stagingBufferMemory);
-}
-
 void Mesh::getAnimLerp(
     const std::vector<std::pair<float, glm::vec3>>& stamps,
     const float& timer,
@@ -188,10 +112,8 @@ Mesh::Mesh(Mesh&& ref)
     device(ref.device),
     vma(ref.vma),
     boneTransforms(std::move(ref.boneTransforms)),
-    vertexBufferOffsets(std::move(ref.vertexBufferOffsets)),
     vertexBuffers(std::move(ref.vertexBuffers)),
     indexBuffer(std::move(ref.indexBuffer)),
-    vertexBufferMemories(std::move(ref.vertexBufferMemories)),
     indexBufferMemory(std::move(ref.indexBufferMemory))
 {
     this->boneTransforms.resize(meshData.bones.size());
@@ -205,40 +127,40 @@ void Mesh::createVertexBuffers(
     ZoneScoped; //:NOLINT
 #endif    
     
+    // Ready array for vertex buffers
+    this->vertexBuffers.create(
+        *importStructs.device, 
+        *importStructs.vma,
+        *importStructs.transferQueue,
+        *importStructs.transferCommandPool
+    );
+
     // Create one vertex buffer per data stream
     
     // Positions
-    this->createSeparateVertexBuffer(
-        meshData.vertexStreams.positions, 
-        importStructs
+    this->vertexBuffers.addVertexBuffer(
+        meshData.vertexStreams.positions
     );
 
     // Colors
-    this->createSeparateVertexBuffer(
-        meshData.vertexStreams.colors, 
-        importStructs
+    this->vertexBuffers.addVertexBuffer(
+        meshData.vertexStreams.colors
     );
 
     // Texture coordinates
-    this->createSeparateVertexBuffer(
-        meshData.vertexStreams.texCoords, 
-        importStructs
+    this->vertexBuffers.addVertexBuffer(
+        meshData.vertexStreams.texCoords
     );
 
     // Bone weights
-    this->createSeparateVertexBuffer(
-        meshData.vertexStreams.boneWeights, 
-        importStructs
+    this->vertexBuffers.addVertexBuffer(
+        meshData.vertexStreams.boneWeights
     );
 
     // Bone indices
-    this->createSeparateVertexBuffer(
-        meshData.vertexStreams.boneIndices, 
-        importStructs
+    this->vertexBuffers.addVertexBuffer(
+        meshData.vertexStreams.boneIndices
     );
-
-    // Vertex buffer offsets when binding
-    this->vertexBufferOffsets.resize(this->vertexBuffers.size());
 }
 
 void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStructs)
@@ -339,11 +261,72 @@ const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer)
 
 void Mesh::cleanup()
 {
-    for (size_t i = 0; i < this->vertexBuffers.size(); ++i)
-    {
-        this->device.getVkDevice().destroyBuffer(this->vertexBuffers[i]);
-        vmaFreeMemory(this->vma, this->vertexBufferMemories[i]);
-    }
+    this->vertexBuffers.cleanup();
+
     this->device.getVkDevice().destroyBuffer(this->indexBuffer);
     vmaFreeMemory(this->vma, this->indexBufferMemory);
+}
+
+#include <fstream>
+#include <iostream>
+void Mesh::outputRigDebugInfo(const std::string& filePath)
+{
+#if defined(_DEBUG) || defined(DEBUG)
+    // Create file
+    std::ofstream file(filePath);
+    
+    // Write
+    for (size_t i = 0; i < this->meshData.bones.size(); ++i)
+    {
+        file << "bone [" << i << "]: " << std::endl;
+        file << "InvBindPose: ";
+        for (uint32_t a = 0; a < 4; ++a)
+        {
+            for (uint32_t b = 0; b < 4; ++b)
+            {
+                file << this->meshData.bones[i].inverseBindPoseMatrix[a][b] << " ";
+            }
+        }
+        file << std::endl;
+        file << "translations (" << this->meshData.bones[i].translationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].translationStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].translationStamps[j].first << "](" <<
+                this->meshData.bones[i].translationStamps[j].second.x << ", " <<
+                this->meshData.bones[i].translationStamps[j].second.y << ", " <<
+                this->meshData.bones[i].translationStamps[j].second.z << ")" <<
+                std::endl;
+        }
+
+        file << "rotation (" << this->meshData.bones[i].rotationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].rotationStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].rotationStamps[j].first << "](" <<
+                this->meshData.bones[i].rotationStamps[j].second.x << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.y << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.z << ", " <<
+                this->meshData.bones[i].rotationStamps[j].second.w << ")" <<
+                std::endl;
+        }
+
+        file << "scale (" << this->meshData.bones[i].scaleStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < this->meshData.bones[i].scaleStamps.size(); ++j)
+        {
+            file << "[" << j << "] [" <<
+                this->meshData.bones[i].scaleStamps[j].first << "](" <<
+                this->meshData.bones[i].scaleStamps[j].second.x << ", " <<
+                this->meshData.bones[i].scaleStamps[j].second.y << ", " <<
+                this->meshData.bones[i].scaleStamps[j].second.z << ")" <<
+                std::endl;
+        }
+
+        file << std::endl;
+    }
+    file << std::endl;
+
+    // Close file
+    file.close();
+#endif
 }

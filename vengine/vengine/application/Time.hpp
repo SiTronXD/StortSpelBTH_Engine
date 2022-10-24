@@ -7,6 +7,7 @@ class Time
 private:
 	friend class Engine;
 	friend class SceneHandler;
+	friend class VulkanRenderer;
 
 	static float deltaTime;
 	static float timeSinceStart;
@@ -16,7 +17,7 @@ private:
 	static std::chrono::system_clock::time_point currentTime;
 	static std::chrono::duration<float> elapsedSeconds;
 
-	static void init();
+	static void reset();
 	static void updateDeltaTime();
 
 public:

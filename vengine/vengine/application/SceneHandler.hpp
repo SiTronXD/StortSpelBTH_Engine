@@ -1,6 +1,9 @@
 #pragma once
 #include "Scene.hpp"
 
+class UIRenderer;
+class DebugRenderer;
+
 class SceneHandler
 {
 private:
@@ -13,7 +16,10 @@ private:
 	ScriptHandler* scriptHandler;
 	ResourceManager* resourceManager;
 	PhysicsEngine* physicsEngine;
-	
+	VulkanRenderer* vulkanRenderer;
+	UIRenderer* uiRenderer;
+	DebugRenderer* debugRenderer;
+
 public:
 	SceneHandler();
 	virtual ~SceneHandler();
@@ -35,6 +41,15 @@ public:
 	inline PhysicsEngine* getPhysicsEngine() { return this->physicsEngine; }
 
 	void setResourceManager(ResourceManager* resourceManager);
+
+	void setUIRenderer(UIRenderer* uiRenderer);
+	UIRenderer* getUIRenderer();
+
+	void setDebugRenderer(DebugRenderer* debugRenderer);
+	DebugRenderer* getDebugRenderer();
+
+	void setVulkanRenderer(VulkanRenderer* vulkanRenderer);
+	VulkanRenderer* getVulkanRenderer();
 
 	Scene* getScene() const;
 };

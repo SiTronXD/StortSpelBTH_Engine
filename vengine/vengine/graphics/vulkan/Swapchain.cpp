@@ -5,6 +5,7 @@
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "QueueFamilies.hpp"
+#include "../ResTranslator.hpp"
 #include "../../application/Window.hpp"
 #include "../../dev/Log.hpp"
 #include "../Texture.hpp"
@@ -342,9 +343,15 @@ void Swapchain::createSwapchain(
         {
             this->device->getVkDevice().destroySwapchainKHR(oldSwapchain);
         }
-    }
 
-    this->createDepthBuffer();
+        this->createDepthBuffer();
+
+        // Update resolution translator
+        ResTranslator::updateWindowSize(
+            static_cast<uint32_t>(imageExtent.width),
+            static_cast<uint32_t>(imageExtent.height)
+        );
+    }
 }
 
 void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
@@ -456,4 +463,19 @@ void Swapchain::cleanup(bool destroySwapchain)
         this->device->getVkDevice().destroyFramebuffer(framebuffer);
     }
     this->swapchainFrameBuffers.resize(0);
+}
+
+bool Swapchain::canCreateValidSwapchain()
+{
+    // Get details
+    SwapchainDetails swapchainDetails{};
+    Swapchain::getDetails(
+        this->physicalDevice->getVkPhysicalDevice(),
+        *this->surface,
+        swapchainDetails
+    );
+
+    // Make sure the size is larger than 0
+    return swapchainDetails.surfaceCapabilities.surfaceCapabilities.maxImageExtent.width > 0 ||
+        swapchainDetails.surfaceCapabilities.surfaceCapabilities.maxImageExtent.height > 0;
 }

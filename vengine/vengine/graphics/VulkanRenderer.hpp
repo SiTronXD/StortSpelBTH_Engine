@@ -14,13 +14,12 @@
 #include "imgui.h"              // Need to be included in header
 
 #include "../resource_management/ResourceManager.hpp"
-#include "glm/gtc/matrix_transform.hpp"
-#include "glm/fwd.hpp"
+#include "UIRenderer.hpp"
+#include "DebugRenderer.hpp"
+#include "vulkan/UniformBufferStructs.hpp"
 
 class Scene;
 class Camera;
-
-
 
 #include <functional>
 using stbi_uc = unsigned char;
@@ -32,6 +31,8 @@ class VulkanRenderer
     const int MAX_FRAMES_IN_FLIGHT = 3;
     friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
     ResourceManager* resourceManager;
+    UIRenderer* uiRenderer;
+    DebugRenderer* debugRenderer;
 
     Window* window;
     VmaAllocator vma = nullptr;
@@ -40,12 +41,7 @@ class VulkanRenderer
 
     bool windowResized = false;
 
-    // Scene Settings
-    struct UboViewProjection 
-    {
-        glm::mat4 projection;   // How the Camera Views the world (Ortographic or Perspective)
-        glm::mat4 view;         // Where our Camera is viewing from and the direction it is viewing        
-    } uboViewProjection{};
+    UboViewProjection uboViewProjection{};
 
     //Vulkan Components
     // - Main
@@ -62,8 +58,6 @@ class VulkanRenderer
     
     Swapchain swapchain;
     
-    vk::Sampler textureSampler{}; // Sampler used to sample images in order to present (??)
-
     // - Assets    
 
     std::vector<vk::Image>        textureImages;
@@ -122,7 +116,6 @@ private:
     void createRenderPassImgui();
     void createCommandPool();   //TODO: Deprecate! 
     void createSynchronisation();
-    void createTextureSampler();
 
     // initializations of subsystems
     void initResourceManager();
@@ -158,11 +151,16 @@ public:
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;
     VulkanRenderer& operator=(VulkanRenderer &&ref)        = delete;
 
-    int init(Window* window, std::string&& windowName, ResourceManager* resourceMan);
+    int init(
+        Window* window, 
+        std::string&& windowName, 
+        ResourceManager* resourceMan,
+        UIRenderer* uiRenderer,
+        DebugRenderer* debugRenderer);
     void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);
 
-    void initMeshes(Scene* scene);
+    void initForScene(Scene* scene);
     
     void cleanup();
 

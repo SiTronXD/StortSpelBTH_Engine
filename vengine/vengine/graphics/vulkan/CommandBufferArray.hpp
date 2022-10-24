@@ -19,4 +19,5 @@ public:
 
 	inline CommandBuffer& getCommandBuffer(const uint32_t& index)
 	{ return this->commandBuffers[index]; }
+	inline size_t getNumCommandBuffers() { return this->commandBuffers.size(); }
 };

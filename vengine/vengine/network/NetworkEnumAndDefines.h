@@ -32,13 +32,15 @@ enum GameEvents {
 	PlayerShoot  = 5,
 	HitMonster	 = 6,
 	PlayerDied	 = 7,
+	ID,
 
-	ID			 = 7,
-	PlayerJoined = 9,
-	GAMEDATA	 = 10,
-	START		 = 11,
-	DISCONNECT	 = 12,
-	END			 = 13,
+	PlayerJoined,
+	GAMEDATA,
+	START,
+	DISCONNECT,
+	END,
+	POLYGON_DATA,
+	REMOVE_POLYGON_DATA,
 
 	//UDP
 	UpdatePlayerPos,

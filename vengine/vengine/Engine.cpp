@@ -44,13 +44,17 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         DEF<int>(W_HEIGHT)
     );
     
-    //  Creating Vulkan Renderer Instance
-    auto renderer = VulkanRenderer();
-    if (renderer.init(&window, std::move(appName), &this->resourceManager) == 1)
+    // Create vulkan renderer instance
+    VulkanRenderer renderer;
+    if (renderer.init(
+        &window, 
+        std::move(appName), 
+        &this->resourceManager,
+        &this->uiRenderer,
+        &this->debugRenderer) == 1)
     {
         std::cout << "EXIT_FAILURE" << std::endl;
     }
-
     window.registerResizeEvent(renderer.getWindowResized());
 
     //  Set references to other systems
@@ -58,10 +62,15 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->sceneHandler.setResourceManager(&resourceManager);
     this->sceneHandler.setPhysicsEngine(&physicsEngine);
+    this->sceneHandler.setVulkanRenderer(&renderer);
+    this->sceneHandler.setUIRenderer(&uiRenderer);
+    this->sceneHandler.setDebugRenderer(&debugRenderer);
     this->networkHandler.setSceneHandler(&sceneHandler);
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
+    this->debugRenderer.setSceneHandler(&sceneHandler);
+    this->scriptHandler.setNetworkHandler(&networkHandler);
 
     //  Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
@@ -71,9 +80,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     //  Temporary, should be called before creating the scene
     this->audioHandler.setSceneHandler(&sceneHandler);
 
-    renderer.initMeshes(this->sceneHandler.getScene());
-
-    //  Game loop
+    // Game loop
     while (window.getIsRunning())
     {
         window.update();
@@ -90,8 +97,8 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
         Time::updateDeltaTime();
         this->scriptHandler.update();
-		this->physicsEngine.update();
-		this->networkHandler.updateNetwork();
+		    this->physicsEngine.update();
+		    this->networkHandler.updateNetwork();
         this->audioHandler.update();
         this->sceneHandler.update();
 

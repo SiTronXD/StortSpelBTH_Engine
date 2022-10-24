@@ -68,6 +68,9 @@ void Device::createDevice(
     //Physical Device features the logical Device will be using...
     vk::PhysicalDeviceFeatures2 deviceFeatures{};
     deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);             // Enables the Anisotropy Feature, now a Sampler made for this Device can use Anisotropy!                 
+#if defined(_CONSOLE) // Debug/Release, but not distribution
+    deviceFeatures.features.setFillModeNonSolid(VK_TRUE);
+#endif
 
     // Get extension Features    
     vk::PhysicalDeviceSynchronization2Features physicalDeviceSyncFeatures{};
@@ -101,6 +104,11 @@ void Device::createDevice(
     presentationQueueInfo.setQueueFamilyIndex(static_cast<uint32_t>(presentQueueIndex));
     presentationQueueInfo.setQueueIndex(uint32_t(0));        // Will be positioned at the Queue index 0 for This particular family... (??)
     outputQueueFamilies.setPresentQueue(this->device.getQueue2(presentationQueueInfo));
+}
+
+void Device::destroyBuffer(vk::Buffer& buffer)
+{
+    this->device.destroyBuffer(buffer);
 }
 
 void Device::waitIdle()

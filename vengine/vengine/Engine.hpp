@@ -6,6 +6,8 @@
 #include "lua/ScriptHandler.h"
 #include "audio/AudioHandler.h"
 #include "resource_management/ResourceManager.hpp"
+#include "graphics/UIRenderer.hpp"
+#include "graphics/DebugRenderer.hpp"
 
 class Engine
 {
@@ -23,6 +25,8 @@ public:
 	PhysicsEngine physicsEngine;
 	ScriptHandler scriptHandler;
 	AudioHandler audioHandler;
+	UIRenderer uiRenderer;
+	DebugRenderer debugRenderer;
 };
 
 

@@ -5,12 +5,18 @@
 class TestDemoScene : public Scene
 {
 private:
-	int testEntity;
-	int testEntity2;
-	int testEntity3;
-	int testEntity4;
+	Entity testEntity;
+	Entity testEntity2;
 
-	int floor;
+	uint32_t uiTextureIndex0;
+	uint32_t uiTextureIndex1;
+
+	float timer;
+
+	Entity aniIDs[4];
+	bool aniActive[4];
+  
+  int floor;
 	bool rotDir = false;
 public:
 	TestDemoScene();

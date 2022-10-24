@@ -8,6 +8,7 @@ class PhysicalDevice;
 class Device;
 class ResourceManager;
 class Texture;
+class TextureSampler;
 
 using UniformBufferID = uint32_t;
 using StorageBufferID = uint32_t;
@@ -63,6 +64,8 @@ private:
 	vk::ShaderStageFlagBits pushConstantShaderStage;
     bool usePushConstant;
 
+	bool hasBeenCreated;
+
 	void createDescriptorSetLayout();
 	void createDescriptorPool();
 	void allocateDescriptorSets();
@@ -106,7 +109,7 @@ public:
 
 	int addPossibleTexture(
 		const uint32_t& textureIndex,
-		vk::Sampler& textureSampler);
+		TextureSampler& textureSampler);
 
 	inline const vk::ShaderStageFlagBits& getPushConstantShaderStage() const { return this->pushConstantShaderStage; }
 	inline const uint32_t& getPushConstantSize() const { return this->pushConstantSize; }

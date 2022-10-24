@@ -1,6 +1,7 @@
 #include "CommandBuffer.hpp"
 #include "Pipeline.hpp"
 #include "../ShaderInput.hpp"
+#include "../VertexBufferArray.hpp"
 
 void CommandBuffer::begin(const vk::CommandBufferBeginInfo& beginInfo)
 {
@@ -73,7 +74,7 @@ void CommandBuffer::bindVertexBuffers2(const vk::Buffer& vertexBuffer)
 }
 
 void CommandBuffer::bindVertexBuffers2(
-    const std::vector<vk::DeviceSize> vertexBufferOffsets,
+    const std::vector<vk::DeviceSize>& vertexBufferOffsets,
     const std::vector<vk::Buffer>& vertexBuffers)
 {
     this->commandBuffer.bindVertexBuffers2(
@@ -81,6 +82,24 @@ void CommandBuffer::bindVertexBuffers2(
         static_cast<uint32_t>(vertexBuffers.size()),
         vertexBuffers.data(),
         vertexBufferOffsets.data(),
+        nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
+        nullptr         //NOTE: Could also be a pointer to an array of buffer strides
+    );
+}
+
+void CommandBuffer::bindVertexBuffers2(
+    const VertexBufferArray& vertexBufferArray,
+    const uint32_t& currentFrame)
+{
+    uint32_t vertexBufferFifOffset =
+        vertexBufferArray.getVertexBufferFifOffset(currentFrame);
+    uint32_t numVertexBuffers = vertexBufferArray.getNumVertexBuffers();
+
+    this->commandBuffer.bindVertexBuffers2(
+        uint32_t(0),
+        numVertexBuffers,
+        &vertexBufferArray.getVertexBuffers()[vertexBufferFifOffset],
+        vertexBufferArray.getVertexBufferOffsets().data(),
         nullptr,        //NOTE: Could also be a pointer to an array of the size in bytes of vertex data bound from pBuffers (vertexBuffer)
         nullptr         //NOTE: Could also be a pointer to an array of buffer strides
     );
@@ -116,6 +135,20 @@ void CommandBuffer::bindShaderInputFrequency(
             0,                               // Dynamic Offset Count;  we dont Dynamic Uniform Buffers use anymore...
             nullptr);                        // Dynamic Offset;        We dont use Dynamic Uniform Buffers  anymore...
     }
+}
+
+void CommandBuffer::draw(
+    const uint32_t& vertexCount,
+    const uint32_t& instanceCount,
+    const uint32_t& firstVertex,
+    const uint32_t& firstInstance)
+{
+    this->commandBuffer.draw(
+        vertexCount, 
+        instanceCount,
+        firstVertex, 
+        firstInstance
+    );
 }
 
 void CommandBuffer::drawIndexed(

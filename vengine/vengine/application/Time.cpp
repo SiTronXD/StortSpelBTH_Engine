@@ -8,7 +8,7 @@ std::chrono::system_clock::time_point Time::lastTime = std::chrono::system_clock
 std::chrono::system_clock::time_point Time::currentTime = std::chrono::system_clock::time_point();
 std::chrono::duration<float> Time::elapsedSeconds = std::chrono::duration<float>();
 
-void Time::init()
+void Time::reset()
 {
 	lastTime = std::chrono::system_clock::now();
 	updateDeltaTime();

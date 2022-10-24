@@ -10,6 +10,8 @@ void ResourceManager::init(
     vk::CommandPool* transCmdPool,
     VulkanRenderer* vulkanRenderer)
 {
+    this->dev = dev;
+
     this->meshLoader.init(
         vma,
         physiscalDev,
@@ -57,7 +59,9 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
     return meshes.size() - 1;
 }
 
-uint32_t ResourceManager::addTexture(std::string&& texturePath)
+uint32_t ResourceManager::addTexture(
+    std::string&& texturePath,
+    const TextureSamplerSettings& textureSamplerSettings)
 { 
     using namespace vengine_helper::config;
 
@@ -74,6 +78,32 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
         return 0;
     }
 
+    // Create texture samples if it doesn't exist already
+    std::string samplerString;
+    TextureSampler::settingsToString(textureSamplerSettings, samplerString);
+    if (this->samplerSettings.count(samplerString) == 0)
+    {
+        // Add sampler index (indirection)
+        this->samplerSettings.insert(
+            {
+                samplerString,
+                this->textureSamplers.size()
+            }
+        );
+
+        // Add texture sampler
+        this->textureSamplers.insert(
+            {
+                this->samplerSettings[samplerString],
+                TextureSampler()
+            }
+        );
+
+        // Create sampler
+        this->textureSamplers[this->samplerSettings[samplerString]].
+            createSampler(*this->dev, textureSamplerSettings);
+    }
+
     //NOTE: texturePaths.size() as key only works if we never remove resources the map...
     this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
 
@@ -82,7 +112,10 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
     textures.insert(
         {
             textures.size(), 
-            textureLoader.createTexture(texturePath)
+            textureLoader.createTexture(
+                texturePath, 
+                this->samplerSettings[samplerString]
+            )
         }
     );
 
@@ -91,13 +124,21 @@ uint32_t ResourceManager::addTexture(std::string&& texturePath)
 
 void ResourceManager::cleanup()
 {
+    // Meshes
     for(auto& elementPair : this->meshes)
     {                
         elementPair.second.cleanup();
     }
 
+    // Textures
     for (auto& elementPair : this->textures)
     {     
+        elementPair.second.cleanup();
+    }
+
+    // Texture samplers
+    for (auto& elementPair : this->textureSamplers)
+    {
         elementPair.second.cleanup();
     }
 }

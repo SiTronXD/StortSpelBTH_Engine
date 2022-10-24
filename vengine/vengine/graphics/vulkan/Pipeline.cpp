@@ -67,7 +67,8 @@ void Pipeline::insertAttributeFromStream(
 }
 
 Pipeline::Pipeline()
-	: device(nullptr)
+	: device(nullptr),
+    hasBeenCreated(false)
 {
 }
 
@@ -80,7 +81,12 @@ void Pipeline::createPipeline(
     ShaderInput& shaderInput,
     vk::RenderPass& renderPass,
     const VertexStreams& targetVertexStream,
-    const std::string& vertexShaderName)
+    const std::string& vertexShaderName,
+    const std::string& fragmentShaderName,
+    const bool& depthTestingEnabled,
+    const bool& wireframe,
+    const bool& backfaceCulling,
+    const vk::PrimitiveTopology& topology)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -89,14 +95,8 @@ void Pipeline::createPipeline(
 	this->device = &device;
 
     // read in SPIR-V code of shaders
-    //auto vertexShaderCode = vengine_helper::readShaderFile("shader.vert.spv");
     auto vertexShaderCode = vengine_helper::readShaderFile(vertexShaderName);
-    auto fragShaderCode = vengine_helper::readShaderFile("shader.frag.spv");
-
-    /*if (hasAnimations)
-    {
-        vertexShaderCode = vengine_helper::readShaderFile("shaderAnim.vert.spv");
-    }*/
+    auto fragShaderCode = vengine_helper::readShaderFile(fragmentShaderName);
 
     // Build Shader Modules to link to Graphics Pipeline
     // Create Shader Modules
@@ -155,7 +155,7 @@ void Pipeline::createPipeline(
 
     // -- INPUT ASSEMBLY --
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
-    inputAssemblyStateCreateInfo.setTopology(vk::PrimitiveTopology::eTriangleList);        // Primitive type to assemble primitives from ;
+    inputAssemblyStateCreateInfo.setTopology(topology);        // Primitive type to assemble primitives from ;
     inputAssemblyStateCreateInfo.setPrimitiveRestartEnable(VK_FALSE);                     // Allow overrideing tof "strip" topology to start new primitives
 
     // -- VIEWPORT & SCISSOR ---
@@ -179,11 +179,10 @@ void Pipeline::createPipeline(
     vk::PipelineRasterizationStateCreateInfo rasterizationStateCreateInfo;
     rasterizationStateCreateInfo.setDepthClampEnable(VK_FALSE);         // Change if fragments beyond near/far planes are clipped / clamped  (Requires depthclamp as a device features...)
     rasterizationStateCreateInfo.setRasterizerDiscardEnable(VK_FALSE);// Wether to discard data or skip rasterizzer. Never creates fragments, only suitable for pipleine without framebuffer output
-    rasterizationStateCreateInfo.setPolygonMode(vk::PolygonMode::eFill);// How to handle filling point betweeen vertices...
-    rasterizationStateCreateInfo.setLineWidth(1.F);                  // how thiock lines should be when drawn (other than 1 requires device features...)
-    rasterizationStateCreateInfo.setCullMode(vk::CullModeFlagBits::eBack);  // Which face of tri to cull
-    rasterizationStateCreateInfo.setFrontFace(vk::FrontFace::eCounterClockwise);// Since our Projection matrix now has a inverted Y-axis (GLM is right handed, but vulkan is left handed)
-    // winding order to determine which side is front
+    rasterizationStateCreateInfo.setPolygonMode(wireframe ? vk::PolygonMode::eLine : vk::PolygonMode::eFill);// How to handle filling point betweeen vertices...
+    rasterizationStateCreateInfo.setLineWidth(1.F);                  // how thick lines should be when drawn (other than 1 requires device features...)
+    rasterizationStateCreateInfo.setCullMode(backfaceCulling ? vk::CullModeFlagBits::eBack : vk::CullModeFlagBits::eNone);  // Which face of tri to cull
+    rasterizationStateCreateInfo.setFrontFace(vk::FrontFace::eCounterClockwise); // Winding order to determine which side is front
     rasterizationStateCreateInfo.setDepthBiasEnable(VK_FALSE);        // Wether to add depthbiaoas to fragments (to remove shadowacne...)
 
     // --- MULTISAMPLING ---
@@ -216,7 +215,7 @@ void Pipeline::createPipeline(
 
     // --- DEPTH STENCIL TESING ---
     vk::PipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
-    depthStencilCreateInfo.setDepthTestEnable(VK_TRUE);              // Enable Depth Testing; Check the Depth to determine if it should write to the fragment
+    depthStencilCreateInfo.setDepthTestEnable(depthTestingEnabled ? VK_TRUE : VK_FALSE);              // Enable Depth Testing; Check the Depth to determine if it should write to the fragment
     depthStencilCreateInfo.setDepthWriteEnable(VK_TRUE);              // enable writing to Depth Buffer; To make sure it replaces old values
     depthStencilCreateInfo.setDepthCompareOp(vk::CompareOp::eLess);   // Describes that we want to replace the old values IF new values are smaller/lesser.
     depthStencilCreateInfo.setDepthBoundsTestEnable(VK_FALSE);             // In case we want to use as Min and a Max Depth; if depth Values exist between two bounds... 
@@ -258,9 +257,14 @@ void Pipeline::createPipeline(
     //Destroy Shader Moduels, no longer needed after pipeline created
     this->device->getVkDevice().destroyShaderModule(vertexShaderModule);
     this->device->getVkDevice().destroyShaderModule(fragmentShaderModule);
+
+    this->hasBeenCreated = true;
 }
 
 void Pipeline::cleanup()
 {
+    // Only cleanup if a pipeline has been created
+    if (!this->hasBeenCreated) return;
+
 	this->device->getVkDevice().destroyPipeline(this->pipeline);
 }

@@ -1,4 +1,5 @@
 #pragma once 
+#include <string>
 #include <vector>
 #include <array>
 #include <glm/vec3.hpp>
@@ -13,15 +14,22 @@ struct ModelMatrix
 
 struct VertexStreams
 {
+    // "Default" meshes
     std::vector<glm::vec3> positions;
     std::vector<glm::vec3> colors;
     std::vector<glm::vec2> texCoords;
+
+    // Animated meshes
     std::vector<glm::vec4> boneWeights;
     std::vector<glm::uvec4> boneIndices;
 };
 
 struct Bone 
 {
+#if defined(_DEBUG) || defined(DEBUG)
+    std::string boneName;
+#endif
+
     int parentIndex;
     glm::mat4 inverseBindPoseMatrix;
     glm::mat4 boneMatrix;
