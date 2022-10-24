@@ -129,6 +129,13 @@ void NetworkScene::update(float dt)
 {
 	this->updateSystems(dt);
 	this->scriptHandler->updateSystems(this->luaSystems);
+
+	auto view = this->getSceneReg().view<Transform>(entt::exclude<Inactive>);
+	auto func = [](Transform& transform)
+	{
+		transform.updateMatrix();
+	};
+	view.each(func);
 }
 
 int NetworkScene::getPlayer(const int& whatPlayer)

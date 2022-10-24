@@ -15,14 +15,17 @@ NetworkTestScene::~NetworkTestScene()
 
 void NetworkTestScene::init()
 {
+
+    int groundMesh =
+        this->getResourceManager()->addMesh("vengine_assets/models/Cube.fbx");
     int camEntity = this->createEntity();
     this->setComponent<Camera>(camEntity, 1.0f);
     this->setMainCamera(camEntity);
     Transform& camTransform = this->getComponent<Transform>(camEntity);
     camTransform.position   = glm::vec3(1.0f);
-
+    
     this->Player = this->createEntity();
-
+    setComponent<MeshComponent>(Player, groundMesh);
     Transform& transform = this->getComponent<Transform>(this->Player);
     transform.position = glm::vec3(0.f, 0.f, 5.f);
     transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
@@ -30,8 +33,6 @@ void NetworkTestScene::init()
 
     //ground
     int ground = this->createEntity();
-    int groundMesh =
-        this->getResourceManager()->addMesh("vengine_assets/models/Cube.fbx");
 
     this->setComponent<Transform>(ground);
     this->setComponent<MeshComponent>(ground, groundMesh);
@@ -74,11 +75,15 @@ void NetworkTestScene::update()
         }
         this->getNetworkHandler()->connectClient(ip);
     }
-    if (Input::isKeyPressed(Keys::O)) {
-        std::cout << this->getComponent<Transform>(Player).position.z << std::endl;
-    }
     this->getNetworkHandler()->sendUDPDataToClient(
-        this->getComponent<Transform>(Player).position,
-        this->getComponent<Transform>(Player).rotation
+        this->getComponent<Transform>(this->Player).position,
+        this->getComponent<Transform>(this->Player).rotation
     );
+    this->getComponent<Transform>(this->getMainCameraID()).position = this->getComponent<Transform>(this->Player).position;
+    if (Input::isKeyDown(Keys::W)) {
+        this->getComponent<Transform>(this->Player).position.z -= Time::getDT() * 50;
+    }
+    else if (Input::isKeyDown(Keys::S)) {
+        this->getComponent<Transform>(this->Player).position.z += Time::getDT() * 50;
+    }
 }

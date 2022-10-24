@@ -9,15 +9,14 @@ ServerGameMode::ServerGameMode()
 	srand((unsigned)time(NULL));
 #endif
 	this->seed = rand();
-	this->scene->setPathFindingManager(&this->pf);
 }
 
 ServerGameMode::~ServerGameMode() {}
 
-
 void ServerGameMode::setScene(NetworkScene* scene)
 {
 	this->scene = scene;
+	this->scene->setPathFindingManager(&this->pf);
 }
 
 void ServerGameMode::setScriptHandler(ServerScriptHandler* scriptHandler)

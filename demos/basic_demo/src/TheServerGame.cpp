@@ -7,23 +7,12 @@ TheServerGame::TheServerGame()
 
 void TheServerGame::init() 
 {
-    int e = this->scene->createEntity();
-    this->scene->setComponent<Transform>(e);
-    this->scene->setScriptComponent(e, "../../vengine/vengine_assets/scripts/ServerLuaTest.lua");
-    std::cout << "made script" << std::endl;
-
-    int e = this->scene->createEnemy(1, "");
+    int e = this->scene->createEnemy(1, "../../vengine/vengine_assets/scripts/testScript.lua");
 }
 
 void TheServerGame::update(float dt)
 {
     static bool wentIn = false;
-    if (this->scene->getComponent<Transform>(this->scene->getPlayer(0)).position.z > 0 && !wentIn)
-    {
-        std::cout << "step over 1" << std::endl;
-        wentIn = true;
-        this->scene->createEnemy(1, "", glm::vec3(0,0,20));
-    }
     for (int i = 0; i < this->scene->getEnemySize(); i++)
     {
         this->scene->getComponent<Transform>(this->scene->getEnemies(i)).rotation.x += dt * 50 * (i + 1);
