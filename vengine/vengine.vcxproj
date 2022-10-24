@@ -293,7 +293,7 @@ SET ERRORLEVEL = 0</Command>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;BT_USE_DOUBLE_PRECISION=1;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;GLM_FORCE_QUAT_DATA_WXYZ;VENGINE_NO_PROFILING;NDEBUG;_CONSOLE;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;BT_USE_DOUBLE_PRECISION=1;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;GLM_FORCE_QUAT_DATA_WXYZ;VENGINE_NO_PROFILING;NDEBUG;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\bullet\src\src\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
