@@ -256,7 +256,7 @@ void DebugRenderer::renderCapsule(
         glm::translate(glm::mat4(1.0f), position) *
         rotationMatrix *
         glm::translate(glm::mat4(1.0f), 
-            glm::vec3(0.0f, 0.0f, height * 0.5f)) *
+            glm::vec3(0.0f, height * 0.5f, 0.0f)) *
         hemisphereScaleMatrix;
     upperHemisphereData.pushConstantData.color = glm::vec4(color, 1.0f);
 
@@ -267,7 +267,7 @@ void DebugRenderer::renderCapsule(
         glm::translate(glm::mat4(1.0f), position) *
         rotationMatrix *
         glm::translate(glm::mat4(1.0f),
-            glm::vec3(0.0f, 0.0f, -height * 0.5f)) *
+            glm::vec3(0.0f, -height * 0.5f, 0.0f)) *
         hemisphereScaleMatrix;
     lowerHemisphereData.pushConstantData.color = glm::vec4(color, 1.0f);
 
@@ -277,7 +277,7 @@ void DebugRenderer::renderCapsule(
     capsuleBodyData.pushConstantData.transform =
         glm::translate(glm::mat4(1.0f), position) *
         rotationMatrix * 
-        glm::scale(glm::mat4(1.0f), glm::vec3(radius, radius, height));
+        glm::scale(glm::mat4(1.0f), glm::vec3(radius, height, radius));
     capsuleBodyData.pushConstantData.color = glm::vec4(color, 1.0f);
 
     // Add draw call data
