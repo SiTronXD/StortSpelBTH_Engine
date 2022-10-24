@@ -20,6 +20,8 @@ private:
 	UIRenderer* uiRenderer;
 	DebugRenderer* debugRenderer;
 
+	void initSubsystems();
+
 public:
 	SceneHandler();
 	virtual ~SceneHandler();

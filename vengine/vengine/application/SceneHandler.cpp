@@ -4,6 +4,24 @@
 #include "../graphics/VulkanRenderer.hpp"
 #include "../lua/ScriptHandler.h"
 
+void SceneHandler::initSubsystems()
+{
+	this->physicsEngine->init();
+
+	// Init scene
+	this->scene->init();
+	if (this->luaScript.size() != 0)
+	{
+		this->scriptHandler->runScript(this->luaScript);
+	}
+
+	// Init renderer for scene
+	this->vulkanRenderer->initForScene(this->scene);
+
+	// Reset delta time counter
+	Time::reset();
+}
+
 SceneHandler::SceneHandler()
 	: scene(nullptr), 
 	nextScene(nullptr), 
@@ -47,29 +65,20 @@ void SceneHandler::update()
 
 void SceneHandler::updateToNextScene()
 {
-	//  Make sure a scene can be switched to
+	// Make sure a scene can be switched to
 	if (this->nextScene != nullptr)
 	{
-		//  Delete old scene
+		// Delete old scene
 		delete this->scene;
 		this->scene = nullptr;
 
-		//  Switch
+		// Switch
 		this->scene = this->nextScene;
 		this->nextScene = nullptr;
 		this->luaScript = this->nextLuaScript;
-		this->physicsEngine->init();
 
-		// Init scene
-		this->scene->init();
-		if (this->luaScript.size() != 0)
-		{
-			this->scriptHandler->runScript(this->luaScript);
-		}
-
-		// Init renderer for scene
-		this->vulkanRenderer->initForScene(this->scene);
-		Time::reset();
+		// Init 
+		this->initSubsystems();
 	}
 }
 
@@ -85,16 +94,11 @@ void SceneHandler::setScene(Scene* scene, std::string path)
 
 void SceneHandler::reloadScene()
 {
+	// Clear registry
 	this->scene->getSceneReg().clear();
-	this->physicsEngine->init();
-
-	this->scene->init();
-	if (this->luaScript.size() != 0)
-	{
-		this->scriptHandler->runScript(this->luaScript);
-	}
-
-	Time::init();
+	
+	// Init
+	this->initSubsystems();
 }
 
 void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
