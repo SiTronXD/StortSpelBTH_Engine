@@ -66,6 +66,7 @@ void SceneHandler::updateToNextScene()
 		{
 			this->scriptHandler->runScript(this->luaScript);
 		}
+		this->scene->start();
 
 		// Init renderer for scene
 		this->vulkanRenderer->initForScene(this->scene);
@@ -93,8 +94,11 @@ void SceneHandler::reloadScene()
 	{
 		this->scriptHandler->runScript(this->luaScript);
 	}
+	this->scene->start();
 
-	Time::init();
+	// Init renderer for scene
+	this->vulkanRenderer->initForScene(this->scene);
+	Time::reset();
 }
 
 void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)

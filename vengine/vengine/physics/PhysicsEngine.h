@@ -9,6 +9,7 @@
 #include "../components/Rigidbody.h"
 #include "../components/Collider.h"
 
+typedef int Entity;
 class SceneHandler;
 class btCollisionShape;
 class btCollisionObject;
@@ -81,5 +82,5 @@ public:
 	RayPayload raycast(Ray ray, float maxDist = 100.0f);
 	// Test contact of a collider within the scene. Get the resulting entities hit
 	// NOTE: The collider argument doesn't need to be attached to an entity for the function to work
-	std::vector<int> testContact(Collider& col, glm::vec3 position, glm::vec3 rotation = glm::vec3(0.0f));
+	std::vector<Entity> testContact(Collider& col, glm::vec3 position, glm::vec3 rotation = glm::vec3(0.0f));
 };

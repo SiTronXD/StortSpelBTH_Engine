@@ -149,6 +149,11 @@ void Scene::init()
 
 }
 
+void Scene::start()
+{
+
+}
+
 void Scene::update()
 {
 

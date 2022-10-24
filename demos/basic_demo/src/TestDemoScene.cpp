@@ -53,7 +53,7 @@ void TestDemoScene::init()
 	{
 		for (int z = 0; z < 5; z++)
 		{
-			int e = this->createEntity();
+			Entity e = this->createEntity();
 			Transform& t = this->getComponent<Transform>(e);
 			t.position = glm::vec3(x, 7.5f, z) * 10.0f;
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
@@ -157,10 +157,17 @@ void TestDemoScene::update()
 	if (Input::isKeyDown(Keys::F))
 	{
 		Collider col = Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f));
-		std::vector<int> hit = this->getPhysicsEngine()->testContact(col, glm::vec3(0.0f, 0.0f, 0.0f));
-		for (const int& e : hit)
+		std::vector<Entity> hit = this->getPhysicsEngine()->testContact(col, glm::vec3(0.0f, 0.0f, 0.0f));
+		for (const Entity& e : hit)
 		{
-			this->getComponent<Rigidbody>(e).velocity.y += 5.0f;
+			if ((int)rand() & 1)
+			{
+				this->setComponent<Inactive>(e);
+			}
+			else
+			{
+				this->getComponent<Rigidbody>(e).velocity.y += 5.0f;
+			}
 		}
 	}
 

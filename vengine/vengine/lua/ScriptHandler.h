@@ -43,4 +43,8 @@ public:
 	bool getScriptComponentValue(Script& script, int& ret, std::string name);
 	bool getScriptComponentValue(Script& script, float& ret, std::string name);
 	bool getScriptComponentValue(Script& script, std::string& ret, std::string name);
+
+	bool getGlobal(int& ret, std::string& name);
+	bool getGlobal(float& ret, std::string& name);
+	bool getGlobal(std::string& ret, std::string& name);
 };
