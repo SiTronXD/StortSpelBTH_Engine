@@ -35,6 +35,11 @@ DebugRenderer* Scene::getDebugRenderer()
 	return this->sceneHandler->getDebugRenderer();
 }
 
+SceneHandler* Scene::getSceneHandler()
+{
+	return this->sceneHandler;
+}
+
 Scene::Scene()
 	: sceneHandler(nullptr), mainCamera(-1)
 {

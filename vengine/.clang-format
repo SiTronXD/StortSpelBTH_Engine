@@ -1,6 +1,5 @@
 Language: Cpp
-BasedOnStyle: Google
-AccessModifierOffset: -1
+BasedOnStyle: LLVM
 AlignAfterOpenBracket: BlockIndent
 AlignConsecutiveAssignments: None
 AlignOperands: Align
@@ -21,7 +20,7 @@ BreakBeforeBinaryOperators: None
 BreakBeforeTernaryOperators: true
 BreakConstructorInitializers: AfterColon
 BreakInheritanceList: AfterComma
-ColumnLimit: 80
+ColumnLimit: 160
 CompactNamespaces: false
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: true

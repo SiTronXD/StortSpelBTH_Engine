@@ -1,8 +1,8 @@
 #include "NetworkHandler.h"
 #include <iostream>
-#include "Timer.h"
+#include "ServerEngine/Timer.h"
 
-void serverMain(bool& shutDownServer, ServerGame* game)
+void serverMain(bool& shutDownServer, ServerGameMode* game)
 {
 	Timer serverTime;
 	Server server(game);
@@ -47,7 +47,7 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 	this->sceneHandler = sceneHandler;
 }
 
-void NetworkHandler::createServer(ServerGame* serverGame)
+void NetworkHandler::createServer(ServerGameMode* serverGame)
 {
 	serverThread =
 	    new std::thread(serverMain, std::ref(this->shutDownServer), serverGame);
@@ -203,6 +203,7 @@ void NetworkHandler::updateNetwork()
 			Transform& transform =
 			    sceneHandler->getScene()->getComponent<Transform>(iy);
 			transform.position = glm::vec3(fx, fy, fz);
+			std::cout << "Client: spawn enemy at:" << fx << ", " << fy << ", " << fz << std::endl;
 		}
 		else if (gameEvent == GameEvents::SpawnEnemies)
 		{

@@ -33,7 +33,6 @@ Engine::~Engine()
 
 void Engine::run(std::string appName, std::string startScenePath, Scene* startScene)
 {
-    this->scriptHandler.setNetworkHandler(&networkHandler);
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
 
@@ -69,6 +68,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
     this->debugRenderer.setSceneHandler(&sceneHandler);
+    this->scriptHandler.setNetworkHandler(&networkHandler);
 
     // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }

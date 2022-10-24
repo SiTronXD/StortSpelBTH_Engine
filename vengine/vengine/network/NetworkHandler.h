@@ -1,5 +1,5 @@
 #pragma once
-#include "Server.h"
+#include "ServerEngine/Server.h"
 #include "Client.h"
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
@@ -33,7 +33,7 @@ class NetworkHandler {
     void setSceneHandler(SceneHandler* sceneHandler);
 
     //SERVER
-    void createServer(ServerGame* serverGame = nullptr); //create new server on a new thread
+    void createServer(ServerGameMode* serverGame = nullptr); //create new server on a new thread
     void deleteServer();
 
     //CLIENT

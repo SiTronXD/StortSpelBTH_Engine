@@ -2,35 +2,28 @@
 
 TheServerGame::TheServerGame()
 {
+
+}
+
+void TheServerGame::init() 
+{
+    int e = this->scene->createEntity();
+    this->scene->setComponent<Transform>(e);
+    this->scene->setScriptComponent(e, "../../vengine/vengine_assets/scripts/ServerLuaTest.lua");
+    std::cout << "made script" << std::endl;
 }
 
 void TheServerGame::update(float dt)
 {
     static bool wentIn = false;
-    if (players[0].position.z > 50 && !wentIn)
+    if (this->scene->getComponent<Transform>(this->scene->getPlayer(0)).position.z > 0 && !wentIn)
     {
+        std::cout << "step over 1" << std::endl;
         wentIn = true;
-        serverEntities.push_back(ServerEntity{ glm::vec3(0, 0, 50), glm::vec3(0, 0, 0), 1 });
-        addEvent({ (int)GameEvents::SpawnEnemy, 1 }, { 0.f, 0.f, 70.f });
-
-        serverEntities.push_back(ServerEntity{ glm::vec3(20, 0, 50), glm::vec3(0, 0, 0), 1 });
-        addEvent({ (int)GameEvents::SpawnEnemy, 1 }, { 0.f, 0.f, 50.f });
+        this->scene->createEnemy(1, "", glm::vec3(0,0,20));
     }
-    for (int i = 0; i < serverEntities.size(); i++)
+    for (int i = 0; i < this->scene->getEnemySize(); i++)
     {
-        if (i % 2 == 0) {
-            serverEntities[i].rotation.x += dt * 5 * (i + 1);
-            if (serverEntities[i].rotation.x > 360)
-            {
-                serverEntities[i].rotation.x = 0;
-            }
-        }
-        else {
-            serverEntities[i].rotation.x -= dt * 5 * (i + 1);
-            if (serverEntities[i].rotation.x < -360)
-            {
-                serverEntities[i].rotation.x = 0;
-            }
-        }
+        this->scene->getComponent<Transform>(this->scene->getEnemies(i)).rotation.x += dt * 50 * (i + 1);
     }
 }
