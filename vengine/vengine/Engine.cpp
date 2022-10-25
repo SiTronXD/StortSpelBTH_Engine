@@ -71,6 +71,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->scriptHandler.setResourceManager(&resourceManager);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
+    this->aiHandler.init(&this->sceneHandler);    
 
     //  Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
