@@ -104,6 +104,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 		    this->physicsEngine.update();
 		    this->networkHandler.updateNetwork();
         this->audioHandler.update();
+        this->aiHandler.update();
         this->sceneHandler.update();
 
         static bool debugInfo = true;

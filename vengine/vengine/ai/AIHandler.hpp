@@ -4,26 +4,20 @@
 #include "../components/FSMAgentComponent.hpp"
 #include <cstdint>
 
-struct FSM_system : public System
+class AIHandler
 {
-   private:
-   public:
-	explicit FSM_system(){};
+    SceneHandler *sh = nullptr; 
+    EventSystem eventSystem;
 
-	bool update(entt::registry& reg, float deltaTime) override
+    void updateEntityFSMs()
 	{
+        auto& reg = this->sh->getScene()->getSceneReg();
+
 		reg.view<FSMAgentComponent>().each(
 		    [&](const auto& entity, FSMAgentComponent& t)
 		    { t.execute(static_cast<int>(entity)); }
 		);
-		return false;
 	}
-};
-
-class AIHandler
-{
-    SceneHandler *sh = nullptr; 
-    EventSystem ESys;
 
     public: 
     AIHandler() = default;
@@ -34,7 +28,7 @@ class AIHandler
 	std::unordered_map<FSM*, std::function<void(FSM* fsm)>> FSMimguiLambdas;
 
     void addFSM(FSM* fsm, const std::string& name) { 
-		fsm->init(this->sh->getScene(), &ESys, name);
+		fsm->init(this->sh->getScene(), &eventSystem, name);
         FSMs.insert({fsm->getName(), fsm});
     }
 
@@ -47,9 +41,6 @@ class AIHandler
     void init(SceneHandler *sh)
     {
         this->sh = sh; 
-        // Create System for FSM to be updated
-        sh->getScene()->createSystem<FSM_system>(); //TODO: This should not be handled by a ECS system, but part of this class...
-        
 
     }
 
@@ -69,7 +60,7 @@ class AIHandler
 			requiredComp->registerEntity(entityID, this->sh->getScene());
 		}
 		// Register this entity to all entity evenets of the FSM
-		this->ESys.registerEntityToEvent(entityID, fsm);
+		this->eventSystem.registerEntityToEvent(entityID, fsm);
 	}
 
     void createAIEntity(uint32_t entityID, const std::string& fsmName)
@@ -80,6 +71,6 @@ class AIHandler
 
     void drawImgui();
 
-    void update(){ESys.update();drawImgui();}
+    void update(){eventSystem.update();updateEntityFSMs();drawImgui();}
 
 };
