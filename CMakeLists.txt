@@ -181,10 +181,10 @@ else() # Use Git Submodules
     target_include_directories(vengine PRIVATE ${VENGINE_SOURCE_DIR}/../)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/include)
     #target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/src/include)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
+    target_include_directories(vengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
+    target_include_directories(vengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt)
+    target_include_directories(vengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src)
     
     find_package(SDL2 REQUIRED)
@@ -213,7 +213,8 @@ else() # Use Git Submodules
 endif()
 
 # Add the vengine sources + imgui sources to the vengine target
-target_sources(vengine PRIVATE 
+target_sources(vengine 
+    PRIVATE 
     
     ${VENGINE_SOURCES} 
     ${IMGUI_HEADERS}    
