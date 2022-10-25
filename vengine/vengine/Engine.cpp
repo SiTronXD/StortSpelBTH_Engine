@@ -57,6 +57,9 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     }
     window.registerResizeEvent(renderer.getWindowResized());
 
+    // Get Imgui IO, used by fps counter
+    ImGuiIO&  io = ImGui::GetIO();
+
     //  Set references to other systems
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->sceneHandler.setScriptHandler(&scriptHandler);
@@ -103,14 +106,14 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         this->audioHandler.update();
         this->sceneHandler.update();
 
-        static bool open = true;
-        ImGui::ShowDemoWindow(&open);
+        static bool debugInfo = true;
 
-        ImGui::Begin("Another Window", &open);   //  Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            open = false;
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+        ImGui::SetWindowPos(ImVec2{40.f,40.f}, ImGuiCond_Once);
+        ImGui::Begin("Debug info",&debugInfo,ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize );
+            ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);                                    
         ImGui::End();
+        ImGui::PopStyleVar();
         
         //  ------------------------------------
         this->sceneHandler.updateToNextScene();
