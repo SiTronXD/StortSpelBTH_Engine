@@ -15,7 +15,7 @@
 // Struct to inherit from; should define all 
 
 struct FSM_component{
-    virtual void registerEntity(uint32_t entityId, Scene* scene) = 0;
+    virtual void registerEntity(uint32_t entityId, SceneHandler* sceneHandler) = 0;
 };
 
 class FSM_Node
@@ -71,7 +71,7 @@ private:
 	   
 protected:
     EventSystem* eventSystem; 
-    static Scene* scene; 
+    static SceneHandler* sceneHandler; 
 
 protected:
     struct BT_AND_NAME
@@ -95,7 +95,7 @@ protected:
     void addBT(std::string name, BehaviorTree* BT) 
     {		
         // Initiating Tree to populate BTs requiredBTComponents!
-        BT->startTree(this->scene,name); 
+        BT->startTree(this->sceneHandler,name); 
 
         this->trees.insert({name, BT});
         this->insertNode(name);
@@ -110,7 +110,7 @@ protected:
         for (auto bt : BTs)
         {
             // Initiating Tree to populate BTs requiredBTComponents!
-            bt.BT->startTree(this->scene,bt.name);
+            bt.BT->startTree(this->sceneHandler,bt.name);
 
             this->trees.insert({bt.name, bt.BT});
             this->insertNode(bt.name);
@@ -138,16 +138,16 @@ public:
     //virtual void registerEntity(uint32_t entityId, Scene* scene) = 0;
 	
     //virtual void init(Scene* sc, EventSystem* es) = 0;    
-    void init(Scene* sc, EventSystem* es, const std::string& name) 
+    void init(SceneHandler* sh, EventSystem* es, const std::string& name) 
     {
 		this->name = name;
 
-        this->scene = sc; 
+        this->sceneHandler = sh; 
         this->eventSystem = es; 
 		real_init();
 		for (auto& tree : trees)
 		{
-			tree.second->startTree(sc,name);// TODO: Is this correct, or is it done during addBT func? ... Should be removed(?)
+			tree.second->startTree(sh,name);// TODO: Is this correct, or is it done during addBT func? ... Should be removed(?)
 		}
         checkForCommonErrors();
     }
@@ -260,7 +260,7 @@ public:
 	}
 	
     FSM()=default;
-	FSM(Scene* scene, EventSystem* eventSystem) 
+	FSM(SceneHandler* sceneHandler, EventSystem* eventSystem) 
 		:
 	    eventSystem(eventSystem)
 	{
@@ -268,9 +268,9 @@ public:
 		//startInit();
 		//init();
 
-		if (FSM::scene != scene)
+		if (FSM::sceneHandler != sceneHandler)
 		{
-			FSM::scene = scene;
+			FSM::sceneHandler = sceneHandler;
 		}
 	};
 	

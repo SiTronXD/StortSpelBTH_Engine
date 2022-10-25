@@ -4,7 +4,7 @@
 #include "BehaviorTreeNodes.hpp"
 #include "BTCreateHelper.hpp"
 #include "AgentStatus.hpp"
-#include "../application/Scene.hpp"
+#include "../application/SceneHandler.hpp"
 #include "../dev/Log.hpp"
 #include <array>
 #include <cstdint>
@@ -69,8 +69,8 @@ protected:
 
     bool started = false;
     friend class Tag;
-    static Scene* scene;
-    static Scene* getScene(){return BehaviorTree::scene;};
+    static SceneHandler* sceneHandler;
+    static SceneHandler* getSceneHandler(){return BehaviorTree::sceneHandler;};
     void setRoot(Node* root) {this->root = root;};
     void addRequiredComponent(BT_component* reqComponent)
 	{
@@ -113,7 +113,7 @@ public:
     virtual void update(uint32_t entityID) = 0;
     
     //Only run start function one time... (Start is for everything in the tree)
-	void startTree(Scene* scene, const std::string& name)
+	void startTree(SceneHandler* sceneHandler, const std::string& name)
 	{
         this->name = name;
 
@@ -123,7 +123,7 @@ public:
 		}
         checkForCommonErrors();
 		this->started = true;
-		this->scene = scene;
+		this->sceneHandler = sceneHandler;
 	};
 
     void checkForCommonErrors()
@@ -267,7 +267,7 @@ public:
 
     // TODO: This should take sceneHandler when implemented into the engine...
     //       Should use the active scenes registry...
-    static void setScene(Scene* scene){BehaviorTree::scene = scene;};    
+    //static void setSceneHandler(Scene* scene){BehaviorTree::sceneHandler = scene;};    
 
     // Debug
     void draw();

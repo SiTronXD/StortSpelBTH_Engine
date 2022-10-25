@@ -28,7 +28,7 @@ class AIHandler
 	std::unordered_map<FSM*, std::function<void(FSM* fsm)>> FSMimguiLambdas;
 
     void addFSM(FSM* fsm, const std::string& name) { 
-		fsm->init(this->sh->getScene(), &eventSystem, name);
+		fsm->init(this->sh, &eventSystem, name);
         FSMs.insert({fsm->getName(), fsm});
     }
 
@@ -52,12 +52,12 @@ class AIHandler
 		// Add required FSMComponents to entityID
 		for (auto& requiredComp : fsm->getRequiredFSMComponents())
 		{
-			requiredComp->registerEntity(entityID, this->sh->getScene());
+			requiredComp->registerEntity(entityID, this->sh);
 		}
 		// Add required BTComponents to entityID
 		for (auto& requiredComp : fsm->getRequiredBTComponents())
 		{
-			requiredComp->registerEntity(entityID, this->sh->getScene());
+			requiredComp->registerEntity(entityID, this->sh);
 		}
 		// Register this entity to all entity evenets of the FSM
 		this->eventSystem.registerEntityToEvent(entityID, fsm);

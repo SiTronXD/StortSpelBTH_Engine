@@ -1,3 +1,3 @@
 #include "FSM.hpp"
 
-Scene* FSM::scene = nullptr;
+SceneHandler* FSM::sceneHandler = nullptr;

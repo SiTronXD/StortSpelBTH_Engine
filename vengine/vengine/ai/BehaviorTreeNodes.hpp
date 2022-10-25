@@ -58,7 +58,7 @@ class Condition;
 struct Fallback;
 
 struct BT_component{
-    virtual void registerEntity(uint32_t entityId, Scene* scene) = 0;
+    virtual void registerEntity(uint32_t entityId, SceneHandler* sceneHandler) = 0;
     virtual ~BT_component()=default;
 };
 

@@ -4,7 +4,7 @@
 #include <fstream>
 #include <iostream>
 
-Scene* BehaviorTree::scene = nullptr;
+SceneHandler* BehaviorTree::sceneHandler = nullptr;
 
 void BehaviorTree::draw()
 {
@@ -83,16 +83,16 @@ BTStatus Tag::decorate(uint32_t entityID)
 	
 	BTStatus ret = this->children[0]->execute(entityID);
 	if (ret == BTStatus::Success || ret == BTStatus::Running)
-	{
+	{        
 		//Set tag to true
-        BehaviorTree::scene->
+        BehaviorTree::sceneHandler->getScene()->
             getComponent<BTAgentComponent>(entityID)
                 .setTag(this->tag, this, true);
 	}
 	else
 	{
 		//Set tag to false
-        BehaviorTree::scene->
+        BehaviorTree::sceneHandler->getScene()->
             getComponent<BTAgentComponent>(entityID)
                 .setTag(this->tag, this, false);
 	}
