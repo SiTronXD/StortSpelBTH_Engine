@@ -1,4 +1,5 @@
 #include "ContactCallback.h"
+#include <algorithm>
 
 btScalar ContactCallback::addSingleResult(btManifoldPoint& cp,
 	const btCollisionObjectWrapper* colObj0Wrap, int partId0, int index0,

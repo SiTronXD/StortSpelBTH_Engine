@@ -1,12 +1,13 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <vector>
 #include <LinearMath/btAlignedObjectArray.h>
 
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/Transform.hpp"
-#include "../components/Rigidbody.h"
+#include "../components/RigidBody.h"
 #include "../components/Collider.h"
 
 typedef int Entity;

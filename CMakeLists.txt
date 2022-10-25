@@ -195,6 +195,17 @@ else() # Use Git Submodules
     find_package(Lua REQUIRED)
     target_include_directories(vengine PRIVATE ${LUA_INCLUDE_DIR})
     
+    # ADD BULLET LIB 
+    find_package(Bullet)    
+    if(NOT ${BULLET_FOUND} )
+        message( "Could not find Bullet!")        
+        message(FATAL_ERROR "Bullet (Double Precision) must be installed through the distribution packet manager (tested with pacman!)")        
+    endif()
+
+    target_compile_definitions(vengine PRIVATE "BT_USE_DOUBLE_PRECISION")
+    target_include_directories(vengine PUBLIC ${BULLET_INCLUDE_DIRS})    #Bullet needs these public...
+    target_link_libraries(vengine PRIVATE ${BULLET_LIBRARIES})
+    
     #set(vengine_vma VulkanMemoryAllocator) 
     set(vengine_stb "") #part of sources, no need to use as lib...
 

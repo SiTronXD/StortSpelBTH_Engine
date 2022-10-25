@@ -6,7 +6,7 @@
 #include "ShaderInput.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "VertexBufferArray.hpp"
-#include "../Application/Scene.hpp"
+#include "../application/Scene.hpp"
 
 class PhysicalDevice;
 class Device;
