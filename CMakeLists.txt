@@ -202,7 +202,7 @@ else() # Use Git Submodules
         message(FATAL_ERROR "Bullet (Double Precision) must be installed through the distribution packet manager (tested with pacman!)")        
     endif()
 
-    target_compile_definitions(vengine PRIVATE "BT_USE_DOUBLE_PRECISION")
+    target_compile_definitions(vengine PUBLIC "BT_USE_DOUBLE_PRECISION")
     target_include_directories(vengine PUBLIC ${BULLET_INCLUDE_DIRS})    #Bullet needs these public...
     target_link_libraries(vengine PRIVATE ${BULLET_LIBRARIES})
     
