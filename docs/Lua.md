@@ -372,6 +372,44 @@ The physics global that has been created for the lua environment is the main int
 ### Functions
 List of functions related to the *physics* global.
 
+#### renderDebugShapes
+This function takes a bool parameter to decide if the physics engine should render debug primitives for the colliders within the current scene.
+~~~ Lua
+physics.renderDebugShapes(bool : renderDebug)
+~~~
+
+#### raycast
+Define a ray by a position and direction and cast it to the physics scene. If something was hit the functions returns a table containing entity and some other information. A distance value can also be sent in as an argument. The default value is 100.
+~~~ Lua
+physics.raycast(vector : pos, vector : dir, float dist) -- dist is optional
+
+-- Returning table (if hit)
+local payload = {
+	int : entity,
+	vector : hitPosition,
+	vector : hitNormal
+}
+
+-- Example
+local payload = physics.raycast(vector(0, 0, 0), vector (0, 0, 1), 100)
+if(payload) then
+	print("Hit entity: " .. payload.entity .. " at pos: " .. payload.position)
+end
+
+~~~
+
+#### testContact
+Send in a [Collider](#Collider) as the collision shape and position and rotation. Rotation is however optional. The function returns a table as an array of all entities hit with the collision shape.
+~~~ Lua
+physics.testContact(collider : shape, vector : pos, vector : rot)
+
+-- Example
+local list = physics.testContact(col, vector(0, 0, 0), vector(90, 0, 0))
+for i = 1, #list do
+	print("Hit entity: " .. list[i])
+end
+~~~
+
 ## UIRenderer
 The uiRenderer global that has been created for the lua environment is the main interface to render textures to the screen as UI.
 

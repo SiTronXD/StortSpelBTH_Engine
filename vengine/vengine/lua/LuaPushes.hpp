@@ -5,12 +5,19 @@
 #include "../components/Transform.hpp"
 #include "../components/MeshComponent.hpp"
 
+// TODO: Find better method to make sure it's correct (perhaps via comparing metatables)
+static bool lua_isvector(lua_State* L, int index)
+{
+	bool b = lua_istable(L, index);
+	return b;
+}
+
 static glm::vec3 lua_tovector(lua_State* L, int index)
 {
 	glm::vec3 vec{ 0.0f };
 	// Sanity check
-	if (!lua_istable(L, index)) {
-		std::cout << "Error: not table" << std::endl;
+	if (!lua_isvector(L, index)) {
+		std::cout << "Error: not vector" << std::endl;
 		return vec;
 	}
 
@@ -130,7 +137,7 @@ static MeshComponent lua_tomesh(lua_State* L, int index)
 	}
 
 	lua_getfield(L, index, "meshID");
-	mesh.meshID = lua_tointeger(L, -1);
+	mesh.meshID = (int)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 
 	return mesh;

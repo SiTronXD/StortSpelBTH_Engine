@@ -40,6 +40,10 @@ function vector.__tostring(t)
 	return "(" .. t.x .. ", " .. t.y .. ", " .. t.z .. ")"
 end
 
+function vector.__concat(t)
+	return vector.__tostring(t)
+end
+
 function vector.__unm(t)
 	return vector.new(-t.x, -t.y, -t.z)
 end

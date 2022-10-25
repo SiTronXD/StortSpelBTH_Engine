@@ -10,6 +10,7 @@
 #include "wrappers/InputLua.h"
 #include "wrappers/ResourceManagerLua.h"
 #include "wrappers/NetworkHandlerLua.h"
+#include "wrappers/PhysicsEngineLua.h"
 #include "wrappers/UIRendererLua.h"
 #include "wrappers/DebugRendererLua.h"
 
@@ -101,7 +102,7 @@ void ScriptHandler::setNetworkHandler(NetworkHandler* networkHandler)
 
 void ScriptHandler::setPhysicsEngine(PhysicsEngine* physicsEngine)
 {
-	
+	PhysicsEngineLua::lua_openphysics(L, physicsEngine);
 }
 
 void ScriptHandler::setUIRenderer(UIRenderer* uiRenderer)

@@ -76,6 +76,7 @@
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneLua.cpp" />
     <ClCompile Include="vengine\lua\wrappers\UIRendererLua.cpp" />
     <ClCompile Include="vengine\lua\wrappers\DebugRendererLua.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\PhysicsEngineLua.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -140,6 +141,7 @@
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneLua.h" />
     <ClInclude Include="vengine\lua\wrappers\UIRendererLua.h" />
     <ClInclude Include="vengine\lua\wrappers\DebugRendererLua.h" />
+    <ClInclude Include="vengine\lua\wrappers\PhysicsEngineLua.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
