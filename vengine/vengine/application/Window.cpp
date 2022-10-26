@@ -79,6 +79,7 @@ void Window::update()
     // Update current keys
     SDL_Event event;
     Input::setDeltaCursor(0, 0);
+    Input::setDeltaScrollWheel(0);
     while (SDL_PollEvent(&event) != 0) {
         ImGui_ImplSDL2_ProcessEvent(&event);
         if (event.type == SDL_QUIT ||
@@ -113,6 +114,12 @@ void Window::update()
                 event.motion.xrel, 
                 event.motion.yrel
             );
+        }
+
+        // Scroll wheel
+        if (event.type == SDL_MOUSEWHEEL)
+        {
+            Input::setDeltaScrollWheel(event.wheel.y);
         }
     }
 

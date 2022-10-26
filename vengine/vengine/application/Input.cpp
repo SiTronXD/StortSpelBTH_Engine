@@ -12,6 +12,9 @@ int Input::deltaCursorX = 0;
 int Input::deltaCursorY = 0;
 int Input::requestedMouseX = 0;
 int Input::requestedMouseY = 0;
+
+int Input::deltaScrollWheel = 0;
+
 bool Input::shouldSetMousePos = false;
 bool Input::shouldHideCursor = false;
 bool Input::lastShouldHideCursor = false;
@@ -23,6 +26,11 @@ void Input::setDeltaCursor(
 	// Update delta
 	Input::deltaCursorX = deltaCursorX;
 	Input::deltaCursorY = deltaCursorY;
+}
+
+void Input::setDeltaScrollWheel(const int& deltaScrollWheel)
+{
+	Input::deltaScrollWheel = deltaScrollWheel;
 }
 
 void Input::setCursor(const int& newCursorX, const int& newCursorY)

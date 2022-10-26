@@ -143,10 +143,6 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
-	// Rotate camera
-	/*this->getComponent<Transform>(this->camEntity).rotation +=
-		glm::vec3(0.0f, Input::getMouseDeltaX(), 0.0f);*/
-
 	// Movement with velocity
 	if (this->hasComponents<Collider, Rigidbody>(this->testEntity))
 	{

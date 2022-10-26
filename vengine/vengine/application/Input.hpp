@@ -137,11 +137,15 @@ private:
 	static int deltaCursorY;
 	static int requestedMouseX;
 	static int requestedMouseY;
+
+	static int deltaScrollWheel;
+
 	static bool shouldSetMousePos;
 	static bool shouldHideCursor;
 	static bool lastShouldHideCursor;
 
 	static void setDeltaCursor(const int& deltaCursorX, const int& deltaCursorY);
+	static void setDeltaScrollWheel(const int& deltaScrollWheel);
 	static void setCursor(const int& newCursorX, const int& newCursorY);
 	static void update();
 
@@ -162,4 +166,5 @@ public:
 	static inline const int& getMouseY() { return Input::cursorY; }
 	static inline const int getMouseDeltaX() { return Input::deltaCursorX; }
 	static inline const int getMouseDeltaY() { return Input::deltaCursorY; }
+	static inline const int getScrollWheelDelta() { return Input::deltaScrollWheel; }
 };
