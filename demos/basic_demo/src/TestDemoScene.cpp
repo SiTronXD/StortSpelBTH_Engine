@@ -8,7 +8,7 @@
 #include "vengine/test/TestScene2.hpp"
 
 TestDemoScene::TestDemoScene()
-	: testEntity(-1)//, testEntity2(-1)
+	: camEntity(-1), testEntity(-1)//, testEntity2(-1)
 	, aniIDs{-1, -1, -1, -1}
 	, aniActive{true, true, true, true}
 {
@@ -25,9 +25,9 @@ void TestDemoScene::init()
 	this->timer = 0.0f;
 
 	// Camera
-	Entity camEntity = this->createEntity();
-	this->setComponent<Camera>(camEntity);
-	this->setMainCamera(camEntity);
+	this->camEntity = this->createEntity();
+	this->setComponent<Camera>(this->camEntity);
+	this->setMainCamera(this->camEntity);
 
 	// Create entity (already has transform)
 	this->testEntity = this->createEntity();
