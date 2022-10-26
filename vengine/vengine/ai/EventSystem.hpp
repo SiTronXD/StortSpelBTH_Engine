@@ -70,8 +70,9 @@ private:
 
     std::unordered_map<FSM*, std::vector<FSM_Events>> fsmEvents;
 
-
+	SceneHandler* sh;
 public:
+	void setSceneHandler(SceneHandler* sh) {this->sh = sh;}
 	//void registerEvent(FSM_Node* who, Event* event)
 	void registerGlobalEvent(FSM* fsm, FSM_Node* who, GlobalEvent* event);
 	void registerEntityEvent(FSM* fsm, FSM_Node* who, EntityEvent* event);

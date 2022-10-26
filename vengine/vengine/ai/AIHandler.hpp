@@ -41,6 +41,8 @@ class AIHandler
     void init(SceneHandler *sh)
     {
         this->sh = sh; 
+		this->eventSystem.setSceneHandler(this->sh);
+        //pathFindingManager        
 
     }
 
