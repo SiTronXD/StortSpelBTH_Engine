@@ -17,7 +17,7 @@ NetworkHandler* Scene::getNetworkHandler()
 
 ScriptHandler* Scene::getScriptHandler()
 {
-	return sceneHandler->getScriptHandler();
+	return this->sceneHandler->getScriptHandler();
 }
 
 ResourceManager* Scene::getResourceManager()
@@ -157,6 +157,14 @@ void Scene::start()
 void Scene::update()
 {
 
+}
+
+void Scene::onCollisionStay(Entity e1, Entity e2)
+{
+}
+
+void Scene::onTriggerStay(Entity e1, Entity e2)
+{
 }
 
 void Scene::setSceneHandler(SceneHandler& sceneHandler)

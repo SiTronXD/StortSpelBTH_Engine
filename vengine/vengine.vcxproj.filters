@@ -74,6 +74,9 @@
     <ClCompile Include="vengine\network\ServerEngine\NetworkScene.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\ServerScriptHandler.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneLua.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\UIRendererLua.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\DebugRendererLua.cpp" />
+    <ClCompile Include="vengine\lua\wrappers\PhysicsEngineLua.cpp" />
     <ClCompile Include="vengine\dev\StringHelper.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +140,9 @@
     <ClInclude Include="vengine\network\ServerEngine\NetworkScene.h" />
     <ClInclude Include="vengine\network\ServerEngine\ServerScriptHandler.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneLua.h" />
+    <ClInclude Include="vengine\lua\wrappers\UIRendererLua.h" />
+    <ClInclude Include="vengine\lua\wrappers\DebugRendererLua.h" />
+    <ClInclude Include="vengine\lua\wrappers\PhysicsEngineLua.h" />
     <ClInclude Include="vengine\dev\StringHelper.hpp" />
   </ItemGroup>
   <ItemGroup>

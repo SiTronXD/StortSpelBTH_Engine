@@ -26,5 +26,8 @@ public:
 	//  Inherited via Scene
 	virtual void init() override;
 	virtual void update() override;
+
+	virtual void onCollisionStay(Entity e1, Entity e2) override;
+	virtual void onTriggerStay(Entity e1, Entity e2) override;
 };
 

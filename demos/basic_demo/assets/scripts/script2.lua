@@ -2,10 +2,22 @@ local script = {}
 
 function script:init()
 	print("Cam: " .. self.ID)
+	self.texture = resources.addTexture("assets/textures/test_A.png")
+	--scene.setComponent(self.ID, CompType.Collider, { type = ColliderType.Sphere, isTrigger = true, radius = 1 })
+	--scene.setComponent(self.ID, CompType.Rigidbody, {})
 end
 
 function script:update()
+	uiRenderer.setTexture(self.texture)
+	uiRenderer.renderTexture(0, 0, 100, 100)
+	debugRenderer.renderCapsule(vector(), vector(), 10, 3, core.LIGHTGRAY)
 
+	local payload = physics.raycast(self.transform.position, self.transform:forward(), 100)
+	physics.renderDebugShapes(payload ~= nil)
+end
+
+function script:onTriggerStay(entity)
+	print("Hit: " .. entity)
 end
 
 return script;

@@ -5,7 +5,7 @@ local cam = scene.createEntity()
 scene.setComponent(cam, CompType.Camera)
 scene.setMainCamera(cam)
 
-local p = scene.createPrefab("assets/scripts/prefabs/prefab.lua")
+--local p = scene.createPrefab("assets/scripts/prefabs/prefab.lua")
 
 scene.setComponent(cam, CompType.Script, "assets/scripts/script2.lua")
 scene.getComponent(cam, CompType.Script).playerID = p

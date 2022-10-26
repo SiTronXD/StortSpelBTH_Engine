@@ -8,15 +8,16 @@ This document contains things that are different from lua in Vengine in lua Veng
 ## Removed
 ### Globals
   Globals that have disepeared are network and resourcehandler. You are not able to retrive any information about the network or able to load any data from the resource handler.
+  
 ### Scene
   Scene has some function taken away and some added here are those that have been removed.
-  ~~~
+  ~~~ Lua
   setScene
   getMainCamera
   setMainCamera
   ~~~
+  
 ## Added
- 
   ### getPlayerCount
   getPlayerCount returns how many players are playing on the server currently.
   ~~~Lua

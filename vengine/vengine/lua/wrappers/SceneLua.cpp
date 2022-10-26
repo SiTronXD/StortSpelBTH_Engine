@@ -71,8 +71,11 @@ int SceneLua::lua_iterateView(lua_State* L)
 		bool addToList =
 			std::find(compTypes.begin(), compTypes.end(), CompType::TRANSFORM) != compTypes.end() && scene->hasComponents<Transform>(entity) &&
 			std::find(compTypes.begin(), compTypes.end(), CompType::MESH) != compTypes.end() && scene->hasComponents<MeshComponent>(entity) &&
-			std::find(compTypes.begin(), compTypes.end(), CompType::SCRIPT) != compTypes.end() && scene->hasComponents<Script>(entity);
-			
+			std::find(compTypes.begin(), compTypes.end(), CompType::CAMERA) != compTypes.end() && scene->hasComponents<Camera>(entity) &&
+			std::find(compTypes.begin(), compTypes.end(), CompType::SCRIPT) != compTypes.end() && scene->hasComponents<Script>(entity) &&
+			std::find(compTypes.begin(), compTypes.end(), CompType::COLLIDER) != compTypes.end() && scene->hasComponents<Collider>(entity) &&
+			std::find(compTypes.begin(), compTypes.end(), CompType::RIGIDBODY) != compTypes.end() && scene->hasComponents<Rigidbody>(entity) &&
+			std::find(compTypes.begin(), compTypes.end(), CompType::ANIMATION) != compTypes.end() && scene->hasComponents<AnimationComponent>(entity);
 
 		if (scriptPath.size() && addToList)
 		{
@@ -97,8 +100,20 @@ int SceneLua::lua_iterateView(lua_State* L)
 			case CompType::MESH:
 				lua_pushmesh(L, scene->getComponent<MeshComponent>(entity));
 				break;
+			case CompType::CAMERA:
+				lua_pushcamera(L, scene->getComponent<Camera>(entity));
+				break;
 			case CompType::SCRIPT:
 				lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Script>(entity).luaRef);
+				break;
+			case CompType::COLLIDER:
+				lua_pushcollider(L, scene->getComponent<Collider>(entity));
+				break;
+			case CompType::RIGIDBODY:
+				lua_pushrigidbody(L, scene->getComponent<Rigidbody>(entity));
+				break;
+			case CompType::ANIMATION:
+				lua_pushanimation(L, scene->getComponent<AnimationComponent>(entity));
 				break;
 			default:
 				break;
@@ -148,17 +163,38 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	}
 	lua_pop(L, 1);
 
-	lua_getfield(L, -1, "Camera");
-	if (!lua_isnil(L, -1))
-	{
-		scene->setComponent<Camera>(entity, 1.0f);
-	}
-	lua_pop(L, 1);
-
 	lua_getfield(L, -1, "Script");
 	if (lua_isstring(L, -1))
 	{
 		scene->setScriptComponent(entity, lua_tostring(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "Camera");
+	if (lua_isstring(L, -1))
+	{
+		scene->setComponent<Camera>(entity, (float)lua_tonumber(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "Collider");
+	if (!lua_isnil(L, -1))
+	{
+		scene->setComponent<Collider>(entity, lua_tocollider(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "Rigidbody");
+	if (!lua_isnil(L, -1))
+	{
+		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, -1));
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "Animation");
+	if (!lua_isnil(L, -1))
+	{
+		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -232,6 +268,21 @@ int SceneLua::lua_hasComponent(lua_State* L)
 	case CompType::CAMERA:
 		hasComp = scene->hasComponents<Camera>(entity);
 		break;
+	case CompType::COLLIDER:
+		hasComp = scene->hasComponents<Collider>(entity);
+		break;
+	case CompType::RIGIDBODY:
+		hasComp = scene->hasComponents<Rigidbody>(entity);
+		break;
+	case CompType::ANIMATION:
+		hasComp = scene->hasComponents<AnimationComponent>(entity);
+		break;
+	case CompType::AUDIOLISTENER:
+		hasComp = scene->hasComponents<AudioListener>(entity);
+		break;
+	case CompType::AUDIOSOURCE:
+		hasComp = scene->hasComponents<AudioSource>(entity);
+		break;
 	default:
 		break;
 	}
@@ -257,6 +308,22 @@ int SceneLua::lua_getComponent(lua_State* L)
 	else if ((CompType)type == CompType::SCRIPT && scene->hasComponents<Script>(entity))
 	{
 		lua_rawgeti(L, LUA_REGISTRYINDEX, scene->getComponent<Script>(entity).luaRef);
+	}
+	else if ((CompType)type == CompType::CAMERA && scene->hasComponents<Camera>(entity))
+	{
+		lua_pushcamera(L, scene->getComponent<Camera>(entity));
+	}
+	else if ((CompType)type == CompType::COLLIDER && scene->hasComponents<Collider>(entity))
+	{
+		lua_pushcollider(L, scene->getComponent<Collider>(entity));
+	}
+	else if ((CompType)type == CompType::RIGIDBODY && scene->hasComponents<Rigidbody>(entity))
+	{
+		lua_pushrigidbody(L, scene->getComponent<Rigidbody>(entity));
+	}
+	else if ((CompType)type == CompType::ANIMATION && scene->hasComponents<AnimationComponent>(entity))
+	{
+		lua_pushanimation(L, scene->getComponent<AnimationComponent>(entity));
 	}
 	else { lua_pushnil(L); }
 	return 1;
@@ -290,7 +357,16 @@ int SceneLua::lua_setComponent(lua_State* L)
 		if(lua_isstring(L, 3)) { scene->setScriptComponent(entity, lua_tostring(L, 3)); }
 		break;
 	case CompType::CAMERA:
-		scene->setComponent<Camera>(entity, 1.0f);
+		scene->setComponent<Camera>(entity, lua_tocamera(L, 3));
+		break;
+	case CompType::COLLIDER:
+		scene->setComponent<Collider>(entity, lua_tocollider(L, 3));
+		break;
+	case CompType::RIGIDBODY:
+		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, 3));
+		break;
+	case CompType::ANIMATION:
+		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3));
 		break;
 	default:
 		break;
@@ -316,14 +392,27 @@ int SceneLua::lua_removeComponent(lua_State* L)
 	case CompType::CAMERA:
 		scene->removeComponent<Camera>(entity);
 		break;
+	case CompType::COLLIDER:
+		scene->removeComponent<Collider>(entity);
+		break;
+	case CompType::RIGIDBODY:
+		scene->removeComponent<Rigidbody>(entity);
+		break;
+	case CompType::ANIMATION:
+		scene->removeComponent<AnimationComponent>(entity);
+		break;
+	case CompType::AUDIOLISTENER:
+		scene->removeComponent<AudioListener>(entity);
+		break;
+	case CompType::AUDIOSOURCE:
+		scene->removeComponent<AudioSource>(entity);
+		break;
 	default:
 		break;
 	}
 
 	return 0;
 }
-
-
 
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {

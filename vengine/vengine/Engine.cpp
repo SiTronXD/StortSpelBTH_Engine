@@ -66,6 +66,9 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
+    this->scriptHandler.setPhysicsEngine(&physicsEngine);
+    this->scriptHandler.setUIRenderer(&uiRenderer);
+    this->scriptHandler.setDebugRenderer(&debugRenderer);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
 
@@ -93,11 +96,11 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         ImGui::NewFrame();
 
         Time::updateDeltaTime();
-        this->scriptHandler.update();
-		    this->physicsEngine.update();
-		    this->networkHandler.updateNetwork();
-        this->audioHandler.update();
+		this->physicsEngine.update();
         this->sceneHandler.update();
+        this->scriptHandler.update();
+        this->audioHandler.update();
+		this->networkHandler.updateNetwork();
 
         static bool open = true;
         ImGui::ShowDemoWindow(&open);

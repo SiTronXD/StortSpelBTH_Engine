@@ -1,5 +1,6 @@
 #include "PhysicsEngine.h"
 #include "../application/SceneHandler.hpp"
+#include "../graphics/DebugRenderer.hpp"
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -147,7 +148,6 @@ void PhysicsEngine::createCollider(const int& entity, Collider& col)
 	btCollisionShape* shape = this->createShape(entity, col);
 
 	btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity));
-	//btDefaultMotionState* motionState = new btDefaultMotionState(transform);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(0.0f, nullptr, shape, btVector3(0.0f, 0.0f, 0.0f));
 
 	btRigidBody* body = new btRigidBody(rbInfo);
@@ -223,6 +223,8 @@ void PhysicsEngine::removeObject(btCollisionObject* obj, int index)
 
 void PhysicsEngine::cleanup()
 {
+	this->renderDebug = false;
+
 	// Remove the rigidbodies from the dynamics world and delete them
 	for (int i = this->dynWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
@@ -264,7 +266,7 @@ void PhysicsEngine::cleanup()
 }
 
 PhysicsEngine::PhysicsEngine()
-	:sceneHandler(nullptr), colShapes(), timer(0.f)
+	:sceneHandler(nullptr), colShapes(), timer(0.f), renderDebug(false)
 {
 	this->collconfig = new btDefaultCollisionConfiguration();
 	this->collDisp = new btCollisionDispatcher(this->collconfig);
@@ -356,11 +358,41 @@ void PhysicsEngine::update()
 		}
 	}
 
+	// TODO: Find way to establish onenter and onexit collision and trigger functions
 	int numManifolds = this->dynWorld->getDispatcher()->getNumManifolds();
+	ScriptHandler* scriptHandler = this->sceneHandler->getScriptHandler();
 	for (int i = 0; i < numManifolds; i++)
 	{
 		btPersistentManifold* man = this->dynWorld->getDispatcher()->getManifoldByIndexInternal(i);
-		//Log::write("Entity: " + std::to_string(man->getBody0()->getUserIndex()) + " and Entity: " + std::to_string(man->getBody1()->getUserIndex()) + " hit!");
+
+		const btCollisionObject* b1 = man->getBody0();
+		const btCollisionObject* b2 = man->getBody1();
+		Entity e1 = b1->getUserIndex(), e2 = b2->getUserIndex();
+		if (scene->entityValid(e1) && scene->entityValid(e2))
+		{
+			bool t1 = b1->getCollisionFlags() == btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE, 
+				 t2 = b2->getCollisionFlags() == btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE;
+			// Triggers
+			if (t1 || t2)
+			{
+				scene->onTriggerStay(e1, e2);
+			}
+			// Collisions
+			else
+			{
+				scene->onCollisionStay(e1, e2);
+			}
+
+			// Scripts
+			if (scene->hasComponents<Script>(e1))
+			{
+				scriptHandler->runCollisionFunction(scene->getComponent<Script>(e1), e1, e2, t1);
+			}
+			else if (scene->hasComponents<Script>(e2))
+			{
+				scriptHandler->runCollisionFunction(scene->getComponent<Script>(e2), e2, e1, t2);
+			}
+		}
 	}
 
 	// Remove objects
@@ -369,6 +401,37 @@ void PhysicsEngine::update()
 		this->removeObject(this->dynWorld->getCollisionObjectArray()[index], index);
 	}
 	this->removeIndicies.clear();
+
+	// Render debug shapes
+	if (this->renderDebug)
+	{
+		DebugRenderer* debugRenderer = this->sceneHandler->getDebugRenderer();
+		glm::vec3 color = glm::vec3(0.0f, 0.5f, 0.5f);
+		for (int i = this->dynWorld->getNumCollisionObjects() - 1; i > -1; i--)
+		{
+			btCollisionObject* object = this->dynWorld->getCollisionObjectArray()[i];
+			Transform& transform = scene->getComponent<Transform>(object->getUserIndex());
+			Collider& col = scene->getComponent<Collider>(object->getUserIndex());
+
+			if (col.type == ColType::SPHERE)
+			{
+				debugRenderer->renderSphere(transform.position, col.radius, color);
+			}
+			else if (col.type == ColType::BOX)
+			{
+				debugRenderer->renderBox(transform.position, transform.rotation, transform.scale * 2.0f, color);
+			}
+			else if (col.type == ColType::CAPSULE)
+			{
+				debugRenderer->renderCapsule(transform.position, transform.rotation, col.height, col.radius, color);
+			}
+		}
+	}
+}
+
+void PhysicsEngine::renderDebugShapes(bool renderDebug)
+{
+	this->renderDebug = renderDebug;
 }
 
 RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)

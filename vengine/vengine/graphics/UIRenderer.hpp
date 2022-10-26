@@ -84,4 +84,7 @@ public:
     inline const uint32_t& getUiTextureIndex() const { return this->uiTextureIndex; }
     inline ShaderInput& getShaderInput() { return this->uiShaderInput; }
     inline const Pipeline& getPipeline() const { return this->uiPipeline; }
+
+    // Mostly for Lua use
+    inline ResourceManager* getResourceManager() const { return this->resourceManager; }
 };
