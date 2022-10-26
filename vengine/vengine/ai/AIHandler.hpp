@@ -2,12 +2,14 @@
 #include "FSM.hpp"
 #include "../application/SceneHandler.hpp"
 #include "../components/FSMAgentComponent.hpp"
+#include "PathFinding.h"
 #include <cstdint>
 
 class AIHandler
 {
     SceneHandler *sh = nullptr; 
     EventSystem eventSystem;
+    
 
     void updateEntityFSMs()
 	{
@@ -33,7 +35,7 @@ class AIHandler
     }
 
     void addImguiToFSM(const std::string& name, std::function<void(FSM* fsm)> imguiLambda) 
-    {
+    {        
         this->FSMimguiLambdas[this->FSMs[name]] = imguiLambda;		
     }
 
@@ -41,8 +43,17 @@ class AIHandler
     void init(SceneHandler *sh)
     {
         this->sh = sh; 
+        //pathFindingManager        
 
     }
+
+	void clean()
+	{
+		for (auto p : FSMs)
+		{
+			p.second->clean();
+		}
+	}
 
     void createAIEntity(uint32_t entityID, FSM* fsm)
 	{

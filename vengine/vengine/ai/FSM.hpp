@@ -152,6 +152,23 @@ public:
         checkForCommonErrors();
     }
 
+
+    void clean()
+	{
+        for (auto p : fsm_nodes)
+		{
+		    delete p.second;
+        }
+		for (auto p : trees)
+		{
+		    delete p.second;
+        }
+        for (auto p : requiredFSMComponents)
+		{
+		    delete p;
+        }
+    }
+
     void checkForCommonErrors()
     {
         int foundProblem = 0; 
