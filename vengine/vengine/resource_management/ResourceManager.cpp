@@ -31,30 +31,37 @@ void ResourceManager::init(
     
 }
 
-uint32_t ResourceManager::addMesh(std::string&& meshPath)
+uint32_t ResourceManager::addMesh(
+    std::string&& meshPath,
+    std::string&& texturesPath)
 {        
     using namespace vengine_helper::config;
 
     if(this->meshPaths.count(meshPath) != 0)
     {
-        //TODO: should be able to log what mesh
+        // TODO: should be able to log what mesh
         Log::warning("Mesh \""+meshPath+"\" was already added!");                
+
         return this->meshPaths[meshPath];        
     } 
     
-    MeshData meshData = this->meshLoader.importMeshData(meshPath);
+    MeshData meshData = this->meshLoader.importMeshData(
+        meshPath, 
+        texturesPath
+    );
+
     // No mesh imported, send default mesh back
     if (meshData.vertexStreams.positions.size() == 0) { return 0; }
 
-    //NOTE: prevSize as key only works if we never remove resources the map...
+    // NOTE: prevSize as key only works if we never remove resources the map...
     this->meshPaths.insert({meshPath,this->meshPaths.size()}); 
 
-    //NOTE: meshes.size as key only works if we never remove resources the map...    
+    // NOTE: meshes.size as key only works if we never remove resources the map...    
     // Create mesh, insert into map of meshes
     meshes.insert({
         meshes.size(),
         meshLoader.createMesh(meshData)}        
-        ); 
+    ); 
 
     return meshes.size() - 1;
 }

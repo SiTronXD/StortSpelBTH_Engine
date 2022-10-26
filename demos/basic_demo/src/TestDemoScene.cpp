@@ -99,7 +99,8 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Amogus/source/1.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+				"assets/models/Amogus/source/1.fbx");
 			amogusMeshID = newMeshComp.meshID;
 		}
 		else
@@ -108,7 +109,9 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+				"assets/models/Stormtrooper/source/silly_dancing.fbx",
+				"assets/models/Stormtrooper/textures");
 		}
 
 		this->setComponent<AnimationComponent>(aniIDs[i]);
@@ -118,6 +121,15 @@ void TestDemoScene::init()
 	}
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
+
+	Entity swarmEntity = this->createEntity();
+	this->setComponent<MeshComponent>(swarmEntity);
+	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
+	swarmTransform.position = glm::vec3(10.0f, 0.0f, 30.f);
+	MeshComponent& swarmMesh = this->getComponent<MeshComponent>(swarmEntity);
+	swarmMesh.meshID = Scene::getResourceManager()->addMesh(
+		"assets/models/Swarm_Model.fbx",
+		"assets/textures/swarmTextures");
 
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};

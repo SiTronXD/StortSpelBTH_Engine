@@ -42,7 +42,8 @@ public:
         vk::CommandPool* transCmdPool,
         VulkanRenderer* vulkanRenderer);
 
-    uint32_t addMesh(std::string&& meshPath);
+    uint32_t addMesh(std::string&& meshPath, 
+        std::string&& texturesPath = "");
     uint32_t addTexture(std::string&& texturePath, 
         const TextureSamplerSettings& textureSamplerSettings = { vk::Filter::eLinear });
 
