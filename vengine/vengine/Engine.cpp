@@ -107,7 +107,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         if (ImGui::Button("Close Me"))
             open = false;
         ImGui::End();
-        
+
         // ------------------------------------
         this->sceneHandler.updateToNextScene();
 

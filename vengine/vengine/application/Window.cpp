@@ -27,7 +27,7 @@ void Window::initWindow(
 
     this->titleName = name;
 
-    // Initializes sdl window
+    // Initializes SDL
     SDL_Init(SDL_INIT_VIDEO);
 
     // Get size from config
@@ -64,6 +64,13 @@ void Window::update()
             SDL_DISABLE :
             SDL_ENABLE
         );
+
+        // Relative mode for mouse delta movement
+        SDL_SetRelativeMouseMode(
+            Input::shouldHideCursor ? 
+            SDL_TRUE : 
+            SDL_FALSE
+        );
     }
 
     // Update input
@@ -71,6 +78,7 @@ void Window::update()
 
     // Update current keys
     SDL_Event event;
+    Input::setDeltaCursor(0, 0);
     while (SDL_PollEvent(&event) != 0) {
         ImGui_ImplSDL2_ProcessEvent(&event);
         if (event.type == SDL_QUIT ||
@@ -97,6 +105,28 @@ void Window::update()
                 event.type == SDL_MOUSEBUTTONDOWN
             );
         }
+
+        // Mouse motion
+        if (event.type == SDL_MOUSEMOTION)
+        {
+            Input::setDeltaCursor(
+                event.motion.xrel, 
+                event.motion.yrel
+            );
+        }
+    }
+
+    // Set mouse pos
+    if (Input::shouldSetMousePos)
+    {
+        Input::shouldSetMousePos = false;
+
+        // Set mouse position
+        SDL_WarpMouseInWindow(
+            this->windowHandle,
+            Input::requestedMouseX,
+            Input::requestedMouseY
+        );
     }
 
     // Update mouse position
@@ -104,16 +134,6 @@ void Window::update()
     int mouseY = 0;
     SDL_GetMouseState(&mouseX, &mouseY);
     Input::setCursor(mouseX, mouseY);
-
-    // Lock cursor if it should
-    if (Input::isCursorLocked)
-    {
-        SDL_WarpMouseInWindow(
-            this->windowHandle,
-            this->width / 2,
-            this->height / 2
-        );
-    }
 }
 
 void Window::initImgui()

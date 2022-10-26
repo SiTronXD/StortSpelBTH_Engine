@@ -133,12 +133,15 @@ private:
 
 	static int cursorX;
 	static int cursorY;
-	static int lastCursorX;
-	static int lastCursorY;
-	static bool isCursorLocked;
+	static int deltaCursorX;
+	static int deltaCursorY;
+	static int requestedMouseX;
+	static int requestedMouseY;
+	static bool shouldSetMousePos;
 	static bool shouldHideCursor;
 	static bool lastShouldHideCursor;
 
+	static void setDeltaCursor(const int& deltaCursorX, const int& deltaCursorY);
 	static void setCursor(const int& newCursorX, const int& newCursorY);
 	static void update();
 
@@ -146,7 +149,7 @@ private:
 	static void setMouseButton(const Mouse& mouseButtonCode, const bool& value);
 
 public:
-	static void setLockCursorPosition(const bool& lock);
+	static void setCursorPosition(const int& newCursorX, const int& newCursorY);
 	static void setHideCursor(const bool& hide);
 
 	static inline bool isKeyDown(const Keys& key) { return Input::keyDown[key]; }
@@ -157,6 +160,6 @@ public:
 	static inline bool isMouseButtonReleased(const Mouse& mouse) { return !Input::mouseButtonDown[mouse] && Input::lastmouseButtonDown[mouse]; }
 	static inline const int& getMouseX() { return Input::cursorX; }
 	static inline const int& getMouseY() { return Input::cursorY; }
-	static inline const int getMouseDeltaX() { return Input::lastCursorX - Input::cursorX; }
-	static inline const int getMouseDeltaY() { return Input::lastCursorY - Input::cursorY; }
+	static inline const int getMouseDeltaX() { return Input::deltaCursorX; }
+	static inline const int getMouseDeltaY() { return Input::deltaCursorY; }
 };
