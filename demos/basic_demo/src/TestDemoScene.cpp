@@ -122,6 +122,15 @@ void TestDemoScene::init()
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
 
+	Entity swarmEntity = this->createEntity();
+	this->setComponent<MeshComponent>(swarmEntity);
+	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
+	swarmTransform.position = glm::vec3(10.0f, 0.0f, 30.f);
+	MeshComponent& swarmMesh = this->getComponent<MeshComponent>(swarmEntity);
+	swarmMesh.meshID = Scene::getResourceManager()->addMesh(
+		"assets/models/Swarm_Model.fbx",
+		"assets/textures/swarmTextures");
+
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};
 	samplerSettings.filterMode = vk::Filter::eNearest;

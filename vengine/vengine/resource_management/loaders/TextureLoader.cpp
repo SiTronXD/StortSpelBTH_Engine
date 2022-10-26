@@ -164,9 +164,18 @@ void TextureLoader::processTextureName(
         return;
     }
 
+    // Replace '\' with '/'
+    std::string tempFilePathFromModel = filePathFromModel;
+    for (size_t i = 0; i < tempFilePathFromModel.length(); ++i)
+    {
+        if (tempFilePathFromModel[i] == '\\')
+        {
+            tempFilePathFromModel[i] = '/';
+        }
+    }
+
     // Split filename to make folderStrings contain folder/texture names 
     // in std::vector elements
-    std::string tempFilePathFromModel = filePathFromModel;
     std::vector<std::string> folderStrings;
     StringHelper::splitString(tempFilePathFromModel, '/', folderStrings);
 
