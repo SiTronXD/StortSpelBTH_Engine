@@ -60,7 +60,7 @@ void TestDemoScene::init()
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
 			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
 
-			this->setComponent<Collider>(e, Collider::createBox(t.scale));
+			this->setComponent<Collider>(e, Collider::createBox(t.scale, rand() % 2));
 			this->setComponent<Rigidbody>(e);
 			this->setComponent<MeshComponent>(e, 0);
 		}
@@ -347,3 +347,14 @@ void TestDemoScene::update()
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
 	}
 }
+
+void TestDemoScene::onCollisionStay(Entity e1, Entity e2)
+{
+	//Log::write("Collision Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+}
+
+void TestDemoScene::onTriggerStay(Entity e1, Entity e2)
+{
+	//Log::write("Trigger Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+}
+

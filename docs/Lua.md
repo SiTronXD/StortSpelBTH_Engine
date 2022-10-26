@@ -259,9 +259,9 @@ local Mesh = { -- When getting from scene.getComponent
 }
 
 --Example of use
-local mesh = scene.getComponent(CompType.Mesh, e)
+local mesh = scene.getComponent(e, CompType.Mesh)
 mesh.meshID = resources.addMesh("test.obj")
-scene.setComponent(CompType.Mesh, e, mesh)
+scene.setComponent(e, CompType.Mesh, mesh)
 ~~~
 
 #### Script
@@ -277,9 +277,9 @@ local Script = { -- When getting from scene.getComponent
 }
 
 --Example of use
-local script = scene.getComponent(CompType.Script, e) -- Lua table
+local script = scene.getComponent(e, CompType.Script) -- Lua table
 print(script.ID)
-scene.setComponent(CompType.Script, e, "script.lua")
+scene.setComponent(e, CompType.Script, "script.lua")
 ~~~
 
 #### Camera
@@ -292,9 +292,9 @@ local Camera = { -- When getting from scene.getComponent
 }
 
 --Example of use
-local cam = scene.getComponent(CompType.Camera, e)
+local cam = scene.getComponent(e, CompType.Camera)
 cam.fov = 90
-scene.setComponent(CompType.Camera, e, cam)
+scene.setComponent(e, CompType.Camera, cam)
 ~~~~~~
 
 #### Collider
@@ -310,11 +310,11 @@ local Collider = {
 }
 
 --Example of use
-local col = scene.getComponent(CompType.Collider, e)
+local col = scene.getComponent(e, CompType.Collider)
 col.type = ColliderType.Sphere
 col.radius = 2.5
 col.isTrigger = false
-scene.setComponent(CompType.Collider, e, col)
+scene.setComponent(e, CompType.Collider, col)
 ~~~
 
 #### Rigidbody
@@ -332,9 +332,9 @@ local RigidBody = {
 }
 
 --Example of use
-local rb = scene.getComponent(CompType.Rigidbody, e)
+local rb = scene.getComponent(e, CompType.Rigidbody)
 rb.velocity = rb.velocity + vector(0, 10, 0)
-scene.setComponent(CompType.Rigidbody, e, rb)
+scene.setComponent(e, CompType.Rigidbody, rb)
 ~~~
 
 #### Animation
@@ -347,9 +347,9 @@ local Animation = {
 }
 
 --Example of use
-local anim = scene.getComponent(CompType.Animation, e)
+local anim = scene.getComponent(e, CompType.Animation)
 anim.timeScale = -2 -- Backwards at double speed
-scene.setComponent(CompType.Animation, e, anim)
+scene.setComponent(e, CompType.Animation, anim)
 ~~~
 
 ## Input
@@ -753,6 +753,8 @@ When using the script, some function names will be called from C++ if they are d
 ~~~ Lua
 script:init() -- Called after component has been created
 script:update(dt) -- Called every new frame where dt is the delta time.
+script:onCollisionStay(e) -- Called when colliding with another entity
+script:onTriggerStay(e) -- Called when trigger colliding with another entity
 ~~~
 The script table created and used in these functions also have some extra member elements that has been provided by the C++ side.
 ~~~ Lua

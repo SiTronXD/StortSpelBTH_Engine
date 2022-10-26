@@ -159,6 +159,14 @@ void Scene::update()
 
 }
 
+void Scene::onCollisionStay(Entity e1, Entity e2)
+{
+}
+
+void Scene::onTriggerStay(Entity e1, Entity e2)
+{
+}
+
 void Scene::setSceneHandler(SceneHandler& sceneHandler)
 {
 	this->sceneHandler = &sceneHandler;

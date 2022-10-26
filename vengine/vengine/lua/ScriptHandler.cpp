@@ -162,6 +162,47 @@ void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 	}
 }
 
+void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger)
+{
+	const char* func = isTrigger ? "onTriggerStay" : "onCollisionStay";
+	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e1);
+
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	if (luaL_dofile(L, script.path) != LUA_OK)
+	{
+		LuaH::dumpError(L);
+	}
+	else
+	{
+		lua_getfield(L, -1, func); // Get new collision function
+		lua_setfield(L, -3, func); // Set instance collision function to the new one
+		lua_pop(L, 1);
+	}
+
+	lua_getfield(L, -1, func);
+	if (lua_type(L, -1) == LUA_TNIL)
+	{
+		lua_pop(L, 2);
+		return;
+	}
+
+	lua_pushtransform(L, transform);
+	lua_setfield(L, -3, "transform");
+
+	lua_pushvalue(L, -2); // self
+	lua_pushinteger(L, e2); // entity hit
+
+	// call function
+	LUA_ERR_CHECK(L, lua_pcall(L, 2, 0, 0));
+
+	lua_getfield(L, -1, "transform");
+	if (!lua_isnil(L, -1))
+	{
+		transform = lua_totransform(L, -1);
+	}
+	lua_pop(L, 2);
+}
+
 void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)
 {
 	for (auto it = vec.begin(); it != vec.end();)

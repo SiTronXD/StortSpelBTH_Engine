@@ -41,6 +41,7 @@ public:
 
 	bool runScript(std::string& path);
 	void setScriptComponent(Entity entity, std::string& path);
+	void runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger);
 	void updateSystems(std::vector<LuaSystem>& vec);
 
 	void update();
