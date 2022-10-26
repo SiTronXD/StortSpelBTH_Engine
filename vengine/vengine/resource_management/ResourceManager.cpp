@@ -41,7 +41,7 @@ uint32_t ResourceManager::addMesh(std::string&& meshPath)
         Log::warning("Mesh \""+meshPath+"\" was already added!");                
         return this->meshPaths[meshPath];        
     } 
-    
+
     MeshData meshData = this->meshLoader.importMeshData(meshPath);
     // No mesh imported, send default mesh back
     if (meshData.vertexStreams.positions.size() == 0) { return 0; }
@@ -120,6 +120,28 @@ uint32_t ResourceManager::addTexture(
     );
 
     return textures.size() -1;
+}
+
+uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
+{
+	using namespace vengine_helper::config;
+
+	if (this->collisionPaths.count(collisionPath) != 0)
+	{
+		//TODO: should be able to log what mesh
+		Log::warning("Collision \"" + collisionPath + "\" was already added!");
+		return this->collisionPaths[collisionPath];
+	}
+    
+	collisionLoader.loadCollisionShape(collisionPath);
+	////NOTE: prevSize as key only works if we never remove resources the map...
+	//this->meshPaths.insert({meshPath, this->meshPaths.size()});
+    //
+	////NOTE: meshes.size as key only works if we never remove resources the map...
+	//// Create mesh, insert into map of meshes
+	//meshes.insert({meshes.size(), meshLoader.createMesh(meshData)});
+
+	return collisionsData.size() - 1;
 }
 
 void ResourceManager::cleanup()

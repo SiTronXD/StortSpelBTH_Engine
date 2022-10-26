@@ -10,6 +10,7 @@
 #include "../dev/Log.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "loaders/MeshLoader.hpp"
+#include "loaders/ColliderLoader.hpp"
 
 class Engine;
 struct ImageData;   //Defined in MeshLoader
@@ -22,12 +23,15 @@ private:
     std::unordered_map<std::string, uint32_t> meshPaths;
     std::unordered_map<std::string, uint32_t> texturePaths;
     std::unordered_map<std::string, uint32_t> samplerSettings;
-    
+	std::unordered_map<std::string, uint32_t> collisionPaths;
+
     std::unordered_map<uint32_t, Mesh>  meshes;
+	std::unordered_map<uint32_t, btCollisionShape*> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
 
     MeshLoader      meshLoader;
+	ColliderLoader  collisionLoader;
     TextureLoader   textureLoader;
 
     Device* dev = nullptr;
@@ -45,10 +49,12 @@ public:
     uint32_t addMesh(std::string&& meshPath);
     uint32_t addTexture(std::string&& texturePath, 
         const TextureSamplerSettings& textureSamplerSettings = { vk::Filter::eLinear });
+	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
 
     Mesh& getMesh(uint32_t id);
     Texture& getTexture(uint32_t id);
     TextureSampler& getTextureSampler(uint32_t id);
+	btCollisionShape* getCollisionShapeFromMesh(std::string&& collisionPath);
 
     size_t getNumMeshes();
     size_t getNumTextures();
