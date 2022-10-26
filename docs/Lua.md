@@ -7,6 +7,7 @@ This file contains everything lua related that has been implemented in to Vengin
 	* [Vector](#Vector)
 * [Exposed Systems:](#Exposed-Systems)
 	* [Scene](#Scene)
+		* [Components](#Components)
 	* [Input](#Input)
 	* [Resource Manager](#Resource-Manager)
 	* [Network](#Network)
@@ -214,6 +215,143 @@ scene.removeComponent(int : entity, int : component_type)
 scene.removeComponent(entity, CompType.Mesh)
 ~~~
 
+### Components
+The amount of components supported grows with the engine. This section goes over the member variables that the components have and how to use them in combination with the [scene](#Scene) global and [prefabs](#Prefabs) These are the ones currently supported in lua:
+* [Transform](#Transform)
+* [MeshComponent](#MeshComponent)
+* [Script](#Script)
+* [Camera](#Camera)
+* [Collider](#Collider)
+* [Rigidbody](#Rigidbody)
+* [Animation](#Animation)
+* AudioListener (not completely done)
+* AudioSource (not completely done)
+
+#### Transform
+The transform component consists of three [vectors](#Vector) that describe the position, rotation and scale of an entity in the scene.
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Transform = {
+	vector : position,
+	vector : rotaiton,
+	vector : scale
+}
+
+-- Member functions
+transform:right() -- get local right vector
+transform:up() -- get local up vector
+transform:forward() -- get local forward vector
+
+--Example of use
+local t = scene.getComponent(CompType.Transform, e)
+t.position = t.position + vector(1, 0, 1)
+scene.setComponent(CompType.Transform, e, t)
+~~~
+
+#### MeshComponent
+The mesh component for now only consists of an integer that is the mesh ID in the [Resource manager](#ResourceManager). In some instances strings can be used for creation
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Mesh = int : mesh_ID
+local Mesh = string : mesh_path -- For creation strings can be used
+local Mesh = { -- When getting from scene.getComponent
+	int : meshID
+}
+
+--Example of use
+local mesh = scene.getComponent(CompType.Mesh, e)
+mesh.meshID = resources.addMesh("test.obj")
+scene.setComponent(CompType.Mesh, e, mesh)
+~~~
+
+#### Script
+The script component is used for creating scriptable components with updating every frame. More information in [Script](#Script-Component).
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Script = string : path
+local Script = { -- When getting from scene.getComponent
+	int : ID,
+	string : path,
+	Transform : transform,
+	additional members...
+}
+
+--Example of use
+local script = scene.getComponent(CompType.Script, e) -- Lua table
+print(script.ID)
+scene.setComponent(CompType.Script, e, "script.lua")
+~~~
+
+#### Camera
+The camera component for now only consists of an float for the FOV (field of view)
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Camera = float : fov
+local Camera = { -- When getting from scene.getComponent
+	float : fov
+}
+
+--Example of use
+local cam = scene.getComponent(CompType.Camera, e)
+cam.fov = 90
+scene.setComponent(CompType.Camera, e, cam)
+~~~~~~
+
+#### Collider
+The collider component is used for physics and can be combined with [rigidbody](#Rigidbody) for it to be dynamic. Only using a collider component will result with a kinematic physicsbody.
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Collider = {
+	int : type, -- ColliderType global useful here
+	bool : isTrigger,
+	float : radius, -- Only needed/recieved for spheres and capsules
+	float : height, -- Only needed/recieved for capsules
+	vector : extents -- Only needed/recieved for boxes
+}
+
+--Example of use
+local col = scene.getComponent(CompType.Collider, e)
+col.type = ColliderType.Sphere
+col.radius = 2.5
+col.isTrigger = false
+scene.setComponent(CompType.Collider, e, col)
+~~~
+
+#### Rigidbody
+The rigidbody component is used to make a physics object dynamic in the scene. Collisions and acceleration is supported. Must be used in combination with [collider component](#Collider), will not create object in [physics engine](#Physics) otherwise.
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local RigidBody = {
+	float : mass,
+	float : gravityMult,
+	float : friction,
+	vector : posFactor,
+	vector : rotFactor,
+	vector : acceleration,
+	vector : velocity
+}
+
+--Example of use
+local rb = scene.getComponent(CompType.Rigidbody, e)
+rb.velocity = rb.velocity + vector(0, 10, 0)
+scene.setComponent(CompType.Rigidbody, e, rb)
+~~~
+
+#### Animation
+The animation component is used to apply an animation on an enity with a [mesh](#MeshComponent). Currently only the timer and playback speed can be altered, but more will be added in the future. Currently only the first animation in the mesh will be played and can't be switched (will be fixed).
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Animation = {
+	float : timer,
+	float : timeScale
+}
+
+--Example of use
+local anim = scene.getComponent(CompType.Animation, e)
+anim.timeScale = -2 -- Backwards at double speed
+scene.setComponent(CompType.Animation, e, anim)
+~~~
+
 ## Input
 The input global that has been created in the lua environment is the main interface of the keyboard and mouse inputs.
 
@@ -308,6 +446,15 @@ input.getMouseDelta() -- Returns vector
 ## Resource Manager
 The resources global that has been created in the lua environment is the main interface of the resource manager in C++. It is used to load in a variety of assets from disk, such as meshes and textures.
 
+With the resources global comes another global table that is related to Filter modes to textures. These value can be used in a table when [adding a texture](#addTexture) to the resource manager.
+~~~ Lua
+-- Filters
+Filters.Nearest
+Filters.Linear
+Filters.CubicEXT
+Filters.CubicIMG
+~~~
+
 ### Functions
 List of functions related to the *resources* global.
 
@@ -319,8 +466,21 @@ resources.addMesh(string : mesh_path) -- Returns the mesh ID
 
 #### addTexture
 This functions loads and creates a texture to be used in the engine. It returns an ID of the texture that can be used to reference it in different part of the engine such as in components. If the path given already has been loaded, the ID is returned immediatly. If the texture couldn't be created a default texture ID is returned.
+Additionally a table containing sampling information can be sent as a second argument.
 ~~~ Lua
 resources.addTexture(string : texture_path) -- Returns the texture ID
+resources.addTexture(string : texture_path, table : sampler_settings) -- optional
+
+-- Example
+local setttings = {}
+settings.filterMode = Filters.Linear
+local textureID = resources.addTexture("test.png", settings)
+~~~
+
+#### addAudio
+Loads audio file that can be used in the engine. Returns ID if the path sent is successfully loaded the audiofile. Otherwise the return is nil.
+~~~ Lua
+resources.addAudio(string : audio_path) -- Returns the audio ID (nil if not found)
 ~~~
 
 ## Network

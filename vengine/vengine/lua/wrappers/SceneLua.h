@@ -2,7 +2,6 @@
 
 #include <vector>
 #include <string>
-#include "../dev/LuaHelper.hpp"
 #include "../../application/SceneHandler.hpp"
 #include "../../components/Script.hpp"
 #include "../../components/MeshComponent.hpp"
@@ -12,12 +11,17 @@ class SceneLua
 {
 private:
 	// COUNT: Getting the number of Components
-	enum class CompType { TRANSFORM, MESH, SCRIPT, CAMERA, COUNT };
+	enum class CompType { TRANSFORM, MESH, SCRIPT, CAMERA, COLLIDER, RIGIDBODY, ANIMATION, AUDIOLISTENER, AUDIOSOURCE, COUNT };
 	inline static const std::vector<std::string> compTypes {
 		"Transform",
 		"Mesh",
 		"Script",
-		"Camera"
+		"Camera",
+		"Collider",
+		"Rigidbody",
+		"Animation",
+		"AudioListener",
+		"AudioSource"
 	};
 
 	// COUNT: Getting the number of Systems

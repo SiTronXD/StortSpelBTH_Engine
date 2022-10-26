@@ -17,7 +17,7 @@ NetworkHandler* Scene::getNetworkHandler()
 
 ScriptHandler* Scene::getScriptHandler()
 {
-	return sceneHandler->getScriptHandler();
+	return this->sceneHandler->getScriptHandler();
 }
 
 ResourceManager* Scene::getResourceManager()

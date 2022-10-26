@@ -6,6 +6,12 @@
 class PhysicsEngineLua
 {
 private:
+	inline static const std::vector<std::string> colliderTypes{
+		"Sphere",
+		"Box",
+		"Capsule"
+	};
+
 	static int lua_renderDebugShapes(lua_State* L);
 	static int lua_raycast(lua_State* L);
 	static int lua_testContact(lua_State* L);

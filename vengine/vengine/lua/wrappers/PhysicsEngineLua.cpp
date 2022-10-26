@@ -75,4 +75,12 @@ void PhysicsEngineLua::lua_openphysics(lua_State* L, PhysicsEngine* physicsEngin
 	lua_pushlightuserdata(L, physicsEngine);
 	luaL_setfuncs(L, methods, 1);
 	lua_setglobal(L, "physics");
+
+	lua_newtable(L);
+	for (size_t i = 0; i < colliderTypes.size(); i++)
+	{
+		lua_pushnumber(L, (int)i);
+		lua_setfield(L, -2, colliderTypes[i].c_str());
+	}
+	lua_setglobal(L, "ColliderType");
 }
