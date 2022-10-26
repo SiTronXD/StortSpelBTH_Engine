@@ -39,7 +39,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     // Window
     Window window;
     window.initWindow(appName);
-    window.setFullscreen(true/*DEF<bool>(W_FULLSCREEN)*/);
+    window.setFullscreen(DEF<bool>(W_FULLSCREEN));
     
     // Create vulkan renderer instance
     VulkanRenderer renderer;
