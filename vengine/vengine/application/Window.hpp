@@ -22,6 +22,8 @@ private:
     std::string titleName;
 
     SDL_Window* windowHandle;
+    int width;
+    int height;
 
 public:
     Window();

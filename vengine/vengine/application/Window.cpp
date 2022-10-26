@@ -13,7 +13,9 @@ using namespace vengine_helper::config;
 
 Window::Window()
     : windowHandle(nullptr),
-    isRunning(true)
+    isRunning(true),
+    width(0),
+    height(0)
 {}
 
 void Window::initWindow(
@@ -29,16 +31,16 @@ void Window::initWindow(
     SDL_Init(SDL_INIT_VIDEO);
 
     // Get size from config
-    int width = DEF<int>(W_WIDTH);
-    int height = DEF<int>(W_HEIGHT);
+    this->width = DEF<int>(W_WIDTH);
+    this->height = DEF<int>(W_HEIGHT);
 
     // Configure SDL Window...    
     this->windowHandle = SDL_CreateWindow(
         this->titleName.c_str(),
         SDL_WINDOWPOS_CENTERED, 
         SDL_WINDOWPOS_CENTERED, 
-        width, 
-        height, 
+        this->width, 
+        this->height, 
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
     );
 }
@@ -54,6 +56,17 @@ void Window::registerResizeEvent(bool& listener)
 
 void Window::update()
 {
+    // Hide cursor if it should
+    if (Input::shouldHideCursor != Input::lastShouldHideCursor)
+    {
+        SDL_ShowCursor(
+            Input::shouldHideCursor ? 
+            SDL_DISABLE :
+            SDL_ENABLE
+        );
+    }
+
+    // Update input
     Input::update();
 
     // Update current keys
@@ -91,6 +104,16 @@ void Window::update()
     int mouseY = 0;
     SDL_GetMouseState(&mouseX, &mouseY);
     Input::setCursor(mouseX, mouseY);
+
+    // Lock cursor if it should
+    if (Input::isCursorLocked)
+    {
+        SDL_WarpMouseInWindow(
+            this->windowHandle,
+            this->width / 2,
+            this->height / 2
+        );
+    }
 }
 
 void Window::initImgui()
@@ -106,20 +129,24 @@ void Window::shutdownImgui()
 void Window::setFullscreen(bool fullscreen)
 {
     // Get size from config
-    int width = DEF<int>(W_WIDTH);
-    int height = DEF<int>(W_HEIGHT);
+    this->width = DEF<int>(W_WIDTH);
+    this->height = DEF<int>(W_HEIGHT);
 
     // Use display size when fullscreen
     if (fullscreen)
     {
         SDL_DisplayMode dm{};
         SDL_GetCurrentDisplayMode(0, &dm);
-        width = dm.w;
-        height = dm.h;
+        this->width = dm.w;
+        this->height = dm.h;
     }
 
     // Apply new size
-    SDL_SetWindowSize(this->windowHandle, width, height);
+    SDL_SetWindowSize(
+        this->windowHandle, 
+        this->width, 
+        this->height
+    );
 
     // Fullscreen
     SDL_SetWindowFullscreen(

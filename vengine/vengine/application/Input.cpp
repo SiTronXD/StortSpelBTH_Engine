@@ -10,6 +10,9 @@ int Input::cursorX = 0.0;
 int Input::cursorY = 0.0;
 int Input::lastCursorX = 0.0;
 int Input::lastCursorY = 0.0;
+bool Input::isCursorLocked = false;
+bool Input::shouldHideCursor = false;
+bool Input::lastShouldHideCursor = false;
 
 void Input::setCursor(const int& newCursorX, const int& newCursorY)
 {
@@ -35,6 +38,9 @@ void Input::update()
 	{
 		Input::lastmouseButtonDown[mouse] = val;
 	}
+
+	// Last should hide cursor
+	Input::lastShouldHideCursor = Input::shouldHideCursor;
 }
 
 void Input::setKey(const Keys& keyCode, const bool& value)
@@ -90,4 +96,14 @@ void Input::setMouseButton(const Mouse& mouseButtonCode, const bool& value)
 			)
 		);
 	}
+}
+
+void Input::setLockCursorPosition(const bool& lock)
+{
+	Input::isCursorLocked = lock;
+}
+
+void Input::setHideCursor(const bool& hide)
+{
+	Input::shouldHideCursor = hide;
 }
