@@ -108,15 +108,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
             open = false;
         ImGui::End();
         
-        // TODO: remove this
-        static bool lockCursor = false;
-        if (Input::isKeyPressed(Keys::ESC))
-        {
-            lockCursor = !lockCursor;
-            Input::setLockCursorPosition(lockCursor);
-            Input::setHideCursor(lockCursor);
-        }
-
         // ------------------------------------
         this->sceneHandler.updateToNextScene();
 
