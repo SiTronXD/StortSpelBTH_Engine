@@ -451,8 +451,8 @@ With the resources global comes another global table that is related to Filter m
 -- Filters
 Filters.Nearest
 Filters.Linear
-Filters.CubicEXT
-Filters.CubicIMG
+Filters.CubicEXT -- Not available currently (warnings)
+Filters.CubicIMG -- Not available currently (warnings)
 ~~~
 
 ### Functions
