@@ -9,7 +9,7 @@ class AIHandler
 {
     SceneHandler *sh = nullptr; 
     EventSystem eventSystem;
-    PathFindingManager pathFindingManager;
+    
 
     void updateEntityFSMs()
 	{
@@ -35,7 +35,7 @@ class AIHandler
     }
 
     void addImguiToFSM(const std::string& name, std::function<void(FSM* fsm)> imguiLambda) 
-    {
+    {        
         this->FSMimguiLambdas[this->FSMs[name]] = imguiLambda;		
     }
 
