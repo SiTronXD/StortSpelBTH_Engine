@@ -47,6 +47,14 @@ class AIHandler
 
     }
 
+	void clean()
+	{
+		for (auto p : FSMs)
+		{
+			p.second->clean();
+		}
+	}
+
     void createAIEntity(uint32_t entityID, FSM* fsm)
 	{
 		// Register entityID to a specific FSM (MovementFSM in this test)
