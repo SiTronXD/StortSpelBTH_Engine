@@ -1,17 +1,17 @@
 #include "TextureLoader.hpp"
+#include "MeshLoader.hpp"
 #include "../Configurator.hpp"
 #include "stb_image.h"
 #include "tracy/Tracy.hpp"
 #include "../../graphics/Texture.hpp"
+#include "../../graphics/Buffer.hpp"
+#include "../../graphics/VulkanRenderer.hpp"
+#include "../../dev/StringHelper.hpp"
 #include "assimp/scene.h"
 #include "assimp/material.h"
 #include "assimp/Importer.hpp" 
 #include "../ResourceManager.hpp" // Importing mesh with Assimp needs to add Texture resources
 #include <span>
-
-#include "../../graphics/Buffer.hpp"
-#include "../../graphics/VulkanRenderer.hpp"
-#include "MeshLoader.hpp"
 
 void TextureLoader::init(VmaAllocator *vma,
                                         vk::PhysicalDevice *physiscalDev,
@@ -31,27 +31,33 @@ std::vector<std::string> TextureLoader::assimpGetTextures(const aiScene *scene)
 {
     std::vector<std::string> textureList(scene->mNumMaterials);
     int textureIndex =
-        0; /// index of the texture that corresponds to the Diffuse material
+        0; // index of the texture that corresponds to the Diffuse material
 
-    /// For each material, if texture file name exists, store it in vector
+    // For each material, if texture file name exists, store it in vector
     for (auto *material :
-        std::span<aiMaterial *>(scene->mMaterials, scene->mNumMaterials)) {
-
-    /// Check for a Diffure Texture
-    if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) {
-        /// get the Path of the texture file
-        aiString path;
-        if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) {
-            textureList[textureIndex] = std::string(path.C_Str());
+        std::span<aiMaterial *>(scene->mMaterials, scene->mNumMaterials)) 
+    {
+        // Check for a diffuse texture
+        if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) 
+        {
+            // Get the path of the texture file
+            aiString path;
+            if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) 
+            {
+                textureList[textureIndex] = std::string(path.C_Str());
+            }
         }
+
+        textureIndex++;
     }
-    textureIndex++; /// Which Material the
-    }
+
     return textureList;
 }
 
 void TextureLoader::assimpTextureImport(
-    const aiScene* scene, std::vector<uint32_t>& materialToTexture)
+    const aiScene* scene, 
+    const std::string& texturesFolderPath,
+    std::vector<uint32_t>& materialToTexture)
 {
     // Get vector of all materials
     std::vector<std::string> textureNames =
@@ -65,7 +71,11 @@ void TextureLoader::assimpTextureImport(
             // Use default textures for models if textures are missing
             materialToTexture[i] = 0;
         }
-        else {
+        else 
+        {
+            // Extract the name from texture path, and add custom folder path
+            this->processTextureName(textureNames[i], texturesFolderPath);
+
             // Create texture, use the index returned by our createTexture function
             materialToTexture[i] =
                 this->resourceMan->addTexture(textureNames[i].c_str());
@@ -141,6 +151,27 @@ stbi_uc *TextureLoader::loadTextureFile(const std::string &filename, int *width,
                                             // channel, we have 4 channels! (rgba)
 
     return image;
+}
+
+void TextureLoader::processTextureName(
+    std::string& filePathFromModel, 
+    const std::string& texturesFolderPath)
+{
+    // Make sure the filename string is actually 
+    // supposed to be processed
+    if (texturesFolderPath == "")
+    {
+        return;
+    }
+
+    // Split filename to make folderStrings contain folder/texture names 
+    // in std::vector elements
+    std::string tempFilePathFromModel = filePathFromModel;
+    std::vector<std::string> folderStrings;
+    StringHelper::splitString(tempFilePathFromModel, '/', folderStrings);
+
+    // Add custom folder path in front of texture name
+    filePathFromModel = texturesFolderPath + "/" + folderStrings[folderStrings.size() - 1];
 }
 
 void TextureLoader::createTextureImage(

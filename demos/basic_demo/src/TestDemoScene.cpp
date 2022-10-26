@@ -99,7 +99,8 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Amogus/source/1.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+				"assets/models/Amogus/source/1.fbx");
 			amogusMeshID = newMeshComp.meshID;
 		}
 		else
@@ -108,7 +109,9 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+				"assets/models/Stormtrooper/source/silly_dancing.fbx",
+				"assets/models/Stormtrooper/textures");
 		}
 
 		this->setComponent<AnimationComponent>(aniIDs[i]);
