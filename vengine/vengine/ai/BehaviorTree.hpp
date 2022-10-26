@@ -56,7 +56,7 @@
 //// - - Trees that needs to be updated More frequently but not not too critical. ex, once every 0.5 sec
 //// - - Trees that needs to be updated very frequently but only after a special event is triggered. ex, less than times per 0.5 sec
 //// - - Trees update rate can also be dynamic (Active Sensing), by having a varying value that specifies of often it should update. And let this value depend on how critical the current situation is.
-
+#include "PathFinding.h"
 
 class BehaviorTree {
 private:
@@ -82,7 +82,7 @@ protected:
     BTCreateHelper&  c = create; //Shorthand for Creates
     
 public:     
-
+    static PathFindingManager pathFindingManager;
     virtual ~BehaviorTree(){
         for(auto rq : requiredComponents) {delete rq;}
         std::stack<Node*> stack;

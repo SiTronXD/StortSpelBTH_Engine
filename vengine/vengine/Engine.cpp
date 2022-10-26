@@ -68,6 +68,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setVulkanRenderer(&renderer);
     this->sceneHandler.setUIRenderer(&uiRenderer);
     this->sceneHandler.setDebugRenderer(&debugRenderer);
+    this->sceneHandler.setAIHandler(&aiHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
@@ -110,7 +111,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         static bool debugInfo = true;
 
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
-        ImGui::SetWindowPos(ImVec2{40.f,40.f}, ImGuiCond_Once);
+        ImGui::SetWindowPos(ImVec2{0.f,0.f}, ImGuiCond_Once);
         ImGui::Begin("Debug info",&debugInfo,ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize );
             ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);                                    
         ImGui::End();
@@ -127,6 +128,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     }
     this->networkHandler.deleteServer();
     this->scriptHandler.cleanup();
+    this->aiHandler.clean();
 
     renderer.cleanup();
 }

@@ -117,6 +117,11 @@ ScriptHandler* SceneHandler::getScriptHandler()
 	return this->scriptHandler;
 }
 
+void SceneHandler::setAIHandler(AIHandler* aiHandler)
+{
+    this->aiHandler = aiHandler;
+}
+
 void SceneHandler::setPhysicsEngine(PhysicsEngine* physicsEngine)
 {
 	this->physicsEngine = physicsEngine;
