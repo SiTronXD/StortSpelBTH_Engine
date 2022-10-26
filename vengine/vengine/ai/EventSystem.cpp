@@ -117,7 +117,7 @@ void EventSystem::update()
 								<< std::endl;
 
 					entityEventLastReturn[entityID][eventTransition] = true;
-					break; 
+					//break; 
 				}
 			}
 			else if (entityEventLastReturn[entityID][eventTransition])
