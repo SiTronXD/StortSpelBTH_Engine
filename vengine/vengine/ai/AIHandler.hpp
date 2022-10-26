@@ -2,12 +2,14 @@
 #include "FSM.hpp"
 #include "../application/SceneHandler.hpp"
 #include "../components/FSMAgentComponent.hpp"
+#include "PathFinding.h"
 #include <cstdint>
 
 class AIHandler
 {
     SceneHandler *sh = nullptr; 
     EventSystem eventSystem;
+    PathFindingManager pathFindingManager;
 
     void updateEntityFSMs()
 	{
@@ -41,6 +43,7 @@ class AIHandler
     void init(SceneHandler *sh)
     {
         this->sh = sh; 
+        //pathFindingManager        
 
     }
 
