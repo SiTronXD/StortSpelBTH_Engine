@@ -8,7 +8,7 @@
 #include "vengine/test/TestScene2.hpp"
 
 TestDemoScene::TestDemoScene()
-	: testEntity(-1)//, testEntity2(-1)
+	: camEntity(-1), testEntity(-1)//, testEntity2(-1)
 	, aniIDs{-1, -1, -1, -1}
 	, aniActive{true, true, true, true}
 {
@@ -25,9 +25,9 @@ void TestDemoScene::init()
 	this->timer = 0.0f;
 
 	// Camera
-	Entity camEntity = this->createEntity();
-	this->setComponent<Camera>(camEntity);
-	this->setMainCamera(camEntity);
+	this->camEntity = this->createEntity();
+	this->setComponent<Camera>(this->camEntity);
+	this->setMainCamera(this->camEntity);
 
 	// Create entity (already has transform)
 	this->testEntity = this->createEntity();
@@ -100,7 +100,8 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Amogus/source/1.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+				"assets/models/Amogus/source/1.fbx");
 			amogusMeshID = newMeshComp.meshID;
 		}
 		else
@@ -109,7 +110,9 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh("assets/models/Stormtrooper/source/silly_dancing.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+				"assets/models/Stormtrooper/source/silly_dancing.fbx",
+				"assets/models/Stormtrooper/textures");
 		}
 
 		this->setComponent<AnimationComponent>(aniIDs[i]);
@@ -119,6 +122,15 @@ void TestDemoScene::init()
 	}
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
+
+	Entity swarmEntity = this->createEntity();
+	this->setComponent<MeshComponent>(swarmEntity);
+	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
+	swarmTransform.position = glm::vec3(10.0f, 0.0f, 30.f);
+	MeshComponent& swarmMesh = this->getComponent<MeshComponent>(swarmEntity);
+	swarmMesh.meshID = Scene::getResourceManager()->addMesh(
+		"assets/models/Swarm_Model.fbx",
+		"assets/textures/swarmTextures");
 
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};

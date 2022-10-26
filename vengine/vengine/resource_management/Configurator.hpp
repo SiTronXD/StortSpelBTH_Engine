@@ -18,6 +18,7 @@ constexpr std::string_view CAM_TARGET_Y = "camera_target_y" ;
 constexpr std::string_view CAM_TARGET_Z = "camera_target_z" ;
 constexpr std::string_view W_WIDTH      = "window_width" ;
 constexpr std::string_view W_HEIGHT     = "window_height" ;
+constexpr std::string_view W_FULLSCREEN = "window_fullscreen";
 constexpr std::string_view P_ASSETS     = "path_assets" ;
 constexpr std::string_view P_MODELS     = "path_models" ;
 constexpr std::string_view P_TEXTURES   = "path_textures" ;
@@ -40,7 +41,8 @@ namespace vengine_helper::config::defaults
     const float CAM_TARGET_Y= 10.F;
     const float CAM_TARGET_Z= 0.F ;
     const int W_WIDTH       = 800;    
-    const int W_HEIGHT      = 600;    
+    const int W_HEIGHT      = 600;
+    const bool W_FULLSCREEN = false;
     const std::string P_ASSETS      = "vengine_assets/" ;           //:NOLINT: Nothing but const std::string works as intended...
     const std::string P_MODELS      = "vengine_assets/models/";     //:NOLINT:
     const std::string P_TEXTURES    = "vengine_assets/textures/";   //:NOLINT:
@@ -49,7 +51,7 @@ namespace vengine_helper::config::defaults
     const bool USE_BUILTIN_VALIDATION = false ;
     const int ROOM_SIZE     = 10;
     const int TILE_TYPES    = 4;
-    }
+}
 
 namespace vengine_helper::config
 {   
@@ -67,8 +69,9 @@ namespace vengine_helper::config
         Type type;
     };
     // Contains Default values if config.cfg is not generated yet
-    struct configHolder{    
-        std::map<std::string_view,ConfVal> rules
+    struct configHolder
+    {
+        std::map<std::string_view, ConfVal> rules
         {
             {CAM_FOV,{defaults::CAMERA_FOV, Type::float_t }},
             {CAM_NP,{defaults::CAMERA_NP, Type::float_t }},
@@ -81,6 +84,7 @@ namespace vengine_helper::config
             {CAM_TARGET_Z,{defaults::CAM_TARGET_Z, Type::float_t }},            
             {W_WIDTH, {defaults::W_WIDTH,  Type::int_t }},
             {W_HEIGHT,{defaults::W_HEIGHT, Type::int_t }},
+            {W_FULLSCREEN, { defaults::W_FULLSCREEN, Type::bool_t }},
             {P_ASSETS,{(defaults::P_ASSETS), Type::string_t }},
             {P_MODELS,{(defaults::P_MODELS), Type::string_t }},
             {P_TEXTURES,{(defaults::P_TEXTURES), Type::string_t }},
@@ -93,7 +97,6 @@ namespace vengine_helper::config
     };
     extern configHolder conf;
 }
-
 
 namespace vengine_helper::config
 {    
@@ -108,7 +111,4 @@ namespace vengine_helper::config
 
     template<typename T>
     T get_rule_val(std::string&& ruleName);
-
-
 }
-

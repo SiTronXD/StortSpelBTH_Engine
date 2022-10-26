@@ -285,7 +285,8 @@ int NetworkSceneLua::lua_getPlayerCount(lua_State* L)
 	return 1;
 }
 
-int NetworkSceneLua::lua_addEvent(lua_State* L) {
+int NetworkSceneLua::lua_addEvent(lua_State* L)
+{
 	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
 	std::vector<int> ints;
 	std::vector<float> floats;
@@ -295,7 +296,7 @@ int NetworkSceneLua::lua_addEvent(lua_State* L) {
 	//if not check if its a table
 	//if its a table get that and return
 
-	//else its a number 
+	//else its a number
 	int i = 2;
 	bool done = false;
 	while (lua_gettop(L) > 0 && !done)
@@ -327,6 +328,16 @@ int NetworkSceneLua::lua_addEvent(lua_State* L) {
 	return 0;
 }
 
+int NetworkSceneLua::lua_PathFinding(lua_State* L) {
+	NetworkScene* scene = ((NetworkScene*)lua_touserdata(L, lua_upvalueindex(1)));
+	glm::vec3 from = lua_tovector(L, 1);
+	glm::vec3 to = lua_tovector(L, 2);
+
+	lua_pushvector(L, scene->getPathFindingManager()->getDirTo(from, to));
+
+	return 1;
+}
+
 void NetworkSceneLua::lua_openscene(lua_State* L, NetworkScene* scene)
 {
 	lua_newtable(L);
@@ -346,7 +357,9 @@ void NetworkSceneLua::lua_openscene(lua_State* L, NetworkScene* scene)
 	    {"getPlayer", lua_getPlayer},
 	    {"getPlayerCount", lua_getPlayerCount},
 	    {"addEvent", lua_addEvent},
-	    {NULL, NULL}};
+	    {"getDirectionTo", lua_PathFinding},
+		{NULL, NULL}
+	};
 
 	lua_pushlightuserdata(L, scene);
 	luaL_setfuncs(L, methods, 1);

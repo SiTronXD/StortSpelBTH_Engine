@@ -13,10 +13,10 @@ ServerGameMode::ServerGameMode()
 
 ServerGameMode::~ServerGameMode() {}
 
-
 void ServerGameMode::setScene(NetworkScene* scene)
 {
 	this->scene = scene;
+	this->scene->setPathFindingManager(&this->pf);
 }
 
 void ServerGameMode::setScriptHandler(ServerScriptHandler* scriptHandler)

@@ -5,6 +5,7 @@
 class TestDemoScene : public Scene
 {
 private:
+	Entity camEntity;
 	Entity testEntity;
 	Entity testEntity2;
 

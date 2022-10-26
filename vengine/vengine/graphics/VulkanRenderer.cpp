@@ -480,6 +480,9 @@ void VulkanRenderer::draw(Scene* scene)
 
 void VulkanRenderer::initForScene(Scene* scene)
 {
+    // Wait idle before doing anything
+    this->device.waitIdle();
+
     // Try to cleanup before creating new objects
     this->shaderInput.cleanup();
     this->pipeline.cleanup();
@@ -974,7 +977,15 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
     renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());      // Size of region to run render pass on (starting at offset)
      
     static const vk::ClearColorValue clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
-    static const vk::ClearColorValue clear_Plum(std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
+    static const vk::ClearColorValue clear_Plum(
+        std::array<float, 4> 
+        {
+            119.0f / 256.0f, 
+            172.0f / 256.0f,
+            222.0f / 256.0f, 
+            1.0f
+        }
+    );
 
     std::array<vk::ClearValue, 2> clearValues = 
     {
@@ -1473,6 +1484,7 @@ void VulkanRenderer::initImgui()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     
     io.ConfigWindowsResizeFromEdges = true;
     

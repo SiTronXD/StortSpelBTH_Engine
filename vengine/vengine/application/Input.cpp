@@ -6,17 +6,35 @@ std::map<Keys, bool> Input::lastKeyDown;
 std::map<Mouse, bool> Input::mouseButtonDown;
 std::map<Mouse, bool> Input::lastmouseButtonDown;
 
-int Input::cursorX = 0.0;
-int Input::cursorY = 0.0;
-int Input::lastCursorX = 0.0;
-int Input::lastCursorY = 0.0;
+int Input::cursorX = 0;
+int Input::cursorY = 0;
+int Input::deltaCursorX = 0;
+int Input::deltaCursorY = 0;
+int Input::requestedMouseX = 0;
+int Input::requestedMouseY = 0;
+
+int Input::deltaScrollWheel = 0;
+
+bool Input::shouldSetMousePos = false;
+bool Input::shouldHideCursor = false;
+bool Input::lastShouldHideCursor = false;
+
+void Input::setDeltaCursor(
+	const int& deltaCursorX, 
+	const int& deltaCursorY)
+{
+	// Update delta
+	Input::deltaCursorX = deltaCursorX;
+	Input::deltaCursorY = deltaCursorY;
+}
+
+void Input::setDeltaScrollWheel(const int& deltaScrollWheel)
+{
+	Input::deltaScrollWheel = deltaScrollWheel;
+}
 
 void Input::setCursor(const int& newCursorX, const int& newCursorY)
 {
-	// Update last position
-	Input::lastCursorX = Input::cursorX;
-	Input::lastCursorY = Input::cursorY;
-
 	// Update current position
 	Input::cursorX = newCursorX;
 	Input::cursorY = newCursorY;
@@ -35,6 +53,9 @@ void Input::update()
 	{
 		Input::lastmouseButtonDown[mouse] = val;
 	}
+
+	// Last should hide cursor
+	Input::lastShouldHideCursor = Input::shouldHideCursor;
 }
 
 void Input::setKey(const Keys& keyCode, const bool& value)
@@ -90,4 +111,16 @@ void Input::setMouseButton(const Mouse& mouseButtonCode, const bool& value)
 			)
 		);
 	}
+}
+
+void Input::setCursorPosition(const int& newCursorX, const int& newCursorY)
+{
+	Input::shouldSetMousePos = true;
+	Input::requestedMouseX = newCursorX;
+	Input::requestedMouseY = newCursorY;
+}
+
+void Input::setHideCursor(const bool& hide)
+{
+	Input::shouldHideCursor = hide;
 }

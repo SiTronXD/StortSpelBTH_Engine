@@ -31,9 +31,11 @@ void MeshLoader::setTextureLoader(TextureLoader* textureLoader)
     this->textureLoader = textureLoader;
 }
 
-MeshData MeshLoader::importMeshData(std::string& path) 
+MeshData MeshLoader::importMeshData(
+    const std::string& modelPath,
+    const std::string& texturesFolderPath)
 {
-    return this->assimpImport(path);
+    return this->assimpImport(modelPath, texturesFolderPath);
 }
 
 Mesh MeshLoader::createMesh(MeshData& data) 
@@ -41,7 +43,9 @@ Mesh MeshLoader::createMesh(MeshData& data)
     return std::move(Mesh(std::move(data), this->importStructs));
 }
 
-MeshData MeshLoader::assimpImport(const std::string &modelFile) 
+MeshData MeshLoader::assimpImport(
+    const std::string& modelFile,
+    const std::string& texturesFolderPath) 
 {
     // Import Model Scene
     using namespace vengine_helper::config;
@@ -53,18 +57,19 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
                                 // we use them
             // | aiProcess_JoinIdenticalVertices // This caused issues for skeletal animations
     );
-    if (scene == nullptr) {
+    if (scene == nullptr) 
+    {
         Log::warning("Failed to load model (" + modelFile + ")");
+
         return MeshData();
-        //throw std::runtime_error("Failed to load model (" + modelFile + ")");
     }
     std::vector<uint32_t> materialToTexture;
-    this->textureLoader->assimpTextureImport(scene, materialToTexture);
+    this->textureLoader->assimpTextureImport(scene, texturesFolderPath, materialToTexture);
     
     MeshData meshData = this->assimpMeshImport(scene, materialToTexture);
     this->importer.FreeScene();
 
-    // Make sure the streams are valid
+    // Make sure the vertex data streams are valid
     if (!MeshDataInfo::areStreamsValid(meshData.vertexStreams))
     {
         Log::error("There are different non-zero number of elements in certain vertex streams. This will cause issues when rendering the mesh...");
