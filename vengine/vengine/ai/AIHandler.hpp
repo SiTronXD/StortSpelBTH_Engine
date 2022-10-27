@@ -27,14 +27,15 @@ class AIHandler
     //MovementFSM movementFSM;
 	//std::vector<FSM*> FSMs;
 	std::unordered_map<std::string, FSM*> FSMs;
-	std::unordered_map<FSM*, std::function<void(FSM* fsm)>> FSMimguiLambdas;
+	std::unordered_map<FSM*, std::function<void(FSM* fsm, uint32_t)>> FSMimguiLambdas;
+    std::unordered_map<FSM*, std::vector<uint32_t>> FSMsEntities;
 
     void addFSM(FSM* fsm, const std::string& name) { 
 		fsm->init(this->sh, &eventSystem, name);
         FSMs.insert({fsm->getName(), fsm});
     }
 
-    void addImguiToFSM(const std::string& name, std::function<void(FSM* fsm)> imguiLambda) 
+    void addImguiToFSM(const std::string& name, std::function<void(FSM* fsm, uint32_t)> imguiLambda) 
     {        
         this->FSMimguiLambdas[this->FSMs[name]] = imguiLambda;		
     }
@@ -44,7 +45,6 @@ class AIHandler
     {
         this->sh = sh; 
 		this->eventSystem.setSceneHandler(this->sh);
-        //pathFindingManager        
 
     }
 
@@ -60,6 +60,9 @@ class AIHandler
 	{
 		// Register entityID to a specific FSM (MovementFSM in this test)
 		this->sh->getScene()->setComponent<FSMAgentComponent>(entityID, fsm);
+
+        // Add Entity to IMGUI lambdas vector 
+        this->FSMsEntities[fsm].push_back(entityID);
 
 		// Add required FSM and BT Components to entityID
         fsm->registerEntity(entityID);
