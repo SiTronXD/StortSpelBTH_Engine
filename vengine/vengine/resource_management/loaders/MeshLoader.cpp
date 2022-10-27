@@ -77,6 +77,21 @@ MeshData MeshLoader::assimpImport(
         Log::error("There are different non-zero number of elements in certain vertex streams. This will cause issues when rendering the mesh...");
     }
 
+    // Print out a warning if the index count is not divisible by 3...
+    if (meshData.indicies.size() % 3 != 0)
+    {
+        Log::warning(modelFile + " does not have an index count divisible by 3. Index count: " + 
+            std::to_string(meshData.indicies.size()));
+
+        // Remove last few vertices to contain valid triangles
+        while (meshData.indicies.size() % 3 != 0)
+        {
+            meshData.indicies.pop_back();
+        }
+        Log::warning("Truncated " + modelFile + " to have an index count of " +
+            std::to_string(meshData.indicies.size()));
+    }
+
     return meshData;
 }
 
