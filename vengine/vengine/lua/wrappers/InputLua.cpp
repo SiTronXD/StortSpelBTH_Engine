@@ -71,6 +71,31 @@ int InputLua::lua_getMouseDelta(lua_State* L)
 	return 1;
 }
 
+int InputLua::lua_getScrollWheelDelta(lua_State* L)
+{
+	lua_pushinteger(L, Input::getScrollWheelDelta());
+	return 1;
+}
+
+int InputLua::lua_setCursorPosition(lua_State* L)
+{
+	if (lua_isvector(L, 1))
+	{
+		glm::vec3 vec = lua_tovector(L, 1);
+		Input::setCursorPosition(vec.x, vec.y);
+	}
+	return 0;
+}
+
+int InputLua::lua_setHideCursor(lua_State* L)
+{
+	if (lua_isboolean(L, 1))
+	{
+		Input::setHideCursor(lua_toboolean(L, 1));
+	}
+	return 0;
+}
+
 void InputLua::lua_openinput(lua_State* L)
 {
 	lua_newtable(L);
@@ -86,6 +111,9 @@ void InputLua::lua_openinput(lua_State* L)
 		{ "isMouseButtonReleased", lua_isMouseButtonReleased },
 		{ "getMousePosition", lua_getMousePosition },
 		{ "getMouseDelta", lua_getMouseDelta },
+		{ "getScrollWheelDelta", lua_getScrollWheelDelta },
+		{ "setCursorPosition", lua_setCursorPosition },
+		{ "setHideCursor", lua_setHideCursor },
 		{ NULL , NULL }
 	};
 

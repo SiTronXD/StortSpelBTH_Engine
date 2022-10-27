@@ -1109,7 +1109,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                         Mesh& currentMesh =
                             this->resourceManager->getMesh(meshComponent.meshID);
 
-                        const glm::mat4& modelMatrix = transform.matrix;
+                        const glm::mat4& modelMatrix = transform.getMatrix();
 
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
                         currentCommandBuffer.pushConstant(
@@ -1195,7 +1195,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             animationComponent.boneTransformsID
                         );
 
-                        const glm::mat4& modelMatrix = transform.matrix;
+                        const glm::mat4& modelMatrix = transform.getMatrix();
 
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
                         currentCommandBuffer.pushConstant(

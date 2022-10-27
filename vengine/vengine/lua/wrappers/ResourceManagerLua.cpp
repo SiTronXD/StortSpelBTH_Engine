@@ -8,7 +8,13 @@ int ResourceManagerLua::lua_addMesh(lua_State* L)
 
 	if(!lua_isstring(L, 1)) { return 0; }
 
-	int meshID = resourceManager->addMesh(lua_tostring(L, 1));
+	std::string texturesPath = "";
+	if (lua_isstring(L, 2))
+	{
+		texturesPath = lua_tostring(L, 2);
+	}
+
+	int meshID = resourceManager->addMesh(lua_tostring(L, 1), std::move(texturesPath));
 	lua_pushinteger(L, meshID);
 
 	return 1;
