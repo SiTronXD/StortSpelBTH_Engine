@@ -60,10 +60,10 @@
 
 class BehaviorTree {
 private:
-    std::vector<BT_component*> requiredComponents;
+    std::vector<void*> requiredBTComponents;
     std::string name;
     Node* root =nullptr;
-
+    
 protected:
     virtual void start() = 0;
 
@@ -72,10 +72,16 @@ protected:
     static SceneHandler* sceneHandler;
     static SceneHandler* getSceneHandler(){return BehaviorTree::sceneHandler;};
     void setRoot(Node* root) {this->root = root;};
-    void addRequiredComponent(BT_component* reqComponent)
+
+    virtual void registerEntityComponents(uint32_t entityId) = 0;
+
+    template<typename T>
+    void addRequiredComponent(uint32_t entityID)
 	{
-		this->requiredComponents.push_back(reqComponent);        
+        sceneHandler->getScene()->setComponent<T>(entityID);
+		this->requiredBTComponents.push_back(new T);
     }
+    
     // wrapper for creating different kind of nodes, this will help with debugging and memory management! 
         
     BTCreateHelper create; //Shorthand for Creates
@@ -84,7 +90,7 @@ protected:
 public:     
     static PathFindingManager pathFindingManager;
     virtual ~BehaviorTree(){
-        for(auto rq : requiredComponents) {delete rq;}
+        for(auto rq : requiredBTComponents) {delete rq;}
         std::stack<Node*> stack;
 
         // If BT was created without AIHandler, then root could be nullptr. 
@@ -104,9 +110,9 @@ public:
         }
     }
 
-    std::vector<BT_component*>& getRequiredComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
+    std::vector<void*>& getRequiredComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
 	{
-		return requiredComponents;
+		return requiredBTComponents;
     }
         
     virtual void initEntityData(uint32_t entityID) = 0;
@@ -269,6 +275,10 @@ public:
     //       Should use the active scenes registry...
     //static void setSceneHandler(Scene* scene){BehaviorTree::sceneHandler = scene;};    
 
+    void registerEntity(uint32_t entityId)
+    {
+        registerEntityComponents(entityId);        
+    }
     // Debug
     void draw();
 };

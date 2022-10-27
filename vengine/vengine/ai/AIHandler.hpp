@@ -61,16 +61,8 @@ class AIHandler
 		// Register entityID to a specific FSM (MovementFSM in this test)
 		this->sh->getScene()->setComponent<FSMAgentComponent>(entityID, fsm);
 
-		// Add required FSMComponents to entityID
-		for (auto& requiredComp : fsm->getRequiredFSMComponents())
-		{
-			requiredComp->registerEntity(entityID, this->sh);
-		}
-		// Add required BTComponents to entityID
-		for (auto& requiredComp : fsm->getRequiredBTComponents())
-		{
-			requiredComp->registerEntity(entityID, this->sh);
-		}
+		// Add required FSM and BT Components to entityID
+        fsm->registerEntity(entityID);
 		// Register this entity to all entity evenets of the FSM
 		this->eventSystem.registerEntityToEvent(entityID, fsm);
 	}

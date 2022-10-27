@@ -8,16 +8,6 @@
 #include <vector>
 
 
-//class Event;
-//class FSM_Node;
-//class EventSystem;
-
-// Struct to inherit from; should define all 
-
-struct FSM_component{
-    virtual void registerEntity(uint32_t entityId, SceneHandler* sceneHandler) = 0;
-};
-
 class FSM_Node
 {
 private:
@@ -28,7 +18,7 @@ public:
 
 	std::string     status;
 	BehaviorTree*   bt = nullptr;                    //TODO: Should not be public? 
-	std::unordered_map<Event*, FSM_Node*> neighbors; //TODO: Should not be public?    	
+	std::unordered_map<Event*, FSM_Node*> neighbors; //TODO: Should not be public?    
 
 public:
 	void execute(uint32_t entityID) 
@@ -52,8 +42,8 @@ class FSM	// TODO: Handlememory for New fsm_nodes and trees
 private: 
     std::unordered_map<std::string, FSM_Node*> fsm_nodes;
     std::unordered_map<std::string, BehaviorTree*> trees;
-    std::vector<FSM_component*> requiredFSMComponents;
-    std::vector<BT_component*>  requiredBTComponents;
+    std::vector<void*> requiredFSMComponents;
+    std::vector<void*>  requiredBTComponents;
     
     FSM_Node* currentNode = nullptr;
 
@@ -121,23 +111,25 @@ protected:
         }
         
     }
-    void setInitialNode(std::string node) {
+    void setInitialNode(std::string node) 
+    {
         this->currentNode = this->fsm_nodes[node];
     }
 
-    void addRequiredComponent(FSM_component* reqComponent)
+    template<typename T>
+    void addRequiredComponent(uint32_t entityID)
 	{
-		this->requiredFSMComponents.push_back(reqComponent);
+        sceneHandler->getScene()->setComponent<T>(entityID);
+		this->requiredFSMComponents.push_back(new T);
     }
+
+    virtual void registerEntityComponents(uint32_t entityId) = 0;
 
     virtual void real_init() = 0; 
 
 public:
 
     //TODO: Make this part of class (Virtual), take template Type for type, 
-    //virtual void registerEntity(uint32_t entityId, Scene* scene) = 0;
-	
-    //virtual void init(Scene* sc, EventSystem* es) = 0;    
     void init(SceneHandler* sh, EventSystem* es, const std::string& name) 
     {
 		this->name = name;
@@ -152,6 +144,17 @@ public:
         checkForCommonErrors();
     }
 
+    void registerEntity(uint32_t entityId)
+    {
+        // Add Components that FSM needs
+        registerEntityComponents(entityId);
+
+        // Add Components that BT needs
+        for(auto& tree : this->trees)
+        {
+            tree.second->registerEntity(entityId);
+        }        
+    }
 
     void clean()
 	{
@@ -260,11 +263,11 @@ public:
 		return this->currentNode;
 	}
 
-    std::vector<FSM_component*>& getRequiredFSMComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
+    std::vector<void*>& getRequiredFSMComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
 	{
 		return requiredFSMComponents;
     }
-    std::vector<BT_component*>& getRequiredBTComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
+    std::vector<void*>& getRequiredBTComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
 	{
         //NOTE: This vector could contain multiples of same components. 
         //TODO: Check if that is a problem! or if Entity cant have multiple componenets of same type...

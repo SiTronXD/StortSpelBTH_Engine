@@ -57,11 +57,6 @@ class Compositor;
 class Condition;
 struct Fallback;
 
-struct BT_component{
-    virtual void registerEntity(uint32_t entityId, SceneHandler* sceneHandler) = 0;
-    virtual ~BT_component()=default;
-};
-
 class Node {
 private: 
     friend BehaviorTree;
