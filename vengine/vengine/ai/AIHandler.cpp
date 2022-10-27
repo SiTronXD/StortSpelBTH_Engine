@@ -16,7 +16,7 @@ void AIHandler::drawImgui(){
 
             static std::string entity_label;
             static uint32_t selected_entity = 0;                
-            static std::function<void(FSM*, uint32_t)>* selected_entity_func = nullptr;                
+            static std::function<void(FSM*, uint32_t)> selected_entity_func;                
             static FSM* selected_fsm = nullptr;
             static bool useFirstAsDefault = true;    
             
@@ -33,7 +33,7 @@ void AIHandler::drawImgui(){
                     { 
                         selected_entity = entityId;
                         
-                        selected_entity_func = &fsmImguiLambda.second;
+                        selected_entity_func = fsmImguiLambda.second;
                         selected_fsm = fsmImguiLambda.first;
                         useFirstAsDefault = false; 
                     }  
@@ -49,9 +49,7 @@ void AIHandler::drawImgui(){
             {
                 if (ImGui::BeginTabItem("Data"))
                 {                
-                    if(nullptr != selected_entity_func){
-                        (*selected_entity_func)(selected_fsm,selected_entity);
-                    }   
+                    selected_entity_func(selected_fsm,selected_entity);                    
                     ImGui::EndTabItem();
                 }
 
