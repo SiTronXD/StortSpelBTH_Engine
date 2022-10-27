@@ -414,6 +414,33 @@ int SceneLua::lua_removeComponent(lua_State* L)
 	return 0;
 }
 
+int SceneLua::lua_setActive(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	int entity = (int)lua_tointeger(L, 1);
+	scene->setActive(entity);
+
+	return 0;
+}
+
+int SceneLua::lua_setInactive(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	int entity = (int)lua_tointeger(L, 1);
+	scene->setInactive(entity);
+
+	return 0;
+}
+
+int SceneLua::lua_isActive(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	int entity = (int)lua_tointeger(L, 1);
+	lua_pushboolean(L, scene->isActive(entity));
+
+	return 1;
+}
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -433,6 +460,9 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "getComponent", lua_getComponent },
 		{ "setComponent", lua_setComponent },
 		{ "removeComponent", lua_removeComponent },
+		{ "setActive", lua_setActive },
+		{ "setInactive", lua_setInactive },
+		{ "isActive", lua_isActive },
 		{ NULL , NULL }
 	};
 

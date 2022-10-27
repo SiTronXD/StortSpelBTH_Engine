@@ -10,10 +10,12 @@ end
 function script:update()
 	uiRenderer.setTexture(self.texture)
 	uiRenderer.renderTexture(0, 0, 100, 100)
-	debugRenderer.renderCapsule(vector(), vector(), 10, 3, core.LIGHTGRAY)
+	debugRenderer.renderCapsule(vector(), vector(), 10, 3, core.YELLOW)
 
 	local payload = physics.raycast(self.transform.position, self.transform:forward(), 100)
 	physics.renderDebugShapes(payload ~= nil)
+
+	input.setHideCursor(input.isKeyDown(Keys.L))
 end
 
 function script:onTriggerStay(entity)

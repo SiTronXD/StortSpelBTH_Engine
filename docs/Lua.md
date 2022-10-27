@@ -215,6 +215,24 @@ scene.removeComponent(int : entity, int : component_type)
 scene.removeComponent(entity, CompType.Mesh)
 ~~~
 
+#### setActive
+Sets an enitity active if it wasn't before in the scene.
+~~~ Lua
+scene.setActive(int : entity)
+~~~
+
+#### setInactive
+Sets an enitity inactive if it wasn't before in the scene.
+~~~ Lua
+scene.setInactive(int : entity)
+~~~
+
+#### isActive
+Checks status of an entity. Returns bool describing it's active status
+~~~ Lua
+scene.isActive(int : entity) -- Returns bool
+~~~
+
 ### Components
 The amount of components supported grows with the engine. This section goes over the member variables that the components have and how to use them in combination with the [scene](#Scene) global and [prefabs](#Prefabs) These are the ones currently supported in lua:
 * [Transform](#Transform)
@@ -443,6 +461,24 @@ Function used to get the mouse delta on the screen. This returns a [Vector](#Vec
 input.getMouseDelta() -- Returns vector
 ~~~
 
+#### getScrollWheelDelta
+Function used to get the scroll wheel delta. The function returns an integer describing how much the scrollwheel is scrolling.
+~~~ Lua
+input.getScrollWheelDelta() -- Returns int
+~~~
+
+#### setCursorPosition
+Function used to manually set the cursor's position on the screen. Argument is a 2D [Vector](#Vector) where vector(0, 0) is the top left of the screen.
+~~~ Lua
+input.setCursorPosition(vector : screen_pos)
+~~~
+
+#### setHideCursor
+Functions that hides/shows the cursor depending on bool sent in. When being hidden, the mouse can't leave the screen and [getMouseDelta](#getMouseDelta) function still works as expected.
+~~~ Lua
+input.setHideCursor(bool : hide)
+~~~
+
 ## Resource Manager
 The resources global that has been created in the lua environment is the main interface of the resource manager in C++. It is used to load in a variety of assets from disk, such as meshes and textures.
 
@@ -459,9 +495,10 @@ Filters.CubicIMG -- Not available currently (warnings)
 List of functions related to the *resources* global.
 
 #### addMesh
-This functions loads and creates a mesh to be used in the engine. It returns an ID of the mesh that can be used to reference it in different part of the engine such as in components. If the path given already has been loaded, the ID is returned immediatly. If the mesh couldn't be created a default mesh ID is returned.
+This functions loads and creates a mesh to be used in the engine. It returns an ID of the mesh that can be used to reference it in different part of the engine such as in components. If the path given already has been loaded, the ID is returned immediatly. If the mesh couldn't be created a default mesh ID is returned. An optional string can also be sent in as the texture path.
 ~~~ Lua
 resources.addMesh(string : mesh_path) -- Returns the mesh ID
+resources.addMesh(string : mesh_path, string : textures_path) -- optional
 ~~~
 
 #### addTexture
@@ -727,8 +764,8 @@ Mesh = string : mesh_path
 -- Script: string for lua path
 Script = string : lua_path
 
--- Camera: anything except nil
-Camera = any : no_args
+-- Camera: float for Field of View
+Camera = float : fov
 ~~~
 
 ## Script Component

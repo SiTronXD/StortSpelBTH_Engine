@@ -354,6 +354,8 @@ static AnimationComponent lua_toanimation(lua_State* L, int index)
 
 	lua_getfield(L, index, "timeScale");
 	anim.timeScale = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+
+	return anim;
 }
 
 static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)

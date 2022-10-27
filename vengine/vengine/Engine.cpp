@@ -110,6 +110,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         // ------------------------------------
         this->sceneHandler.updateToNextScene();
 
+        this->sceneHandler.prepareForRendering();
         renderer.draw(this->sceneHandler.getScene());
 
 #ifndef VENGINE_NO_PROFILING
