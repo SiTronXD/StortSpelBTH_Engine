@@ -31,7 +31,7 @@ public:
 			glm::scale(glm::mat4(1.0f), this->scale);
 	}
 	
-	const glm::mat4& getMatrix() const
+	inline const glm::mat4& getMatrix() const
 	{
 		return this->matrix;
 	}
