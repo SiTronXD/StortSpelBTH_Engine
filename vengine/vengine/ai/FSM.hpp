@@ -42,8 +42,6 @@ class FSM	// TODO: Handlememory for New fsm_nodes and trees
 private: 
     std::unordered_map<std::string, FSM_Node*> fsm_nodes;
     std::unordered_map<std::string, BehaviorTree*> trees;
-    std::vector<void*> requiredFSMComponents;
-    std::vector<void*>  requiredBTComponents;
     
     FSM_Node* currentNode = nullptr;
 
@@ -89,10 +87,6 @@ protected:
 
         this->trees.insert({name, BT});
         this->insertNode(name);
-        //TODO: Note that it is possible that multiple components of same type is added to this vector...
-        this->requiredBTComponents.insert(this->requiredBTComponents.begin(),
-            BT->getRequiredComponents().begin(),
-            BT->getRequiredComponents().end());
     }
     
     void addBTs(std::vector<BT_AND_NAME> BTs)
@@ -104,10 +98,6 @@ protected:
 
             this->trees.insert({bt.name, bt.BT});
             this->insertNode(bt.name);
-            //TODO: Note that it is possible that multiple components of same type is added to this vector...
-            this->requiredBTComponents.insert(this->requiredBTComponents.begin(),
-                bt.BT->getRequiredComponents().begin(),
-                bt.BT->getRequiredComponents().end());
         }
         
     }
@@ -120,7 +110,6 @@ protected:
     void addRequiredComponent(uint32_t entityID)
 	{
         sceneHandler->getScene()->setComponent<T>(entityID);
-		this->requiredFSMComponents.push_back(new T);
     }
 
     virtual void registerEntityComponents(uint32_t entityId) = 0;
@@ -165,10 +154,6 @@ public:
 		for (auto p : trees)
 		{
 		    delete p.second;
-        }
-        for (auto p : requiredFSMComponents)
-		{
-		    delete p;
         }
     }
 
@@ -262,18 +247,6 @@ public:
 	FSM_Node* getCurrentNode() const {
 		return this->currentNode;
 	}
-
-    std::vector<void*>& getRequiredFSMComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
-	{
-		return requiredFSMComponents;
-    }
-    std::vector<void*>& getRequiredBTComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
-	{
-        //NOTE: This vector could contain multiples of same components. 
-        //TODO: Check if that is a problem! or if Entity cant have multiple componenets of same type...
-		return requiredBTComponents;
-    }
-    
 
 	void drawBT(std::string tree) { 
 		this->trees[tree]->draw();

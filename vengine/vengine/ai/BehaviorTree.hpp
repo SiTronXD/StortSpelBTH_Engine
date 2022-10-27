@@ -60,7 +60,6 @@
 
 class BehaviorTree {
 private:
-    std::vector<void*> requiredBTComponents;
     std::string name;
     Node* root =nullptr;
     
@@ -79,9 +78,7 @@ protected:
     void addRequiredComponent(uint32_t entityID)
 	{
         sceneHandler->getScene()->setComponent<T>(entityID);
-		this->requiredBTComponents.push_back(new T);
     }
-    
     // wrapper for creating different kind of nodes, this will help with debugging and memory management! 
         
     BTCreateHelper create; //Shorthand for Creates
@@ -90,7 +87,6 @@ protected:
 public:     
     static PathFindingManager pathFindingManager;
     virtual ~BehaviorTree(){
-        for(auto rq : requiredBTComponents) {delete rq;}
         std::stack<Node*> stack;
 
         // If BT was created without AIHandler, then root could be nullptr. 
@@ -110,10 +106,6 @@ public:
         }
     }
 
-    std::vector<void*>& getRequiredComponents() // TODO: Decide if public of if AIHandler should be friendclass... ? 
-	{
-		return requiredBTComponents;
-    }
         
     virtual void initEntityData(uint32_t entityID) = 0;
     virtual void update(uint32_t entityID) = 0;
