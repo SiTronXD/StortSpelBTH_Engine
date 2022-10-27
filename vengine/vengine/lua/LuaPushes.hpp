@@ -84,7 +84,7 @@ static Transform lua_totransform(lua_State* L, int index)
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "scale");
-	transform.scale = lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
+	transform.scale = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
 	lua_pop(L, 1);
 
 	return transform;
@@ -174,7 +174,7 @@ static Camera lua_tocamera(lua_State* L, int index)
 	}
 
 	lua_getfield(L, index, "fov");
-	cam.fov = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 90.0f;
+	cam.fov = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 90.0f;
 	lua_pop(L, 1);
 
 	return cam;
@@ -212,25 +212,25 @@ static Collider lua_tocollider(lua_State* L, int index)
 	{
 	case ColType::SPHERE:
 		lua_getfield(L, index, "radius");
-		radius = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+		radius = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 		lua_pop(L, 1);
 
 		col = Collider::createSphere(radius, trigger);
 		break;
 	case ColType::BOX:
 		lua_getfield(L, index, "extents");
-		extents = lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
+		extents = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
 		lua_pop(L, 1);
 
 		col = Collider::createBox(extents, trigger);
 		break;
 	case ColType::CAPSULE:
 		lua_getfield(L, index, "radius");
-		radius = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+		radius = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 		lua_pop(L, 1);
 
 		lua_getfield(L, index, "height");
-		height = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+		height = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 		lua_pop(L, 1);
 
 		col = Collider::createCapsule(radius, height, trigger);
@@ -284,23 +284,23 @@ static Rigidbody lua_torigidbody(lua_State* L, int index)
 	}
 
 	lua_getfield(L, index, "mass");
-	rb.mass = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	rb.mass = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "gravityMult");
-	rb.gravityMult = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	rb.gravityMult = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "friction");
-	rb.friction = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	rb.friction = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "posFactor");
-	rb.posFactor = lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
+	rb.posFactor = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "rotFactor");
-	rb.rotFactor = lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
+	rb.rotFactor = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "acceleration");
@@ -353,7 +353,7 @@ static AnimationComponent lua_toanimation(lua_State* L, int index)
 	anim.timer = (float)lua_tonumber(L, -1);
 
 	lua_getfield(L, index, "timeScale");
-	anim.timeScale = lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	anim.timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 
 	return anim;
 }
