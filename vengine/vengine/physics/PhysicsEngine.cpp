@@ -442,7 +442,7 @@ void PhysicsEngine::update()
 			}
 			else if (col.type == ColType::BOX)
 			{
-				debugRenderer->renderBox(transform.position, transform.rotation, transform.scale * 2.0f, color);
+				debugRenderer->renderBox(transform.position, transform.rotation, col.extents * 2.0f, color);
 			}
 			else if (col.type == ColType::CAPSULE)
 			{

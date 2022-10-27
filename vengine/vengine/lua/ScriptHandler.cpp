@@ -247,6 +247,12 @@ void ScriptHandler::update()
 {
 	this->updateScripts();
 
+	// Empty stack if needed
+	if (lua_gettop(L))
+	{
+		lua_pop(L, lua_gettop(L));
+	}
+
 	if (Input::isKeyPressed(Keys::R) && Input::isKeyDown(Keys::CTRL))
 	{
 		this->sceneHandler->reloadScene();
