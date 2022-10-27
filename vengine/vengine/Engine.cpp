@@ -102,14 +102,10 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         this->audioHandler.update();
 		this->networkHandler.updateNetwork();
 
+#if defined(_CONSOLE) // Debug/Release, but not distribution
         static bool open = true;
         ImGui::ShowDemoWindow(&open);
-
-        ImGui::Begin("Another Window", &open);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            open = false;
-        ImGui::End();
+#endif
 
         // ------------------------------------
         this->sceneHandler.updateToNextScene();

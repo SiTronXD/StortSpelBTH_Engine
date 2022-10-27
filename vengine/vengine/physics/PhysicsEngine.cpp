@@ -317,28 +317,44 @@ void PhysicsEngine::update()
 
 		if (body)
 		{
+			Entity entity = body->getUserIndex();
+			Collider* col = nullptr;
+			Rigidbody* rb = nullptr;
+
 			// Entity removed
-			if (!scene->entityValid(body->getUserIndex()))
+			if (!scene->entityValid(entity))
 			{
 				this->removeIndicies.push_back(i);
+				continue;
 			}
-			// No instance of collider and rigidbody (or inactive)
-			else if (!scene->hasComponents<Collider>(body->getUserIndex()) && 
-					 !scene->hasComponents<Rigidbody>(body->getUserIndex()) || 
-					 scene->hasComponents<Inactive>(body->getUserIndex()))
+			else
+			{
+				if (scene->hasComponents<Collider>(entity)) { col = &scene->getComponent<Collider>(entity); }
+				if (scene->hasComponents<Rigidbody>(entity)) { rb = &scene->getComponent<Rigidbody>(entity); }
+			}
+
+			// Entity inactive
+			if (!scene->isActive(entity))
+			{
+				if (col) { col->ColID = -1; }
+				if (rb) { rb->assigned = false; }
+				this->removeIndicies.push_back(i);
+			}
+			// No instance of collider and rigidbody
+			else if (!col && !rb)
 			{
 				this->removeIndicies.push_back(i);
 			}
 			// Has collider, but removed rigidbody
-			else if (body->getMass() != 0.0f && !scene->hasComponents<Rigidbody>(body->getUserIndex()))
+			else if (body->getMass() != 0.0f && !rb)
 			{
-				scene->getComponent<Collider>(body->getUserIndex()).ColID = -1;
+				col->ColID = -1;
 				this->removeIndicies.push_back(i);
 			}
 			// Has rigidbody, but removed collider
-			else if (body->getLocalInertia() != btVector3(0.0f, 0.0f, 0.0f) && !scene->hasComponents<Collider>(body->getUserIndex()))
+			else if (body->getLocalInertia() != btVector3(0.0f, 0.0f, 0.0f) && !col)
 			{
-				scene->getComponent<Rigidbody>(body->getUserIndex()).assigned = false;
+				rb->assigned = false;
 				this->removeIndicies.push_back(i);
 			}
 			// Update positions if it has motion state (Rigidbody)
@@ -347,13 +363,13 @@ void PhysicsEngine::update()
 				btTransform transform;
 				body->getMotionState()->getWorldTransform(transform);
 
-				Transform& t = scene->getComponent<Transform>(body->getUserIndex());
+				Transform& t = scene->getComponent<Transform>(entity);
 				glm::vec3 scale = t.scale;
 
 				t = BulletH::toTransform(transform);
 				t.scale = scale;
 
-				scene->getComponent<Rigidbody>(body->getUserIndex()).velocity = BulletH::glmvec(body->getLinearVelocity());
+				rb->velocity = BulletH::glmvec(body->getLinearVelocity());
 			}
 		}
 	}
@@ -383,14 +399,20 @@ void PhysicsEngine::update()
 				scene->onCollisionStay(e1, e2);
 			}
 
-			// Scripts
-			if (scene->hasComponents<Script>(e1))
+			// Scripts (still valid entities)
+			if (scene->entityValid(e1) && scene->entityValid(e2))
 			{
-				scriptHandler->runCollisionFunction(scene->getComponent<Script>(e1), e1, e2, t1);
+				if (scene->hasComponents<Script>(e1))
+				{
+					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e1), e1, e2, t1);
+				}
 			}
-			else if (scene->hasComponents<Script>(e2))
+			if (scene->entityValid(e1) && scene->entityValid(e2))
 			{
-				scriptHandler->runCollisionFunction(scene->getComponent<Script>(e2), e2, e1, t2);
+				if (scene->hasComponents<Script>(e2))
+				{
+					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e2), e2, e1, t2);
+				}
 			}
 		}
 	}
@@ -403,6 +425,7 @@ void PhysicsEngine::update()
 	this->removeIndicies.clear();
 
 	// Render debug shapes
+#if defined(_CONSOLE) // Debug/Release, but not distribution (debug rendering is disabled)
 	if (this->renderDebug)
 	{
 		DebugRenderer* debugRenderer = this->sceneHandler->getDebugRenderer();
@@ -427,6 +450,7 @@ void PhysicsEngine::update()
 			}
 		}
 	}
+#endif
 }
 
 void PhysicsEngine::renderDebugShapes(bool renderDebug)
