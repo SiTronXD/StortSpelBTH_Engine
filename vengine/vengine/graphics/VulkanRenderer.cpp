@@ -498,7 +498,7 @@ void VulkanRenderer::initForScene(Scene* scene)
 	// Default shader inputs
     VertexStreams defaultStream{};
     defaultStream.positions.resize(1);
-    defaultStream.colors.resize(1);
+    defaultStream.normals.resize(1);
     defaultStream.texCoords.resize(1);
 
 	this->shaderInput.beginForInput(
@@ -542,7 +542,7 @@ void VulkanRenderer::initForScene(Scene* scene)
 	{
 		VertexStreams animStream{};
 		animStream.positions.resize(1);
-		animStream.colors.resize(1);
+		animStream.normals.resize(1);
 		animStream.texCoords.resize(1);
 		animStream.boneWeights.resize(1);
 		animStream.boneIndices.resize(1);

@@ -2,6 +2,7 @@
 #include "Configurator.hpp"
 #include "loaders/MeshLoader.hpp"
 #include "loaders/TextureLoader.hpp"
+#include "../graphics/MeshDataModifier.hpp"
 
 void ResourceManager::init(
     VmaAllocator* vma,
@@ -52,6 +53,9 @@ uint32_t ResourceManager::addMesh(
 
     // No mesh imported, send default mesh back
     if (meshData.vertexStreams.positions.size() == 0) { return 0; }
+
+    // Smooth normals in mesh data
+    // MeshDataModifier::smoothNormals(meshData);
 
     // NOTE: prevSize as key only works if we never remove resources the map...
     this->meshPaths.insert({meshPath,this->meshPaths.size()}); 

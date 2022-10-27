@@ -55,9 +55,11 @@ MeshData MeshLoader::assimpImport(
                                 // Triangles
             | aiProcess_FlipUVs // Flips the texture UV values, to be same as how
                                 // we use them
-            // | aiProcess_JoinIdenticalVertices // This caused issues for skeletal animations
+             | aiProcess_JoinIdenticalVertices // This causes issues 
+                // for skeletal animations when using the latest version of assimp, but not
+                // when using an earlier version... 
     );
-    if (scene == nullptr) 
+    if (scene == nullptr)
     {
         Log::warning("Failed to load model (" + modelFile + ")");
 
@@ -95,8 +97,8 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene, std::vector<uint32_t
             data.vertexStreams.positions
         );
         this->insertStream(
-            mesh.vertexStreams.colors,
-            data.vertexStreams.colors
+            mesh.vertexStreams.normals,
+            data.vertexStreams.normals
         );
         this->insertStream(
             mesh.vertexStreams.texCoords,
@@ -248,17 +250,17 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
 
     /// Resize vertex list to hold all vertices for mesh
     vertexStreams.positions.resize(mesh->mNumVertices);
-    vertexStreams.colors.resize(mesh->mNumVertices);
+    vertexStreams.normals.resize(mesh->mNumVertices);
     vertexStreams.texCoords.resize(mesh->mNumVertices);
     int vertex_index = 0;
     int index_index = 0;
 
     /// For each veretx in our assimp mesh, define the Vertex in our format
-    for (auto ai_vertice :
+    for (auto aiVertex :
         std::span<aiVector3D>(mesh->mVertices, mesh->mNumVertices)) 
     {
         /// copy the position vertex
-        vertexStreams.positions[vertex_index] = {ai_vertice.x, ai_vertice.y, ai_vertice.z};
+        vertexStreams.positions[vertex_index] = { aiVertex.x, aiVertex.y, aiVertex.z };
         
         /// copy the tex coordinate, if model have textures
         if (mesh->mTextureCoords[0] != nullptr) 
@@ -275,8 +277,21 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
             vertexStreams.texCoords[vertex_index] = {0.F, 0.F};
         }
 
-        /// set Color, if we want to use it later...
-        vertexStreams.colors[vertex_index] = { 1.f, 1.f, 1.f }; /// Color is white
+        /// copy the normals, if model have normals
+        if (mesh->HasNormals())
+        {
+            vertexStreams.normals[vertex_index] = 
+            { 
+                mesh->mNormals[vertex_index].x,
+                mesh->mNormals[vertex_index].y,
+                mesh->mNormals[vertex_index].z 
+            };
+        }
+        else
+        {
+            vertexStreams.normals[vertex_index] = { 1.f, 1.f, 1.f };
+        }
+
         vertex_index++;
     }
 

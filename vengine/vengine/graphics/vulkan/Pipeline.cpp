@@ -132,6 +132,7 @@ void Pipeline::createPipeline(
     // is as a whole.
     std::vector<vk::VertexInputBindingDescription> bindingDescriptions;
     this->insertBindingFromStream(targetVertexStream.positions, bindingDescriptions);
+    this->insertBindingFromStream(targetVertexStream.normals, bindingDescriptions);
     this->insertBindingFromStream(targetVertexStream.colors, bindingDescriptions);
     this->insertBindingFromStream(targetVertexStream.texCoords, bindingDescriptions);
     this->insertBindingFromStream(targetVertexStream.boneWeights, bindingDescriptions);
@@ -140,6 +141,7 @@ void Pipeline::createPipeline(
     // How the data for an attribute is definied within a vertex    
     std::vector<vk::VertexInputAttributeDescription> attributeDescriptions;
     this->insertAttributeFromStream(targetVertexStream.positions, vk::Format::eR32G32B32Sfloat, attributeDescriptions);
+    this->insertAttributeFromStream(targetVertexStream.normals, vk::Format::eR32G32B32Sfloat, attributeDescriptions);
     this->insertAttributeFromStream(targetVertexStream.colors, vk::Format::eR32G32B32Sfloat, attributeDescriptions);
     this->insertAttributeFromStream(targetVertexStream.texCoords, vk::Format::eR32G32Sfloat, attributeDescriptions);
     this->insertAttributeFromStream(targetVertexStream.boneWeights, vk::Format::eR32G32B32A32Sfloat, attributeDescriptions);
