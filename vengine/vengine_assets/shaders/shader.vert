@@ -5,7 +5,7 @@
 
 // Vertex data
 layout(location = 0) in vec3 pos;
-layout(location = 1) in vec3 col;
+layout(location = 1) in vec3 nor;
 layout(location = 2) in vec2 tex; 
 
 // Uniform buffer
@@ -22,7 +22,7 @@ layout(push_constant) uniform PushConstant_Model
 } pushConstant_Model;
 
 // Vertex shader outputs
-layout(location = 0) out vec3 fragCol;
+layout(location = 0) out vec3 fragNor;
 layout(location = 1) out vec2 fragTex;
 
 void main()
@@ -33,6 +33,6 @@ void main()
         pushConstant_Model.model *
         vec4(pos, 1.0);
 
-    fragCol = col;
+    fragNor = (pushConstant_Model.model * vec4(nor, 0.0f)).xyz;
     fragTex = tex;
 }
