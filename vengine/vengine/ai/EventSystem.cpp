@@ -99,7 +99,6 @@ void EventSystem::update()
 
 		for (auto& currNeighbor : agent.currentNode->neighbors)
 		{
-			
 			auto* eventTransition = (EntityEvent*)currNeighbor.first;
 			
 			if (eventTransition->checkEvent(entityID))
@@ -113,7 +112,7 @@ void EventSystem::update()
 					agent.fsm->setCurrentNode(currNeighbor.second);
 					agent.currentNode = currNeighbor.second;
 
-					std::cout << agent.fsm->getCurrentNode()->status
+					std::cout << agent.currentNode->status
 								<< std::endl;
 
 					entityEventLastReturn[entityID][eventTransition] = true;

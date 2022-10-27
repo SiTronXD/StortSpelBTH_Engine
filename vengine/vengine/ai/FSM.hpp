@@ -298,5 +298,5 @@ public:
 	
 	std::vector<FSM_Node*> nodes;
 
-	void execute(uint32_t entityID) { if(currentNode){currentNode->execute(entityID);}else{Log::error("Failed: FSM_Node is a nullptr!");} }
+	void execute(uint32_t entityID);
 };
