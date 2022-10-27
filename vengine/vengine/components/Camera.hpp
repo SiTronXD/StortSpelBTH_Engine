@@ -20,7 +20,7 @@ struct Camera
 		float nearPlane = 0.1f, 
 		float farPlane = 1000.0f)
 	{
-		this->projection = glm::perspective(fov, aspectRatio, nearPlane, farPlane);
+		this->projection = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
 		this->invProjection = glm::inverse(this->projection);
 	}
 };
