@@ -29,7 +29,7 @@ class UIRenderer
 private:
     friend VulkanRenderer;
 
-    const uint32_t START_NUM_MAX_ELEMENTS = 4;
+    const uint32_t START_NUM_MAX_ELEMENTS = 16;
 
     std::vector<UIElementData> uiElementData;
     std::vector<UIDrawCallData> uiDrawCallData;
