@@ -71,7 +71,7 @@ vk::PresentModeKHR Swapchain::chooseBestPresentationMode(
     {
         if (std::find(presentationModes.begin(), presentationModes.end(), mode) != presentationModes.end())
         {
-            Log::write("Chosen swapchain presentation mode: " + std::to_string((int) mode));
+            // Log::write("Chosen swapchain presentation mode: " + std::to_string((int) mode));
 
             return mode;
         }

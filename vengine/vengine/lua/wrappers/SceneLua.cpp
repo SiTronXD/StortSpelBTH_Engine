@@ -194,7 +194,16 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	lua_getfield(L, -1, "Animation");
 	if (!lua_isnil(L, -1))
 	{
-		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1));
+		if (scene->hasComponents<AnimationComponent>(entity))
+		{
+			float endTime = scene->getComponent<AnimationComponent>(entity).endTime;
+			StorageBufferID boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
+			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, endTime, boneID));
+		}
+		else
+		{
+			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, 0, 0));
+		}
 	}
 	lua_pop(L, 1);
 
@@ -338,6 +347,10 @@ int SceneLua::lua_setComponent(lua_State* L)
 	int type = (int)lua_tointeger(L, 2);
 	std::string path;
 
+	float endTime = 0;
+	StorageBufferID boneID = 0;
+	bool assigned = false;
+
 	switch ((CompType)type)
 	{
 	case CompType::TRANSFORM:
@@ -363,10 +376,16 @@ int SceneLua::lua_setComponent(lua_State* L)
 		scene->setComponent<Collider>(entity, lua_tocollider(L, 3));
 		break;
 	case CompType::RIGIDBODY:
-		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, 3));
+		if (scene->hasComponents<Rigidbody>(entity)) { assigned = scene->getComponent<Rigidbody>(entity).assigned; }
+		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, 3, assigned));
 		break;
 	case CompType::ANIMATION:
-		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3));
+		if (scene->hasComponents<AnimationComponent>(entity)) 
+		{ 
+			endTime = scene->getComponent<AnimationComponent>(entity).endTime;
+			boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
+		}
+		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, endTime, boneID));
 		break;
 	default:
 		break;

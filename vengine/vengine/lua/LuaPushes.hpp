@@ -274,7 +274,7 @@ static void lua_pushcollider(lua_State* L, const Collider& col)
 	}
 }
 
-static Rigidbody lua_torigidbody(lua_State* L, int index)
+static Rigidbody lua_torigidbody(lua_State* L, int index, bool assigned = false)
 {
 	Rigidbody rb;
 	// Sanity check
@@ -282,6 +282,8 @@ static Rigidbody lua_torigidbody(lua_State* L, int index)
 		std::cout << "Error: not rigidbody-table" << std::endl;
 		return rb;
 	}
+
+	rb.assigned = assigned;
 
 	lua_getfield(L, index, "mass");
 	rb.mass = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
@@ -340,9 +342,12 @@ static void lua_pushrigidbody(lua_State* L, const Rigidbody& rb)
 	lua_setfield(L, -2, "velocity");
 }
 
-static AnimationComponent lua_toanimation(lua_State* L, int index)
+static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime, StorageBufferID boneID)
 {
-	AnimationComponent anim;
+	AnimationComponent anim{};
+	anim.boneTransformsID = boneID;
+	anim.endTime = endTime;
+
 	// Sanity check
 	if (!lua_istable(L, index)) {
 		std::cout << "Error: not animation-table" << std::endl;
