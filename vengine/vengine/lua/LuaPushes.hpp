@@ -340,9 +340,12 @@ static void lua_pushrigidbody(lua_State* L, const Rigidbody& rb)
 	lua_setfield(L, -2, "velocity");
 }
 
-static AnimationComponent lua_toanimation(lua_State* L, int index)
+static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime, StorageBufferID boneID)
 {
-	AnimationComponent anim;
+	AnimationComponent anim{};
+	anim.boneTransformsID = boneID;
+	anim.endTime = endTime;
+
 	// Sanity check
 	if (!lua_istable(L, index)) {
 		std::cout << "Error: not animation-table" << std::endl;

@@ -338,6 +338,9 @@ int SceneLua::lua_setComponent(lua_State* L)
 	int type = (int)lua_tointeger(L, 2);
 	std::string path;
 
+	float endTime = 0;
+	StorageBufferID boneID = 0;
+
 	switch ((CompType)type)
 	{
 	case CompType::TRANSFORM:
@@ -366,7 +369,12 @@ int SceneLua::lua_setComponent(lua_State* L)
 		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, 3));
 		break;
 	case CompType::ANIMATION:
-		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3));
+		if (scene->hasComponents<AnimationComponent>(entity)) 
+		{ 
+			endTime = scene->getComponent<AnimationComponent>(entity).endTime;
+			boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
+		}
+		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, endTime, boneID));
 		break;
 	default:
 		break;
