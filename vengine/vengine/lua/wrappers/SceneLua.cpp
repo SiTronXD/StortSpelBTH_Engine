@@ -194,7 +194,16 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	lua_getfield(L, -1, "Animation");
 	if (!lua_isnil(L, -1))
 	{
-		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1));
+		if (scene->hasComponents<AnimationComponent>(entity))
+		{
+			float endTime = scene->getComponent<AnimationComponent>(entity).endTime;
+			StorageBufferID boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
+			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, endTime, boneID));
+		}
+		else
+		{
+			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, 0, 0));
+		}
 	}
 	lua_pop(L, 1);
 
