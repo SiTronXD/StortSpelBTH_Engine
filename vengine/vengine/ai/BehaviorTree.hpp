@@ -72,10 +72,10 @@ protected:
     static SceneHandler* getSceneHandler(){return BehaviorTree::sceneHandler;};
     void setRoot(Node* root) {this->root = root;};
 
-    virtual void registerEntityComponents(uint32_t entityId) = 0;
+    virtual void registerEntityComponents(Entity entityId) = 0;
 
     template<typename T>
-    void addRequiredComponent(uint32_t entityID)
+    void addRequiredComponent(Entity entityID)
 	{
         sceneHandler->getScene()->setComponent<T>(entityID);
     }
@@ -107,8 +107,8 @@ public:
     }
 
         
-    virtual void initEntityData(uint32_t entityID) = 0;
-    virtual void update(uint32_t entityID) = 0;
+    virtual void initEntityData(Entity entityID) = 0;
+    virtual void update(Entity entityID) = 0;
     
     //Only run start function one time... (Start is for everything in the tree)
 	void startTree(SceneHandler* sceneHandler, const std::string& name)
@@ -261,9 +261,9 @@ public:
         return treeIsDisconnected;
     }
 
-    void execute(uint32_t entityID){ root->execute(entityID);};
+    void execute(Entity entityID){ root->execute(entityID);};
 
-    void registerEntity(uint32_t entityId)
+    void registerEntity(Entity entityId)
     {
         registerEntityComponents(entityId);        
     }

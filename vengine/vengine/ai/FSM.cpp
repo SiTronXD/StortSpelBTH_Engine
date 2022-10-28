@@ -3,7 +3,7 @@
 
 SceneHandler* FSM::sceneHandler = nullptr;
 
-void FSM::execute(uint32_t entityID) 
+void FSM::execute(Entity entityID) 
 { 
 	FSM_Node* node = sceneHandler->getScene()->getComponent<FSMAgentComponent>(entityID).currentNode;
 	if(node)

@@ -486,8 +486,11 @@ void VulkanRenderer::initForScene(Scene* scene)
     // Try to cleanup before creating new objects
     this->shaderInput.cleanup();
     this->pipeline.cleanup();
-    this->animShaderInput.cleanup();
-    this->animPipeline.cleanup();
+    if (this->hasAnimations) // (hasAnimations from previous scene)
+    {
+        this->animShaderInput.cleanup();
+        this->animPipeline.cleanup();
+    }
 
     // UI renderer
     this->uiRenderer->initForScene();
@@ -740,7 +743,8 @@ VulkanRenderer::VulkanRenderer()
     : resourceManager(nullptr), 
     uiRenderer(nullptr), 
     debugRenderer(nullptr),
-    window(nullptr)
+    window(nullptr),
+    hasAnimations(false)
 {
     loadConfIntoMemory();
 }

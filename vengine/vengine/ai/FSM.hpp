@@ -103,12 +103,12 @@ protected:
     }
 
     template<typename T>
-    void addRequiredComponent(uint32_t entityID)
+    void addRequiredComponent(Entity entityID)
 	{
         sceneHandler->getScene()->setComponent<T>(entityID);
     }
 
-    virtual void registerEntityComponents(uint32_t entityId) = 0;
+    virtual void registerEntityComponents(Entity entityId) = 0;
 
     virtual void real_init() = 0; 
 
@@ -129,7 +129,7 @@ public:
         checkForCommonErrors();
     }
 
-    void registerEntity(uint32_t entityId)
+    void registerEntity(Entity entityId)
     {
         // Add Components that FSM needs
         registerEntityComponents(entityId);
@@ -263,5 +263,5 @@ public:
 	
 	std::vector<FSM_Node*> nodes;
 
-	void execute(uint32_t entityID);
+	void execute(Entity entityID);
 };

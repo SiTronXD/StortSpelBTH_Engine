@@ -20,8 +20,6 @@ TestDemoScene::~TestDemoScene()
 
 void TestDemoScene::init()
 {
-	std::cout << "Test scene init" << std::endl;    
-
 	this->timer = 0.0f;
 
 	// Camera
@@ -110,6 +108,8 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
+			/*newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+				"assets/models/run_forward_correct.fbx");*/
 			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
 				"assets/models/Stormtrooper/source/silly_dancing.fbx",
 				"assets/models/Stormtrooper/textures");

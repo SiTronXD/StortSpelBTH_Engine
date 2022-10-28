@@ -274,7 +274,7 @@ static void lua_pushcollider(lua_State* L, const Collider& col)
 	}
 }
 
-static Rigidbody lua_torigidbody(lua_State* L, int index)
+static Rigidbody lua_torigidbody(lua_State* L, int index, bool assigned = false)
 {
 	Rigidbody rb;
 	// Sanity check
@@ -282,6 +282,8 @@ static Rigidbody lua_torigidbody(lua_State* L, int index)
 		std::cout << "Error: not rigidbody-table" << std::endl;
 		return rb;
 	}
+
+	rb.assigned = assigned;
 
 	lua_getfield(L, index, "mass");
 	rb.mass = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;

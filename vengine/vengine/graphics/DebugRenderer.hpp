@@ -34,7 +34,7 @@ class DebugRenderer
 private:
     friend VulkanRenderer;
 
-    const uint32_t START_NUM_MAX_ELEMENTS = 256;
+    const uint32_t START_NUM_MAX_ELEMENTS = 1024;
 
     std::vector<DebugMeshDrawCallData> meshDrawData;
 
