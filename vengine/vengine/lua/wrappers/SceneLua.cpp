@@ -349,6 +349,7 @@ int SceneLua::lua_setComponent(lua_State* L)
 
 	float endTime = 0;
 	StorageBufferID boneID = 0;
+	bool assigned = false;
 
 	switch ((CompType)type)
 	{
@@ -375,7 +376,8 @@ int SceneLua::lua_setComponent(lua_State* L)
 		scene->setComponent<Collider>(entity, lua_tocollider(L, 3));
 		break;
 	case CompType::RIGIDBODY:
-		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, 3));
+		if (scene->hasComponents<Rigidbody>(entity)) { assigned = scene->getComponent<Rigidbody>(entity).assigned; }
+		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, 3, assigned));
 		break;
 	case CompType::ANIMATION:
 		if (scene->hasComponents<AnimationComponent>(entity)) 
