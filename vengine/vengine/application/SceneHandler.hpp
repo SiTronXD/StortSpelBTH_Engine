@@ -14,6 +14,7 @@ private:
 
 	NetworkHandler* networkHandler;
 	ScriptHandler* scriptHandler;
+    AIHandler* aiHandler;
 	ResourceManager* resourceManager;
 	PhysicsEngine* physicsEngine;
 	VulkanRenderer* vulkanRenderer;
@@ -28,6 +29,7 @@ public:
 
 	void update();
 	void updateToNextScene();
+	void prepareForRendering();
 
 	void setScene(Scene* scene, std::string path = "");
 	void reloadScene();
@@ -38,6 +40,9 @@ public:
 
 	void setScriptHandler(ScriptHandler* scriptHandler);
 	ScriptHandler* getScriptHandler();
+
+    void setAIHandler(AIHandler* aiHandler);
+    inline AIHandler* getAIHandler(){return this->aiHandler;};
 
 	void setPhysicsEngine(PhysicsEngine* physicsEngine);
 	inline PhysicsEngine* getPhysicsEngine() { return this->physicsEngine; }

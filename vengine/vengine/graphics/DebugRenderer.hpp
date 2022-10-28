@@ -6,7 +6,7 @@
 #include "ShaderInput.hpp"
 #include "vulkan/Pipeline.hpp"
 #include "VertexBufferArray.hpp"
-#include "../Application/Scene.hpp"
+#include "../application/Scene.hpp"
 
 class PhysicalDevice;
 class Device;
@@ -34,7 +34,7 @@ class DebugRenderer
 private:
     friend VulkanRenderer;
 
-    const uint32_t START_NUM_MAX_ELEMENTS = 256;
+    const uint32_t START_NUM_MAX_ELEMENTS = 1024;
 
     std::vector<DebugMeshDrawCallData> meshDrawData;
 
@@ -120,4 +120,7 @@ public:
     inline const Pipeline& getMeshPipeline() const { return this->meshPipeline; }
     inline const VertexBufferArray& getLineVertexBufferArray() const { return this->lineVertexBuffers; }
     inline size_t getNumVertices() { return this->numVertices; }
+
+    // Mostly for Lua use
+    inline ResourceManager* getResourceManager() const { return this->resourceManager; }
 };

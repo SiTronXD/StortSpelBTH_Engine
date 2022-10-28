@@ -21,6 +21,7 @@ class NetworkHandler;
 class ScriptHandler;
 class UIRenderer;
 class DebugRenderer;
+class AIHandler;
 
 struct LuaSystem
 {
@@ -47,6 +48,7 @@ protected:
 	UIRenderer* getUIRenderer();
 	DebugRenderer* getDebugRenderer();
 	SceneHandler* getSceneHandler();
+    AIHandler* getAIHandler();
 
     template <typename T> T getConfigValue(std::string_view name)
     {
@@ -99,6 +101,14 @@ public:
 	// When starting (after lua)
 	virtual void start();
 	virtual void update();
+
+	// Collision callbacks (some implemented later)
+	//virtual void onCollisionEnter(Entity e1, Entity e2);
+	virtual void onCollisionStay(Entity e1, Entity e2);
+	//virtual void onCollisionExit(Entity e1, Entity e2);
+	//virtual void onTriggerEnter(Entity e1, Entity e2);
+	virtual void onTriggerStay(Entity e1, Entity e2);
+	//virtual void onTriggerExit(Entity e1, Entity e2);
 
 	inline entt::registry& getSceneReg() { return this->reg; }
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }

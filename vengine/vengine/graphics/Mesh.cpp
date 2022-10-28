@@ -142,6 +142,11 @@ void Mesh::createVertexBuffers(
         meshData.vertexStreams.positions
     );
 
+    // Normals
+    this->vertexBuffers.addVertexBuffer(
+        meshData.vertexStreams.normals
+    );
+
     // Colors
     this->vertexBuffers.addVertexBuffer(
         meshData.vertexStreams.colors

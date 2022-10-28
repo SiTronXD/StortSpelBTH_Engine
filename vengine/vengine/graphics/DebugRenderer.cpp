@@ -314,7 +314,7 @@ void DebugRenderer::renderSkeleton(
     Mesh& mesh = this->resourceManager->getMesh(
         scene->getComponent<MeshComponent>(entity).meshID);
     MeshData& meshData = mesh.getMeshData();
-    const glm::mat4& modelMat = scene->getComponent<Transform>(entity).matrix;
+    const glm::mat4& modelMat = scene->getComponent<Transform>(entity).getMatrix();
 
     // Loop through bones and render them as lines
     size_t numBones = meshData.bones.size();
@@ -324,6 +324,9 @@ void DebugRenderer::renderSkeleton(
     glm::mat4* boneTransform = nullptr;
     for (size_t i = 1; i < numBones; ++i)
     {
+        if (meshData.bones[i].parentIndex < 0)
+            continue;
+
         // Transforms
         parentBoneTransform = &meshData.bones[meshData.bones[i].parentIndex].boneMatrix;
         boneTransform = &meshData.bones[i].boneMatrix;

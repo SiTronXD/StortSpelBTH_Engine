@@ -7,16 +7,19 @@
 #include "Input.hpp"
 #include "../dev/Log.hpp"
 #include "../graphics/vulkan/VulkanInstance.hpp"
+#include "../resource_management/Configurator.hpp"
+
+using namespace vengine_helper::config;
 
 Window::Window()
     : windowHandle(nullptr),
-    isRunning(true)
+    isRunning(true),
+    width(0),
+    height(0)
 {}
 
 void Window::initWindow(
-    const std::string &name, 
-    const int width, 
-    const int height)
+    const std::string &name)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -24,16 +27,20 @@ void Window::initWindow(
 
     this->titleName = name;
 
-    ///Initializes sdl window
+    // Initializes SDL
     SDL_Init(SDL_INIT_VIDEO);
 
-    ///Configure SDL Window...    
+    // Get size from config
+    this->width = DEF<int>(W_WIDTH);
+    this->height = DEF<int>(W_HEIGHT);
+
+    // Configure SDL Window...    
     this->windowHandle = SDL_CreateWindow(
         this->titleName.c_str(),
         SDL_WINDOWPOS_CENTERED, 
         SDL_WINDOWPOS_CENTERED, 
-        width, 
-        height, 
+        this->width, 
+        this->height, 
         SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE
     );
 }
@@ -49,10 +56,30 @@ void Window::registerResizeEvent(bool& listener)
 
 void Window::update()
 {
+    // Hide cursor if it should
+    if (Input::shouldHideCursor != Input::lastShouldHideCursor)
+    {
+        SDL_ShowCursor(
+            Input::shouldHideCursor ? 
+            SDL_DISABLE :
+            SDL_ENABLE
+        );
+
+        // Relative mode for mouse delta movement
+        SDL_SetRelativeMouseMode(
+            Input::shouldHideCursor ? 
+            SDL_TRUE : 
+            SDL_FALSE
+        );
+    }
+
+    // Update input
     Input::update();
 
     // Update current keys
     SDL_Event event;
+    Input::setDeltaCursor(0, 0);
+    Input::setDeltaScrollWheel(0);
     while (SDL_PollEvent(&event) != 0) {
         ImGui_ImplSDL2_ProcessEvent(&event);
         if (event.type == SDL_QUIT ||
@@ -79,6 +106,34 @@ void Window::update()
                 event.type == SDL_MOUSEBUTTONDOWN
             );
         }
+
+        // Mouse motion
+        if (event.type == SDL_MOUSEMOTION)
+        {
+            Input::setDeltaCursor(
+                event.motion.xrel, 
+                event.motion.yrel
+            );
+        }
+
+        // Scroll wheel
+        if (event.type == SDL_MOUSEWHEEL)
+        {
+            Input::setDeltaScrollWheel(event.wheel.y);
+        }
+    }
+
+    // Set mouse pos
+    if (Input::shouldSetMousePos)
+    {
+        Input::shouldSetMousePos = false;
+
+        // Set mouse position
+        SDL_WarpMouseInWindow(
+            this->windowHandle,
+            Input::requestedMouseX,
+            Input::requestedMouseY
+        );
     }
 
     // Update mouse position
@@ -96,6 +151,35 @@ void Window::initImgui()
 void Window::shutdownImgui()
 {
     ImGui_ImplSDL2_Shutdown();
+}
+
+void Window::setFullscreen(bool fullscreen)
+{
+    // Get size from config
+    this->width = DEF<int>(W_WIDTH);
+    this->height = DEF<int>(W_HEIGHT);
+
+    // Use display size when fullscreen
+    if (fullscreen)
+    {
+        SDL_DisplayMode dm{};
+        SDL_GetCurrentDisplayMode(0, &dm);
+        this->width = dm.w;
+        this->height = dm.h;
+    }
+
+    // Apply new size
+    SDL_SetWindowSize(
+        this->windowHandle, 
+        this->width, 
+        this->height
+    );
+
+    // Fullscreen
+    SDL_SetWindowFullscreen(
+        this->windowHandle,
+        fullscreen ? SDL_WINDOW_FULLSCREEN : 0
+    );
 }
 
 void Window::createVulkanSurface(
@@ -120,17 +204,17 @@ void Window::createVulkanSurface(
 void Window::getVulkanExtensions(
     std::vector<const char*>& outputExtensions)
 {
-    unsigned int sdlExtensionCount = 0;        /// may require multiple extension  
+    unsigned int sdlExtensionCount = 0;        //  may require multiple extension  
     SDL_Vulkan_GetInstanceExtensions(
         this->windowHandle, 
         &sdlExtensionCount, 
         nullptr
     );
 
-    ///Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
+    // Store the extensions in sdlExtensions, and the number of extensions in sdlExtensionCount
     outputExtensions.resize(sdlExtensionCount);
 
-    /// Get SDL Extensions
+    //  Get SDL Extensions
     SDL_Vulkan_GetInstanceExtensions(
         this->windowHandle, 
         &sdlExtensionCount, 
@@ -148,7 +232,7 @@ Window::~Window() {
     SDL_DestroyWindow(this->windowHandle);
 }
 
-////__attribute__((unused))
+// /__attribute__((unused))
 [[maybe_unused]]
 int resizingEventWatcher(void* data, SDL_Event* event)
 {

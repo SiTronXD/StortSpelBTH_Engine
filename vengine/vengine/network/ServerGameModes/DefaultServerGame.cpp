@@ -4,8 +4,10 @@ DefaultServerGame::DefaultServerGame() {
 
 }
 
-void DefaultServerGame::init() {
-
+void DefaultServerGame::init() 
+{
+    //TODO: After intern Test, make use of DefaultServerGame
+    //this->aiHandler.init(&this->sceneHandler);
 }
 
 void DefaultServerGame::update(float dt)
@@ -21,4 +23,10 @@ void DefaultServerGame::update(float dt)
 	{
 		this->scene->getComponent<Transform>(this->scene->getEnemies(i)).rotation += dt * 50 * (i + 1);
 	}
+    scene->getPlayer(0);
+    //TODO: After intern Test, make use of DefaultServerGame
+    //this->aiHandler.update();
+    //pf.atPoint(const glm::vec3 &from, const glm::vec3 &to) // Checks if Entity is close enough to specific position
+    //pf.getDirTo(glm::vec3 &from, glm::vec3 &to)              // Returns a normalized Vector from "from" to "to"; That points in the next position player has to go to to reach position "to" 
+    
 }

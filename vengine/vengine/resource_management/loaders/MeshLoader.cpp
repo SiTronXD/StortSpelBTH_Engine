@@ -31,9 +31,11 @@ void MeshLoader::setTextureLoader(TextureLoader* textureLoader)
     this->textureLoader = textureLoader;
 }
 
-MeshData MeshLoader::importMeshData(std::string& path) 
+MeshData MeshLoader::importMeshData(
+    const std::string& modelPath,
+    const std::string& texturesFolderPath)
 {
-    return this->assimpImport(path);
+    return this->assimpImport(modelPath, texturesFolderPath);
 }
 
 Mesh MeshLoader::createMesh(MeshData& data) 
@@ -41,7 +43,9 @@ Mesh MeshLoader::createMesh(MeshData& data)
     return std::move(Mesh(std::move(data), this->importStructs));
 }
 
-MeshData MeshLoader::assimpImport(const std::string &modelFile) 
+MeshData MeshLoader::assimpImport(
+    const std::string& modelFile,
+    const std::string& texturesFolderPath) 
 {
     // Import Model Scene
     using namespace vengine_helper::config;
@@ -51,29 +55,49 @@ MeshData MeshLoader::assimpImport(const std::string &modelFile)
                                 // Triangles
             | aiProcess_FlipUVs // Flips the texture UV values, to be same as how
                                 // we use them
-            // | aiProcess_JoinIdenticalVertices // This caused issues for skeletal animations
+             | aiProcess_JoinIdenticalVertices // This causes issues 
+                // for skeletal animations when using the latest version of assimp, but not
+                // when using an earlier version... 
     );
-    if (scene == nullptr) {
+    if (scene == nullptr)
+    {
         Log::warning("Failed to load model (" + modelFile + ")");
+
         return MeshData();
-        //throw std::runtime_error("Failed to load model (" + modelFile + ")");
     }
     std::vector<uint32_t> materialToTexture;
-    this->textureLoader->assimpTextureImport(scene, materialToTexture);
+    this->textureLoader->assimpTextureImport(scene, texturesFolderPath, materialToTexture);
     
     MeshData meshData = this->assimpMeshImport(scene, materialToTexture);
     this->importer.FreeScene();
 
-    // Make sure the streams are valid
+    // Make sure the vertex data streams are valid
     if (!MeshDataInfo::areStreamsValid(meshData.vertexStreams))
     {
         Log::error("There are different non-zero number of elements in certain vertex streams. This will cause issues when rendering the mesh...");
     }
 
+    // Print out a warning if the index count is not divisible by 3 in a submesh...
+    for (size_t i = 0; i < meshData.submeshes.size(); ++i)
+    {
+        // Check if this submesh numindices is divisible by 3
+        SubmeshData& currentSubmesh = meshData.submeshes[i];
+        if (currentSubmesh.numIndicies % 3 != 0)
+        {
+            Log::warning("Submesh [" + std::to_string(i) + "] in " + modelFile + " has an index count which is not divisible by 3. Index count: " + std::to_string(currentSubmesh.numIndicies));
+            currentSubmesh.numIndicies = currentSubmesh.numIndicies - (currentSubmesh.numIndicies % 3);
+            Log::warning("Submesh [" + std::to_string(i) + "] in " + modelFile + " had it's index count truncated to " + std::to_string(currentSubmesh.numIndicies));
+        }
+    }
+
+    // We only allow 1 submesh for meshes with skeletal animations
+    if (meshData.submeshes.size() > 1 && meshData.bones.size() > 0)
+    {
+        Log::warning("The engine does not support multiple submeshes for meshes with skeletal animations. Please merge the submeshes into 1 single submesh for " + modelFile);
+    }
+
     return meshData;
 }
-
-
 
 MeshData MeshLoader::assimpMeshImport(const aiScene *scene, std::vector<uint32_t>& materialToTexture)
 {  
@@ -90,8 +114,8 @@ MeshData MeshLoader::assimpMeshImport(const aiScene *scene, std::vector<uint32_t
             data.vertexStreams.positions
         );
         this->insertStream(
-            mesh.vertexStreams.colors,
-            data.vertexStreams.colors
+            mesh.vertexStreams.normals,
+            data.vertexStreams.normals
         );
         this->insertStream(
             mesh.vertexStreams.texCoords,
@@ -249,17 +273,17 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
 
     /// Resize vertex list to hold all vertices for mesh
     vertexStreams.positions.resize(mesh->mNumVertices);
-    vertexStreams.colors.resize(mesh->mNumVertices);
+    vertexStreams.normals.resize(mesh->mNumVertices);
     vertexStreams.texCoords.resize(mesh->mNumVertices);
     int vertex_index = 0;
     int index_index = 0;
 
     /// For each veretx in our assimp mesh, define the Vertex in our format
-    for (auto ai_vertice :
+    for (auto aiVertex :
         std::span<aiVector3D>(mesh->mVertices, mesh->mNumVertices)) 
     {
         /// copy the position vertex
-        vertexStreams.positions[vertex_index] = {ai_vertice.x, ai_vertice.y, ai_vertice.z};
+        vertexStreams.positions[vertex_index] = { aiVertex.x, aiVertex.y, aiVertex.z };
         
         /// copy the tex coordinate, if model have textures
         if (mesh->mTextureCoords[0] != nullptr) 
@@ -276,8 +300,21 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
             vertexStreams.texCoords[vertex_index] = {0.F, 0.F};
         }
 
-        /// set Color, if we want to use it later...
-        vertexStreams.colors[vertex_index] = { 1.f, 1.f, 1.f }; /// Color is white
+        /// copy the normals, if model have normals
+        if (mesh->HasNormals())
+        {
+            vertexStreams.normals[vertex_index] = 
+            { 
+                mesh->mNormals[vertex_index].x,
+                mesh->mNormals[vertex_index].y,
+                mesh->mNormals[vertex_index].z 
+            };
+        }
+        else
+        {
+            vertexStreams.normals[vertex_index] = { 1.f, 1.f, 1.f };
+        }
+
         vertex_index++;
     }
 

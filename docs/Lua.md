@@ -7,9 +7,13 @@ This file contains everything lua related that has been implemented in to Vengin
 	* [Vector](#Vector)
 * [Exposed Systems:](#Exposed-Systems)
 	* [Scene](#Scene)
+		* [Components](#Components)
 	* [Input](#Input)
 	* [Resource Manager](#Resource-Manager)
 	* [Network](#Network)
+	* [Physics](#Physics)
+	* [UIRenderer](#UIRenderer)
+	* [DebugRenderer](#DebugRenderer)
 * [Scene Files](#Scene-Files)
 * [Prefabs](#Prefabs)
 * [Script Component](#Script-Component)
@@ -21,6 +25,22 @@ Metatables within Lua is a way to share functionality between tables. The concep
 ### Core
 The core global contains common functionality that is useful in a variety of situations. Currently it's very small but later will be added upon after demand.
 
+#### Colors
+Core contains some default colors to be used in other global functions. It uses the [vector](#Vector) global. List of currently added colors:
+~~~ Lua
+-- Some default colors
+core.RED = vector(1, 0, 0)
+core.GREEN = vector(0, 1, 0)
+core.BLUE = vector(0, 0, 1)
+core.YELLOW = vector(1, 1, 0)
+core.MAGENTA = vector(1, 0, 1)
+core.CYAN = vector(0, 1, 1)
+core.BLACK = vector(0, 0, 0)
+core.WHITE = vector(1, 1, 1)
+core.GRAY = vector(0.5, 0.5, 0.5)
+core.LIGHTGRAY = vector(0.8, 0.8, 0.8)
+~~~
+
 ### Vector
 The vector lua table is one of the most used metatables in the lua environment. It is a table that contains a x, y and z value and functions and overloading of functions to match the vector classes used in C++. It's also used for a variation of components such as Transform.
 
@@ -31,12 +51,15 @@ Notable functions:
 vector(x, y, z) -- Constructor
 vector.new(x, y, z) -- Also constructor
 vector.fill(v) -- Returns a vector where all values are "v" (vector(v, v, v))
+vector.random(scalar) --Makes this vector random between -1 and 1 times scalar
+vector.randomPositive(scalar) --Makes this vector random between 0 and 1 times scalar
 vector:length() -- Returns length of vector
 vector:cross(v) -- Return the cross product between itself and vector v
 vector:normalize() -- Normalizes the vector
 vector:rotate(x, y, z) -- Rotates the vector based on values
-vector:randomVector(scalar) --Makes this vector random between -1 and 1 times scalar (scalar variable is optional)
-vector:randomVectorPositive(scalar) --Makes this vector random between 0 and 1 times scalar (scalar variable is optional)
+vector:rotateX(xrot) -- Rotates the vector on the X-axis
+vector:rotateY(yrot) -- Rotates the vector on the Y-axis
+vector:rotateZ(zrot) -- Rotates the vector on the Z-axis
 ~~~
 
 ## Exposed Systems
@@ -46,6 +69,10 @@ Names of the system globals in lua:
 * scene
 * input
 * resources
+* network
+* physics
+* uiRenderer
+* debugRenderer
 
 ## Scene
 The scene global that has been created in the lua environment is the main interface of the ECS, similarly to the C++ environment. It has multiple functions that is the same as in C++ and some extra functionality.
@@ -188,6 +215,161 @@ scene.removeComponent(int : entity, int : component_type)
 scene.removeComponent(entity, CompType.Mesh)
 ~~~
 
+#### setActive
+Sets an enitity active if it wasn't before in the scene.
+~~~ Lua
+scene.setActive(int : entity)
+~~~
+
+#### setInactive
+Sets an enitity inactive if it wasn't before in the scene.
+~~~ Lua
+scene.setInactive(int : entity)
+~~~
+
+#### isActive
+Checks status of an entity. Returns bool describing it's active status
+~~~ Lua
+scene.isActive(int : entity) -- Returns bool
+~~~
+
+### Components
+The amount of components supported grows with the engine. This section goes over the member variables that the components have and how to use them in combination with the [scene](#Scene) global and [prefabs](#Prefabs) These are the ones currently supported in lua:
+* [Transform](#Transform)
+* [MeshComponent](#MeshComponent)
+* [Script](#Script)
+* [Camera](#Camera)
+* [Collider](#Collider)
+* [Rigidbody](#Rigidbody)
+* [Animation](#Animation)
+* AudioListener (not completely done)
+* AudioSource (not completely done)
+
+#### Transform
+The transform component consists of three [vectors](#Vector) that describe the position, rotation and scale of an entity in the scene.
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Transform = {
+	vector : position,
+	vector : rotaiton,
+	vector : scale
+}
+
+-- Member functions
+transform:right() -- get local right vector
+transform:up() -- get local up vector
+transform:forward() -- get local forward vector
+
+--Example of use
+local t = scene.getComponent(CompType.Transform, e)
+t.position = t.position + vector(1, 0, 1)
+scene.setComponent(CompType.Transform, e, t)
+~~~
+
+#### MeshComponent
+The mesh component for now only consists of an integer that is the mesh ID in the [Resource manager](#ResourceManager). In some instances strings can be used for creation
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Mesh = int : mesh_ID
+local Mesh = string : mesh_path -- For creation strings can be used
+local Mesh = { -- When getting from scene.getComponent
+	int : meshID
+}
+
+--Example of use
+local mesh = scene.getComponent(e, CompType.Mesh)
+mesh.meshID = resources.addMesh("test.obj")
+scene.setComponent(e, CompType.Mesh, mesh)
+~~~
+
+#### Script
+The script component is used for creating scriptable components with updating every frame. More information in [Script](#Script-Component).
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Script = string : path
+local Script = { -- When getting from scene.getComponent
+	int : ID,
+	string : path,
+	Transform : transform,
+	additional members...
+}
+
+--Example of use
+local script = scene.getComponent(e, CompType.Script) -- Lua table
+print(script.ID)
+scene.setComponent(e, CompType.Script, "script.lua")
+~~~
+
+#### Camera
+The camera component for now only consists of an float for the FOV (field of view)
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Camera = float : fov
+local Camera = { -- When getting from scene.getComponent
+	float : fov
+}
+
+--Example of use
+local cam = scene.getComponent(e, CompType.Camera)
+cam.fov = 90
+scene.setComponent(e, CompType.Camera, cam)
+~~~~~~
+
+#### Collider
+The collider component is used for physics and can be combined with [rigidbody](#Rigidbody) for it to be dynamic. Only using a collider component will result with a kinematic physicsbody.
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Collider = {
+	int : type, -- ColliderType global useful here
+	bool : isTrigger,
+	float : radius, -- Only needed/recieved for spheres and capsules
+	float : height, -- Only needed/recieved for capsules
+	vector : extents -- Only needed/recieved for boxes
+}
+
+--Example of use
+local col = scene.getComponent(e, CompType.Collider)
+col.type = ColliderType.Sphere
+col.radius = 2.5
+col.isTrigger = false
+scene.setComponent(e, CompType.Collider, col)
+~~~
+
+#### Rigidbody
+The rigidbody component is used to make a physics object dynamic in the scene. Collisions and acceleration is supported. Must be used in combination with [collider component](#Collider), will not create object in [physics engine](#Physics) otherwise.
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local RigidBody = {
+	float : mass,
+	float : gravityMult,
+	float : friction,
+	vector : posFactor,
+	vector : rotFactor,
+	vector : acceleration,
+	vector : velocity
+}
+
+--Example of use
+local rb = scene.getComponent(e, CompType.Rigidbody)
+rb.velocity = rb.velocity + vector(0, 10, 0)
+scene.setComponent(e, CompType.Rigidbody, rb)
+~~~
+
+#### Animation
+The animation component is used to apply an animation on an enity with a [mesh](#MeshComponent). Currently only the timer and playback speed can be altered, but more will be added in the future. Currently only the first animation in the mesh will be played and can't be switched (will be fixed).
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local Animation = {
+	float : timer,
+	float : timeScale
+}
+
+--Example of use
+local anim = scene.getComponent(e, CompType.Animation)
+anim.timeScale = -2 -- Backwards at double speed
+scene.setComponent(e, CompType.Animation, anim)
+~~~
+
 ## Input
 The input global that has been created in the lua environment is the main interface of the keyboard and mouse inputs.
 
@@ -279,22 +461,63 @@ Function used to get the mouse delta on the screen. This returns a [Vector](#Vec
 input.getMouseDelta() -- Returns vector
 ~~~
 
+#### getScrollWheelDelta
+Function used to get the scroll wheel delta. The function returns an integer describing how much the scrollwheel is scrolling.
+~~~ Lua
+input.getScrollWheelDelta() -- Returns int
+~~~
+
+#### setCursorPosition
+Function used to manually set the cursor's position on the screen. Argument is a 2D [Vector](#Vector) where vector(0, 0) is the top left of the screen.
+~~~ Lua
+input.setCursorPosition(vector : screen_pos)
+~~~
+
+#### setHideCursor
+Functions that hides/shows the cursor depending on bool sent in. When being hidden, the mouse can't leave the screen and [getMouseDelta](#getMouseDelta) function still works as expected.
+~~~ Lua
+input.setHideCursor(bool : hide)
+~~~
+
 ## Resource Manager
 The resources global that has been created in the lua environment is the main interface of the resource manager in C++. It is used to load in a variety of assets from disk, such as meshes and textures.
+
+With the resources global comes another global table that is related to Filter modes to textures. These value can be used in a table when [adding a texture](#addTexture) to the resource manager.
+~~~ Lua
+-- Filters
+Filters.Nearest
+Filters.Linear
+Filters.CubicEXT -- Not available currently (warnings)
+Filters.CubicIMG -- Not available currently (warnings)
+~~~
 
 ### Functions
 List of functions related to the *resources* global.
 
 #### addMesh
-This functions loads and creates a mesh to be used in the engine. It returns an ID of the mesh that can be used to reference it in different part of the engine such as in components. If the path given already has been loaded, the ID is returned immediatly. If the mesh couldn't be created a default mesh ID is returned.
+This functions loads and creates a mesh to be used in the engine. It returns an ID of the mesh that can be used to reference it in different part of the engine such as in components. If the path given already has been loaded, the ID is returned immediatly. If the mesh couldn't be created a default mesh ID is returned. An optional string can also be sent in as the texture path.
 ~~~ Lua
 resources.addMesh(string : mesh_path) -- Returns the mesh ID
+resources.addMesh(string : mesh_path, string : textures_path) -- optional
 ~~~
 
 #### addTexture
 This functions loads and creates a texture to be used in the engine. It returns an ID of the texture that can be used to reference it in different part of the engine such as in components. If the path given already has been loaded, the ID is returned immediatly. If the texture couldn't be created a default texture ID is returned.
+Additionally a table containing sampling information can be sent as a second argument.
 ~~~ Lua
 resources.addTexture(string : texture_path) -- Returns the texture ID
+resources.addTexture(string : texture_path, table : sampler_settings) -- optional
+
+-- Example
+local setttings = {}
+settings.filterMode = Filters.Linear
+local textureID = resources.addTexture("test.png", settings)
+~~~
+
+#### addAudio
+Loads audio file that can be used in the engine. Returns ID if the path sent is successfully loaded the audiofile. Otherwise the return is nil.
+~~~ Lua
+resources.addAudio(string : audio_path) -- Returns the audio ID (nil if not found)
 ~~~
 
 ## Network
@@ -339,6 +562,126 @@ sendUDPData(vector : player_position, vector : player_rotation)
 
 #### getNetworkData
 In progress...
+
+## Physics
+The physics global that has been created for the lua environment is the main interface for simple physics functions such as [raycast](#raycast) and [contactTest](#contactTest).
+
+### Functions
+List of functions related to the *physics* global.
+
+#### renderDebugShapes
+This function takes a bool parameter to decide if the physics engine should render debug primitives for the colliders within the current scene.
+~~~ Lua
+physics.renderDebugShapes(bool : renderDebug)
+~~~
+
+#### raycast
+Define a ray by a position and direction and cast it to the physics scene. If something was hit the functions returns a table containing entity and some other information. A distance value can also be sent in as an argument. The default value is 100.
+~~~ Lua
+physics.raycast(vector : pos, vector : dir, float dist) -- dist is optional
+
+-- Returning table (if hit)
+local payload = {
+	int : entity,
+	vector : hitPosition,
+	vector : hitNormal
+}
+
+-- Example
+local payload = physics.raycast(vector(0, 0, 0), vector (0, 0, 1), 100)
+if(payload) then
+	print("Hit entity: " .. payload.entity .. " at pos: " .. payload.position)
+end
+
+~~~
+
+#### testContact
+Send in a [Collider](#Collider) as the collision shape and position and rotation. Rotation is however optional. The function returns a table as an array of all entities hit with the collision shape.
+~~~ Lua
+physics.testContact(collider : shape, vector : pos, vector : rot)
+
+-- Example
+local list = physics.testContact(col, vector(0, 0, 0), vector(90, 0, 0))
+for i = 1, #list do
+	print("Hit entity: " .. list[i])
+end
+~~~
+
+## UIRenderer
+The uiRenderer global that has been created for the lua environment is the main interface to render textures to the screen as UI.
+
+### Functions
+List of functions related to the *uiRenderer* global.
+
+#### setTexture
+Sets the active texture resource to be rendered when calling [renderTexture](#renderTexture). It can be used with a texture ID or the path to the texture.
+~~~ Lua
+uiRenderer.setTexture(int : textureID)
+uiRenderer.setTexture(string : texture_path)
+~~~
+
+#### renderTexture
+Renders the active texture to the screen. [setTexture](#setTexture) should be called before. Takes a 2D position and width and height as the argument.
+~~~ Lua
+uiRenderer.renderTexture(float : x, float : y, float : width, float : height)
+
+--Example use
+uiRenderer.setTexture("test.png")
+uiRenderer.renderTexture(0, 0, 100, 100) -- 100x100 image in the middle of the screen
+~~~
+
+## DebugRenderer
+The debugRenderer global that has been created for the lua environment is the main interface to render debug lines and wireframe objects. This can be used in combination of [Physics](#Physics) for colliders and more.
+
+### Functions
+List of functions related to the *debugRenderer* global.
+
+#### renderLine
+Renders a line of a designated color.
+~~~ Lua
+debugRenderer.renderLine(
+vector : pos0,
+vector : pos1,
+vector : color)
+~~~
+
+#### renderSphere
+Renders a sphere of a designated position, radius and color
+~~~ Lua
+debugRenderer.renderSphere(
+vector : position,
+float : radius,
+vector : color)
+~~~
+
+#### renderBox
+Renders a box of a designated position, rotation, size and color
+~~~ Lua
+debugRenderer.renderBox(
+vector : position,
+vector : rotation,
+vector : size,
+vector : color)
+~~~
+
+#### renderCapsule
+Renders a capsule of a designated position, rotation, height, radius and color
+~~~ Lua
+debugRenderer.renderCapsule(
+vector : position,
+vector : rotation,
+float : height,
+float : radius,
+vector : color)
+~~~
+
+#### renderSkeleton
+Renders a skeleton on an entity of a designated color.
+~~~ Lua
+debugRenderer.renderSkeleton(
+int : entityID,
+vector : color)
+~~~
 
 ## Scene Files
 Scene files are lua scripts that describe the initilization of a scene and is mostly used in that context. What is done in the lua file is up to the user, but creating entities and setting components within the [Scene](#Scene). Currently these are called when creating a new scene in C++ and via the [setScene](#setScene) function in lua.
@@ -421,8 +764,8 @@ Mesh = string : mesh_path
 -- Script: string for lua path
 Script = string : lua_path
 
--- Camera: anything except nil
-Camera = any : no_args
+-- Camera: float for Field of View
+Camera = float : fov
 ~~~
 
 ## Script Component
@@ -447,6 +790,8 @@ When using the script, some function names will be called from C++ if they are d
 ~~~ Lua
 script:init() -- Called after component has been created
 script:update(dt) -- Called every new frame where dt is the delta time.
+script:onCollisionStay(e) -- Called when colliding with another entity
+script:onTriggerStay(e) -- Called when trigger colliding with another entity
 ~~~
 The script table created and used in these functions also have some extra member elements that has been provided by the C++ side.
 ~~~ Lua

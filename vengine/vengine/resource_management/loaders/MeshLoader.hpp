@@ -17,7 +17,7 @@ private:
     ResourceManager*     resourceMan    = nullptr;
     TextureLoader*       textureLoader  = nullptr;
 
-    MeshData assimpImport(const std::string& modelFile);
+    MeshData assimpImport(const std::string& modelFile, const std::string& texturesFolderPath);
     MeshData assimpMeshImport(const aiScene* scene,     std::vector<uint32_t>& materialToTexture);   
 
     template <typename T>
@@ -35,7 +35,9 @@ public:
     void init(VmaAllocator* vma, vk::PhysicalDevice* physiscalDev, Device* dev, vk::Queue* transQueue, vk::CommandPool* transCmdPool, ResourceManager* resourceMan);
     void setTextureLoader(TextureLoader* textureLoader);
 
-    MeshData importMeshData(std::string& path);
+    MeshData importMeshData(
+        const std::string& modelPath,
+        const std::string& texturesFolderPath);
     Mesh createMesh(MeshData& data);
 
 };

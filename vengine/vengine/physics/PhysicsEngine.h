@@ -1,6 +1,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <vector>
 #include <LinearMath/btAlignedObjectArray.h>
 
 #include "../application/Time.hpp"
@@ -49,6 +50,7 @@ private:
 
 	float timer;
 	const float TIMESTEP = 1.0f / 30.0f;
+	bool renderDebug;
 
 	btCollisionDispatcher* collDisp;
 	btBroadphaseInterface* bpInterface;
@@ -78,6 +80,8 @@ public:
 	void init();
 	void update();
 
+	// Function to automatically render all collider shapes
+	void renderDebugShapes(bool renderDebug);
 	// Raycast into the scene and get resulting hit
 	RayPayload raycast(Ray ray, float maxDist = 100.0f);
 	// Test contact of a collider within the scene. Get the resulting entities hit

@@ -5,11 +5,14 @@
 
 struct Transform
 {
+private:
+	glm::mat4 matrix;
+
+public:
 	glm::vec3 position;
 	glm::vec3 rotation;
 	glm::vec3 scale;
 
-	glm::mat4 matrix;
 
 	Transform():
 		position(0.0f), rotation(0.0f), scale(1.0f), matrix(1.0f)
@@ -28,4 +31,8 @@ struct Transform
 			glm::scale(glm::mat4(1.0f), this->scale);
 	}
 	
+	inline const glm::mat4& getMatrix() const
+	{
+		return this->matrix;
+	}
 };

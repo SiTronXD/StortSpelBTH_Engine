@@ -34,15 +34,12 @@ Engine::~Engine()
 void Engine::run(std::string appName, std::string startScenePath, Scene* startScene)
 {
     using namespace vengine_helper::config;
-    loadConfIntoMemory(); //  load config data into memory
+    loadConfIntoMemory(); // load config data into memory
 
-    //  Window
+    // Window
     Window window;
-    window.initWindow(
-        appName, 
-        DEF<int>(W_WIDTH), 
-        DEF<int>(W_HEIGHT)
-    );
+    window.initWindow(appName);
+    window.setFullscreen(DEF<bool>(W_FULLSCREEN));
     
     // Create vulkan renderer instance
     VulkanRenderer renderer;
@@ -57,6 +54,9 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     }
     window.registerResizeEvent(renderer.getWindowResized());
 
+    // Get Imgui IO, used by fps counter
+    ImGuiIO&  io = ImGui::GetIO();
+
     //  Set references to other systems
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->sceneHandler.setScriptHandler(&scriptHandler);
@@ -65,19 +65,24 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setVulkanRenderer(&renderer);
     this->sceneHandler.setUIRenderer(&uiRenderer);
     this->sceneHandler.setDebugRenderer(&debugRenderer);
+    this->sceneHandler.setAIHandler(&aiHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
+    this->scriptHandler.setPhysicsEngine(&physicsEngine);
+    this->scriptHandler.setUIRenderer(&uiRenderer);
+    this->scriptHandler.setDebugRenderer(&debugRenderer);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
+    this->aiHandler.init(&this->sceneHandler);    
 
-    //  Initialize the start scene
+    // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
 
-    //  Temporary, should be called before creating the scene
+    // Temporary, should be called before creating the scene
     this->audioHandler.setSceneHandler(&sceneHandler);
 
     // Game loop
@@ -96,24 +101,29 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         ImGui::NewFrame();
 
         Time::updateDeltaTime();
-        this->scriptHandler.update();
-		    this->physicsEngine.update();
-		    this->networkHandler.updateNetwork();
-        this->audioHandler.update();
+		this->physicsEngine.update();
+        this->aiHandler.update();
         this->sceneHandler.update();
+        this->scriptHandler.update();
+        this->audioHandler.update();
+		this->networkHandler.updateNetwork();                
 
-        static bool open = true;
-        ImGui::ShowDemoWindow(&open);
 
-        ImGui::Begin("Another Window", &open);   //  Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
-            open = false;
+#if defined(_CONSOLE) // Debug/Release, but not distribution        
+        static bool debugInfo = true;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+        ImGui::SetWindowPos(ImVec2{0.f,0.f}, ImGuiCond_Once);
+        ImGui::Begin("Debug info",&debugInfo,ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize );
+            ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);                                    
         ImGui::End();
+        ImGui::PopStyleVar();
+#endif                
         
         //  ------------------------------------
         this->sceneHandler.updateToNextScene();
 
+        this->sceneHandler.prepareForRendering();
         renderer.draw(this->sceneHandler.getScene());
 
 #ifndef VENGINE_NO_PROFILING
@@ -122,6 +132,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     }
     this->networkHandler.deleteServer();
     this->scriptHandler.cleanup();
+    this->aiHandler.clean();
 
     renderer.cleanup();
 }

@@ -3,6 +3,7 @@
 #include "../network/NetworkHandler.h"
 #include "../lua/ScriptHandler.h"
 #include "../graphics/UIRenderer.hpp"
+#include "../ai/AIHandler.hpp"
 #include "Time.hpp"
 
 void Scene::switchScene(Scene* scene, std::string path)
@@ -17,7 +18,7 @@ NetworkHandler* Scene::getNetworkHandler()
 
 ScriptHandler* Scene::getScriptHandler()
 {
-	return sceneHandler->getScriptHandler();
+	return this->sceneHandler->getScriptHandler();
 }
 
 ResourceManager* Scene::getResourceManager()
@@ -43,6 +44,11 @@ DebugRenderer* Scene::getDebugRenderer()
 SceneHandler* Scene::getSceneHandler()
 {
 	return this->sceneHandler;
+}
+
+AIHandler* Scene::getAIHandler()
+{
+    return this->sceneHandler->getAIHandler();   
 }
 
 Scene::Scene()
@@ -157,6 +163,14 @@ void Scene::start()
 void Scene::update()
 {
 
+}
+
+void Scene::onCollisionStay(Entity e1, Entity e2)
+{
+}
+
+void Scene::onTriggerStay(Entity e1, Entity e2)
+{
 }
 
 void Scene::setSceneHandler(SceneHandler& sceneHandler)

@@ -2,10 +2,10 @@ local ghost = resources.addMesh("assets/models/ghost.obj")
 print(ghost)
 
 local cam = scene.createEntity()
-scene.setComponent(cam, CompType.Camera)
+scene.setComponent(cam, CompType.Camera, { fov = 90 })
 scene.setMainCamera(cam)
 
-local p = scene.createPrefab("assets/scripts/prefabs/prefab.lua")
+--local p = scene.createPrefab("assets/scripts/prefabs/prefab.lua")
 
 scene.setComponent(cam, CompType.Script, "assets/scripts/script2.lua")
 scene.getComponent(cam, CompType.Script).playerID = p
