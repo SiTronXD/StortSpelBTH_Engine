@@ -7,7 +7,7 @@
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/Transform.hpp"
-#include "../components/RigidBody.h"
+#include "../components/Rigidbody.h"
 #include "../components/Collider.h"
 
 typedef int Entity;

@@ -278,6 +278,10 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:DebugWCallStackProfiling>
 target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_COMPILE_TIME_DEFINITIONS_debug}>" ) 
 # NOTE! STB_IMAGE_IMPLEMENTATION  <-- Cant be used here! for some reason!
 
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug" OR ${CMAKE_BUILD_TYPE} MATCHES "Release" )
+target_compile_definitions(vengine PRIVATE "_CONSOLE" )
+endif()
+
 # Replace non portable functions with portable functions...
 if(${UNIX})
     #define strcpy_s strcpy

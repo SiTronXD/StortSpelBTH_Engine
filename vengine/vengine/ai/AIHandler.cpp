@@ -3,7 +3,7 @@
 
 void AIHandler::drawImgui(){
 
-        
+    if(FSMimguiLambdas.size() <= 0 ){return;}
     static bool blackboard_Entities_open = true; 
     ImGui::Begin("BlackBoard");
     float width = ImGui::GetWindowWidth();
@@ -11,7 +11,7 @@ void AIHandler::drawImgui(){
         
         if (ImGui::BeginTabItem("Entities"))
         {   
-    
+            
             uint32_t id = 0;
 
             static std::string entity_label;

@@ -114,7 +114,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
         ImGui::SetWindowPos(ImVec2{0.f,0.f}, ImGuiCond_Once);
-        ImGui::Begin("Debug info",&debugInfo,ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize );
+        ImGui::Begin("Debug info",&debugInfo,ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize );
             ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);                                    
         ImGui::End();
         ImGui::PopStyleVar();
