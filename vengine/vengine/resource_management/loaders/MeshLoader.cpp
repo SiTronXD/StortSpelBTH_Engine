@@ -77,19 +77,17 @@ MeshData MeshLoader::assimpImport(
         Log::error("There are different non-zero number of elements in certain vertex streams. This will cause issues when rendering the mesh...");
     }
 
-    // Print out a warning if the index count is not divisible by 3...
-    if (meshData.indicies.size() % 3 != 0)
+    // Print out a warning if the index count is not divisible by 3 in a submesh...
+    for (size_t i = 0; i < meshData.submeshes.size(); ++i)
     {
-        Log::warning(modelFile + " does not have an index count divisible by 3. Index count: " + 
-            std::to_string(meshData.indicies.size()));
-
-        // Remove last few vertices to contain valid triangles
-        while (meshData.indicies.size() % 3 != 0)
+        // Check if this submesh numindices is divisible by 3
+        SubmeshData& currentSubmesh = meshData.submeshes[i];
+        if (currentSubmesh.numIndicies % 3 != 0)
         {
-            meshData.indicies.pop_back();
+            Log::warning("Submesh [" + std::to_string(i) + "] in " + modelFile + " has an index count which is not divisible by 3. Index count: " + std::to_string(currentSubmesh.numIndicies));
+            currentSubmesh.numIndicies = currentSubmesh.numIndicies - (currentSubmesh.numIndicies % 3);
+            Log::warning("Submesh [" + std::to_string(i) + "] in " + modelFile + " had it's index count truncated to " + std::to_string(currentSubmesh.numIndicies));
         }
-        Log::warning("Truncated " + modelFile + " to have an index count of " +
-            std::to_string(meshData.indicies.size()));
     }
 
     return meshData;
