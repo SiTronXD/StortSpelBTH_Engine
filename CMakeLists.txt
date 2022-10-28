@@ -181,10 +181,10 @@ else() # Use Git Submodules
     target_include_directories(vengine PRIVATE ${VENGINE_SOURCE_DIR}/../)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/include)
     #target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/src/include)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
+    target_include_directories(vengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
+    target_include_directories(vengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/vma/src/include)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src/glm)
-    target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt)
+    target_include_directories(vengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/EnTT/src/single_include/entt)
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/stb/src)
     
     find_package(SDL2 REQUIRED)
@@ -202,7 +202,7 @@ else() # Use Git Submodules
         message(FATAL_ERROR "Bullet (Double Precision) must be installed through the distribution packet manager (tested with pacman!)")        
     endif()
 
-    target_compile_definitions(vengine PRIVATE "BT_USE_DOUBLE_PRECISION")
+    target_compile_definitions(vengine PUBLIC "BT_USE_DOUBLE_PRECISION")
     target_include_directories(vengine PUBLIC ${BULLET_INCLUDE_DIRS})    #Bullet needs these public...
     target_link_libraries(vengine PRIVATE ${BULLET_LIBRARIES})
     
@@ -213,7 +213,8 @@ else() # Use Git Submodules
 endif()
 
 # Add the vengine sources + imgui sources to the vengine target
-target_sources(vengine PRIVATE 
+target_sources(vengine 
+    PRIVATE 
     
     ${VENGINE_SOURCES} 
     ${IMGUI_HEADERS}    
@@ -276,6 +277,10 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:DebugWCallStackProfiling>
 # This config is setup in vscode workspace, in order to get the correct Compile_commands.json... (see: "cmake.configureArgs": ["-DCMAKE_BUILD_TYPE=cmake_project"],)
 target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_COMPILE_TIME_DEFINITIONS_debug}>" ) 
 # NOTE! STB_IMAGE_IMPLEMENTATION  <-- Cant be used here! for some reason!
+
+if(${CMAKE_BUILD_TYPE} MATCHES "Debug" OR ${CMAKE_BUILD_TYPE} MATCHES "Release" )
+target_compile_definitions(vengine PRIVATE "_CONSOLE" )
+endif()
 
 # Replace non portable functions with portable functions...
 if(${UNIX})

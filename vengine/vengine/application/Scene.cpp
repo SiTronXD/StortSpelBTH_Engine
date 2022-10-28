@@ -3,6 +3,7 @@
 #include "../network/NetworkHandler.h"
 #include "../lua/ScriptHandler.h"
 #include "../graphics/UIRenderer.hpp"
+#include "../ai/AIHandler.hpp"
 #include "Time.hpp"
 
 void Scene::switchScene(Scene* scene, std::string path)
@@ -43,6 +44,11 @@ DebugRenderer* Scene::getDebugRenderer()
 SceneHandler* Scene::getSceneHandler()
 {
 	return this->sceneHandler;
+}
+
+AIHandler* Scene::getAIHandler()
+{
+    return this->sceneHandler->getAIHandler();   
 }
 
 Scene::Scene()

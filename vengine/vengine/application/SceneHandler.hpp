@@ -14,6 +14,7 @@ private:
 
 	NetworkHandler* networkHandler;
 	ScriptHandler* scriptHandler;
+    AIHandler* aiHandler;
 	ResourceManager* resourceManager;
 	PhysicsEngine* physicsEngine;
 	VulkanRenderer* vulkanRenderer;
@@ -39,6 +40,9 @@ public:
 
 	void setScriptHandler(ScriptHandler* scriptHandler);
 	ScriptHandler* getScriptHandler();
+
+    void setAIHandler(AIHandler* aiHandler);
+    inline AIHandler* getAIHandler(){return this->aiHandler;};
 
 	void setPhysicsEngine(PhysicsEngine* physicsEngine);
 	inline PhysicsEngine* getPhysicsEngine() { return this->physicsEngine; }

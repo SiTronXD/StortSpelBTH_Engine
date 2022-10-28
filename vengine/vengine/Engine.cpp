@@ -54,7 +54,10 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     }
     window.registerResizeEvent(renderer.getWindowResized());
 
-    // Set references to other systems
+    // Get Imgui IO, used by fps counter
+    ImGuiIO&  io = ImGui::GetIO();
+
+    //  Set references to other systems
     this->sceneHandler.setNetworkHandler(&networkHandler);
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->sceneHandler.setResourceManager(&resourceManager);
@@ -62,6 +65,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setVulkanRenderer(&renderer);
     this->sceneHandler.setUIRenderer(&uiRenderer);
     this->sceneHandler.setDebugRenderer(&debugRenderer);
+    this->sceneHandler.setAIHandler(&aiHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
@@ -71,6 +75,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->scriptHandler.setDebugRenderer(&debugRenderer);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
+    this->aiHandler.init(&this->sceneHandler);    
 
     // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
@@ -97,17 +102,25 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
         Time::updateDeltaTime();
 		this->physicsEngine.update();
+        this->aiHandler.update();
         this->sceneHandler.update();
         this->scriptHandler.update();
         this->audioHandler.update();
-		this->networkHandler.updateNetwork();
+		this->networkHandler.updateNetwork();                
 
-#if defined(_CONSOLE) // Debug/Release, but not distribution
-        static bool open = true;
-        ImGui::ShowDemoWindow(&open);
-#endif
 
-        // ------------------------------------
+#if defined(_CONSOLE) // Debug/Release, but not distribution        
+        static bool debugInfo = true;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
+        ImGui::SetWindowPos(ImVec2{0.f,0.f}, ImGuiCond_Once);
+        ImGui::Begin("Debug info",&debugInfo,ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize );
+            ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);                                    
+        ImGui::End();
+        ImGui::PopStyleVar();
+#endif                
+        
+        //  ------------------------------------
         this->sceneHandler.updateToNextScene();
 
         this->sceneHandler.prepareForRendering();
@@ -119,6 +132,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     }
     this->networkHandler.deleteServer();
     this->scriptHandler.cleanup();
+    this->aiHandler.clean();
 
     renderer.cleanup();
 }
