@@ -1,6 +1,6 @@
 #pragma once
 #include "BehaviorTree.hpp"
-#include "EventSystem.hpp"//////////////////////////
+#include "EventSystem.hpp"
 #include "../dev/Log.hpp"
 #include <functional>
 #include <iostream>
@@ -37,7 +37,7 @@ public:
     
 };
 
-class FSM	// TODO: Handlememory for New fsm_nodes and trees 
+class FSM
 {
 private: 
     std::unordered_map<std::string, FSM_Node*> fsm_nodes;
@@ -52,10 +52,6 @@ private:
     {
         fsm_nodes.insert({name, new FSM_Node(name, trees[name])});
     }
-
-    //TODO: Make this part of class (Virtual), take template Type for type, 
-    // template<typename T>
-    // void regEntiy(uint32_t entityId, Scene* scene);
 	   
 protected:
     EventSystem* eventSystem; 
@@ -257,10 +253,6 @@ public:
 		:
 	    eventSystem(eventSystem)
 	{
-        //NOTE: Cant call Pure Virtual function from constructor...
-		//startInit();
-		//init();
-
 		if (FSM::sceneHandler != sceneHandler)
 		{
 			FSM::sceneHandler = sceneHandler;

@@ -81,7 +81,7 @@ protected:
     }
     // wrapper for creating different kind of nodes, this will help with debugging and memory management! 
         
-    BTCreateHelper create; //Shorthand for Creates
+    BTCreateHelper create;       //Shorthand for Creates
     BTCreateHelper&  c = create; //Shorthand for Creates
     
 public:     
@@ -263,14 +263,11 @@ public:
 
     void execute(uint32_t entityID){ root->execute(entityID);};
 
-    // TODO: This should take sceneHandler when implemented into the engine...
-    //       Should use the active scenes registry...
-    //static void setSceneHandler(Scene* scene){BehaviorTree::sceneHandler = scene;};    
-
     void registerEntity(uint32_t entityId)
     {
         registerEntityComponents(entityId);        
     }
+
     // Debug
     void draw();
 };

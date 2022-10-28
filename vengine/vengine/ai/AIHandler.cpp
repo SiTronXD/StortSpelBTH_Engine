@@ -23,9 +23,9 @@ void AIHandler::drawImgui(){
             ImGui::SetNextItemOpen(blackboard_Entities_open, ImGuiCond_FirstUseEver);
             ImGui::BeginChild("entity_picker", ImVec2(100, 0), false, ImGuiWindowFlags_AlwaysAutoResize);
             
-            for(auto fsmImguiLambda : FSMimguiLambdas)
+            for(auto fsmImguiLambda : this->FSMimguiLambdas)
             {
-                for(auto entityId : FSMsEntities[fsmImguiLambda.first])
+                for(auto entityId : this->FSMsEntities[fsmImguiLambda.first])
                 {
                     
                     entity_label = "Entity["+std::to_string(entityId)+"]";

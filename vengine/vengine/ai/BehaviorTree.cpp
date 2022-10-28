@@ -24,7 +24,7 @@ void BehaviorTree::draw()
         out << "Node_"<< currentNode->getID() <<" [\n";
         
         // Set name of the node
-        out << "label = \""<< currentNode->displayName << "\"\n"; // No need to pollute display name//  <<"_"<< currentNode->getID() ;
+        out << "label = \""<< currentNode->displayName << "\"\n";
 
         // Set
         if(currentNode->nodeType != NodeType::Condition){
@@ -50,13 +50,12 @@ void BehaviorTree::draw()
             case BTStatus::Failure :
                 out<< "xlabel=<<font color=\"red\">↑</font>>";
                 break;
-            case BTStatus::INVALID :
-                //assert(false && "Invalid BTStatus return");
+            case BTStatus::INVALID :                
                 out<< "xlabel=<<font color=\"blue\">🛑</font>>";
                 break;
         }
 
-        // Set Potential Decorators of the node
+        // TODO: Set Potential Decorators of the node(??)
 
         // End node label
         out << "\n" << "]\n";

@@ -1,13 +1,14 @@
 #pragma once
 
 #include <cstdint>
-//#include <unordered_map>
 #include "../ai/FSM.hpp"
 
 struct FSMAgentComponent
 {
 	FSM* fsm;
 	FSM_Node* currentNode; 
+
+    //TODO: Check if Tags still work, or if following code snipped is required
 	/*std::unordered_map<Node*, TagData> tags;
 	void setTag(std::string name, Node* nodeptr, bool status)
 	{

@@ -54,15 +54,17 @@ void Blackboard::addEntityData(const std::string& key, const uint32_t entityId, 
         assert(false && "addEntityData function failed");
     }
 }
-
+#include "../dev/Log.hpp"
 //TODO: Define
 void Blackboard::removeEnvironmentData(const std::string& key)
 {
+    Log::error("NOT IMPLEMENTED YET!");
     //return Blackboard::environmentData.find(key)->second.value;
 }
 
 void Blackboard::removeEntityData(const std::string& key, const uint32_t entity)
 {
+    Log::error("NOT IMPLEMENTED YET!");
     //return Blackboard::entityData.find(entity)->second.data.find(key)->second.value;
 }
 

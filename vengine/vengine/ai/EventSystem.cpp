@@ -48,8 +48,7 @@ void EventSystem::registerEntityEvent(
 	}
 
 	if (!found)
-	{
-		//entitySubscribers[entityID].push_back({fsm, who, event});
+	{	
 		entityEvents[event].push_back({fsm, who});
 		fsmEvents[fsm].push_back({event, who});
 	}
@@ -74,7 +73,6 @@ void EventSystem::update()
 				for (auto subscriber : event.second)
 				{
 					//TODO: What will happen, how can I call whatever func my subscriber want me to call?
-					//subscriber.fsm->currentNode = subscriber.node;
 					subscriber.fsm->setCurrentNode(subscriber.node);
 				}
 				std::cout << event.second[0].fsm->getCurrentNode()->status
@@ -116,7 +114,6 @@ void EventSystem::update()
 								<< std::endl;
 
 					entityEventLastReturn[entityID][eventTransition] = true;
-					//break; 
 				}
 			}
 			else if (entityEventLastReturn[entityID][eventTransition])
@@ -125,36 +122,5 @@ void EventSystem::update()
 			}
 
 		}
-
-		//// Loop through their registred eventPtr... (eventPtr used to index into this->entityEvents)
-		//for (auto entityEventPtr : entityEventPtrs)
-		//{
-		//	// Check Event function for the current Entity!
-		//	for (auto& entityEvent : entityEvents[entityEventPtr])
-		//	{
-
-		//		// Check Event for Entity with given entityID
-		//		if (entityEventPtr->checkEvent(entityID))
-		//		{
-		//			if (!entityEventLastReturn[entityID][entityEventPtr])
-		//			{
-		//				// TODO: Maybe currentEvent could be held by the FSMComponent?
-		//				// NOTE: Unsure, but I think we have multiple instances of FSMs right now?...
-
-		//				//If event was true, update the current Entitys FSM
-		//				entityEvent.fsm->setCurrentNode(entityEvent.node);
-
-		//				std::cout << entityEvent.fsm->getCurrentNode()->status
-		//				          << std::endl;
-
-		//				entityEventLastReturn[entityID][entityEventPtr] = true;
-		//			}
-		//		}
-		//		else if (entityEventLastReturn[entityID][entityEventPtr])
-		//		{
-		//			entityEventLastReturn[entityID][entityEventPtr] = false;
-		//		}
-		//	}
-		//}
 	}
 }

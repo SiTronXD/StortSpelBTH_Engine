@@ -94,8 +94,7 @@ public:
     inline void addLeaf(Leaf* task);
     inline void addLeafs(std::vector<Leaf*> tasks);
 
-    inline void addDecorator(Decorator* decorator);
-    //inline void addDecorator(Decorator decorator){decorators.push_back(decorator);};    
+    inline void addDecorator(Decorator* decorator);    
 
     virtual BTStatus execute(uint32_t entityID) = 0;
 
@@ -111,7 +110,6 @@ public:
     Compositor(NodeType nodeType, std::string &&typeName, std::string displayName) 
     : Node(nodeType, std::move(typeName), displayName) {};    
 };
-
 
 
 class Selector : public Compositor{
@@ -287,12 +285,10 @@ public:
     {
 		if (this->children.size() > 1 || this->children.size() < 1)
 		{
-            //TODO: replace with something else
-			assert(false);
-			//Decorators can only have one child!
+            Log::error("Decorators can only have one child!");		
 			return BTStatus::INVALID;
 		}
-        // TODO Might be unncessary with a decorate function, but might also help readability...
+        // TODO: Might be unncessary with a decorate function, but might also help readability...
         return decorate(entityID);
     }
     virtual BTStatus decorate(uint32_t entityID) = 0;
@@ -305,7 +301,6 @@ struct TagData
     bool active;
 };
 
-//#include "../components_sfml/BTComponent.hpp"
 class Tag : public Decorator{
 private:
 public:
@@ -349,7 +344,7 @@ class Message : public Decorator
 	BTStatus curStatus;
 	std::string msg;
    public:
-	Message(std::string message) :
+	Message(std::string message) : //TODO: Check if message can be const std::string&.  
 	    Decorator(NodeType::Message, "Message", "\"\""),
 	    curStatus(BTStatus::INVALID),
 	    msg(message){};
