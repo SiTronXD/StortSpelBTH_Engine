@@ -5,6 +5,9 @@
 #include <vector>
 #include <assimp/scene.h>
 #include <iostream>
+#include "../../components/Collider.h"
+
+class Scene;
 
 class ColliderLoader
 {
@@ -20,9 +23,11 @@ class ColliderLoader
 		Error
 	};
 	Assimp::Importer importer;
-	int getShapeType(aiMesh* mesh);
-	btCollisionShape* makeCollisionShape(const shapeType &type, const aiMesh* mesh);
+	int getShapeType(aiMesh* mesh, const std::string& meshName);
+	Collider makeCollisionShape(const shapeType& type, const aiMesh* mesh);
 
   public:
-	std::vector<btCollisionShape*> loadCollisionShape(const std::string& modelFile);
+	std::vector<std::pair<glm::vec3, Collider>> loadCollisionShape(const std::string& modelFile);
 };
+
+void addCollisionToScene(std::vector<std::pair<glm::vec3, Collider>> colliders, Scene* currentScene, glm::vec3 offset = glm::vec3(0,0,0));

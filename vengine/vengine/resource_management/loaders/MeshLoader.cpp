@@ -202,7 +202,7 @@ std::vector<MeshData> MeshLoader::getMeshesFromNodeTree(
         node_meshes = std::span<unsigned int>(node->mMeshes, node->mNumMeshes);
         for (size_t j = 0; j < node->mNumMeshes; j++) {
 			std::string meshName(scenes_meshes[node_meshes[j]]->mName.C_Str());
-			if (meshName.length() > 7 && meshName.substr(scenes_meshes[node_meshes[j]]->mName.length - 7) == "collide")
+			if (meshName.length() > 7 && meshName.substr(0, 8) == "Collider")
 			{
                 //its a collision mesh
 			    break;

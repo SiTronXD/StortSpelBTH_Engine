@@ -133,13 +133,13 @@ uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
 		return this->collisionPaths[collisionPath];
 	}
     
-	collisionLoader.loadCollisionShape(collisionPath);
-	////NOTE: prevSize as key only works if we never remove resources the map...
-	//this->meshPaths.insert({meshPath, this->meshPaths.size()});
-    //
-	////NOTE: meshes.size as key only works if we never remove resources the map...
-	//// Create mesh, insert into map of meshes
-	//meshes.insert({meshes.size(), meshLoader.createMesh(meshData)});
+	std::vector<std::pair<glm::vec3, Collider>> collisions = collisionLoader.loadCollisionShape(collisionPath);
+	//NOTE: prevSize as key only works if we never remove resources the map...
+	 this->collisionPaths.insert({collisionPath, this->collisionPaths.size()});
+    
+	//NOTE: meshes.size as key only works if we never remove resources the map...
+	// Create mesh, insert into map of meshes
+	 collisionsData.insert({collisionsData.size(), collisions});
 
 	return collisionsData.size() - 1;
 }

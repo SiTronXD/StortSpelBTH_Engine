@@ -32,7 +32,8 @@ void TestDemoScene::init()
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
 	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_2.fbx"));
-	this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_2.fbx");
+	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_3.fbx")),this);
+	this->getPhysicsEngine().
 
 
 	this->testEntity = this->createEntity();
