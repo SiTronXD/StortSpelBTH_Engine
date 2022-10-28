@@ -17,6 +17,10 @@ private:
     static int lua_isMouseButtonReleased(lua_State* L);
     static int lua_getMousePosition(lua_State* L);
     static int lua_getMouseDelta(lua_State* L);
+    static int lua_getScrollWheelDelta(lua_State* L);
+
+    static int lua_setCursorPosition(lua_State* L);
+    static int lua_setHideCursor(lua_State* L);
 public:
     static void lua_openinput(lua_State* L);
 };

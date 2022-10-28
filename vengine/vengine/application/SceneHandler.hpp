@@ -29,6 +29,7 @@ public:
 
 	void update();
 	void updateToNextScene();
+	void prepareForRendering();
 
 	void setScene(Scene* scene, std::string path = "");
 	void reloadScene();

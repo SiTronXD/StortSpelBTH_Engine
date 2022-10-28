@@ -498,7 +498,7 @@ void VulkanRenderer::initForScene(Scene* scene)
 	// Default shader inputs
     VertexStreams defaultStream{};
     defaultStream.positions.resize(1);
-    defaultStream.colors.resize(1);
+    defaultStream.normals.resize(1);
     defaultStream.texCoords.resize(1);
 
 	this->shaderInput.beginForInput(
@@ -542,7 +542,7 @@ void VulkanRenderer::initForScene(Scene* scene)
 	{
 		VertexStreams animStream{};
 		animStream.positions.resize(1);
-		animStream.colors.resize(1);
+		animStream.normals.resize(1);
 		animStream.texCoords.resize(1);
 		animStream.boneWeights.resize(1);
 		animStream.boneIndices.resize(1);
@@ -977,7 +977,15 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
     renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());      // Size of region to run render pass on (starting at offset)
      
     static const vk::ClearColorValue clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
-    static const vk::ClearColorValue clear_Plum(std::array<float,4> {221.F/256.0F, 160.F/256.0F, 221.F/256.0F, 1.0F});
+    static const vk::ClearColorValue clear_Plum(
+        std::array<float, 4> 
+        {
+            119.0f / 256.0f, 
+            172.0f / 256.0f,
+            222.0f / 256.0f, 
+            1.0f
+        }
+    );
 
     std::array<vk::ClearValue, 2> clearValues = 
     {
@@ -1101,7 +1109,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                         Mesh& currentMesh =
                             this->resourceManager->getMesh(meshComponent.meshID);
 
-                        const glm::mat4& modelMatrix = transform.matrix;
+                        const glm::mat4& modelMatrix = transform.getMatrix();
 
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
                         currentCommandBuffer.pushConstant(
@@ -1187,7 +1195,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             animationComponent.boneTransformsID
                         );
 
-                        const glm::mat4& modelMatrix = transform.matrix;
+                        const glm::mat4& modelMatrix = transform.getMatrix();
 
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
                         currentCommandBuffer.pushConstant(
@@ -1476,6 +1484,7 @@ void VulkanRenderer::initImgui()
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
     io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_NoMouseCursorChange;
     
     io.ConfigWindowsResizeFromEdges = true;
     

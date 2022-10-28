@@ -52,7 +52,8 @@ enum class Keys
 	HOME = SDLK_HOME,
 	SHIFT = SDLK_LSHIFT,
 	CTRL = SDLK_LCTRL,
-	SPACE = SDLK_SPACE
+	SPACE = SDLK_SPACE,
+	ESC = SDLK_ESCAPE
 };
 
 enum class Mouse
@@ -115,7 +116,8 @@ private:
 		{ "HOME" , SDLK_HOME },
 		{ "SHIFT" , SDLK_LSHIFT },
 		{ "CTRL" , SDLK_LCTRL },
-		{ "SPACE" , SDLK_SPACE }
+		{ "SPACE" , SDLK_SPACE },
+		{ "ESCAPE", SDLK_ESCAPE }
     };
     inline static const std::map<std::string, int> mouseMap {
         { "LEFT", SDL_BUTTON_LEFT },
@@ -131,9 +133,19 @@ private:
 
 	static int cursorX;
 	static int cursorY;
-	static int lastCursorX;
-	static int lastCursorY;
+	static int deltaCursorX;
+	static int deltaCursorY;
+	static int requestedMouseX;
+	static int requestedMouseY;
 
+	static int deltaScrollWheel;
+
+	static bool shouldSetMousePos;
+	static bool shouldHideCursor;
+	static bool lastShouldHideCursor;
+
+	static void setDeltaCursor(const int& deltaCursorX, const int& deltaCursorY);
+	static void setDeltaScrollWheel(const int& deltaScrollWheel);
 	static void setCursor(const int& newCursorX, const int& newCursorY);
 	static void update();
 
@@ -141,6 +153,9 @@ private:
 	static void setMouseButton(const Mouse& mouseButtonCode, const bool& value);
 
 public:
+	static void setCursorPosition(const int& newCursorX, const int& newCursorY);
+	static void setHideCursor(const bool& hide);
+
 	static inline bool isKeyDown(const Keys& key) { return Input::keyDown[key]; }
 	static inline bool isKeyPressed(const Keys& key) { return Input::keyDown[key] && !Input::lastKeyDown[key]; }
 	static inline bool isKeyReleased(const Keys& key) { return !Input::keyDown[key] && Input::lastKeyDown[key]; }
@@ -149,6 +164,7 @@ public:
 	static inline bool isMouseButtonReleased(const Mouse& mouse) { return !Input::mouseButtonDown[mouse] && Input::lastmouseButtonDown[mouse]; }
 	static inline const int& getMouseX() { return Input::cursorX; }
 	static inline const int& getMouseY() { return Input::cursorY; }
-	static inline const int getMouseDeltaX() { return Input::lastCursorX - Input::cursorX; }
-	static inline const int getMouseDeltaY() { return Input::lastCursorY - Input::cursorY; }
+	static inline const int getMouseDeltaX() { return Input::deltaCursorX; }
+	static inline const int getMouseDeltaY() { return Input::deltaCursorY; }
+	static inline const int getScrollWheelDelta() { return Input::deltaScrollWheel; }
 };

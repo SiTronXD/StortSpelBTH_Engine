@@ -34,15 +34,12 @@ Engine::~Engine()
 void Engine::run(std::string appName, std::string startScenePath, Scene* startScene)
 {
     using namespace vengine_helper::config;
-    loadConfIntoMemory(); //  load config data into memory
+    loadConfIntoMemory(); // load config data into memory
 
-    //  Window
+    // Window
     Window window;
-    window.initWindow(
-        appName, 
-        DEF<int>(W_WIDTH), 
-        DEF<int>(W_HEIGHT)
-    );
+    window.initWindow(appName);
+    window.setFullscreen(DEF<bool>(W_FULLSCREEN));
     
     // Create vulkan renderer instance
     VulkanRenderer renderer;
@@ -73,16 +70,19 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
+    this->scriptHandler.setPhysicsEngine(&physicsEngine);
+    this->scriptHandler.setUIRenderer(&uiRenderer);
+    this->scriptHandler.setDebugRenderer(&debugRenderer);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
     this->aiHandler.init(&this->sceneHandler);    
 
-    //  Initialize the start scene
+    // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
 
-    //  Temporary, should be called before creating the scene
+    // Temporary, should be called before creating the scene
     this->audioHandler.setSceneHandler(&sceneHandler);
 
     // Game loop
@@ -101,13 +101,15 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         ImGui::NewFrame();
 
         Time::updateDeltaTime();
-        this->scriptHandler.update();
-		    this->physicsEngine.update();
-		    this->networkHandler.updateNetwork();
-        this->audioHandler.update();
+		this->physicsEngine.update();
         this->aiHandler.update();
         this->sceneHandler.update();
+        this->scriptHandler.update();
+        this->audioHandler.update();
+		this->networkHandler.updateNetwork();                
 
+
+#if defined(_CONSOLE) // Debug/Release, but not distribution        
         static bool debugInfo = true;
 
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
@@ -116,10 +118,12 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
             ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);                                    
         ImGui::End();
         ImGui::PopStyleVar();
+#endif                
         
         //  ------------------------------------
         this->sceneHandler.updateToNextScene();
 
+        this->sceneHandler.prepareForRendering();
         renderer.draw(this->sceneHandler.getScene());
 
 #ifndef VENGINE_NO_PROFILING

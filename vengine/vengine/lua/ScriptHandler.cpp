@@ -10,6 +10,9 @@
 #include "wrappers/InputLua.h"
 #include "wrappers/ResourceManagerLua.h"
 #include "wrappers/NetworkHandlerLua.h"
+#include "wrappers/PhysicsEngineLua.h"
+#include "wrappers/UIRendererLua.h"
+#include "wrappers/DebugRendererLua.h"
 
 void ScriptHandler::lua_openmetatables(lua_State* L)
 {
@@ -91,9 +94,25 @@ void ScriptHandler::setResourceManager(ResourceManager* resourceManager)
 	ResourceManagerLua::lua_openresources(L, resourceManager);
 }
 
-void ScriptHandler::setNetworkHandler(NetworkHandler* networkHandler) {
+void ScriptHandler::setNetworkHandler(NetworkHandler* networkHandler) 
+{
 	this->networkHandler = networkHandler;
 	NetworkHandlerLua::lua_openNetworkScene(L, networkHandler);
+}
+
+void ScriptHandler::setPhysicsEngine(PhysicsEngine* physicsEngine)
+{
+	PhysicsEngineLua::lua_openphysics(L, physicsEngine);
+}
+
+void ScriptHandler::setUIRenderer(UIRenderer* uiRenderer)
+{
+	UIRendererLua::lua_openui(L, uiRenderer);
+}
+
+void ScriptHandler::setDebugRenderer(DebugRenderer* debugRenderer)
+{
+	DebugRendererLua::lua_open_debug_renderer(L, debugRenderer);
 }
 
 bool ScriptHandler::runScript(std::string& path)
@@ -143,6 +162,47 @@ void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 	}
 }
 
+void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger)
+{
+	const char* func = isTrigger ? "onTriggerStay" : "onCollisionStay";
+	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e1);
+
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	if (luaL_dofile(L, script.path) != LUA_OK)
+	{
+		LuaH::dumpError(L);
+	}
+	else
+	{
+		lua_getfield(L, -1, func); // Get new collision function
+		lua_setfield(L, -3, func); // Set instance collision function to the new one
+		lua_pop(L, 1);
+	}
+
+	lua_getfield(L, -1, func);
+	if (lua_type(L, -1) == LUA_TNIL)
+	{
+		lua_pop(L, 2);
+		return;
+	}
+
+	lua_pushtransform(L, transform);
+	lua_setfield(L, -3, "transform");
+
+	lua_pushvalue(L, -2); // self
+	lua_pushinteger(L, e2); // entity hit
+
+	// call function
+	LUA_ERR_CHECK(L, lua_pcall(L, 2, 0, 0));
+
+	lua_getfield(L, -1, "transform");
+	if (!lua_isnil(L, -1))
+	{
+		transform = lua_totransform(L, -1);
+	}
+	lua_pop(L, 2);
+}
+
 void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)
 {
 	for (auto it = vec.begin(); it != vec.end();)
@@ -186,6 +246,12 @@ void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)
 void ScriptHandler::update()
 {
 	this->updateScripts();
+
+	// Empty stack if needed
+	if (lua_gettop(L))
+	{
+		lua_pop(L, lua_gettop(L));
+	}
 
 	if (Input::isKeyPressed(Keys::R) && Input::isKeyDown(Keys::CTRL))
 	{

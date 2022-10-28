@@ -1,5 +1,6 @@
 #include "PhysicsEngine.h"
 #include "../application/SceneHandler.hpp"
+#include "../graphics/DebugRenderer.hpp"
 
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
@@ -147,7 +148,6 @@ void PhysicsEngine::createCollider(const int& entity, Collider& col)
 	btCollisionShape* shape = this->createShape(entity, col);
 
 	btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity));
-	//btDefaultMotionState* motionState = new btDefaultMotionState(transform);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(0.0f, nullptr, shape, btVector3(0.0f, 0.0f, 0.0f));
 
 	btRigidBody* body = new btRigidBody(rbInfo);
@@ -223,6 +223,8 @@ void PhysicsEngine::removeObject(btCollisionObject* obj, int index)
 
 void PhysicsEngine::cleanup()
 {
+	this->renderDebug = false;
+
 	// Remove the rigidbodies from the dynamics world and delete them
 	for (int i = this->dynWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
@@ -264,7 +266,7 @@ void PhysicsEngine::cleanup()
 }
 
 PhysicsEngine::PhysicsEngine()
-	:sceneHandler(nullptr), colShapes(), timer(0.f)
+	:sceneHandler(nullptr), colShapes(), timer(0.f), renderDebug(false)
 {
 	this->collconfig = new btDefaultCollisionConfiguration();
 	this->collDisp = new btCollisionDispatcher(this->collconfig);
@@ -315,28 +317,44 @@ void PhysicsEngine::update()
 
 		if (body)
 		{
+			Entity entity = body->getUserIndex();
+			Collider* col = nullptr;
+			Rigidbody* rb = nullptr;
+
 			// Entity removed
-			if (!scene->entityValid(body->getUserIndex()))
+			if (!scene->entityValid(entity))
 			{
 				this->removeIndicies.push_back(i);
+				continue;
 			}
-			// No instance of collider and rigidbody (or inactive)
-			else if (!scene->hasComponents<Collider>(body->getUserIndex()) && 
-					 !scene->hasComponents<Rigidbody>(body->getUserIndex()) || 
-					 scene->hasComponents<Inactive>(body->getUserIndex()))
+			else
+			{
+				if (scene->hasComponents<Collider>(entity)) { col = &scene->getComponent<Collider>(entity); }
+				if (scene->hasComponents<Rigidbody>(entity)) { rb = &scene->getComponent<Rigidbody>(entity); }
+			}
+
+			// Entity inactive
+			if (!scene->isActive(entity))
+			{
+				if (col) { col->ColID = -1; }
+				if (rb) { rb->assigned = false; }
+				this->removeIndicies.push_back(i);
+			}
+			// No instance of collider and rigidbody
+			else if (!col && !rb)
 			{
 				this->removeIndicies.push_back(i);
 			}
 			// Has collider, but removed rigidbody
-			else if (body->getMass() != 0.0f && !scene->hasComponents<Rigidbody>(body->getUserIndex()))
+			else if (body->getMass() != 0.0f && !rb)
 			{
-				scene->getComponent<Collider>(body->getUserIndex()).ColID = -1;
+				col->ColID = -1;
 				this->removeIndicies.push_back(i);
 			}
 			// Has rigidbody, but removed collider
-			else if (body->getLocalInertia() != btVector3(0.0f, 0.0f, 0.0f) && !scene->hasComponents<Collider>(body->getUserIndex()))
+			else if (body->getLocalInertia() != btVector3(0.0f, 0.0f, 0.0f) && !col)
 			{
-				scene->getComponent<Rigidbody>(body->getUserIndex()).assigned = false;
+				rb->assigned = false;
 				this->removeIndicies.push_back(i);
 			}
 			// Update positions if it has motion state (Rigidbody)
@@ -345,22 +363,58 @@ void PhysicsEngine::update()
 				btTransform transform;
 				body->getMotionState()->getWorldTransform(transform);
 
-				Transform& t = scene->getComponent<Transform>(body->getUserIndex());
+				Transform& t = scene->getComponent<Transform>(entity);
 				glm::vec3 scale = t.scale;
 
 				t = BulletH::toTransform(transform);
 				t.scale = scale;
 
-				scene->getComponent<Rigidbody>(body->getUserIndex()).velocity = BulletH::glmvec(body->getLinearVelocity());
+				rb->velocity = BulletH::glmvec(body->getLinearVelocity());
 			}
 		}
 	}
 
+	// TODO: Find way to establish onenter and onexit collision and trigger functions
 	int numManifolds = this->dynWorld->getDispatcher()->getNumManifolds();
+	ScriptHandler* scriptHandler = this->sceneHandler->getScriptHandler();
 	for (int i = 0; i < numManifolds; i++)
 	{
 		btPersistentManifold* man = this->dynWorld->getDispatcher()->getManifoldByIndexInternal(i);
-		//Log::write("Entity: " + std::to_string(man->getBody0()->getUserIndex()) + " and Entity: " + std::to_string(man->getBody1()->getUserIndex()) + " hit!");
+
+		const btCollisionObject* b1 = man->getBody0();
+		const btCollisionObject* b2 = man->getBody1();
+		Entity e1 = b1->getUserIndex(), e2 = b2->getUserIndex();
+		if (scene->entityValid(e1) && scene->entityValid(e2))
+		{
+			bool t1 = b1->getCollisionFlags() == btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE, 
+				 t2 = b2->getCollisionFlags() == btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE;
+			// Triggers
+			if (t1 || t2)
+			{
+				scene->onTriggerStay(e1, e2);
+			}
+			// Collisions
+			else
+			{
+				scene->onCollisionStay(e1, e2);
+			}
+
+			// Scripts (still valid entities)
+			if (scene->entityValid(e1) && scene->entityValid(e2))
+			{
+				if (scene->hasComponents<Script>(e1))
+				{
+					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e1), e1, e2, t1);
+				}
+			}
+			if (scene->entityValid(e1) && scene->entityValid(e2))
+			{
+				if (scene->hasComponents<Script>(e2))
+				{
+					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e2), e2, e1, t2);
+				}
+			}
+		}
 	}
 
 	// Remove objects
@@ -369,6 +423,39 @@ void PhysicsEngine::update()
 		this->removeObject(this->dynWorld->getCollisionObjectArray()[index], index);
 	}
 	this->removeIndicies.clear();
+
+	// Render debug shapes
+#if defined(_CONSOLE) // Debug/Release, but not distribution (debug rendering is disabled)
+	if (this->renderDebug)
+	{
+		DebugRenderer* debugRenderer = this->sceneHandler->getDebugRenderer();
+		glm::vec3 color = glm::vec3(0.0f, 0.5f, 0.5f);
+		for (int i = this->dynWorld->getNumCollisionObjects() - 1; i > -1; i--)
+		{
+			btCollisionObject* object = this->dynWorld->getCollisionObjectArray()[i];
+			Transform& transform = scene->getComponent<Transform>(object->getUserIndex());
+			Collider& col = scene->getComponent<Collider>(object->getUserIndex());
+
+			if (col.type == ColType::SPHERE)
+			{
+				debugRenderer->renderSphere(transform.position, col.radius, color);
+			}
+			else if (col.type == ColType::BOX)
+			{
+				debugRenderer->renderBox(transform.position, transform.rotation, col.extents * 2.0f, color);
+			}
+			else if (col.type == ColType::CAPSULE)
+			{
+				debugRenderer->renderCapsule(transform.position, transform.rotation, col.height, col.radius, color);
+			}
+		}
+	}
+#endif
+}
+
+void PhysicsEngine::renderDebugShapes(bool renderDebug)
+{
+	this->renderDebug = renderDebug;
 }
 
 RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)

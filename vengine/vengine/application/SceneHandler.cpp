@@ -43,25 +43,6 @@ void SceneHandler::update()
 	this->scene->updateSystems();
 	this->scriptHandler->updateSystems(this->scene->getLuaSystems());
 	this->scene->update();
-
-	// Update animation timer
-	auto animView = this->scene->getSceneReg().view<AnimationComponent>(entt::exclude<Inactive>);
-	animView.each([&]
-			(AnimationComponent& animationComponent)
-		{
-			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
-			if (animationComponent.timer >= animationComponent.endTime)
-			{
-				animationComponent.timer -= animationComponent.endTime;
-			}
-		}
-	);
-	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
-	auto func = [](Transform& transform)
-	{
-		transform.updateMatrix();
-	};
-	view.each(func);
 }
 
 void SceneHandler::updateToNextScene()
@@ -81,6 +62,28 @@ void SceneHandler::updateToNextScene()
 		// Init 
 		this->initSubsystems();
 	}
+}
+
+void SceneHandler::prepareForRendering()
+{
+	// Update animation timer
+	auto animView = this->scene->getSceneReg().view<AnimationComponent>(entt::exclude<Inactive>);
+	animView.each([&]
+	(AnimationComponent& animationComponent)
+		{
+			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
+			if (animationComponent.timer >= animationComponent.endTime)
+			{
+				animationComponent.timer -= animationComponent.endTime;
+			}
+		}
+	);
+	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
+	auto func = [](Transform& transform)
+	{
+		transform.updateMatrix();
+	};
+	view.each(func);
 }
 
 void SceneHandler::setScene(Scene* scene, std::string path)

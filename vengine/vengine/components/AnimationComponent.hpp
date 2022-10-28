@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../graphics/ShaderInput.hpp"
+
 struct AnimationComponent
 {
 	float timer;
