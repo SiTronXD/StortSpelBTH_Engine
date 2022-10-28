@@ -324,6 +324,9 @@ void DebugRenderer::renderSkeleton(
     glm::mat4* boneTransform = nullptr;
     for (size_t i = 1; i < numBones; ++i)
     {
+        if (meshData.bones[i].parentIndex < 0)
+            continue;
+
         // Transforms
         parentBoneTransform = &meshData.bones[meshData.bones[i].parentIndex].boneMatrix;
         boneTransform = &meshData.bones[i].boneMatrix;

@@ -40,8 +40,7 @@ uint32_t ResourceManager::addMesh(
 
     if(this->meshPaths.count(meshPath) != 0)
     {
-        // TODO: should be able to log what mesh
-        Log::warning("Mesh \""+meshPath+"\" was already added!");                
+        // Log::warning("Mesh \""+meshPath+"\" was already added!");                
 
         return this->meshPaths[meshPath];        
     } 
