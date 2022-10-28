@@ -41,6 +41,7 @@ class AIHandler
     void init(SceneHandler *sh)
     {
         this->sh = sh; 
+        currentScene = sh->getScene();
 		this->eventSystem.setSceneHandler(this->sh);
 
     }
@@ -75,7 +76,15 @@ class AIHandler
 
 
     void drawImgui();
-
-    void update(){eventSystem.update();updateEntityFSMs();drawImgui();}
+    Scene* currentScene = nullptr; //TODO make const...
+    void update(){
+        if(currentScene != this->sh->getScene())
+        {
+            FSMimguiLambdas.clear();
+            FSMsEntities.clear();
+        }
+        eventSystem.update();
+        updateEntityFSMs();
+        drawImgui();}
 
 };
