@@ -90,10 +90,14 @@ MeshData MeshLoader::assimpImport(
         }
     }
 
+    // We only allow 1 submesh for meshes with skeletal animations
+    if (meshData.submeshes.size() > 1 && meshData.bones.size() > 0)
+    {
+        Log::warning("The engine does not support multiple submeshes for meshes with skeletal animations. Please merge the submeshes into 1 single submesh for " + modelFile);
+    }
+
     return meshData;
 }
-
-
 
 MeshData MeshLoader::assimpMeshImport(const aiScene *scene, std::vector<uint32_t>& materialToTexture)
 {  
