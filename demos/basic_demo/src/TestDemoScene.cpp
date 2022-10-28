@@ -29,10 +29,8 @@ void TestDemoScene::init()
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
-	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_2.fbx"));
-	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_3.fbx")),this);
-	this->getPhysicsEngine().
-
+	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_4.fbx"));
+	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_4.fbx")), *this);
 
 	this->testEntity = this->createEntity();
 
@@ -48,27 +46,28 @@ void TestDemoScene::init()
 	// Floor
 	this->floor = this->createEntity();
 	Transform& floorT = this->getComponent<Transform>(floor);
-	floorT.position = glm::vec3(10.0f, -25.0f, 30.0f);
+	floorT.position = glm::vec3(10.0f, -5.0f, 30.0f);
 	floorT.scale = glm::vec3(100.0f, 1.0f, 100.0f);
 	this->setComponent<MeshComponent>(floor, 0);
-	this->setComponent<Collider>(floor, Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f)));
+	Collider a = Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f));
+	this->setComponent<Collider>(floor, a);
 
-	// Create multiple test rigidbodies
-	for (int x = 0; x < 5; x++)
-	{
-		for (int z = 0; z < 5; z++)
-		{
-			Entity e = this->createEntity();
-			Transform& t = this->getComponent<Transform>(e);
-			t.position = glm::vec3(x, 7.5f, z) * 10.0f;
-			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
-			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
-
-			this->setComponent<Collider>(e, Collider::createBox(t.scale, rand() % 2));
-			this->setComponent<Rigidbody>(e);
-			this->setComponent<MeshComponent>(e, 0);
-		}
-	}
+	//Create multiple test rigidbodies
+	//for (int x = 0; x < 5; x++)
+	//{
+	//	for (int z = 0; z < 5; z++)
+	//	{
+	//		Entity e = this->createEntity();
+	//		Transform& t = this->getComponent<Transform>(e);
+	//		t.position = glm::vec3(x, 7.5f, z) * 10.0f;
+	//		t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
+	//		t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
+	//
+	//		this->setComponent<Collider>(e, Collider::createBox(t.scale, rand() % 2));
+	//		this->setComponent<Rigidbody>(e);
+	//		this->setComponent<MeshComponent>(e, 0);
+	//	}
+	//}
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
@@ -89,60 +88,60 @@ void TestDemoScene::init()
 	}
 
 	// Create other test entities
-	uint32_t amogusMeshID = ~0u;
-	for (uint32_t i = 0; i < 4; ++i)
-	{
-		aniIDs[i] = this->createEntity();
-
-		Transform& newTransform = this->getComponent<Transform>(aniIDs[i]);
-
-		this->setComponent<MeshComponent>(aniIDs[i]);
-		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(aniIDs[i]);
-		if (i <= 1)
-		{
-			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
-			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
-
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/Amogus/source/1.fbx");
-			amogusMeshID = newMeshComp.meshID;
-		}
-		else
-		{
-			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
-			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
-			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-
-			/*newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/run_forward_correct.fbx");*/
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/Stormtrooper/source/silly_dancing.fbx",
-				"assets/models/Stormtrooper/textures");
-		}
-
-		this->setComponent<AnimationComponent>(aniIDs[i]);
-		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
-		newAnimComp.timer += 24.0f * 0.6f * i;
-		newAnimComp.timeScale += i % 2;
-	}
+	//uint32_t amogusMeshID = ~0u;
+	//for (uint32_t i = 0; i < 4; ++i)
+	//{
+	//	aniIDs[i] = this->createEntity();
+	//
+	//	Transform& newTransform = this->getComponent<Transform>(aniIDs[i]);
+	//
+	//	this->setComponent<MeshComponent>(aniIDs[i]);
+	//	MeshComponent& newMeshComp = this->getComponent<MeshComponent>(aniIDs[i]);
+	//	if (i <= 1)
+	//	{
+	//		newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
+	//		newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+	//		newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
+	//
+	//		newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+	//			"assets/models/Amogus/source/1.fbx");
+	//		amogusMeshID = newMeshComp.meshID;
+	//	}
+	//	else
+	//	{
+	//		newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
+	//		newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
+	//		newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+	//
+	//		/*newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+	//			"assets/models/run_forward_correct.fbx");*/
+	//		newMeshComp.meshID = Scene::getResourceManager()->addMesh(
+	//			"assets/models/Stormtrooper/source/silly_dancing.fbx",
+	//			"assets/models/Stormtrooper/textures");
+	//	}
+	//
+	//	this->setComponent<AnimationComponent>(aniIDs[i]);
+	//	AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
+	//	newAnimComp.timer += 24.0f * 0.6f * i;
+	//	newAnimComp.timeScale += i % 2;
+	//}
 	// Output test
-	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
+	//Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
 
-	Entity swarmEntity = this->createEntity();
-	this->setComponent<MeshComponent>(swarmEntity);
-	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
-	swarmTransform.position = glm::vec3(10.0f, 0.0f, 30.f);
-	MeshComponent& swarmMesh = this->getComponent<MeshComponent>(swarmEntity);
-	swarmMesh.meshID = Scene::getResourceManager()->addMesh(
-		"assets/models/Swarm_Model.fbx",
-		"assets/textures/swarmTextures");
-
-	// Add textures for ui renderer
-	TextureSamplerSettings samplerSettings{};
-	samplerSettings.filterMode = vk::Filter::eNearest;
-	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_UV.png", samplerSettings);
-	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
+	//Entity swarmEntity = this->createEntity();
+	//this->setComponent<MeshComponent>(swarmEntity);
+	//Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
+	//swarmTransform.position = glm::vec3(10.0f, 0.0f, 30.f);
+	//MeshComponent& swarmMesh = this->getComponent<MeshComponent>(swarmEntity);
+	//swarmMesh.meshID = Scene::getResourceManager()->addMesh(
+	//	"assets/models/Swarm_Model.fbx",
+	//	"assets/textures/swarmTextures");
+	//
+	//// Add textures for ui renderer
+	//TextureSamplerSettings samplerSettings{};
+	//samplerSettings.filterMode = vk::Filter::eNearest;
+	//this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_UV.png", samplerSettings);
+	//this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
 
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
  
@@ -213,6 +212,7 @@ void TestDemoScene::update()
 		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
+		camTransform.rotation.y += ((int)Input::isKeyDown(Keys::H) - (int)Input::isKeyDown(Keys::K)) * Time::getDT() * 40;
 	}
 
 	if (Input::isKeyPressed(Keys::T))
@@ -277,10 +277,10 @@ void TestDemoScene::update()
 	);
 
 	// Skeleton
-	Scene::getDebugRenderer()->renderSkeleton(
-		this->aniIDs[2],
-		glm::vec3(1.0f, 1.0f, 0.0f)
-	);
+	//Scene::getDebugRenderer()->renderSkeleton(
+	//	this->aniIDs[2],
+	//	glm::vec3(1.0f, 1.0f, 0.0f)
+	//);
 
 	this->timer += Time::getDT();
 
@@ -364,6 +364,7 @@ void TestDemoScene::update()
 	if (Input::isKeyPressed(Keys::I)) {
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
 	}
+
 }
 
 void TestDemoScene::onCollisionStay(Entity e1, Entity e2)

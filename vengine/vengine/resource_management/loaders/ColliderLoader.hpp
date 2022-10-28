@@ -24,10 +24,10 @@ class ColliderLoader
 	};
 	Assimp::Importer importer;
 	int getShapeType(aiMesh* mesh, const std::string& meshName);
-	Collider makeCollisionShape(const shapeType& type, const aiMesh* mesh);
+	Collider makeCollisionShape(const shapeType& type, const aiMesh* mesh, glm::vec3 position);
 
   public:
 	std::vector<std::pair<glm::vec3, Collider>> loadCollisionShape(const std::string& modelFile);
 };
 
-void addCollisionToScene(std::vector<std::pair<glm::vec3, Collider>> colliders, Scene* currentScene, glm::vec3 offset = glm::vec3(0,0,0));
+void addCollisionToScene(std::vector<std::pair<glm::vec3, Collider>> colliders, Scene& currentScene, glm::vec3 offset = glm::vec3(0,0,0));

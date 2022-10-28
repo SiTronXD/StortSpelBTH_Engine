@@ -56,11 +56,11 @@ int ColliderLoader::getShapeType(aiMesh* mesh, const std::string &meshName)
 	return shapeType::Error;
 }
 
-Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh* mesh)
+Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh* mesh, glm::vec3 position)
 {
 	if (type == shapeType::Sphere)
 	{
-		float radius = mesh->mVertices[0].Length();
+		float radius = (position - glm::vec3(mesh->mVertices[0].x, mesh->mVertices[0].y, mesh->mVertices[0].z)).length();
 		return Collider::createSphere(radius);
 	}
 	else if (type == shapeType::Plane)//not supported by engine
@@ -73,10 +73,21 @@ Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh*
 	}
 	else if (type == shapeType::Box)
 	{
+		//glm::vec3 whd(
+		//	(position.x - mesh->mVertices[0].x) * 2,
+		//	(position.y - mesh->mVertices[0].y) * 2, 
+		//	(position.z - mesh->mVertices[0].z) * 2
+		//);
+		std::cout <<
+		"0: " << mesh->mVertices[0].x << ", " << mesh->mVertices[0].y << ", " << mesh->mVertices[0].z <<
+		"\n1: " << mesh->mVertices[1].x << ", " << mesh->mVertices[1].y << ", " << mesh->mVertices[1].z <<
+		"\n2: " << mesh->mVertices[2].x << ", " << mesh->mVertices[2].y << ", " << mesh->mVertices[2].z << 
+		"\n4: " << mesh->mVertices[4].x << ", " << mesh->mVertices[4].y << ", " << mesh->mVertices[4].z << 
+			std::endl;
 		glm::vec3 whd(
 		    (mesh->mVertices[0] - mesh->mVertices[1]).Length(),
-		    (mesh->mVertices[0] - mesh->mVertices[2]).Length(),
-		    (mesh->mVertices[0] - mesh->mVertices[4]).Length()
+			(mesh->mVertices[0] - mesh->mVertices[2]).Length(),
+			(mesh->mVertices[0] - mesh->mVertices[4]).Length()
 		);
 		return Collider::createBox(whd);
 	}
@@ -99,13 +110,11 @@ std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(c
 {
 	//this->setComponent<Collider>(camEntity, Collider::createBox(glm::vec3(1)));
 	const aiScene* scene = this->importer.ReadFile((modelFile).c_str(),
-		aiProcess_JoinIdenticalVertices |
-		aiProcess_RemoveComponent | 
-		aiProcess_GlobalScale |
-		aiProcess_DropNormals |
-		aiProcess_RemoveComponent |
-		aiProcess_Triangulate |
-		aiProcess_FindDegenerates 
+		aiProcess_JoinIdenticalVertices 
+		//| aiProcess_RemoveComponent |
+		| aiProcess_DropNormals  
+		//| aiProcess_GlobalScale 
+		//| aiProcess_FindDegenerates 
 	);
 	
 	if (scene == nullptr)
@@ -133,7 +142,7 @@ std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(c
 			if (meshName.length() > 7 && meshName.substr(0, 8) == "Collider")
 			{
 				//get what kind of shape it is
-				shapeType theShapeType = (shapeType)getShapeType(scenes_meshes[j], meshName);
+				shapeType theShapeType = (shapeType)getShapeType(scenes_meshes[node_meshes[j]], meshName);
 				if (theShapeType == shapeType::Error)
 				{
 					Log::error("can't load the collision box");
@@ -146,7 +155,15 @@ std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(c
 						node->mTransformation.b4, 
 						node->mTransformation.c4
 					), 
-					makeCollisionShape(theShapeType, scenes_meshes[j])
+					makeCollisionShape(
+				        theShapeType,
+				        scenes_meshes[node_meshes[j]], 
+						glm::vec3(
+							node->mTransformation.a4, 
+							node->mTransformation.b4, 
+							node->mTransformation.c4
+						)
+					)
 				)
 				);
 			}
@@ -162,58 +179,19 @@ std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(c
 		node = nodeStack.top();
 		nodeStack.pop();
 	}
-
-	//for (size_t j = 0; j < scene->mNumMeshes; j++)
-	//{
-	//	std::string meshName(scenes_meshes[j]->mName.C_Str());
-	//	if (meshName.length() > 7 && meshName.substr(0, 8) == "Collider")
-	//	{
-	//		//get what kind of shape it is
-	//		shapeType theShapeType = (shapeType)getShapeType(scenes_meshes[j], meshName);
-	//		if (theShapeType == shapeType::Error)
-	//		{
-	//			Log::error("can't load the collision box");
-	//			return collisionList;
-	//		}
-	//		//get its fetures
-	//		collisionList.push_back(makeCollisionShape(theShapeType, scenes_meshes[j]));
-	//	}
-	//}
-
-	//std::vector<aiMesh*> scenes_meshes;
-	//scenes_meshes.reserve(scene->mNumMeshes);
-	//for (int i = 0; i < scene->mNumMeshes; i++)
-	//{
-	//	scenes_meshes.push_back(scene->mMeshes[i]);
-	//}
-	//
-	//for (size_t j = 0; j < scene->mNumMeshes; j++)
-	//{
-	//	std::string meshName(scenes_meshes[j]->mName.C_Str());
-	//	if (meshName.length() > 7 && meshName.substr(0, 8) == "Collider")
-	//	{
-	//		//get what kind of shape it is
-	//		shapeType theShapeType = (shapeType)getShapeType(scenes_meshes[j], meshName);
-	//		if (theShapeType == shapeType::Error)
-	//		{
-	//			Log::error("can't load the collision box");
-	//			return collisionList;
-	//		}
-	//		//get its fetures
-	//		collisionList.push_back(makeCollisionShape(theShapeType, scenes_meshes[j]));
-	//	}
-	//}
 	
 	importer.FreeScene();
 
 	return collisionList;
 }
 
-void addCollisionToScene(std::vector<std::pair<glm::vec3, Collider>> colliders, Scene* currentScene, glm::vec3 offset)
+void addCollisionToScene(std::vector<std::pair<glm::vec3, Collider>> colliders, Scene& currentScene, glm::vec3 offset)
 {
-	int e = currentScene->createEntity();
-	currentScene->setComponent<Transform>(e);
-	Transform &t = currentScene->getComponent<Transform>(e);
-	t.position = offset + colliders[0].first;
-	currentScene->setComponent<Collider>(e, colliders[0].second);
+	for (int i = 0; i < colliders.size(); i++)
+	{
+		int e = currentScene.createEntity();
+		Transform& t = currentScene.getComponent<Transform>(e);
+		t.position = offset + colliders[i].first;
+		currentScene.setComponent<Collider>(e, colliders[i].second);
+	}
 }
