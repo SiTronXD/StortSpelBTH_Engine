@@ -30,7 +30,8 @@ void TestDemoScene::init()
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
 	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_4.fbx"));
-	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_4.fbx")), *this);
+	this->getComponent<Transform>(puzzleTest).position = glm::vec3(5, 0, 0);
+	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_4.fbx")), *this, glm::vec3(5,0,0));
 
 	this->testEntity = this->createEntity();
 
@@ -209,72 +210,73 @@ void TestDemoScene::update()
 
 	if (this->entityValid(this->getMainCameraID()))
 	{
-		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
+		//glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
+		int fb = Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S);
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
-		camTransform.position += moveVec * 25.0f * Time::getDT();
-		camTransform.rotation.y += ((int)Input::isKeyDown(Keys::H) - (int)Input::isKeyDown(Keys::K)) * Time::getDT() * 40;
+		camTransform.position += fb * 25.0f * Time::getDT() * camTransform.forward();
+		camTransform.rotation.y += ((int)Input::isKeyDown(Keys::H) - (int)Input::isKeyDown(Keys::K)) * Time::getDT() * 90;
 	}
-
+	
 	if (Input::isKeyPressed(Keys::T))
 	{
 		Scene::switchScene(new TestScene2(), "assets/scripts/scene.lua");
 	}
 
 	// UI
-	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
-	Scene::getUIRenderer()->renderTexture(-960.0f,  540.0f, 200.0f, 200.0f);
-	Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
-	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
-	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
-
-	// Debug rendering
-
-	// Lines
-	Scene::getDebugRenderer()->renderLine(
-		glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
-		glm::vec3(10.0f, 10.0f, 25.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
-	Scene::getDebugRenderer()->renderLine(
-		glm::vec3(0.0f, -10.0f, 35.0f),
-		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
-
-	// Spheres
-	Scene::getDebugRenderer()->renderSphere(
-		glm::vec3(0.0f, 0.0f, 30.0f),
-		1.0f,
-		glm::vec3(1.0f, 1.0f, 0.0f)
-	);
-	Scene::getDebugRenderer()->renderSphere(
-		glm::vec3(3.0f, 0.0f, 30.0f),
-		2.0f,
-		glm::vec3(0.0f, 1.0f, 0.0f)
-	);
-
-	// Boxes
-	Scene::getDebugRenderer()->renderBox(
-		glm::vec3(5.5f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 2.541f, 0.0f),
-		glm::vec3(1.0f, 1.0f, 1.0f),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
-	Scene::getDebugRenderer()->renderBox(
-		glm::vec3(6.25f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
-		glm::vec3(0.5f, 2.0f, 1.0f),
-		glm::vec3(0.0f, 1.0f, 1.0f)
-	);
-
-	// Capsules
-	Scene::getDebugRenderer()->renderCapsule(
-		glm::vec3(8.0f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
-		2.0f + sin(timer),
-		0.5f,
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
+	//Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
+	//Scene::getUIRenderer()->renderTexture(-960.0f,  540.0f, 200.0f, 200.0f);
+	//Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
+	//Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
+	//Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
+	//
+	//// Debug rendering
+	//
+	//// Lines
+	//Scene::getDebugRenderer()->renderLine(
+	//	glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
+	//	glm::vec3(10.0f, 10.0f, 25.0f),
+	//	glm::vec3(1.0f, 0.0f, 0.0f)
+	//);
+	//Scene::getDebugRenderer()->renderLine(
+	//	glm::vec3(0.0f, -10.0f, 35.0f),
+	//	glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
+	//	glm::vec3(1.0f, 0.0f, 0.0f)
+	//);
+	//
+	//// Spheres
+	//Scene::getDebugRenderer()->renderSphere(
+	//	glm::vec3(0.0f, 0.0f, 30.0f),
+	//	1.0f,
+	//	glm::vec3(1.0f, 1.0f, 0.0f)
+	//);
+	//Scene::getDebugRenderer()->renderSphere(
+	//	glm::vec3(3.0f, 0.0f, 30.0f),
+	//	2.0f,
+	//	glm::vec3(0.0f, 1.0f, 0.0f)
+	//);
+	//
+	//// Boxes
+	//Scene::getDebugRenderer()->renderBox(
+	//	glm::vec3(5.5f, 0.0f, 30.0f),
+	//	glm::vec3(timer * 30.0f, timer * 30.0f * 2.541f, 0.0f),
+	//	glm::vec3(1.0f, 1.0f, 1.0f),
+	//	glm::vec3(0.0f, 0.0f, 1.0f)
+	//);
+	//Scene::getDebugRenderer()->renderBox(
+	//	glm::vec3(6.25f, 0.0f, 30.0f),
+	//	glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
+	//	glm::vec3(0.5f, 2.0f, 1.0f),
+	//	glm::vec3(0.0f, 1.0f, 1.0f)
+	//);
+	//
+	//// Capsules
+	//Scene::getDebugRenderer()->renderCapsule(
+	//	glm::vec3(8.0f, 0.0f, 30.0f),
+	//	glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
+	//	2.0f + sin(timer),
+	//	0.5f,
+	//	glm::vec3(1.0f, 0.0f, 0.0f)
+	//);
 
 	// Skeleton
 	//Scene::getDebugRenderer()->renderSkeleton(
@@ -364,7 +366,6 @@ void TestDemoScene::update()
 	if (Input::isKeyPressed(Keys::I)) {
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
 	}
-
 }
 
 void TestDemoScene::onCollisionStay(Entity e1, Entity e2)

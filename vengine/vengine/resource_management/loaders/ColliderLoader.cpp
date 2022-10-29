@@ -20,12 +20,12 @@ int ColliderLoader::getShapeType(aiMesh* mesh, const std::string &meshName)
 	static const std::string ConeName("Cone");
 	static const std::string CylinderName("Cylinder");
 	static const std::string CapsuleName("Capsule");
-	static const uint8_t SphereNameSize = SphereName.length();
-	static const uint8_t PlaneNameSize = PlaneName.length();
-	static const uint8_t BoxNameSize = BoxName.length();
-	static const uint8_t ConeNameSize = ConeName.length();
-	static const uint8_t CylinderNameSize = CylinderName.length();
-	static const uint8_t CapsuleNameSize = CapsuleName.length();
+	static const uint8_t SphereNameSize =	(uint8_t)SphereName.length();
+	static const uint8_t PlaneNameSize =	(uint8_t)PlaneName.length();
+	static const uint8_t BoxNameSize =		(uint8_t)BoxName.length();
+	static const uint8_t ConeNameSize =		(uint8_t)ConeName.length();
+	static const uint8_t CylinderNameSize = (uint8_t)CylinderName.length();
+	static const uint8_t CapsuleNameSize =	(uint8_t)CapsuleName.length();
 	//static const uint8_t PolygonNameSize = std::string("Polygon").length(); //not supported yet
 	
 	if (meshName.size() >= 8 + SphereNameSize && meshName.substr(8, SphereNameSize) == SphereName)
@@ -60,7 +60,11 @@ Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh*
 {
 	if (type == shapeType::Sphere)
 	{
-		float radius = (position - glm::vec3(mesh->mVertices[0].x, mesh->mVertices[0].y, mesh->mVertices[0].z)).length();
+		float radius = sqrt(
+			mesh->mVertices[0].x * mesh->mVertices[0].x + 
+			mesh->mVertices[0].y * mesh->mVertices[0].y + 
+			mesh->mVertices[0].z * mesh->mVertices[0].z
+		) * 100;
 		return Collider::createSphere(radius);
 	}
 	else if (type == shapeType::Plane)//not supported by engine
@@ -73,22 +77,12 @@ Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh*
 	}
 	else if (type == shapeType::Box)
 	{
-		//glm::vec3 whd(
-		//	(position.x - mesh->mVertices[0].x) * 2,
-		//	(position.y - mesh->mVertices[0].y) * 2, 
-		//	(position.z - mesh->mVertices[0].z) * 2
-		//);
-		std::cout <<
-		"0: " << mesh->mVertices[0].x << ", " << mesh->mVertices[0].y << ", " << mesh->mVertices[0].z <<
-		"\n1: " << mesh->mVertices[1].x << ", " << mesh->mVertices[1].y << ", " << mesh->mVertices[1].z <<
-		"\n2: " << mesh->mVertices[2].x << ", " << mesh->mVertices[2].y << ", " << mesh->mVertices[2].z << 
-		"\n4: " << mesh->mVertices[4].x << ", " << mesh->mVertices[4].y << ", " << mesh->mVertices[4].z << 
-			std::endl;
 		glm::vec3 whd(
-		    (mesh->mVertices[0] - mesh->mVertices[1]).Length(),
-			(mesh->mVertices[0] - mesh->mVertices[2]).Length(),
-			(mesh->mVertices[0] - mesh->mVertices[4]).Length()
+			abs(mesh->mVertices[0].x) * 100,
+			abs(mesh->mVertices[0].z) * 100, 
+			abs(mesh->mVertices[0].y) * 100
 		);
+
 		return Collider::createBox(whd);
 	}
 	else if (type == shapeType::Cone)//not supported by engine
@@ -100,7 +94,7 @@ Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh*
 	else if (type == shapeType::Capsule)
 	{
 		float radius = aiVector3D(mesh->mVertices[0].x, 0, mesh->mVertices[0].z).Length();
-		float height = aiVector3D(0,mesh->mVertices[0].y, 0).Length() * 2;
+		float height = aiVector3D(0,mesh->mVertices[0].y, 0).Length() * 2;//vet ej om det ska vara 2 eller inte
 		return Collider::createCapsule(radius, height);
 	}
 	return Collider::createBox(glm::vec3(1));
@@ -111,10 +105,8 @@ std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(c
 	//this->setComponent<Collider>(camEntity, Collider::createBox(glm::vec3(1)));
 	const aiScene* scene = this->importer.ReadFile((modelFile).c_str(),
 		aiProcess_JoinIdenticalVertices 
-		//| aiProcess_RemoveComponent |
+		| aiProcess_RemoveComponent 
 		| aiProcess_DropNormals  
-		//| aiProcess_GlobalScale 
-		//| aiProcess_FindDegenerates 
 	);
 	
 	if (scene == nullptr)
