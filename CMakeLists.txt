@@ -280,6 +280,7 @@ target_compile_definitions(vengine PRIVATE "$<$<CONFIG:cmake_project>:${CLANG_CO
 
 if(${CMAKE_BUILD_TYPE} MATCHES "Debug" OR ${CMAKE_BUILD_TYPE} MATCHES "Release" )
 target_compile_definitions(vengine PRIVATE "_CONSOLE" )
+target_compile_definitions(vengine PRIVATE "NO_MOUSE_GRAB" )
 endif()
 
 # Replace non portable functions with portable functions...
@@ -305,6 +306,7 @@ target_link_libraries(
     ${vengine_vma}
     ${LUA_LIBRARIES}
 )
+
 
 
 # Sources for executable demo

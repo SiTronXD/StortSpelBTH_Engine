@@ -122,5 +122,9 @@ void Input::setCursorPosition(const int& newCursorX, const int& newCursorY)
 
 void Input::setHideCursor(const bool& hide)
 {
+    // NO_MOUSE_GRAB mainly used on Linux in Debug to ensure mouse is not hogged by process
+#ifdef NO_MOUSE_GRAB
 	Input::shouldHideCursor = hide;
+#endif
+
 }
