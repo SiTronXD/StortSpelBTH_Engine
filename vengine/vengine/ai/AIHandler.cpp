@@ -11,31 +11,34 @@ void AIHandler::drawImgui(){
         
         if (ImGui::BeginTabItem("Entities"))
         {   
-            
-            uint32_t id = 0;
 
             static std::string entity_label;
             static uint32_t selected_entity = 0;                
             static std::function<void(FSM*, uint32_t)> selected_entity_func;                
             static FSM* selected_fsm = nullptr;
-            static bool useFirstAsDefault = true;    
             
             ImGui::SetNextItemOpen(blackboard_Entities_open, ImGuiCond_FirstUseEver);
             ImGui::BeginChild("entity_picker", ImVec2(100, 0), false, ImGuiWindowFlags_AlwaysAutoResize);
-            
+
+            // Use first as default! 
+            if(this->switchedScene)
+            {
+                selected_entity      = this->FSMsEntities[this->FSMimguiLambdas.begin()->first][0];                        
+                selected_entity_func = this->FSMimguiLambdas.begin()->second;
+                selected_fsm         = this->FSMimguiLambdas.begin()->first;
+            }
+                        
             for(auto fsmImguiLambda : this->FSMimguiLambdas)
             {
                 for(auto entityId : this->FSMsEntities[fsmImguiLambda.first])
                 {
                     
                     entity_label = "Entity["+std::to_string(entityId)+"]";
-                    if(ImGui::Selectable(entity_label.c_str(), selected_entity == entityId) || useFirstAsDefault)
+                    if(ImGui::Selectable(entity_label.c_str(), selected_entity == entityId) )
                     { 
-                        selected_entity = entityId;
-                        
+                        selected_entity = entityId;                        
                         selected_entity_func = fsmImguiLambda.second;
                         selected_fsm = fsmImguiLambda.first;
-                        useFirstAsDefault = false; 
                     }  
                 }
             }    
