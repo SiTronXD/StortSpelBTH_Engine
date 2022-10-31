@@ -44,7 +44,7 @@ public:
     {
         this->sh = sh; 
 		this->eventSystem.setSceneHandler(this->sh);
-        this->currentScene = sh->getScene();
+        this->currentScene = nullptr;
         this->switchedScene = true;
 
         this->FSMimguiLambdas.clear();
@@ -88,6 +88,7 @@ public:
         {
             FSMimguiLambdas.clear();
             FSMsEntities.clear();
+            currentScene = this->sh->getScene();
         }
 
         eventSystem.update();
