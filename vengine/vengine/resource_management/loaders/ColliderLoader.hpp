@@ -27,23 +27,13 @@ struct ColliderDataRes
 class ColliderLoader
 {
   private:
-	enum shapeType
-	{
-		Sphere,
-		Plane,
-		Box,
-		Cone,
-		Cylinder,
-		Capsule,
-		Error
-	};
 	Assimp::Importer importer;
-	int getShapeType(aiMesh* mesh, const std::string& meshName);
-	Collider makeCollisionShape(const shapeType& type, const aiMesh* mesh);
+	ColType getShapeType(aiMesh* mesh, const std::string& meshName);
+	Collider makeCollisionShape(const ColType& type, const aiMesh* mesh);
 
   public:
 	std::vector<ColliderDataRes> loadCollisionShape(const std::string& modelFile);
 };
 
 void addCollisionToScene(std::vector<ColliderDataRes> colliders, Scene& currentScene, const glm::vec3 &offset = glm::vec3(0, 0, 0), const glm::vec3 &rotationOffset = glm::vec3(0,0,0));
-void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, NetworkScene& currentScene, glm::vec3 offset = glm::vec3(0, 0, 0));
+
