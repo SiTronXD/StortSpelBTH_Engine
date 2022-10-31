@@ -627,7 +627,7 @@ void VulkanRenderer::initForScene(Scene* scene)
 		);
 	}
 
-    // Add all textures for possible use in the shader
+    // Add all textures for possible use in the shader 
     size_t numTextures = this->resourceManager->getNumTextures();
     for (size_t i = 0; i < numTextures; ++i) 
     {
@@ -980,13 +980,22 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
     renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());      // Size of region to run render pass on (starting at offset)
      
-    static const vk::ClearColorValue clear_black(std::array<float,4> {0.F, 0.F, 0.F, 1.F});    
-    static const vk::ClearColorValue clear_Plum(
-        std::array<float, 4> 
+    static const vk::ClearColorValue clearColor(
+        // Sky color
+        /*std::array<float, 4> 
         {
             119.0f / 256.0f, 
             172.0f / 256.0f,
             222.0f / 256.0f, 
+            1.0f
+        }*/
+
+        // Fog color
+        std::array<float, 4>
+        {
+            0.8f,
+            0.8f,
+            0.8f,
             1.0f
         }
     );
@@ -994,7 +1003,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
     std::array<vk::ClearValue, 2> clearValues = 
     {
             vk::ClearValue(                         // of type VkClearColorValue 
-                vk::ClearColorValue{clear_Plum}     // Clear Value for Attachment 0
+                vk::ClearColorValue{ clearColor }     // Clear Value for Attachment 0
             ),  
             vk::ClearValue(                         // Clear Value for Attachment 1
                 vk::ClearDepthStencilValue(
