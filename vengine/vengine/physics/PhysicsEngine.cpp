@@ -372,10 +372,21 @@ void PhysicsEngine::update()
 				}
 
 				Transform& t = scene->getComponent<Transform>(entity);
-				glm::vec3 scale = t.scale;
+				const glm::vec3 scale = t.scale;
+				const glm::vec3 rotation = t.rotation;
 
+				// Apply transform, but keep scale
 				t = BulletH::toTransform(transform);
 				t.scale = scale;
+
+				// Keep rotation if necessary
+				if (rb != nullptr)
+				{
+					if (glm::dot(rb->rotFactor, rb->rotFactor) <= 0.01f)
+					{
+						t.rotation = rotation;
+					}
+				}
 			}
 		}
 	}
