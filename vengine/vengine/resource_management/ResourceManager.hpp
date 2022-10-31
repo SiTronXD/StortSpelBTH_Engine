@@ -26,7 +26,7 @@ private:
 	std::unordered_map<std::string, uint32_t> collisionPaths;
 
     std::unordered_map<uint32_t, Mesh>  meshes;
-	std::unordered_map<uint32_t, std::vector<std::pair<glm::vec3, Collider>>> collisionsData;
+	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
 
@@ -55,8 +55,8 @@ public:
     Mesh& getMesh(uint32_t id);
     Texture& getTexture(uint32_t id);
     TextureSampler& getTextureSampler(uint32_t id);
-	std::vector < std::pair<glm::vec3, Collider>> getCollisionShapeFromMesh(std::string&& collisionPath);
-	std::vector < std::pair<glm::vec3, Collider>> getCollisionShapeFromMesh(uint32_t id);
+	std::vector<ColliderDataRes> getCollisionShapeFromMesh(std::string&& collisionPath);
+	std::vector<ColliderDataRes> getCollisionShapeFromMesh(uint32_t id);
 
     size_t getNumMeshes();
     size_t getNumTextures();
@@ -95,7 +95,7 @@ inline TextureSampler& ResourceManager::getTextureSampler(uint32_t id)
     return map_iterator->second;
 }
 
-inline std::vector<std::pair<glm::vec3, Collider>> ResourceManager::getCollisionShapeFromMesh(std::string&& collisionPath)
+inline std::vector<ColliderDataRes> ResourceManager::getCollisionShapeFromMesh(std::string&& collisionPath)
 {
 	if (this->collisionPaths.count(collisionPath) != 0)
 	{
@@ -104,11 +104,11 @@ inline std::vector<std::pair<glm::vec3, Collider>> ResourceManager::getCollision
 	else
 	{
 		Log::error("Failed to find Collision with given name : " + collisionPath);
-		return std::vector<std::pair<glm::vec3, Collider>>();
+		return std::vector<ColliderDataRes>();
     }
 }
 
-inline std::vector<std::pair<glm::vec3, Collider>> ResourceManager::getCollisionShapeFromMesh(uint32_t id)
+inline std::vector<ColliderDataRes> ResourceManager::getCollisionShapeFromMesh(uint32_t id)
 {
 	auto map_iterator = this->collisionsData.find(id);
 	if (this->collisionsData.end() == map_iterator)

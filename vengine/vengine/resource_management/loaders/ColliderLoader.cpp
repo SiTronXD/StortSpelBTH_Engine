@@ -5,6 +5,8 @@
 #include <assimp/postprocess.h>
 #include <map>
 #include "../../application/Scene.hpp"
+#include "../../network/ServerEngine/NetworkScene.h"
+#include <glm/gtx/matrix_decompose.hpp>
  
 btVector3 aiVectorToBtVector(const aiVector3D &a, btVector3 &b) 
 {
@@ -56,7 +58,7 @@ int ColliderLoader::getShapeType(aiMesh* mesh, const std::string &meshName)
 	return shapeType::Error;
 }
 
-Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh* mesh, glm::vec3 position)
+Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh* mesh)
 {
 	if (type == shapeType::Sphere)
 	{
@@ -100,7 +102,7 @@ Collider ColliderLoader::makeCollisionShape(const shapeType& type, const aiMesh*
 	return Collider::createBox(glm::vec3(1));
 }
 
-std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(const std::string& modelFile)
+std::vector<ColliderDataRes> ColliderLoader::loadCollisionShape(const std::string& modelFile)
 {
 	//this->setComponent<Collider>(camEntity, Collider::createBox(glm::vec3(1)));
 	const aiScene* scene = this->importer.ReadFile((modelFile).c_str(),
@@ -112,10 +114,10 @@ std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(c
 	if (scene == nullptr)
 	{
 		Log::warning("Failed to load Collision (" + modelFile + ")");
-		return std::vector<std::pair<glm::vec3, Collider>>();
+		return std::vector<ColliderDataRes>();
 	}
 
-	std::vector<std::pair<glm::vec3, Collider>> collisionList;
+	std::vector<ColliderDataRes> collisionList;
 
 	auto* node = scene->mRootNode;
 	auto scenes_meshes = std::span<aiMesh*>(scene->mMeshes, scene->mNumMeshes);
@@ -140,23 +142,34 @@ std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(c
 					Log::error("can't load the collision box");
 					return collisionList;
 				}
+				//rotations DEBUG
+				aiMatrix4x4 modelMatrix = node->mTransformation;
+				glm::mat4 transformation(
+					node->mTransformation.a1, node->mTransformation.b1, node->mTransformation.c1, node->mTransformation.d1, 
+					node->mTransformation.a2, node->mTransformation.b2, node->mTransformation.c2, node->mTransformation.d2,
+				    node->mTransformation.a3, node->mTransformation.b3, node->mTransformation.c3, node->mTransformation.d3,
+				    node->mTransformation.a4, node->mTransformation.b4, node->mTransformation.c4, node->mTransformation.d4
+				);  // your transformation matrix
+				glm::vec3 scale;
+				glm::quat rotation;
+				glm::vec3 translation;
+				glm::vec3 skew;
+				glm::vec4 perspective;
+				glm::decompose(transformation, scale, rotation, translation, skew, perspective);
+				glm::vec3 eRotation = glm::eulerAngles(rotation) * (180.0f / 3.141592653589793238463f);
+				eRotation.x += 90;
+
+
 				//get its fetures
-				collisionList.push_back(std::pair<glm::vec3, Collider>(
-				    glm::vec3(
-						node->mTransformation.a4, 
-						node->mTransformation.b4, 
-						node->mTransformation.c4
-					), 
-					makeCollisionShape(
-				        theShapeType,
-				        scenes_meshes[node_meshes[j]], 
-						glm::vec3(
-							node->mTransformation.a4, 
-							node->mTransformation.b4, 
-							node->mTransformation.c4
+				collisionList.push_back(
+					ColliderDataRes(
+						translation, 
+						eRotation,
+						makeCollisionShape(
+							theShapeType,
+							scenes_meshes[node_meshes[j]]
 						)
 					)
-				)
 				);
 			}
 		}
@@ -177,13 +190,19 @@ std::vector<std::pair<glm::vec3, Collider>> ColliderLoader::loadCollisionShape(c
 	return collisionList;
 }
 
-void addCollisionToScene(std::vector<std::pair<glm::vec3, Collider>> colliders, Scene& currentScene, glm::vec3 offset)
+void addCollisionToScene(std::vector<ColliderDataRes> colliders, Scene& currentScene, const glm::vec3 &offset, const glm::vec3 &rotationOffset)
 {
 	for (int i = 0; i < colliders.size(); i++)
 	{
 		int e = currentScene.createEntity();
 		Transform& t = currentScene.getComponent<Transform>(e);
-		t.position = offset + colliders[i].first;
-		currentScene.setComponent<Collider>(e, colliders[i].second);
+		t.position = offset + colliders[i].position;
+		t.rotation = colliders[i].rotation;
+		currentScene.setComponent<Collider>(e, colliders[i].col);
 	}
+}
+
+void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, NetworkScene& currentScene, glm::vec3 offset)
+{
+	//hur ska jag göra detta?
 }

@@ -29,9 +29,9 @@ void TestDemoScene::init()
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
-	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_4.fbx"));
+	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_5.fbx"));
 	this->getComponent<Transform>(puzzleTest).position = glm::vec3(5, 0, 0);
-	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_4.fbx")), *this, glm::vec3(5,0,0));
+	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), *this, glm::vec3(5,0,0));
 
 	this->testEntity = this->createEntity();
 

@@ -8,6 +8,21 @@
 #include "../../components/Collider.h"
 
 class Scene;
+class NetworkScene;
+
+struct ColliderDataRes
+{
+	glm::vec3 position;
+	glm::vec3 rotation;
+	Collider col;
+
+	ColliderDataRes(const glm::vec3 &pos, const glm::vec3 &rot, const Collider col) 
+	{ 
+		this->position = pos;
+		this->rotation = rot;
+		this->col = col;
+	}
+};
 
 class ColliderLoader
 {
@@ -24,10 +39,11 @@ class ColliderLoader
 	};
 	Assimp::Importer importer;
 	int getShapeType(aiMesh* mesh, const std::string& meshName);
-	Collider makeCollisionShape(const shapeType& type, const aiMesh* mesh, glm::vec3 position);
+	Collider makeCollisionShape(const shapeType& type, const aiMesh* mesh);
 
   public:
-	std::vector<std::pair<glm::vec3, Collider>> loadCollisionShape(const std::string& modelFile);
+	std::vector<ColliderDataRes> loadCollisionShape(const std::string& modelFile);
 };
 
-void addCollisionToScene(std::vector<std::pair<glm::vec3, Collider>> colliders, Scene& currentScene, glm::vec3 offset = glm::vec3(0,0,0));
+void addCollisionToScene(std::vector<ColliderDataRes> colliders, Scene& currentScene, const glm::vec3 &offset = glm::vec3(0, 0, 0), const glm::vec3 &rotationOffset = glm::vec3(0,0,0));
+void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, NetworkScene& currentScene, glm::vec3 offset = glm::vec3(0, 0, 0));

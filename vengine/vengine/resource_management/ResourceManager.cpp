@@ -143,7 +143,7 @@ uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
 		return this->collisionPaths[collisionPath];
 	}
     
-	std::vector<std::pair<glm::vec3, Collider>> collisions = collisionLoader.loadCollisionShape(collisionPath);
+	std::vector<ColliderDataRes> collisions = collisionLoader.loadCollisionShape(collisionPath);
 	//NOTE: prevSize as key only works if we never remove resources the map...
 	 this->collisionPaths.insert({collisionPath, this->collisionPaths.size()});
     
