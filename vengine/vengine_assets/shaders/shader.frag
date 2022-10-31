@@ -21,5 +21,17 @@ void main()
 
 	vec3 finalCol = texture(textureSampler0, fragTex).rgb * diffuse;
 	
-	outColor = vec4(finalCol, 1.0f);
+	// outColor = vec4(finalCol, 1.0f);
+
+	// Temporary fog
+	const float MIN_DIST = 0.995f;
+	const float MAX_DIST = 1.0f;
+	float distAlpha = clamp(
+		(gl_FragCoord.z - MIN_DIST) / (MAX_DIST - MIN_DIST), 
+		0.0f, 
+		1.0f
+	);
+	distAlpha = distAlpha * distAlpha;
+
+	outColor = vec4(mix(finalCol, vec3(0.8f), distAlpha), 1.0f);
 }
