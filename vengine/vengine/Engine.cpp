@@ -75,12 +75,14 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->scriptHandler.setDebugRenderer(&debugRenderer);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
-    this->aiHandler.init(&this->sceneHandler);    
 
     // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
+
+    //Needs to run after scene is initialized
+    this->aiHandler.init(&this->sceneHandler);    
 
     // Temporary, should be called before creating the scene
     this->audioHandler.setSceneHandler(&sceneHandler);
