@@ -49,6 +49,7 @@ public:
     {
         this->sh = sh; 
 		this->eventSystem.setSceneHandler(this->sh);
+        this->eventSystem.clean();
         this->currentScene = this->sh->getScene();
         this->switchedScene = true;
 
