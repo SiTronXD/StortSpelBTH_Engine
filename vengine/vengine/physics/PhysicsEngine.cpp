@@ -387,6 +387,10 @@ void PhysicsEngine::update()
 						t.rotation = rotation;
 					}
 				}
+				else // Colliders also keep rotations
+				{
+					t.rotation = rotation;
+				}
 			}
 		}
 	}
