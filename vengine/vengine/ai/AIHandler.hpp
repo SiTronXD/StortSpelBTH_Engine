@@ -30,8 +30,13 @@ public:
     std::unordered_map<FSM*, std::vector<uint32_t>> FSMsEntities;
 
     void addFSM(FSM* fsm, const std::string& name) { 
-		fsm->init(this->sh, &this->eventSystem, name);
-        this->FSMs.insert({fsm->getName(), fsm});
+		
+        auto foundFSM = this->FSMs.find(name);
+        if(foundFSM == this->FSMs.end())
+        {
+            fsm->init(this->sh, &this->eventSystem, name);
+            this->FSMs.insert({fsm->getName(), fsm});
+        }
     }
 
     void addImguiToFSM(const std::string& name, std::function<void(FSM* fsm, uint32_t)> imguiLambda) 
