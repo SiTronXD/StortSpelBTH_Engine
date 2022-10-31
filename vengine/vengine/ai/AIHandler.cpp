@@ -3,7 +3,14 @@
 
 void AIHandler::drawImgui(){
 
-    if(FSMimguiLambdas.size() <= 0 ){return;}
+    // TODO: Improve this code... 
+    // If any entities exists, then we can run without problem... 
+    if(this->FSMimguiLambdas.size() <= 0 ){return;}
+    bool noEntities = true; 
+    for( auto& fsm : this->FSMsEntities)
+    {if(fsm.second.size() > 0) {noEntities = false; break;}}
+    if(noEntities) {return; }
+    
     static bool blackboard_Entities_open = true; 
     ImGui::Begin("BlackBoard");
     float width = ImGui::GetWindowWidth();

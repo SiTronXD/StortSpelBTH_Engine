@@ -48,8 +48,7 @@ public:
         this->switchedScene = true;
 
         this->FSMimguiLambdas.clear();
-        this->FSMsEntities.clear();        
-
+        this->FSMsEntities.clear();
     }
 
 	void clean()
