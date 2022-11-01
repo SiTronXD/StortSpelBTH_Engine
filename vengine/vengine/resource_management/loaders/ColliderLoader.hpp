@@ -41,6 +41,6 @@ void addCollisionToScene(
 );
 
 void addCollisionToNetworkScene(
-    std::vector<ColliderDataRes> colliders, NetworkScene& currentScene, const glm::vec3& offset = glm::vec3(0, 0, 0),
+    std::vector<ColliderDataRes> colliders, NetworkScene* currentScene, const glm::vec3& offset = glm::vec3(0, 0, 0),
     const glm::vec3& rotationOffset = glm::vec3(0, 0, 0)
 );

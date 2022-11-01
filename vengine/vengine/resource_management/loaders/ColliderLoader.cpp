@@ -186,42 +186,51 @@ void addCollisionToScene(std::vector<ColliderDataRes> colliders, Scene& currentS
 {
 	for (int i = 0; i < colliders.size(); i++)
 	{
-		glm::vec3 pussPosition = colliders[i].position;
-		SMath::rotateVector(rotationOffset, pussPosition);
-
+		glm::vec3 colliderPos = SMath::rotateVector(rotationOffset, colliders[i].position);
+		
 		int e = currentScene.createEntity();
 		Transform& t = currentScene.getComponent<Transform>(e);
-		t.position = offset + pussPosition;
+		t.position = offset + colliderPos;
 		t.rotation = colliders[i].rotation;
 		currentScene.setComponent<Collider>(e, colliders[i].col);
 	}
 }
 
-void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, NetworkScene& currentScene, const glm::vec3& offset, const glm::vec3& rotationOffset) {
+void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, NetworkScene* currentScene, const glm::vec3& offset, const glm::vec3& rotationOffset) {
+	std::vector<NavMesh::Polygon> polygons;
 	for (int i = 0; i < colliders.size(); i++)
 	{
-		std::vector<NavMesh::Point> points;
-		glm::vec3 vec3Point;
-		glm::vec3 rotation = rotationOffset + colliders[i].rotation;
-		glm::vec3 position = offset + colliders[i].position;
+		NavMesh::Polygon newPolygon;
+		glm::vec3 colliderPos = SMath::rotateVector(rotationOffset, colliders[i].position) + offset;
+
+		glm::vec3 rotation = colliders[i].rotation;
+
 		if (colliders[i].col.type == ColType::BOX)
 		{
 			NavMesh::Point point[4];
-			//fromVec3ToPoint(SMath::rotateVector());
-			point[0] = NavMesh::Point(colliders[i].col.extents.x, colliders[i].col.extents.z);
-			point[1] = NavMesh::Point(colliders[i].col.extents.x, -colliders[i].col.extents.z);
-			point[2] = NavMesh::Point(-colliders[i].col.extents.x, colliders[i].col.extents.z);
-			point[3] = NavMesh::Point(-colliders[i].col.extents.x, -colliders[i].col.extents.z);
-			
+			glm::vec3 plus = SMath::rotateVector(rotation, colliders[i].col.extents);
+			glm::vec3 minus = SMath::rotateVector(rotation, glm::vec3(-colliders[i].col.extents.x, colliders[i].col.extents.y, colliders[i].col.extents.z));
+
+			point[0] = NavMesh::Point(fromVec3ToPoint(plus + colliderPos));
+			point[1] = NavMesh::Point(fromVec3ToPoint(-plus + colliderPos));
+			point[2] = NavMesh::Point(fromVec3ToPoint(minus + colliderPos));
+			point[3] = NavMesh::Point(fromVec3ToPoint(-minus + colliderPos));
+			for (int i = 0; i < 4; i++)
+			{
+				newPolygon.AddPoint(point[i]);
+			}
 		}
 		else if (colliders[i].col.type == ColType::SPHERE || colliders[i].col.type == ColType::CAPSULE)
 		{
-			//NavMesh::Point point[8];
-			//point[0] = NavMesh::Point(colliders[i].col.extents.x, colliders[i].col.extents.z);
-			//point[1] = NavMesh::Point(colliders[i].col.extents.x, -colliders[i].col.extents.z);
-			//point[2] = NavMesh::Point(-colliders[i].col.extents.x, colliders[i].col.extents.z);
-			//point[3] = NavMesh::Point(-colliders[i].col.extents.x, -colliders[i].col.extents.z);
+			glm::vec3 line(colliders[i].col.radius, 0, 0);
+			NavMesh::Point point[8];
+			for (int i = 0; i < 8; i++)
+			{
+				line = SMath::rotateVector(glm::vec3(0, 45, 0), line);
+				point[i] = NavMesh::Point(fromVec3ToPoint(line + colliderPos));
+				newPolygon.AddPoint(point[i]);
+			}
 		}
+		polygons.push_back(newPolygon);
 	}
-	//currentScene.getPathFindingManager()->addPolygon();
 }
