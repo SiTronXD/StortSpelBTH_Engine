@@ -13,9 +13,13 @@ function script:update()
 	debugRenderer.renderCapsule(vector(), vector(), 10, 3, core.YELLOW)
 
 	local payload = physics.raycast(self.transform.position, self.transform:forward(), 100)
-	physics.renderDebugShapes(payload ~= nil)
+	self:test()
 
 	input.setHideCursor(input.isKeyDown(Keys.L))
+end
+
+function script:test()
+	print("Test")
 end
 
 function script:onTriggerStay(entity)
