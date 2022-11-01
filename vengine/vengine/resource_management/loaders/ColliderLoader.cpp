@@ -1,14 +1,15 @@
 #include "ColliderLoader.hpp"
+#include "../../application/Scene.hpp"
 #include "../../dev/Log.hpp"
+#include "../../network/ServerEngine/NetworkScene.h"
+#include <assimp/postprocess.h>
+#include <glm/gtx/matrix_decompose.hpp>
+#include <map>
 #include <span>
 #include <stack>
-#include <assimp/postprocess.h>
-#include <map>
-#include "../../application/Scene.hpp"
-#include "../../network/ServerEngine/NetworkScene.h"
-#include <glm/gtx/matrix_decompose.hpp>
- 
-btVector3 aiVectorToBtVector(const aiVector3D &a, btVector3 &b) 
+#include "../../vengine/vengine/VengineMath.hpp"
+
+btVector3 aiVectorToBtVector(const aiVector3D& a, btVector3& b)
 {
 	b = btVector3(a.x, a.y, a.z);
 	return b;
@@ -23,14 +24,14 @@ ColType ColliderLoader::getShapeType(aiMesh* mesh, const std::string& meshName)
 	static const std::string CylinderName("Cylinder");
 	static const std::string CapsuleName("Capsule");
 	static const std::string PolygonName("Polygon");
-	static const uint8_t SphereNameSize   =		(uint8_t)SphereName.length();
-	static const uint8_t PlaneNameSize    =		(uint8_t)PlaneName.length();	//NOT SUPPORTED YET
-	static const uint8_t BoxNameSize      =		(uint8_t)BoxName.length();
-	static const uint8_t ConeNameSize     =		(uint8_t)ConeName.length();		//NOT SUPPORTED YET
-	static const uint8_t CylinderNameSize =		(uint8_t)CylinderName.length();	//NOT SUPPORTED YET
-	static const uint8_t CapsuleNameSize  =		(uint8_t)CapsuleName.length();
-	static const uint8_t PolygonNameSize  =		(uint8_t)PolygonName.length();  //NOT SUPPORTED YET
-	
+	static const uint8_t SphereNameSize = (uint8_t)SphereName.length();
+	static const uint8_t PlaneNameSize = (uint8_t)PlaneName.length();  //NOT SUPPORTED YET
+	static const uint8_t BoxNameSize = (uint8_t)BoxName.length();
+	static const uint8_t ConeNameSize = (uint8_t)ConeName.length();          //NOT SUPPORTED YET
+	static const uint8_t CylinderNameSize = (uint8_t)CylinderName.length();  //NOT SUPPORTED YET
+	static const uint8_t CapsuleNameSize = (uint8_t)CapsuleName.length();
+	static const uint8_t PolygonNameSize = (uint8_t)PolygonName.length();  //NOT SUPPORTED YET
+
 	if (meshName.size() >= 8 + SphereNameSize && meshName.substr(8, SphereNameSize) == SphereName)
 	{
 		return ColType::SPHERE;
@@ -63,11 +64,8 @@ Collider ColliderLoader::makeCollisionShape(const ColType& type, const aiMesh* m
 {
 	if (type == ColType::SPHERE)
 	{
-		float radius = sqrt(
-			mesh->mVertices[0].x * mesh->mVertices[0].x + 
-			mesh->mVertices[0].y * mesh->mVertices[0].y + 
-			mesh->mVertices[0].z * mesh->mVertices[0].z
-		) * 100;
+		float radius =
+		    sqrt(mesh->mVertices[0].x * mesh->mVertices[0].x + mesh->mVertices[0].y * mesh->mVertices[0].y + mesh->mVertices[0].z * mesh->mVertices[0].z) * 100;
 		return Collider::createSphere(radius);
 	}
 	//else if (type == shapeType::Plane)//not supported by engine
@@ -80,11 +78,7 @@ Collider ColliderLoader::makeCollisionShape(const ColType& type, const aiMesh* m
 	//}
 	else if (type == ColType::BOX)
 	{
-		glm::vec3 whd(
-			abs(mesh->mVertices[0].x) * 100,
-			abs(mesh->mVertices[0].z) * 100, 
-			abs(mesh->mVertices[0].y) * 100
-		);
+		glm::vec3 whd(abs(mesh->mVertices[0].x) * 100, abs(mesh->mVertices[0].z) * 100, abs(mesh->mVertices[0].y) * 100);
 
 		return Collider::createBox(whd);
 	}
@@ -97,7 +91,7 @@ Collider ColliderLoader::makeCollisionShape(const ColType& type, const aiMesh* m
 	else if (type == ColType::CAPSULE)
 	{
 		float radius = aiVector3D(mesh->mVertices[0].x, 0, mesh->mVertices[0].z).Length();
-		float height = aiVector3D(0,mesh->mVertices[0].y, 0).Length() * 2;//vet ej om det ska vara 2 eller inte
+		float height = aiVector3D(0, mesh->mVertices[0].y, 0).Length() * 2;  //vet ej om det ska vara 2 eller inte
 		return Collider::createCapsule(radius, height);
 	}
 	return Collider::createBox(glm::vec3(1));
@@ -106,12 +100,8 @@ Collider ColliderLoader::makeCollisionShape(const ColType& type, const aiMesh* m
 std::vector<ColliderDataRes> ColliderLoader::loadCollisionShape(const std::string& modelFile)
 {
 	//this->setComponent<Collider>(camEntity, Collider::createBox(glm::vec3(1)));
-	const aiScene* scene = this->importer.ReadFile((modelFile).c_str(),
-		aiProcess_JoinIdenticalVertices 
-		| aiProcess_RemoveComponent 
-		| aiProcess_DropNormals  
-	);
-	
+	const aiScene* scene = this->importer.ReadFile((modelFile).c_str(), aiProcess_JoinIdenticalVertices | aiProcess_RemoveComponent | aiProcess_DropNormals);
+
 	if (scene == nullptr)
 	{
 		Log::warning("Failed to load Collision (" + modelFile + ")");
@@ -146,10 +136,22 @@ std::vector<ColliderDataRes> ColliderLoader::loadCollisionShape(const std::strin
 				//get position and rotation of mesh
 				aiMatrix4x4 modelMatrix = node->mTransformation;
 				glm::mat4 transformation(
-					node->mTransformation.a1, node->mTransformation.b1, node->mTransformation.c1, node->mTransformation.d1, 
-					node->mTransformation.a2, node->mTransformation.b2, node->mTransformation.c2, node->mTransformation.d2,
-				    node->mTransformation.a3, node->mTransformation.b3, node->mTransformation.c3, node->mTransformation.d3,
-				    node->mTransformation.a4, node->mTransformation.b4, node->mTransformation.c4, node->mTransformation.d4
+				    node->mTransformation.a1,
+				    node->mTransformation.b1,
+				    node->mTransformation.c1,
+				    node->mTransformation.d1,
+				    node->mTransformation.a2,
+				    node->mTransformation.b2,
+				    node->mTransformation.c2,
+				    node->mTransformation.d2,
+				    node->mTransformation.a3,
+				    node->mTransformation.b3,
+				    node->mTransformation.c3,
+				    node->mTransformation.d3,
+				    node->mTransformation.a4,
+				    node->mTransformation.b4,
+				    node->mTransformation.c4,
+				    node->mTransformation.d4
 				);
 				glm::vec3 scale;
 				glm::quat rotation;
@@ -157,19 +159,10 @@ std::vector<ColliderDataRes> ColliderLoader::loadCollisionShape(const std::strin
 				glm::vec3 skew;
 				glm::vec4 perspective;
 				glm::decompose(transformation, scale, rotation, translation, skew, perspective);
-				glm::vec3 eRotation = glm::eulerAngles(rotation) * (180.0f / 3.141592653589793238463f);
-				eRotation.x += 90;//assimp weirdly makes mesh.rot.x -90 as def
+				glm::vec3 eRotation = glm::degrees(glm::eulerAngles(rotation));
+				eRotation.x += 90;  //assimp weirdly makes mesh.rot.x -90 as def
 
-				collisionList.push_back(
-					ColliderDataRes(
-						translation, 
-						eRotation,
-						makeCollisionShape(
-							theShapeType,
-							scenes_meshes[node_meshes[j]]
-						)
-					)
-				);
+				collisionList.push_back(ColliderDataRes(translation, eRotation, makeCollisionShape(theShapeType, scenes_meshes[node_meshes[j]])));
 			}
 		}
 
@@ -183,21 +176,52 @@ std::vector<ColliderDataRes> ColliderLoader::loadCollisionShape(const std::strin
 		node = nodeStack.top();
 		nodeStack.pop();
 	}
-	
+
 	importer.FreeScene();
 
 	return collisionList;
 }
 
-void addCollisionToScene(std::vector<ColliderDataRes> colliders, Scene& currentScene, const glm::vec3 &offset, const glm::vec3 &rotationOffset)
+void addCollisionToScene(std::vector<ColliderDataRes> colliders, Scene& currentScene, const glm::vec3& offset, const glm::vec3& rotationOffset)
 {
 	for (int i = 0; i < colliders.size(); i++)
 	{
+		glm::vec3 pussPosition = colliders[i].position;
+		SMath::rotateVector(rotationOffset, pussPosition);
+
 		int e = currentScene.createEntity();
 		Transform& t = currentScene.getComponent<Transform>(e);
-		t.position = offset + colliders[i].position;
+		t.position = offset + pussPosition;
 		t.rotation = colliders[i].rotation;
 		currentScene.setComponent<Collider>(e, colliders[i].col);
 	}
 }
 
+void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, NetworkScene& currentScene, const glm::vec3& offset, const glm::vec3& rotationOffset) {
+	for (int i = 0; i < colliders.size(); i++)
+	{
+		std::vector<NavMesh::Point> points;
+		glm::vec3 vec3Point;
+		glm::vec3 rotation = rotationOffset + colliders[i].rotation;
+		glm::vec3 position = offset + colliders[i].position;
+		if (colliders[i].col.type == ColType::BOX)
+		{
+			NavMesh::Point point[4];
+			//fromVec3ToPoint(SMath::rotateVector());
+			point[0] = NavMesh::Point(colliders[i].col.extents.x, colliders[i].col.extents.z);
+			point[1] = NavMesh::Point(colliders[i].col.extents.x, -colliders[i].col.extents.z);
+			point[2] = NavMesh::Point(-colliders[i].col.extents.x, colliders[i].col.extents.z);
+			point[3] = NavMesh::Point(-colliders[i].col.extents.x, -colliders[i].col.extents.z);
+			
+		}
+		else if (colliders[i].col.type == ColType::SPHERE || colliders[i].col.type == ColType::CAPSULE)
+		{
+			//NavMesh::Point point[8];
+			//point[0] = NavMesh::Point(colliders[i].col.extents.x, colliders[i].col.extents.z);
+			//point[1] = NavMesh::Point(colliders[i].col.extents.x, -colliders[i].col.extents.z);
+			//point[2] = NavMesh::Point(-colliders[i].col.extents.x, colliders[i].col.extents.z);
+			//point[3] = NavMesh::Point(-colliders[i].col.extents.x, -colliders[i].col.extents.z);
+		}
+	}
+	//currentScene.getPathFindingManager()->addPolygon();
+}

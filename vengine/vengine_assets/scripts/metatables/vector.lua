@@ -126,8 +126,8 @@ end
 
 function vector:rotate(xrot, yrot, zrot)
 	self:rotateZ(zrot)
-	self:rotateY(yrot)
 	self:rotateX(xrot)
+	self:rotateY(yrot)
 	return self
 end
 

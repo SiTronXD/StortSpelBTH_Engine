@@ -17,9 +17,9 @@ TestDemoScene::TestDemoScene()
 TestDemoScene::~TestDemoScene()
 {
 }
-
+#include "vengine/VengineMath.hpp"
 void TestDemoScene::init()
-{
+{	
 	this->timer = 0.0f;
 
 	// Camera
@@ -42,8 +42,9 @@ void TestDemoScene::init()
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
 	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_5.fbx"));
+	this->getComponent<Transform>(puzzleTest).rotation = glm::vec3(0, 180, 0);
 	this->getComponent<Transform>(puzzleTest).position = glm::vec3(5, 0, 0);
-	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), *this, glm::vec3(5, 0, 0));
+	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), *this, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
 
 	// Floor
 	this->floor = this->createEntity();
