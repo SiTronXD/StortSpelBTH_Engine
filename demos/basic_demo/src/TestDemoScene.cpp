@@ -9,17 +9,17 @@
 
 TestDemoScene::TestDemoScene()
 	: camEntity(-1), testEntity(-1)//, testEntity2(-1)
-	, aniIDs{-1, -1, -1, -1}
-	, aniActive{true, true, true, true}
+	, aniIDs{ -1, -1, -1, -1 }
+	, aniActive{ true, true, true, true }
 {
 }
 
 TestDemoScene::~TestDemoScene()
 {
 }
-
+#include "vengine/VengineMath.hpp"
 void TestDemoScene::init()
-{
+{	
 	this->timer = 0.0f;
 
 	// Camera
@@ -38,6 +38,14 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
+
+	// Create entity (already has transform)
+	int puzzleTest = this->createEntity();
+	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_5.fbx"));
+	this->getComponent<Transform>(puzzleTest).rotation = glm::vec3(0, 180, 0);
+	this->getComponent<Transform>(puzzleTest).position = glm::vec3(5, 0, 0);
+	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), *this, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
+	addCollisionToNetworkScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), nullptr, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
 
 	// Floor
 	this->floor = this->createEntity();
@@ -139,16 +147,14 @@ void TestDemoScene::init()
 	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
 
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
- 
+
 	// // Create entity2 (already has transform)
 	this->testEntity2 = this->createEntity();
-
 	// Transform component
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
 	transform2.position = glm::vec3(0.f, 0.f, 20.f);
 	transform2.rotation = glm::vec3(-90.0f, 40.0f, 0.0f);
 	transform2.scale = glm::vec3(10.0f, 10.0f, 10.0f);
-
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
@@ -216,7 +222,7 @@ void TestDemoScene::update()
 
 	// UI
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
-	Scene::getUIRenderer()->renderTexture(-960.0f,  540.0f, 200.0f, 200.0f);
+	Scene::getUIRenderer()->renderTexture(-960.0f, 540.0f, 200.0f, 200.0f);
 	Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
@@ -316,7 +322,7 @@ void TestDemoScene::update()
 		{
 			AudioListener& listener = this->getComponent<AudioListener>(this->getMainCameraID());
 
-			listener.setVolume(master);	
+			listener.setVolume(master);
 		}
 
 		ImGui::PopItemWidth();
@@ -369,4 +375,3 @@ void TestDemoScene::onTriggerStay(Entity e1, Entity e2)
 {
 	//Log::write("Trigger Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
 }
-

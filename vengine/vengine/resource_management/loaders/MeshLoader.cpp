@@ -225,6 +225,12 @@ std::vector<MeshData> MeshLoader::getMeshesFromNodeTree(
     while (!nodeStack.empty()) {
         node_meshes = std::span<unsigned int>(node->mMeshes, node->mNumMeshes);
         for (size_t j = 0; j < node->mNumMeshes; j++) {
+			std::string meshName(scenes_meshes[node_meshes[j]]->mName.C_Str());
+			if (meshName.length() > 7 && meshName.substr(0, 8) == "Collider")
+			{
+                //its a collision mesh
+			    break;
+			}
             meshList.push_back(loadMesh(scenes_meshes[node_meshes[j]], vertice_index,
                                         index_index, matToTex));
 

@@ -132,6 +132,28 @@ uint32_t ResourceManager::addTexture(
     return textures.size() -1;
 }
 
+uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
+{
+	using namespace vengine_helper::config;
+
+	if (this->collisionPaths.count(collisionPath) != 0)
+	{
+		//TODO: should be able to log what mesh
+		Log::warning("Collision \"" + collisionPath + "\" was already added!");
+		return this->collisionPaths[collisionPath];
+	}
+    
+	std::vector<ColliderDataRes> collisions = collisionLoader.loadCollisionShape(collisionPath);
+	//NOTE: prevSize as key only works if we never remove resources the map...
+	 this->collisionPaths.insert({collisionPath, this->collisionPaths.size()});
+    
+	//NOTE: meshes.size as key only works if we never remove resources the map...
+	// Create mesh, insert into map of meshes
+	 collisionsData.insert({collisionsData.size(), collisions});
+
+	return collisionsData.size() - 1;
+}
+
 void ResourceManager::cleanup()
 {
     // Meshes

@@ -145,7 +145,7 @@ int NetworkScene::getPlayer(const int& whatPlayer)
 
 const int NetworkScene::getPlayerSize()
 {
-	return this->players.size();
+	return (int)this->players.size();
 }
 
 int NetworkScene::getEnemies(const int& whatPlayer)
@@ -155,7 +155,7 @@ int NetworkScene::getEnemies(const int& whatPlayer)
 
 const int NetworkScene::getEnemySize()
 {
-	return this->enemies.size();
+	return (int)this->enemies.size();
 }
 
 int NetworkScene::createEnemy(int type, const std::string &script, glm::vec3 pos, glm::vec3 rot)

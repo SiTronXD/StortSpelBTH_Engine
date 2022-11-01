@@ -74,6 +74,7 @@
     <ClCompile Include="vengine\network\ServerEngine\NetworkScene.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\ServerScriptHandler.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneLua.cpp" />
+    <ClCompile Include="vengine\resource_management\loaders\ColliderLoader.cpp" />
     <ClCompile Include="vengine\ai\AIHandler.cpp" />
     <ClCompile Include="vengine\ai\BehaviorTree.cpp" />
     <ClCompile Include="vengine\ai\Blackboard.cpp" />
@@ -147,6 +148,7 @@
     <ClInclude Include="vengine\network\ServerEngine\NetworkScene.h" />
     <ClInclude Include="vengine\network\ServerEngine\ServerScriptHandler.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneLua.h" />
+    <ClInclude Include="vengine\resource_management\loaders\ColliderLoader.hpp" />
     <ClInclude Include="vengine\ai\AgentStatus.hpp" />
     <ClInclude Include="vengine\ai\AIHandler.hpp" />
     <ClInclude Include="vengine\ai\BehaviorTree.hpp" />

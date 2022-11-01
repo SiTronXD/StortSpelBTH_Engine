@@ -10,6 +10,7 @@
 #include "../dev/Log.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "loaders/MeshLoader.hpp"
+#include "loaders/ColliderLoader.hpp"
 
 class Engine;
 struct ImageData;   //Defined in MeshLoader
@@ -22,12 +23,15 @@ private:
     std::unordered_map<std::string, uint32_t> meshPaths;
     std::unordered_map<std::string, uint32_t> texturePaths;
     std::unordered_map<std::string, uint32_t> samplerSettings;
-    
+	std::unordered_map<std::string, uint32_t> collisionPaths;
+
     std::unordered_map<uint32_t, Mesh>  meshes;
+	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
 
     MeshLoader      meshLoader;
+	ColliderLoader  collisionLoader;
     TextureLoader   textureLoader;
 
     Device* dev = nullptr;
@@ -46,10 +50,13 @@ public:
         std::string&& texturesPath = "");
     uint32_t addTexture(std::string&& texturePath, 
         const TextureSamplerSettings& textureSamplerSettings = { vk::Filter::eLinear });
+	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
 
     Mesh& getMesh(uint32_t id);
     Texture& getTexture(uint32_t id);
     TextureSampler& getTextureSampler(uint32_t id);
+	std::vector<ColliderDataRes> getCollisionShapeFromMesh(std::string&& collisionPath);
+	std::vector<ColliderDataRes> getCollisionShapeFromMesh(uint32_t id);
 
     size_t getNumMeshes();
     size_t getNumTextures();
@@ -86,6 +93,29 @@ inline TextureSampler& ResourceManager::getTextureSampler(uint32_t id)
             + std::to_string(id));
     }
     return map_iterator->second;
+}
+
+inline std::vector<ColliderDataRes> ResourceManager::getCollisionShapeFromMesh(std::string&& collisionPath)
+{
+	if (this->collisionPaths.count(collisionPath) != 0)
+	{
+		return getCollisionShapeFromMesh(this->collisionPaths[collisionPath]);
+    }
+	else
+	{
+		Log::error("Failed to find Collision with given name : " + collisionPath);
+		return std::vector<ColliderDataRes>();
+    }
+}
+
+inline std::vector<ColliderDataRes> ResourceManager::getCollisionShapeFromMesh(uint32_t id)
+{
+	auto map_iterator = this->collisionsData.find(id);
+	if (this->collisionsData.end() == map_iterator)
+	{
+		Log::error("Failed to find Collision with the given ID : " + std::to_string(id));
+	}
+	return map_iterator->second;
 }
 
 inline size_t ResourceManager::getNumMeshes() 
