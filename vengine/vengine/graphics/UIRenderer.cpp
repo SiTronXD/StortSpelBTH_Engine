@@ -92,6 +92,34 @@ void UIRenderer::cleanup()
 	this->uiShaderInput.cleanup();
 }
 
+void UIRenderer::setBitmapFont(
+    const std::vector<std::string>& characters,
+    const uint32_t& tileWidth,
+    const uint32_t& tileHeight)
+{
+    // Go through rows
+    for (uint32_t y = 0, rows = (uint32_t) characters.size(); 
+        y < rows; 
+        ++y)
+    {
+        // Go through columns
+        for (uint32_t x = 0, cols = (uint32_t) characters[y].length(); 
+            x < cols; 
+            ++x)
+        {
+            // Create rect
+            CharacterRect charRect{};
+            charRect.x = (float) x * tileWidth;
+            charRect.y = (float) y * tileHeight;
+            charRect.width = (float) tileWidth;
+            charRect.height = (float) tileHeight;
+
+            // Add rect
+            this->characterRects.insert({ characters[y][x], charRect });
+        }
+    }
+}
+
 void UIRenderer::setTexture(const uint32_t& textureIndex)
 {
     // Add data for unique draw call
@@ -147,12 +175,19 @@ void UIRenderer::renderString(
     // Render character by character
     for (size_t i = 0; i < text.length(); ++i)
     {
+        // Find rectangle from map
+        const CharacterRect& charRect = this->characterRects[text[i]];
+
+        // Render character as texture
         this->renderTexture(
             x + i * characterWidth,
             y, 
             characterWidth, 
             characterHeight,
-            0, 0, 16, 16 
+            charRect.x, 
+            charRect.y, 
+            charRect.width, 
+            charRect.height 
         );
     }
 }

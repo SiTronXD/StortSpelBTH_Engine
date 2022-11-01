@@ -12,5 +12,7 @@ layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
 
 void main() 
 {
-	outColor = textureLod(textureSampler0, fragUV, 0);
+	// Use this sampling function to generate correct SPIR-V when
+	// using unnormalized uv coordinates
+	outColor = textureLod(textureSampler0, ivec2(floor(fragUV)), 0);
 }

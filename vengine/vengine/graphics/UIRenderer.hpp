@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <unordered_map>
 #include <vulkan/vulkan.hpp>
 #include "vulkan/VmaUsage.hpp"
 #include "ShaderInput.hpp"
@@ -24,12 +25,22 @@ struct UIDrawCallData
     uint32_t numVertices;
 };
 
+struct CharacterRect
+{
+    float x;
+    float y;
+    float width;
+    float height;
+};
+
 class UIRenderer
 {
 private:
     friend VulkanRenderer;
 
     const uint32_t START_NUM_MAX_ELEMENTS = 16;
+
+    std::unordered_map<char, CharacterRect> characterRects;
 
     std::vector<UIElementData> uiElementData;
     std::vector<UIDrawCallData> uiDrawCallData;
@@ -68,6 +79,10 @@ public:
         const uint32_t& framesInFlight);
     void initForScene();
     void cleanup();
+    void setBitmapFont(
+        const std::vector<std::string>& characters,
+        const uint32_t& tileWidth,
+        const uint32_t& tileHeight);
 
     void setTexture(const uint32_t& textureIndex);
     void renderTexture(

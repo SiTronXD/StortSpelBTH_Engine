@@ -140,6 +140,18 @@ void TestDemoScene::init()
 	samplerSettings.unnormalizedCoordinates = VK_TRUE;
 	this->fontTextureIndex = Scene::getResourceManager()->addTexture("assets/textures/testBitmapFont.png", samplerSettings);
 
+	Scene::getUIRenderer()->setBitmapFont(
+		{
+			"abcdefghij",
+			"klmnopqrst",
+			"uvwxyz+-. ",
+			"0123456789",
+			"!?,<>:()#^",
+			"@         "
+		},
+		16, 16
+	);
+
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
  
 	// // Create entity2 (already has transform)
