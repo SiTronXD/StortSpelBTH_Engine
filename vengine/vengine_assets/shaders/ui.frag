@@ -12,5 +12,5 @@ layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
 
 void main() 
 {
-	outColor = texture(textureSampler0, fragUV);
+	outColor = textureLod(textureSampler0, fragUV, 0);
 }

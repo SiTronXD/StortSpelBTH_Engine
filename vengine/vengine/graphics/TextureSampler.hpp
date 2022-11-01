@@ -6,7 +6,8 @@ class Device;
 
 struct TextureSamplerSettings
 {
-	vk::Filter filterMode;
+	vk::Filter filterMode = vk::Filter::eLinear;
+	vk::Bool32 unnormalizedCoordinates = VK_FALSE;
 };
 
 class TextureSampler

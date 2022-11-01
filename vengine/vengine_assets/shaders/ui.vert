@@ -6,6 +6,7 @@
 struct UIElementData
 {
     vec4 transform;
+    vec4 uvRect;
 };
 layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer UIElementDataBuffer
 {
@@ -50,6 +51,7 @@ void main()
     // Extract element data
     UIElementData uiData = ui.data[uint(gl_VertexIndex / 6)];
     vec4 uiTransform = uiData.transform;
+    vec4 uvRect = uiData.uvRect;
 
     // Position
     gl_Position = vec4(
@@ -58,6 +60,7 @@ void main()
         1.0f
     );
 
-    // Uv coordinates
-    fragUV = vec2(position.x, -position.y) * 0.5f + vec2(0.5f);
+    // UV coordinates
+    vec2 localUV = vec2(position.x, -position.y) * 0.5f + vec2(0.5f);
+    fragUV = uvRect.xy + localUV * uvRect.zw;
 }

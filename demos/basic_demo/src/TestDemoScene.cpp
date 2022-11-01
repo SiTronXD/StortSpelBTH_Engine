@@ -137,6 +137,8 @@ void TestDemoScene::init()
 	samplerSettings.filterMode = vk::Filter::eNearest;
 	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_UV.png", samplerSettings);
 	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
+	samplerSettings.unnormalizedCoordinates = VK_TRUE;
+	this->fontTextureIndex = Scene::getResourceManager()->addTexture("assets/textures/testBitmapFont.png", samplerSettings);
 
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
  
@@ -220,6 +222,8 @@ void TestDemoScene::update()
 	Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
+	Scene::getUIRenderer()->setTexture(this->fontTextureIndex);
+	Scene::getUIRenderer()->renderString("hello", 0, 200, 100, 100);
 
 	// Debug rendering
 

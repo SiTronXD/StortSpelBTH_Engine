@@ -115,7 +115,11 @@ void UIRenderer::renderTexture(
     const float& x, 
     const float& y, 
     const float& width, 
-    const float& height)
+    const float& height,
+    const float& u0,
+    const float& v0,
+    const float& u1,
+    const float& v1)
 {
     if (this->currentElementIndex >= START_NUM_MAX_ELEMENTS)
     {
@@ -126,7 +130,29 @@ void UIRenderer::renderTexture(
     // Set element data
     this->uiElementData[this->currentElementIndex].transform =
         ResTranslator::transformRect(x, y, width, height);
+    this->uiElementData[this->currentElementIndex].uvRect =
+        glm::vec4(u0, v0, u1, v1);
 
     // Next ui element
     this->currentElementIndex++;
+}
+
+void UIRenderer::renderString(
+    const std::string& text,
+    const float& x,
+    const float& y,
+    const float& characterWidth,
+    const float& characterHeight)
+{
+    // Render character by character
+    for (size_t i = 0; i < text.length(); ++i)
+    {
+        this->renderTexture(
+            x + i * characterWidth,
+            y, 
+            characterWidth, 
+            characterHeight,
+            0, 0, 16, 16 
+        );
+    }
 }

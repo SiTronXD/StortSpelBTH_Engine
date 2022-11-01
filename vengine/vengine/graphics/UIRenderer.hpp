@@ -13,8 +13,8 @@ class VulkanRenderer;
 
 struct UIElementData
 {
-    // vec4(x, y, scaleX, scaleY)
-    glm::vec4 transform;
+    glm::vec4 transform;    // vec4(x, y, scaleX, scaleY)
+    glm::vec4 uvRect;       // vec4(u, v, sizeU, sizeV)
 };
 
 struct UIDrawCallData
@@ -74,7 +74,18 @@ public:
         const float& x,
         const float& y,
         const float& width,
-        const float& height
+        const float& height,
+        const float& u0 = 0.0f,
+        const float& v0 = 0.0f,
+        const float& u1 = 1.0f,
+        const float& v1 = 1.0f
+    );
+    void renderString(
+        const std::string& text,
+        const float& x,
+        const float& y,
+        const float& characterWidth,
+        const float& characterHeight
     );
 
     inline const StorageBufferID& getStorageBufferID() const { return this->storageBufferID; }
