@@ -49,7 +49,10 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 
 void NetworkHandler::createServer(NetworkScene* serverGame)
 {
-	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), serverGame);
+	if (serverThread == nullptr)
+	{
+		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), serverGame);
+	}
 }
 
 void NetworkHandler::deleteServer()

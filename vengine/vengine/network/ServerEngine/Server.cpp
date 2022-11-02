@@ -103,6 +103,8 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 
 Server::Server(NetworkScene* serverGame)
 {
+	//TODO : Remove comments
+	/*
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
@@ -142,6 +144,7 @@ Server::Server(NetworkScene* serverGame)
 
 	std::cout << "Server: waiting for users to connect" << std::endl;
 	this->connectThread = new std::thread(ConnectUsers, std::ref(this->clients), std::ref(this->listener), std::ref(this->starting));
+	*/
 }
 
 Server::~Server()
@@ -164,17 +167,19 @@ Server::~Server()
 
 void Server::start()
 {
+	//TODO : Remove comments
+	/*
 	//wait for the thread to be done
 	this->connectThread->join();
 	delete this->connectThread;
 	this->connectThread = nullptr;
-
+	
 	//make packets ready
 	this->clientToServerPacketTcp.resize(this->clients.size());
 	this->serverToClientPacketTcp.resize(this->clients.size());
 	this->clientToServerPacketUdp.resize(this->clients.size());
 	this->serverToClientPacketUdp.resize(this->clients.size());
-
+	
 	//send to clients that we shall start
 	sf::Packet startPacket;
 	//last one is seed
@@ -196,10 +201,13 @@ void Server::start()
 	std::cout << "Server: printing all users" << std::endl;
 	printAllUsers();
 	this->starting = StartingEnum::Running;
+	*/
 }
 
 bool Server::update(float dt)
 {
+	//TODO : Remove comments
+	/*
 	//if all users is connected and client host sayd it ok to start
 	if (this->starting == StartingEnum::Start)
 	{
@@ -207,7 +215,7 @@ bool Server::update(float dt)
 	}
 	else if (this->starting == StartingEnum::Running)
 	{
-		this->currentTimeToSend += dt;
+		 this->currentTimeToSend += dt;
 
 		for (int i = 0; i < this->clients.size(); i++)
 		{
@@ -231,7 +239,9 @@ bool Server::update(float dt)
 			this->currentTimeToSend = 0;
 		}
 		cleanRecvPackages();
+		
 	}
+	*/
 	return false;  //server is not done
 }
 
