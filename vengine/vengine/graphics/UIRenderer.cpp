@@ -101,8 +101,8 @@ void UIRenderer::setBitmapFont(
     const std::vector<std::vector<Pixel>>& pixels =
         this->resourceManager->getTexture(bitmapFontTextureIndex).getCpuPixels();
 
-    this->characterTileWidth = static_cast<float>(tileWidth);
-    this->characterTileHeight = static_cast<float>(tileHeight);
+    this->oneOverCharTileWidth = 1.0f / static_cast<float>(tileWidth);
+    this->oneOverCharTileHeight = 1.0f / static_cast<float>(tileHeight);
 
     // Go through rows
     for (uint32_t y = 0, rows = (uint32_t) characters.size(); 
@@ -225,7 +225,7 @@ void UIRenderer::renderString(
     // Start at left edge of the first character
     float firstCharWidth = 
         characterWidth *
-        (this->characterRects[text[0]].width / this->characterTileWidth);
+        (this->characterRects[text[0]].width * this->oneOverCharTileWidth);
     float currentSizeX = -firstCharWidth * 0.5f;
 
     // Get entire string width after the first character
@@ -238,7 +238,7 @@ void UIRenderer::renderString(
 
         // Current character size
         currentCharWidth =
-            characterWidth * (charRect->width / this->characterTileWidth);
+            characterWidth * (charRect->width * this->oneOverCharTileWidth);
         
         stringWidth += currentCharWidth;
     }
@@ -251,14 +251,14 @@ void UIRenderer::renderString(
 
         // Current character size
         currentCharWidth =
-            characterWidth * (charRect->width / this->characterTileWidth);
+            characterWidth * (charRect->width * this->oneOverCharTileWidth);
         currentCharHeight =
-            characterHeight * (charRect->height / this->characterTileHeight);
+            characterHeight * (charRect->height * this->oneOverCharTileWidth);
 
         // Render character as texture
         this->renderTexture(
             x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f,
-            y, 
+            y - characterHeight * 0.5f + currentCharHeight * 0.5f,
             currentCharWidth,
             currentCharHeight,
             charRect->x, 

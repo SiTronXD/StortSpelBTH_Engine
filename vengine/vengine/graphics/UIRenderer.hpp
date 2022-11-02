@@ -55,8 +55,8 @@ private:
 
     float uiTextureWidth;
     float uiTextureHeight;
-    float characterTileWidth;
-    float characterTileHeight;
+    float oneOverCharTileWidth;
+    float oneOverCharTileHeight;
 
     uint32_t framesInFlight;
 

@@ -236,7 +236,9 @@ void TestDemoScene::update()
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
 	Scene::getUIRenderer()->setTexture(this->fontTextureIndex);
-	Scene::getUIRenderer()->renderString("aiooia", 0, 200, 100, 100);
+	/*Scene::getUIRenderer()->renderString(
+		"fps: " + std::to_string(1.0/Time::getDT()), 0, 200, 100, 100);*/
+	Scene::getUIRenderer()->renderString("fps: 170.776696", 0, 200, 100, 100);
 
 	// Debug rendering
 
