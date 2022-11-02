@@ -26,12 +26,14 @@ int ResourceManagerLua::lua_addTexture(lua_State* L)
 
 	if(!lua_isstring(L, 1)) { return 0; }
 
-	TextureSamplerSettings settings = { vk::Filter::eLinear };
+	TextureSettings settings{};
 	if (lua_istable(L, 2))
 	{
 		lua_getfield(L, 2, "filterMode");
-		if (lua_isnumber(L, -1)) { settings.filterMode = (vk::Filter)lua_tonumber(L, -1); }
+		if (lua_isnumber(L, -1)) { settings.samplerSettings.filterMode = (vk::Filter)lua_tonumber(L, -1); }
 		lua_pop(L, 1);
+
+		Log::warning("TODO: fix texture sampler settings from lua");
 	}
 
 	int textureID = resourceManager->addTexture(lua_tostring(L, 1), settings);

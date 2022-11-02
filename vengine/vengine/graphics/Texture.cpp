@@ -4,7 +4,12 @@
 #include "vulkan/CommandBuffer.hpp"
 
 Texture::Texture(Device& device, VmaAllocator& vma) 
-    : device(&device), vma(&vma) 
+    : device(&device), 
+    vma(&vma),
+    imageMemory(nullptr),
+    width(0),
+    height(0),
+    textureSamplerIndex(~0u)
 { }
 
 Texture::~Texture()
@@ -12,14 +17,49 @@ Texture::~Texture()
 
 void Texture::init(
     const vk::ImageView& imageView,
-    const uint32_t& width,
-    const uint32_t& height,
     const uint32_t& textureSamplerIndex)
 {
     this->imageView = imageView;
+    this->textureSamplerIndex = textureSamplerIndex;
+}
+
+void Texture::setCpuInfo(
+    stbi_uc* imageData,
+    const uint32_t& width,
+    const uint32_t& height,
+    const TextureSettings& textureSettings)
+{
     this->width = width;
     this->height = height;
-    this->textureSamplerIndex = textureSamplerIndex;
+
+    // Save the pixels only if it should keep the info
+    if (textureSettings.keepCpuPixelInfo)
+    {
+        // x
+        this->pixels.reserve(width);
+        for (uint32_t x = 0; x < width; ++x)
+        {
+            this->pixels.push_back(std::vector<Pixel>());
+            this->pixels[this->pixels.size() - 1].reserve(height);
+
+            // y
+            for (uint32_t y = 0; y < height; ++y)
+            {
+                // 1D index
+                uint32_t imageDataIndex = (y * width + x) * 4;
+
+                // Create pixel
+                Pixel pixel{};
+                pixel.r = imageData[imageDataIndex + 0];
+                pixel.g = imageData[imageDataIndex + 1];
+                pixel.b = imageData[imageDataIndex + 2];
+                pixel.a = imageData[imageDataIndex + 3];
+
+                // Add pixel
+                this->pixels[x].push_back(pixel);
+            }
+        }
+    }
 }
 
 void Texture::cleanup() 
@@ -96,7 +136,7 @@ vk::Image Texture::createImage(
 
     vk::Image image;
 
-    // // Create the Image
+    // Create the Image
     if (vmaCreateImage(
         vma, 
         (VkImageCreateInfo*) &imageCreateInfo, 

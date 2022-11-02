@@ -1,14 +1,9 @@
 #pragma once
 
 #include "TempPCH.hpp"
+#include "Texture.hpp"
 
 class Device;
-
-struct TextureSamplerSettings
-{
-	vk::Filter filterMode = vk::Filter::eLinear;
-	vk::Bool32 unnormalizedCoordinates = VK_FALSE;
-};
 
 class TextureSampler
 {
