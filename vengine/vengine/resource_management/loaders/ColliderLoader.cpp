@@ -7,13 +7,7 @@
 #include <map>
 #include <span>
 #include <stack>
-#include "../../vengine/vengine/VengineMath.hpp"
-
-btVector3 aiVectorToBtVector(const aiVector3D& a, btVector3& b)
-{
-	b = btVector3(a.x, a.y, a.z);
-	return b;
-}
+#include "../../VengineMath.hpp"
 
 ColType ColliderLoader::getShapeType(aiMesh* mesh, const std::string& meshName)
 {
