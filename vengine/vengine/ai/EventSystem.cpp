@@ -63,6 +63,7 @@ void EventSystem::registerEntityEvent(
 
 void EventSystem::update()
 {
+	//OH oh stinky
     if(currentScene != this->sh->getScene())
     {
         entitySubscribers.clear();
