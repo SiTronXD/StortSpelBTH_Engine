@@ -79,6 +79,7 @@ public:
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }
 	inline const uint32_t& getSamplerIndex() const { return this->textureSamplerIndex; }
+	inline const std::vector<std::vector<Pixel>>& getCpuPixels() const { return this->pixels; }
 
 	static vk::Format chooseSupportedFormat(
 		PhysicalDevice& physicalDevice,

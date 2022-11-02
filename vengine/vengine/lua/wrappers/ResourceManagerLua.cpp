@@ -33,6 +33,7 @@ int ResourceManagerLua::lua_addTexture(lua_State* L)
 		if (lua_isnumber(L, -1)) { settings.samplerSettings.filterMode = (vk::Filter)lua_tonumber(L, -1); }
 		lua_pop(L, 1);
 
+		// TODO: fix this
 		Log::warning("TODO: fix texture sampler settings from lua");
 	}
 

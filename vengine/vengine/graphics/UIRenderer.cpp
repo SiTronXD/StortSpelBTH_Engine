@@ -94,9 +94,16 @@ void UIRenderer::cleanup()
 
 void UIRenderer::setBitmapFont(
     const std::vector<std::string>& characters,
+    const uint32_t& bitmapFontTextureIndex,
     const uint32_t& tileWidth,
     const uint32_t& tileHeight)
 {
+    const std::vector<std::vector<Pixel>>& pixels =
+        this->resourceManager->getTexture(bitmapFontTextureIndex).getCpuPixels();
+
+    this->characterTileWidth = static_cast<float>(tileWidth);
+    this->characterTileHeight = static_cast<float>(tileHeight);
+
     // Go through rows
     for (uint32_t y = 0, rows = (uint32_t) characters.size(); 
         y < rows; 
@@ -107,15 +114,53 @@ void UIRenderer::setBitmapFont(
             x < cols; 
             ++x)
         {
+            const char& currentChar = characters[y][x];
+
+            uint32_t charX = x * tileWidth;
+            uint32_t charY = y * tileHeight;
+            uint32_t charWidth = tileWidth;
+            uint32_t charHeight = tileHeight;
+
+            // Make rect smaller, but not for spaces
+            if (currentChar != ' ')
+            {
+                uint32_t minX = charX + charWidth;
+                uint32_t minY = charY + charHeight;
+                uint32_t maxX = charX;
+                uint32_t maxY = charY;
+
+                // Loop through pixels inside char rect
+                for (uint32_t tempCharY = charY; tempCharY < charY + tileHeight; ++tempCharY)
+                {
+                    for (uint32_t tempCharX = charX; tempCharX < charX + tileWidth; ++tempCharX)
+                    {
+                        // Found pixel
+                        if (pixels[tempCharX][tempCharY].a > 0)
+                        {
+                            minX = std::min(minX, tempCharX);
+                            minY = std::min(minY, tempCharY);
+                            maxX = std::max(maxX, tempCharX + 1);
+                            maxY = std::max(maxY, tempCharY + 1);
+                        }
+                    }
+                }
+
+                // Apply new size
+                charX = minX;
+                charY = minY;
+                charWidth = maxX - minX;
+                charHeight = maxY - minY;
+            }
+
             // Create rect
             CharacterRect charRect{};
-            charRect.x = (float) x * tileWidth;
-            charRect.y = (float) y * tileHeight;
-            charRect.width = (float) tileWidth;
-            charRect.height = (float) tileHeight;
+            charRect.x = (float) charX;
+            charRect.y = (float) charY;
+            charRect.width = (float) charWidth;
+            charRect.height = (float) charHeight;
 
             // Add rect
-            this->characterRects.insert({ characters[y][x], charRect });
+            this->characterRects.insert({ currentChar, charRect });
         }
     }
 }
@@ -172,22 +217,39 @@ void UIRenderer::renderString(
     const float& characterWidth,
     const float& characterHeight)
 {
+    float currentCharWidth = 0.0f;
+    float currentCharHeight = 0.0f;
+
+    // Start at left edge of the first character
+    float currentSizeX = 
+        -characterWidth * 
+        (this->characterRects[text[0]].width / this->characterTileWidth) * 
+        0.5f;
+
     // Render character by character
     for (size_t i = 0; i < text.length(); ++i)
     {
         // Find rectangle from map
         const CharacterRect& charRect = this->characterRects[text[i]];
 
+        // Current character size
+        currentCharWidth =
+            characterWidth * (charRect.width / this->characterTileWidth);
+        currentCharHeight =
+            characterHeight * (charRect.height / this->characterTileHeight);
+
         // Render character as texture
         this->renderTexture(
-            x + i * characterWidth,
+            x + currentSizeX + currentCharWidth * 0.5f,
             y, 
-            characterWidth, 
-            characterHeight,
+            currentCharWidth,
+            currentCharHeight,
             charRect.x, 
             charRect.y, 
             charRect.width, 
             charRect.height 
         );
+
+        currentSizeX += currentCharWidth;
     }
 }

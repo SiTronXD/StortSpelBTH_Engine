@@ -38,7 +38,7 @@ class UIRenderer
 private:
     friend VulkanRenderer;
 
-    const uint32_t START_NUM_MAX_ELEMENTS = 16;
+    const uint32_t START_NUM_MAX_ELEMENTS = 256;
 
     std::unordered_map<char, CharacterRect> characterRects;
 
@@ -55,6 +55,8 @@ private:
 
     float uiTextureWidth;
     float uiTextureHeight;
+    float characterTileWidth;
+    float characterTileHeight;
 
     uint32_t framesInFlight;
 
@@ -81,6 +83,7 @@ public:
     void cleanup();
     void setBitmapFont(
         const std::vector<std::string>& characters,
+        const uint32_t& bitmapFontTextureIndex,
         const uint32_t& tileWidth,
         const uint32_t& tileHeight);
 
