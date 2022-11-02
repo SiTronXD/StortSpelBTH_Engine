@@ -143,8 +143,23 @@ void TestDemoScene::init()
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};
 	samplerSettings.filterMode = vk::Filter::eNearest;
-	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_UV.png", samplerSettings);
-	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", samplerSettings);
+	this->uiTextureIndex0 = Scene::getResourceManager()->addTexture("assets/textures/test_UV.png", {samplerSettings});
+	this->uiTextureIndex1 = Scene::getResourceManager()->addTexture("assets/textures/test_B.png", { samplerSettings });
+	samplerSettings.unnormalizedCoordinates = VK_TRUE;
+	this->fontTextureIndex = Scene::getResourceManager()->addTexture("assets/textures/testBitmapFont.png", { samplerSettings, true });
+
+	Scene::getUIRenderer()->setBitmapFont(
+		{
+			"abcdefghij",
+			"klmnopqrst",
+			"uvwxyz+-.'",
+			"0123456789",
+			"!?,<>:()#^",
+			"@         "
+		},
+		this->fontTextureIndex,
+		16, 16
+	);
 
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
 
@@ -226,6 +241,16 @@ void TestDemoScene::update()
 	Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
 	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
+	Scene::getUIRenderer()->setTexture(this->fontTextureIndex);
+	Scene::getUIRenderer()->renderString(
+		"fps: " + std::to_string(1.0/Time::getDT()), 
+		-400, 
+		400, 
+		50, 
+		50,
+		0,
+		StringAlignment::LEFT
+	);
 
 	// Debug rendering
 
