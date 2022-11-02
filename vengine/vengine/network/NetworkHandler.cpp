@@ -263,11 +263,14 @@ void NetworkHandler::updateNetwork()
 			cUDPP >> ix;
 			if (monsters.size() < ix)
 			{
-				monsters.resize(ix);
-			}
-			if (monsters.size() < ix)
-			{
-				//create entity
+				monsters.reserve(ix);
+				for (int i = monsters.size(); i < ix; i++)
+				{
+					iy = sceneHandler->getScene()->createEntity();
+					monsters.push_back(iy);
+
+					sceneHandler->getScene()->setComponent<MeshComponent>(iy);
+				}
 			}
 
 			for (int i = 0; i < ix; i++)

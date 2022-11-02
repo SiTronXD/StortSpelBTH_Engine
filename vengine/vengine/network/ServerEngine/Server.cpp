@@ -158,7 +158,8 @@ Server::~Server()
 	{
 		delete this->clients[i];
 	}
-	scriptHandler.cleanup();
+
+	this->scriptHandler.cleanup();
 }
 
 void Server::start()
@@ -167,9 +168,6 @@ void Server::start()
 	this->connectThread->join();
 	delete this->connectThread;
 	this->connectThread = nullptr;
-
-	//TODO : DEBUG REMOVE!
-	sceneHandler.getScene()->testName = "penis";
 
 	//make packets ready
 	this->clientToServerPacketTcp.resize(this->clients.size());
@@ -198,7 +196,6 @@ void Server::start()
 	std::cout << "Server: printing all users" << std::endl;
 	printAllUsers();
 	this->starting = StartingEnum::Running;
-	sceneHandler.getScene()->init();
 }
 
 bool Server::update(float dt)

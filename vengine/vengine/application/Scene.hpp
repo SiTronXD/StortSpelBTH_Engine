@@ -58,9 +58,6 @@ class Scene
 	}
 
   public:
-	 //DEBUG
-	std::string testName = "nope";
-	/////////////
 
 	Scene();
 	virtual ~Scene();
