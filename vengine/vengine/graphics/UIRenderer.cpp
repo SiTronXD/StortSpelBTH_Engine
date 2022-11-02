@@ -189,10 +189,10 @@ void UIRenderer::renderTexture(
     const float& y, 
     const float& width, 
     const float& height,
-    const float& u0,
-    const float& v0,
-    const float& u1,
-    const float& v1)
+    const uint32_t& u0,
+    const uint32_t& v0,
+    const uint32_t& u1,
+    const uint32_t& v1)
 {
     if (this->currentElementIndex >= START_NUM_MAX_ELEMENTS)
     {
@@ -204,7 +204,7 @@ void UIRenderer::renderTexture(
     this->uiElementData[this->currentElementIndex].transform =
         ResTranslator::transformRect(x, y, width, height);
     this->uiElementData[this->currentElementIndex].uvRect =
-        glm::vec4(u0, v0, u1, v1);
+        glm::uvec4(u0, v0, u1, v1);
 
     // Next ui element
     this->currentElementIndex++;

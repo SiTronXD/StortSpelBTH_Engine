@@ -15,7 +15,7 @@ class VulkanRenderer;
 struct UIElementData
 {
     glm::vec4 transform;    // vec4(x, y, scaleX, scaleY)
-    glm::vec4 uvRect;       // vec4(u, v, sizeU, sizeV)
+    glm::uvec4 uvRect;       // ivec4(u, v, sizeU, sizeV)
 };
 
 struct UIDrawCallData
@@ -27,10 +27,10 @@ struct UIDrawCallData
 
 struct CharacterRect
 {
-    float x;
-    float y;
-    float width;
-    float height;
+    uint32_t x;
+    uint32_t y;
+    uint32_t width;
+    uint32_t height;
 };
 
 class UIRenderer
@@ -93,10 +93,10 @@ public:
         const float& y,
         const float& width,
         const float& height,
-        const float& u0 = 0.0f,
-        const float& v0 = 0.0f,
-        const float& u1 = 1.0f,
-        const float& v1 = 1.0f
+        const uint32_t& u0 = 0,
+        const uint32_t& v0 = 0,
+        const uint32_t& u1 = 1,
+        const uint32_t& v1 = 1
     );
     void renderString(
         const std::string& text,
