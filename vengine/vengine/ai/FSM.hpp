@@ -64,16 +64,45 @@ protected:
         BehaviorTree* BT;
     };
     
-
+    bool checkAddEntityTransitionErrors(std::string from, std::string to)
+    {
+        bool ret = false;
+        if(trees.count(from) < 1)
+        {
+            Log::warning("FSM["+this->name+"] trying to add event FROM BT["+from+"], but FSM has no BT with that name");
+            ret = true;
+        }
+        else if (trees.count(to) < 1 )
+        {
+            Log::warning("FSM["+this->name+"] trying to add event TO BT["+to+"], but FSM has no BT with that name");
+            ret = true;
+        }
+        return ret;
+    }
     void addEntityTransition(std::string from, EntityEvent& transition, std::string to)
     {
-        fsm_nodes[from]->addNeighbor(&transition, fsm_nodes[to]);
-        this->eventSystem->registerEntityEvent(this, fsm_nodes[to], &transition);
+        if(!checkAddEntityTransitionErrors(from, to))
+        {
+            this->fsm_nodes[from]->addNeighbor(&transition, this->fsm_nodes[to]);
+            this->eventSystem->registerEntityEvent(this, this->fsm_nodes[to], &transition);            
+        }
+        else
+        {
+            Log::error("FSM["+this->name+"] could not att Entity transition between states, see warnings above!");
+        }
+        
     }
     void addGlobalTransition(std::string from, GlobalEvent& transition, std::string to)
     {
-        fsm_nodes[from]->addNeighbor(&transition, fsm_nodes[to]);
-        this->eventSystem->registerGlobalEvent(this, fsm_nodes[to], &transition);
+        if(!checkAddEntityTransitionErrors(from, to))
+        {
+            fsm_nodes[from]->addNeighbor(&transition, fsm_nodes[to]);
+            this->eventSystem->registerGlobalEvent(this, fsm_nodes[to], &transition);
+        }
+        else
+        {
+            Log::error("FSM["+this->name+"] could not att Global transition between states, see warnings above!");
+        }
     }
 
     bool checkAddBTErrors(std::string name, BehaviorTree* BT)
