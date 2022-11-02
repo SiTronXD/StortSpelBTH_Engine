@@ -91,8 +91,10 @@ uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, s
     // No mesh imported, send default mesh back
     if (meshData.vertexStreams.positions.size() == 0) { return 0; }
     
-    // For all paths or only first ? 
-    //this->meshPaths.insert({paths[0], this->meshPaths.size()}); 
+    for (const std::string& path : paths)
+    {
+        this->meshPaths.insert({path, this->meshPaths.size()}); 
+    }
 
     meshes.insert({(uint32_t)meshes.size(), meshLoader.createMesh(meshData)});
     return (uint32_t)meshes.size() - 1;
