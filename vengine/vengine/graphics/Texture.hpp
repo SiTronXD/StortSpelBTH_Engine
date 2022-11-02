@@ -50,7 +50,7 @@ private:
 
 	vk::ImageView imageView;
 
-	std::vector<std::vector<Pixel>> pixels;
+	std::vector<Pixel> pixels;
 
 	uint32_t textureSamplerIndex;
 	uint32_t width;
@@ -79,7 +79,7 @@ public:
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }
 	inline const uint32_t& getSamplerIndex() const { return this->textureSamplerIndex; }
-	inline const std::vector<std::vector<Pixel>>& getCpuPixels() const { return this->pixels; }
+	inline const Pixel& getCpuPixel(const uint32_t& x, const uint32_t& y) const { return this->pixels[y * this->width + x]; }
 
 	static vk::Format chooseSupportedFormat(
 		PhysicalDevice& physicalDevice,

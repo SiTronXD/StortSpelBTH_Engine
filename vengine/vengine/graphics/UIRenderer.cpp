@@ -98,8 +98,8 @@ void UIRenderer::setBitmapFont(
     const uint32_t& tileWidth,
     const uint32_t& tileHeight)
 {
-    const std::vector<std::vector<Pixel>>& pixels =
-        this->resourceManager->getTexture(bitmapFontTextureIndex).getCpuPixels();
+    const Texture& fontTexture = 
+        this->resourceManager->getTexture(bitmapFontTextureIndex);
 
     this->oneOverCharTileWidth = 1.0f / static_cast<float>(tileWidth);
     this->oneOverCharTileHeight = 1.0f / static_cast<float>(tileHeight);
@@ -135,7 +135,7 @@ void UIRenderer::setBitmapFont(
                     for (uint32_t tempCharX = charX; tempCharX < charX + tileWidth; ++tempCharX)
                     {
                         // Found pixel
-                        if (pixels[tempCharX][tempCharY].a > 0)
+                        if (fontTexture.getCpuPixel(tempCharX, tempCharY).a > 0)
                         {
                             minX = std::min(minX, tempCharX);
                             minY = std::min(minY, tempCharY);

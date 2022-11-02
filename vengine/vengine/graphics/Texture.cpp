@@ -35,29 +35,22 @@ void Texture::setCpuInfo(
     // Save the pixels only if it should keep the info
     if (textureSettings.keepCpuPixelInfo)
     {
-        // x
-        this->pixels.reserve(width);
-        for (uint32_t x = 0; x < width; ++x)
+        // Loop through pixels in 1D array
+        this->pixels.reserve(width * height);
+        for (uint32_t i = 0, size = width * height; i < size; ++i)
         {
-            this->pixels.push_back(std::vector<Pixel>());
-            this->pixels[this->pixels.size() - 1].reserve(height);
+            // Image data index
+            uint32_t imageDataIndex = i * 4;
 
-            // y
-            for (uint32_t y = 0; y < height; ++y)
-            {
-                // 1D index
-                uint32_t imageDataIndex = (y * width + x) * 4;
+            // Create pixel
+            Pixel pixel{};
+            pixel.r = imageData[imageDataIndex + 0];
+            pixel.g = imageData[imageDataIndex + 1];
+            pixel.b = imageData[imageDataIndex + 2];
+            pixel.a = imageData[imageDataIndex + 3];
 
-                // Create pixel
-                Pixel pixel{};
-                pixel.r = imageData[imageDataIndex + 0];
-                pixel.g = imageData[imageDataIndex + 1];
-                pixel.b = imageData[imageDataIndex + 2];
-                pixel.a = imageData[imageDataIndex + 3];
-
-                // Add pixel
-                this->pixels[x].push_back(pixel);
-            }
+            // Add pixel
+            this->pixels.push_back(pixel);
         }
     }
 }
