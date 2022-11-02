@@ -33,8 +33,13 @@ int ResourceManagerLua::lua_addTexture(lua_State* L)
 		if (lua_isnumber(L, -1)) { settings.samplerSettings.filterMode = (vk::Filter)lua_tonumber(L, -1); }
 		lua_pop(L, 1);
 
-		// TODO: fix this
-		Log::warning("TODO: fix texture sampler settings from lua");
+		lua_getfield(L, 2, "unnormalizedCoordinates");
+		if (lua_isboolean(L, -1)) { settings.samplerSettings.unnormalizedCoordinates = lua_toboolean(L, -1) ? VK_TRUE : VK_FALSE; }
+		lua_pop(L, 1);
+
+		lua_getfield(L, 2, "keepCpuPixelInfo");
+		if (lua_isboolean(L, -1)) { settings.keepCpuPixelInfo = lua_toboolean(L, -1); }
+		lua_pop(L, 1);
 	}
 
 	int textureID = resourceManager->addTexture(lua_tostring(L, 1), settings);
