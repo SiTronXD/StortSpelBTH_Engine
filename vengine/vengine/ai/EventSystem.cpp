@@ -1,6 +1,7 @@
 #include "EventSystem.hpp"
 #include "FSM.hpp"
 #include "../components/FSMAgentComponent.hpp"
+#include "../dev/Log.hpp"
 
 //void registerEvent(FSM_Node* who, Event* event)
 
@@ -93,6 +94,7 @@ void EventSystem::update()
 	}	
 
 	//TODO: Move to separate update funtion
+    std::vector<std::string*> activeEntityEventNames; 
 	// For All Entities ...
 	for (auto& eventsPerEntity : this->entitySubscribers)
 	{
@@ -104,10 +106,12 @@ void EventSystem::update()
 
 		for (auto& currNeighbor : agent.currentNode->neighbors)
 		{
-			auto* eventTransition = (EntityEvent*)currNeighbor.first;
-			
+			auto* eventTransition = (EntityEvent*)currNeighbor.first;			
+
 			if (eventTransition->checkEvent(entityID))
 			{
+                activeEntityEventNames.emplace_back(&eventTransition->getName());
+                
 				if (!entityEventLastReturn[entityID][eventTransition])
 				{
 					// TODO: Maybe currentEvent could be held by the FSMComponent?
@@ -121,13 +125,27 @@ void EventSystem::update()
 								<< std::endl;
 
 					entityEventLastReturn[entityID][eventTransition] = true;
-				}
+				}                
 			}
 			else if (entityEventLastReturn[entityID][eventTransition])
 			{
 				entityEventLastReturn[entityID][eventTransition] = false;
 			}
 
+            if(activeEntityEventNames.size() > 1 )
+            {
+                std::string activeEventsStr; 
+                size_t c = 0; 
+                for(auto& e:activeEntityEventNames){
+                    if(c != activeEntityEventNames.size() -1)
+                    {activeEventsStr += *e+", ";}
+                    else {activeEventsStr += *e;}
+                    c++;
+                }
+                Log::warning("Entity["+std::to_string(entityID)+"] More than one FSM Transition Events {"+activeEventsStr+"} are active, will cause problems");
+            }
+
 		}
+        activeEntityEventNames.clear();
 	}
 }

@@ -33,8 +33,10 @@ struct FSM_and_Node_and_Event
 class Event
 {
 private:
+    std::string name; 
 public:
-	Event() = default;
+	Event(std::string name) : name(name){};
+    inline std::string& getName(){return name;};
 };
 class GlobalEvent : public Event
 {
@@ -42,8 +44,8 @@ private:
 public:
 	std::function<bool()> event;
 	bool checkEvent() { return event(); }
-	GlobalEvent() = default;
-	GlobalEvent(std::function<bool()> event) : event(event){};
+	GlobalEvent() = default; //TODO: Remove
+	GlobalEvent(std::string name, std::function<bool()> event) :Event(name), event(event){};
 };
 
 class EntityEvent : public Event
@@ -52,8 +54,8 @@ class EntityEvent : public Event
    public:
 	std::function<bool(uint32_t)> event;
 	bool checkEvent(uint32_t entityID) { return event(entityID); }
-	EntityEvent() = default;
-	EntityEvent(std::function<bool(uint32_t)> event) : event(event){};
+	EntityEvent() = default; //TODO: Remove
+	EntityEvent(std::string name, std::function<bool(uint32_t)> event) :Event(name), event(event){};
 };
 
 class EventSystem
