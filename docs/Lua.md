@@ -482,13 +482,22 @@ input.setHideCursor(bool : hide)
 ## Resource Manager
 The resources global that has been created in the lua environment is the main interface of the resource manager in C++. It is used to load in a variety of assets from disk, such as meshes and textures.
 
-With the resources global comes another global table that is related to Filter modes to textures. These value can be used in a table when [adding a texture](#addTexture) to the resource manager.
+With the resources global comes another global table that is related to texture settings. These value can be used in a table when [adding a texture](#addTexture) to the resource manager.
 ~~~ Lua
 -- Filters
 Filters.Nearest
 Filters.Linear
 Filters.CubicEXT -- Not available currently (warnings)
 Filters.CubicIMG -- Not available currently (warnings)
+
+--Unnormalized coordinates
+false: UV has the range [0, 1)
+true: UV has the ranges [0, width) and [0, height). Only relevant for UI/bitmap fonts.
+
+--Keep CPU pixel information
+false: do not store any pixels on CPU
+true: store pixels for read-only access on CPU. Only relevant for bitmap fonts.
+
 ~~~
 
 ### Functions
@@ -503,14 +512,16 @@ resources.addMesh(string : mesh_path, string : textures_path) -- optional
 
 #### addTexture
 This functions loads and creates a texture to be used in the engine. It returns an ID of the texture that can be used to reference it in different part of the engine such as in components. If the path given already has been loaded, the ID is returned immediatly. If the texture couldn't be created a default texture ID is returned.
-Additionally a table containing sampling information can be sent as a second argument.
+Additionally a table containing texture information can be sent as a second argument.
 ~~~ Lua
 resources.addTexture(string : texture_path) -- Returns the texture ID
 resources.addTexture(string : texture_path, table : sampler_settings) -- optional
 
 -- Example
-local setttings = {}
-settings.filterMode = Filters.Linear
+local settings = {}
+settings.samplerSettings.filterMode = Filters.Linear
+settings.samplerSettings.unnormalizedCoordinates = false
+settings.keepCpuPixelInfo = false
 local textureID = resources.addTexture("test.png", settings)
 ~~~
 
