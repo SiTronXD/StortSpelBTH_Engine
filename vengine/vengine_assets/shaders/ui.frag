@@ -17,6 +17,8 @@ void main()
 	// using unnormalized uv coordinates
 	outColor = textureLod(
 		textureSampler0, 
+		(fragBoundsUV.z <= 1 && fragBoundsUV.w <= 1) ? 
+		fragUV : 
 		clamp(
 			uvec2(fragUV), 
 			fragBoundsUV.xy, 
