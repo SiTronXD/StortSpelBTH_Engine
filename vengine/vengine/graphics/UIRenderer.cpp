@@ -220,34 +220,51 @@ void UIRenderer::renderString(
     float currentCharWidth = 0.0f;
     float currentCharHeight = 0.0f;
 
+    CharacterRect* charRect = nullptr;
+
     // Start at left edge of the first character
-    float currentSizeX = 
-        -characterWidth * 
-        (this->characterRects[text[0]].width / this->characterTileWidth) * 
-        0.5f;
+    float firstCharWidth = 
+        characterWidth *
+        (this->characterRects[text[0]].width / this->characterTileWidth);
+    float currentSizeX = -firstCharWidth * 0.5f;
+
+    // Get entire string width after the first character
+    // (because it is offset by currentSizeX)
+    float stringWidth = 0.0f;
+    for (size_t i = 1; i < text.length(); ++i)
+    {
+        // Find rectangle from map
+        charRect = &this->characterRects[text[i]];
+
+        // Current character size
+        currentCharWidth =
+            characterWidth * (charRect->width / this->characterTileWidth);
+        
+        stringWidth += currentCharWidth;
+    }
 
     // Render character by character
     for (size_t i = 0; i < text.length(); ++i)
     {
         // Find rectangle from map
-        const CharacterRect& charRect = this->characterRects[text[i]];
+        charRect = &this->characterRects[text[i]];
 
         // Current character size
         currentCharWidth =
-            characterWidth * (charRect.width / this->characterTileWidth);
+            characterWidth * (charRect->width / this->characterTileWidth);
         currentCharHeight =
-            characterHeight * (charRect.height / this->characterTileHeight);
+            characterHeight * (charRect->height / this->characterTileHeight);
 
         // Render character as texture
         this->renderTexture(
-            x + currentSizeX + currentCharWidth * 0.5f,
+            x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f,
             y, 
             currentCharWidth,
             currentCharHeight,
-            charRect.x, 
-            charRect.y, 
-            charRect.width, 
-            charRect.height 
+            charRect->x, 
+            charRect->y, 
+            charRect->width, 
+            charRect->height 
         );
 
         currentSizeX += currentCharWidth;
