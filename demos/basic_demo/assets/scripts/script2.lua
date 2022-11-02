@@ -2,7 +2,7 @@ local script = {}
 
 function script:init()
 	print("Cam: " .. self.ID)
-	self.texture = resources.addTexture("assets/textures/test_A.png")
+	self.texture = resources.addTexture("assets/textures/test_A.png", { filterMode = Filters.Nearest })
 	--scene.setComponent(self.ID, CompType.Collider, { type = ColliderType.Sphere, isTrigger = true, radius = 1 })
 	--scene.setComponent(self.ID, CompType.Rigidbody, {})
 end
@@ -19,7 +19,7 @@ function script:update()
 end
 
 function script:test()
-	print("Test")
+	--print("Test")
 end
 
 function script:onTriggerStay(entity)

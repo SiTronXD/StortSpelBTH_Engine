@@ -33,6 +33,7 @@ void ScriptHandler::updateScripts()
 	auto func = [&](Transform& transform, const Script& script)
 	{
 		lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+#ifdef _CONSOLE
 		if (luaL_dofile(L, script.path) != LUA_OK)
 		{
 			LuaH::dumpError(L);
@@ -42,7 +43,7 @@ void ScriptHandler::updateScripts()
 			LuaH::replaceTableFunctions(L, -1, -2);
 			lua_pop(L, 1);
 		}
-
+#endif
 		lua_getfield(L, -1, "update");
 		if (lua_type(L, -1) == LUA_TNIL)
 		{
@@ -167,6 +168,7 @@ void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, b
 	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e1);
 
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+#ifdef _CONSOLE
 	if (luaL_dofile(L, script.path) != LUA_OK)
 	{
 		LuaH::dumpError(L);
@@ -176,6 +178,7 @@ void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, b
 		LuaH::replaceTableFunctions(L, -1, -2);
 		lua_pop(L, 1);
 	}
+#endif
 
 	lua_getfield(L, -1, func);
 	if (lua_type(L, -1) == LUA_TNIL)
