@@ -322,6 +322,7 @@ The collider component is used for physics and can be combined with [rigidbody](
 local Collider = {
 	int : type, -- ColliderType global useful here
 	bool : isTrigger,
+	vector : offset, -- Offset from origin
 	float : radius, -- Only needed/recieved for spheres and capsules
 	float : height, -- Only needed/recieved for capsules
 	vector : extents -- Only needed/recieved for boxes
@@ -332,6 +333,7 @@ local col = scene.getComponent(e, CompType.Collider)
 col.type = ColliderType.Sphere
 col.radius = 2.5
 col.isTrigger = false
+col.offset = vector(0, 5, 0)
 scene.setComponent(e, CompType.Collider, col)
 ~~~
 

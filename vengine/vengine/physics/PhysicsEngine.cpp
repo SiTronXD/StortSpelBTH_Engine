@@ -32,7 +32,10 @@ void PhysicsEngine::updateColliders()
 				body->setCollisionFlags(
 					btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE * col.isTrigger +
 					btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT * !col.isTrigger);
-				body->setWorldTransform(BulletH::toBulletTransform(scene->getComponent<Transform>((int)entity)));
+
+				btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>((int)entity));
+				transform.setOrigin(transform.getOrigin() + BulletH::bulletVec(col.offset));
+				body->setWorldTransform(transform);
 			}
 		}
 	};
@@ -60,7 +63,10 @@ void PhysicsEngine::updateRigidbodies()
 				body->setCollisionFlags(
 					btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE * col.isTrigger +
 					btCollisionObject::CollisionFlags::CF_DYNAMIC_OBJECT * !col.isTrigger);
-				body->getMotionState()->setWorldTransform(BulletH::toBulletTransform(scene->getComponent<Transform>((int)entity)));
+
+				btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>((int)entity));
+				transform.setOrigin(transform.getOrigin() + BulletH::bulletVec(col.offset));
+				body->getMotionState()->setWorldTransform(transform);
 
 				if (rb.mass != body->getMass())
 				{
@@ -148,6 +154,7 @@ void PhysicsEngine::createCollider(const int& entity, Collider& col)
 	btCollisionShape* shape = this->createShape(entity, col);
 
 	btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity));
+	transform.setOrigin(transform.getOrigin() + BulletH::bulletVec(col.offset));
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(0.0f, nullptr, shape, btVector3(0.0f, 0.0f, 0.0f));
 
 	btRigidBody* body = new btRigidBody(rbInfo);
@@ -155,7 +162,7 @@ void PhysicsEngine::createCollider(const int& entity, Collider& col)
 		btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE * col.isTrigger +
 		btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT * !col.isTrigger);
 	body->setCollisionShape(shape);
-	body->setWorldTransform(BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity)));
+	body->setWorldTransform(transform);
 	body->setUserIndex(entity);
 
 	this->dynWorld->addRigidBody(body);
@@ -175,6 +182,9 @@ void PhysicsEngine::createRigidbody(const int& entity, Rigidbody& rb, Collider& 
 
 	// Create Rigidbody
 	btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity));
+	Log::write("Before: (" + std::to_string(transform.getOrigin().x()) + ", " + std::to_string(transform.getOrigin().y()) + ", " + std::to_string(transform.getOrigin().z()));
+	transform.setOrigin(transform.getOrigin() + BulletH::bulletVec(col.offset));
+	Log::write("After: (" + std::to_string(transform.getOrigin().x()) + ", " + std::to_string(transform.getOrigin().y()) + ", " + std::to_string(transform.getOrigin().z()));
 	btVector3 localInertia = btVector3(0.0f, 0.0f, 0.0f);
 	if (rb.mass != 0.0f) { shape->calculateLocalInertia(rb.mass, localInertia); }
 
@@ -377,6 +387,7 @@ void PhysicsEngine::update()
 
 				// Apply transform, but keep scale
 				t = BulletH::toTransform(transform);
+				t.position -= col->offset;
 				t.scale = scale;
 
 				// Keep rotation if necessary
@@ -520,7 +531,7 @@ std::vector<Entity> PhysicsEngine::testContact(Collider& col, glm::vec3 position
 	object->setCollisionShape(shape);
 
 	btTransform transform;
-	transform.setOrigin(BulletH::bulletVec(position));
+	transform.setOrigin(BulletH::bulletVec(position + col.offset));
 	transform.setRotation(BulletH::bulletQuat(rotation));
 	object->setWorldTransform(transform);
 
