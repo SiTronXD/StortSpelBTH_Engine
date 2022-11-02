@@ -101,23 +101,22 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 	client.resize(client.size() - 1);
 }
 
-Server::Server(ServerGameMode* serverGame)
+Server::Server(NetworkScene* serverGame)
 {
-	this->scene.setScriptHandler(&this->scriptHandler);
-	this->scriptHandler.setScene(&this->scene);
+	this->sceneHandler.setScriptHandler(&this->scriptHandler);
+	this->scriptHandler.setSceneHandler(&this->sceneHandler);
+
 	if (serverGame == nullptr)
 	{
-		this->serverGame = new DefaultServerGame();
+		sceneHandler.setScene(new DefaultServerGame());
 	}
 	else
 	{
-		this->serverGame = serverGame;
+		sceneHandler.setScene(serverGame);
 	}
 
-	this->serverGame->setScene(&this->scene);
-	this->serverGame->setScriptHandler(&this->scriptHandler);
+	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
 
-	this->scene.GivePacketInfo(this->serverToClientPacketTcp);
 
 	this->starting = StartingEnum::WaitingForUsers;
 	this->currentTimeToSend = 0;
@@ -160,7 +159,6 @@ Server::~Server()
 	{
 		delete this->clients[i];
 	}
-	delete serverGame;
 	scriptHandler.cleanup();
 }
 
@@ -185,12 +183,11 @@ void Server::start()
 	{
 		startPacket << clients[i]->id;
 	}
-	startPacket << this->serverGame->getSeed();
 
 	for (int i = 0; i < this->clients.size(); i++)
 	{
 		this->clients[i]->clientTcpSocket.send(startPacket);
-		this->scene.createPlayer();
+		sceneHandler.getScene()->createPlayer();
 	}
 
 	this->udpSocket.setBlocking(false);
@@ -199,7 +196,7 @@ void Server::start()
 	std::cout << "Server: printing all users" << std::endl;
 	printAllUsers();
 	this->starting = StartingEnum::Running;
-	this->serverGame->init();
+	sceneHandler.getScene()->init();
 }
 
 bool Server::update(float dt)
@@ -226,9 +223,8 @@ bool Server::update(float dt)
 		if (this->currentTimeToSend > this->timeToSend)
 		{
 
-			this->scene.update(this->currentTimeToSend);
-			this->scriptHandler.update();
-			this->serverGame->update(this->currentTimeToSend);
+			this->sceneHandler.getScene()->update(this->currentTimeToSend);
+			this->scriptHandler.update(this->currentTimeToSend);
 
 			this->seeIfUsersExist();
 			this->sendDataToAllUsers();
@@ -429,12 +425,12 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 						clientToServerPacketTcp[ClientID] >> packetHelper1;
 						points.push_back(packetHelper1);
 					}
-					this->serverGame->addPolygon(points);
+					this->sceneHandler.getScene()->addPolygon(points);
 					points.clear();
 					break;
 				case GameEvents::REMOVE_POLYGON_DATA:
 					std::cout << "We shall start over with polygon data" << std::endl;
-					this->serverGame->removeAllPolygons();
+					this->sceneHandler.getScene()->removeAllPolygons();
 					break;
 			}
 		}
@@ -455,7 +451,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				case GameEvents::UpdatePlayerPos:
 				{
 					//std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
-					Transform& T = this->scene.getComponent<Transform>(this->scene.getPlayer(ClientID));
+					Transform& T = this->sceneHandler.getScene()->getComponent<Transform>(this->sceneHandler.getScene()->getPlayer(ClientID));
 					glm::vec3 tempVec;
 					clientToServerPacketUdp[ClientID] >> tempVec.x;
 					clientToServerPacketUdp[ClientID] >> tempVec.y;
@@ -479,17 +475,17 @@ void Server::createUDPPacketToClient(const int& clientID, sf::Packet& packet)
 	{
 		if (i != clientID)
 		{
-			Transform& T = this->scene.getComponent<Transform>(this->scene.getPlayer(i));
+			Transform& T = this->sceneHandler.getScene()->getComponent<Transform>(this->sceneHandler.getScene()->getPlayer(i));
 			packet << T.position.x << T.position.y
 			       << T.position.z << T.rotation.x
 			       << T.rotation.y << T.rotation.z;
 		}
 	}
 	//get all monster position
-	packet << GameEvents::UpdateMonsterPos << this->scene.getEnemySize();
-	for (int i = 0; i < this->scene.getEnemySize(); i++)
+	packet << GameEvents::UpdateMonsterPos << this->sceneHandler.getScene()->getEnemySize();
+	for (int i = 0; i < this->sceneHandler.getScene()->getEnemySize(); i++)
 	{
-		Transform& T = this->scene.getComponent<Transform>(this->scene.getEnemies(i));
+		Transform& T = this->sceneHandler.getScene()->getComponent<Transform>(this->sceneHandler.getScene()->getEnemies(i));
 		packet << T.position.x << T.position.y
 		       << T.position.z << T.rotation.x
 		       << T.rotation.y << T.rotation.z;

@@ -2,7 +2,7 @@
 #include <iostream>
 #include "ServerEngine/Timer.h"
 
-void serverMain(bool& shutDownServer, ServerGameMode* game)
+void serverMain(bool& shutDownServer, NetworkScene* game)
 {
 	Timer serverTime;
 	Server server(game);
@@ -47,7 +47,7 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 	this->sceneHandler = sceneHandler;
 }
 
-void NetworkHandler::createServer(ServerGameMode* serverGame)
+void NetworkHandler::createServer(NetworkScene* serverGame)
 {
 	serverThread =
 	    new std::thread(serverMain, std::ref(this->shutDownServer), serverGame);

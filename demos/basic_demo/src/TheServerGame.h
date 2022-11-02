@@ -1,7 +1,7 @@
 #pragma once
-#include "../vengine/vengine/network/ServerEngine/ServerGame.h"
+#include "../vengine/vengine/network/ServerEngine/NetworkScene.h"
 
-class TheServerGame : public ServerGameMode {
+class TheServerGame : public NetworkScene {
 private:
 
 public:

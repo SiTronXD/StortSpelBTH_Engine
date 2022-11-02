@@ -196,7 +196,7 @@ void addCollisionToScene(std::vector<ColliderDataRes> colliders, Scene& currentS
 	}
 }
 
-void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, NetworkScene* currentScene, const glm::vec3& offset, const glm::vec3& rotationOffset) {
+void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, const glm::vec3& offset, const glm::vec3& rotationOffset) {
 	std::vector<NavMesh::Polygon> polygons;
 	for (int i = 0; i < colliders.size(); i++)
 	{

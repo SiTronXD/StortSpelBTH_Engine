@@ -45,7 +45,7 @@ void TestDemoScene::init()
 	this->getComponent<Transform>(puzzleTest).rotation = glm::vec3(0, 180, 0);
 	this->getComponent<Transform>(puzzleTest).position = glm::vec3(5, 0, 0);
 	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), *this, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
-	addCollisionToNetworkScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), nullptr, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
+	addCollisionToNetworkScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), glm::vec3(5, 0, 0), glm::vec3(0,180,0));
 
 	// Floor
 	this->floor = this->createEntity();

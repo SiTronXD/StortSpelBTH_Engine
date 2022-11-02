@@ -1,58 +1,53 @@
 #include "NetworkScene.h"
 
-ServerScriptHandler* NetworkScene::getScriptHandler()
-{
-	return this->scriptHandler;
-}
-
 NetworkScene::NetworkScene()
 {
-	this->reg.clear();
+	//Scene::Scene();  //TODO : ?
 }
 
 NetworkScene::~NetworkScene()
 {
-	for (size_t i = 0; i < this->systems.size(); ++i)
-	{
-		delete this->systems[i];
-	}
-	this->reg.clear();
-	this->systems.clear();
-	this->luaSystems.clear();
+	//Scene::~Scene();  //TODO : ?
 }
 
-void NetworkScene::setPathFindingManager(PathFindingManager* pf)
-{
-	this->pf = pf;
-}
-
-PathFindingManager* NetworkScene::getPathFindingManager()
+PathFindingManager& NetworkScene::getPathFinder()
 {
 	return this->pf;
 }
 
-
-void NetworkScene::setScriptHandler(ServerScriptHandler* scriptHandler)
+void NetworkScene::addPolygon(NavMesh::Polygon& polygon)
 {
-	this->scriptHandler = scriptHandler;
+	pf.addPolygon(polygon);
 }
 
-void NetworkScene::createSystem(std::string& path)
+void NetworkScene::addPolygon(const std::vector<float>& polygon)
 {
-	this->luaSystems.push_back(LuaSystem{path, -1});
+	NavMesh::Polygon p;
+	for (size_t i = 0; i < polygon.size(); i += 2)
+	{
+		p.AddPoint(polygon[i], polygon[i + 1]);
+	}
+	pf.addPolygon(p);
 }
 
-void NetworkScene::setScriptComponent(Entity entity, std::string path)
+void NetworkScene::removeAllPolygons()
 {
-	this->getScriptHandler()->setScriptComponent(entity, path);
+	pf.removeAllPolygons();
+}
+
+void NetworkScene::removeAllEntitys()
+{
+
+	this->getSceneReg().clear();
+	players.clear();
+	enemies.clear();
 }
 
 void NetworkScene::updateSystems(float dt)
 {
 	for (auto it = this->systems.begin(); it != this->systems.end();)
 	{
-		//doesn't dare to use Time::getDT()
-		if ((*it)->update(this->reg, dt))
+		if ((*it)->update(this->getSceneReg(), dt))
 		{
 			delete (*it);
 			it = this->systems.erase(it);
@@ -64,71 +59,14 @@ void NetworkScene::updateSystems(float dt)
 	}
 }
 
-int NetworkScene::getEntityCount() const
-{
-	return (int)this->reg.alive();
-}
-
-bool NetworkScene::entityValid(Entity entity) const
-{
-	return this->reg.valid((entt::entity)entity);
-}
-
-Entity NetworkScene::createEntity()
-{
-	int entity = (int)this->reg.create();
-	this->setComponent<Transform>(entity);
-	return entity;
-}
-
-bool NetworkScene::removeEntity(Entity entity)
-{
-	bool valid = this->entityValid(entity);
-	if (valid)
-	{
-		this->reg.destroy((entt::entity)entity);
-	}
-	for (size_t i = 0; i < enemies.size(); i++)
-	{
-		if (entity == enemies[i].first)
-		{
-			enemies.erase(enemies.begin() + entity);
-			break;
-		}
-	}
-	//TODO : check if an enemy was this entity?
-	
-	return valid;
-}
-
-void NetworkScene::removeAllEntitys()
-{
-	this->reg.clear();
-	players.clear();
-	enemies.clear();
-}
-
-void NetworkScene::setActive(Entity entity)
-{
-	this->removeComponent<Inactive>(entity);
-}
-
-void NetworkScene::setInactive(Entity entity)
-{
-	this->setComponent<Inactive>(entity);
-}
-
-bool NetworkScene::isActive(Entity entity)
-{
-	return !this->hasComponents<Inactive>(entity);
-}
-
 void NetworkScene::init() {}
+
+void NetworkScene::update() {}
 
 void NetworkScene::update(float dt)
 {
 	this->updateSystems(dt);
-	this->scriptHandler->updateSystems(this->luaSystems);
+	this->getScriptHandler()->updateSystems(this->luaSystems);
 
 	auto view = this->getSceneReg().view<Transform>(entt::exclude<Inactive>);
 	auto func = [](Transform& transform)
@@ -158,7 +96,7 @@ const int NetworkScene::getEnemySize()
 	return (int)this->enemies.size();
 }
 
-int NetworkScene::createEnemy(int type, const std::string &script, glm::vec3 pos, glm::vec3 rot)
+int NetworkScene::createEnemy(int type, const std::string& script, glm::vec3 pos, glm::vec3 rot)
 {
 	int e = this->createEntity();
 	this->setComponent<Transform>(e);
@@ -168,12 +106,12 @@ int NetworkScene::createEnemy(int type, const std::string &script, glm::vec3 pos
 	{
 		this->setScriptComponent(e, script);
 	}
-	this->enemies.push_back(std::pair<int,int>(e, type));
+	this->enemies.push_back(std::pair<int, int>(e, type));
 	this->addEvent({(int)GameEvents::SpawnEnemy, type}, {pos.x, pos.y, pos.z, rot.x, rot.y, rot.z});
 	return e;
 }
 
-int NetworkScene::createPlayer() 
+int NetworkScene::createPlayer()
 {
 	int e = this->createEntity();
 	this->setComponent<Transform>(e);
@@ -186,7 +124,7 @@ void NetworkScene::removePlayer(int playerID)
 	players.erase(players.begin() + playerID);
 }
 
-void NetworkScene::GivePacketInfo(std::vector<sf::Packet>& serverToClient)
+void NetworkScene::givePacketInfo(std::vector<sf::Packet>& serverToClient)
 {
 	this->serverToClient = &serverToClient;
 }

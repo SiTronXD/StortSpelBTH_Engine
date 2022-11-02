@@ -33,7 +33,7 @@ class NetworkHandler {
     void setSceneHandler(SceneHandler* sceneHandler);
 
     //SERVER
-    void createServer(ServerGameMode* serverGame = nullptr); //create new server on a new thread
+    void createServer(NetworkScene* serverGame = nullptr); //create new server on a new thread
     void deleteServer();
 
     //CLIENT
