@@ -498,6 +498,16 @@ true: UV has the ranges [0, width) and [0, height). Only relevant for UI/bitmap 
 false: do not store any pixels on CPU
 true: store pixels for read-only access on CPU. Only relevant for bitmap fonts.
 
+local SamplerSettings = {
+	Filters : filterMode,
+	boolean : unnormalizedCoordinates
+}
+
+local TextureSettings = {
+	SamplerSettings : samplerSettings,
+	boolean : keepCpuPixelInfo
+}
+
 ~~~
 
 ### Functions
@@ -519,6 +529,7 @@ resources.addTexture(string : texture_path, table : sampler_settings) -- optiona
 
 -- Example
 local settings = {}
+settings.samplerSettings = {}
 settings.samplerSettings.filterMode = Filters.Linear
 settings.samplerSettings.unnormalizedCoordinates = false
 settings.keepCpuPixelInfo = false
