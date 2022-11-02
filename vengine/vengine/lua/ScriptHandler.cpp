@@ -162,9 +162,23 @@ void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 	}
 }
 
-void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger)
+void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger, CallbackType type)
 {
-	const char* func = isTrigger ? "onTriggerStay" : "onCollisionStay";
+	std::string typeStr;
+	switch (type)
+	{
+	case CallbackType::ENTER:
+		typeStr = "Enter";
+		break;
+	case CallbackType::STAY:
+		typeStr = "Stay";
+		break;
+	case CallbackType::EXIT:
+		typeStr = "Exit";
+		break;
+	}
+
+	const char* func = (isTrigger ? "onTrigger" : "onCollision" + typeStr).c_str();
 	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e1);
 
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);

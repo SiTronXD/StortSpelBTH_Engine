@@ -86,6 +86,7 @@
     <ClCompile Include="vengine\lua\wrappers\PhysicsEngineLua.cpp" />
     <ClCompile Include="vengine\dev\StringHelper.cpp" />
     <ClCompile Include="vengine\graphics\MeshDataModifier.cpp" />
+    <ClCompile Include="vengine\physics\CollisionDispatcher.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -165,6 +166,8 @@
     <ClInclude Include="vengine\lua\wrappers\PhysicsEngineLua.h" />
     <ClInclude Include="vengine\dev\StringHelper.hpp" />
     <ClInclude Include="vengine\graphics\MeshDataModifier.hpp" />
+    <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
+    <ClInclude Include="vengine\physics\CallbackType.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

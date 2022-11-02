@@ -7,6 +7,7 @@
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "BulletHelper.hpp"
 #include "ContactCallback.h"
+#include "CollisionDispatcher.h"
 
 #include <iostream>
 #include <string>
@@ -279,7 +280,8 @@ PhysicsEngine::PhysicsEngine()
 	:sceneHandler(nullptr), colShapes(), timer(0.f), renderDebug(false)
 {
 	this->collconfig = new btDefaultCollisionConfiguration();
-	this->collDisp = new btCollisionDispatcher(this->collconfig);
+	this->collDispCallbacks = new CollisionDispatcher(this->collconfig);
+	this->collDisp = this->collDispCallbacks;
 	this->bpInterface = new btDbvtBroadphase();
 	this->solver = new btSequentialImpulseConstraintSolver();
 	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
@@ -300,7 +302,8 @@ void PhysicsEngine::init()
 {
 	cleanup();
 	this->collconfig = new btDefaultCollisionConfiguration();
-	this->collDisp = new btCollisionDispatcher(this->collconfig);
+	this->collDispCallbacks = new CollisionDispatcher(this->collconfig);
+	this->collDisp = this->collDispCallbacks;
 	this->bpInterface = new btDbvtBroadphase();
 	this->solver = new btSequentialImpulseConstraintSolver();
 	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
@@ -409,13 +412,20 @@ void PhysicsEngine::update()
 	// TODO: Find way to establish onenter and onexit collision and trigger functions
 	int numManifolds = this->dynWorld->getDispatcher()->getNumManifolds();
 	ScriptHandler* scriptHandler = this->sceneHandler->getScriptHandler();
+	//Log::write(std::to_string(numManifolds));
 	for (int i = 0; i < numManifolds; i++)
 	{
 		btPersistentManifold* man = this->dynWorld->getDispatcher()->getManifoldByIndexInternal(i);
-		if (!man->getNumContacts()) { continue; }
+		CallbackType& type = this->collDispCallbacks->getTypes()[i];
+		if (!man->getNumContacts())
+		{
+			if (type != CallbackType::EXIT) { type = CallbackType::EXIT; }
+			else { continue; }
+		}
 
 		const btCollisionObject* b1 = man->getBody0();
 		const btCollisionObject* b2 = man->getBody1();
+
 		Entity e1 = b1->getUserIndex(), e2 = b2->getUserIndex();
 		if (scene->entityValid(e1) && scene->entityValid(e2))
 		{
@@ -424,12 +434,34 @@ void PhysicsEngine::update()
 			// Triggers
 			if (t1 || t2)
 			{
-				scene->onTriggerStay(e1, e2);
+				if (type == CallbackType::STAY)
+				{
+					scene->onTriggerStay(e1, e2);
+				}
+				else if (type == CallbackType::ENTER)
+				{
+					scene->onTriggerEnter(e1, e2);
+				}
+				else // Exit
+				{
+					scene->onTriggerExit(e1, e2);
+				}
 			}
 			// Collisions
 			else
 			{
-				scene->onCollisionStay(e1, e2);
+				if (type == CallbackType::STAY)
+				{
+					scene->onCollisionStay(e1, e2);
+				}
+				else if (type == CallbackType::ENTER)
+				{
+					scene->onCollisionEnter(e1, e2);
+				}
+				else // Exit
+				{
+					scene->onCollisionExit(e1, e2);
+				}
 			}
 
 			// Scripts (still valid entities)
@@ -437,18 +469,57 @@ void PhysicsEngine::update()
 			{
 				if (scene->hasComponents<Script>(e1))
 				{
-					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e1), e1, e2, t1);
+					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e1), e1, e2, t1, type);
 				}
 			}
 			if (scene->entityValid(e1) && scene->entityValid(e2))
 			{
 				if (scene->hasComponents<Script>(e2))
 				{
-					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e2), e2, e1, t2);
+					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e2), e2, e1, t2, type);
+				}
+			}
+		}
+		if (type == CallbackType::ENTER) { type = CallbackType::STAY; }
+	}
+
+	for (const auto& exit : this->collDispCallbacks->getExits())
+	{
+		Entity e1 = exit.first, e2 = exit.second;
+		if (scene->entityValid(e1) && scene->entityValid(e2))
+		{
+			if (!scene->hasComponents<Collider>(e1) || !scene->hasComponents<Collider>(e2)) { continue; }
+			bool t1 = scene->getComponent<Collider>(e1).isTrigger, t2 = scene->getComponent<Collider>(e2).isTrigger;
+
+			// Triggers
+			if (t1 || t2)
+			{
+				scene->onTriggerExit(e1, e2);
+			}
+			// Collisions
+			else
+			{
+				scene->onCollisionExit(e1, e2);
+			}
+
+			// Scripts (still valid entities)
+			if (scene->entityValid(e1) && scene->entityValid(e2))
+			{
+				if (scene->hasComponents<Script>(e1))
+				{
+					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e1), e1, e2, t1, CallbackType::EXIT);
+				}
+			}
+			if (scene->entityValid(e1) && scene->entityValid(e2))
+			{
+				if (scene->hasComponents<Script>(e2))
+				{
+					scriptHandler->runCollisionFunction(scene->getComponent<Script>(e2), e2, e1, t2, CallbackType::EXIT);
 				}
 			}
 		}
 	}
+	this->collDispCallbacks->getExits().clear();
 
 	// Remove objects
 	for (const auto& index : this->removeIndicies)
@@ -475,7 +546,7 @@ void PhysicsEngine::update()
 			}
 			else if (col.type == ColType::BOX)
 			{
-				debugRenderer->renderBox(BulletH::glmvec(object->getWorldTransform().getOrigin()), transform.rotation, col.extents * 2.0f, color);
+				debugRenderer->renderBox(transform.position, transform.rotation, col.extents * 2.0f, color);
 			}
 			else if (col.type == ColType::CAPSULE)
 			{
@@ -510,6 +581,7 @@ RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)
 	return payload;
 }
 
+// Optimize (reduce dynamic allocations)
 std::vector<Entity> PhysicsEngine::testContact(Collider& col, glm::vec3 position, glm::vec3 rotation)
 {
 	btCollisionShape* shape = nullptr;

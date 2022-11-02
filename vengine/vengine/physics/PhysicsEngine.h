@@ -9,11 +9,13 @@
 #include "../components/Transform.hpp"
 #include "../components/Rigidbody.h"
 #include "../components/Collider.h"
+#include "CallbackType.h"
 
 typedef int Entity;
 class SceneHandler;
 class btCollisionShape;
 class btCollisionObject;
+class CollisionDispatcher;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
@@ -57,6 +59,8 @@ private:
 	btSequentialImpulseConstraintSolver* solver;
 	btDefaultCollisionConfiguration* collconfig;
 	btDiscreteDynamicsWorld* dynWorld;
+
+	CollisionDispatcher* collDispCallbacks;
 
 	btAlignedObjectArray<ColShapeInfo> colShapes;
 	std::vector<int> removeIndicies;
