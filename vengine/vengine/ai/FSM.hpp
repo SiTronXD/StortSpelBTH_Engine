@@ -76,24 +76,46 @@ protected:
         this->eventSystem->registerGlobalEvent(this, fsm_nodes[to], &transition);
     }
 
-    void addBT(std::string name, BehaviorTree* BT) 
-    {		
-        // Initiating Tree to populate BTs requiredBTComponents!
-        BT->startTree(this->sceneHandler,name); 
+    bool checkAddBTErrors(std::string name, BehaviorTree* BT)
+    {
+        bool ret = false; 
+        if(this->trees.count(name) > 0)
+        {
+            Log::warning("FSM["+this->name+"] already has a BT with the name ["+name+"], use unique names for all added BT Trees");
+            ret = true; 
+        }
 
-        this->trees.insert({name, BT});
-        this->insertNode(name);
+        return ret;
+    }
+
+    void addBT(std::string name, BehaviorTree* BT) 
+    {	
+
+        if(!checkAddBTErrors(name, BT))
+        {
+            // Initiating Tree to populate BTs requiredBTComponents!
+            BT->startTree(this->sceneHandler,name); 
+
+            this->trees.insert({name, BT});
+            this->insertNode(name);
+        }
+        else 
+        {
+            Log::error("FSM["+this->name+"] could not add Behavior Tree, see warnings above!");
+        }
+
     }
     
     void addBTs(std::vector<BT_AND_NAME> BTs)
     {
         for (auto bt : BTs)
         {
-            // Initiating Tree to populate BTs requiredBTComponents!
-            bt.BT->startTree(this->sceneHandler,bt.name);
+            addBT(bt.name, bt.BT);
+            // // Initiating Tree to populate BTs requiredBTComponents!
+            // bt.BT->startTree(this->sceneHandler,bt.name);
 
-            this->trees.insert({bt.name, bt.BT});
-            this->insertNode(bt.name);
+            // this->trees.insert({bt.name, bt.BT});
+            // this->insertNode(bt.name);
         }
         
     }
