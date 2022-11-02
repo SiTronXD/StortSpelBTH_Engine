@@ -38,7 +38,7 @@ uint32_t ResourceManager::addMesh(
 {        
     using namespace vengine_helper::config;
 
-    if(this->meshPaths.count(meshPath) != 0)
+    if (this->meshPaths.count(meshPath) != 0)
     {
         // Log::warning("Mesh \""+meshPath+"\" was already added!");                
 
@@ -67,6 +67,35 @@ uint32_t ResourceManager::addMesh(
     ); 
 
     return meshes.size() - 1;
+}
+
+uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, std::string&& texturesPath)
+{
+    if (!paths.size())
+    {
+        Log::warning("Animation array contains no elements!");
+        return 0;
+    }
+
+    if (this->meshPaths.count(paths[0]) != 0)
+    {
+        // Log::warning("Mesh \""+meshPath+"\" was already added!");                
+
+        return this->meshPaths[paths[0]];        
+    }
+
+    // load and store animations in meshData
+    MeshData meshData;
+    this->meshLoader.loadAnimations(paths, texturesPath, meshData);
+    
+    // No mesh imported, send default mesh back
+    if (meshData.vertexStreams.positions.size() == 0) { return 0; }
+    
+    // For all paths or only first ? 
+    //this->meshPaths.insert({paths[0], this->meshPaths.size()}); 
+
+    meshes.insert({(uint32_t)meshes.size(), meshLoader.createMesh(meshData)});
+    return (uint32_t)meshes.size() - 1;
 }
 
 uint32_t ResourceManager::addTexture(

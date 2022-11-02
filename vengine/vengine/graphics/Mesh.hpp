@@ -35,6 +35,7 @@ private:
     void getLocalBoneTransform(
         const Bone& bone,
         const float& timer,
+        const int& animationIndex,
         glm::mat4& outputMatrix
     );
 
@@ -45,7 +46,7 @@ public:
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
-    const std::vector<glm::mat4>& getBoneTransforms(const float& timer);
+    const std::vector<glm::mat4>& getBoneTransforms(const float& timer, const int& animationIndex);
 
     inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;
@@ -55,7 +56,7 @@ public:
     void cleanup();
 
     // Debug
-    void outputRigDebugInfo(const std::string& filePath);
+    void outputRigDebugInfo(const std::string& filePath, int animationIndex = 0);
 };
 
 const VertexBufferArray& Mesh::getVertexBufferArray() const

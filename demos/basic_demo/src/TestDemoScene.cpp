@@ -106,8 +106,8 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/Amogus/source/1.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
+				"assets/models/Amogus/source/1.fbx"});
 			amogusMeshID = newMeshComp.meshID;
 		}
 		else
@@ -118,8 +118,8 @@ void TestDemoScene::init()
 
 			/*newMeshComp.meshID = Scene::getResourceManager()->addMesh(
 				"assets/models/run_forward_correct.fbx");*/
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/Stormtrooper/source/silly_dancing.fbx",
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
+				"assets/models/Stormtrooper/source/silly_dancing.fbx"},
 				"assets/models/Stormtrooper/textures");
 		}
 
@@ -131,6 +131,7 @@ void TestDemoScene::init()
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
 
+
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
 	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
@@ -139,6 +140,17 @@ void TestDemoScene::init()
 	swarmMesh.meshID = Scene::getResourceManager()->addMesh(
 		"assets/models/Swarm_Model.fbx",
 		"assets/textures/swarmTextures");
+
+	uint32_t meshId = Scene::getResourceManager()->addAnimations(
+		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx"});
+
+	multiAnimation = this->createEntity();
+	this->setComponent<MeshComponent>(multiAnimation);
+	this->getComponent<MeshComponent>(multiAnimation).meshID = meshId;
+	this->setComponent<AnimationComponent>(multiAnimation);
+	this->getComponent<Transform>(multiAnimation).position.x = -30.f;
+	this->getComponent<Transform>(multiAnimation).rotation.x = 90.f;
+
 
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};
@@ -162,6 +174,15 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
+	if (Input::isKeyReleased(Keys::ONE))
+	{
+		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 0;
+	}
+	else if (Input::isKeyReleased(Keys::TWO))
+	{
+		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 1;
+	}
+
 	// Debug rendering on colliders
 	this->getPhysicsEngine()->renderDebugShapes(Input::isKeyDown(Keys::Y));
 
@@ -277,10 +298,10 @@ void TestDemoScene::update()
 	);
 
 	// Skeleton
-	Scene::getDebugRenderer()->renderSkeleton(
+	/*Scene::getDebugRenderer()->renderSkeleton(
 		this->aniIDs[2],
 		glm::vec3(1.0f, 1.0f, 0.0f)
-	);
+	);*/
 
 	this->timer += Time::getDT();
 

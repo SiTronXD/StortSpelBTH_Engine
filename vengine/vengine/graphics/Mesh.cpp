@@ -71,21 +71,22 @@ void Mesh::getAnimSlerp(
 void Mesh::getLocalBoneTransform(
     const Bone& bone,
     const float& timer,
+    const int& animationIndex,
     glm::mat4& outputMatrix)
 {
     glm::mat4 identityMat(1.0f);
 
     // Translation
     glm::vec3 translation;
-    this->getAnimLerp(bone.translationStamps, timer, translation);
+    this->getAnimLerp(bone.animations[animationIndex].translationStamps, timer, translation);
 
     // Rotation
     glm::quat rotation;
-    this->getAnimSlerp(bone.rotationStamps, timer, rotation);
+    this->getAnimSlerp(bone.animations[animationIndex].rotationStamps, timer, rotation);
 
     // Scale
     glm::vec3 scale;
-    this->getAnimLerp(bone.scaleStamps, timer, scale);
+    this->getAnimLerp(bone.animations[animationIndex].scaleStamps, timer, scale);
 
     // Final transform
     outputMatrix =
@@ -227,7 +228,7 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
 
-const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer)
+const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer, const int& animationIndex)
 {
     // Preallocate
     glm::mat4 boneTransform;
@@ -241,6 +242,7 @@ const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer)
         this->getLocalBoneTransform(
             currentBone,
             timer,
+            animationIndex,
             boneTransform
         );
 
@@ -274,7 +276,7 @@ void Mesh::cleanup()
 
 #include <fstream>
 #include <iostream>
-void Mesh::outputRigDebugInfo(const std::string& filePath)
+void Mesh::outputRigDebugInfo(const std::string& filePath, int animationIndex)
 {
 #if defined(_DEBUG) || defined(DEBUG)
     // Create file
@@ -283,6 +285,8 @@ void Mesh::outputRigDebugInfo(const std::string& filePath)
     // Write
     for (size_t i = 0; i < this->meshData.bones.size(); ++i)
     {
+        Animation& animation = this->meshData.bones[i].animations[animationIndex];
+
         file << "bone [" << i << "]: " << std::endl;
         file << "InvBindPose: ";
         for (uint32_t a = 0; a < 4; ++a)
@@ -293,37 +297,37 @@ void Mesh::outputRigDebugInfo(const std::string& filePath)
             }
         }
         file << std::endl;
-        file << "translations (" << this->meshData.bones[i].translationStamps.size() << "): " << std::endl;
-        for (size_t j = 0; j < this->meshData.bones[i].translationStamps.size(); ++j)
+        file << "translations (" << animation.translationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < animation.translationStamps.size(); ++j)
         {
             file << "[" << j << "] [" <<
-                this->meshData.bones[i].translationStamps[j].first << "](" <<
-                this->meshData.bones[i].translationStamps[j].second.x << ", " <<
-                this->meshData.bones[i].translationStamps[j].second.y << ", " <<
-                this->meshData.bones[i].translationStamps[j].second.z << ")" <<
+                animation.translationStamps[j].first << "](" <<
+                animation.translationStamps[j].second.x << ", " <<
+                animation.translationStamps[j].second.y << ", " <<
+                animation.translationStamps[j].second.z << ")" <<
                 std::endl;
         }
 
-        file << "rotation (" << this->meshData.bones[i].rotationStamps.size() << "): " << std::endl;
-        for (size_t j = 0; j < this->meshData.bones[i].rotationStamps.size(); ++j)
+        file << "rotation (" << animation.rotationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < animation.rotationStamps.size(); ++j)
         {
             file << "[" << j << "] [" <<
-                this->meshData.bones[i].rotationStamps[j].first << "](" <<
-                this->meshData.bones[i].rotationStamps[j].second.x << ", " <<
-                this->meshData.bones[i].rotationStamps[j].second.y << ", " <<
-                this->meshData.bones[i].rotationStamps[j].second.z << ", " <<
-                this->meshData.bones[i].rotationStamps[j].second.w << ")" <<
+                animation.rotationStamps[j].first << "](" <<
+                animation.rotationStamps[j].second.x << ", " <<
+                animation.rotationStamps[j].second.y << ", " <<
+                animation.rotationStamps[j].second.z << ", " <<
+                animation.rotationStamps[j].second.w << ")" <<
                 std::endl;
         }
 
-        file << "scale (" << this->meshData.bones[i].scaleStamps.size() << "): " << std::endl;
-        for (size_t j = 0; j < this->meshData.bones[i].scaleStamps.size(); ++j)
+        file << "scale (" << animation.scaleStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < animation.scaleStamps.size(); ++j)
         {
             file << "[" << j << "] [" <<
-                this->meshData.bones[i].scaleStamps[j].first << "](" <<
-                this->meshData.bones[i].scaleStamps[j].second.x << ", " <<
-                this->meshData.bones[i].scaleStamps[j].second.y << ", " <<
-                this->meshData.bones[i].scaleStamps[j].second.z << ")" <<
+                animation.scaleStamps[j].first << "](" <<
+                animation.scaleStamps[j].second.x << ", " <<
+                animation.scaleStamps[j].second.y << ", " <<
+                animation.scaleStamps[j].second.z << ")" <<
                 std::endl;
         }
 

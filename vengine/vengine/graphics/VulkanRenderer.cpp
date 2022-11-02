@@ -588,26 +588,28 @@ void VulkanRenderer::initForScene(Scene* scene)
 			    float maxTimeStamp = 0.0f;
 			    for (size_t i = 0; i < bones.size(); ++i)
 			    {
+                    Animation& animation = bones[i].animations[animationComponent.animationIndex];
+
 				    // Translation
-				    for (size_t j = 0; j < bones[i].translationStamps.size();
+				    for (size_t j = 0; j < animation.translationStamps.size();
 				         ++j)
 				    {
-					    if (bones[i].translationStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = bones[i].translationStamps[j].first;
+					    if (animation.translationStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = animation.translationStamps[j].first;
 				    }
 
 				    // Rotation
-				    for (size_t j = 0; j < bones[i].rotationStamps.size(); ++j)
+				    for (size_t j = 0; j < animation.rotationStamps.size(); ++j)
 				    {
-					    if (bones[i].rotationStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = bones[i].rotationStamps[j].first;
+					    if (animation.rotationStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = animation.rotationStamps[j].first;
 				    }
 
 				    // Scale
-				    for (size_t j = 0; j < bones[i].scaleStamps.size(); ++j)
+				    for (size_t j = 0; j < animation.scaleStamps.size(); ++j)
 				    {
-					    if (bones[i].scaleStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = bones[i].scaleStamps[j].first;
+					    if (animation.scaleStamps[j].first > maxTimeStamp)
+						    maxTimeStamp = animation.scaleStamps[j].first;
 				    }
 			    }
 			    animationComponent.endTime = maxTimeStamp;
@@ -1197,7 +1199,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         // Get bone transformations
                         const std::vector<glm::mat4>& boneTransforms =
-                            currentMesh.getBoneTransforms(animationComponent.timer);
+                            currentMesh.getBoneTransforms(animationComponent.timer, 
+                                animationComponent.animationIndex);
 
                         // Update transformations in storage buffer
 					    this->animShaderInput.updateStorageBuffer(
