@@ -142,7 +142,7 @@ void TestDemoScene::init()
 		"assets/textures/swarmTextures");
 
 	uint32_t meshId = Scene::getResourceManager()->addAnimations(
-		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx"});
+		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx", "assets/models/stickThird.fbx"});
 
 	multiAnimation = this->createEntity();
 	this->setComponent<MeshComponent>(multiAnimation);
@@ -181,6 +181,10 @@ void TestDemoScene::update()
 	else if (Input::isKeyReleased(Keys::TWO))
 	{
 		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 1;
+	}
+	else if (Input::isKeyReleased(Keys::THREE))
+	{
+		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 2;
 	}
 
 	// Debug rendering on colliders

@@ -78,11 +78,7 @@ void MeshLoader::loadAnimations(const std::vector<std::string>& paths, const std
             outMeshData.vertexStreams.boneWeights.resize((size_t)scene->mMeshes[0]->mNumVertices);
             outMeshData.vertexStreams.boneIndices.resize((size_t)scene->mMeshes[0]->mNumVertices);
             outMeshData.bones.resize((size_t)scene->mMeshes[0]->mNumBones);
-            for (Bone& bone : outMeshData.bones)
-            {
-                // Using reserve instead of resize incase some animations fail to load
-                bone.animations.reserve(paths.size());
-            }
+            outMeshData.animations.reserve(paths.size());
 
             loadSkeleton(scene, outMeshData);
         }
@@ -410,21 +406,25 @@ void MeshLoader::loadAnimation(const aiScene* scene, MeshData& outMeshData)
     // Assuming single mesh per fbx
     aiMesh* mesh = scene->mMeshes[0];
     aiAnimation* ani = scene->mAnimations[0];
+    Animation& animation = outMeshData.animations.emplace_back();
+
+    animation.endTime = (float)ani->mDuration;
+    animation.boneStamps.resize((size_t)mesh->mNumBones);
 
     for (unsigned int i = 0; i < mesh->mNumBones; i++) 
     {
-        Animation& animation = outMeshData.bones[i].animations.emplace_back();
+        BonePoses& poses = animation.boneStamps[i];
 
-        // The order of aiMesh::mBones does not always match aiAnimation::mChannels
+        // The order of aiMesh::mBones does not always match aiposes::mChannels
         aiNodeAnim* nodeAnim = findAnimationNode(ani->mChannels, ani->mNumChannels, mesh->mBones[i]->mName.C_Str());
         if (!nodeAnim) 
         {
             Log::error("Could not find animation node");
             
             // Create and default stamp[0] to avoid future errors
-            animation.translationStamps.emplace_back(0.f, glm::vec3(0.f));
-            animation.rotationStamps.emplace_back(0.f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-            animation.scaleStamps.emplace_back(0.f, glm::vec3(1.f));
+            poses.translationStamps.emplace_back(0.f, glm::vec3(0.f));
+            poses.rotationStamps.emplace_back(0.f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            poses.scaleStamps.emplace_back(0.f, glm::vec3(1.f));
 
             continue;
         }
@@ -432,27 +432,27 @@ void MeshLoader::loadAnimation(const aiScene* scene, MeshData& outMeshData)
         // Get poses
 
         // Translation
-        animation.translationStamps.resize(nodeAnim->mNumPositionKeys);
+        poses.translationStamps.resize(nodeAnim->mNumPositionKeys);
         for (unsigned int k = 0; k < nodeAnim->mNumPositionKeys; k++) 
         {
-            animation.translationStamps[k].first = (float)nodeAnim->mPositionKeys[k].mTime;
-            memcpy(&animation.translationStamps[k].second, &nodeAnim->mPositionKeys[k].mValue, sizeof(glm::vec3));
+            poses.translationStamps[k].first = (float)nodeAnim->mPositionKeys[k].mTime;
+            memcpy(&poses.translationStamps[k].second, &nodeAnim->mPositionKeys[k].mValue, sizeof(glm::vec3));
         }
 
         // Rotation
-        animation.rotationStamps.resize(nodeAnim->mNumRotationKeys);
+        poses.rotationStamps.resize(nodeAnim->mNumRotationKeys);
         for (unsigned int k = 0; k < nodeAnim->mNumRotationKeys; k++)
         {
-            animation.rotationStamps[k].first = (float)nodeAnim->mRotationKeys[k].mTime;
-            memcpy(&animation.rotationStamps[k].second, &nodeAnim->mRotationKeys[k].mValue, sizeof(glm::quat));
+            poses.rotationStamps[k].first = (float)nodeAnim->mRotationKeys[k].mTime;
+            memcpy(&poses.rotationStamps[k].second, &nodeAnim->mRotationKeys[k].mValue, sizeof(glm::quat));
         }
 
         // Scaling
-        animation.scaleStamps.resize(nodeAnim->mNumScalingKeys);
+        poses.scaleStamps.resize(nodeAnim->mNumScalingKeys);
         for (unsigned int k = 0; k < nodeAnim->mNumScalingKeys; k++)
         {
-            animation.scaleStamps[k].first = (float)nodeAnim->mScalingKeys[k].mTime;
-            memcpy(&animation.scaleStamps[k].second, &nodeAnim->mScalingKeys[k].mValue, sizeof(glm::vec3));
+            poses.scaleStamps[k].first = (float)nodeAnim->mScalingKeys[k].mTime;
+            memcpy(&poses.scaleStamps[k].second, &nodeAnim->mScalingKeys[k].mValue, sizeof(glm::vec3));
         }
     }
 

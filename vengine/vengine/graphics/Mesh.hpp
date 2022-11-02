@@ -33,11 +33,10 @@ private:
         const float& timer,
         glm::quat& outputValue);
     void getLocalBoneTransform(
-        const Bone& bone,
+        const BonePoses& bone,
         const float& timer,
         const int& animationIndex,
-        glm::mat4& outputMatrix
-    );
+        glm::mat4& outputMatrix);
 
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);

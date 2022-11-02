@@ -69,7 +69,7 @@ void Mesh::getAnimSlerp(
 }
 
 void Mesh::getLocalBoneTransform(
-    const Bone& bone,
+    const BonePoses& poses,
     const float& timer,
     const int& animationIndex,
     glm::mat4& outputMatrix)
@@ -78,15 +78,15 @@ void Mesh::getLocalBoneTransform(
 
     // Translation
     glm::vec3 translation;
-    this->getAnimLerp(bone.animations[animationIndex].translationStamps, timer, translation);
+    this->getAnimLerp(poses.translationStamps, timer, translation);
 
     // Rotation
     glm::quat rotation;
-    this->getAnimSlerp(bone.animations[animationIndex].rotationStamps, timer, rotation);
+    this->getAnimSlerp(poses.rotationStamps, timer, rotation);
 
     // Scale
     glm::vec3 scale;
-    this->getAnimLerp(bone.animations[animationIndex].scaleStamps, timer, scale);
+    this->getAnimLerp(poses.scaleStamps, timer, scale);
 
     // Final transform
     outputMatrix =
@@ -233,6 +233,8 @@ const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer, const 
     // Preallocate
     glm::mat4 boneTransform;
 
+    const Animation& animation = this->meshData.animations[animationIndex];
+
     // Loop through bones, from parents to children
     for (size_t i = 0; i < this->meshData.bones.size(); ++i)
     {
@@ -240,7 +242,7 @@ const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer, const 
 
         // Start from this local bone transformation
         this->getLocalBoneTransform(
-            currentBone,
+            animation.boneStamps[i],
             timer,
             animationIndex,
             boneTransform
@@ -283,9 +285,10 @@ void Mesh::outputRigDebugInfo(const std::string& filePath, int animationIndex)
     std::ofstream file(filePath);
     
     // Write
+    const Animation& animation = this->meshData.animations[animationIndex];
     for (size_t i = 0; i < this->meshData.bones.size(); ++i)
     {
-        Animation& animation = this->meshData.bones[i].animations[animationIndex];
+        const BonePoses& poses = animation.boneStamps[i];
 
         file << "bone [" << i << "]: " << std::endl;
         file << "InvBindPose: ";
@@ -297,37 +300,37 @@ void Mesh::outputRigDebugInfo(const std::string& filePath, int animationIndex)
             }
         }
         file << std::endl;
-        file << "translations (" << animation.translationStamps.size() << "): " << std::endl;
-        for (size_t j = 0; j < animation.translationStamps.size(); ++j)
+        file << "translations (" << poses.translationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < poses.translationStamps.size(); ++j)
         {
             file << "[" << j << "] [" <<
-                animation.translationStamps[j].first << "](" <<
-                animation.translationStamps[j].second.x << ", " <<
-                animation.translationStamps[j].second.y << ", " <<
-                animation.translationStamps[j].second.z << ")" <<
+                poses.translationStamps[j].first << "](" <<
+                poses.translationStamps[j].second.x << ", " <<
+                poses.translationStamps[j].second.y << ", " <<
+                poses.translationStamps[j].second.z << ")" <<
                 std::endl;
         }
 
-        file << "rotation (" << animation.rotationStamps.size() << "): " << std::endl;
-        for (size_t j = 0; j < animation.rotationStamps.size(); ++j)
+        file << "rotation (" << poses.rotationStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < poses.rotationStamps.size(); ++j)
         {
             file << "[" << j << "] [" <<
-                animation.rotationStamps[j].first << "](" <<
-                animation.rotationStamps[j].second.x << ", " <<
-                animation.rotationStamps[j].second.y << ", " <<
-                animation.rotationStamps[j].second.z << ", " <<
-                animation.rotationStamps[j].second.w << ")" <<
+                poses.rotationStamps[j].first << "](" <<
+                poses.rotationStamps[j].second.x << ", " <<
+                poses.rotationStamps[j].second.y << ", " <<
+                poses.rotationStamps[j].second.z << ", " <<
+                poses.rotationStamps[j].second.w << ")" <<
                 std::endl;
         }
 
-        file << "scale (" << animation.scaleStamps.size() << "): " << std::endl;
-        for (size_t j = 0; j < animation.scaleStamps.size(); ++j)
+        file << "scale (" << poses.scaleStamps.size() << "): " << std::endl;
+        for (size_t j = 0; j < poses.scaleStamps.size(); ++j)
         {
             file << "[" << j << "] [" <<
-                animation.scaleStamps[j].first << "](" <<
-                animation.scaleStamps[j].second.x << ", " <<
-                animation.scaleStamps[j].second.y << ", " <<
-                animation.scaleStamps[j].second.z << ")" <<
+                poses.scaleStamps[j].first << "](" <<
+                poses.scaleStamps[j].second.x << ", " <<
+                poses.scaleStamps[j].second.y << ", " <<
+                poses.scaleStamps[j].second.z << ")" <<
                 std::endl;
         }
 

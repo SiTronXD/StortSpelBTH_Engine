@@ -67,10 +67,14 @@ void SceneHandler::updateToNextScene()
 void SceneHandler::prepareForRendering()
 {
 	// Update animation timer
-	auto animView = this->scene->getSceneReg().view<AnimationComponent>(entt::exclude<Inactive>);
+	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
 	animView.each([&]
-	(AnimationComponent& animationComponent)
+	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
 		{
+			animationComponent.endTime = 
+				this->resourceManager->getMesh(meshComponent.meshID)
+				.getMeshData().animations[animationComponent.animationIndex].endTime;
+
 			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
 			if (animationComponent.timer >= animationComponent.endTime)
 			{
