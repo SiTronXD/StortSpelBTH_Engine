@@ -496,6 +496,9 @@ void ShaderInput::cleanup()
     if (!this->hasBeenCreated)
         return;
 
+    // Undo after destroying objects
+    this->hasBeenCreated = false;
+
     // Uniform buffers
     for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
     {

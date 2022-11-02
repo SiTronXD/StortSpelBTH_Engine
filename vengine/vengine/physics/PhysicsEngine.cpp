@@ -27,12 +27,12 @@ void PhysicsEngine::updateColliders()
 		{
 			btCollisionObject* object = this->dynWorld->getCollisionObjectArray()[col.ColID];
 			btRigidBody* body = btRigidBody::upcast(object);
-			if (body && body->getMotionState())
+			if (body)
 			{
 				body->setCollisionFlags(
-					btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE * col.isTrigger + 
+					btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE * col.isTrigger +
 					btCollisionObject::CollisionFlags::CF_KINEMATIC_OBJECT * !col.isTrigger);
-				body->getMotionState()->setWorldTransform(BulletH::toBulletTransform(scene->getComponent<Transform>((int)entity)));
+				body->setWorldTransform(BulletH::toBulletTransform(scene->getComponent<Transform>((int)entity)));
 			}
 		}
 	};
@@ -94,7 +94,7 @@ btCollisionShape* PhysicsEngine::createShape(const int& entity, Collider& col)
 	case ColType::SPHERE:
 		for (int i = this->colShapes.size() - 1; i > -1; i--)
 		{
-			if (this->colShapes[i].type == col.type && 
+			if (this->colShapes[i].type == col.type &&
 				this->colShapes[i].radius == col.radius)
 			{
 				col.ShapeID = i;
@@ -107,7 +107,7 @@ btCollisionShape* PhysicsEngine::createShape(const int& entity, Collider& col)
 	case ColType::BOX:
 		for (int i = this->colShapes.size() - 1; i > -1; i--)
 		{
-			if (this->colShapes[i].type == col.type && 
+			if (this->colShapes[i].type == col.type &&
 				this->colShapes[i].extents == col.extents)
 			{
 				col.ShapeID = i;
@@ -120,8 +120,8 @@ btCollisionShape* PhysicsEngine::createShape(const int& entity, Collider& col)
 	case ColType::CAPSULE:
 		for (int i = this->colShapes.size() - 1; i > -1; i--)
 		{
-			if (this->colShapes[i].type == col.type && 
-				this->colShapes[i].radius == col.radius && 
+			if (this->colShapes[i].type == col.type &&
+				this->colShapes[i].radius == col.radius &&
 				this->colShapes[i].height == col.height)
 			{
 				col.ShapeID = i;
@@ -176,7 +176,7 @@ void PhysicsEngine::createRigidbody(const int& entity, Rigidbody& rb, Collider& 
 	// Create Rigidbody
 	btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity));
 	btVector3 localInertia = btVector3(0.0f, 0.0f, 0.0f);
-	if(rb.mass != 0.0f) { shape->calculateLocalInertia(rb.mass, localInertia); }
+	if (rb.mass != 0.0f) { shape->calculateLocalInertia(rb.mass, localInertia); }
 
 	btDefaultMotionState* motionState = new btDefaultMotionState(transform);
 	btRigidBody::btRigidBodyConstructionInfo rbInfo(rb.mass, motionState, shape, localInertia);
@@ -207,7 +207,7 @@ void PhysicsEngine::removeObject(btCollisionObject* obj, int index)
 	this->dynWorld->removeCollisionObject(obj);
 
 	// Not last object, ID needs to be changed
-	if(lastObj != obj && scene->hasComponents<Collider>(lastObj->getUserIndex()))
+	if (lastObj != obj && scene->hasComponents<Collider>(lastObj->getUserIndex()))
 	{
 		Collider& col = scene->getComponent<Collider>(lastObj->getUserIndex());
 		col.ColID = index;
@@ -357,19 +357,40 @@ void PhysicsEngine::update()
 				rb->assigned = false;
 				this->removeIndicies.push_back(i);
 			}
-			// Update positions if it has motion state (Rigidbody)
-			else if (body->getMotionState())
+			// Update positions
+			else if (body)
 			{
 				btTransform transform;
-				body->getMotionState()->getWorldTransform(transform);
+				if (body->getMotionState())
+				{
+					body->getMotionState()->getWorldTransform(transform);
+					rb->velocity = BulletH::glmvec(body->getLinearVelocity());
+				}
+				else
+				{
+					transform = body->getWorldTransform();
+				}
 
 				Transform& t = scene->getComponent<Transform>(entity);
-				glm::vec3 scale = t.scale;
+				const glm::vec3 scale = t.scale;
+				const glm::vec3 rotation = t.rotation;
 
+				// Apply transform, but keep scale
 				t = BulletH::toTransform(transform);
 				t.scale = scale;
 
-				rb->velocity = BulletH::glmvec(body->getLinearVelocity());
+				// Keep rotation if necessary
+				if (rb != nullptr)
+				{
+					if (glm::dot(rb->rotFactor, rb->rotFactor) <= 0.01f)
+					{
+						t.rotation = rotation;
+					}
+				}
+				else // Colliders also keep rotations
+				{
+					t.rotation = rotation;
+				}
 			}
 		}
 	}
@@ -380,14 +401,15 @@ void PhysicsEngine::update()
 	for (int i = 0; i < numManifolds; i++)
 	{
 		btPersistentManifold* man = this->dynWorld->getDispatcher()->getManifoldByIndexInternal(i);
+		if (!man->getNumContacts()) { continue; }
 
 		const btCollisionObject* b1 = man->getBody0();
 		const btCollisionObject* b2 = man->getBody1();
 		Entity e1 = b1->getUserIndex(), e2 = b2->getUserIndex();
 		if (scene->entityValid(e1) && scene->entityValid(e2))
 		{
-			bool t1 = b1->getCollisionFlags() == btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE, 
-				 t2 = b2->getCollisionFlags() == btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE;
+			bool t1 = b1->getCollisionFlags() == btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE,
+				t2 = b2->getCollisionFlags() == btCollisionObject::CollisionFlags::CF_NO_CONTACT_RESPONSE;
 			// Triggers
 			if (t1 || t2)
 			{
@@ -442,7 +464,7 @@ void PhysicsEngine::update()
 			}
 			else if (col.type == ColType::BOX)
 			{
-				debugRenderer->renderBox(transform.position, transform.rotation, col.extents * 2.0f, color);
+				debugRenderer->renderBox(BulletH::glmvec(object->getWorldTransform().getOrigin()), transform.rotation, col.extents * 2.0f, color);
 			}
 			else if (col.type == ColType::CAPSULE)
 			{
@@ -466,7 +488,7 @@ RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)
 
 	this->dynWorld->rayTest(closestResults.m_rayFromWorld, closestResults.m_rayToWorld, closestResults);
 
-	RayPayload payload {};
+	RayPayload payload{};
 	if (closestResults.hasHit())
 	{
 		payload.hit = true;

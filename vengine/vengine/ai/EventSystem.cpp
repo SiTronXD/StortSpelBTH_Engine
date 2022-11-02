@@ -63,6 +63,12 @@ void EventSystem::registerEntityEvent(
 
 void EventSystem::update()
 {
+    if(currentScene != this->sh->getScene())
+    {
+        entitySubscribers.clear();
+        entityEventLastReturn.clear();
+    }
+
 	for (auto& event : globalSubscribers)
 	{
 
@@ -93,6 +99,7 @@ void EventSystem::update()
 		const auto& entityID = eventsPerEntity.first;
 		const auto& entityEventPtrs = eventsPerEntity.second;
 
+        
 		auto& agent = this->sh->getScene()->getComponent<FSMAgentComponent>(entityID);
 
 		for (auto& currNeighbor : agent.currentNode->neighbors)

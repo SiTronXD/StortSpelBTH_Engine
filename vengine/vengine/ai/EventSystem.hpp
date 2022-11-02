@@ -72,9 +72,14 @@ private:
 
 	SceneHandler* sh;
 public:
-	void setSceneHandler(SceneHandler* sh) {this->sh = sh;}
+	void setSceneHandler(SceneHandler* sh) {this->sh = sh; this->currentScene = this->sh->getScene();}
 	void registerGlobalEvent(FSM* fsm, FSM_Node* who, GlobalEvent* event);
 	void registerEntityEvent(FSM* fsm, FSM_Node* who, EntityEvent* event);
+
+    void clean(){
+        entitySubscribers.clear();
+        entityEventLastReturn.clear();
+    }
 
     void registerEntityToEvent(uint32_t entityID, FSM* fsm)
     {
@@ -86,7 +91,7 @@ public:
 
     }
 
-	
+	Scene* currentScene = nullptr; //TODO make const...
 
 	void update();
 };

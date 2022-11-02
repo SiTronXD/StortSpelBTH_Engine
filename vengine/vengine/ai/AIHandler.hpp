@@ -7,6 +7,8 @@
 
 class AIHandler
 {
+private: 
+    bool switchedScene = true;
     SceneHandler *sh = nullptr; 
     EventSystem eventSystem;
     
@@ -21,15 +23,20 @@ class AIHandler
 		);
 	}
 
-    public: 
+public: 
     AIHandler() = default;
 	std::unordered_map<std::string, FSM*> FSMs;
 	std::unordered_map<FSM*, std::function<void(FSM* fsm, uint32_t)>> FSMimguiLambdas;
     std::unordered_map<FSM*, std::vector<uint32_t>> FSMsEntities;
 
     void addFSM(FSM* fsm, const std::string& name) { 
-		fsm->init(this->sh, &this->eventSystem, name);
-        this->FSMs.insert({fsm->getName(), fsm});
+		
+        auto foundFSM = this->FSMs.find(name);
+        if(foundFSM == this->FSMs.end())
+        {
+            fsm->init(this->sh, &this->eventSystem, name);
+            this->FSMs.insert({fsm->getName(), fsm});
+        }
     }
 
     void addImguiToFSM(const std::string& name, std::function<void(FSM* fsm, uint32_t)> imguiLambda) 
@@ -42,7 +49,12 @@ class AIHandler
     {
         this->sh = sh; 
 		this->eventSystem.setSceneHandler(this->sh);
+        this->eventSystem.clean();
+        this->currentScene = this->sh->getScene();
+        this->switchedScene = true;
 
+        this->FSMimguiLambdas.clear();
+        this->FSMsEntities.clear();
     }
 
 	void clean()
@@ -75,7 +87,20 @@ class AIHandler
 
 
     void drawImgui();
+    Scene* currentScene = nullptr; //TODO make const...
+    
+    void update(){
+        if(currentScene != this->sh->getScene())
+        {
+            FSMimguiLambdas.clear();
+            FSMsEntities.clear();
+            currentScene = this->sh->getScene();
+        }
 
-    void update(){eventSystem.update();updateEntityFSMs();drawImgui();}
+        eventSystem.update();
+        updateEntityFSMs();
+        drawImgui();
+        switchedScene = false; 
+    }
 
 };

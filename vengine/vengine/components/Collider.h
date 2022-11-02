@@ -2,7 +2,7 @@
 
 #include <glm/glm.hpp>
 
-enum class ColType { SPHERE, BOX, CAPSULE, COUNT };
+enum class ColType { SPHERE, BOX, CAPSULE, COUNT, COLERROR };
 
 struct Collider
 {
