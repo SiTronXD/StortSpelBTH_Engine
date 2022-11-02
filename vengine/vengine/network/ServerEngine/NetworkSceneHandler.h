@@ -12,6 +12,7 @@ class NetworkSceneHandler : public SceneHandler
 	void update(float dt);
 	void givePacketInfo(std::vector<sf::Packet>& serverToClient);
 	void updateToNextScene();
+	void setScene(Scene* scene, std::string path = "");
 
 	NetworkScene* getScene() const;
 

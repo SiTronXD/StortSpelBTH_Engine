@@ -105,6 +105,7 @@ Server::Server(NetworkScene* serverGame)
 {
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);
+	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
 
 	if (serverGame == nullptr)
 	{
@@ -114,9 +115,7 @@ Server::Server(NetworkScene* serverGame)
 	{
 		sceneHandler.setScene(serverGame);
 	}
-
-	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
-
+	this->sceneHandler.updateToNextScene();
 
 	this->starting = StartingEnum::WaitingForUsers;
 	this->currentTimeToSend = 0;
@@ -168,6 +167,9 @@ void Server::start()
 	this->connectThread->join();
 	delete this->connectThread;
 	this->connectThread = nullptr;
+
+	//TODO : DEBUG REMOVE!
+	sceneHandler.getScene()->testName = "penis";
 
 	//make packets ready
 	this->clientToServerPacketTcp.resize(this->clients.size());

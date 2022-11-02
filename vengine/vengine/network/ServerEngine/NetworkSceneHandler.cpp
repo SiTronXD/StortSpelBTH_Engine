@@ -18,10 +18,14 @@ void NetworkSceneHandler::givePacketInfo(std::vector<sf::Packet>& serverToClient
 void NetworkSceneHandler::updateToNextScene() 
 {
 	SceneHandler::updateToNextScene();
-	((NetworkScene*)this->getScene())->givePacketInfo(*serverToClientPacketTcp);
+}
+
+void NetworkSceneHandler::setScene(Scene* scene, std::string path) {
+	SceneHandler::setScene(scene, path);
+	((NetworkScene*)scene)->givePacketInfo(*serverToClientPacketTcp);
 }
 
 NetworkScene* NetworkSceneHandler::getScene() const
 {
-	return (NetworkScene*)SceneHandler::getScene();
+	return dynamic_cast<NetworkScene*>(SceneHandler::getScene());
 }
