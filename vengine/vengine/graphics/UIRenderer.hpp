@@ -33,6 +33,13 @@ struct CharacterRect
     uint32_t height;
 };
 
+enum class StringAlignment
+{
+    LEFT = -1,
+    CENTER = 0,
+    RIGHT = 1
+};
+
 class UIRenderer
 {
 private:
@@ -103,7 +110,9 @@ public:
         const float& x,
         const float& y,
         const float& characterWidth,
-        const float& characterHeight
+        const float& characterHeight,
+        const float& characterMargin = 0.0f,
+        const StringAlignment& alignment = StringAlignment::CENTER
     );
 
     inline const StorageBufferID& getStorageBufferID() const { return this->storageBufferID; }

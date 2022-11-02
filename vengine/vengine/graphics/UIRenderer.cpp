@@ -215,17 +215,20 @@ void UIRenderer::renderString(
     const float& x,
     const float& y,
     const float& characterWidth,
-    const float& characterHeight)
+    const float& characterHeight,
+    const float& characterMargin,
+    const StringAlignment& alignment)
 {
     float currentCharWidth = 0.0f;
     float currentCharHeight = 0.0f;
 
     CharacterRect* charRect = nullptr;
 
-    // Start at left edge of the first character
-    float firstCharWidth = 
+    const float firstCharWidth = 
         characterWidth *
         (this->characterRects[text[0]].width * this->oneOverCharTileWidth);
+    
+        // Start at left edge of the first character
     float currentSizeX = -firstCharWidth * 0.5f;
 
     // Get entire string width after the first character
@@ -240,8 +243,12 @@ void UIRenderer::renderString(
         currentCharWidth =
             characterWidth * (charRect->width * this->oneOverCharTileWidth);
         
-        stringWidth += currentCharWidth;
+        stringWidth += characterMargin + currentCharWidth;
     }
+
+    // Alignment offset
+    float alignmentOffset = 
+        -((int) alignment) * (stringWidth + firstCharWidth) * 0.5f;
 
     // Render character by character
     for (size_t i = 0; i < text.length(); ++i)
@@ -257,7 +264,8 @@ void UIRenderer::renderString(
 
         // Render character as texture
         this->renderTexture(
-            x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f,
+            x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f + 
+                alignmentOffset,
             y - characterHeight * 0.5f + currentCharHeight * 0.5f,
             currentCharWidth,
             currentCharHeight,
@@ -267,6 +275,6 @@ void UIRenderer::renderString(
             charRect->height 
         );
 
-        currentSizeX += currentCharWidth;
+        currentSizeX += characterMargin + currentCharWidth;
     }
 }
