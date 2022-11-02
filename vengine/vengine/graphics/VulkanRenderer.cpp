@@ -587,38 +587,6 @@ void VulkanRenderer::initForScene(Scene* scene)
 			    // Update animation component with storage buffer ID
 			    animationComponent.boneTransformsID = newStorageBufferID;
                 animationComponent.endTime = animation.endTime;
-
-#if 0
-			    // Set end time
-			    float maxTimeStamp = 0.0f;
-			    for (size_t i = 0; i < bones.size(); ++i)
-			    {
-                    const BonePoses& poses = animation.boneStamps[i];
-
-				    // Translation
-				    for (size_t j = 0; j < poses.translationStamps.size();
-				         ++j)
-				    {
-					    if (poses.translationStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = poses.translationStamps[j].first;
-				    }
-
-				    // Rotation
-				    for (size_t j = 0; j < poses.rotationStamps.size(); ++j)
-				    {
-					    if (poses.rotationStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = poses.rotationStamps[j].first;
-				    }
-
-				    // Scale
-				    for (size_t j = 0; j < poses.scaleStamps.size(); ++j)
-				    {
-					    if (poses.scaleStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = poses.scaleStamps[j].first;
-				    }
-			    }
-			    animationComponent.endTime = maxTimeStamp;
-#endif
 		    }
 		);
 		this->animViewProjectionUB =
