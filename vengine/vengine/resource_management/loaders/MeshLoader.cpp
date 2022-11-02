@@ -56,11 +56,13 @@ void MeshLoader::loadAnimations(const std::vector<std::string>& paths, const std
         if (!scene) 
         { 
             Log::warning("Failed loading file \"" + path + "\"!");
+            this->importer.FreeScene();
             continue;
         }
         if (!scene->mNumMeshes || !scene->mNumAnimations)
         {
             Log::warning("\"" + path + "\" contains no meshes or animations!");
+            this->importer.FreeScene();
             continue;
         }
 

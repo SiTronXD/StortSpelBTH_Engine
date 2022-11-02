@@ -586,7 +586,6 @@ void VulkanRenderer::initForScene(Scene* scene)
 
 			    // Update animation component with storage buffer ID
 			    animationComponent.boneTransformsID = newStorageBufferID;
-                animationComponent.endTime = animation.endTime;
 		    }
 		);
 		this->animViewProjectionUB =

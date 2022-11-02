@@ -71,14 +71,14 @@ void SceneHandler::prepareForRendering()
 	animView.each([&]
 	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
 		{
-			animationComponent.endTime = 
+			const float endTime = 
 				this->resourceManager->getMesh(meshComponent.meshID)
 				.getMeshData().animations[animationComponent.animationIndex].endTime;
 
 			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
-			if (animationComponent.timer >= animationComponent.endTime)
+			if (animationComponent.timer >= endTime)
 			{
-				animationComponent.timer -= animationComponent.endTime;
+				animationComponent.timer -= endTime;
 			}
 		}
 	);

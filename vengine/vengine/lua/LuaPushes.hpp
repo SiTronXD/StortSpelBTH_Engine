@@ -342,11 +342,10 @@ static void lua_pushrigidbody(lua_State* L, const Rigidbody& rb)
 	lua_setfield(L, -2, "velocity");
 }
 
-static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime, StorageBufferID boneID)
+static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBufferID boneID)
 {
 	AnimationComponent anim{};
 	anim.boneTransformsID = boneID;
-	anim.endTime = endTime;
 
 	// Sanity check
 	if (!lua_istable(L, index)) {
@@ -354,11 +353,17 @@ static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime
 		return anim;
 	}
 
+	lua_getfield(L, index, "animationIndex");
+	anim.animationIndex = (int)lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
 	lua_getfield(L, index, "timer");
 	anim.timer = (float)lua_tonumber(L, -1);
+	lua_pop(L, 1);
 
 	lua_getfield(L, index, "timeScale");
 	anim.timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	lua_pop(L, 1);
 
 	return anim;
 }
@@ -366,6 +371,9 @@ static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime
 static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
 {
 	lua_newtable(L);
+
+	lua_pushinteger(L, anim.animationIndex);
+	lua_setfield(L, -2, "animationIndex");
 
 	lua_pushnumber(L, anim.timer);
 	lua_setfield(L, -2, "timer");

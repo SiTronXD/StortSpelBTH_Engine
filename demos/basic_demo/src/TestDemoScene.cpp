@@ -177,14 +177,17 @@ void TestDemoScene::update()
 	if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 0;
+		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
 	}
 	else if (Input::isKeyReleased(Keys::TWO))
 	{
 		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 1;
+		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
 	}
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
 		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 2;
+		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
 	}
 
 	// Debug rendering on colliders
