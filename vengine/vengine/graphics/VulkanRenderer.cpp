@@ -511,6 +511,8 @@ void VulkanRenderer::initForScene(Scene* scene)
 	this->viewProjectionUB =
 	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
 	this->sampler = this->shaderInput.addSampler();
+    this->lightBufferSB = this->shaderInput.addStorageBuffer(
+        sizeof(LightBufferData) * MAX_NUM_LIGHTS);
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
 	    this->device, 
@@ -959,7 +961,7 @@ void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up
 
 void VulkanRenderer::updateLightBuffer(Scene* scene)
 {
-    lightBuffer.clear();
+    this->lightBuffer.clear();
     
     // Loop through all lights in the scene
     auto lightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
@@ -967,12 +969,17 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
         const Transform& transform,
         const PointLight& pointLightComp)
         {
-            
+            LightBufferData lightData{};
+            lightData.position = glm::vec4(transform.position, 1.0f);
+            lightData.color = glm::vec4(pointLightComp.color, 1.0f);
+
+            this->lightBuffer.push_back(lightData);
         }
     );
 
-    this->shaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data());
-    this->animShaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data());
+    this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) &lightBuffer[0]);
+    this->shaderInput.setStorageBuffer(this->lightBufferSB);
+    //this->animShaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data()); 
 }
 
 void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
@@ -1092,6 +1099,9 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 this->viewProjectionUB,
                 (void*)&this->uboViewProjection
             );
+
+            // Update lights
+            this->updateLightBuffer(scene);
 
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)

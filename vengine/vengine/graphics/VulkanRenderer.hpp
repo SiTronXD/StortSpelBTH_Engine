@@ -23,8 +23,10 @@ class Camera;
 
 struct LightBufferData
 {
-    glm::vec3 position;
-    glm::vec3 color;
+    glm::vec4 position;
+    glm::vec4 color;
+    glm::vec4 padding0;
+    glm::vec4 padding1;
 };
 
 #include <functional>
@@ -35,6 +37,9 @@ class VulkanRenderer
     std::vector<TracyVkCtx> tracyContext;
 #endif
     const int MAX_FRAMES_IN_FLIGHT = 3;
+
+    const uint32_t MAX_NUM_LIGHTS = 1;
+
     ResourceManager* resourceManager;
     UIRenderer* uiRenderer;
     DebugRenderer* debugRenderer;
