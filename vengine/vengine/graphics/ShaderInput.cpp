@@ -44,7 +44,7 @@ void ShaderInput::createDescriptorSetLayout()
         perMeshLayoutBindings[i].setBinding(uint32_t(i));                                           // Describes which Binding Point in the shaders this layout is being bound to
         perMeshLayoutBindings[i].setDescriptorType(vk::DescriptorType::eStorageBuffer);    // Type of descriptor (Uniform, Dynamic uniform, image Sampler, etc.)
         perMeshLayoutBindings[i].setDescriptorCount(uint32_t(1));                                   // Amount of actual descriptors we're binding, where just binding one; our MVP struct
-        perMeshLayoutBindings[i].setStageFlags(vk::ShaderStageFlagBits::eVertex);               // What Shader Stage we want to bind our Descriptor set to
+        perMeshLayoutBindings[i].setStageFlags(this->addedStorageBuffers[i].shaderStage);               // What Shader Stage we want to bind our Descriptor set to
         perMeshLayoutBindings[i].setPImmutableSamplers(nullptr);          // Used by Textures; whether or not the Sampler should be Immutable
     }
 
@@ -269,11 +269,11 @@ void ShaderInput::updateDescriptorSets()
         {
             // Describe the Buffer info and Data offset Info
             descriptorBufferInfos[j].setBuffer(
-                this->addedStorageBuffers[j].getBuffer(i)); // Buffer to get the Data from
+                this->addedStorageBuffers[j].storageBuffer.getBuffer(i)); // Buffer to get the Data from
             descriptorBufferInfos[j].setOffset(
                 0);
             descriptorBufferInfos[j].setRange(
-                (vk::DeviceSize)this->addedStorageBuffers[j].getBufferSize());
+                (vk::DeviceSize)this->addedStorageBuffers[j].storageBuffer.getBufferSize());
 
             // Data to describe the connection between binding and uniform Buffer
             writeDescriptorSets[j].setDstSet(this->perMeshDescriptorSets[i][j]);              // Descriptor Set to update
@@ -402,18 +402,23 @@ UniformBufferID ShaderInput::addUniformBuffer(
 }
 
 StorageBufferID ShaderInput::addStorageBuffer(
-    const size_t& contentsSize) 
+    const size_t& contentsSize,
+    const vk::ShaderStageFlagBits& shaderStage)
 {
     StorageBufferID storageBufferID = this->addedStorageBuffers.size();
 
-    // Create and add storage buffer
-    this->addedStorageBuffers.push_back(StorageBuffer());
-    this->addedStorageBuffers[storageBufferID].createStorageBuffer(
+    // Create buffer and set info
+    StorageBufferHandle storageBufferHandle{};
+    storageBufferHandle.storageBuffer.createStorageBuffer(
         *this->device,
         *this->vma,
         contentsSize,
         this->framesInFlight
     );
+    storageBufferHandle.shaderStage = shaderStage;
+
+    // Add to list
+    this->addedStorageBuffers.push_back(storageBufferHandle);
 
     return storageBufferID;
 }
@@ -509,7 +514,7 @@ void ShaderInput::cleanup()
     // Storage buffers
     for (size_t i = 0; i < this->addedStorageBuffers.size(); ++i)
     {
-        this->addedStorageBuffers[i].cleanup();
+        this->addedStorageBuffers[i].storageBuffer.cleanup();
     }
     this->addedStorageBuffers.clear();
 
@@ -548,7 +553,7 @@ void ShaderInput::updateStorageBuffer(
     const StorageBufferID& id,
     void* data)
 {
-    this->addedStorageBuffers[id].update(data, this->currentFrame);
+    this->addedStorageBuffers[id].storageBuffer.update(data, this->currentFrame);
 }
 
 void ShaderInput::setCurrentFrame(const uint32_t& currentFrame)

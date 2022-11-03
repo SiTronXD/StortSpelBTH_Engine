@@ -23,6 +23,12 @@ enum class DescriptorFrequency
 	NUM_FREQUENCY_TYPES
 };
 
+struct StorageBufferHandle
+{
+	StorageBuffer storageBuffer;
+	vk::ShaderStageFlagBits shaderStage;
+};
+
 class ShaderInput
 {
 private:
@@ -48,7 +54,7 @@ private:
 	vk::PushConstantRange pushConstantRange{};
 
 	std::vector<UniformBuffer> addedUniformBuffers;
-	std::vector<StorageBuffer> addedStorageBuffers; 
+	std::vector<StorageBufferHandle> addedStorageBuffers;
 
 	// per...DescriptorSets[frameInFlight][bufferID]
 	std::vector<vk::DescriptorSet> perFrameDescriptorSets;
@@ -88,7 +94,8 @@ public:
 	UniformBufferID addUniformBuffer(
 		const size_t& contentsSize);
     StorageBufferID addStorageBuffer(
-		const size_t& contentsSize);
+		const size_t& contentsSize,
+		const vk::ShaderStageFlagBits& shaderStage = vk::ShaderStageFlagBits::eVertex);
 	SamplerID addSampler();
 	void endForInput();
 

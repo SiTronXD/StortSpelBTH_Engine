@@ -34,8 +34,9 @@ layout(push_constant) uniform PushConstant_Model
 } pushConstant_Model;
 
 // Vertex shader outputs
-layout(location = 0) out vec3 fragNor;
-layout(location = 1) out vec2 fragTex;
+layout(location = 0) out vec3 fragWorldPos;
+layout(location = 1) out vec3 fragNor;
+layout(location = 2) out vec2 fragTex;
 
 void main()
 {
@@ -49,13 +50,17 @@ void main()
     if(weights.w > 0.0f)
         animTransform += bones.transforms[boneIndices.w].boneTransform * weights.w;
 
-    gl_Position = 
-        uboViewProjection.projection *
-        uboViewProjection.view *
+    vec4 worldPos = 
         pushConstant_Model.model *
         animTransform *
         vec4(pos, 1.0);
-        
+
+    gl_Position = 
+        uboViewProjection.projection *
+        uboViewProjection.view *
+        worldPos;
+    
+    fragWorldPos = worldPos.xyz;
     fragNor = (pushConstant_Model.model * animTransform * vec4(nor, 0.0f)).xyz;
     fragTex = tex;
 }

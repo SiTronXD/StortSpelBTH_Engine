@@ -1,9 +1,24 @@
 #version 450
 
+#define FREQ_PER_MESH 1
 #define FREQ_PER_DRAW 2
 
-layout(location = 0) in vec3 fragNor;
-layout(location = 1) in vec2 fragTex;
+layout(location = 0) in vec3 fragWorldPos;
+layout(location = 1) in vec3 fragNor;
+layout(location = 2) in vec2 fragTex;
+
+// Storage buffer
+struct LightBufferData
+{
+    vec4 position;
+    vec4 color;
+    vec4 padding0;
+    vec4 padding1;
+};
+layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer LightBuffer
+{
+    LightBufferData lights[];
+} lightBuffer;
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
 
@@ -35,5 +50,9 @@ void main()
 
 	outColor = vec4(mix(finalCol, vec3(0.8f), distAlpha), 1.0f);
 
-	outColor = vec4(fragNor, 1.0f);
+	outColor = vec4(
+		lightBuffer.lights[0].color.xyz * 
+			1.0f / length(lightBuffer.lights[0].position.xyz - fragWorldPos.xyz), 
+		1.0f
+	);
 }

@@ -512,7 +512,8 @@ void VulkanRenderer::initForScene(Scene* scene)
 	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
 	this->sampler = this->shaderInput.addSampler();
     this->lightBufferSB = this->shaderInput.addStorageBuffer(
-        sizeof(LightBufferData) * MAX_NUM_LIGHTS);
+        sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+        vk::ShaderStageFlagBits::eFragment); 
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
 	    this->device, 

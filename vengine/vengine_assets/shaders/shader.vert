@@ -15,19 +15,6 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform UboViewProjection
     mat4 view;    
 } uboViewProjection;
 
-// Storage buffer
-struct LightBufferData
-{
-    vec4 position;
-    vec4 color;
-    vec4 padding0;
-    vec4 padding1;
-};
-layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer LightBuffer
-{
-    LightBufferData lights[];
-} lightBuffer;
-
 // Push Constant to update the model Matrix! 
 layout(push_constant) uniform PushConstant_Model
 {
@@ -35,8 +22,9 @@ layout(push_constant) uniform PushConstant_Model
 } pushConstant_Model;
 
 // Vertex shader outputs
-layout(location = 0) out vec3 fragNor;
-layout(location = 1) out vec2 fragTex;
+layout(location = 0) out vec3 fragWorldPos;
+layout(location = 1) out vec3 fragNor;
+layout(location = 2) out vec2 fragTex;
 
 void main()
 {
@@ -47,9 +35,7 @@ void main()
         uboViewProjection.view *
         worldPos;
 
-    //fragNor = (pushConstant_Model.model * vec4(nor, 0.0f)).xyz;
+    fragWorldPos = worldPos.xyz;
+    fragNor = (pushConstant_Model.model * vec4(nor, 0.0f)).xyz;
     fragTex = tex;
-
-    fragNor = lightBuffer.lights[0].color.xyz * 
-        1.0f / length(lightBuffer.lights[0].position.xyz - worldPos.xyz);
 }

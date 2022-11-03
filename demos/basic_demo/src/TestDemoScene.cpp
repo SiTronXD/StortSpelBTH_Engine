@@ -125,10 +125,10 @@ void TestDemoScene::init()
 				"assets/models/Stormtrooper/textures");
 		}
 
-		this->setComponent<AnimationComponent>(aniIDs[i]);
+		/*this->setComponent<AnimationComponent>(aniIDs[i]);
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
 		newAnimComp.timer += 24.0f * 0.6f * i;
-		newAnimComp.timeScale += i % 2;
+		newAnimComp.timeScale += i % 2;*/
 	}
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
