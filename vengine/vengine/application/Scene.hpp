@@ -12,6 +12,7 @@
 #include "../lua/ScriptHandler.h"
 #include "Window.hpp"
 #include "../systems/System.hpp"
+#include "../audio/AudioHandler.h"
 
 #include <entt.hpp>
 #include <vector>
@@ -53,6 +54,7 @@ class Scene
 	DebugRenderer* getDebugRenderer();
 	SceneHandler* getSceneHandler();
 	AIHandler* getAIHandler();
+	AudioHandler* getAudioHandler();
 
 	template <typename T>
 	T getConfigValue(std::string_view name)

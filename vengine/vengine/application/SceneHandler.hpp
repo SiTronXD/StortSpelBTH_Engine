@@ -4,6 +4,7 @@
 class UIRenderer;
 class DebugRenderer;
 class Window;
+class AudioHandler;
 
 class SceneHandler
 {
@@ -22,6 +23,7 @@ private:
 	UIRenderer* uiRenderer;
 	DebugRenderer* debugRenderer;
 	Window* window;
+	AudioHandler* audioHandler;
 
 	void initSubsystems();
 
@@ -62,6 +64,9 @@ public:
 
 	void setWindow(Window* window);
 	Window* getWindow();
+
+	void setAudioHandler(AudioHandler* audioHandler);
+	AudioHandler* getAudioHandler();
 
 	Scene* getScene() const;
 };
