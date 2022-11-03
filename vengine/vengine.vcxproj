@@ -351,6 +351,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\ai\BTCreateHelper.hpp" />
     <ClInclude Include="vengine\ai\EventSystem.hpp" />
     <ClInclude Include="vengine\ai\FSM.hpp" />
+    <ClInclude Include="vengine\components\AmbientLight.hpp" />
     <ClInclude Include="vengine\components\BTAgent.hpp" />
     <ClInclude Include="vengine\components\BTComponent.hpp" />
     <ClInclude Include="vengine\components\FSMAgentComponent.hpp" />

@@ -23,15 +23,17 @@ class Camera;
 
 struct AllLightsInfo
 {
-    uint32_t numLights;
+    uint32_t ambientLightsEndIndex;
+    uint32_t directionalLightsEndIndex;
+    uint32_t pointLightsEndIndex;
+    
     uint32_t padding0;
-    uint32_t padding1;
-    uint32_t padding2;
 };
 
 struct LightBufferData
 {
     glm::vec4 position;
+    glm::vec4 direction;
     glm::vec4 color;
 };
 

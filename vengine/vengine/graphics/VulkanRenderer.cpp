@@ -31,6 +31,7 @@
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/AnimationComponent.hpp"
+#include "../components/AmbientLight.hpp"
 #include "../components/PointLight.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
@@ -971,28 +972,64 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
 {
     this->lightBuffer.clear();
     
-    // Loop through all lights in the scene
+    // Info about all lights in the shader
+    AllLightsInfo lightsInfo{};
+
+    // Loop through all ambient lights in scene
+    auto ambientLightView = scene->getSceneReg().view<Transform, AmbientLight>(entt::exclude<Inactive>);
+    ambientLightView.each([&](
+        const Transform& transform,
+        const AmbientLight& ambientLightComp)
+        {
+            // Create point light data
+            LightBufferData lightData{};
+            lightData.color = glm::vec4(ambientLightComp.color, 1.0f);
+
+            // Add to list
+            this->lightBuffer.push_back(lightData);
+
+            // Increment end index
+            lightsInfo.ambientLightsEndIndex++;
+        }
+    );
+
+    // Loop through all directional lights in the scene
+    lightsInfo.directionalLightsEndIndex = lightsInfo.ambientLightsEndIndex;
+
+    // Loop through all point lights in scene
+    lightsInfo.pointLightsEndIndex = lightsInfo.directionalLightsEndIndex;
     auto lightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
     lightView.each([&](
         const Transform& transform,
         const PointLight& pointLightComp)
         {
+            // Create point light data
             LightBufferData lightData{};
             lightData.position = glm::vec4(transform.position, 1.0f);
             lightData.color = glm::vec4(pointLightComp.color, 1.0f);
 
+            // Add to list
             this->lightBuffer.push_back(lightData);
+
+            // Increment end index
+            lightsInfo.pointLightsEndIndex++;
         }
     );
 
+    // Update storage buffer containing lights
     this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) &lightBuffer[0]);
     this->shaderInput.setStorageBuffer(this->lightBufferSB);
     // this->animShaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data()); 
 
-    // Info about all lights in the shader
-    AllLightsInfo lightsInfo{};
-    lightsInfo.numLights = std::min(
-        static_cast<uint32_t>(this->lightBuffer.size()), 
+    // Truncate indices to not overshoot max
+    lightsInfo.ambientLightsEndIndex = std::min(
+        lightsInfo.ambientLightsEndIndex,
+        MAX_NUM_LIGHTS);
+    lightsInfo.directionalLightsEndIndex = std::min(
+        lightsInfo.directionalLightsEndIndex,
+        MAX_NUM_LIGHTS);
+    lightsInfo.pointLightsEndIndex = std::min(
+        lightsInfo.pointLightsEndIndex,
         MAX_NUM_LIGHTS);
 
 #ifdef _CONSOLE

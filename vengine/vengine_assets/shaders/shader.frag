@@ -8,19 +8,29 @@ layout(location = 0) in vec3 fragWorldPos;
 layout(location = 1) in vec3 fragNor;
 layout(location = 2) in vec2 fragTex;
 
-// Uniform buffer
+// Uniform buffer for light indices
+// Ambient: [0, ambientLightsEndIndex)
+// Directional: [ambientLightsEndIndex, directionalLightsEndIndex)
+// Point: [directionalLightsEndIndex, pointLightsEndIndex)
 layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
 {
-    uint numLights;
+    uint ambientLightsEndIndex;
+    uint directionalLightsEndIndex;
+    uint pointLightsEndIndex;
+	
     uint padding0;
-    uint padding1;
-    uint padding2;
 } allLightsInfo;
 
 // Storage buffer
 struct LightBufferData
 {
+	// Point lights
     vec4 position;
+
+	// Directional lights
+    vec4 direction;
+
+	// Ambient/Directional/Point lights
     vec4 color;
 };
 layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer LightBuffer
@@ -61,7 +71,19 @@ void main()
 
 	// Color from lights
 	vec3 finalLightColor = vec3(0.0f);
-	for(uint i = 0; i < 2/*allLightsInfo.numLights*/; ++i)
+
+	// Ambient lights
+	for(uint i = 0; 
+		i < allLightsInfo.ambientLightsEndIndex; 
+		++i)
+	{
+		finalLightColor += lightBuffer.lights[i].color.xyz;
+	}
+
+	// Point lights
+	for(uint i = allLightsInfo.directionalLightsEndIndex; 
+		i < allLightsInfo.pointLightsEndIndex; 
+		++i)
 	{
 		finalLightColor += 
 			lightBuffer.lights[i].color.xyz * 

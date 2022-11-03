@@ -5,6 +5,7 @@
 #include "vengine/resource_management/ResourceManager.hpp"
 #include "vengine/components/MeshComponent.hpp"
 #include "vengine/components/AnimationComponent.hpp"
+#include "vengine/components/AmbientLight.hpp"
 #include "vengine/components/PointLight.hpp"
 #include "vengine/dev/Log.hpp"
 #include "vengine/test/TestScene.hpp"

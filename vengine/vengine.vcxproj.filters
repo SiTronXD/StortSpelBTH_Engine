@@ -166,6 +166,7 @@
     <ClInclude Include="vengine\dev\StringHelper.hpp" />
     <ClInclude Include="vengine\graphics\MeshDataModifier.hpp" />
     <ClInclude Include="vengine\components\PointLight.hpp" />
+    <ClInclude Include="vengine\components\AmbientLight.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
