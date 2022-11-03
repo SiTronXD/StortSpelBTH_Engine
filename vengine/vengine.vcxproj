@@ -354,6 +354,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\components\BTAgent.hpp" />
     <ClInclude Include="vengine\components\BTComponent.hpp" />
     <ClInclude Include="vengine\components\FSMAgentComponent.hpp" />
+    <ClInclude Include="vengine\components\PointLight.hpp" />
     <ClInclude Include="vengine\graphics\MeshDataModifier.hpp" />
     <ClInclude Include="vengine\lua\wrappers\PhysicsEngineLua.h" />
     <ClInclude Include="vengine\lua\wrappers\DebugRendererLua.h" />

@@ -31,6 +31,7 @@
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/AnimationComponent.hpp"
+#include "../components/PointLight.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../resource_management/loaders/MeshLoader.hpp"
@@ -241,13 +242,6 @@ void VulkanRenderer::cleanup()
     }
 #endif
 
-    for(size_t i = 0; i < this->textureImages.size();i++)
-    {
-        this->getVkDevice().destroyImageView(this->textureImageViews[i]);
-        this->getVkDevice().destroyImage(this->textureImages[i]);
-        vmaFreeMemory(this->vma,this->textureImageMemory[i]);
-    }
-
     for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         this->getVkDevice().destroySemaphore(this->renderFinished[i]);
@@ -387,7 +381,7 @@ void VulkanRenderer::draw(Scene* scene)
     if (deleteCamera) { delete camera; }
 
     // Record the current commandBuffer
-    recordRenderPassCommandsBase(scene, imageIndex);
+    this->recordCommandBuffer(scene, imageIndex);
     
     // Submit to graphics queue
     {
@@ -963,14 +957,32 @@ void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up
                             up);            // Up    : Up direction 
 }
 
-void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIndex)
+void VulkanRenderer::updateLightBuffer(Scene* scene)
+{
+    lightBuffer.clear();
+    
+    // Loop through all lights in the scene
+    auto lightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
+    lightView.each([&](
+        const Transform& transform,
+        const PointLight& pointLightComp)
+        {
+            
+        }
+    );
+
+    this->shaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data());
+    this->animShaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data());
+}
+
+void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
     ZoneTransient(recordRenderPassCommands_zone1,  true); //:NOLINT   
 #endif
-    // Information about how to befin each Command Buffer...
 
+    // Information about how to begin each Command Buffer...
     vk::CommandBufferBeginInfo bufferBeginInfo;
     bufferBeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     

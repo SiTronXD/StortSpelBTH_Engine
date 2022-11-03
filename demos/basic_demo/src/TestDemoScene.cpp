@@ -38,6 +38,8 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
+	this->setComponent<PointLight>(this->testEntity);
+	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f);
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();

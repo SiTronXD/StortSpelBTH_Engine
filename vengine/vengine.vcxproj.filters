@@ -165,6 +165,7 @@
     <ClInclude Include="vengine\lua\wrappers\PhysicsEngineLua.h" />
     <ClInclude Include="vengine\dev\StringHelper.hpp" />
     <ClInclude Include="vengine\graphics\MeshDataModifier.hpp" />
+    <ClInclude Include="vengine\components\PointLight.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
