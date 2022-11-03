@@ -1,13 +1,9 @@
 #pragma once
 
 #include "TempPCH.hpp"
+#include "Texture.hpp"
 
 class Device;
-
-struct TextureSamplerSettings
-{
-	vk::Filter filterMode;
-};
 
 class TextureSampler
 {

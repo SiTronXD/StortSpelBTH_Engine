@@ -26,11 +26,26 @@ int ResourceManagerLua::lua_addTexture(lua_State* L)
 
 	if(!lua_isstring(L, 1)) { return 0; }
 
-	TextureSamplerSettings settings = { vk::Filter::eLinear };
+	TextureSettings settings{};
 	if (lua_istable(L, 2))
 	{
-		lua_getfield(L, 2, "filterMode");
-		if (lua_isnumber(L, -1)) { settings.filterMode = (vk::Filter)lua_tonumber(L, -1); }
+		// Sampler settings struct
+		lua_getfield(L, 2, "samplerSettings");
+		if (lua_istable(L, -1))
+		{
+			lua_getfield(L, -1, "filterMode");
+			if (lua_isnumber(L, -1)) { settings.samplerSettings.filterMode = (vk::Filter)lua_tonumber(L, -1); }
+			lua_pop(L, 1);
+
+			lua_getfield(L, -1, "unnormalizedCoordinates");
+			if (lua_isboolean(L, -1)) { settings.samplerSettings.unnormalizedCoordinates = lua_toboolean(L, -1) ? VK_TRUE : VK_FALSE; }
+			lua_pop(L, 1);
+		}
+		lua_pop(L, 1);
+		
+		// Texture settings
+		lua_getfield(L, 2, "keepCpuPixelInfo");
+		if (lua_isboolean(L, -1)) { settings.keepCpuPixelInfo = lua_toboolean(L, -1); }
 		lua_pop(L, 1);
 	}
 

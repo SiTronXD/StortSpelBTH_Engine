@@ -88,5 +88,29 @@ namespace LuaH
 		}
 		lua_pop(L, 1);
 	}
+
+	static void replaceTableFunctions(lua_State* L, int origIndex, int newIndex)
+	{
+		if (!lua_istable(L, origIndex) || !lua_istable(L, newIndex)) { return; }
+
+		lua_pushvalue(L, origIndex);
+		lua_pushvalue(L, newIndex);
+		lua_pushnil(L);
+
+		while (lua_next(L, -2))
+		{
+			lua_pushvalue(L, -2);
+
+			const char* key = lua_tostring(L, -1);
+			if (lua_isfunction(L, -2)) // Replace if value is a function
+			{
+				lua_getfield(L, -6, key);
+				lua_setfield(L, -8, key);
+			}
+			lua_pop(L, 2);
+		}
+
+		lua_pop(L, 2);
+	}
 }
 

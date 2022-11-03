@@ -45,12 +45,13 @@ public:
         Device* dev, vk::Queue* transQueue,
         vk::CommandPool* transCmdPool,
         VulkanRenderer* vulkanRenderer);
-
-    uint32_t addMesh(std::string&& meshPath, std::string&& texturesPath = "");
-    uint32_t addAnimations(const std::vector<std::string>& paths, std::string&& texturesPath = "");
-    uint32_t addTexture(std::string&& texturePath, 
-        const TextureSamplerSettings& textureSamplerSettings = { vk::Filter::eLinear });
+		
+    uint32_t addMesh(std::string&& meshPath, 
+        std::string&& texturesPath = "");
+    uint32_t addTexture(std::string&& texturePath,
+        const TextureSettings& textureSettings = {});
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
+	uint32_t addAnimations(const std::vector<std::string>& paths, std::string&& texturesPath = "");
 
     Mesh& getMesh(uint32_t id);
     Texture& getTexture(uint32_t id);

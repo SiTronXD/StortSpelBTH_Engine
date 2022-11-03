@@ -102,7 +102,7 @@ uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, s
 
 uint32_t ResourceManager::addTexture(
     std::string&& texturePath,
-    const TextureSamplerSettings& textureSamplerSettings)
+    const TextureSettings& textureSettings)
 { 
     using namespace vengine_helper::config;
 
@@ -121,7 +121,7 @@ uint32_t ResourceManager::addTexture(
 
     // Create texture samples if it doesn't exist already
     std::string samplerString;
-    TextureSampler::settingsToString(textureSamplerSettings, samplerString);
+    TextureSampler::settingsToString(textureSettings.samplerSettings, samplerString);
     if (this->samplerSettings.count(samplerString) == 0)
     {
         // Add sampler index (indirection)
@@ -142,7 +142,7 @@ uint32_t ResourceManager::addTexture(
 
         // Create sampler
         this->textureSamplers[this->samplerSettings[samplerString]].
-            createSampler(*this->dev, textureSamplerSettings);
+            createSampler(*this->dev, textureSettings.samplerSettings);
     }
 
     //NOTE: texturePaths.size() as key only works if we never remove resources the map...
@@ -154,13 +154,14 @@ uint32_t ResourceManager::addTexture(
         {
             textures.size(), 
             textureLoader.createTexture(
-                texturePath, 
+                texturePath,
+                textureSettings,
                 this->samplerSettings[samplerString]
             )
         }
     );
 
-    return textures.size() -1;
+    return textures.size() - 1;
 }
 
 uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)

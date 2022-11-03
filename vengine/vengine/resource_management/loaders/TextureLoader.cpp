@@ -85,6 +85,7 @@ void TextureLoader::assimpTextureImport(
 
 Texture TextureLoader::createTexture(
     const std::string &filename, 
+    const TextureSettings& textureSettings,
     const uint32_t& textureSamplerIndex)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -96,14 +97,10 @@ Texture TextureLoader::createTexture(
     );
 
     // Create Texture Image
-    uint32_t width = 0;
-    uint32_t height = 0;
     this->createTextureImage(
         filename, 
-        createdTexture.image, 
-        createdTexture.imageMemory,
-        width,
-        height
+        createdTexture,
+        textureSettings
     );
 
     // Create Image View
@@ -114,8 +111,6 @@ Texture TextureLoader::createTexture(
             vk::Format::eR8G8B8A8Unorm, // Format for rgba
             vk::ImageAspectFlagBits::eColor
         ),
-        width, 
-        height,
         textureSamplerIndex
     );
 
@@ -185,10 +180,8 @@ void TextureLoader::processTextureName(
 
 void TextureLoader::createTextureImage(
     const std::string &filename,
-    vk::Image &imageRef,
-    VmaAllocation &allocRef,
-    uint32_t& outputWidth,
-    uint32_t& outputHeight) 
+    Texture& outputTexture,
+    const TextureSettings& textureSettings)
 {
 #ifndef VENGINE_NO_PROFILING
   ZoneScoped; //: NOLINT
@@ -197,11 +190,16 @@ void TextureLoader::createTextureImage(
     int width = 0;
     int height = 0;
     vk::DeviceSize imageSize = 0;
-    stbi_uc *imageData =
+    stbi_uc* imageData =
         this->loadTextureFile(filename, &width, &height, &imageSize);
 
-    outputWidth = static_cast<uint32_t>(width);
-    outputHeight = static_cast<uint32_t>(height);
+    // Set info for CPU reads
+    outputTexture.setCpuInfo(
+        imageData, 
+        static_cast<uint32_t>(width), 
+        static_cast<uint32_t>(height),
+        textureSettings
+    );
 
     // Create Staging buffer to hold loaded data, ready to copy to device
     vk::Buffer imageStagingBuffer = nullptr;
@@ -234,7 +232,7 @@ void TextureLoader::createTextureImage(
     // Free image data allocated through stb_image.h
     stbi_image_free(imageData);
 
-    imageRef = Texture::createImage(
+    outputTexture.image = Texture::createImage(
         *this->importStructs.vma,
         {.width = static_cast<uint32_t>(width),
         .height = static_cast<uint32_t>(height),
@@ -248,7 +246,7 @@ void TextureLoader::createTextureImage(
                                                 // buffer
             | vk::ImageUsageFlagBits::eSampled,  // This image will be Sampled by
                                                 // a Sampler!
-        .imageMemory = &allocRef
+        .imageMemory = &outputTexture.imageMemory
 
         },
         filename // Describing what image is being created, for debug purposes...
@@ -262,7 +260,7 @@ void TextureLoader::createTextureImage(
         *this->importStructs.device,
         *this->importStructs.transferQueue, // Same as graphics Queue
         *this->importStructs.transferCommandPool,
-        imageRef,                    // Image to transition the layout on
+        outputTexture.image,                    // Image to transition the layout on
         vk::ImageLayout::eUndefined, // Image Layout to transition the image from
         vk::ImageLayout::eTransferDstOptimal); // Image Layout to transition the
                                                 // image to
@@ -272,13 +270,14 @@ void TextureLoader::createTextureImage(
         this->importStructs.device->getVkDevice(),
         *this->importStructs.transferQueue,
         *this->importStructs.transferCommandPool, imageStagingBuffer,
-        imageRef, width, height);
+        outputTexture.image, width, height);
 
     // Transition iamge to be shader readable for shader usage
     Texture::transitionImageLayout(
         *this->importStructs.device,
         *this->importStructs.transferQueue,
-        *this->importStructs.transferCommandPool, imageRef,
+        *this->importStructs.transferCommandPool, 
+        outputTexture.image,
         vk::ImageLayout::eTransferDstOptimal, // Image layout to transition the
                                             // image from; this is the same as
                                             // we transition the image too
