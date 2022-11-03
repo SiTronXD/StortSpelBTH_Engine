@@ -407,15 +407,12 @@ void PhysicsEngine::update()
 		}
 	}
 
-	// TODO: Find way to establish onenter and onexit collision and trigger functions
 	int numManifolds = this->dynWorld->getDispatcher()->getNumManifolds();
 	ScriptHandler* scriptHandler = this->sceneHandler->getScriptHandler();
-	//Log::write(std::to_string(numManifolds));
 	for (int i = 0; i < numManifolds; i++)
 	{
 		btPersistentManifold* man = this->dynWorld->getDispatcher()->getManifoldByIndexInternal(i);
 		CallbackType& type = this->collDispCallbacks->getTypes()[i];
-		//Log::write(type == CallbackType::ENTER ? "Enter" : type == CallbackType::STAY ? "Stay" : "");
 		if (!man->getNumContacts())
 		{
 			if (type == CallbackType::STAY) { type = CallbackType::EXIT; }
