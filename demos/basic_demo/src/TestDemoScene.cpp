@@ -366,22 +366,44 @@ void TestDemoScene::update()
 	}
 }
 
+void TestDemoScene::onCollisionEnter(Entity e1, Entity e2)
+{
+	/*Entity e = e1 == this->testEntity ? e1 : e2 == this->testEntity ? e2 : -1;
+	if (e == this->testEntity)
+	{
+		Log::write("Col Enter! " + std::to_string(e1) + " and " + std::to_string(e2));
+	}*/
+}
+
 void TestDemoScene::onCollisionStay(Entity e1, Entity e2)
 {
-	//Log::write("Collision Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+	/*Entity e = e1 == this->testEntity ? e1 : e2 == this->testEntity ? e2 : -1;
+	if (e == this->testEntity)
+	{
+		Log::write("Col Stay! " + std::to_string(e1) + " and " + std::to_string(e2));
+	}*/
+}
+
+void TestDemoScene::onCollisionExit(Entity e1, Entity e2)
+{
+	/*Entity e = e1 == this->testEntity ? e1 : e2 == this->testEntity ? e2 : -1;
+	if (e == this->testEntity)
+	{
+		Log::write("Col Exit! " + std::to_string(e1) + " and " + std::to_string(e2));
+	}*/
 }
 
 void TestDemoScene::onTriggerEnter(Entity e1, Entity e2)
 {
-	Log::write("Trigger Enter! " + std::to_string(e1) + " and " + std::to_string(e2));
+	//Log::write("Trigger Enter! " + std::to_string(e1) + " and " + std::to_string(e2));
 }
 
 void TestDemoScene::onTriggerStay(Entity e1, Entity e2)
 {
-	Log::write("Trigger Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+	//Log::write("Trigger Stay! " + std::to_string(e1) + " and " + std::to_string(e2));
 }
 
 void TestDemoScene::onTriggerExit(Entity e1, Entity e2)
 {
-	Log::write("Trigger Exit! " + std::to_string(e1) + " and " + std::to_string(e2));
+	//Log::write("Trigger Exit! " + std::to_string(e1) + " and " + std::to_string(e2));
 }

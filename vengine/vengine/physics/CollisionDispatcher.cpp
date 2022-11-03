@@ -16,6 +16,10 @@ void CollisionDispatcher::releaseManifold(btPersistentManifold* manifold)
 	this->exits.push_back(std::pair<int, int>(
 		manifold->getBody0()->getUserIndex(), 
 		manifold->getBody1()->getUserIndex()));
+
+	std::swap(this->types[manifold->m_index1a], this->types[this->types.size() - 1]);
+	this->types.pop_back();
+
 	btCollisionDispatcher::releaseManifold(manifold);
 }
 

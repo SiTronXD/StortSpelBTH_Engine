@@ -183,9 +183,7 @@ void PhysicsEngine::createRigidbody(const int& entity, Rigidbody& rb, Collider& 
 
 	// Create Rigidbody
 	btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity));
-	Log::write("Before: (" + std::to_string(transform.getOrigin().x()) + ", " + std::to_string(transform.getOrigin().y()) + ", " + std::to_string(transform.getOrigin().z()));
 	transform.setOrigin(transform.getOrigin() + BulletH::bulletVec(col.offset));
-	Log::write("After: (" + std::to_string(transform.getOrigin().x()) + ", " + std::to_string(transform.getOrigin().y()) + ", " + std::to_string(transform.getOrigin().z()));
 	btVector3 localInertia = btVector3(0.0f, 0.0f, 0.0f);
 	if (rb.mass != 0.0f) { shape->calculateLocalInertia(rb.mass, localInertia); }
 
@@ -417,9 +415,10 @@ void PhysicsEngine::update()
 	{
 		btPersistentManifold* man = this->dynWorld->getDispatcher()->getManifoldByIndexInternal(i);
 		CallbackType& type = this->collDispCallbacks->getTypes()[i];
+		//Log::write(type == CallbackType::ENTER ? "Enter" : type == CallbackType::STAY ? "Stay" : "");
 		if (!man->getNumContacts())
 		{
-			if (type != CallbackType::EXIT) { type = CallbackType::EXIT; }
+			if (type == CallbackType::STAY) { type = CallbackType::EXIT; }
 			else { continue; }
 		}
 

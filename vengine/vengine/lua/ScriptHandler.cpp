@@ -164,6 +164,7 @@ void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 
 void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger, CallbackType type)
 {
+	std::string func = isTrigger ? "onTrigger" : "onCollision";
 	std::string typeStr;
 	switch (type)
 	{
@@ -178,7 +179,7 @@ void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, b
 		break;
 	}
 
-	const char* func = (isTrigger ? "onTrigger" : "onCollision" + typeStr).c_str();
+	func += typeStr;
 	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e1);
 
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
@@ -194,7 +195,7 @@ void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, b
 	}
 #endif
 
-	lua_getfield(L, -1, func);
+	lua_getfield(L, -1, func.c_str());
 	if (lua_type(L, -1) == LUA_TNIL)
 	{
 		lua_pop(L, 2);
