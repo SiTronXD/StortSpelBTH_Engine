@@ -1,11 +1,21 @@
 #version 450
 
+#define FREQ_PER_FRAME 0
 #define FREQ_PER_MESH 1
 #define FREQ_PER_DRAW 2
 
 layout(location = 0) in vec3 fragWorldPos;
 layout(location = 1) in vec3 fragNor;
 layout(location = 2) in vec2 fragTex;
+
+// Uniform buffer
+layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
+{
+    uint numLights;
+    uint padding0;
+    uint padding1;
+    uint padding2;
+} allLightsInfo;
 
 // Storage buffer
 struct LightBufferData
@@ -51,7 +61,7 @@ void main()
 
 	// Color from lights
 	vec3 finalLightColor = vec3(0.0f);
-	for(uint i = 0; i < 1; ++i)
+	for(uint i = 0; i < 2/*allLightsInfo.numLights*/; ++i)
 	{
 		finalLightColor += 
 			lightBuffer.lights[i].color.xyz * 

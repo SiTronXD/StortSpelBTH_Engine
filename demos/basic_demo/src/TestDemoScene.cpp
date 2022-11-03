@@ -42,6 +42,20 @@ void TestDemoScene::init()
 	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f);
 
 	// Create entity (already has transform)
+	Entity ghostEntity2 = this->createEntity();
+
+	// Transform component
+	Transform& transform2 = this->getComponent<Transform>(ghostEntity2);
+	transform2.position = glm::vec3(15.f, 0.f, 30.f);
+	//transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+	this->setComponent<MeshComponent>(ghostEntity2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->setComponent<Collider>(ghostEntity2, Collider::createCapsule(2.0f, 5.0f));
+	this->setComponent<Rigidbody>(ghostEntity2);
+	this->getComponent<Rigidbody>(ghostEntity2).rotFactor = glm::vec3(0.0f);
+	this->setComponent<PointLight>(ghostEntity2);
+	this->getComponent<PointLight>(ghostEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f);
+
+	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
 	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_5.fbx"));
 	this->getComponent<Transform>(puzzleTest).rotation = glm::vec3(0, 180, 0);

@@ -21,6 +21,14 @@
 class Scene;
 class Camera;
 
+struct AllLightsInfo
+{
+    uint32_t numLights;
+    uint32_t padding0;
+    uint32_t padding1;
+    uint32_t padding2;
+};
+
 struct LightBufferData
 {
     glm::vec4 position;
@@ -36,7 +44,7 @@ class VulkanRenderer
 #endif
     const int MAX_FRAMES_IN_FLIGHT = 3;
 
-    const uint32_t MAX_NUM_LIGHTS = 1;
+    const uint32_t MAX_NUM_LIGHTS = 8;
 
     ResourceManager* resourceManager;
     UIRenderer* uiRenderer;
@@ -75,6 +83,7 @@ class VulkanRenderer
 
     // Default pipeline
     UniformBufferID viewProjectionUB;
+    UniformBufferID allLightsInfoUB;
     SamplerID sampler;
     StorageBufferID lightBufferSB;
     ShaderInput shaderInput;

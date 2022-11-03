@@ -21,7 +21,7 @@ void ShaderInput::createDescriptorSetLayout()
         perFrameLayoutBindings[i].setBinding(uint32_t(i));                                           // Describes which Binding Point in the shaders this layout is being bound to
         perFrameLayoutBindings[i].setDescriptorType(vk::DescriptorType::eUniformBuffer);    // Type of descriptor (Uniform, Dynamic uniform, image Sampler, etc.)
         perFrameLayoutBindings[i].setDescriptorCount(uint32_t(1));                                   // Amount of actual descriptors we're binding, where just binding one; our MVP struct
-        perFrameLayoutBindings[i].setStageFlags(vk::ShaderStageFlagBits::eVertex);               // What Shader Stage we want to bind our Descriptor set to
+        perFrameLayoutBindings[i].setStageFlags(this->addedUniformBuffers[i].shaderStage);               // What Shader Stage we want to bind our Descriptor set to
         perFrameLayoutBindings[i].setPImmutableSamplers(nullptr);          // Used by Textures; whether or not the Sampler should be Immutable
     }
     
@@ -231,11 +231,11 @@ void ShaderInput::updateDescriptorSets()
         {
             // Describe the Buffer info and Data offset Info
             descriptorBufferInfos[j].setBuffer(
-                this->addedUniformBuffers[j].getBuffer(i)); // Buffer to get the Data from
+                this->addedUniformBuffers[j].uniformBuffer.getBuffer(i)); // Buffer to get the Data from
             descriptorBufferInfos[j].setOffset(
                 0);
             descriptorBufferInfos[j].setRange(
-                (vk::DeviceSize)this->addedUniformBuffers[j].getBufferSize());
+                (vk::DeviceSize)this->addedUniformBuffers[j].uniformBuffer.getBufferSize());
 
             // Data to describe the connection between binding and uniform Buffer
             writeDescriptorSets[j].setDstSet(this->perFrameDescriptorSets[i]);              // Descriptor Set to update
@@ -385,18 +385,23 @@ void ShaderInput::beginForInput(
 }
 
 UniformBufferID ShaderInput::addUniformBuffer(
-    const size_t& contentsSize)
+    const size_t& contentsSize,
+    const vk::ShaderStageFlagBits& shaderStage)
 {
     UniformBufferID uniformBufferID = this->addedUniformBuffers.size();
 
-    // Create and add uniform buffer
-    this->addedUniformBuffers.push_back(UniformBuffer());
-    this->addedUniformBuffers[uniformBufferID].createUniformBuffer(
+    // Create buffer and set info
+    UniformBufferHandle uniformBufferHandle{};
+    uniformBufferHandle.uniformBuffer.createUniformBuffer(
         *this->device,
         *this->vma,
         contentsSize,
         this->framesInFlight
     );
+    uniformBufferHandle.shaderStage = shaderStage;
+
+    // Add to list
+    this->addedUniformBuffers.push_back(uniformBufferHandle);
 
     return uniformBufferID;
 }
@@ -507,7 +512,7 @@ void ShaderInput::cleanup()
     // Uniform buffers
     for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
     {
-        this->addedUniformBuffers[i].cleanup();
+        this->addedUniformBuffers[i].uniformBuffer.cleanup();
     }
     this->addedUniformBuffers.clear();
 
@@ -546,7 +551,7 @@ void ShaderInput::updateUniformBuffer(
     const UniformBufferID& id,
     void* data)
 {
-    this->addedUniformBuffers[id].update(data, this->currentFrame);
+    this->addedUniformBuffers[id].uniformBuffer.update(data, this->currentFrame);
 }
 
 void ShaderInput::updateStorageBuffer(

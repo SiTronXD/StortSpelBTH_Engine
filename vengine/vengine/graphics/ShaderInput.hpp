@@ -23,6 +23,12 @@ enum class DescriptorFrequency
 	NUM_FREQUENCY_TYPES
 };
 
+struct UniformBufferHandle
+{
+	UniformBuffer uniformBuffer;
+	vk::ShaderStageFlagBits shaderStage;
+};
+
 struct StorageBufferHandle
 {
 	StorageBuffer storageBuffer;
@@ -53,7 +59,7 @@ private:
 	vk::DescriptorSetLayout perDrawSetLayout{};
 	vk::PushConstantRange pushConstantRange{};
 
-	std::vector<UniformBuffer> addedUniformBuffers;
+	std::vector<UniformBufferHandle> addedUniformBuffers;
 	std::vector<StorageBufferHandle> addedStorageBuffers;
 
 	// per...DescriptorSets[frameInFlight][bufferID]
@@ -92,7 +98,8 @@ public:
 		const vk::ShaderStageFlagBits& pushConstantShaderStage);
 	void setNumShaderStorageBuffers(const uint32_t& numStorageBuffers);
 	UniformBufferID addUniformBuffer(
-		const size_t& contentsSize);
+		const size_t& contentsSize,
+		const vk::ShaderStageFlagBits& shaderStage = vk::ShaderStageFlagBits::eVertex);
     StorageBufferID addStorageBuffer(
 		const size_t& contentsSize,
 		const vk::ShaderStageFlagBits& shaderStage = vk::ShaderStageFlagBits::eVertex);

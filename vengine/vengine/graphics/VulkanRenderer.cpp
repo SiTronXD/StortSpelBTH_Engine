@@ -510,10 +510,17 @@ void VulkanRenderer::initForScene(Scene* scene)
 	);
 	this->viewProjectionUB =
 	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
+    this->allLightsInfoUB =
+        this->shaderInput.addUniformBuffer(
+            sizeof(AllLightsInfo), 
+            vk::ShaderStageFlagBits::eFragment
+        );
 	this->sampler = this->shaderInput.addSampler();
-    this->lightBufferSB = this->shaderInput.addStorageBuffer(
-        sizeof(LightBufferData) * MAX_NUM_LIGHTS,
-        vk::ShaderStageFlagBits::eFragment); 
+    this->lightBufferSB = 
+        this->shaderInput.addStorageBuffer(
+            sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+            vk::ShaderStageFlagBits::eFragment
+        );
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
 	    this->device, 
@@ -980,7 +987,27 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
 
     this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) &lightBuffer[0]);
     this->shaderInput.setStorageBuffer(this->lightBufferSB);
-    //this->animShaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data()); 
+    // this->animShaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data()); 
+
+    // Info about all lights in the shader
+    AllLightsInfo lightsInfo{};
+    lightsInfo.numLights = std::min(
+        static_cast<uint32_t>(this->lightBuffer.size()), 
+        MAX_NUM_LIGHTS);
+
+#ifdef _CONSOLE
+    if (this->lightBuffer.size() > MAX_NUM_LIGHTS)
+    {
+        Log::warning("The number of lights is larger than the maximum allowed number. Truncates " + 
+            std::to_string(this->lightBuffer.size()) + " lights to " + 
+            std::to_string(MAX_NUM_LIGHTS));
+    }
+#endif
+
+    this->shaderInput.updateUniformBuffer(
+        this->allLightsInfoUB,
+        (void*) &lightsInfo
+    );
 }
 
 void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
