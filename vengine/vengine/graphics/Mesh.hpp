@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <vulkan/vulkan.hpp>
+#include <unordered_map>
 
 #include "../resource_management/ResourceManagerStructs.hpp"
 #include "MeshData.hpp"
@@ -18,6 +19,7 @@ private:
     VmaAllocator&   vma;
 
     std::vector<glm::mat4> boneTransforms;
+    std::unordered_map<std::string, uint32_t> aniNames;
 
     // One vertex buffer per data stream
     VertexBufferArray vertexBuffers;
@@ -52,6 +54,9 @@ public:
 	inline MeshData& getMeshData();
     inline const std::vector<SubmeshData>& getSubmeshData() const;
     
+    void mapAnimations(const std::vector<std::string>& names);
+    uint32_t getAnimationIndex(const std::string& name) const;
+
     void cleanup();
 
     // Debug

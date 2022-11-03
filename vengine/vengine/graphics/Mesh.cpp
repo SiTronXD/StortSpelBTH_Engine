@@ -3,6 +3,8 @@
 #include "tracy/Tracy.hpp"
 #include "glm/gtx/quaternion.hpp"
 #include "Buffer.hpp"
+#include "../dev/Log.hpp"
+
 #include <map>
 
 void Mesh::getAnimLerp(
@@ -266,6 +268,27 @@ const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer, const 
 
     // Return transformed array
     return this->boneTransforms;
+}
+
+void Mesh::mapAnimations(const std::vector<std::string>& names)
+{
+    this->aniNames.clear();
+    uint32_t index = 0;
+    for (const std::string& name : names)
+    {
+        this->aniNames[name] = index++;
+    }
+}
+
+uint32_t Mesh::getAnimationIndex(const std::string& name) const
+{
+    const auto it = this->aniNames.find(name);
+    if (it == this->aniNames.end())
+    {
+        Log::error("Could not find animation with name \"" + name + "\"");
+    }
+
+    return it->second;
 }
 
 void Mesh::cleanup()

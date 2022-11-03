@@ -143,6 +143,8 @@ void TestDemoScene::init()
 
 	uint32_t meshId = Scene::getResourceManager()->addAnimations(
 		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx", "assets/models/stickThird.fbx"});
+	this->getResourceManager()->getMesh(meshId).mapAnimations(
+		{"bendIdle", "fastBend", "dumb"});
 
 	multiAnimation = this->createEntity();
 	this->setComponent<MeshComponent>(multiAnimation);
@@ -191,17 +193,26 @@ void TestDemoScene::update()
 {
 	if (Input::isKeyReleased(Keys::ONE))
 	{
-		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 0;
+		const uint32_t meshId = this->getComponent<MeshComponent>(multiAnimation).meshID;
+		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 
+			this->getResourceManager()->getMesh(meshId).getAnimationIndex("bendIdle");
+
 		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
 	}
 	else if (Input::isKeyReleased(Keys::TWO))
 	{
-		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 1;
+		const uint32_t meshId = this->getComponent<MeshComponent>(multiAnimation).meshID;
+		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 
+			this->getResourceManager()->getMesh(meshId).getAnimationIndex("fastBend");
+
 		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
 	}
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
-		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 2;
+		const uint32_t meshId = this->getComponent<MeshComponent>(multiAnimation).meshID;
+		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 
+			this->getResourceManager()->getMesh(meshId).getAnimationIndex("dumb");
+
 		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
 	}
 
