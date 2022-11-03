@@ -1,9 +1,9 @@
 #pragma once
 
-#include "../ServerEngine/ServerGame.h"
 #include "../../ai/AIHandler.hpp"
+#include "../ServerEngine/NetworkScene.h"
 
-class DefaultServerGame : public ServerGameMode
+class DefaultServerGame : public NetworkScene
 {
 private:
     //AIHandler aiHandler;
