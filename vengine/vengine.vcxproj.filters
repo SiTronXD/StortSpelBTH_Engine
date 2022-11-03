@@ -85,6 +85,7 @@
     <ClCompile Include="vengine\lua\wrappers\PhysicsEngineLua.cpp" />
     <ClCompile Include="vengine\dev\StringHelper.cpp" />
     <ClCompile Include="vengine\graphics\MeshDataModifier.cpp" />
+    <ClCompile Include="vengine\physics\CollisionDispatcher.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -165,6 +166,8 @@
     <ClInclude Include="vengine\lua\wrappers\PhysicsEngineLua.h" />
     <ClInclude Include="vengine\dev\StringHelper.hpp" />
     <ClInclude Include="vengine\graphics\MeshDataModifier.hpp" />
+    <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
+    <ClInclude Include="vengine\physics\CallbackType.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneHandler.h" />
     <ClInclude Include="vengine\dev\Fail.h" />
   </ItemGroup>
