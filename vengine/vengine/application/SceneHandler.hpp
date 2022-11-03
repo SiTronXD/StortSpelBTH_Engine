@@ -3,6 +3,7 @@
 
 class UIRenderer;
 class DebugRenderer;
+class Window;
 
 class SceneHandler
 {
@@ -20,6 +21,7 @@ private:
 	VulkanRenderer* vulkanRenderer;
 	UIRenderer* uiRenderer;
 	DebugRenderer* debugRenderer;
+	Window* window;
 
 	void initSubsystems();
 
@@ -57,6 +59,9 @@ public:
 
 	void setVulkanRenderer(VulkanRenderer* vulkanRenderer);
 	VulkanRenderer* getVulkanRenderer();
+
+	void setWindow(Window* window);
+	Window* getWindow();
 
 	Scene* getScene() const;
 };

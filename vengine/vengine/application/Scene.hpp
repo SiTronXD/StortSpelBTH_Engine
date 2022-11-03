@@ -9,6 +9,7 @@
 #include "../resource_management/ResourceManager.hpp"
 #include "../physics/PhysicsEngine.h"
 #include "../lua/ScriptHandler.h"
+#include "Window.hpp"
 
 #include <entt.hpp>
 #include <vector>

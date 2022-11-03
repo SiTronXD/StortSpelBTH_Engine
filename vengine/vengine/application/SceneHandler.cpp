@@ -169,3 +169,13 @@ Scene* SceneHandler::getScene() const
 {
 	return this->scene;
 }
+
+void SceneHandler::setWindow(Window* window)
+{
+	this->window = window;
+}
+
+Window* SceneHandler::getWindow()
+{
+	return this->window;
+}
