@@ -33,21 +33,21 @@ void ScriptHandler::updateScripts()
 	auto func = [&](Transform& transform, const Script& script)
 	{
 		lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+#ifdef _CONSOLE
 		if (luaL_dofile(L, script.path) != LUA_OK)
 		{
 			LuaH::dumpError(L);
 		}
 		else
 		{
-			lua_getfield(L, -1, "update"); // Get new update function
-			lua_setfield(L, -3, "update"); // Set instance update function to the new one
+			LuaH::replaceTableFunctions(L, -1, -2);
 			lua_pop(L, 1);
 		}
-
+#endif
 		lua_getfield(L, -1, "update");
 		if (lua_type(L, -1) == LUA_TNIL)
 		{
-			lua_pop(L, 1);
+			lua_pop(L, 2);
 			return;
 		}
 
@@ -168,16 +168,17 @@ void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, b
 	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e1);
 
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+#ifdef _CONSOLE
 	if (luaL_dofile(L, script.path) != LUA_OK)
 	{
 		LuaH::dumpError(L);
 	}
 	else
 	{
-		lua_getfield(L, -1, func); // Get new collision function
-		lua_setfield(L, -3, func); // Set instance collision function to the new one
+		LuaH::replaceTableFunctions(L, -1, -2);
 		lua_pop(L, 1);
 	}
+#endif
 
 	lua_getfield(L, -1, func);
 	if (lua_type(L, -1) == LUA_TNIL)
@@ -237,9 +238,9 @@ void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)
 			bool returned = lua_toboolean(L, -1);
 			if (returned) { it = vec.erase(it); }
 			else { it++; }
-			lua_pop(L, 3);
 		}
 		else { it++; }
+		lua_pop(L, 3);
 	}
 }
 
@@ -269,9 +270,9 @@ bool ScriptHandler::getScriptComponentValue(Script& script, int& ret, std::strin
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
 	lua_getfield(L, -1, name.c_str());
 
-
 	bool result = lua_isnumber(L, -1);
 	if (result) { ret = (int)lua_tonumber(L, -1); }
+	lua_pop(L, 2);
 	return result;
 }
 
@@ -282,6 +283,7 @@ bool ScriptHandler::getScriptComponentValue(Script& script, float& ret, std::str
 
 	bool result = lua_isnumber(L, -1);
 	if (result) { ret = (float)lua_tonumber(L, -1); }
+	lua_pop(L, 2);
 	return result;
 }
 
@@ -292,6 +294,7 @@ bool ScriptHandler::getScriptComponentValue(Script& script, std::string& ret, st
 
 	bool result = lua_isstring(L, -1);
 	if (result) { ret = lua_tostring(L, -1); }
+	lua_pop(L, 2);
 	return result;
 }
 
@@ -301,6 +304,7 @@ bool ScriptHandler::getGlobal(int& ret, std::string& name)
 
 	bool result = lua_isnumber(L, -1);
 	if (result) { ret = (int)lua_tonumber(L, -1); }
+	lua_pop(L, 1);
 	return result;
 }
 
@@ -310,6 +314,7 @@ bool ScriptHandler::getGlobal(float& ret, std::string& name)
 
 	bool result = lua_isnumber(L, -1);
 	if (result) { ret = (float)lua_tonumber(L, -1); }
+	lua_pop(L, 1);
 	return result;
 }
 
@@ -319,5 +324,6 @@ bool ScriptHandler::getGlobal(std::string& ret, std::string& name)
 
 	bool result = lua_isstring(L, -1);
 	if (result) { ret = lua_tostring(L, -1); }
+	lua_pop(L, 1);
 	return result;
 }

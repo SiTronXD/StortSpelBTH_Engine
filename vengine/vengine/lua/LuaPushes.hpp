@@ -356,9 +356,11 @@ static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime
 
 	lua_getfield(L, index, "timer");
 	anim.timer = (float)lua_tonumber(L, -1);
+	lua_pop(L, 1);
 
 	lua_getfield(L, index, "timeScale");
 	anim.timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	lua_pop(L, 1);
 
 	return anim;
 }

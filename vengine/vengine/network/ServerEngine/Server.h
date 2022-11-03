@@ -3,9 +3,8 @@
 #include <vector>
 #include <thread>
 #include "../NetworkEnumAndDefines.h"
-#include "ServerGame.h"
-#include "NetworkScene.h"
-#include "ServerScriptHandler.h"
+#include "NetworkSceneHandler.h"
+#include "NetworkScriptHandler.h"
 
 struct clientInfo {
 	clientInfo(std::string name)
@@ -38,8 +37,10 @@ private:
 	void getDataFromUsers();
 	void createUDPPacketToClient(const int& clientID, sf::Packet& packet);
 
-	//serverMode
-	ServerGameMode *serverGame;
+	//engine objects
+	NetworkSceneHandler sceneHandler;
+	//PhysicsEngine physicsEngine; unsure?
+	NetworkScriptHandler scriptHandler;
 
 	//print all users
 	void printAllUsers();
@@ -49,10 +50,6 @@ private:
 	StartingEnum starting;
 	float        currentTimeToSend;
 	float        timeToSend;
-
-	//engine objects
-	NetworkScene scene;
-	ServerScriptHandler scriptHandler;
 
 	//objects
 	std::thread* connectThread;
@@ -86,7 +83,7 @@ private:
 	}
 
 public:
-	Server(ServerGameMode* serverGame = nullptr);
+	Server(NetworkScene* serverGame = nullptr);
 	~Server();
 	void        start();
 	bool        update(float dt);
