@@ -536,6 +536,13 @@ settings.keepCpuPixelInfo = false
 local textureID = resources.addTexture("test.png", settings)
 ~~~
 
+### addAnimations
+This function is similar to the [addMesh](#addMesh) function. The difference is that it takes in multiple files that contain the same mesh with a skeleton, but with different animations. This results with one mesh but with multiple animation clips that can be used with the [animation component](#Animation).
+~~~ Lua
+resources.addAnimations(table : path_array) -- Returns the mesh ID
+resources.addMesh(table : path_array, string : textures_path) -- optional
+~~~
+
 #### addAudio
 Loads audio file that can be used in the engine. Returns ID if the path sent is successfully loaded the audiofile. Otherwise the return is nil.
 ~~~ Lua
