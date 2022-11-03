@@ -343,6 +343,8 @@ SET ERRORLEVEL = 0</Command>
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\physics\CallbackType.h" />
+    <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
     <ClInclude Include="vengine\ai\AgentStatus.hpp" />
     <ClInclude Include="vengine\ai\AIHandler.hpp" />
     <ClInclude Include="vengine\ai\BehaviorTree.hpp" />
@@ -456,6 +458,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="vengine\physics\CollisionDispatcher.cpp" />
     <ClCompile Include="vengine\ai\AIHandler.cpp" />
     <ClCompile Include="vengine\ai\BehaviorTree.cpp" />
     <ClCompile Include="vengine\ai\Blackboard.cpp" />

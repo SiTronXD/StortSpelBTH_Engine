@@ -10,6 +10,9 @@ scene.setMainCamera(cam)
 scene.setComponent(cam, CompType.Script, "assets/scripts/script2.lua")
 scene.getComponent(cam, CompType.Script).playerID = p
 
+local e = scene.createEntity()
+scene.setComponent(e, CompType.Script, "assets/scripts/collisionchecks.lua")
+
 --[[local prefab = {
 	Transform = {
 		position = vector(3, 0, 5),

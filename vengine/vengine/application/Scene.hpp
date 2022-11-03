@@ -104,13 +104,13 @@ class Scene
 	virtual void start();
 	virtual void update();
 
-	// Collision callbacks (some implemented later)
-	//virtual void onCollisionEnter(Entity e1, Entity e2);
+	// Collision callbacks
+	virtual void onCollisionEnter(Entity e1, Entity e2);
 	virtual void onCollisionStay(Entity e1, Entity e2);
-	//virtual void onCollisionExit(Entity e1, Entity e2);
-	//virtual void onTriggerEnter(Entity e1, Entity e2);
+	virtual void onCollisionExit(Entity e1, Entity e2);
+	virtual void onTriggerEnter(Entity e1, Entity e2);
 	virtual void onTriggerStay(Entity e1, Entity e2);
-	//virtual void onTriggerExit(Entity e1, Entity e2);
+	virtual void onTriggerExit(Entity e1, Entity e2);
 
 	inline entt::registry& getSceneReg() { return this->reg; }
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }

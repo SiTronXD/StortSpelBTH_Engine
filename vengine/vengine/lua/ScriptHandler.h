@@ -8,6 +8,7 @@
 typedef int Entity;
 struct lua_State;
 struct LuaSystem;
+enum class CallbackType;
 class SceneHandler;
 class ResourceManager;
 class NetworkHandler;
@@ -41,7 +42,7 @@ public:
 
 	bool runScript(std::string& path);
 	void setScriptComponent(Entity entity, std::string& path);
-	void runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger);
+	void runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger, CallbackType type);
 	void updateSystems(std::vector<LuaSystem>& vec);
 
 	void update();
