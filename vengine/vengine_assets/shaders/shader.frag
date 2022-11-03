@@ -12,8 +12,6 @@ struct LightBufferData
 {
     vec4 position;
     vec4 color;
-    vec4 padding0;
-    vec4 padding1;
 };
 layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer LightBuffer
 {
@@ -36,6 +34,7 @@ void main()
 
 	vec3 finalCol = texture(textureSampler0, fragTex).rgb * diffuse;
 	
+	// Texture + static diffuse light
 	// outColor = vec4(finalCol, 1.0f);
 
 	// Temporary fog
@@ -50,9 +49,13 @@ void main()
 
 	outColor = vec4(mix(finalCol, vec3(0.8f), distAlpha), 1.0f);
 
-	outColor = vec4(
-		lightBuffer.lights[0].color.xyz * 
-			1.0f / length(lightBuffer.lights[0].position.xyz - fragWorldPos.xyz), 
-		1.0f
-	);
+	// Color from lights
+	vec3 finalLightColor = vec3(0.0f);
+	for(uint i = 0; i < 1; ++i)
+	{
+		finalLightColor += 
+			lightBuffer.lights[i].color.xyz * 
+			1.0f / length(lightBuffer.lights[i].position.xyz - fragWorldPos.xyz);
+	}
+	outColor = vec4(finalLightColor, 1.0f);
 }

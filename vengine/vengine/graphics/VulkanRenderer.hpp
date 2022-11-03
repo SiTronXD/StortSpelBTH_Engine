@@ -25,8 +25,6 @@ struct LightBufferData
 {
     glm::vec4 position;
     glm::vec4 color;
-    glm::vec4 padding0;
-    glm::vec4 padding1;
 };
 
 #include <functional>
