@@ -18,7 +18,7 @@ class DebugRenderer;
 
 class ScriptHandler
 {
-private:
+protected:
 	static inline const std::string SCRIPT_PATH = "vengine_assets/scripts/";
 
 	lua_State* L;

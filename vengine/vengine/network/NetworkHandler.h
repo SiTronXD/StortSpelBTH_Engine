@@ -6,9 +6,13 @@
 
 class NetworkHandler {
   private:
+	const float waitTimeForServerCreation = 5.0f;
+
+  private:
 
     std::thread*  serverThread;
     bool          shutDownServer;
+	bool          createdServer;
     Client*       client;
     SceneHandler* sceneHandler;
     int           ID;
@@ -33,7 +37,7 @@ class NetworkHandler {
     void setSceneHandler(SceneHandler* sceneHandler);
 
     //SERVER
-    void createServer(ServerGameMode* serverGame = nullptr); //create new server on a new thread
+    void createServer(NetworkScene* serverGame = nullptr); //create new server on a new thread
     void deleteServer();
 
     //CLIENT

@@ -48,8 +48,8 @@ public:
 
     uint32_t addMesh(std::string&& meshPath, 
         std::string&& texturesPath = "");
-    uint32_t addTexture(std::string&& texturePath, 
-        const TextureSamplerSettings& textureSamplerSettings = { vk::Filter::eLinear });
+    uint32_t addTexture(std::string&& texturePath,
+        const TextureSettings& textureSettings = {});
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
 
     Mesh& getMesh(uint32_t id);

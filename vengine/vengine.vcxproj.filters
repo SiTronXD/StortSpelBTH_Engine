@@ -54,7 +54,6 @@
     <ClCompile Include="vengine\network\Client.cpp" />
     <ClCompile Include="vengine\network\NetworkHandler.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\Server.cpp" />
-    <ClCompile Include="vengine\network\ServerEngine\ServerGame.cpp" />
     <ClCompile Include="vengine\network\ServerGameModes\DefaultServerGame.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\Timer.cpp" />
     <ClCompile Include="vengine\resource_management\Configurator.cpp" />
@@ -72,7 +71,7 @@
     <ClCompile Include="vengine\graphics\DebugRenderer.cpp" />
     <ClCompile Include="vengine\graphics\VertexBufferArray.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkScene.cpp" />
-    <ClCompile Include="vengine\network\ServerEngine\ServerScriptHandler.cpp" />
+    <ClCompile Include="vengine\network\ServerEngine\NetworkScriptHandler.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneLua.cpp" />
     <ClCompile Include="vengine\resource_management\loaders\ColliderLoader.cpp" />
     <ClCompile Include="vengine\ai\AIHandler.cpp" />
@@ -87,6 +86,7 @@
     <ClCompile Include="vengine\dev\StringHelper.cpp" />
     <ClCompile Include="vengine\graphics\MeshDataModifier.cpp" />
     <ClCompile Include="vengine\physics\CollisionDispatcher.cpp" />
+    <ClCompile Include="vengine\network\ServerEngine\NetworkSceneHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -147,7 +147,7 @@
     <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\UniformBufferStructs.hpp" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkScene.h" />
-    <ClInclude Include="vengine\network\ServerEngine\ServerScriptHandler.h" />
+    <ClInclude Include="vengine\network\ServerEngine\NetworkScriptHandler.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneLua.h" />
     <ClInclude Include="vengine\resource_management\loaders\ColliderLoader.hpp" />
     <ClInclude Include="vengine\ai\AgentStatus.hpp" />
@@ -168,6 +168,8 @@
     <ClInclude Include="vengine\graphics\MeshDataModifier.hpp" />
     <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
     <ClInclude Include="vengine\physics\CallbackType.h" />
+    <ClInclude Include="vengine\network\ServerEngine\NetworkSceneHandler.h" />
+    <ClInclude Include="vengine\dev\Fail.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -335,7 +337,6 @@
     <ClInclude Include="vengine\network\NetworkEnumAndDefines.h" />
     <ClInclude Include="vengine\network\NetworkHandler.h" />
     <ClInclude Include="vengine\network\ServerEngine\Server.h" />
-    <ClInclude Include="vengine\network\ServerEngine\ServerGame.h" />
     <ClInclude Include="vengine\network\ServerEngine\Timer.h" />
     <ClInclude Include="vengine\systems\System.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />

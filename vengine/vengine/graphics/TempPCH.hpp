@@ -7,3 +7,5 @@
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyVulkan.hpp"
 #endif 
+
+typedef unsigned char stbi_uc;

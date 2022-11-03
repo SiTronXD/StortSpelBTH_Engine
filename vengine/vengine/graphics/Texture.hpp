@@ -5,6 +5,25 @@
 class PhysicalDevice;
 class Device;
 
+struct TextureSamplerSettings
+{
+	// Settings for sampler
+	vk::Filter filterMode = vk::Filter::eLinear;
+	vk::Bool32 unnormalizedCoordinates = VK_FALSE;
+};
+
+struct TextureSettings
+{
+	TextureSamplerSettings samplerSettings
+	{
+		vk::Filter::eLinear,
+		VK_FALSE
+	};
+
+	// Settings for texture
+	bool keepCpuPixelInfo = false;
+};
+
 struct ImageCreateData
 {
 	uint32_t width;
@@ -15,6 +34,14 @@ struct ImageCreateData
 	VmaAllocation* imageMemory;
 };
 
+struct Pixel
+{
+	unsigned char r;
+	unsigned char g;
+	unsigned char b;
+	unsigned char a;
+};
+
 class Texture
 {
 private:
@@ -22,6 +49,8 @@ private:
     VmaAllocator* vma;
 
 	vk::ImageView imageView;
+
+	std::vector<Pixel> pixels;
 
 	uint32_t textureSamplerIndex;
 	uint32_t width;
@@ -36,9 +65,13 @@ public:
 
 	void init(
 		const vk::ImageView& imageView, 
-		const uint32_t& width, 
-		const uint32_t& height,
 		const uint32_t& textureSamplerIndex);
+
+	void setCpuInfo(
+		stbi_uc* imageData, 
+		const uint32_t& outputWidth, 
+		const uint32_t& outputHeight,
+		const TextureSettings& textureSettings);
 
 	void cleanup();
 
@@ -46,6 +79,7 @@ public:
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }
 	inline const uint32_t& getSamplerIndex() const { return this->textureSamplerIndex; }
+	inline const Pixel& getCpuPixel(const uint32_t& x, const uint32_t& y) const { return this->pixels[y * this->width + x]; }
 
 	static vk::Format chooseSupportedFormat(
 		PhysicalDevice& physicalDevice,
@@ -74,4 +108,8 @@ public:
 		const vk::Image& image,
 		const vk::ImageLayout& oldLayout,
 		const vk::ImageLayout& newLayout);
+
+	static void settingsToString(
+		const TextureSettings& samplerSettings,
+		std::string& outputString);
 };

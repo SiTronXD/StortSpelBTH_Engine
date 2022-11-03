@@ -11,6 +11,7 @@ private:
 
 	uint32_t uiTextureIndex0;
 	uint32_t uiTextureIndex1;
+	uint32_t fontTextureIndex;
 
 	float timer;
 
