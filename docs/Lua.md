@@ -792,8 +792,12 @@ When using the script, some function names will be called from C++ if they are d
 ~~~ Lua
 script:init() -- Called after component has been created
 script:update(dt) -- Called every new frame where dt is the delta time.
+script:onCollisionEnter(e) -- Called when collision with another entity has started
 script:onCollisionStay(e) -- Called when colliding with another entity
+script:onCollisionExit(e) -- Called when collision with another entity has ended
+script:onTriggerEnter(e) -- Called when triggering with another entity has started
 script:onTriggerStay(e) -- Called when trigger colliding with another entity
+script:onTriggerExit(e) -- Called when triggering with another entity has ended
 ~~~
 The script table created and used in these functions also have some extra member elements that has been provided by the C++ side.
 ~~~ Lua
