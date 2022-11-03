@@ -84,16 +84,15 @@ void NetworkTestScene::update()
 {
     if (Input::isKeyPressed(Keys::B)) {
         this->getNetworkHandler()->createServer(new TheServerGame());
-		//TODO : Remove comments
-        //this->getNetworkHandler()->createClient();
-        //if (this->getNetworkHandler()->connectClientToThis())
-        //  {
-        //    std::cout << "connect" << std::endl;
-        //  }
-        //else
-        //{
-        //    std::cout << "no Connect" << std::endl;
-        //}
+        this->getNetworkHandler()->createClient();
+        if (this->getNetworkHandler()->connectClientToThis())
+          {
+            std::cout << "connect" << std::endl;
+          }
+        else
+        {
+            std::cout << "no Connect" << std::endl;
+        }
         //no visulation that we connected
     }
     if (Input::isKeyPressed(Keys::N)) {

@@ -27,7 +27,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 			std::cout << "Server: " << client[client.size() - 1]->clientTcpSocket.getRemoteAddress().toString() << " Connected" << std::endl;
 
 			bool duplicatedUser = false;
-			// TODO: double check so we don't get double players
+			//double check so we don't get double players
 			for (int c = 0; c < client.size() - 1; c++)
 			{
 				if (client[client.size() - 1]->sender == client[c]->sender &&
@@ -56,7 +56,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 
 			client[client.size() - 1]->clientTcpSocket.setBlocking(false);
 
-			//TODO: send to player their id
+			// send to player their id
 			sf::Packet idPacket;
 			idPacket << GameEvents::ID << client[client.size() - 1]->id << (int)client.size() - 1;
 			client[client.size() - 1]->clientTcpSocket.send(idPacket);
@@ -64,7 +64,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 			if (!duplicatedUser)
 			{
 
-				//TODO: send that a player has joined
+				// send that a player has joined
 				sf::Packet playerJoinedPacket;
 				playerJoinedPacket << GameEvents::PlayerJoined << client[client.size() - 1]->id;
 				for (int i = 0; i < client.size() - 1; i++)
@@ -103,8 +103,6 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 
 Server::Server(NetworkScene* serverGame)
 {
-	//TODO : Remove comments
-	/*
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
@@ -144,7 +142,7 @@ Server::Server(NetworkScene* serverGame)
 
 	std::cout << "Server: waiting for users to connect" << std::endl;
 	this->connectThread = new std::thread(ConnectUsers, std::ref(this->clients), std::ref(this->listener), std::ref(this->starting));
-	*/
+	
 }
 
 Server::~Server()
@@ -167,8 +165,6 @@ Server::~Server()
 
 void Server::start()
 {
-	//TODO : Remove comments
-	/*
 	//wait for the thread to be done
 	this->connectThread->join();
 	delete this->connectThread;
@@ -201,13 +197,11 @@ void Server::start()
 	std::cout << "Server: printing all users" << std::endl;
 	printAllUsers();
 	this->starting = StartingEnum::Running;
-	*/
+	
 }
 
 bool Server::update(float dt)
 {
-	//TODO : Remove comments
-	/*
 	//if all users is connected and client host sayd it ok to start
 	if (this->starting == StartingEnum::Start)
 	{
@@ -241,7 +235,7 @@ bool Server::update(float dt)
 		cleanRecvPackages();
 		
 	}
-	*/
+	
 	return false;  //server is not done
 }
 
@@ -424,7 +418,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				case GameEvents::A_Button_Was_Pressed_On_Client:
 					std::cout << "Server: client pressed Button wow (TCP)" << std::endl;
 					break;
-
+	
 				case GameEvents::POLYGON_DATA:
 					std::cout << "Server: client sent polygon data" << std::endl;
 					clientToServerPacketTcp[ClientID] >> packetHelper2;

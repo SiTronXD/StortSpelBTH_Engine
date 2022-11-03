@@ -55,7 +55,6 @@ void NetworkScriptHandler::updateScripts(float dt)
 
 NetworkScriptHandler::NetworkScriptHandler()
 {
-	ScriptHandler::ScriptHandler();
 }
 
 NetworkScriptHandler::~NetworkScriptHandler() {}

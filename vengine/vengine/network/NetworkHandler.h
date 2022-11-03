@@ -6,9 +6,13 @@
 
 class NetworkHandler {
   private:
+	const float waitTimeForServerCreation = 5.0f;
+
+  private:
 
     std::thread*  serverThread;
     bool          shutDownServer;
+	bool          createdServer;
     Client*       client;
     SceneHandler* sceneHandler;
     int           ID;

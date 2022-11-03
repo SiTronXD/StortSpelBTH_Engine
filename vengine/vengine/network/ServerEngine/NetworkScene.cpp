@@ -1,14 +1,8 @@
 #include "NetworkScene.h"
 
-NetworkScene::NetworkScene()
-{
-	//Scene::Scene();  //TODO : ?
-}
+NetworkScene::NetworkScene() {}
 
-NetworkScene::~NetworkScene()
-{
-	//Scene::~Scene();  //TODO : ?
-}
+NetworkScene::~NetworkScene() {}
 
 PathFindingManager& NetworkScene::getPathFinder()
 {

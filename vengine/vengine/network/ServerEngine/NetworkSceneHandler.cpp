@@ -26,5 +26,5 @@ void NetworkSceneHandler::setScene(Scene* scene, std::string path) {
 
 NetworkScene* NetworkSceneHandler::getScene() const
 {
-	return dynamic_cast<NetworkScene*>(SceneHandler::getScene());
+	return static_cast<NetworkScene*>(SceneHandler::getScene());
 }

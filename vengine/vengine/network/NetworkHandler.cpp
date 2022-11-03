@@ -1,22 +1,25 @@
 #include "NetworkHandler.h"
 #include "ServerEngine/Timer.h"
 #include <iostream>
+#include <windows.h>
 
-void serverMain(bool& shutDownServer, NetworkScene* game)
+void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
 {
 	Timer serverTime;
 	Server server(game);
 	bool serverIsDone = false;
+	created = true;
 
 	while (!shutDownServer && !serverIsDone)
 	{
 		serverIsDone = server.update(serverTime.getDT());
 		serverTime.updateDeltaTime();
 	}
+
 	return;
 }
 
-NetworkHandler::NetworkHandler()
+NetworkHandler::NetworkHandler() : sceneHandler(nullptr)
 {
 	this->fx = fy = fz = fa = fb = fc = 0.f;
 	this->ix = iy = iz = ia = ib = ic = 0;
@@ -51,7 +54,40 @@ void NetworkHandler::createServer(NetworkScene* serverGame)
 {
 	if (serverThread == nullptr)
 	{
-		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), serverGame);
+		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
+
+		Timer timer;
+		float timeSinceStartCreatingServer = 0;
+		while (!this->createdServer && timeSinceStartCreatingServer < waitTimeForServerCreation)
+		{
+			timeSinceStartCreatingServer += timer.getRealDT();
+			timer.updateDeltaTime();
+		}
+		if (!this->createdServer)
+		{
+			std::cout << "failed to create server" << std::endl;
+		}
+	}
+	else
+	{  //shut down server and create it again
+		this->shutDownServer = true;
+		serverThread->join();
+		delete serverThread;
+		serverThread = nullptr;
+		this->shutDownServer = false;
+		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
+
+		Timer timer;
+		float timeSinceStartCreatingServer = 0;
+		while (!this->createdServer && timeSinceStartCreatingServer < waitTimeForServerCreation)
+		{
+			timeSinceStartCreatingServer += timer.getRealDT();
+			timer.updateDeltaTime();
+		}
+		if (!this->createdServer)
+		{
+			std::cout << "failed to create server" << std::endl;
+		}
 	}
 }
 
@@ -315,7 +351,6 @@ int NetworkHandler::getServerSeed()
 }
 void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
 {
-	//TODO : send polygons to the server
 	TCPPacketEvent polygonEvent;
 
 	polygonEvent.gameEvent = GameEvents::POLYGON_DATA;  //change this
