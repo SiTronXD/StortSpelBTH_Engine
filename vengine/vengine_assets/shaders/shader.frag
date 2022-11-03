@@ -80,6 +80,19 @@ void main()
 		finalLightColor += lightBuffer.lights[i].color.xyz;
 	}
 
+	// Directional lights
+	for(uint i = allLightsInfo.ambientLightsEndIndex; 
+		i < allLightsInfo.directionalLightsEndIndex; 
+		++i)
+	{
+		finalLightColor += 
+			clamp(
+				dot(normal, -lightBuffer.lights[i].direction.xyz),
+				0.0f,
+				1.0f
+			) * lightBuffer.lights[i].color.xyz;
+	}
+
 	// Point lights
 	for(uint i = allLightsInfo.directionalLightsEndIndex; 
 		i < allLightsInfo.pointLightsEndIndex; 

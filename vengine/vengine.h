@@ -6,6 +6,7 @@
 #include "vengine/components/MeshComponent.hpp"
 #include "vengine/components/AnimationComponent.hpp"
 #include "vengine/components/AmbientLight.hpp"
+#include "vengine/components/DirectionalLight.hpp"
 #include "vengine/components/PointLight.hpp"
 #include "vengine/dev/Log.hpp"
 #include "vengine/test/TestScene.hpp"

@@ -59,15 +59,16 @@ void TestDemoScene::init()
 	Entity ambientLightEntity = this->createEntity();
 	this->setComponent<AmbientLight>(ambientLightEntity);
 	this->getComponent<AmbientLight>(ambientLightEntity).color = 
-		glm::vec3(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f);
+		glm::vec3(0.1f);
+		//glm::vec3(48.0f / 255.0f, 10.0f / 255.0f, 36.0f / 255.0f);
 
 	// Directional light
-	/*Entity ambientLightEntity = this->createEntity();
-	this->setComponent<DirectionalLight>(ambientLightEntity);
-	this->getComponent<DirectionalLight>(ambientLightEntity).color =
-		glm::vec3(0.35, 0.35f, 0.2f);
-	this->getComponent<DirectionalLight>(ambientLightEntity).direction =
-		glm::vec3(-1.0f);*/
+	Entity directionalLightEntity = this->createEntity();
+	this->setComponent<DirectionalLight>(directionalLightEntity);
+	this->getComponent<DirectionalLight>(directionalLightEntity).color =
+		glm::vec3(0.95, 0.95f, 0.1f);
+	this->getComponent<DirectionalLight>(directionalLightEntity).direction =
+		glm::vec3(-1.0f, -1.0f, 1.0f);
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();

@@ -32,6 +32,7 @@
 #include "../components/MeshComponent.hpp"
 #include "../components/AnimationComponent.hpp"
 #include "../components/AmbientLight.hpp"
+#include "../components/DirectionalLight.hpp"
 #include "../components/PointLight.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
@@ -995,6 +996,24 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
 
     // Loop through all directional lights in the scene
     lightsInfo.directionalLightsEndIndex = lightsInfo.ambientLightsEndIndex;
+    auto directionalLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
+    directionalLightView.each([&](
+        const DirectionalLight& directionalLightComp)
+        {
+            // Create point light data
+            LightBufferData lightData{};
+            lightData.direction = 
+                glm::vec4(glm::normalize(directionalLightComp.direction), 1.0f);
+            lightData.color = 
+                glm::vec4(directionalLightComp.color, 1.0f);
+
+            // Add to list
+            this->lightBuffer.push_back(lightData);
+
+            // Increment end index
+            lightsInfo.directionalLightsEndIndex++;
+        }
+    );
 
     // Loop through all point lights in scene
     lightsInfo.pointLightsEndIndex = lightsInfo.directionalLightsEndIndex;
