@@ -1,7 +1,4 @@
 #pragma once
-#include <SFML/Audio.hpp>
-#include <unordered_map>
-
 class SceneHandler;
 
 class AudioHandler
@@ -12,6 +9,9 @@ private:
 public:
 	AudioHandler();
 	~AudioHandler();
+
+	void cleanUp();
+
 
 	void setSceneHandler(SceneHandler* sceneHandler);
 	void update();

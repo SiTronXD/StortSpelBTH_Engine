@@ -16,6 +16,10 @@ struct AudioSource
 		:sourceId(sourceId), bufferId(bufferId)
 	{
 	}
+	~AudioSource()
+	{
+		alDeleteSources(1, &this->sourceId);
+	}
 
 	static AudioSource create(AudioBufferId bufferId)
 	{

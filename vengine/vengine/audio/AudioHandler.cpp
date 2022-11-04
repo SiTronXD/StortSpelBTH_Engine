@@ -1,12 +1,24 @@
 #include "AudioHandler.h"
-#include "../dev/Log.hpp"
 #include "../application/SceneHandler.hpp"
+#include "OpenAL/alc.h"
 
-#include <iostream>
 
 AudioHandler::AudioHandler()
 	:sceneHandler(nullptr)
 {
+	ALCdevice* device = alcOpenDevice(NULL);
+    if (!device)
+    {
+		Log::error("Failed creating OpenAL Device");
+    }
+
+    ALCcontext* context = alcCreateContext(device, nullptr);
+	if (!context)
+    {
+		Log::error("Failed creating OpenAL Context");
+    }
+
+    alcMakeContextCurrent(context);
 }
 
 AudioHandler::~AudioHandler()
@@ -20,47 +32,38 @@ void AudioHandler::setSceneHandler(SceneHandler* sceneHandler)
 
 void AudioHandler::update()
 {
-	Scene* scene = sceneHandler->getScene();
+	Scene* scene = this->sceneHandler->getScene();
 
 	const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>(entt::exclude<Inactive>);
 	for (const entt::entity& entity : sourceView)
 	{
-		sourceView.get<AudioSource>(entity).setPosition(sourceView.get<Transform>(entity).position);
+		AudioSourceId id = sourceView.get<AudioSource>(entity).sourceId;
+		const glm::vec3& pos = sourceView.get<Transform>(entity).position;
+		alSource3f(id, AL_POSITION, pos.x, pos.y, pos.z);
 	}
 
-	const int camID = scene->getMainCameraID();
+	const Entity camID = scene->getMainCameraID();
 	if (scene->hasComponents<AudioListener>(camID) && scene->isActive(camID))
 	{
-		AudioListener& listener = scene->getComponent<AudioListener>(camID);
-		Transform& camTra = scene->getComponent<Transform>(camID);
-		listener.setPosition(camTra.position);
-		listener.setOrientation(camTra.forward(), camTra.up());
+		const AudioListener& listener = scene->getComponent<AudioListener>(camID);
+		const Transform& camTra = scene->getComponent<Transform>(camID);
+		
+		const glm::vec3 forward = camTra.forward();
+		const glm::vec3 up = camTra.up();
+		const float orientation[6]{forward.x, forward.y, forward.z, up.x, up.y, up.z};
+
+		alListenerfv(AL_ORIENTATION, orientation);
+		alListener3f(AL_POSITION, camTra.position.x, camTra.position.y, camTra.position.z);
 	}
 	else
 	{
-		sf::Listener::setGlobalVolume(0.f);
+		alListenerf(AL_GAIN, 0.f);
 	}
-}
-
-int AudioHandler::loadFile(const char* filePath)
-{
-	static int ids = 0;
-
-	if (!soundBuffers[ids].loadFromFile(filePath))
-	{
-		Log::error("Could not find file...");
-		soundBuffers.erase(ids);
-		return -1;
-	}
-
-	// Should check if file compatiable with 3D sound or not (mono or stereo)
-
-	return ids++;
 }
 
 void AudioHandler::setMasterVolume(float volume)
 {
-	Scene* scene = sceneHandler->getScene();
+	Scene* scene = this->sceneHandler->getScene();
 	const Entity camID = scene->getMainCameraID();
 	if (scene->hasComponents<AudioListener>(camID) && scene->isActive(camID))
 	{
@@ -68,13 +71,15 @@ void AudioHandler::setMasterVolume(float volume)
 	}
 	else
 	{
-		sf::Listener::setGlobalVolume(volume);
+		alListenerf(AL_GAIN, volume);
 	}
 }
 
 float AudioHandler::getMasterVolume() const
 {
-	return sf::Listener::getGlobalVolume();
+	float volume = 0.f;
+	alGetListenerf(AL_GAIN, &volume);
+	return volume;
 }
 
 void AudioHandler::setMusicBuffer(const sf::SoundBuffer& musicBuffer)
@@ -104,10 +109,11 @@ void AudioHandler::stopMusic()
 	this->music.stop();
 }
 
-sf::SoundBuffer* AudioHandler::getBuffer(int id)
+void AudioHandler::cleanUp()
 {
-	if (soundBuffers.find(id) == soundBuffers.end())
-		return nullptr;
-
-	return &soundBuffers[id];
+	ALCcontext* context = alcGetCurrentContext();
+    ALCdevice* device = alcGetContextsDevice(context);
+    alcMakeContextCurrent(NULL);
+    alcDestroyContext(context);
+    alcCloseDevice(device);
 }

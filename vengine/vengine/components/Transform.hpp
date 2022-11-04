@@ -18,9 +18,9 @@ public:
 		position(0.0f), rotation(0.0f), scale(1.0f), matrix(1.0f)
 	{ }
 
-	glm::vec3 right() { return glm::normalize(glm::vec3(this->matrix[0])); }
-	glm::vec3 up() { return glm::normalize(glm::vec3(this->matrix[1])); }
-	glm::vec3 forward() { return glm::normalize(glm::vec3(this->matrix[2])); }
+	glm::vec3 right() const { return glm::normalize(glm::vec3(this->matrix[0])); }
+	glm::vec3 up() const { return glm::normalize(glm::vec3(this->matrix[1])); }
+	glm::vec3 forward() const { return glm::normalize(glm::vec3(this->matrix[2])); }
 
 	void updateMatrix() // Only useful before right, up, forward or rendering the object
 	{
