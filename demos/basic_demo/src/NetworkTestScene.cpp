@@ -60,7 +60,7 @@ void NetworkTestScene::init()
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
 			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
 
-			this->setComponent<Collider>(e, Collider::createBox(t.scale, glm::vec3(0.f), rand() % 2));
+			this->setComponent<Collider>(e, Collider::createBox(t.scale, glm::vec3(0,0,0),rand() % 2));
 			this->setComponent<Rigidbody>(e);
 			this->setComponent<MeshComponent>(e, 0);
 		}
