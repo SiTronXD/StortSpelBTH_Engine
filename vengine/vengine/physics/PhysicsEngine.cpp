@@ -308,7 +308,7 @@ void PhysicsEngine::init()
 	this->dynWorld->setGravity(btVector3(0, -10, 0));
 }
 
-void PhysicsEngine::update()
+void PhysicsEngine::update(float dt)
 {
 	Scene* scene = this->sceneHandler->getScene();
 
@@ -317,7 +317,7 @@ void PhysicsEngine::update()
 	updateRigidbodies();
 
 	// Update world
-	this->dynWorld->stepSimulation(Time::getDT(), 1, this->TIMESTEP);
+	this->dynWorld->stepSimulation(dt, 1, this->TIMESTEP);
 	this->dynWorld->updateAabbs();
 	this->dynWorld->computeOverlappingPairs();
 
