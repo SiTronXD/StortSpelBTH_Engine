@@ -96,6 +96,8 @@ public:
 	void setInactive(Entity entity);
 	bool isActive(Entity entity);
 
+	void setAnimation(Entity entity, const std::string& animationName, bool resetTimer = true);
+
 	// When created
 	virtual void init();
 	// When starting (after lua)

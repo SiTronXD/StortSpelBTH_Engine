@@ -193,27 +193,15 @@ void TestDemoScene::update()
 {
 	if (Input::isKeyReleased(Keys::ONE))
 	{
-		const uint32_t meshId = this->getComponent<MeshComponent>(multiAnimation).meshID;
-		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 
-			this->getResourceManager()->getMesh(meshId).getAnimationIndex("bendIdle");
-
-		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
+		this->setAnimation(multiAnimation, "bendIdle");
 	}
 	else if (Input::isKeyReleased(Keys::TWO))
 	{
-		const uint32_t meshId = this->getComponent<MeshComponent>(multiAnimation).meshID;
-		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 
-			this->getResourceManager()->getMesh(meshId).getAnimationIndex("fastBend");
-
-		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
+		this->setAnimation(multiAnimation, "fastBend");
 	}
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
-		const uint32_t meshId = this->getComponent<MeshComponent>(multiAnimation).meshID;
-		this->getComponent<AnimationComponent>(multiAnimation).animationIndex = 
-			this->getResourceManager()->getMesh(meshId).getAnimationIndex("dumb");
-
-		this->getComponent<AnimationComponent>(multiAnimation).timer = 0.f;
+		this->setAnimation(multiAnimation, "dumb", false);
 	}
 
 	// Debug rendering on colliders
