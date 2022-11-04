@@ -196,13 +196,12 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	{
 		if (scene->hasComponents<AnimationComponent>(entity))
 		{
-			float endTime = scene->getComponent<AnimationComponent>(entity).endTime;
 			StorageBufferID boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
-			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, endTime, boneID));
+			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, boneID));
 		}
 		else
 		{
-			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, 0, 0));
+			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, 0));
 		}
 	}
 	lua_pop(L, 1);
@@ -347,7 +346,6 @@ int SceneLua::lua_setComponent(lua_State* L)
 	int type = (int)lua_tointeger(L, 2);
 	std::string path;
 
-	float endTime = 0;
 	StorageBufferID boneID = 0;
 	bool assigned = false;
 
@@ -382,10 +380,9 @@ int SceneLua::lua_setComponent(lua_State* L)
 	case CompType::ANIMATION:
 		if (scene->hasComponents<AnimationComponent>(entity)) 
 		{ 
-			endTime = scene->getComponent<AnimationComponent>(entity).endTime;
 			boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
 		}
-		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, endTime, boneID));
+		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, boneID));
 		break;
 	default:
 		break;
@@ -460,6 +457,18 @@ int SceneLua::lua_isActive(lua_State* L)
 	return 1;
 }
 
+int SceneLua::lua_setAnimation(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2)) { return 0; }
+
+	Entity entity = (Entity)lua_tointeger(L, 1);
+	bool reset = lua_isboolean(L, 3) ? lua_toboolean(L, 3) : true;
+	scene->setAnimation(entity, lua_tostring(L, 2), reset);
+
+	return 0;
+}
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -482,6 +491,7 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "setActive", lua_setActive },
 		{ "setInactive", lua_setInactive },
 		{ "isActive", lua_isActive },
+		{ "setAnimation", lua_setAnimation },
 		{ NULL , NULL }
 	};
 

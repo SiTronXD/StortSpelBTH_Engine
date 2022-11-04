@@ -154,10 +154,10 @@ void UIRenderer::setBitmapFont(
 
             // Create rect
             CharacterRect charRect{};
-            charRect.x = (float) charX;
-            charRect.y = (float) charY;
-            charRect.width = (float) charWidth;
-            charRect.height = (float) charHeight;
+            charRect.x = charX;
+            charRect.y = charY;
+            charRect.width = charWidth;
+            charRect.height = charHeight;
 
             // Add rect
             this->characterRects.insert({ currentChar, charRect });

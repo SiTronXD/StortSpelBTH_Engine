@@ -2,8 +2,6 @@
 #include "../../components/Collider.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
-#include <btBulletCollisionCommon.h>
-#include <btBulletDynamicsCommon.h>
 #include <iostream>
 #include <vector>
 

@@ -66,6 +66,8 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setUIRenderer(&uiRenderer);
     this->sceneHandler.setDebugRenderer(&debugRenderer);
     this->sceneHandler.setAIHandler(&aiHandler);
+    this->sceneHandler.setWindow(&window);
+    this->sceneHandler.setAudioHandler(&audioHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
@@ -75,6 +77,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->scriptHandler.setDebugRenderer(&debugRenderer);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
+    this->audioHandler.setSceneHandler(&sceneHandler);
 
     // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
@@ -83,9 +86,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
     //Needs to run after scene is initialized
     this->aiHandler.init(&this->sceneHandler);    
-
-    // Temporary, should be called before creating the scene
-    this->audioHandler.setSceneHandler(&sceneHandler);
 
     // Game loop
     while (window.getIsRunning())

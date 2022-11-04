@@ -8,7 +8,11 @@
 #include "../physics/PhysicsEngine.h"
 #include "../resource_management/Configurator.hpp"
 #include "../resource_management/ResourceManager.hpp"
+#include "../physics/PhysicsEngine.h"
+#include "../lua/ScriptHandler.h"
+#include "Window.hpp"
 #include "../systems/System.hpp"
+#include "../audio/AudioHandler.h"
 
 #include <entt.hpp>
 #include <vector>
@@ -50,6 +54,7 @@ class Scene
 	DebugRenderer* getDebugRenderer();
 	SceneHandler* getSceneHandler();
 	AIHandler* getAIHandler();
+	AudioHandler* getAudioHandler();
 
 	template <typename T>
 	T getConfigValue(std::string_view name)
@@ -98,19 +103,21 @@ class Scene
 	void setInactive(Entity entity);
 	bool isActive(Entity entity);
 
+	void setAnimation(Entity entity, const std::string& animationName, bool resetTimer = true);
+
 	// When created
 	virtual void init();
 	// When starting (after lua)
 	virtual void start();
 	virtual void update();
 
-	// Collision callbacks (some implemented later)
-	//virtual void onCollisionEnter(Entity e1, Entity e2);
+	// Collision callbacks
+	virtual void onCollisionEnter(Entity e1, Entity e2);
 	virtual void onCollisionStay(Entity e1, Entity e2);
-	//virtual void onCollisionExit(Entity e1, Entity e2);
-	//virtual void onTriggerEnter(Entity e1, Entity e2);
+	virtual void onCollisionExit(Entity e1, Entity e2);
+	virtual void onTriggerEnter(Entity e1, Entity e2);
 	virtual void onTriggerStay(Entity e1, Entity e2);
-	//virtual void onTriggerExit(Entity e1, Entity e2);
+	virtual void onTriggerExit(Entity e1, Entity e2);
 
 	inline entt::registry& getSceneReg() { return this->reg; }
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }

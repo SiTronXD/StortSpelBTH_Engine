@@ -4,7 +4,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
-
 #include "vengine/test/TestScene2.hpp"
 
 TestDemoScene::TestDemoScene()
@@ -66,7 +65,7 @@ void TestDemoScene::init()
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
 			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
 
-			this->setComponent<Collider>(e, Collider::createBox(t.scale, rand() % 2));
+			this->setComponent<Collider>(e, Collider::createBox(t.scale, glm::vec3(0.0f, -5.0f, 0.0f), rand() % 2));
 			this->setComponent<Rigidbody>(e);
 			this->setComponent<MeshComponent>(e, 0);
 		}
@@ -106,8 +105,8 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/Amogus/source/1.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
+				"assets/models/Amogus/source/1.fbx"});
 			amogusMeshID = newMeshComp.meshID;
 		}
 		else
@@ -118,8 +117,8 @@ void TestDemoScene::init()
 
 			/*newMeshComp.meshID = Scene::getResourceManager()->addMesh(
 				"assets/models/run_forward_correct.fbx");*/
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/Stormtrooper/source/silly_dancing.fbx",
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
+				"assets/models/Stormtrooper/source/silly_dancing.fbx"},
 				"assets/models/Stormtrooper/textures");
 		}
 
@@ -131,6 +130,7 @@ void TestDemoScene::init()
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
 
+
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
 	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
@@ -139,6 +139,19 @@ void TestDemoScene::init()
 	swarmMesh.meshID = Scene::getResourceManager()->addMesh(
 		"assets/models/Swarm_Model.fbx",
 		"assets/textures/swarmTextures");
+
+	/*uint32_t meshId = Scene::getResourceManager()->addAnimations(
+		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx", "assets/models/stickThird.fbx"});
+	this->getResourceManager()->getMesh(meshId).mapAnimations(
+		{"bendIdle", "fastBend", "dumb"});
+
+	multiAnimation = this->createEntity();
+	this->setComponent<MeshComponent>(multiAnimation);
+	this->getComponent<MeshComponent>(multiAnimation).meshID = meshId;
+	this->setComponent<AnimationComponent>(multiAnimation);
+	this->getComponent<Transform>(multiAnimation).position.x = -30.f;
+	this->getComponent<Transform>(multiAnimation).rotation.x = 90.f;*/
+
 
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};
@@ -177,6 +190,19 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
+	/*if (Input::isKeyReleased(Keys::ONE))
+	{
+		this->setAnimation(multiAnimation, "bendIdle");
+	}
+	else if (Input::isKeyReleased(Keys::TWO))
+	{
+		this->setAnimation(multiAnimation, "fastBend");
+	}
+	else if (Input::isKeyReleased(Keys::THREE))
+	{
+		this->setAnimation(multiAnimation, "dumb", false);
+	}*/
+
 	// Debug rendering on colliders
 	this->getPhysicsEngine()->renderDebugShapes(Input::isKeyDown(Keys::Y));
 
@@ -302,10 +328,10 @@ void TestDemoScene::update()
 	);
 
 	// Skeleton
-	Scene::getDebugRenderer()->renderSkeleton(
+	/*Scene::getDebugRenderer()->renderSkeleton(
 		this->aniIDs[2],
 		glm::vec3(1.0f, 1.0f, 0.0f)
-	);
+	);*/
 
 	this->timer += Time::getDT();
 
@@ -389,14 +415,39 @@ void TestDemoScene::update()
 	if (Input::isKeyPressed(Keys::I)) {
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
 	}
+
+	if (Input::isKeyReleased(Keys::V))
+	{
+		this->getSceneHandler()->getWindow()->close();
+	}
+}
+
+void TestDemoScene::onCollisionEnter(Entity e1, Entity e2)
+{
+	
 }
 
 void TestDemoScene::onCollisionStay(Entity e1, Entity e2)
 {
-	//Log::write("Collision Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+	
+}
+
+void TestDemoScene::onCollisionExit(Entity e1, Entity e2)
+{
+	
+}
+
+void TestDemoScene::onTriggerEnter(Entity e1, Entity e2)
+{
+
 }
 
 void TestDemoScene::onTriggerStay(Entity e1, Entity e2)
 {
-	//Log::write("Trigger Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+
+}
+
+void TestDemoScene::onTriggerExit(Entity e1, Entity e2)
+{
+
 }

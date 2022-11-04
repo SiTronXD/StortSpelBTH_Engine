@@ -201,6 +201,10 @@ static Collider lua_tocollider(lua_State* L, int index)
 	ColType type = (ColType)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 
+	lua_getfield(L, index, "offset");
+	glm::vec3 offset = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(0.0f);
+	lua_pop(L, 1);
+
 	lua_getfield(L, index, "isTrigger");
 	bool trigger = lua_toboolean(L, -1);
 	lua_pop(L, 1);
@@ -215,14 +219,14 @@ static Collider lua_tocollider(lua_State* L, int index)
 		radius = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 		lua_pop(L, 1);
 
-		col = Collider::createSphere(radius, trigger);
+		col = Collider::createSphere(radius, offset, trigger);
 		break;
 	case ColType::BOX:
 		lua_getfield(L, index, "extents");
 		extents = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
 		lua_pop(L, 1);
 
-		col = Collider::createBox(extents, trigger);
+		col = Collider::createBox(extents, offset, trigger);
 		break;
 	case ColType::CAPSULE:
 		lua_getfield(L, index, "radius");
@@ -233,7 +237,7 @@ static Collider lua_tocollider(lua_State* L, int index)
 		height = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 		lua_pop(L, 1);
 
-		col = Collider::createCapsule(radius, height, trigger);
+		col = Collider::createCapsule(radius, height, offset, trigger);
 		break;
 	default:
 		break;
@@ -306,11 +310,11 @@ static Rigidbody lua_torigidbody(lua_State* L, int index, bool assigned = false)
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "acceleration");
-	rb.acceleration = lua_tovector(L, -1);
+	rb.acceleration = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(0.0f);
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "velocity");
-	rb.velocity = lua_tovector(L, -1);
+	rb.velocity = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(0.0f);
 	lua_pop(L, 1);
 
 	return rb;
@@ -342,17 +346,20 @@ static void lua_pushrigidbody(lua_State* L, const Rigidbody& rb)
 	lua_setfield(L, -2, "velocity");
 }
 
-static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime, StorageBufferID boneID)
+static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBufferID boneID)
 {
 	AnimationComponent anim{};
 	anim.boneTransformsID = boneID;
-	anim.endTime = endTime;
 
 	// Sanity check
 	if (!lua_istable(L, index)) {
 		std::cout << "Error: not animation-table" << std::endl;
 		return anim;
 	}
+
+	lua_getfield(L, index, "animationIndex");
+	anim.animationIndex = (int)lua_tonumber(L, -1);
+	lua_pop(L, 1);
 
 	lua_getfield(L, index, "timer");
 	anim.timer = (float)lua_tonumber(L, -1);
@@ -368,6 +375,9 @@ static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime
 static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
 {
 	lua_newtable(L);
+
+	lua_pushinteger(L, anim.animationIndex);
+	lua_setfield(L, -2, "animationIndex");
 
 	lua_pushnumber(L, anim.timer);
 	lua_setfield(L, -2, "timer");

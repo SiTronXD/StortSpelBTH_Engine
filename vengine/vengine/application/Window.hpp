@@ -45,6 +45,7 @@ public:
     void getVulkanExtensions(std::vector<const char*>& outputExtensions);
     void getSize(int& outputWidth, int& outputHeight);
 
+    void close();
     const bool& getIsRunning() const { return this->isRunning; }
 
     inline SDL_Window*& getWindowHandle() { return this->windowHandle; }

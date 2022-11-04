@@ -3,6 +3,8 @@
 
 class UIRenderer;
 class DebugRenderer;
+class Window;
+class AudioHandler;
 
 class SceneHandler
 {
@@ -20,6 +22,8 @@ private:
 	VulkanRenderer* vulkanRenderer;
 	UIRenderer* uiRenderer;
 	DebugRenderer* debugRenderer;
+	Window* window;
+	AudioHandler* audioHandler;
 
 	void initSubsystems();
 
@@ -57,6 +61,12 @@ public:
 
 	void setVulkanRenderer(VulkanRenderer* vulkanRenderer);
 	VulkanRenderer* getVulkanRenderer();
+
+	void setWindow(Window* window);
+	Window* getWindow();
+
+	void setAudioHandler(AudioHandler* audioHandler);
+	AudioHandler* getAudioHandler();
 
 	Scene* getScene() const;
 };
