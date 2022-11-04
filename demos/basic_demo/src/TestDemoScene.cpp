@@ -141,7 +141,7 @@ void TestDemoScene::init()
 		"assets/models/Swarm_Model.fbx",
 		"assets/textures/swarmTextures");
 
-	uint32_t meshId = Scene::getResourceManager()->addAnimations(
+	/*uint32_t meshId = Scene::getResourceManager()->addAnimations(
 		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx", "assets/models/stickThird.fbx"});
 	this->getResourceManager()->getMesh(meshId).mapAnimations(
 		{"bendIdle", "fastBend", "dumb"});
@@ -151,7 +151,7 @@ void TestDemoScene::init()
 	this->getComponent<MeshComponent>(multiAnimation).meshID = meshId;
 	this->setComponent<AnimationComponent>(multiAnimation);
 	this->getComponent<Transform>(multiAnimation).position.x = -30.f;
-	this->getComponent<Transform>(multiAnimation).rotation.x = 90.f;
+	this->getComponent<Transform>(multiAnimation).rotation.x = 90.f;*/
 
 
 	// Add textures for ui renderer
@@ -191,7 +191,7 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
-	if (Input::isKeyReleased(Keys::ONE))
+	/*if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->setAnimation(multiAnimation, "bendIdle");
 	}
@@ -202,7 +202,7 @@ void TestDemoScene::update()
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
 		this->setAnimation(multiAnimation, "dumb", false);
-	}
+	}*/
 
 	// Debug rendering on colliders
 	this->getPhysicsEngine()->renderDebugShapes(Input::isKeyDown(Keys::Y));

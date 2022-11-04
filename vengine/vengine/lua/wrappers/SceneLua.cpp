@@ -457,6 +457,18 @@ int SceneLua::lua_isActive(lua_State* L)
 	return 1;
 }
 
+int SceneLua::lua_setAnimation(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2)) { return 0; }
+
+	Entity entity = (Entity)lua_tointeger(L, 1);
+	bool reset = lua_isboolean(L, 3) ? lua_toboolean(L, 3) : true;
+	scene->setAnimation(entity, lua_tostring(L, 2), reset);
+
+	return 0;
+}
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -479,6 +491,7 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "setActive", lua_setActive },
 		{ "setInactive", lua_setInactive },
 		{ "isActive", lua_isActive },
+		{ "setAnimation", lua_setAnimation },
 		{ NULL , NULL }
 	};
 

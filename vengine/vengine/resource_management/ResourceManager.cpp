@@ -100,6 +100,20 @@ uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, s
     return (uint32_t)meshes.size() - 1;
 }
 
+bool ResourceManager::mapAnimations(uint32_t meshid, const std::vector<std::string>& names)
+{
+    auto map_iterator = this->meshes.find(meshid);
+    if (this->meshes.end() == map_iterator)
+    {
+        Log::error("mapAnimations failed to find a mesh with the given ID : "
+            + std::to_string(meshid));
+        return false;
+    }
+    this->getMesh(meshid).mapAnimations(names);
+
+    return true;
+}
+
 uint32_t ResourceManager::addTexture(
     std::string&& texturePath,
     const TextureSettings& textureSettings)
