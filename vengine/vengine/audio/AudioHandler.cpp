@@ -74,6 +74,11 @@ void AudioHandler::setMasterVolume(float volume)
 	}
 }
 
+float AudioHandler::getMasterVolume() const
+{
+	return sf::Listener::getGlobalVolume();
+}
+
 void AudioHandler::setMusicBuffer(const sf::SoundBuffer& musicBuffer)
 {
 	this->music.setBuffer(musicBuffer);

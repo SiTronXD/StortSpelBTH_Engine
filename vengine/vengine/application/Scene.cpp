@@ -52,6 +52,12 @@ AIHandler* Scene::getAIHandler()
     return this->sceneHandler->getAIHandler();   
 }
 
+AudioHandler* Scene::getAudioHandler()
+{
+	return this->sceneHandler->getAudioHandler();
+}
+
+
 Scene::Scene()
 	: sceneHandler(nullptr), mainCamera(-1)
 {
@@ -178,12 +184,34 @@ void Scene::update()
 
 }
 
+void Scene::onCollisionEnter(Entity e1, Entity e2)
+{
+
+}
+
 void Scene::onCollisionStay(Entity e1, Entity e2)
 {
+
+}
+
+void Scene::onCollisionExit(Entity e1, Entity e2)
+{
+
+}
+
+void Scene::onTriggerEnter(Entity e1, Entity e2)
+{
+
 }
 
 void Scene::onTriggerStay(Entity e1, Entity e2)
 {
+
+}
+
+void Scene::onTriggerExit(Entity e1, Entity e2)
+{
+
 }
 
 void Scene::setSceneHandler(SceneHandler& sceneHandler)

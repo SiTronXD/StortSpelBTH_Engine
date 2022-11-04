@@ -7,6 +7,7 @@ enum class ColType { SPHERE, BOX, CAPSULE, COUNT, COLERROR };
 struct Collider
 {
 	bool isTrigger = false;
+	glm::vec3 offset = glm::vec3(0.0f);
 
 	// NOTE: Can't be changed after creation, create new collider component instead
 	ColType type;
@@ -19,30 +20,33 @@ struct Collider
 	int ShapeID = -1;
 
 	// Constructor functions
-	static Collider createSphere(float radius, bool isTrigger = false)
+	static Collider createSphere(float radius, glm::vec3 offset = glm::vec3(0.0f), bool isTrigger = false)
 	{
 		Collider col;
 		col.type = ColType::SPHERE;
 		col.radius = radius;
+		col.offset = offset;
 		col.isTrigger = isTrigger;
 		return col;
 	}
 
-	static Collider createBox(glm::vec3 extents, bool isTrigger = false)
+	static Collider createBox(glm::vec3 extents, glm::vec3 offset = glm::vec3(0.0f), bool isTrigger = false)
 	{
 		Collider col;
 		col.type = ColType::BOX;
 		col.extents = extents;
+		col.offset = offset;
 		col.isTrigger = isTrigger;
 		return col;
 	}
 
-	static Collider createCapsule(float radius, float height, bool isTrigger = false)
+	static Collider createCapsule(float radius, float height, glm::vec3 offset = glm::vec3(0.0f), bool isTrigger = false)
 	{
 		Collider col;
 		col.type = ColType::CAPSULE;
 		col.radius = radius;
 		col.height = height;
+		col.offset = offset;
 		col.isTrigger = isTrigger;
 		return col;
 	}

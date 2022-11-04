@@ -7,13 +7,7 @@
 #include <map>
 #include <span>
 #include <stack>
-#include "../../vengine/vengine/VengineMath.hpp"
-
-btVector3 aiVectorToBtVector(const aiVector3D& a, btVector3& b)
-{
-	b = btVector3(a.x, a.y, a.z);
-	return b;
-}
+#include "../../VengineMath.hpp"
 
 ColType ColliderLoader::getShapeType(aiMesh* mesh, const std::string& meshName)
 {
@@ -196,7 +190,7 @@ void addCollisionToScene(std::vector<ColliderDataRes> colliders, Scene& currentS
 	}
 }
 
-void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, NetworkScene* currentScene, const glm::vec3& offset, const glm::vec3& rotationOffset) {
+void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, const glm::vec3& offset, const glm::vec3& rotationOffset) {
 	std::vector<NavMesh::Polygon> polygons;
 	for (int i = 0; i < colliders.size(); i++)
 	{

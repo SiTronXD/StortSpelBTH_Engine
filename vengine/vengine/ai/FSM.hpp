@@ -48,7 +48,7 @@ private:
 	std::string name = "NONAME";
 
 private: 
-    void insertNode(std::string name)
+    void insertNode(const std::string& name)
     {
         fsm_nodes.insert({name, new FSM_Node(name, trees[name])});
     }
@@ -64,40 +64,91 @@ protected:
         BehaviorTree* BT;
     };
     
-
-    void addEntityTransition(std::string from, EntityEvent& transition, std::string to)
+    bool checkAddEntityTransitionErrors(const std::string& from, const std::string& to)
     {
-        fsm_nodes[from]->addNeighbor(&transition, fsm_nodes[to]);
-        this->eventSystem->registerEntityEvent(this, fsm_nodes[to], &transition);
+        bool ret = false;
+        if(trees.count(from) < 1)
+        {
+            Log::warning("FSM["+this->name+"] trying to add event FROM BT["+from+"], but FSM has no BT with that name");
+            ret = true;
+        }
+        else if (trees.count(to) < 1 )
+        {
+            Log::warning("FSM["+this->name+"] trying to add event TO BT["+to+"], but FSM has no BT with that name");
+            ret = true;
+        }
+        return ret;
     }
-    void addGlobalTransition(std::string from, GlobalEvent& transition, std::string to)
+    void addEntityTransition(const std::string& from, EntityEvent& transition, const std::string& to)
     {
-        fsm_nodes[from]->addNeighbor(&transition, fsm_nodes[to]);
-        this->eventSystem->registerGlobalEvent(this, fsm_nodes[to], &transition);
+        if(!checkAddEntityTransitionErrors(from, to))
+        {
+            this->fsm_nodes[from]->addNeighbor(&transition, this->fsm_nodes[to]);
+            this->eventSystem->registerEntityEvent(this, this->fsm_nodes[to], &transition);            
+        }
+        else
+        {
+            Log::error("FSM["+this->name+"] could not att Entity transition between states, see warnings above!");
+        }
+        
+    }
+    void addGlobalTransition(const std::string& from, GlobalEvent& transition, const std::string& to)
+    {
+        if(!checkAddEntityTransitionErrors(from, to))
+        {
+            fsm_nodes[from]->addNeighbor(&transition, fsm_nodes[to]);
+            this->eventSystem->registerGlobalEvent(this, fsm_nodes[to], &transition);
+        }
+        else
+        {
+            Log::error("FSM["+this->name+"] could not att Global transition between states, see warnings above!");
+        }
     }
 
-    void addBT(std::string name, BehaviorTree* BT) 
-    {		
-        // Initiating Tree to populate BTs requiredBTComponents!
-        BT->startTree(this->sceneHandler,name); 
+    bool checkAddBTErrors(const std::string& name, BehaviorTree* BT)
+    {
+        bool ret = false; 
+        if(this->trees.count(name) > 0)
+        {
+            Log::warning("FSM["+this->name+"] already has a BT with the name ["+name+"], use unique names for all added BT Trees");
+            ret = true; 
+        }
 
-        this->trees.insert({name, BT});
-        this->insertNode(name);
+        return ret;
+    }
+
+    void addBT(const std::string& name, BehaviorTree* BT) 
+    {	
+
+        if(!checkAddBTErrors(name, BT))
+        {
+            // Initiating Tree to populate BTs requiredBTComponents!
+            BT->startTree(this->sceneHandler,name); 
+
+            this->trees.insert({name, BT});
+            this->insertNode(name);
+        }
+        else 
+        {
+            Log::error("FSM["+this->name+"] could not add Behavior Tree, see warnings above!");
+        }
+
     }
     
     void addBTs(std::vector<BT_AND_NAME> BTs)
     {
         for (auto bt : BTs)
         {
-            // Initiating Tree to populate BTs requiredBTComponents!
-            bt.BT->startTree(this->sceneHandler,bt.name);
+            addBT(bt.name, bt.BT);
+            // // Initiating Tree to populate BTs requiredBTComponents!
+            // bt.BT->startTree(this->sceneHandler,bt.name);
 
-            this->trees.insert({bt.name, bt.BT});
-            this->insertNode(bt.name);
+            // this->trees.insert({bt.name, bt.BT});
+            // this->insertNode(bt.name);
         }
         
     }
-    void setInitialNode(std::string node) 
+    void setInitialNode(const std::string& node) 
     {
         this->currentNode = this->fsm_nodes[node];
     }
@@ -236,7 +287,7 @@ public:
 	void setCurrentNode(FSM_Node* node) {
 		this->currentNode = node;
 	}
-	void setCurrentNode(std::string node)
+	void setCurrentNode(const std::string& node)
 	{
 		this->currentNode = this->fsm_nodes[node];
 	}
@@ -244,7 +295,7 @@ public:
 		return this->currentNode;
 	}
 
-	void drawBT(std::string tree) { 
+	void drawBT(const std::string& tree) { 
 		this->trees[tree]->draw();
 	}
 	

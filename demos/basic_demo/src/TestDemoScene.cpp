@@ -4,7 +4,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
-
 #include "vengine/test/TestScene2.hpp"
 
 TestDemoScene::TestDemoScene()
@@ -45,7 +44,7 @@ void TestDemoScene::init()
 	this->getComponent<Transform>(puzzleTest).rotation = glm::vec3(0, 180, 0);
 	this->getComponent<Transform>(puzzleTest).position = glm::vec3(5, 0, 0);
 	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), *this, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
-	addCollisionToNetworkScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), nullptr, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
+	addCollisionToNetworkScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), glm::vec3(5, 0, 0), glm::vec3(0,180,0));
 
 	// Floor
 	this->floor = this->createEntity();
@@ -66,7 +65,7 @@ void TestDemoScene::init()
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
 			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
 
-			this->setComponent<Collider>(e, Collider::createBox(t.scale, rand() % 2));
+			this->setComponent<Collider>(e, Collider::createBox(t.scale, glm::vec3(0.0f, -5.0f, 0.0f), rand() % 2));
 			this->setComponent<Rigidbody>(e);
 			this->setComponent<MeshComponent>(e, 0);
 		}
@@ -416,14 +415,39 @@ void TestDemoScene::update()
 	if (Input::isKeyPressed(Keys::I)) {
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
 	}
+
+	if (Input::isKeyReleased(Keys::V))
+	{
+		this->getSceneHandler()->getWindow()->close();
+	}
+}
+
+void TestDemoScene::onCollisionEnter(Entity e1, Entity e2)
+{
+	
 }
 
 void TestDemoScene::onCollisionStay(Entity e1, Entity e2)
 {
-	//Log::write("Collision Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+	
+}
+
+void TestDemoScene::onCollisionExit(Entity e1, Entity e2)
+{
+	
+}
+
+void TestDemoScene::onTriggerEnter(Entity e1, Entity e2)
+{
+
 }
 
 void TestDemoScene::onTriggerStay(Entity e1, Entity e2)
 {
-	//Log::write("Trigger Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+
+}
+
+void TestDemoScene::onTriggerExit(Entity e1, Entity e2)
+{
+
 }

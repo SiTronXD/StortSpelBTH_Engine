@@ -1,14 +1,18 @@
 #pragma once
 
-#include "../systems/System.hpp"
-#include "../components/Transform.hpp"
-#include "../components/Camera.hpp"
-#include "../components/AudioSource.hpp"
 #include "../components/AudioListener.hpp"
+#include "../components/AudioSource.hpp"
+#include "../components/Camera.hpp"
+#include "../components/Transform.hpp"
+#include "../lua/ScriptHandler.h"
+#include "../physics/PhysicsEngine.h"
 #include "../resource_management/Configurator.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../physics/PhysicsEngine.h"
 #include "../lua/ScriptHandler.h"
+#include "Window.hpp"
+#include "../systems/System.hpp"
+#include "../audio/AudioHandler.h"
 
 #include <entt.hpp>
 #include <vector>
@@ -31,15 +35,16 @@ struct LuaSystem
 
 class Scene
 {
-private:
+  private:
 	SceneHandler* sceneHandler;
-
 	entt::registry reg;
-	std::vector<System*> systems;
-	std::vector<LuaSystem> luaSystems;
 	Entity mainCamera;
 
-protected:
+  protected:
+	std::vector<System*> systems;
+	std::vector<LuaSystem> luaSystems;
+
+  protected:
 	void switchScene(Scene* scene, std::string path = "");
 	NetworkHandler* getNetworkHandler();
 	ScriptHandler* getScriptHandler();
@@ -48,14 +53,16 @@ protected:
 	UIRenderer* getUIRenderer();
 	DebugRenderer* getDebugRenderer();
 	SceneHandler* getSceneHandler();
-    AIHandler* getAIHandler();
+	AIHandler* getAIHandler();
+	AudioHandler* getAudioHandler();
 
-    template <typename T> T getConfigValue(std::string_view name)
-    {
-        return vengine_helper::config::DEF<T>(name);
-    }
+	template <typename T>
+	T getConfigValue(std::string_view name)
+	{
+		return vengine_helper::config::DEF<T>(name);
+	}
 
-public:
+  public:
 	Scene();
 	virtual ~Scene();
 
@@ -66,7 +73,7 @@ public:
 	void createSystem(std::string& path);
 	void setScriptComponent(Entity entity, std::string path);
 
-	template <typename T, typename ...Args>
+	template <typename T, typename... Args>
 	void createSystem(Args... args);
 
 	void updateSystems();
@@ -77,7 +84,7 @@ public:
 	Entity createEntity();
 	bool removeEntity(Entity entity);
 
-	template <typename ...Args>
+	template <typename... Args>
 	bool hasComponents(Entity entity);
 
 	template <typename T>
@@ -86,7 +93,7 @@ public:
 	template <typename T>
 	void setComponent(Entity entity, const T&);
 
-	template <typename T, typename ...Args>
+	template <typename T, typename... Args>
 	void setComponent(Entity entity, Args... args);
 
 	template <typename T>
@@ -104,13 +111,13 @@ public:
 	virtual void start();
 	virtual void update();
 
-	// Collision callbacks (some implemented later)
-	//virtual void onCollisionEnter(Entity e1, Entity e2);
+	// Collision callbacks
+	virtual void onCollisionEnter(Entity e1, Entity e2);
 	virtual void onCollisionStay(Entity e1, Entity e2);
-	//virtual void onCollisionExit(Entity e1, Entity e2);
-	//virtual void onTriggerEnter(Entity e1, Entity e2);
+	virtual void onCollisionExit(Entity e1, Entity e2);
+	virtual void onTriggerEnter(Entity e1, Entity e2);
 	virtual void onTriggerStay(Entity e1, Entity e2);
-	//virtual void onTriggerExit(Entity e1, Entity e2);
+	virtual void onTriggerExit(Entity e1, Entity e2);
 
 	inline entt::registry& getSceneReg() { return this->reg; }
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }
@@ -118,40 +125,34 @@ public:
 	void setSceneHandler(SceneHandler& sceneHandler);
 };
 
-template<typename T, typename ...Args>
-inline void Scene::createSystem(Args ...args)
+template <typename T, typename... Args>
+inline void Scene::createSystem(Args... args)
 {
 	this->systems.emplace_back(new T(args...));
 }
 
-template <typename ...Args>
+template <typename... Args>
 bool Scene::hasComponents(Entity entity)
 {
-	return this->reg.all_of<Args...>(
-		(entt::entity)entity);
+	return this->reg.all_of<Args...>((entt::entity)entity);
 }
 
 template <typename T>
 T& Scene::getComponent(Entity entity)
 {
-	return this->reg.get<T>(
-		(entt::entity)entity);
+	return this->reg.get<T>((entt::entity)entity);
 }
 
 template <typename T>
-void Scene::setComponent(Entity entity,
-	const T& component)
+void Scene::setComponent(Entity entity, const T& component)
 {
-	this->reg.emplace_or_replace<T>(
-		(entt::entity)entity, component);
+	this->reg.emplace_or_replace<T>((entt::entity)entity, component);
 }
 
-template <typename T, typename ...Args>
-void Scene::setComponent(Entity entity,
-	Args... args)
+template <typename T, typename... Args>
+void Scene::setComponent(Entity entity, Args... args)
 {
-	this->reg.emplace_or_replace<T>(
-		(entt::entity)entity, args...);
+	this->reg.emplace_or_replace<T>((entt::entity)entity, args...);
 }
 
 template <typename T>
@@ -159,7 +160,9 @@ void Scene::removeComponent(Entity entity)
 {
 	// Don't remove transform
 	if (typeid(T) == typeid(Transform))
-	{ return; }
+	{
+		return;
+	}
 
 	this->reg.remove<T>((entt::entity)entity);
 }

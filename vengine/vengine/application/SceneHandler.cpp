@@ -6,7 +6,11 @@
 
 void SceneHandler::initSubsystems()
 {
-	this->physicsEngine->init();
+	if (physicsEngine != nullptr)
+	{
+		this->physicsEngine->init();
+	}
+	
 
 	// Init scene
 	this->scene->init();
@@ -17,8 +21,11 @@ void SceneHandler::initSubsystems()
 	this->scene->start();
 
 	// Init renderer for scene
-	this->vulkanRenderer->initForScene(this->scene);
-  
+	if (vulkanRenderer != nullptr)
+	{
+		this->vulkanRenderer->initForScene(this->scene);
+	}
+	
 	// Reset delta time counter
 	Time::reset();
 }
@@ -27,10 +34,13 @@ SceneHandler::SceneHandler()
 	: scene(nullptr), 
 	nextScene(nullptr), 
 	networkHandler(nullptr), 
-	scriptHandler(nullptr),
+	scriptHandler(nullptr), 
+	aiHandler(nullptr),
 	resourceManager(nullptr),
+    physicsEngine(nullptr),
 	vulkanRenderer(nullptr),
-	uiRenderer(nullptr)
+	uiRenderer(nullptr), 
+	debugRenderer(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -172,4 +182,24 @@ VulkanRenderer* SceneHandler::getVulkanRenderer()
 Scene* SceneHandler::getScene() const
 {
 	return this->scene;
+}
+
+void SceneHandler::setWindow(Window* window)
+{
+	this->window = window;
+}
+
+Window* SceneHandler::getWindow()
+{
+	return this->window;
+}
+
+void SceneHandler::setAudioHandler(AudioHandler* audioHandler)
+{
+	this->audioHandler = audioHandler;
+}
+
+AudioHandler* SceneHandler::getAudioHandler()
+{
+	return this->audioHandler;
 }
