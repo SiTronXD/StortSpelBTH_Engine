@@ -233,6 +233,12 @@ Checks status of an entity. Returns bool describing it's active status
 scene.isActive(int : entity) -- Returns bool
 ~~~
 
+### setAnimation
+Sets an animation clip to an entity with a string if it has an [animation component](#Animation) and [mesh component](#MeshComponent). This is used in combination with the [mapAnimations](#mapAnimations) function. This exists to be used instead of integer id's since it's more intuitive to work with.
+~~~ Lua
+scene.setAnimation(int : entity, string : animation_name)
+~~~
+
 ### Components
 The amount of components supported grows with the engine. This section goes over the member variables that the components have and how to use them in combination with the [scene](#Scene) global and [prefabs](#Prefabs) These are the ones currently supported in lua:
 * [Transform](#Transform)
@@ -358,10 +364,11 @@ scene.setComponent(e, CompType.Rigidbody, rb)
 ~~~
 
 #### Animation
-The animation component is used to apply an animation on an enity with a [mesh](#MeshComponent). Currently only the timer and playback speed can be altered, but more will be added in the future. Currently only the first animation in the mesh will be played and can't be switched (will be fixed).
+The animation component is used to apply an animation on an enity with a [mesh](#MeshComponent). The current timer, playback speed and selected animation can be decided in the component.
 ~~~ Lua
 -- Members (also how it's defined in prefabs)
 local Animation = {
+	float : animation_index,
 	float : timer,
 	float : timeScale
 }
@@ -536,6 +543,23 @@ settings.samplerSettings.filterMode = Filters.Linear
 settings.samplerSettings.unnormalizedCoordinates = false
 settings.keepCpuPixelInfo = false
 local textureID = resources.addTexture("test.png", settings)
+~~~
+
+### addAnimations
+This function is similar to the [addMesh](#addMesh) function. The difference is that it takes in multiple files that contain the same mesh with a skeleton, but with different animations. This results with one mesh but with multiple animation clips that can be used with the [animation component](#Animation).
+~~~ Lua
+resources.addAnimations(table : path_array) -- Returns the mesh ID
+resources.addAnimations(table : path_array, string : textures_path) -- optional
+~~~
+
+### mapAnimations
+This function is useful with the [setAnimation](#setAnimation) function where a string can be used to change the animation instead of using a integer id in the [animation component](#Animation). The input is the meshid paired with an array containing the names to be used.
+~~~ Lua
+resources.mapAnimations(int: meshID, table : path_array) -- returns true if succeded
+
+-- Example with addAnimations
+local animMesh = resources.addAnimations({ "walk.fbx", "run.fbx", "jump.fbx" })
+resources.mapAnimations(animMesh, { "walk", "run", "jump" })
 ~~~
 
 #### addAudio

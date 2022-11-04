@@ -8,7 +8,7 @@ private:
 	Entity camEntity;
 	Entity testEntity;
 	Entity testEntity2;
-
+	Entity multiAnimation;
 	uint32_t uiTextureIndex0;
 	uint32_t uiTextureIndex1;
 	uint32_t fontTextureIndex;

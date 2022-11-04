@@ -77,14 +77,18 @@ void SceneHandler::updateToNextScene()
 void SceneHandler::prepareForRendering()
 {
 	// Update animation timer
-	auto animView = this->scene->getSceneReg().view<AnimationComponent>(entt::exclude<Inactive>);
+	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
 	animView.each([&]
-	(AnimationComponent& animationComponent)
+	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
 		{
+			const float endTime = 
+				this->resourceManager->getMesh(meshComponent.meshID)
+				.getMeshData().animations[animationComponent.animationIndex].endTime;
+
 			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
-			if (animationComponent.timer >= animationComponent.endTime)
+			if (animationComponent.timer >= endTime)
 			{
-				animationComponent.timer -= animationComponent.endTime;
+				animationComponent.timer -= endTime;
 			}
 		}
 	);
@@ -178,4 +182,24 @@ VulkanRenderer* SceneHandler::getVulkanRenderer()
 Scene* SceneHandler::getScene() const
 {
 	return this->scene;
+}
+
+void SceneHandler::setWindow(Window* window)
+{
+	this->window = window;
+}
+
+Window* SceneHandler::getWindow()
+{
+	return this->window;
+}
+
+void SceneHandler::setAudioHandler(AudioHandler* audioHandler)
+{
+	this->audioHandler = audioHandler;
+}
+
+AudioHandler* SceneHandler::getAudioHandler()
+{
+	return this->audioHandler;
 }

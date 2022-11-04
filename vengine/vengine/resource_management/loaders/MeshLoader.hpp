@@ -25,12 +25,14 @@ private:
     void topologicallySortBones(aiMesh* mesh, aiNode* node, uint32_t& globalIndex);
     std::vector<MeshData> getMeshesFromNodeTree(const aiScene * scene, const std::vector<uint32_t>& matToTex);
     MeshData loadMesh(aiMesh* mesh, uint32_t& lastVertice, uint32_t& lastIndex, std::vector<uint32_t> matToTex);
-    bool loadBones(const aiScene* scene, aiMesh* mesh, MeshData& outMeshData);
 
     aiNodeAnim* findAnimationNode(aiNodeAnim** nodeAnims, unsigned int numNodes, std::string_view name);
     aiNode* findNode(aiNode* rootNode, std::string_view boneName);
     aiNode* findParentBoneNode(std::unordered_map<std::string_view, int>& bones, aiNode* node);
 
+    // Animations
+    void loadAnimation(const aiScene* scene, MeshData& outMeshData);
+    void loadSkeleton(const aiScene* scene, MeshData& outMeshData);
 public: 
     void init(VmaAllocator* vma, vk::PhysicalDevice* physiscalDev, Device* dev, vk::Queue* transQueue, vk::CommandPool* transCmdPool, ResourceManager* resourceMan);
     void setTextureLoader(TextureLoader* textureLoader);
@@ -40,4 +42,5 @@ public:
         const std::string& texturesFolderPath);
     Mesh createMesh(MeshData& data);
 
+    void loadAnimations(const std::vector<std::string>& paths,const std::string& textures, MeshData& outMeshData);
 };

@@ -29,7 +29,8 @@ public:
 
 	// Set master volume, value between 0 - 100
 	void setMasterVolume(float volume);
-	
+	float getMasterVolume() const;
+
 	// Set music buffer
 	void setMusicBuffer(const sf::SoundBuffer& musicBuffer);
 

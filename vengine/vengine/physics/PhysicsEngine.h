@@ -82,7 +82,7 @@ public:
 	void setSceneHandler(SceneHandler* sceneHandler);
 
 	void init();
-	void update();
+	void update(float dt);
 
 	// Function to automatically render all collider shapes
 	void renderDebugShapes(bool renderDebug);
