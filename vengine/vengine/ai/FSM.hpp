@@ -48,7 +48,7 @@ private:
 	std::string name = "NONAME";
 
 private: 
-    void insertNode(std::string name)
+    void insertNode(const std::string& name)
     {
         fsm_nodes.insert({name, new FSM_Node(name, trees[name])});
     }
@@ -64,7 +64,7 @@ protected:
         BehaviorTree* BT;
     };
     
-    bool checkAddEntityTransitionErrors(std::string from, std::string to)
+    bool checkAddEntityTransitionErrors(const std::string& from, const std::string& to)
     {
         bool ret = false;
         if(trees.count(from) < 1)
@@ -79,7 +79,7 @@ protected:
         }
         return ret;
     }
-    void addEntityTransition(std::string from, EntityEvent& transition, std::string to)
+    void addEntityTransition(const std::string& from, EntityEvent& transition, const std::string& to)
     {
         if(!checkAddEntityTransitionErrors(from, to))
         {
@@ -92,7 +92,7 @@ protected:
         }
         
     }
-    void addGlobalTransition(std::string from, GlobalEvent& transition, std::string to)
+    void addGlobalTransition(const std::string& from, GlobalEvent& transition, const std::string& to)
     {
         if(!checkAddEntityTransitionErrors(from, to))
         {
@@ -105,7 +105,7 @@ protected:
         }
     }
 
-    bool checkAddBTErrors(std::string name, BehaviorTree* BT)
+    bool checkAddBTErrors(const std::string& name, BehaviorTree* BT)
     {
         bool ret = false; 
         if(this->trees.count(name) > 0)
@@ -117,7 +117,7 @@ protected:
         return ret;
     }
 
-    void addBT(std::string name, BehaviorTree* BT) 
+    void addBT(const std::string& name, BehaviorTree* BT) 
     {	
 
         if(!checkAddBTErrors(name, BT))
@@ -148,7 +148,7 @@ protected:
         }
         
     }
-    void setInitialNode(std::string node) 
+    void setInitialNode(const std::string& node) 
     {
         this->currentNode = this->fsm_nodes[node];
     }
@@ -287,7 +287,7 @@ public:
 	void setCurrentNode(FSM_Node* node) {
 		this->currentNode = node;
 	}
-	void setCurrentNode(std::string node)
+	void setCurrentNode(const std::string& node)
 	{
 		this->currentNode = this->fsm_nodes[node];
 	}
@@ -295,7 +295,7 @@ public:
 		return this->currentNode;
 	}
 
-	void drawBT(std::string tree) { 
+	void drawBT(const std::string& tree) { 
 		this->trees[tree]->draw();
 	}
 	

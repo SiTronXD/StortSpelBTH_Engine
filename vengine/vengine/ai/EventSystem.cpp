@@ -11,7 +11,7 @@ void EventSystem::registerGlobalEvent(
 {
 	// TODO: Replace vector with map to get better performance...
 	bool found = false;
-	for (auto& s : globalSubscribers[event])
+	for (auto& s : this->globalSubscribers[event])
 	{
 		if (s.node == who)
 		{
@@ -22,7 +22,7 @@ void EventSystem::registerGlobalEvent(
 
 	if (!found)
 	{
-		globalSubscribers[event].push_back({fsm, who});
+		this->globalSubscribers[event].push_back({fsm, who});
 	}
 	else
 	{
@@ -30,7 +30,7 @@ void EventSystem::registerGlobalEvent(
 	}
 
 	//TODO: might not be a good idea to use bool, first time its neither true or false. Use enum?
-	globalEventLastReturn[event] = false;
+	this->globalEventLastReturn[event] = false;
 }
 
 void EventSystem::registerEntityEvent(
@@ -39,7 +39,7 @@ void EventSystem::registerEntityEvent(
 {
 	// TODO: Replace vector with map to get better performance...
 	bool found = false;
-	for (const auto& s : entityEvents[event])
+	for (const auto& s : this->entityEvents[event])
 	{
 		if (s.node == who)
 		{
@@ -50,8 +50,8 @@ void EventSystem::registerEntityEvent(
 
 	if (!found)
 	{	
-		entityEvents[event].push_back({fsm, who});
-		fsmEvents[fsm].push_back({event, who});
+		this->entityEvents[event].push_back({fsm, who});
+		this->fsmEvents[fsm].push_back({event, who});
 	}
 	else
 	{
@@ -64,18 +64,18 @@ void EventSystem::registerEntityEvent(
 
 void EventSystem::update()
 {	
-    if(currentScene != this->sh->getScene())
+    if(this->currentScene != this->sh->getScene())
     {
-        entitySubscribers.clear();
-        entityEventLastReturn.clear();
+        this->entitySubscribers.clear();
+        this->entityEventLastReturn.clear();
     }
 
-	for (auto& event : globalSubscribers)
+	for (auto& event : this->globalSubscribers)
 	{
 
 		if (event.first->checkEvent())
 		{
-			if (!globalEventLastReturn[event.first])
+			if (!this->globalEventLastReturn[event.first])
 			{
 				for (auto subscriber : event.second)
 				{
@@ -84,12 +84,12 @@ void EventSystem::update()
 				}
 				std::cout << event.second[0].fsm->getCurrentNode()->status
 				          << std::endl;
-				globalEventLastReturn[event.first] = true;
+				this->globalEventLastReturn[event.first] = true;
 			}
 		}
-		else if (globalEventLastReturn[event.first])
+		else if (this->globalEventLastReturn[event.first])
 		{
-			globalEventLastReturn[event.first] = false;
+			this->globalEventLastReturn[event.first] = false;
 		}
 	}	
 
@@ -112,7 +112,7 @@ void EventSystem::update()
 			{
                 activeEntityEventNames.emplace_back(&eventTransition->getName());
                 
-				if (!entityEventLastReturn[entityID][eventTransition])
+				if (!this->entityEventLastReturn[entityID][eventTransition])
 				{
 					// TODO: Maybe currentEvent could be held by the FSMComponent?
 					// NOTE: Unsure, but I think we have multiple instances of FSMs right now?...
@@ -124,12 +124,12 @@ void EventSystem::update()
 					std::cout << agent.currentNode->status
 								<< std::endl;
 
-					entityEventLastReturn[entityID][eventTransition] = true;
+					this->entityEventLastReturn[entityID][eventTransition] = true;
 				}                
 			}
-			else if (entityEventLastReturn[entityID][eventTransition])
+			else if (this->entityEventLastReturn[entityID][eventTransition])
 			{
-				entityEventLastReturn[entityID][eventTransition] = false;
+				this->entityEventLastReturn[entityID][eventTransition] = false;
 			}
 
             if(activeEntityEventNames.size() > 1 )

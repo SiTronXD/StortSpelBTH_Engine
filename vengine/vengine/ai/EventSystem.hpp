@@ -35,7 +35,7 @@ class Event
 private:
     std::string name; 
 public:
-	Event(std::string name) : name(name){};
+	Event(const std::string& name) : name(name){};
     inline std::string& getName(){return name;};
 };
 class GlobalEvent : public Event
@@ -45,7 +45,7 @@ public:
 	std::function<bool()> event;
 	bool checkEvent() { return event(); }
 	GlobalEvent() = default; //TODO: Remove
-	GlobalEvent(std::string name, std::function<bool()> event) :Event(name), event(event){};
+	GlobalEvent(const std::string& name, std::function<bool()> event) :Event(name), event(event){};
 };
 
 class EntityEvent : public Event
@@ -55,7 +55,7 @@ class EntityEvent : public Event
 	std::function<bool(uint32_t)> event;
 	bool checkEvent(uint32_t entityID) { return event(entityID); }
 	EntityEvent() = default; //TODO: Remove
-	EntityEvent(std::string name, std::function<bool(uint32_t)> event) :Event(name), event(event){};
+	EntityEvent(const std::string& name, std::function<bool(uint32_t)> event) :Event(name), event(event){};
 };
 
 class EventSystem
