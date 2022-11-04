@@ -6,8 +6,8 @@ DefaultServerGame::DefaultServerGame() {
 
 void DefaultServerGame::init() 
 {
-    //TODO: After intern Test, make use of DefaultServerGame
-    //this->aiHandler.init(&this->sceneHandler);
+	int ground = this->createEntity();
+	this->setComponent<Collider>(ground, Collider::createBox(glm::vec3(100,0.2,100)));
 }
 
 void DefaultServerGame::update(float dt)
