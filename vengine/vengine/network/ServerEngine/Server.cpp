@@ -106,6 +106,7 @@ Server::Server(NetworkScene* serverGame)
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
+	this->physicsEngine.setSceneHandler(&this->sceneHandler);
 
 	if (serverGame == nullptr)
 	{
