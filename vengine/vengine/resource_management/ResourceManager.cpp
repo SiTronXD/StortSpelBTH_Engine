@@ -120,9 +120,8 @@ uint32_t ResourceManager::addSound(std::string&& soundPath)
 {
     if (this->soundPaths.count(soundPath) != 0)
     {
-        return this->soundPaths[soundPath];        
+        return this->soundPaths[soundPath];   
     }
-
 
     sf::InputSoundFile reader;
     if (!reader.openFromFile(soundPath))
@@ -131,20 +130,25 @@ uint32_t ResourceManager::addSound(std::string&& soundPath)
         return 0;
     }
 
+    // Allocate memory for samples
     const uint32_t sampleCount = (uint32_t)reader.getSampleCount();
     short* samples = new short[sampleCount]{};
     reader.read(samples, sampleCount);
-        
+    
+    // Generate buffer
     audioBufferId bufferId = ~1u;
     alGenBuffers(1, &bufferId);
     if (alGetError() != AL_NO_ERROR)
     {
         Log::warning("Failed creating audio buffer!");
+        delete[]samples;
         return 0;
     }
 
+    // Fill buffer
     const ALenum format = reader.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
     alBufferData(bufferId, format, samples, sizeof(short) * sampleCount, sampleCount);
+    delete[]samples;
     if (alGetError() != AL_NO_ERROR)
     {
         Log::warning("Failed filling audio buffer!");
