@@ -30,6 +30,7 @@
 #include "../application/Scene.hpp"
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
+#include "../components/MaterialComponent.hpp"
 #include "../components/AnimationComponent.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
@@ -1116,9 +1117,15 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                 // For every non-animating mesh we have
                 auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent, Inactive>);
                 meshView.each([&](
+                    const auto entity,
                     const Transform& transform, 
                     const MeshComponent& meshComponent)
                     {
+				        if(scene->getSceneReg().try_get<MaterialComponent>(entity))
+				        {
+				            int a = 5;
+                        }
+
                         Mesh& currentMesh =
                             this->resourceManager->getMesh(meshComponent.meshID);
 
@@ -1146,16 +1153,23 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             DescriptorFrequency::PER_MESH
                         );
 
+                        MaterialComponent* material = scene->getSceneReg().try_get<MaterialComponent>(entity);
+				        
                         const std::vector<SubmeshData>& submeshes =
                             currentMesh.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
                         {
                             const SubmeshData& currentSubmesh = submeshes[i];
 
-                            // Update for descriptors
-                            this->shaderInput.setTexture(
-                                this->sampler, currentSubmesh.materialIndex
-                            );
+                            // if entity has material component set, use that material for all submeshes
+					        if (material != nullptr)
+					        {
+						        this->shaderInput.setTexture(this->sampler, material->textureID);
+					        }
+					        else
+					        {
+						        this->shaderInput.setTexture(this->sampler, currentSubmesh.materialIndex);
+					        }
                             currentCommandBuffer.bindShaderInputFrequency(
                                 this->shaderInput,
                                 DescriptorFrequency::PER_DRAW_CALL

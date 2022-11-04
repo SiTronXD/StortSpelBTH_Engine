@@ -69,6 +69,51 @@ uint32_t ResourceManager::addMesh(
     return meshes.size() - 1;
 }
 
+uint32_t ResourceManager::addMesh(std::string meshPath, MeshData meshData)
+{
+	// No mesh imported, send default mesh back
+	if (meshData.vertexStreams.positions.size() == 0)
+	{
+		return 0;
+	}
+
+	// Smooth normals in mesh data
+	// MeshDataModifier::smoothNormals(meshData);
+
+	// NOTE: prevSize as key only works if we never remove resources the map...
+	this->meshPaths.insert({meshPath, this->meshPaths.size()});
+
+	// NOTE: meshes.size as key only works if we never remove resources the map...
+	// Create mesh, insert into map of meshes
+	meshes.insert({meshes.size(), meshLoader.createMesh(meshData)});
+
+	return meshes.size() - 1;
+}
+
+uint32_t ResourceManager::addMaterial(std::string&& materialPath)
+{
+	using namespace vengine_helper::config;
+
+	if (this->materialPaths.count(materialPath) != 0)
+	{
+		// Log::warning("Mesh \""+meshPath+"\" was already added!");
+
+		return this->materialPaths[materialPath];
+	} 
+
+    //TODO: don't create empty material...
+    Material mat = Material();
+
+    this->materialPaths.insert({materialPath, this->materialPaths.size()}); 
+
+    materials.insert({
+        materials.size(), 
+        mat}
+    );
+
+	return materials.size() -1;
+}
+
 uint32_t ResourceManager::addTexture(
     std::string&& texturePath,
     const TextureSettings& textureSettings)

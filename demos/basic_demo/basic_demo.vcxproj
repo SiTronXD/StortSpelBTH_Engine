@@ -258,11 +258,14 @@ SET ERRORLEVEL = 0</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\LevelEditorTestScene.cpp" />
     <ClCompile Include="src\NetworkTestScene.cpp" />
     <ClCompile Include="src\TestDemoScene.cpp" />
     <ClCompile Include="src\TheServerGame.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Headers.h" />
+    <ClInclude Include="src\LevelEditorTestScene.h" />
     <ClInclude Include="src\NetworkTestScene.h" />
     <ClInclude Include="src\TestDemoScene.h" />
     <ClInclude Include="src\TheServerGame.h" />

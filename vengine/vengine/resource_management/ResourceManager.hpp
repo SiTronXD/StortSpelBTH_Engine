@@ -5,6 +5,7 @@
 #include <string>
 #include "ResourceManagerStructs.hpp"
 #include "../graphics/Mesh.hpp"
+#include "../graphics/Material.hpp"
 #include "../graphics/Texture.hpp"
 #include "../graphics/TextureSampler.hpp"
 #include "../dev/Log.hpp"
@@ -21,11 +22,13 @@ private:
     /// VulkanRenderer takes care of cleanups
     friend class VulkanRenderer; 
     std::unordered_map<std::string, uint32_t> meshPaths;
+	std::unordered_map<std::string, uint32_t> materialPaths;
     std::unordered_map<std::string, uint32_t> texturePaths;
     std::unordered_map<std::string, uint32_t> samplerSettings;
 	std::unordered_map<std::string, uint32_t> collisionPaths;
 
-    std::unordered_map<uint32_t, Mesh>  meshes;
+    std::unordered_map<uint32_t, Mesh> meshes;
+	std::unordered_map<uint32_t, Material> materials;
 	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
@@ -48,6 +51,8 @@ public:
 
     uint32_t addMesh(std::string&& meshPath, 
         std::string&& texturesPath = "");
+	uint32_t addMesh(std::string meshPath, MeshData meshData);
+	uint32_t addMaterial(std::string&& materialPath);
     uint32_t addTexture(std::string&& texturePath,
         const TextureSettings& textureSettings = {});
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);

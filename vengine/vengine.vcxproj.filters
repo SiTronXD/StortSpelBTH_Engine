@@ -87,6 +87,10 @@
     <ClCompile Include="vengine\graphics\MeshDataModifier.cpp" />
     <ClCompile Include="vengine\physics\CollisionDispatcher.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneHandler.cpp" />
+    <ClCompile Include="vengine\graphics\Material.cpp" />
+    <ClCompile Include="vengine\shared_memory\Comlib.cpp" />
+    <ClCompile Include="vengine\shared_memory\Memory.cpp" />
+    <ClCompile Include="vengine\shared_memory\Mutex.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -170,6 +174,12 @@
     <ClInclude Include="vengine\physics\CallbackType.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneHandler.h" />
     <ClInclude Include="vengine\dev\Fail.h" />
+    <ClInclude Include="vengine\components\MaterialComponent.hpp" />
+    <ClInclude Include="vengine\graphics\Material.hpp" />
+    <ClInclude Include="vengine\shared_memory\Comlib.h" />
+    <ClInclude Include="vengine\shared_memory\Memory.h" />
+    <ClInclude Include="vengine\shared_memory\Mutex.h" />
+    <ClInclude Include="vengine\shared_memory\MayaStructures.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
