@@ -186,6 +186,10 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
+
+	uint32_t audioId = ~1u;
+	audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
+
 }
 
 void TestDemoScene::update()

@@ -3,6 +3,8 @@
 #include "loaders/MeshLoader.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "../graphics/MeshDataModifier.hpp"
+#include "SFML/Audio/InputSoundFile.hpp"
+#include "OpenAL/al.h"
 
 void ResourceManager::init(
     VmaAllocator* vma,
@@ -112,6 +114,47 @@ bool ResourceManager::mapAnimations(uint32_t meshid, const std::vector<std::stri
     this->getMesh(meshid).mapAnimations(names);
 
     return true;
+}
+
+uint32_t ResourceManager::addSound(std::string&& soundPath)
+{
+    if (this->soundPaths.count(soundPath) != 0)
+    {
+        return this->soundPaths[soundPath];        
+    }
+
+
+    sf::InputSoundFile reader;
+    if (!reader.openFromFile(soundPath))
+    {
+        // reader outputs error string
+        return 0;
+    }
+
+    const uint32_t sampleCount = (uint32_t)reader.getSampleCount();
+    short* samples = new short[sampleCount]{};
+    reader.read(samples, sampleCount);
+        
+    audioBufferId bufferId = ~1u;
+    alGenBuffers(1, &bufferId);
+    if (alGetError() != AL_NO_ERROR)
+    {
+        Log::warning("Failed creating audio buffer!");
+        return 0;
+    }
+
+    const ALenum format = reader.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
+    alBufferData(bufferId, format, samples, sizeof(short) * sampleCount, sampleCount);
+    if (alGetError() != AL_NO_ERROR)
+    {
+        Log::warning("Failed filling audio buffer!");
+        return 0;
+    }
+
+    this->soundPaths.insert({soundPath, (uint32_t)this->soundPaths.size()});
+    this->audioBuffers.insert({(uint32_t)this->audioBuffers.size(), bufferId});
+
+    return (uint32_t)this->audioBuffers.size() - 1;
 }
 
 uint32_t ResourceManager::addTexture(

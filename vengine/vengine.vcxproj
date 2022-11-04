@@ -182,7 +182,7 @@
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;BT_USE_DOUBLE_PRECISION=1;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;GLM_FORCE_QUAT_DATA_WXYZ;_DEBUG;_CONSOLE;TRACY_ENABLE;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\bullet\src\src\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\bullet\src\src\;$(ProjectDir)..\deps\lua\;$(ProjectDir)..\deps\OpenAL\include\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <UndefinePreprocessorDefinitions>
@@ -194,8 +194,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib;$(ProjectDir)..\deps\bullet\lib\;$(ProjectDir)..\deps\lua\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;assimp-vc143-mtd.lib;sfml-network-d.lib;sfml-system-d.lib;sfml-audio-d.lib;BulletDynamics_d.lib;BulletCollision_d.lib;LinearMath_d.lib;lua_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib\;$(ProjectDir)..\deps\bullet\lib\;$(ProjectDir)..\deps\lua\lib\;$(ProjectDir)..\deps\OpenAL\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;openal32.lib;assimp-vc143-mtd.lib;sfml-network-d.lib;sfml-system-d.lib;sfml-audio-d.lib;BulletDynamics_d.lib;BulletCollision_d.lib;LinearMath_d.lib;lua_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
       <Command>
@@ -238,7 +238,7 @@ SET ERRORLEVEL = 0</Command>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;BT_USE_DOUBLE_PRECISION=1;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;GLM_FORCE_QUAT_DATA_WXYZ;NDEBUG;_CONSOLE;TRACY_ENABLE;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\bullet\src\src\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\bullet\src\src\;$(ProjectDir)..\deps\lua\;$(ProjectDir)..\deps\OpenAL\include\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessToFile>false</PreprocessToFile>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
@@ -252,8 +252,8 @@ SET ERRORLEVEL = 0</Command>
       <AdditionalDependencies>assimp-vc143-mt.lib;TracyClient.lib;VulkanMemoryAllocator.lib;SDL2.lib;SDL2main.lib;vulkan-1.lib;$(CoreLibraryDependencies);%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib;$(ProjectDir)..\deps\bullet\lib\;$(ProjectDir)..\deps\lua\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;assimp-vc143-mt.lib;sfml-network.lib;sfml-system.lib;sfml-audio.lib;BulletDynamics.lib;BulletCollision.lib;LinearMath.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib\;$(ProjectDir)..\deps\bullet\lib\;$(ProjectDir)..\deps\lua\lib\;$(ProjectDir)..\deps\OpenAL\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;openal32.lib;assimp-vc143-mt.lib;sfml-network.lib;sfml-system.lib;sfml-audio.lib;BulletDynamics.lib;BulletCollision.lib;LinearMath.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
       <Command>
@@ -296,7 +296,7 @@ SET ERRORLEVEL = 0</Command>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;BT_USE_DOUBLE_PRECISION=1;GLM_FORCE_RADIANS;GLM_FORCE_DEPTH_ZERO_TO_ONE;GLM_FORCE_QUAT_DATA_WXYZ;VENGINE_NO_PROFILING;NDEBUG;SDL_MAIN_HANDLED;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\bullet\src\src\;$(ProjectDir)..\deps\lua\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\deps\sdl\include\SDL2\;$(ProjectDir)..\deps\assimp\include\;$(ProjectDir)..\deps\assimp\src\include\;$(ProjectDir)..\deps\EnTT\src\single_include\entt\;$(ProjectDir)..\deps\glm\src\;$(ProjectDir)..\deps\imgui\src\backends\;$(ProjectDir)..\deps\imgui\src\;$(ProjectDir)..\deps\vma\src\include\;$(ProjectDir)..\deps\tracy\src\public\;$(ProjectDir)..\deps\stb\src\;$(ProjectDir)..\deps\sdl\include\;$(ProjectDir)..\deps\SFMLNetwork\include\;$(ProjectDir)..\deps\bullet\src\src\;$(ProjectDir)..\deps\lua\;$(ProjectDir)..\deps\OpenAL\include\;$(VULKAN_SDK)\Include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
     </ClCompile>
@@ -307,8 +307,8 @@ SET ERRORLEVEL = 0</Command>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib;$(ProjectDir)..\deps\bullet\lib\;$(ProjectDir)..\deps\lua\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;assimp-vc143-mt.lib;sfml-network.lib;sfml-system.lib;sfml-audio.lib;BulletDynamics.lib;BulletCollision.lib;LinearMath.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(ProjectDir)..\deps\vma\lib\;$(ProjectDir)..\deps\sdl\lib\;$(ProjectDir)..\deps\tracy\lib\;$(ProjectDir)..\deps\assimp\lib\;$(ProjectDir)..\deps\SFMLNetwork\lib\;$(ProjectDir)..\deps\bullet\lib\;$(ProjectDir)..\deps\lua\lib\;$(ProjectDir)..\deps\OpenAL\lib\;$(VULKAN_SDK)\Lib\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;vulkan-1.lib;openal32.lib;assimp-vc143-mt.lib;sfml-network.lib;sfml-system.lib;sfml-audio.lib;BulletDynamics.lib;BulletCollision.lib;LinearMath.lib;lua.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Lib>
     <PreBuildEvent>
       <Command>
