@@ -136,7 +136,7 @@ uint32_t ResourceManager::addSound(std::string&& soundPath)
     reader.read(samples, sampleCount);
     
     // Generate buffer
-    audioBufferId bufferId = ~1u;
+    AudioBufferId bufferId = ~1u;
     alGenBuffers(1, &bufferId);
     if (alGetError() != AL_NO_ERROR)
     {

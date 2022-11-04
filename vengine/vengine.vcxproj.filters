@@ -170,6 +170,7 @@
     <ClInclude Include="vengine\physics\CallbackType.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneHandler.h" />
     <ClInclude Include="vengine\dev\Fail.h" />
+    <ClInclude Include="vengine\VengineHelper.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

@@ -454,6 +454,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\systems\System.hpp" />
     <ClInclude Include="vengine\test\TestScene.hpp" />
     <ClInclude Include="vengine\test\TestScene2.hpp" />
+    <ClInclude Include="vengine\VengineHelper.h" />
     <ClInclude Include="vengine\VengineMath.hpp" />
     <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
   </ItemGroup>

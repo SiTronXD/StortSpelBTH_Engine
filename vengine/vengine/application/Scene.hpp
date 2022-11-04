@@ -17,8 +17,7 @@
 #include <entt.hpp>
 #include <vector>
 
-typedef bool Inactive;
-typedef int Entity;
+#include "../VengineHelper.h"
 
 class SceneHandler;
 class NetworkHandler;

@@ -4,8 +4,6 @@
 
 #include <iostream>
 
-std::unordered_map<int, sf::SoundBuffer> AudioHandler::soundBuffers;
-
 AudioHandler::AudioHandler()
 	:sceneHandler(nullptr)
 {

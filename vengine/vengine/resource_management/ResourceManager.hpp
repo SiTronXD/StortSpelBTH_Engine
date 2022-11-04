@@ -11,8 +11,7 @@
 #include "loaders/TextureLoader.hpp"
 #include "loaders/MeshLoader.hpp"
 #include "loaders/ColliderLoader.hpp"
-
-typedef unsigned int audioBufferId;
+#include "../VengineHelper.h"
 
 class Engine;
 struct ImageData;   //Defined in MeshLoader
@@ -32,7 +31,7 @@ private:
 	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
-    std::unordered_map<uint32_t, audioBufferId> audioBuffers; // unnecessary ?
+    std::unordered_map<uint32_t, AudioBufferId> audioBuffers; // unnecessary ?
 
     MeshLoader      meshLoader;
 	ColliderLoader  collisionLoader;

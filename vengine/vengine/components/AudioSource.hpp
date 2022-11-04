@@ -1,21 +1,27 @@
 #pragma once
-#include <SFML/Audio.hpp>
 #include "glm/glm.hpp"
 
 struct AudioSource
 {
-	sf::Sound sound;
-
-	AudioSource() = default;
-	AudioSource(const sf::SoundBuffer& buffer)
-	{
-		sound.setBuffer(buffer);
-	}
-
-	void setPosition(const glm::vec3& position)
-	{
-		sound.setPosition(position.x, position.y, position.z);
-	}
-
 	// Multiple sounds?
+
+	const AudioSourceId sourceId;
+	AudioBufferId bufferId;
+
+	AudioSource(AudioSourceId sourceId)
+		:sourceId(sourceId)
+	{
+	}
+	AudioSource(AudioSourceId sourceId, AudioBufferId bufferId)
+		:sourceId(sourceId), bufferId(bufferId)
+	{
+	}
+
+	static AudioSource create(AudioBufferId bufferId)
+	{
+		AudioSourceId sourceId;
+		alGenSources(1, &sourceId);
+
+		return AudioSource(sourceId, bufferId);
+	}
 };
