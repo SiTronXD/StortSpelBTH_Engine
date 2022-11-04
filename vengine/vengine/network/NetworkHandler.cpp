@@ -1,7 +1,7 @@
 #include "NetworkHandler.h"
 #include "ServerEngine/Timer.h"
 #include <iostream>
-#include <windows.h>
+
 
 void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
 {
