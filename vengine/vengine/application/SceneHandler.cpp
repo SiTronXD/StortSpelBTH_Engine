@@ -179,3 +179,23 @@ Scene* SceneHandler::getScene() const
 {
 	return this->scene;
 }
+
+void SceneHandler::setWindow(Window* window)
+{
+	this->window = window;
+}
+
+Window* SceneHandler::getWindow()
+{
+	return this->window;
+}
+
+void SceneHandler::setAudioHandler(AudioHandler* audioHandler)
+{
+	this->audioHandler = audioHandler;
+}
+
+AudioHandler* SceneHandler::getAudioHandler()
+{
+	return this->audioHandler;
+}

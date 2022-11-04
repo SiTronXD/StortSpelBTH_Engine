@@ -227,6 +227,11 @@ void Window::getSize(int& outputWidth, int& outputHeight)
     SDL_GetWindowSize(this->windowHandle, &outputWidth, &outputHeight);
 }
 
+void Window::close()
+{
+    this->isRunning = false;
+}
+
 Window::~Window() {
 
     SDL_DestroyWindow(this->windowHandle);

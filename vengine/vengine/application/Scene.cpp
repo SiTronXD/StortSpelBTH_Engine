@@ -51,6 +51,12 @@ AIHandler* Scene::getAIHandler()
     return this->sceneHandler->getAIHandler();   
 }
 
+AudioHandler* Scene::getAudioHandler()
+{
+	return this->sceneHandler->getAudioHandler();
+}
+
+
 Scene::Scene()
 	: sceneHandler(nullptr), mainCamera(-1)
 {

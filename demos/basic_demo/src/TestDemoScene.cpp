@@ -4,7 +4,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
-
 #include "vengine/test/TestScene2.hpp"
 
 TestDemoScene::TestDemoScene()
@@ -388,6 +387,11 @@ void TestDemoScene::update()
 	}
 	if (Input::isKeyPressed(Keys::I)) {
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
+	}
+
+	if (Input::isKeyReleased(Keys::V))
+	{
+		this->getSceneHandler()->getWindow()->close();
 	}
 }
 
