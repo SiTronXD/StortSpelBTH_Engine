@@ -538,15 +538,15 @@ void PhysicsEngine::update(float dt)
 
 			if (col.type == ColType::SPHERE)
 			{
-				debugRenderer->renderSphere(transform.position, col.radius, color);
+				debugRenderer->renderSphere(transform.position + col.offset, col.radius, color);
 			}
 			else if (col.type == ColType::BOX)
 			{
-				debugRenderer->renderBox(transform.position, transform.rotation, col.extents * 2.0f, color);
+				debugRenderer->renderBox(transform.position + col.offset, transform.rotation, col.extents * 2.0f, color);
 			}
 			else if (col.type == ColType::CAPSULE)
 			{
-				debugRenderer->renderCapsule(transform.position, transform.rotation, col.height, col.radius, color);
+				debugRenderer->renderCapsule(transform.position + col.offset, transform.rotation, col.height, col.radius, color);
 			}
 		}
 	}
