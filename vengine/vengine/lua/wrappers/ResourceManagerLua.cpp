@@ -55,6 +55,57 @@ int ResourceManagerLua::lua_addTexture(lua_State* L)
 	return 1;
 }
 
+int ResourceManagerLua::lua_addAnimations(lua_State* L)
+{
+	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
+
+	if (!lua_istable(L, 1)) { return 0; }
+	
+	std::vector<std::string> paths;
+	lua_pushvalue(L, 1);
+	lua_pushnil(L);
+	while (lua_next(L, -2))
+	{
+		lua_pushvalue(L, -2);
+		paths.push_back(lua_tostring(L, -2));
+		lua_pop(L, 2);
+	}
+	lua_pop(L, 1);
+
+	std::string texturesPath = "";
+	if (lua_isstring(L, 2))
+	{
+		texturesPath = lua_tostring(L, 2);
+	}
+
+	int meshID = resourceManager->addAnimations(paths, std::move(texturesPath));
+	lua_pushinteger(L, meshID);
+
+	return 1;
+}
+
+int ResourceManagerLua::lua_mapAnimations(lua_State* L)
+{
+	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
+
+	if (!lua_isinteger(L, 1) || !lua_istable(L, 2)) { return 0; }
+
+	std::vector<std::string> names;
+	lua_pushvalue(L, 2);
+	lua_pushnil(L);
+	while (lua_next(L, -2))
+	{
+		lua_pushvalue(L, -2);
+		names.push_back(lua_tostring(L, -2));
+		lua_pop(L, 2);
+	}
+	lua_pop(L, 1);
+
+	lua_pushboolean(L, resourceManager->mapAnimations(lua_tointeger(L, 1), names));
+
+	return 1;
+}
+
 // TODO change to resource manager later
 int ResourceManagerLua::lua_addAudio(lua_State* L)
 {
@@ -74,6 +125,8 @@ void ResourceManagerLua::lua_openresources(lua_State* L, ResourceManager* resour
 	luaL_Reg methods[] = {
 		{ "addMesh", lua_addMesh },
 		{ "addTexture", lua_addTexture },
+		{ "addAnimations", lua_addAnimations },
+		{ "mapAnimations", lua_mapAnimations },
 		{ NULL , NULL }
 	};
 

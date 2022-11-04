@@ -1,6 +1,7 @@
 #pragma once 
 
 #include <vulkan/vulkan.hpp>
+#include <unordered_map>
 
 #include "../resource_management/ResourceManagerStructs.hpp"
 #include "MeshData.hpp"
@@ -18,6 +19,7 @@ private:
     VmaAllocator&   vma;
 
     std::vector<glm::mat4> boneTransforms;
+    std::unordered_map<std::string, uint32_t> aniNames;
 
     // One vertex buffer per data stream
     VertexBufferArray vertexBuffers;
@@ -33,10 +35,10 @@ private:
         const float& timer,
         glm::quat& outputValue);
     void getLocalBoneTransform(
-        const Bone& bone,
+        const BonePoses& bone,
         const float& timer,
-        glm::mat4& outputMatrix
-    );
+        const int& animationIndex,
+        glm::mat4& outputMatrix);
 
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
@@ -45,17 +47,20 @@ public:
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
-    const std::vector<glm::mat4>& getBoneTransforms(const float& timer);
+    const std::vector<glm::mat4>& getBoneTransforms(const float& timer, const int& animationIndex);
 
     inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;
 	inline MeshData& getMeshData();
     inline const std::vector<SubmeshData>& getSubmeshData() const;
     
+    void mapAnimations(const std::vector<std::string>& names);
+    uint32_t getAnimationIndex(const std::string& name) const;
+
     void cleanup();
 
     // Debug
-    void outputRigDebugInfo(const std::string& filePath);
+    void outputRigDebugInfo(const std::string& filePath, int animationIndex = 0);
 };
 
 const VertexBufferArray& Mesh::getVertexBufferArray() const

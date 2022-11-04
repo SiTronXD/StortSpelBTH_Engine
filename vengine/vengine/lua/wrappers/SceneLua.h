@@ -50,6 +50,7 @@ private:
 	static int lua_setActive(lua_State* L);
 	static int lua_setInactive(lua_State* L);
 	static int lua_isActive(lua_State* L);
+	static int lua_setAnimation(lua_State* L);
 
    public:
 	static void lua_openscene(lua_State* L, SceneHandler* sceneHandler);

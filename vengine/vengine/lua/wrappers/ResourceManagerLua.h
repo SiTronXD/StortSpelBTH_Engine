@@ -16,6 +16,8 @@ private:
 
 	static int lua_addMesh(lua_State* L);
 	static int lua_addTexture(lua_State* L);
+	static int lua_addAnimations(lua_State* L);
+	static int lua_mapAnimations(lua_State* L);
 	static int lua_addAudio(lua_State* L);
 public:
 	static void lua_openresources(lua_State* L, ResourceManager* resources);

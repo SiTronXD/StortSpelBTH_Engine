@@ -10,6 +10,13 @@ scene.setMainCamera(cam)
 scene.setComponent(cam, CompType.Script, "assets/scripts/script2.lua")
 scene.getComponent(cam, CompType.Script).playerID = p
 
+local multiAnim = resources.addAnimations({ "assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx", "assets/models/stickThird.fbx" })
+resources.mapAnimations(multiAnim, { "bendIdle", "fastBend", "dumb" })
+local a = scene.createEntity()
+scene.setComponent(a, CompType.Mesh, multiAnim)
+scene.setComponent(a, CompType.Animation, {})
+scene.setComponent(a, CompType.Script, "assets/scripts/multiAnim.lua")
+
 local e = scene.createEntity()
 scene.setComponent(e, CompType.Script, "assets/scripts/collisionchecks.lua")
 
