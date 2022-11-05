@@ -80,12 +80,23 @@ uint32_t ResourceManager::addMesh(std::string meshPath, MeshData meshData)
 	// Smooth normals in mesh data
 	// MeshDataModifier::smoothNormals(meshData);
 
-	// NOTE: prevSize as key only works if we never remove resources the map...
-	this->meshPaths.insert({meshPath, this->meshPaths.size()});
+	auto map_iterator = this->meshPaths.find(meshPath);
+	if (this->meshPaths.end() == map_iterator)
+	{
+        //No mesh exists, create new
+		this->meshPaths.insert({meshPath, this->meshPaths.size()});
 
-	// NOTE: meshes.size as key only works if we never remove resources the map...
-	// Create mesh, insert into map of meshes
-	meshes.insert({meshes.size(), meshLoader.createMesh(meshData)});
+		// NOTE: meshes.size as key only works if we never remove resources the map...
+		// Create mesh, insert into map of meshes
+		meshes.insert({meshes.size(), meshLoader.createMesh(meshData)});
+	}
+	else
+	{
+		uint32_t meshID = map_iterator->second;
+		meshes.erase(meshID);
+		meshes.insert({meshID, meshLoader.createMesh(meshData)});
+    }
+	
 
 	return meshes.size() - 1;
 }

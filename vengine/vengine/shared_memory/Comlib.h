@@ -2,14 +2,10 @@
 #include <string>
 #include "Memory.h"
 #include "Mutex.h"
+#include "MayaStructures.h"
 
 enum ProcessType {Producer, Consumer};
 
-struct MessageHeader
-{
-	size_t messageType;
-	size_t messageLength;
-};
 
 class Comlib
 {

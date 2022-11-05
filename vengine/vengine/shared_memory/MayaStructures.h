@@ -4,9 +4,9 @@ enum Headers
 {
 	BUFFER_FULL,
 	MESSAGE,
-	NEW_MESH,
+	MESH_NEW,
 	MESH_TRANSFORM,
-	REMOVE_MESH,
+	MESH_REMOVE,
 	MESH_MODIFIED,
 	TOPOLOGY_CHANGED,
 	CAMERA,
@@ -20,6 +20,12 @@ enum CameraTypes
 	SCENE_CAMERA_ORTHOGRAPHIC = 2,
 };
 
+struct MessageHeader
+{
+	size_t messageType;
+	size_t messageLength;
+};
+
 struct MeshHeader
 {
 	char name[64];
@@ -30,6 +36,9 @@ struct MeshHeader
 struct MeshTransformHeader
 {
 	char name[64];
+	float position[3];
+	float rotation[3];
+	float scale[3];
 	float transform[4][4];
 };
 
