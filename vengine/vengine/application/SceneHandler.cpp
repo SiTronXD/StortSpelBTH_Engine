@@ -3,6 +3,7 @@
 #include "Time.hpp"
 #include "../components/AnimationComponent.hpp"
 #include "../graphics/VulkanRenderer.hpp"
+#include "../graphics/UIRenderer.hpp"
 #include "../lua/ScriptHandler.h"
 
 void SceneHandler::initSubsystems()
@@ -93,12 +94,28 @@ void SceneHandler::prepareForRendering()
 			}
 		}
 	);
+
 	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
 	auto func = [](Transform& transform)
 	{
 		transform.updateMatrix();
 	};
 	view.each(func);
+
+	ScriptHandler& scriptHandler = *this->getScriptHandler();
+	auto uiView = this->scene->getSceneReg().view<UIComponent, Script>(entt::exclude<Inactive>);
+	auto uiFunc = [&](UIComponent& uiComp, Script& script)
+	{
+		if (uiComp.isClicking())
+		{
+			scriptHandler.runFunction(script, "onHover");
+		}
+		else if (uiComp.isHovering())
+		{
+			scriptHandler.runFunction(script, "onClick");
+		}
+	};
+	uiView.each(uiFunc);
 }
 
 void SceneHandler::setScene(Scene* scene, std::string path)

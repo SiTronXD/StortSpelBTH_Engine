@@ -41,6 +41,7 @@ public:
 	void setDebugRenderer(DebugRenderer* debugRenderer);
 
 	bool runScript(std::string& path);
+	void runFunction(Script& script, std::string funcName);
 	void setScriptComponent(Entity entity, std::string& path);
 	void runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger, CallbackType type);
 	void updateSystems(std::vector<LuaSystem>& vec);

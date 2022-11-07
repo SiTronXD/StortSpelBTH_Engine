@@ -123,6 +123,11 @@ bool ScriptHandler::runScript(std::string& path)
 	return result;
 }
 
+void ScriptHandler::runFunction(Script& script, std::string funcName)
+{
+
+}
+
 void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 {
 	Scene* scene = this->sceneHandler->getScene();
@@ -218,6 +223,14 @@ void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, b
 		transform = lua_totransform(L, -1);
 	}
 	lua_pop(L, 2);
+}
+
+void ScriptHandler::runOnHoverFunction(Script& script)
+{
+}
+
+void ScriptHandler::runOnClickFunction(Script& script)
+{
 }
 
 void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)
