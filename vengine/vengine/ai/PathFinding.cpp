@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "PathFinding.h"
 
 PathFindingManager::PathFindingManager() {}

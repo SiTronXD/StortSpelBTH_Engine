@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "AudioHandler.h"
 #include "../application/SceneHandler.hpp"
 #include "OpenAL/alc.h"

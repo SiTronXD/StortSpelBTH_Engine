@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Mesh.hpp"
 #include "Utilities.hpp"
 #include "tracy/Tracy.hpp"

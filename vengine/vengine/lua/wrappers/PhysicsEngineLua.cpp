@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "PhysicsEngineLua.h"
 
 int PhysicsEngineLua::lua_renderDebugShapes(lua_State* L)

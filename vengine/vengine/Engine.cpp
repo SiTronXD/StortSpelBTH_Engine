@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Engine.hpp"
 
 #include <vulkan/vulkan.hpp>
@@ -103,7 +104,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         ImGui::NewFrame();
 
         Time::updateDeltaTime();
-		this->physicsEngine.update();
+		this->physicsEngine.update(Time::getDT());
         this->aiHandler.update();
         this->sceneHandler.update();
         this->scriptHandler.update();

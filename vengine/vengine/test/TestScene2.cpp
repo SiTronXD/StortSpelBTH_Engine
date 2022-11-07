@@ -1,3 +1,4 @@
+#include "pch.h"
 #include <iostream>
 #include "TestScene2.hpp"
 #include "../application/Input.hpp"

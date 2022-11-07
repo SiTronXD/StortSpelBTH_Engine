@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "NetworkSceneLua.h"
 
 int NetworkSceneLua::lua_getPlayer(lua_State* L)

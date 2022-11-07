@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ColliderLoader.hpp"
 #include "../../application/Scene.hpp"
 #include "../../dev/Log.hpp"

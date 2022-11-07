@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "NetworkScriptHandler.h"
 #include "../../application/Input.hpp"
 #include "../../application/SceneHandler.hpp"

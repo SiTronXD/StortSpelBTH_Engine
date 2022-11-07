@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "PhysicsEngine.h"
 #include "../application/SceneHandler.hpp"
 #include "../graphics/DebugRenderer.hpp"
@@ -308,7 +309,7 @@ void PhysicsEngine::init()
 	this->dynWorld->setGravity(btVector3(0, -10, 0));
 }
 
-void PhysicsEngine::update()
+void PhysicsEngine::update(float dt)
 {
 	Scene* scene = this->sceneHandler->getScene();
 
@@ -317,7 +318,7 @@ void PhysicsEngine::update()
 	updateRigidbodies();
 
 	// Update world
-	this->dynWorld->stepSimulation(Time::getDT(), 1, this->TIMESTEP);
+	this->dynWorld->stepSimulation(dt, 1, this->TIMESTEP);
 	this->dynWorld->updateAabbs();
 	this->dynWorld->computeOverlappingPairs();
 
@@ -538,15 +539,15 @@ void PhysicsEngine::update()
 
 			if (col.type == ColType::SPHERE)
 			{
-				debugRenderer->renderSphere(transform.position, col.radius, color);
+				debugRenderer->renderSphere(transform.position + col.offset, col.radius, color);
 			}
 			else if (col.type == ColType::BOX)
 			{
-				debugRenderer->renderBox(transform.position, transform.rotation, col.extents * 2.0f, color);
+				debugRenderer->renderBox(transform.position + col.offset, transform.rotation, col.extents * 2.0f, color);
 			}
 			else if (col.type == ColType::CAPSULE)
 			{
-				debugRenderer->renderCapsule(transform.position, transform.rotation, col.height, col.radius, color);
+				debugRenderer->renderCapsule(transform.position + col.offset, transform.rotation, col.height, col.radius, color);
 			}
 		}
 	}

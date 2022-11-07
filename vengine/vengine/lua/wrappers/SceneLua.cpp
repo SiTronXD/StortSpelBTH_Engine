@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SceneLua.h"
 #include "../../application/Time.hpp"
 

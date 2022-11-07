@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Server.h"
 #include <iostream>
 #include "../ServerGameModes/DefaultServerGame.h"
@@ -17,8 +18,6 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 		if (listener.accept(client[client.size() - 1]->clientTcpSocket) == sf::Socket::Done)
 		{
 			id++;
-			//client[client.size() - 1]->port = UDP_PORT_CLIENT;
-			//std::cout << UDP_PORT_CLIENT << std::endl;
 
 			client[client.size() - 1]->sender = client[client.size() - 1]->clientTcpSocket.getRemoteAddress();  //may be wrong address here 2?
 
@@ -106,6 +105,7 @@ Server::Server(NetworkScene* serverGame)
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
+	this->physicsEngine.setSceneHandler(&this->sceneHandler);
 
 	if (serverGame == nullptr)
 	{
@@ -221,16 +221,22 @@ bool Server::update(float dt)
 		}
 
 		getDataFromUsers();
-		if (this->currentTimeToSend > this->timeToSend)
+		if (this->currentTimeToSend >= this->timeToSend)
 		{
-
+			this->physicsEngine.update(this->currentTimeToSend);
 			this->sceneHandler.getScene()->update(this->currentTimeToSend);
 			this->scriptHandler.update(this->currentTimeToSend);
 
 			this->seeIfUsersExist();
 			this->sendDataToAllUsers();
 			this->cleanSendPackages();
-			this->currentTimeToSend = 0;
+
+			this->currentTimeToSend -= this->timeToSend;
+			if (this->currentTimeToSend > this->timeToSend)
+			{
+				//takes to long to load so skip some updates
+				this->currentTimeToSend = 0;
+			}
 		}
 		cleanRecvPackages();
 		

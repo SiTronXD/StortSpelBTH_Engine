@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "VulkanValidation.hpp"
 #include "tracy/Tracy.hpp"
 
