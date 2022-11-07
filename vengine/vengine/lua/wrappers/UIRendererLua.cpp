@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "UIRendererLua.h"
 #include "../../resource_management/ResourceManager.hpp"
 

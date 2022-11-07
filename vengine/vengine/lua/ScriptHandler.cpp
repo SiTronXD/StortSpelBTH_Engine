@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ScriptHandler.h"
 #include "../dev/Log.hpp"
 #include "../application/SceneHandler.hpp"

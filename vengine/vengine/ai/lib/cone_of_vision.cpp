@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "cone_of_vision.h"
 #include "polygon.h"
 #include "point.h"

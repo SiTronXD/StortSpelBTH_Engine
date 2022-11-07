@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "path_finder.h"
 
 #include <algorithm>
