@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "DebugRendererLua.h"
 
 int DebugRendererLua::lua_renderLine(lua_State* L)
