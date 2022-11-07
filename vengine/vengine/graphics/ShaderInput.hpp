@@ -27,12 +27,14 @@ struct UniformBufferHandle
 {
 	UniformBuffer uniformBuffer;
 	vk::ShaderStageFlagBits shaderStage;
+	DescriptorFrequency descriptorFreq;
 };
 
 struct StorageBufferHandle
 {
 	StorageBuffer storageBuffer;
 	vk::ShaderStageFlagBits shaderStage;
+	DescriptorFrequency descriptorFreq;
 };
 
 class ShaderInput
@@ -99,10 +101,12 @@ public:
 	void setNumShaderStorageBuffers(const uint32_t& numStorageBuffers);
 	UniformBufferID addUniformBuffer(
 		const size_t& contentsSize,
-		const vk::ShaderStageFlagBits& shaderStage = vk::ShaderStageFlagBits::eVertex);
+		const vk::ShaderStageFlagBits& shaderStage,
+		const DescriptorFrequency& descriptorFrequency);
     StorageBufferID addStorageBuffer(
 		const size_t& contentsSize,
-		const vk::ShaderStageFlagBits& shaderStage = vk::ShaderStageFlagBits::eVertex);
+		const vk::ShaderStageFlagBits& shaderStage,
+		const DescriptorFrequency& descriptorFrequency);
 	SamplerID addSampler();
 	void endForInput();
 

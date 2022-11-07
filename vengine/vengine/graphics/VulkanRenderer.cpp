@@ -515,17 +515,22 @@ void VulkanRenderer::initForScene(Scene* scene)
 	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
 	);
 	this->viewProjectionUB =
-	    this->shaderInput.addUniformBuffer(sizeof(CameraBufferData));
+	    this->shaderInput.addUniformBuffer(
+            sizeof(CameraBufferData),
+            vk::ShaderStageFlagBits::eVertex,
+            DescriptorFrequency::PER_FRAME);
     this->allLightsInfoUB =
         this->shaderInput.addUniformBuffer(
             sizeof(AllLightsInfo), 
-            vk::ShaderStageFlagBits::eFragment
+            vk::ShaderStageFlagBits::eFragment,
+            DescriptorFrequency::PER_FRAME
         );
 	this->sampler = this->shaderInput.addSampler();
     this->lightBufferSB = 
         this->shaderInput.addStorageBuffer(
             sizeof(LightBufferData) * MAX_NUM_LIGHTS,
-            vk::ShaderStageFlagBits::eFragment
+            vk::ShaderStageFlagBits::eFragment,
+            DescriptorFrequency::PER_MESH // TODO: change this
         );
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
@@ -588,7 +593,9 @@ void VulkanRenderer::initForScene(Scene* scene)
 			    // Add new storage buffer for animations
 			    StorageBufferID newStorageBufferID =
 			        this->animShaderInput.addStorageBuffer(
-			            numAnimationBones * sizeof(glm::mat4)
+			            numAnimationBones * sizeof(glm::mat4),
+                        vk::ShaderStageFlagBits::eVertex,
+                        DescriptorFrequency::PER_MESH
 			        );
 
 			    // Update animation component with storage buffer ID
@@ -625,7 +632,11 @@ void VulkanRenderer::initForScene(Scene* scene)
 		);
 
 		this->animViewProjectionUB =
-		    this->animShaderInput.addUniformBuffer(sizeof(CameraBufferData));
+		    this->animShaderInput.addUniformBuffer(
+                sizeof(CameraBufferData),
+                vk::ShaderStageFlagBits::eVertex,
+                DescriptorFrequency::PER_FRAME
+            );
 		this->animSampler = this->animShaderInput.addSampler();
 		this->animShaderInput.endForInput();
 		this->animPipeline.createPipeline(

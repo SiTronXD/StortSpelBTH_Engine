@@ -70,7 +70,9 @@ void UIRenderer::initForScene()
     this->uiShaderInput.setNumShaderStorageBuffers(1);
     this->storageBufferID = this->uiShaderInput.addStorageBuffer(
         this->uiElementData.size() *
-        sizeof(this->uiElementData[0])
+        sizeof(this->uiElementData[0]),
+        vk::ShaderStageFlagBits::eVertex,
+        DescriptorFrequency::PER_MESH // TODO: change this
     );
     this->uiShaderInput.endForInput();
 
