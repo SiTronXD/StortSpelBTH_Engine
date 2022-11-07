@@ -43,6 +43,55 @@ Mesh MeshLoader::createMesh(MeshData& data)
     return std::move(Mesh(std::move(data), this->importStructs));
 }
 
+void MeshLoader::loadAnimations(const std::vector<std::string>& paths, const std::string& textures, MeshData& outMeshData)
+{
+    const aiScene* scene = nullptr;
+    bool meshLoaded = false;
+
+    for (const std::string& path : paths)
+    {
+        scene = this->importer.ReadFile(path.c_str(), 
+            aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+
+        if (!scene) 
+        { 
+            Log::warning("Failed loading file \"" + path + "\"!");
+            this->importer.FreeScene();
+            continue;
+        }
+        if (!scene->mNumMeshes || !scene->mNumAnimations)
+        {
+            Log::warning("\"" + path + "\" contains no meshes or animations!");
+            this->importer.FreeScene();
+            continue;
+        }
+
+        // On first successful file read: Read mesh + skeleton and reserve memory for bones + animations
+        if (!meshLoaded)
+        {
+            meshLoaded = true;
+
+            std::vector<uint32_t> materialToTexture;
+            this->textureLoader->assimpTextureImport(scene, textures, materialToTexture);
+
+            uint32_t lastVertice = 0, lastIndex = 0;
+            outMeshData = loadMesh(scene->mMeshes[0], lastVertice, lastIndex, materialToTexture);
+
+            outMeshData.vertexStreams.boneWeights.resize((size_t)scene->mMeshes[0]->mNumVertices);
+            outMeshData.vertexStreams.boneIndices.resize((size_t)scene->mMeshes[0]->mNumVertices);
+            outMeshData.bones.resize((size_t)scene->mMeshes[0]->mNumBones);
+            outMeshData.animations.reserve(paths.size());
+
+            loadSkeleton(scene, outMeshData);
+        }
+
+        loadAnimation(scene, outMeshData);
+
+        this->importer.FreeScene();
+    }
+
+}
+
 MeshData MeshLoader::assimpImport(
     const std::string& modelFile,
     const std::string& texturesFolderPath) 
@@ -222,9 +271,11 @@ std::vector<MeshData> MeshLoader::getMeshesFromNodeTree(
     std::stack<aiNode *> nodeStack;
     nodeStack.push(node);
 
-    while (!nodeStack.empty()) {
+    while (!nodeStack.empty()) 
+    {
         node_meshes = std::span<unsigned int>(node->mMeshes, node->mNumMeshes);
-        for (size_t j = 0; j < node->mNumMeshes; j++) {
+        for (size_t j = 0; j < node->mNumMeshes; j++)
+        {
 			std::string meshName(scenes_meshes[node_meshes[j]]->mName.C_Str());
 			if (meshName.length() > 7 && meshName.substr(0, 8) == "Collider")
 			{
@@ -233,15 +284,12 @@ std::vector<MeshData> MeshLoader::getMeshesFromNodeTree(
 			}
             meshList.push_back(loadMesh(scenes_meshes[node_meshes[j]], vertice_index,
                                         index_index, matToTex));
-
-            if (scenes_meshes[node_meshes[j]]->HasBones()) {
-                loadBones(scene, scenes_meshes[node_meshes[j]], meshList.back());
-            }
         }
 
         node_children = std::span<aiNode *>(node->mChildren, node->mNumChildren);
 
-        for (auto *child : node_children) {
+        for (auto *child : node_children) 
+        {
             nodeStack.push(child);
         }
 
@@ -355,18 +403,66 @@ MeshData MeshLoader::loadMesh(aiMesh *mesh, uint32_t &lastVertice,
     return meshData;
 }
 
-bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh, 
-    MeshData& outMeshData)
+void MeshLoader::loadAnimation(const aiScene* scene, MeshData& outMeshData)
 {
+    // Assuming single mesh per fbx
+    aiMesh* mesh = scene->mMeshes[0];
     aiAnimation* ani = scene->mAnimations[0];
-    if (!ani) 
+    Animation& animation = outMeshData.animations.emplace_back();
+
+    animation.endTime = (float)ani->mDuration;
+    animation.boneStamps.resize((size_t)mesh->mNumBones);
+
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) 
     {
-        return false;
+        BonePoses& poses = animation.boneStamps[i];
+
+        // The order of aiMesh::mBones does not always match aiposes::mChannels
+        aiNodeAnim* nodeAnim = findAnimationNode(ani->mChannels, ani->mNumChannels, mesh->mBones[i]->mName.C_Str());
+        if (!nodeAnim) 
+        {
+            Log::error("Could not find animation node");
+            
+            // Create and default stamp[0] to avoid future errors
+            poses.translationStamps.emplace_back(0.f, glm::vec3(0.f));
+            poses.rotationStamps.emplace_back(0.f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
+            poses.scaleStamps.emplace_back(0.f, glm::vec3(1.f));
+
+            continue;
+        }
+
+        // Get poses
+
+        // Translation
+        poses.translationStamps.resize(nodeAnim->mNumPositionKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumPositionKeys; k++) 
+        {
+            poses.translationStamps[k].first = (float)nodeAnim->mPositionKeys[k].mTime;
+            memcpy(&poses.translationStamps[k].second, &nodeAnim->mPositionKeys[k].mValue, sizeof(glm::vec3));
+        }
+
+        // Rotation
+        poses.rotationStamps.resize(nodeAnim->mNumRotationKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumRotationKeys; k++)
+        {
+            poses.rotationStamps[k].first = (float)nodeAnim->mRotationKeys[k].mTime;
+            memcpy(&poses.rotationStamps[k].second, &nodeAnim->mRotationKeys[k].mValue, sizeof(glm::quat));
+        }
+
+        // Scaling
+        poses.scaleStamps.resize(nodeAnim->mNumScalingKeys);
+        for (unsigned int k = 0; k < nodeAnim->mNumScalingKeys; k++)
+        {
+            poses.scaleStamps[k].first = (float)nodeAnim->mScalingKeys[k].mTime;
+            memcpy(&poses.scaleStamps[k].second, &nodeAnim->mScalingKeys[k].mValue, sizeof(glm::vec3));
+        }
     }
 
-    outMeshData.vertexStreams.boneWeights.resize(mesh->mNumVertices);
-    outMeshData.vertexStreams.boneIndices.resize(mesh->mNumVertices);
-    outMeshData.bones.resize(mesh->mNumBones);
+}
+
+void MeshLoader::loadSkeleton(const aiScene* scene, MeshData& outMeshData)
+{
+    aiMesh* mesh = scene->mMeshes[0];
 
     // Topologically sort bones for iterative tree traversal
     // when playing the animation
@@ -376,8 +472,11 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh,
     // boneIndices used for getting parentIndex
     std::unordered_map<std::string_view, int> boneIndices;
 
-    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+    // Get the inverse bind pose matrix
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) 
+    {
         boneIndices[mesh->mBones[i]->mName.C_Str()] = i;
+
         Bone& bone = outMeshData.bones[i];
 
         // Bone name
@@ -385,59 +484,29 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh,
         bone.boneName = mesh->mBones[i]->mName.C_Str();
 #endif
 
-        // Get the inverse bind pose matrix
         memcpy(&bone.inverseBindPoseMatrix, &mesh->mBones[i]->mOffsetMatrix, sizeof(glm::mat4));
         bone.inverseBindPoseMatrix = glm::transpose(bone.inverseBindPoseMatrix);
-
+    
         // Set weights & boneIndex
-        for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) {
+        for (unsigned int k = 0; k < mesh->mBones[i]->mNumWeights; k++) 
+        {
             aiVertexWeight& aiWeight = mesh->mBones[i]->mWeights[k];
             glm::vec4& vertexBoneWeights = outMeshData.vertexStreams.boneWeights[aiWeight.mVertexId];
             glm::uvec4& vertexBoneIndices = outMeshData.vertexStreams.boneIndices[aiWeight.mVertexId];
-
+    
             if      (vertexBoneWeights.x <= 0.f) { vertexBoneWeights.x = aiWeight.mWeight; vertexBoneIndices.x = i; }
             else if (vertexBoneWeights.y <= 0.f) { vertexBoneWeights.y = aiWeight.mWeight; vertexBoneIndices.y = i; }
             else if (vertexBoneWeights.z <= 0.f) { vertexBoneWeights.z = aiWeight.mWeight; vertexBoneIndices.z = i; }
             else if (vertexBoneWeights.w <= 0.f) { vertexBoneWeights.w = aiWeight.mWeight; vertexBoneIndices.w = i; }
         }
-
-        // The order of aiMesh::mBones does not always match aiAnimation::mChannels
-        aiNodeAnim* nodeAnim = findAnimationNode(ani->mChannels, ani->mNumChannels, mesh->mBones[i]->mName.C_Str());
-        if (!nodeAnim) {
-            Log::error("Could not find animation node");
-            
-            // Create and default stamp[0] to avoid future errors
-            bone.translationStamps.emplace_back(0.f, glm::vec3(0.f));
-            bone.rotationStamps.emplace_back(0.f, glm::quat(1.0f, 0.0f, 0.0f, 0.0f));
-            bone.scaleStamps.emplace_back(0.f, glm::vec3(1.f));
-
-            continue;
-        }
-
-        // Get all poses
-        bone.translationStamps.resize(nodeAnim->mNumPositionKeys);
-        for (unsigned int k = 0; k < nodeAnim->mNumPositionKeys; k++) {
-            bone.translationStamps[k].first = (float)nodeAnim->mPositionKeys[k].mTime;
-            memcpy(&bone.translationStamps[k].second, &nodeAnim->mPositionKeys[k].mValue, sizeof(glm::vec3));
-        }
-
-        bone.rotationStamps.resize(nodeAnim->mNumRotationKeys);
-        for (unsigned int k = 0; k < nodeAnim->mNumRotationKeys; k++) {
-            bone.rotationStamps[k].first = (float)nodeAnim->mRotationKeys[k].mTime;
-            memcpy(&bone.rotationStamps[k].second, &nodeAnim->mRotationKeys[k].mValue, sizeof(glm::quat));
-        }
-
-        bone.scaleStamps.resize(nodeAnim->mNumScalingKeys);
-        for (unsigned int k = 0; k < nodeAnim->mNumScalingKeys; k++) {
-            bone.scaleStamps[k].first = (float)nodeAnim->mScalingKeys[k].mTime;
-            memcpy(&bone.scaleStamps[k].second, &nodeAnim->mScalingKeys[k].mValue, sizeof(glm::vec3));
-        }
     }
 
     // Find parent index
-    for (unsigned int i = 0; i < mesh->mNumBones; i++) {
+    for (unsigned int i = 0; i < mesh->mNumBones; i++) 
+    {
         aiNode* boneNode = findNode(scene->mRootNode, mesh->mBones[i]->mName.C_Str());
-        if (!boneNode) {
+        if (!boneNode)
+        {
             outMeshData.bones[i].parentIndex = -1;
             continue;
         }
@@ -446,11 +515,12 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh,
         outMeshData.bones[i].parentIndex = parent ? boneIndices[parent->mName.C_Str()] : -1;
     }
 
-    // Normalize & fix invalid weights
+    // Normalize weights
     for (glm::vec4& boneWeights : outMeshData.vertexStreams.boneWeights)
     {
         float inverseSum = boneWeights.x + boneWeights.y + boneWeights.z + boneWeights.w;
-        if (inverseSum == 0.f) {
+        if (inverseSum == 0.f) 
+        {
             continue;
         }
 
@@ -459,8 +529,6 @@ bool MeshLoader::loadBones(const aiScene* scene, aiMesh* mesh,
         // Apply to all components
         boneWeights *= inverseSum;
     }
-
-    return true;
 }
 
 aiNodeAnim* MeshLoader::findAnimationNode(aiNodeAnim** nodeAnims, unsigned int numNodes, std::string_view name)

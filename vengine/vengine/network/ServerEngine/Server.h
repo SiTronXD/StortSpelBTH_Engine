@@ -39,7 +39,7 @@ private:
 
 	//engine objects
 	NetworkSceneHandler sceneHandler;
-	//PhysicsEngine physicsEngine; unsure?
+	PhysicsEngine physicsEngine;
 	NetworkScriptHandler scriptHandler;
 
 	//print all users

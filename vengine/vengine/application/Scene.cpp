@@ -5,6 +5,7 @@
 #include "../graphics/UIRenderer.hpp"
 #include "../ai/AIHandler.hpp"
 #include "Time.hpp"
+#include "../components/AnimationComponent.hpp"
 
 void Scene::switchScene(Scene* scene, std::string path)
 {
@@ -154,6 +155,18 @@ void Scene::setActive(Entity entity)
 bool Scene::isActive(Entity entity)
 {
 	return !this->hasComponents<Inactive>(entity);
+}
+
+void Scene::setAnimation(Entity entity, const std::string& animationName, bool resetTimer)
+{
+	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
+	{
+		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
+		aniComp.timer *= !resetTimer;
+		aniComp.animationIndex = this->sceneHandler->getResourceManager()->
+			getMesh(this->getComponent<MeshComponent>(entity).meshID)
+			.getAnimationIndex(animationName);
+	}
 }
 
 void Scene::init()

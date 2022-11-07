@@ -106,6 +106,7 @@ Server::Server(NetworkScene* serverGame)
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
+	this->physicsEngine.setSceneHandler(&this->sceneHandler);
 
 	if (serverGame == nullptr)
 	{
@@ -221,16 +222,22 @@ bool Server::update(float dt)
 		}
 
 		getDataFromUsers();
-		if (this->currentTimeToSend > this->timeToSend)
+		if (this->currentTimeToSend >= this->timeToSend)
 		{
-
+			this->physicsEngine.update(this->currentTimeToSend);
 			this->sceneHandler.getScene()->update(this->currentTimeToSend);
 			this->scriptHandler.update(this->currentTimeToSend);
 
 			this->seeIfUsersExist();
 			this->sendDataToAllUsers();
 			this->cleanSendPackages();
-			this->currentTimeToSend = 0;
+
+			this->currentTimeToSend -= this->timeToSend;
+			if (this->currentTimeToSend > this->timeToSend)
+			{
+				//takes to long to load so skip some updates
+				this->currentTimeToSend = 0;
+			}
 		}
 		cleanRecvPackages();
 		
