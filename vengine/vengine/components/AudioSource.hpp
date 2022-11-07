@@ -1,11 +1,11 @@
 #pragma once
-#include "glm/glm.hpp"
+#include "../VengineHelper.h"
 
 struct AudioSource
 {
 	// Multiple sounds?
 
-	const AudioSourceId sourceId;
+	AudioSourceId sourceId;
 	AudioBufferId bufferId;
 
 	AudioSource(AudioSourceId sourceId)

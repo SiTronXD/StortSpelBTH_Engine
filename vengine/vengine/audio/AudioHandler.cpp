@@ -1,10 +1,11 @@
 #include "AudioHandler.h"
 #include "../application/SceneHandler.hpp"
 #include "OpenAL/alc.h"
+#include "OpenAL/al.h"
 
 
 AudioHandler::AudioHandler()
-	:sceneHandler(nullptr)
+	:sceneHandler(nullptr), musicSourceId(), alBuffers{}
 {
 	ALCdevice* device = alcOpenDevice(NULL);
     if (!device)
@@ -19,10 +20,17 @@ AudioHandler::AudioHandler()
     }
 
     alcMakeContextCurrent(context);
+
+	alGenSources(1, &this->musicSourceId);
+	alGenBuffers(NUM_BUFFERS, this->alBuffers);
+
+	this->audioSamples = new char[BUFFER_SIZE];
+	this->state = State::NotPlaying;
 }
 
 AudioHandler::~AudioHandler()
 {
+	delete[] audioSamples;
 }
 
 void AudioHandler::setSceneHandler(SceneHandler* sceneHandler)
@@ -37,15 +45,14 @@ void AudioHandler::update()
 	const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>(entt::exclude<Inactive>);
 	for (const entt::entity& entity : sourceView)
 	{
-		AudioSourceId id = sourceView.get<AudioSource>(entity).sourceId;
+		const AudioSourceId id = sourceView.get<AudioSource>(entity).sourceId;
 		const glm::vec3& pos = sourceView.get<Transform>(entity).position;
 		alSource3f(id, AL_POSITION, pos.x, pos.y, pos.z);
 	}
 
 	const Entity camID = scene->getMainCameraID();
-	if (scene->hasComponents<AudioListener>(camID) && scene->isActive(camID))
+	if (scene->isActive(camID))
 	{
-		const AudioListener& listener = scene->getComponent<AudioListener>(camID);
 		const Transform& camTra = scene->getComponent<Transform>(camID);
 		
 		const glm::vec3 forward = camTra.forward();
@@ -55,24 +62,43 @@ void AudioHandler::update()
 		alListenerfv(AL_ORIENTATION, orientation);
 		alListener3f(AL_POSITION, camTra.position.x, camTra.position.y, camTra.position.z);
 	}
-	else
+
+	if (this->state == State::Playing)
 	{
-		alListenerf(AL_GAIN, 0.f);
+		this->updateMusic();
 	}
+}
+
+void AudioHandler::updateMusic()
+{
+	ALint buffersProcessed = 0;
+
+    alGetSourcei(this->musicSourceId, AL_BUFFERS_PROCESSED, &buffersProcessed);
+    if (buffersProcessed < 1)
+        return;
+
+    ALuint oldBuffer;
+
+    // while to to fix all processed buffers
+    while (buffersProcessed--)
+    {
+        alSourceUnqueueBuffers(this->musicSourceId, 1, &oldBuffer);
+        printf("Old buffer: %u\n", oldBuffer);
+
+        this->mrStreamer.read((short*)this->audioSamples, NUM_SAMPLES_PER_READ);
+        alBufferData(oldBuffer, this->alSoundFormat, this->audioSamples, BUFFER_SIZE, this->mrStreamer.getSampleRate());
+        alSourceQueueBuffers(this->musicSourceId, 1, &oldBuffer);
+
+        if (this->mrStreamer.getSampleOffset() >= this->mrStreamer.getSampleCount())
+        {
+            this->mrStreamer.seek(0ull);
+        }
+    }
 }
 
 void AudioHandler::setMasterVolume(float volume)
 {
-	Scene* scene = this->sceneHandler->getScene();
-	const Entity camID = scene->getMainCameraID();
-	if (scene->hasComponents<AudioListener>(camID) && scene->isActive(camID))
-	{
-		scene->getComponent<AudioListener>(scene->getMainCameraID()).setVolume(volume);
-	}
-	else
-	{
-		alListenerf(AL_GAIN, volume);
-	}
+	alListenerf(AL_GAIN, volume);
 }
 
 float AudioHandler::getMasterVolume() const
@@ -82,31 +108,49 @@ float AudioHandler::getMasterVolume() const
 	return volume;
 }
 
-void AudioHandler::setMusicBuffer(const sf::SoundBuffer& musicBuffer)
+void AudioHandler::setMusic(const std::string& filePath)
 {
-	this->music.setBuffer(musicBuffer);
-	this->music.setRelativeToListener(false);
+	if (!this->mrStreamer.openFromFile(filePath))
+	{
+		Log::warning("Failed loading music file");
+		return;
+	}
+
+	memset(this->audioSamples, 0, BUFFER_SIZE);
+	for (int i = 0; i < NUM_BUFFERS; i++)
+    {
+        this->mrStreamer.read((short*)this->audioSamples, BUFFER_SIZE);
+
+	    alBufferData(this->alBuffers[i], this->alSoundFormat, this->audioSamples, BUFFER_SIZE, this->mrStreamer.getSampleRate());
+        if (alGetError() != AL_NO_ERROR)
+		{
+			Log::error("Failed filling audio buffers");
+		}
+    }
 }
 
-void AudioHandler::setMusicVolume(float volume)
+void AudioHandler::playMusic()
 {
-	this->music.setVolume(volume);
-}
-
-void AudioHandler::playMusic(bool loop)
-{
-	this->music.setLoop(loop);
-	this->music.play();
-}
-
-void AudioHandler::pauseMusic()
-{
-	this->music.pause();
+	alSourceRewind(this->musicSourceId);
+	alSourcePlay(this->musicSourceId);
+	this->state = State::Playing;
 }
 
 void AudioHandler::stopMusic()
 {
-	this->music.stop();
+	alSourceStop(this->musicSourceId);
+	this->state = State::NotPlaying;
+}
+
+void AudioHandler::resumeMusic()
+{
+	alSourcePlay(this->musicSourceId);
+	this->state = State::Playing;
+}
+
+void AudioHandler::setMusicVolume(float volume)
+{
+	alSourcef(this->musicSourceId, AL_GAIN, volume);
 }
 
 void AudioHandler::cleanUp()
@@ -116,4 +160,7 @@ void AudioHandler::cleanUp()
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context);
     alcCloseDevice(device);
+
+	alDeleteSources(1, &this->musicSourceId);
+
 }

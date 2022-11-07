@@ -398,7 +398,6 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\components\Script.hpp" />
     <ClInclude Include="vengine\lua\ScriptHandler.h" />
     <ClInclude Include="vengine\audio\AudioHandler.h" />
-    <ClInclude Include="vengine\components\AudioListener.hpp" />
     <ClInclude Include="vengine\components\AudioSource.hpp" />
     <ClInclude Include="vengine\graphics\MeshData.hpp" />
     <ClInclude Include="vengine\graphics\ShaderInput.hpp" />
