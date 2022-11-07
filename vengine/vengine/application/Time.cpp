@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Time.hpp"
 
 float Time::deltaTime = 0.0f;

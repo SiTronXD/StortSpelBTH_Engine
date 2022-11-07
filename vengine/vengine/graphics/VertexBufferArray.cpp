@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "VertexBufferArray.hpp"
 
 void VertexBufferArray::cpuUpdateBuffer(

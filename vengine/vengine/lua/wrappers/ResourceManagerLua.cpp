@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ResourceManagerLua.h"
 
 #include "../../audio/AudioHandler.h" //TEMP

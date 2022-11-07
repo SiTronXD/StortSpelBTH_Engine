@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "QueueFamilies.hpp"
 
 QueueFamilies::QueueFamilies()

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "NetworkHandlerLua.h"
 
 int NetworkHandlerLua::lua_sendPolygons(lua_State* L)

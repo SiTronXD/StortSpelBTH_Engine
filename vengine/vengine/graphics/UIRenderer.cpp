@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "UIRenderer.hpp"
 #include "ResTranslator.hpp"
 #include "../resource_management/ResourceManager.hpp"
