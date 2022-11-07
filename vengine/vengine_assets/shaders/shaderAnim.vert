@@ -11,11 +11,12 @@ layout(location = 3) in vec4 weights;
 layout(location = 4) in uvec4 boneIndices;
 
 // Uniform buffer
-layout(set = FREQ_PER_FRAME, binding = 0) uniform UboViewProjection
+layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 {
     mat4 projection;
-    mat4 view;    
-} uboViewProjection;
+    mat4 view;
+    vec4 worldPos;
+} cameraBuffer;
 
 // Storage buffer
 struct BoneTransformsData
@@ -37,6 +38,7 @@ layout(push_constant) uniform PushConstant_Model
 layout(location = 0) out vec3 fragWorldPos;
 layout(location = 1) out vec3 fragNor;
 layout(location = 2) out vec2 fragTex;
+layout(location = 3) out vec3 fragCamWorldPos;
 
 void main()
 {
@@ -56,11 +58,12 @@ void main()
         vec4(pos, 1.0);
 
     gl_Position = 
-        uboViewProjection.projection *
-        uboViewProjection.view *
+        cameraBuffer.projection *
+        cameraBuffer.view *
         worldPos;
     
     fragWorldPos = worldPos.xyz;
     fragNor = (pushConstant_Model.model * animTransform * vec4(nor, 0.0f)).xyz;
     fragTex = tex;
+    fragCamWorldPos = cameraBuffer.worldPos.xyz;
 }

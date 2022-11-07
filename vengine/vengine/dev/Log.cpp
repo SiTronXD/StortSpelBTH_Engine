@@ -41,3 +41,10 @@ void Log::error(const std::string& message)
     assert(false);
 }
 #endif
+
+std::string Log::vecToStr(const glm::vec3& vec)
+{
+	return "(" + std::to_string(vec.x) + ", " + 
+		std::to_string(vec.y) + ", " + 
+		std::to_string(vec.z) + ")";
+}

@@ -95,7 +95,7 @@ void DebugRenderer::initForScene()
         *this->resourceManager,
         this->framesInFlight);
     this->lineViewProjectionUB =
-        this->lineShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+        this->lineShaderInput.addUniformBuffer(sizeof(CameraBufferData));
     this->lineShaderInput.endForInput();
 
     // Line pipeline
@@ -120,7 +120,7 @@ void DebugRenderer::initForScene()
         *this->resourceManager,
         this->framesInFlight);
     this->meshViewProjectionUB = 
-        this->meshShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+        this->meshShaderInput.addUniformBuffer(sizeof(CameraBufferData));
     this->meshShaderInput.addPushConstant(
         sizeof(DebugMeshPushConstantData), 
         vk::ShaderStageFlagBits::eVertex

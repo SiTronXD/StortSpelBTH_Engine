@@ -7,6 +7,7 @@
 layout(location = 0) in vec3 fragWorldPos;
 layout(location = 1) in vec3 fragNor;
 layout(location = 2) in vec2 fragTex;
+layout(location = 3) in vec3 fragCamWorldPos;
 
 // Uniform buffer for light indices
 // Ambient: [0, ambientLightsEndIndex)
@@ -85,12 +86,26 @@ void main()
 		i < allLightsInfo.directionalLightsEndIndex; 
 		++i)
 	{
-		finalLightColor += 
+		vec3 lightDir = lightBuffer.lights[i].direction.xyz;
+
+		// Regular diffuse light
+		float diffuseLight = 
 			clamp(
-				dot(normal, -lightBuffer.lights[i].direction.xyz),
+				dot(normal, -lightDir),
 				0.0f,
 				1.0f
-			) * lightBuffer.lights[i].color.xyz;
+			);
+
+		// Blinn specular
+		vec3 fragToLightDir = -lightDir;
+		vec3 fragToViewDir = 
+			normalize(fragCamWorldPos - fragWorldPos);
+		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
+		float specularLight = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
+		
+		// Add blinn-phong light contribution
+		finalLightColor += 
+			(diffuseLight + specularLight) * lightBuffer.lights[i].color.xyz;
 	}
 
 	// Point lights
@@ -98,9 +113,28 @@ void main()
 		i < allLightsInfo.pointLightsEndIndex; 
 		++i)
 	{
+		vec3 fragToLight = lightBuffer.lights[i].position.xyz - fragWorldPos;
+		vec3 fragToLightDir = normalize(fragToLight);
+		vec3 fragToViewDir = 
+			normalize(fragCamWorldPos - fragWorldPos);
+		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
+		float atten = 1.0f / (1.0f + length(fragToLight));
+
+		// Regular diffuse light
+		float diffuseLight = 
+			clamp(
+				dot(normal, fragToLightDir),
+				0.0f,
+				1.0f
+			);
+
+		// Blinn specular
+		float specularLight = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
+
+		// Add blinn-phong light contribution
 		finalLightColor += 
-			lightBuffer.lights[i].color.xyz * 
-			1.0f / length(lightBuffer.lights[i].position.xyz - fragWorldPos.xyz);
+			(diffuseLight + specularLight) * atten * 
+			lightBuffer.lights[i].color.xyz;
 	}
 	outColor = vec4(finalLightColor, 1.0f);
 }

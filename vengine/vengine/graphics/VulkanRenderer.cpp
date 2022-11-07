@@ -151,11 +151,6 @@ int VulkanRenderer::init(
 
         this->createSynchronisation();        
 
-        this->updateUboProjection();
-        this->updateUboView(
-            glm::vec3(DEF<float>(CAM_EYE_X),DEF<float>(CAM_EYE_Y),DEF<float>(CAM_EYE_Z)),
-            glm::vec3(DEF<float>(CAM_TARGET_X),DEF<float>(CAM_TARGET_Y), DEF<float>(CAM_TARGET_Z)));
-
 #ifndef VENGINE_NO_PROFILING
         this->initTracy();
 #endif
@@ -300,15 +295,15 @@ void VulkanRenderer::draw(Scene* scene)
 
         ImGui::Render();
         
-        //TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
+        // TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
         // Wait for The Fence to be signaled from last Draw for this currrent Frame; 
         // This will freeze the CPU operations here and wait for the Fence to open
         vk::Bool32 waitForAllFences = VK_TRUE;
 
         auto result = this->getVkDevice().waitForFences(
-            uint32_t(1),                          // number of Fences to wait on
+            uint32_t(1),                          // Number of Fences to wait on
             &this->drawFences[this->currentFrame],// Which Fences to wait on
-            waitForAllFences,                     // should we wait for all Fences or not?              
+            waitForAllFences,                     // Should we wait for all Fences or not?
             std::numeric_limits<uint64_t>::max());
         if(result != vk::Result::eSuccess) 
         {
@@ -318,14 +313,15 @@ void VulkanRenderer::draw(Scene* scene)
 
     // Get scene camera and update view matrix
     Camera* camera = scene->getMainCamera();
+    Transform* cameraTransform = nullptr;
     bool deleteCamera = false;
     if (camera)
     {
-        Transform& transform = scene->getComponent<Transform>(scene->getMainCameraID());
+        cameraTransform = &scene->getComponent<Transform>(scene->getMainCameraID());
         camera->view = glm::lookAt(
-            transform.position,
-            transform.position + transform.forward(),
-            transform.up()
+            cameraTransform->position,
+            cameraTransform->position + cameraTransform->forward(),
+            cameraTransform->up()
         );
 
         if (!scene->isActive(scene->getMainCameraID()))
@@ -337,7 +333,10 @@ void VulkanRenderer::draw(Scene* scene)
     {
         Log::error("No main camera exists!");
         camera = new Camera((float)this->swapchain.getWidth() / (float)this->swapchain.getHeight());
-        camera->view = uboViewProjection.view;
+        camera->view = cameraDataUBO.view;
+
+        cameraTransform = new Transform();
+
         deleteCamera = true;
     }
 
@@ -346,7 +345,7 @@ void VulkanRenderer::draw(Scene* scene)
         #ifndef VENGINE_NO_PROFILING
         ZoneNamedN(draw_zone2, "Get Next Image", true); //:NOLINT   
         #endif 
-        // -- Get Next Image -- 
+        // -- Get Next Image --
         //1. Get Next available image image to draw to and set a Semaphore to signal when we're finished with the image 
 
         vk::Result result{};
@@ -378,9 +377,14 @@ void VulkanRenderer::draw(Scene* scene)
     }
     
     // Set view and projection in ubo
-    uboViewProjection.view = camera->view;
-    uboViewProjection.projection = camera->projection;
-    if (deleteCamera) { delete camera; }
+    this->cameraDataUBO.projection = camera->projection;
+    this->cameraDataUBO.view = camera->view;
+    this->cameraDataUBO.worldPosition = glm::vec4(cameraTransform->position, 1.0f);
+    if (deleteCamera) 
+    {
+        delete camera; 
+        delete cameraTransform;
+    }
 
     // Record the current commandBuffer
     this->recordCommandBuffer(scene, imageIndex);
@@ -511,7 +515,7 @@ void VulkanRenderer::initForScene(Scene* scene)
 	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
 	);
 	this->viewProjectionUB =
-	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
+	    this->shaderInput.addUniformBuffer(sizeof(CameraBufferData));
     this->allLightsInfoUB =
         this->shaderInput.addUniformBuffer(
             sizeof(AllLightsInfo), 
@@ -621,7 +625,7 @@ void VulkanRenderer::initForScene(Scene* scene)
 		);
 
 		this->animViewProjectionUB =
-		    this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
+		    this->animShaderInput.addUniformBuffer(sizeof(CameraBufferData));
 		this->animSampler = this->animShaderInput.addSampler();
 		this->animShaderInput.endForInput();
 		this->animPipeline.createPipeline(
@@ -951,24 +955,6 @@ void VulkanRenderer::createFramebuffer(
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eFramebuffer, reinterpret_cast<uint64_t>(vk::Framebuffer::CType(frameBuffer)));
 }
 
-void VulkanRenderer::updateUboProjection()
-{
-    using namespace vengine_helper::config;
-    uboViewProjection.projection  = glm::perspective(                                        // View Angle in the y-axis
-                            glm::radians(DEF<float>(CAM_FOV)),                               // View Angle in the y-axis
-                            (float)this->swapchain.getWidth()/(float)swapchain.getHeight(),  // Setting up the Aspect Ratio
-                            DEF<float>(CAM_NP),                                              // The Near Plane
-                            DEF<float>(CAM_FP));                                             // The Far Plane
-}
-
-void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
-{
-    uboViewProjection.view = glm::lookAt(
-                            eye,            // Eye   : Where the Camera is positioned in the world
-                            center,         // Target: Point the Camera is looking at
-                            up);            // Up    : Up direction 
-}
-
 void VulkanRenderer::updateLightBuffer(Scene* scene)
 {
     this->lightBuffer.clear();
@@ -1149,7 +1135,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
             this->shaderInput.setCurrentFrame(this->currentFrame);
             this->shaderInput.updateUniformBuffer(
                 this->viewProjectionUB,
-                (void*)&this->uboViewProjection
+                (void*)&this->cameraDataUBO
             );
 
             // Animation shader input
@@ -1157,7 +1143,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 			{
 				this->animShaderInput.setCurrentFrame(this->currentFrame);
 				this->animShaderInput.updateUniformBuffer(
-				    this->viewProjectionUB, (void*)&this->uboViewProjection
+				    this->viewProjectionUB, 
+                    (void*)&this->cameraDataUBO
 				);
 			}
 
@@ -1174,14 +1161,14 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
             );
             this->debugRenderer->getLineShaderInput().updateUniformBuffer(
                 this->viewProjectionUB,
-                (void*)&this->uboViewProjection
+                (void*)&this->cameraDataUBO
             );
             this->debugRenderer->getMeshShaderInput().setCurrentFrame(
                 this->currentFrame
             );
             this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
                 this->viewProjectionUB,
-                (void*)&this->uboViewProjection
+                (void*)&this->cameraDataUBO
             );
 
             // Update lights

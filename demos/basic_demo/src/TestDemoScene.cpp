@@ -39,7 +39,7 @@ void TestDemoScene::init()
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
 	this->setComponent<PointLight>(this->testEntity);
-	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f);
+	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f) * 3.0f;
 
 	// Create entity (already has transform)
 	Entity ghostEntity2 = this->createEntity();
@@ -53,7 +53,7 @@ void TestDemoScene::init()
 	this->setComponent<Rigidbody>(ghostEntity2);
 	this->getComponent<Rigidbody>(ghostEntity2).rotFactor = glm::vec3(0.0f);
 	this->setComponent<PointLight>(ghostEntity2);
-	this->getComponent<PointLight>(ghostEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f);
+	this->getComponent<PointLight>(ghostEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 2.0f;
 
 	// Ambient light
 	Entity ambientLightEntity = this->createEntity();
@@ -258,6 +258,8 @@ void TestDemoScene::update()
 		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += moveVec * 25.0f * Time::getDT();
+
+		camTransform.rotation.y += (float) (Input::isKeyDown(Keys::RIGHT) - Input::isKeyDown(Keys::LEFT)) * -360.0f * Time::getDT();
 	}
 
 	if (Input::isKeyPressed(Keys::T))

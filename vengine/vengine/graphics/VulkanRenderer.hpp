@@ -21,22 +21,6 @@
 class Scene;
 class Camera;
 
-struct AllLightsInfo
-{
-    uint32_t ambientLightsEndIndex;
-    uint32_t directionalLightsEndIndex;
-    uint32_t pointLightsEndIndex;
-    
-    uint32_t padding0;
-};
-
-struct LightBufferData
-{
-    glm::vec4 position;
-    glm::vec4 direction;
-    glm::vec4 color;
-};
-
 #include <functional>
 using stbi_uc = unsigned char;
 class VulkanRenderer 
@@ -59,7 +43,7 @@ class VulkanRenderer
 
     bool windowResized = false;
 
-    UboViewProjection uboViewProjection{};
+    CameraBufferData cameraDataUBO{};
 
     // Vulkan Components
     // - Main
@@ -145,8 +129,6 @@ private:
     void createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name);
     void createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
 
-    void updateUboProjection();
-    void updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up = glm::vec3(0.F,1.F,0.F));
     void updateLightBuffer(Scene* scene);
 
     // - Record Functions
