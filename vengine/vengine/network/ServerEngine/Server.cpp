@@ -18,8 +18,6 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 		if (listener.accept(client[client.size() - 1]->clientTcpSocket) == sf::Socket::Done)
 		{
 			id++;
-			//client[client.size() - 1]->port = UDP_PORT_CLIENT;
-			//std::cout << UDP_PORT_CLIENT << std::endl;
 
 			client[client.size() - 1]->sender = client[client.size() - 1]->clientTcpSocket.getRemoteAddress();  //may be wrong address here 2?
 
