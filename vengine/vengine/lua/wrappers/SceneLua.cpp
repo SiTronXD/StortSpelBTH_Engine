@@ -286,9 +286,6 @@ int SceneLua::lua_hasComponent(lua_State* L)
 	case CompType::ANIMATION:
 		hasComp = scene->hasComponents<AnimationComponent>(entity);
 		break;
-	case CompType::AUDIOLISTENER:
-		hasComp = scene->hasComponents<AudioListener>(entity);
-		break;
 	case CompType::AUDIOSOURCE:
 		hasComp = scene->hasComponents<AudioSource>(entity);
 		break;
@@ -417,9 +414,6 @@ int SceneLua::lua_removeComponent(lua_State* L)
 		break;
 	case CompType::ANIMATION:
 		scene->removeComponent<AnimationComponent>(entity);
-		break;
-	case CompType::AUDIOLISTENER:
-		scene->removeComponent<AudioListener>(entity);
 		break;
 	case CompType::AUDIOSOURCE:
 		scene->removeComponent<AudioSource>(entity);

@@ -81,14 +81,6 @@ void TestDemoScene::init()
 	// MeshComponent& meshComp = this->getComponent<MeshComponent>(this->testEntity);
 	// meshComp.meshID = this->getResourceManager()->addMesh("ghost.obj");
 
-	//  AudioSource component
-	int soundID = AudioHandler::loadFile("assets/sounds/test-audio.wav");
-	if (soundID != -1)
-	{
-		this->setComponent<AudioSource>(this->testEntity);
-		this->getComponent<AudioSource>(this->testEntity).sound.setBuffer(*AudioHandler::getBuffer(soundID));
-	}
-
 	// Create other test entities
 	uint32_t amogusMeshID = ~0u;
 	for (uint32_t i = 0; i < 4; ++i)
@@ -339,7 +331,7 @@ void TestDemoScene::update()
 
 	this->timer += Time::getDT();
 
-	if (ImGui::Begin("Sound"))
+	/*if (ImGui::Begin("Sound"))
 	{
 		ImGui::PushItemWidth(-100.f);
 
@@ -382,7 +374,7 @@ void TestDemoScene::update()
 
 		ImGui::PopItemWidth();
 	}
-	ImGui::End();
+	ImGui::End();*/
 
 	if (ImGui::Begin("Set Active"))
 	{

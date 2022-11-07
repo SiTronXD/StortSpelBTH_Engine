@@ -1,5 +1,12 @@
 #pragma once
 #include "../VengineHelper.h"
+#include "OpenAL/al.h"
+
+/*
+	"Can't open include file" OpenAL/al.h
+	"Can't open include file" OpenAL/al.h
+	"Can't open include file" OpenAL/al.h
+*/
 
 struct AudioSource
 {
@@ -9,7 +16,7 @@ struct AudioSource
 	AudioBufferId bufferId;
 
 	AudioSource(AudioSourceId sourceId)
-		:sourceId(sourceId)
+		:sourceId(sourceId), bufferId(~1u)
 	{
 	}
 	AudioSource(AudioSourceId sourceId, AudioBufferId bufferId)
