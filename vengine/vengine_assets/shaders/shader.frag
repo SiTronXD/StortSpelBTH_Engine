@@ -34,7 +34,7 @@ struct LightBufferData
 	// Ambient/Directional/Point lights
     vec4 color;
 };
-layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer LightBuffer
+layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
 {
     LightBufferData lights[];
 } lightBuffer;

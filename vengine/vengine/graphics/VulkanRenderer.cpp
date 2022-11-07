@@ -525,13 +525,13 @@ void VulkanRenderer::initForScene(Scene* scene)
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
-	this->sampler = this->shaderInput.addSampler();
     this->lightBufferSB = 
         this->shaderInput.addStorageBuffer(
             sizeof(LightBufferData) * MAX_NUM_LIGHTS,
             vk::ShaderStageFlagBits::eFragment,
-            DescriptorFrequency::PER_MESH // TODO: change this
+            DescriptorFrequency::PER_FRAME
         );
+    this->sampler = this->shaderInput.addSampler();
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
 	    this->device, 

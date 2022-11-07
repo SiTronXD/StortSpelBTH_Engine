@@ -2,6 +2,7 @@
 
 #define FREQ_PER_FRAME 0
 #define FREQ_PER_MESH 1
+#define FREQ_PER_DRAW 2
 
 // Vertex data
 layout(location = 0) in vec3 pos;

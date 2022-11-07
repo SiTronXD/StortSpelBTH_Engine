@@ -7,7 +7,7 @@
 #include "Texture.hpp"
 #include "../dev/Log.hpp"
 
-void ShaderInput::createDescriptorSetLayout()
+void ShaderInput::createDescriptorSetLayouts()
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -114,58 +114,107 @@ void ShaderInput::createDescriptorSetLayout()
     VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout PerDraw", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perDrawSetLayout)));
 }
 
-void ShaderInput::createDescriptorPool()
+void ShaderInput::createDescriptorPools()
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
 
-    if (this->addedUniformBuffers.size() > 0)
+
+    // Pool sizes
+    vk::DescriptorPoolSize perFrameUniformBufferPoolSize{};
+    perFrameUniformBufferPoolSize.setType(vk::DescriptorType::eUniformBuffer);
+    perFrameUniformBufferPoolSize.setDescriptorCount(0);
+    vk::DescriptorPoolSize perFrameStorageBufferPoolSize{};
+    perFrameStorageBufferPoolSize.setType(vk::DescriptorType::eStorageBuffer);
+    perFrameStorageBufferPoolSize.setDescriptorCount(0);
+
+    vk::DescriptorPoolSize perMeshUniformBufferPoolSize{};
+    perMeshUniformBufferPoolSize.setType(vk::DescriptorType::eUniformBuffer);
+    perMeshUniformBufferPoolSize.setDescriptorCount(0);
+    vk::DescriptorPoolSize perMeshStorageBufferPoolSize{};
+    perMeshStorageBufferPoolSize.setType(vk::DescriptorType::eStorageBuffer);
+    perMeshStorageBufferPoolSize.setDescriptorCount(0);
+
+    // Number of ubo descriptor sets
+    for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
     {
-        // --------- Descriptor pool for per frame descriptor sets ---------
-        vk::DescriptorPoolSize perFramePoolSize{};
-        perFramePoolSize.setType(vk::DescriptorType::eUniformBuffer);                                     // Descriptors in Set will be of Type Uniform Buffer
-        perFramePoolSize.setDescriptorCount(
-            this->framesInFlight * this->addedUniformBuffers.size());
-
-        std::vector<vk::DescriptorPoolSize> perFramePoolSizes
+        if (this->addedUniformBuffers[i].descriptorFreq == DescriptorFrequency::PER_FRAME)
         {
-            perFramePoolSize
-        };
-
-        vk::DescriptorPoolCreateInfo perFramePoolCreateInfo{};
-        perFramePoolCreateInfo.setMaxSets(
-            this->framesInFlight * this->addedUniformBuffers.size());             // Max Nr Of descriptor Sets that can be created from the pool,
-        perFramePoolCreateInfo.setPoolSizeCount(
-            static_cast<uint32_t>(perFramePoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
-        perFramePoolCreateInfo.setPPoolSizes(
-            perFramePoolSizes.data());                        // PoolSizes to create the Descriptor Pool with
-
-        // Create descriptor pool
-        this->perFramePool = this->device->getVkDevice().createDescriptorPool(
-            perFramePoolCreateInfo);
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorPool PerFrame", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perFramePool)));
+            perFrameUniformBufferPoolSize.descriptorCount +=
+                this->addedUniformBuffers[i].cpuWritable ?
+                this->framesInFlight : 1;
+        }
+        else if (this->addedUniformBuffers[i].descriptorFreq == DescriptorFrequency::PER_MESH)
+        {
+            perMeshUniformBufferPoolSize.descriptorCount +=
+                this->addedUniformBuffers[i].cpuWritable ?
+                this->framesInFlight : 1;
+        }
     }
+
+    // Number of sbo descriptor sets
+    for (size_t i = 0; i < this->addedStorageBuffers.size(); ++i)
+    {
+        if (this->addedStorageBuffers[i].descriptorFreq == DescriptorFrequency::PER_FRAME)
+        {
+            perFrameStorageBufferPoolSize.descriptorCount +=
+                this->addedStorageBuffers[i].cpuWritable ?
+                this->framesInFlight : 1;
+        }
+        else if (this->addedStorageBuffers[i].descriptorFreq == DescriptorFrequency::PER_MESH)
+        {
+            perMeshStorageBufferPoolSize.descriptorCount +=
+                this->addedStorageBuffers[i].cpuWritable ?
+                this->framesInFlight : 1;
+        }
+    }
+
+    // --------- Descriptor pool for per frame descriptor sets ---------
+    std::vector<vk::DescriptorPoolSize> perFramePoolSizes
+    {
+        perFrameUniformBufferPoolSize,
+        perFrameStorageBufferPoolSize
+    };
+
+    // Pool create info
+    vk::DescriptorPoolCreateInfo perFramePoolCreateInfo{};
+    perFramePoolCreateInfo.setMaxSets(
+        perFrameUniformBufferPoolSize.descriptorCount + 
+        perFrameStorageBufferPoolSize.descriptorCount);             // Max Nr Of descriptor Sets that can be created from the pool,
+    perFramePoolCreateInfo.setPoolSizeCount(
+        static_cast<uint32_t>(perFramePoolSizes.size()));   // Based on how many pools we have in our descriptorPoolSizes
+    perFramePoolCreateInfo.setPPoolSizes(
+        perFramePoolSizes.data());                        // PoolSizes to create the Descriptor Pool with
+
+    // Create per frame descriptor pool
+    this->perFramePool = 
+        this->device->getVkDevice().createDescriptorPool(
+            perFramePoolCreateInfo);
+    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool UboPool", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perFramePool)));
+
 
     // --------- Descriptor pool for per mesh descriptor sets ---------
-    if (this->addedStorageBuffers.size() > 0)
+    std::vector<vk::DescriptorPoolSize> perMeshPoolSizes
     {
-        vk::DescriptorPoolSize perMeshPoolSize{};
-        perMeshPoolSize.setType(vk::DescriptorType::eStorageBuffer);
-        perMeshPoolSize.setDescriptorCount(
-            this->framesInFlight * this->addedStorageBuffers.size());
+        perMeshUniformBufferPoolSize,
+        perMeshStorageBufferPoolSize
+    };
 
-        vk::DescriptorPoolCreateInfo perMeshPoolCreateInfo{};
-        perMeshPoolCreateInfo.setMaxSets(perMeshPoolSize.descriptorCount);
-        perMeshPoolCreateInfo.setPoolSizeCount(uint32_t(1));
-        perMeshPoolCreateInfo.setPPoolSizes(&perMeshPoolSize);
+    // Pool create info
+    vk::DescriptorPoolCreateInfo perMeshPoolCreateInfo{};
+    perMeshPoolCreateInfo.setMaxSets(
+        perMeshUniformBufferPoolSize.descriptorCount +
+        perMeshStorageBufferPoolSize.descriptorCount);
+    perMeshPoolCreateInfo.setPoolSizeCount(
+        static_cast<uint32_t>(perMeshPoolSizes.size()));
+    perMeshPoolCreateInfo.setPPoolSizes(perMeshPoolSizes.data());
 
-        // Create descriptor pool
-        this->perMeshPool =
-            this->device->getVkDevice().createDescriptorPool(
-                perMeshPoolCreateInfo);
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorPool PerMesh", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perMeshPool)));
-    }
+    // Create per mesh descriptor pool
+    this->perMeshPool =
+        this->device->getVkDevice().createDescriptorPool(
+            perMeshPoolCreateInfo);
+    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool SboPool", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perMeshPool)));
 
     // --------- Descriptor pool for per draw descriptor sets ---------
     vk::DescriptorPoolSize perDrawPoolSize{};
@@ -173,69 +222,65 @@ void ShaderInput::createDescriptorPool()
     perDrawPoolSize.setDescriptorCount(MAX_NUM_TEXTURES);
 
     vk::DescriptorPoolCreateInfo samplerPoolCreateInfo{};
-    samplerPoolCreateInfo.setMaxSets(MAX_NUM_TEXTURES);
+    samplerPoolCreateInfo.setMaxSets(perDrawPoolSize.descriptorCount);
     samplerPoolCreateInfo.setPoolSizeCount(uint32_t(1));
     samplerPoolCreateInfo.setPPoolSizes(&perDrawPoolSize);
 
-    // Create descriptor pool
+    // Create combined image sampler descriptor pool
     this->perDrawPool = 
         this->device->getVkDevice().createDescriptorPool(
             samplerPoolCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool PerDraw", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perDrawPool)));
+    VulkanDbg::registerVkObjectDbgInfo("DescriptorPool CombSamp", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perDrawPool)));
 }
 
 void ShaderInput::allocateDescriptorSets()
 {
     // --------- Descriptor sets per frame ---------
-    if (this->addedUniformBuffers.size() > 0)
-    {
-        // One descriptor set per frame in flight
-        this->perFrameDescriptorSets.resize(this->framesInFlight);
+    
+    // One descriptor set per frame in flight
+    this->perFrameDescriptorSets.resize(this->framesInFlight);
 
-        // Copy our layout so we have one per set
-        std::vector<vk::DescriptorSetLayout> perFrameLayouts(
-            this->perFrameDescriptorSets.size(),
-            this->perFrameSetLayout
-        );
+    // Copy our layout so we have one per set
+    std::vector<vk::DescriptorSetLayout> perFrameLayouts(
+        this->perFrameDescriptorSets.size(),
+        this->perFrameSetLayout
+    );
 
-        vk::DescriptorSetAllocateInfo perFrameAllocInfo;
-        perFrameAllocInfo.setDescriptorPool(this->perFramePool);                                   // Pool to allocate descriptors (Set?) from   
-        perFrameAllocInfo.setDescriptorSetCount(
-            static_cast<uint32_t>(this->perFrameDescriptorSets.size()));
-        perFrameAllocInfo.setPSetLayouts(perFrameLayouts.data());                               // Layouts to use to allocate sets (1:1 relationship)
+    vk::DescriptorSetAllocateInfo perFrameAllocInfo;
+    perFrameAllocInfo.setDescriptorPool(this->perFramePool);                                   // Pool to allocate descriptors (Set?) from   
+    perFrameAllocInfo.setDescriptorSetCount(
+        static_cast<uint32_t>(this->perFrameDescriptorSets.size()));
+    perFrameAllocInfo.setPSetLayouts(perFrameLayouts.data());                               // Layouts to use to allocate sets (1:1 relationship)
 
-        // Allocate descriptor sets
-        this->perFrameDescriptorSets =
-            this->device->getVkDevice().allocateDescriptorSets(
-                perFrameAllocInfo);
-    }
+    // Allocate descriptor sets
+    this->perFrameDescriptorSets =
+        this->device->getVkDevice().allocateDescriptorSets(
+            perFrameAllocInfo);
 
     // --------- Descriptor sets per mesh ---------
-    if (this->addedStorageBuffers.size() > 0)
+    
+    // One descriptor set per frame in flight per storage buffer
+    uint32_t numStorageBuffers = this->addedStorageBuffers.size();
+    this->perMeshDescriptorSets.resize(this->framesInFlight);
+    for (size_t i = 0; i < this->perMeshDescriptorSets.size(); ++i)
     {
-        // One descriptor set per frame in flight per storage buffer
-        uint32_t numStorageBuffers = this->addedStorageBuffers.size();
-        this->perMeshDescriptorSets.resize(this->framesInFlight);
-        for (size_t i = 0; i < this->perMeshDescriptorSets.size(); ++i)
-        {
-            this->perMeshDescriptorSets[i].resize(numStorageBuffers);
+        this->perMeshDescriptorSets[i].resize(numStorageBuffers);
 
-            // Copy our layout so we have one per set
-            std::vector<vk::DescriptorSetLayout> perMeshLayouts(
-                numStorageBuffers,
-                this->perMeshSetLayout
-            );
+        // Copy our layout so we have one per set
+        std::vector<vk::DescriptorSetLayout> perMeshLayouts(
+            numStorageBuffers,
+            this->perMeshSetLayout
+        );
 
-            vk::DescriptorSetAllocateInfo perMeshAllocInfo;
-            perMeshAllocInfo.setDescriptorPool(this->perMeshPool);
-            perMeshAllocInfo.setDescriptorSetCount(numStorageBuffers);
-            perMeshAllocInfo.setPSetLayouts(perMeshLayouts.data());
+        vk::DescriptorSetAllocateInfo perMeshAllocInfo;
+        perMeshAllocInfo.setDescriptorPool(this->perMeshPool);
+        perMeshAllocInfo.setDescriptorSetCount(numStorageBuffers);
+        perMeshAllocInfo.setPSetLayouts(perMeshLayouts.data());
 
-            // Allocate descriptor sets
-            this->perMeshDescriptorSets[i] =
-                this->device->getVkDevice().allocateDescriptorSets(
-                    perMeshAllocInfo);
-        }
+        // Allocate descriptor sets
+        this->perMeshDescriptorSets[i] =
+            this->device->getVkDevice().allocateDescriptorSets(
+                perMeshAllocInfo);
     }
 }
 
@@ -384,7 +429,7 @@ int ShaderInput::addPossibleTexture(
 ShaderInput::ShaderInput()
     : physicalDevice(nullptr),
     device(nullptr),
-    vma(nullptr), 
+    vma(nullptr),
     resourceManager(nullptr),
     framesInFlight(0),
     currentFrame(~0u),
@@ -430,6 +475,7 @@ UniformBufferID ShaderInput::addUniformBuffer(
     );
     uniformBufferHandle.shaderStage = shaderStage;
     uniformBufferHandle.descriptorFreq = descriptorFrequency;
+    uniformBufferHandle.cpuWritable = true;
 
     // Add to list
     this->addedUniformBuffers.push_back(uniformBufferHandle);
@@ -454,6 +500,7 @@ StorageBufferID ShaderInput::addStorageBuffer(
     );
     storageBufferHandle.shaderStage = shaderStage;
     storageBufferHandle.descriptorFreq = descriptorFrequency;
+    storageBufferHandle.cpuWritable = true;
 
     // Add to list
     this->addedStorageBuffers.push_back(storageBufferHandle);
@@ -503,8 +550,8 @@ SamplerID ShaderInput::addSampler()
 
 void ShaderInput::endForInput()
 {
-    this->createDescriptorSetLayout();
-    this->createDescriptorPool();
+    this->createDescriptorSetLayouts();
+    this->createDescriptorPools();
     this->allocateDescriptorSets();
     this->updateDescriptorSets();
 

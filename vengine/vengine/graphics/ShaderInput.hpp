@@ -28,6 +28,7 @@ struct UniformBufferHandle
 	UniformBuffer uniformBuffer;
 	vk::ShaderStageFlagBits shaderStage;
 	DescriptorFrequency descriptorFreq;
+	bool cpuWritable = true;
 };
 
 struct StorageBufferHandle
@@ -35,6 +36,7 @@ struct StorageBufferHandle
 	StorageBuffer storageBuffer;
 	vk::ShaderStageFlagBits shaderStage;
 	DescriptorFrequency descriptorFreq;
+	bool cpuWritable = true;
 };
 
 class ShaderInput
@@ -52,14 +54,14 @@ private:
 	uint32_t currentFrame;
 	uint32_t framesInFlight;
 
-	vk::DescriptorPool perFramePool{};
-	vk::DescriptorPool perMeshPool{};
-	vk::DescriptorPool perDrawPool{};
-
 	vk::DescriptorSetLayout perFrameSetLayout{};
 	vk::DescriptorSetLayout perMeshSetLayout{};
 	vk::DescriptorSetLayout perDrawSetLayout{};
 	vk::PushConstantRange pushConstantRange{};
+
+	vk::DescriptorPool perFramePool{};
+	vk::DescriptorPool perMeshPool{};
+	vk::DescriptorPool perDrawPool{};
 
 	std::vector<UniformBufferHandle> addedUniformBuffers;
 	std::vector<StorageBufferHandle> addedStorageBuffers;
@@ -80,8 +82,8 @@ private:
 
 	bool hasBeenCreated;
 
-	void createDescriptorSetLayout();
-	void createDescriptorPool();
+	void createDescriptorSetLayouts();
+	void createDescriptorPools();
 	void allocateDescriptorSets();
 	void updateDescriptorSets();
 
