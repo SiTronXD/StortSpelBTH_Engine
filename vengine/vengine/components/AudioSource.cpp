@@ -2,19 +2,8 @@
 #include "AudioSource.h"
 #include "OpenAL/al.h"
 
-AudioSource::AudioSource()
-	:bufferId(~1u)
-{
-	alGenSources(1, &this->sourceId);
-	if (alGetError() != AL_NO_ERROR)
-    {
-        Log::warning("AudioSource: Failed generating alAudioSource!\n");
-        return;
-    }
-}
-
 AudioSource::AudioSource(uint32_t bufferId)
-		:sourceId(sourceId), bufferId(bufferId)
+		:sourceId(sourceId), bufferId(bufferId), playingb4Inactive(false)
 {
 	alGenSources(1, &this->sourceId);
 	if (alGetError() != AL_NO_ERROR)
@@ -78,4 +67,11 @@ void AudioSource::stop()
 void AudioSource::pause()
 {
 	alSourcePause(this->sourceId);
+}
+
+bool AudioSource::isPlaying() const
+{
+	ALint state;
+	alGetSourcei(this->sourceId, AL_SOURCE_STATE, &state);
+	return state == AL_PLAYING;
 }

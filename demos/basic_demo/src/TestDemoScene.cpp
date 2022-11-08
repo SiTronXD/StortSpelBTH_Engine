@@ -90,6 +90,7 @@ void TestDemoScene::init()
 	}*/
 
 	// Create other test entities
+	uint32_t audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
 	uint32_t amogusMeshID = ~0u;
 	for (uint32_t i = 0; i < 4; ++i)
 	{
@@ -207,11 +208,15 @@ void TestDemoScene::start()
 
 	this->getAudioHandler()->setMasterVolume(0.5f);
 	master = this->getAudioHandler()->getMasterVolume();
-	this->getAudioHandler()->setMusic("assets/sounds/BackgroundMusic.wav");
+	this->getAudioHandler()->setMusic("assets/sounds/notSusMusic.ogg");
 	this->getAudioHandler()->playMusic();
 
-	this->getAudioHandler()->setMusicVolume(1.f);
-	music = this->getAudioHandler()->getMusicVolume();
+	this->getAudioHandler()->setMusicVolume(music = 0.005f);
+
+	//this->setComponent<AudioSource>(aniIDs[0], audioId);
+	//this->getComponent<AudioSource>(aniIDs[0]).setVolume(0.2f);
+	//this->getComponent<AudioSource>(aniIDs[0]).play();
+	//this->getComponent<AudioSource>(aniIDs[0]).setLooping(true);
 #endif
 }
 

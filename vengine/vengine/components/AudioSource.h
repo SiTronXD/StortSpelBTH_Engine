@@ -4,12 +4,11 @@ typedef unsigned int uint32_t;
 
 struct AudioSource
 {
-	// Multiple sounds?
+	bool playingb4Inactive; // No touchy
 
 	uint32_t sourceId;
 	uint32_t bufferId;
 
-	AudioSource();
 	AudioSource(uint32_t bufferId);
 	~AudioSource();
 
@@ -24,4 +23,6 @@ struct AudioSource
 	void play();
 	void stop();
 	void pause();
+
+	bool isPlaying() const;
 };
