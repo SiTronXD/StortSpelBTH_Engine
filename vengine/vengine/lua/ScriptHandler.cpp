@@ -123,7 +123,7 @@ bool ScriptHandler::runScript(std::string& path)
 	return result;
 }
 
-void ScriptHandler::runFunction(Entity e, Script& script, std::string func)
+void ScriptHandler::runFunction(Entity e, Script& script, const std::string& func)
 {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
 #ifdef _CONSOLE

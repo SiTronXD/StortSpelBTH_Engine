@@ -130,7 +130,7 @@ void Input::setHideCursor(const bool& hide)
 
 }
 
-const glm::ivec2 Input::getMouseUITranslated()
+const glm::vec2 Input::getMouseUITranslated()
 {
 	return ResTranslator::toInternalPos(glm::vec2((float)Input::getMouseX(), (float)Input::getMouseY()));
 }

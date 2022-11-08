@@ -168,5 +168,5 @@ public:
 	static inline const int getMouseDeltaX() { return Input::deltaCursorX; }
 	static inline const int getMouseDeltaY() { return Input::deltaCursorY; }
 	static inline const int getScrollWheelDelta() { return Input::deltaScrollWheel; }
-	static const glm::ivec2 getMouseUITranslated();
+	static const glm::vec2 getMouseUITranslated();
 };
