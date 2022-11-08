@@ -3,6 +3,7 @@
 #include "vulkan/PipelineLayout.hpp"
 #include "vulkan/UniformBuffer.hpp"
 #include "vulkan/StorageBuffer.hpp"
+#include "../dev/Log.hpp"
 
 class PhysicalDevice;
 class Device;
@@ -12,7 +13,6 @@ class TextureSampler;
 
 using UniformBufferID = uint32_t;
 using StorageBufferID = uint32_t;
-using SamplerID = uint32_t;
 
 enum class DescriptorFrequency
 {
@@ -46,6 +46,26 @@ struct ResourceHandle
 	vk::ShaderStageFlagBits shaderStage;
 	DescriptorFrequency descriptorFreq;
 	bool cpuWritable = true;
+};
+
+#define MAX_NUM_SET_BINDINGS 4
+struct FrequencyInputLayout
+{
+	vk::DescriptorType descriptorBindings[MAX_NUM_SET_BINDINGS]{};
+	uint32_t numBindings = 0;
+
+	void addBinding(const vk::DescriptorType& addedBindingType)
+	{
+		// Make sure bindings can be added
+		if (numBindings >= MAX_NUM_SET_BINDINGS)
+		{
+			Log::error("Maximum number of bindings for this frequency has been reached.");
+			return;
+		}
+
+		// Add descriptor type
+		descriptorBindings[numBindings++] = addedBindingType;
+	}
 };
 
 class ShaderInput
@@ -84,7 +104,8 @@ private:
 	std::vector<std::vector<vk::DescriptorSet>> perMeshDescriptorSets;
 	std::vector<vk::DescriptorSet> perDrawDescriptorSets;
 
-	std::vector<uint32_t> samplersTextureIndex;
+	// Bindings in per draw descriptor set
+	FrequencyInputLayout perDrawBindingsLayout;
 
 	std::vector<vk::DescriptorSetLayout> bindDescriptorSetLayouts;
 	std::vector<vk::DescriptorSet*> bindDescriptorSets;
@@ -122,7 +143,6 @@ public:
 		const size_t& contentsSize,
 		const vk::ShaderStageFlagBits& shaderStage,
 		const DescriptorFrequency& descriptorFrequency);
-	SamplerID addSampler();
 	void endForInput();
 
 	void cleanup();
@@ -137,12 +157,15 @@ public:
 	void setCurrentFrame(const uint32_t& currentFrame);
 	void setStorageBuffer(const StorageBufferID& storageBufferID);
 	void setTexture(
-		const SamplerID& samplerID,
 		const uint32_t& textureIndex);
 
 	int addPossibleTexture(
 		const uint32_t& textureIndex,
 		TextureSampler& textureSampler);
+
+	void makeFrequencyBindingsLayout(
+		const DescriptorFrequency& descriptorFrequency,
+		const FrequencyInputLayout& bindingsLayout);
 
 	inline const vk::ShaderStageFlagBits& getPushConstantShaderStage() const { return this->pushConstantShaderStage; }
 	inline const uint32_t& getPushConstantSize() const { return this->pushConstantSize; }

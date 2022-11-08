@@ -7,6 +7,7 @@
 #include "../graphics/Mesh.hpp"
 #include "../graphics/Texture.hpp"
 #include "../graphics/TextureSampler.hpp"
+#include "../graphics/MaterialData.hpp"
 #include "../dev/Log.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "loaders/MeshLoader.hpp"
@@ -29,6 +30,7 @@ private:
 	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
+    std::unordered_map<uint32_t, Material> materials;
 
     MeshLoader      meshLoader;
 	ColliderLoader  collisionLoader;
@@ -51,15 +53,18 @@ public:
     uint32_t addTexture(std::string&& texturePath,
         const TextureSettings& textureSettings = {});
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
+    uint32_t addMaterial(uint32_t textureIndex);
 
     Mesh& getMesh(uint32_t id);
     Texture& getTexture(uint32_t id);
     TextureSampler& getTextureSampler(uint32_t id);
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(std::string&& collisionPath);
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(uint32_t id);
+    Material& getMaterial(uint32_t id);
 
     size_t getNumMeshes();
     size_t getNumTextures();
+    size_t getNumMaterials();
 };
 
 inline Mesh& ResourceManager::getMesh(uint32_t id)
@@ -118,6 +123,16 @@ inline std::vector<ColliderDataRes> ResourceManager::getCollisionShapeFromMesh(u
 	return map_iterator->second;
 }
 
+inline Material& ResourceManager::getMaterial(uint32_t id)
+{
+    auto map_iterator = this->materials.find(id);
+    if (this->materials.end() == map_iterator)
+    {
+        Log::error("Failed to find material with the given ID : " + std::to_string(id));
+    }
+    return map_iterator->second;
+}
+
 inline size_t ResourceManager::getNumMeshes() 
 {
     return this->meshes.size();
@@ -126,4 +141,9 @@ inline size_t ResourceManager::getNumMeshes()
 inline size_t ResourceManager::getNumTextures() 
 {
     return this->textures.size();
+}
+
+inline size_t ResourceManager::getNumMaterials()
+{
+    return this->materials.size();
 }

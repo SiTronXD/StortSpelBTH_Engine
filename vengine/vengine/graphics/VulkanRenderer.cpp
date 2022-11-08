@@ -504,6 +504,10 @@ void VulkanRenderer::initForScene(Scene* scene)
     defaultStream.normals.resize(1);
     defaultStream.texCoords.resize(1);
 
+    // Default per draw bindings
+    FrequencyInputLayout perDrawInputLayout{};
+    perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+    
 	this->shaderInput.beginForInput(
 	    this->physicalDevice,
 	    this->device,
@@ -531,7 +535,10 @@ void VulkanRenderer::initForScene(Scene* scene)
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
-    this->sampler = this->shaderInput.addSampler();
+    this->shaderInput.makeFrequencyBindingsLayout(
+        DescriptorFrequency::PER_DRAW_CALL, 
+        perDrawInputLayout
+    );
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
 	    this->device, 
@@ -649,7 +656,10 @@ void VulkanRenderer::initForScene(Scene* scene)
                 vk::ShaderStageFlagBits::eFragment,
                 DescriptorFrequency::PER_FRAME
             );
-		this->animSampler = this->animShaderInput.addSampler();
+        this->animShaderInput.makeFrequencyBindingsLayout(
+            DescriptorFrequency::PER_DRAW_CALL,
+            perDrawInputLayout
+        );
 		this->animShaderInput.endForInput();
 		this->animPipeline.createPipeline(
 		    this->device,
@@ -1279,9 +1289,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                             const SubmeshData& currentSubmesh = submeshes[i];
 
                             // Update for descriptors
-                            this->shaderInput.setTexture(
-                                this->sampler, currentSubmesh.materialIndex
-                            );
+                            this->shaderInput.setTexture(currentSubmesh.materialIndex);
                             currentCommandBuffer.bindShaderInputFrequency(
                                 this->shaderInput,
                                 DescriptorFrequency::PER_DRAW_CALL
@@ -1366,7 +1374,6 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 
                             // Update for descriptors
                             this->animShaderInput.setTexture(
-                                this->animSampler, 
                                 currentSubmesh.materialIndex
                             );
                             currentCommandBuffer.bindShaderInputFrequency(
@@ -1411,7 +1418,6 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                     {
                         // UI texture
                         this->uiRenderer->getShaderInput().setTexture(
-                            this->uiRenderer->getSamplerID(),
                             drawCallData[i].textureIndex
                         );
                         currentCommandBuffer.bindShaderInputFrequency(

@@ -71,7 +71,6 @@ class VulkanRenderer
     UniformBufferID viewProjectionUB;
     UniformBufferID allLightsInfoUB;
     StorageBufferID lightBufferSB;
-    SamplerID sampler;
     ShaderInput shaderInput;
     Pipeline pipeline;
 
@@ -80,7 +79,6 @@ class VulkanRenderer
     UniformBufferID animViewProjectionUB;
     UniformBufferID animAllLightsInfoUB;
     StorageBufferID animLightBufferSB;
-    SamplerID animSampler;
     ShaderInput animShaderInput;
     Pipeline animPipeline;
 

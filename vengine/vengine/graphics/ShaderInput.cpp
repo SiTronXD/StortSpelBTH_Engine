@@ -67,12 +67,12 @@ void ShaderInput::createDescriptorSetLayouts()
         }
     }
 
-    // Texture samplers
-    for (size_t i = 0; i < this->samplersTextureIndex.size(); ++i)
+    // Combined image/samplers
+    for (size_t i = 0; i < this->perDrawBindingsLayout.numBindings; ++i)
     {
         vk::DescriptorSetLayoutBinding combSampLayoutBinding{};
         combSampLayoutBinding.setBinding(uint32_t(i));
-        combSampLayoutBinding.setDescriptorType(vk::DescriptorType::eCombinedImageSampler);
+        combSampLayoutBinding.setDescriptorType(this->perDrawBindingsLayout.descriptorBindings[i]);
         combSampLayoutBinding.setDescriptorCount(uint32_t(1));
         combSampLayoutBinding.setStageFlags(vk::ShaderStageFlagBits::eFragment);
         combSampLayoutBinding.setPImmutableSamplers(nullptr);
@@ -623,19 +623,6 @@ void ShaderInput::setNumShaderStorageBuffers(const uint32_t& numStorageBuffers)
     }
 }
 
-SamplerID ShaderInput::addSampler()
-{
-    if (this->samplersTextureIndex.size() > 0)
-    {
-        Log::error("Multiple samplers are currently not supported. Ask an engine programmer for advice.");
-        return ~0u;
-    }
-
-    this->samplersTextureIndex.push_back(~0u);
-
-    return this->samplersTextureIndex.size() - 1;
-}
-
 void ShaderInput::endForInput()
 {
     this->createDescriptorSetLayouts();
@@ -707,9 +694,6 @@ void ShaderInput::cleanup()
     // Pipeline layout
     this->pipelineLayout.cleanup();
 
-    // Sampler texture indices
-    this->samplersTextureIndex.clear();
-
     // Vectors for binding during rendering
     this->bindDescriptorSetLayouts.clear();
     this->bindDescriptorSets.clear();
@@ -749,13 +733,16 @@ void ShaderInput::setStorageBuffer(
 }
 
 void ShaderInput::setTexture(
-    const SamplerID& samplerID, 
     const uint32_t& textureIndex)
 {
-    // Current texture that sampler will use
-    this->samplersTextureIndex[samplerID] = textureIndex;
-
     // Bind descriptor set
     this->bindDescriptorSets[(uint32_t) DescriptorFrequency::PER_DRAW_CALL] = 
         &this->perDrawDescriptorSets[textureIndex];
+}
+
+void ShaderInput::makeFrequencyBindingsLayout(
+    const DescriptorFrequency& descriptorFrequency,
+    const FrequencyInputLayout& bindingsLayout)
+{
+    this->perDrawBindingsLayout = bindingsLayout;
 }

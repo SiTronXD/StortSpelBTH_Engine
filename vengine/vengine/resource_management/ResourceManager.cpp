@@ -155,6 +155,19 @@ uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
 	return collisionsData.size() - 1;
 }
 
+uint32_t ResourceManager::addMaterial(uint32_t textureIndex)
+{
+    // Created material
+    Material newMaterial{};
+    newMaterial.diffuseTextureIndex = textureIndex;
+    newMaterial.descriptorIndex = ~0u;
+
+    // Insert material
+    this->materials.insert({ this->materials.size(), newMaterial });
+
+    return this->materials.size() - 1;
+}
+
 void ResourceManager::cleanup()
 {
     // Meshes

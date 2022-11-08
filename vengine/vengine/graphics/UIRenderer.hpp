@@ -52,7 +52,6 @@ private:
     std::vector<UIElementData> uiElementData;
     std::vector<UIDrawCallData> uiDrawCallData;
 
-    SamplerID uiSamplerID;
     StorageBufferID storageBufferID;
     ShaderInput uiShaderInput;
     Pipeline uiPipeline;
@@ -116,7 +115,6 @@ public:
     );
 
     inline const StorageBufferID& getStorageBufferID() const { return this->storageBufferID; }
-    inline const SamplerID& getSamplerID() const { return this->uiSamplerID; }
     inline std::vector<UIElementData>& getUiElementData() { return this->uiElementData; }
     inline const std::vector<UIDrawCallData>& getUiDrawCallData() const { return this->uiDrawCallData; }
     inline const uint32_t& getUiTextureIndex() const { return this->uiTextureIndex; }
