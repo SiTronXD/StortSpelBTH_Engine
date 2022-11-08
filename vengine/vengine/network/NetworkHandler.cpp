@@ -51,6 +51,13 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 	this->sceneHandler = sceneHandler;
 }
 
+void NetworkHandler::setResourceManager(ResourceManager* resourceManager) {
+	this->resourceManger = resourceManager;
+	monsterResId[0] = this->resourceManger->addMesh("assets/models/Swarm_model.obj");
+	monsterResId[1] = this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx");
+	monsterResId[2] = this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx");
+}
+
 void NetworkHandler::createServer(NetworkScene* serverGame)
 {
 	if (serverThread == nullptr)
@@ -219,7 +226,7 @@ void NetworkHandler::updateNetwork()
 			iy = sceneHandler->getScene()->createEntity();
 			monsters.push_back(iy);
 
-			sceneHandler->getScene()->setComponent<MeshComponent>(iy);
+			sceneHandler->getScene()->setComponent<MeshComponent>(iy, monsterResId[ix]);
 
 			cTCPP >> fx >> fy >> fz;
 			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);

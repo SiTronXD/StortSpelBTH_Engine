@@ -3,20 +3,23 @@
 #include "Client.h"
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
+#include "../../vengine/resource_management/ResourceManager.hpp"
 
 class NetworkHandler {
   private:
-	const float waitTimeForServerCreation = 5.0f;
+	const float waitTimeForServerCreation = 10.0f;
 
   private:
 
-    std::thread*  serverThread;
-    bool          shutDownServer;
-	bool          createdServer;
-    Client*       client;
-    SceneHandler* sceneHandler;
-    int           ID;
-    int           player;
+    std::thread*        serverThread;
+    bool                shutDownServer;
+	bool                createdServer;
+    Client*             client;
+    SceneHandler*       sceneHandler;
+	ResourceManager*    resourceManger;
+    int                 ID;
+    int                 player;
+	uint32_t            monsterResId[3];
 
     //HELPERS
     float fx, fy, fz, fa, fb, fc;
@@ -35,6 +38,7 @@ class NetworkHandler {
     NetworkHandler();
     virtual ~NetworkHandler();
     void setSceneHandler(SceneHandler* sceneHandler);
+	void setResourceManager(ResourceManager* resourceManager);
 
     //SERVER
     void createServer(NetworkScene* serverGame = nullptr); //create new server on a new thread
