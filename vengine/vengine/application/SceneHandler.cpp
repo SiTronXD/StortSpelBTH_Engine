@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SceneHandler.hpp"
 #include "Time.hpp"
 #include "../components/AnimationComponent.hpp"

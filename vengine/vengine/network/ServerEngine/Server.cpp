@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Server.h"
 #include <iostream>
 #include "../ServerGameModes/DefaultServerGame.h"
@@ -17,8 +18,6 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 		if (listener.accept(client[client.size() - 1]->clientTcpSocket) == sf::Socket::Done)
 		{
 			id++;
-			//client[client.size() - 1]->port = UDP_PORT_CLIENT;
-			//std::cout << UDP_PORT_CLIENT << std::endl;
 
 			client[client.size() - 1]->sender = client[client.size() - 1]->clientTcpSocket.getRemoteAddress();  //may be wrong address here 2?
 
@@ -104,8 +103,10 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 Server::Server(NetworkScene* serverGame)
 {
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
-	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
+	this->sceneHandler.setPhysicsEngine(&this->physicsEngine);
+	this->scriptHandler.setSceneHandler(&this->sceneHandler);
+	this->scriptHandler.setPhysicsEngine(&this->physicsEngine);
 	this->physicsEngine.setSceneHandler(&this->sceneHandler);
 
 	if (serverGame == nullptr)

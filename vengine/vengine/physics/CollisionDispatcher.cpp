@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "CollisionDispatcher.h"
 
 btPersistentManifold* CollisionDispatcher::getNewManifold(const btCollisionObject* b0, const btCollisionObject* b1)
