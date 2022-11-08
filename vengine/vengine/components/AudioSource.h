@@ -1,10 +1,6 @@
 #pragma once
 
-/*
-	"Can't open include file" OpenAL/al.h
-	"Can't open include file" OpenAL/al.h
-	"Can't open include file" OpenAL/al.h
-*/
+typedef unsigned int uint32_t;
 
 struct AudioSource
 {

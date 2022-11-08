@@ -9,7 +9,6 @@
 #include "../components/Collider.h"
 #include "../components/Rigidbody.h"
 #include "../components/AnimationComponent.hpp"
-#include "../components/AudioListener.hpp"
 #include "../components/AudioSource.h"
 
 static bool lua_isvector(lua_State* L, int index)

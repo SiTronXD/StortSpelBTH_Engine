@@ -11,7 +11,7 @@ class SceneLua
 {
 private:
 	// COUNT: Getting the number of Components
-	enum class CompType { TRANSFORM, MESH, SCRIPT, CAMERA, COLLIDER, RIGIDBODY, ANIMATION, UIAREA, AUDIOLISTENER, AUDIOSOURCE, COUNT };
+	enum class CompType { TRANSFORM, MESH, SCRIPT, CAMERA, COLLIDER, RIGIDBODY, ANIMATION, UIAREA, AUDIOSOURCE, COUNT };
 	inline static const std::vector<std::string> compTypes {
 		"Transform",
 		"Mesh",
@@ -21,7 +21,6 @@ private:
 		"Rigidbody",
 		"Animation",
 		"UIArea",
-		"AudioListener",
 		"AudioSource"
 	};
 
