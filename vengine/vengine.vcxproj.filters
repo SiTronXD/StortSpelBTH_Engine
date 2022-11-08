@@ -168,6 +168,7 @@
     <ClInclude Include="vengine\components\PointLight.hpp" />
     <ClInclude Include="vengine\components\AmbientLight.hpp" />
     <ClInclude Include="vengine\components\DirectionalLight.hpp" />
+    <ClInclude Include="vengine\graphics\MaterialData.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

@@ -1289,7 +1289,10 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                             const SubmeshData& currentSubmesh = submeshes[i];
 
                             // Update for descriptors
-                            this->shaderInput.setTexture(currentSubmesh.materialIndex);
+                            this->shaderInput.setTexture(
+                                this->resourceManager->getMaterial(currentSubmesh.materialIndex).
+                                    descriptorIndex
+                            );
                             currentCommandBuffer.bindShaderInputFrequency(
                                 this->shaderInput,
                                 DescriptorFrequency::PER_DRAW_CALL
@@ -1374,7 +1377,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 
                             // Update for descriptors
                             this->animShaderInput.setTexture(
-                                currentSubmesh.materialIndex
+                                this->resourceManager->getMaterial(currentSubmesh.materialIndex).
+                                    descriptorIndex
                             );
                             currentCommandBuffer.bindShaderInputFrequency(
                                 this->animShaderInput,
