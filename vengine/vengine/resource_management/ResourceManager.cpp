@@ -127,7 +127,7 @@ uint32_t ResourceManager::addSound(std::string&& soundPath)
     sf::InputSoundFile reader;
     if (!reader.openFromFile(soundPath))
     {
-        // reader outputs error string
+        Log::warning("Failed opening audio file: " + soundPath);
         return 0;
     }
 
@@ -137,29 +137,29 @@ uint32_t ResourceManager::addSound(std::string&& soundPath)
     reader.read(samples, sampleCount);
     
     // Generate buffer
-    AudioBufferId bufferId = ~1u;
+    ALBufferId bufferId = -1;
     alGenBuffers(1, &bufferId);
     if (alGetError() != AL_NO_ERROR)
     {
-        Log::warning("Failed creating audio buffer!");
+        Log::warning("Failed generating audio buffer! File: " + soundPath);
         delete[]samples;
         return 0;
     }
 
     // Fill buffer
     const ALenum format = reader.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
-    alBufferData(bufferId, format, samples, sizeof(short) * sampleCount, sampleCount);
+    alBufferData(bufferId, format, samples, sizeof(short) * sampleCount, reader.getSampleRate());
     delete[]samples;
     if (alGetError() != AL_NO_ERROR)
     {
-        Log::warning("Failed filling audio buffer!");
+        Log::warning("Failed filling audio buffer! File: " + soundPath);
         return 0;
     }
 
-    this->soundPaths.insert({soundPath, (uint32_t)this->soundPaths.size()});
-    this->audioBuffers.insert({(uint32_t)this->audioBuffers.size(), bufferId});
+    this->soundPaths.insert({soundPath, bufferId});
+    this->audioBuffers.emplace_back(bufferId);
 
-    return (uint32_t)this->audioBuffers.size() - 1;
+    return this->audioBuffers.back();
 }
 
 uint32_t ResourceManager::addTexture(

@@ -13,6 +13,7 @@ function script:update(dt)
 	elseif (input.isKeyReleased(Keys.THREE)) then
 		scene.setAnimation(self.ID, "dumb")
 	end
+	
 end
 
 return script

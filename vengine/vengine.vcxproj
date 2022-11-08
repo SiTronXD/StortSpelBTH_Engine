@@ -408,7 +408,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\components\Script.hpp" />
     <ClInclude Include="vengine\lua\ScriptHandler.h" />
     <ClInclude Include="vengine\audio\AudioHandler.h" />
-    <ClInclude Include="vengine\components\AudioSource.hpp" />
+    <ClInclude Include="vengine\components\AudioSource.h" />
     <ClInclude Include="vengine\graphics\MeshData.hpp" />
     <ClInclude Include="vengine\graphics\ShaderInput.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\CommandBuffer.hpp" />
@@ -468,6 +468,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="vengine\components\AudioSource.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>

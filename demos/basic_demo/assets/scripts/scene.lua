@@ -4,6 +4,7 @@ print(ghost)
 local cam = scene.createEntity()
 scene.setComponent(cam, CompType.Camera, { fov = 90 })
 scene.setMainCamera(cam)
+scene.getComponent(cam, CompType.Transform).rotation.y = 90.0
 
 --local p = scene.createPrefab("assets/scripts/prefabs/prefab.lua")
 

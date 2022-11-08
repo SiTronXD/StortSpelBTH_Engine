@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../components/AudioSource.hpp"
+#include "../components/AudioSource.h"
 #include "../components/Camera.hpp"
 #include "../components/Transform.hpp"
 #include "../lua/ScriptHandler.h"

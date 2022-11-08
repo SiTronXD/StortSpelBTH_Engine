@@ -25,13 +25,13 @@ private:
     std::unordered_map<std::string, uint32_t> texturePaths;
     std::unordered_map<std::string, uint32_t> samplerSettings;
 	std::unordered_map<std::string, uint32_t> collisionPaths;
-	std::unordered_map<std::string, uint32_t> soundPaths;
+	std::unordered_map<std::string, ALBufferId> soundPaths;
 
     std::unordered_map<uint32_t, Mesh>  meshes;
 	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
-    std::unordered_map<uint32_t, AudioBufferId> audioBuffers; // unnecessary ?
+    std::vector<ALBufferId> audioBuffers; // Is this even needed ?
 
     MeshLoader      meshLoader;
 	ColliderLoader  collisionLoader;

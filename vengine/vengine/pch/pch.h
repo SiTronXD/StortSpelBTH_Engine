@@ -27,7 +27,7 @@
 #include "../components/Collider.h"
 #include "../components/Rigidbody.h"
 #include "../components/AnimationComponent.hpp"
-#include "../components/AudioSource.hpp"
+#include "../components/AudioSource.h"
 #include "../components/BTAgent.hpp"
 #include "../components/BTComponent.hpp"
 #include "../components/FSMAgentComponent.hpp"

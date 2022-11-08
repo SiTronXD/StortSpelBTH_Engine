@@ -21,11 +21,6 @@ void TestDemoScene::init()
 {	
 	this->timer = 0.0f;
 
-	// Camera
-	this->camEntity = this->createEntity();
-	this->setComponent<Camera>(this->camEntity);
-	this->setMainCamera(this->camEntity);
-
 	// Create entity (already has transform)
 	this->testEntity = this->createEntity();
 
@@ -132,7 +127,7 @@ void TestDemoScene::init()
 		"assets/models/Swarm_Model.fbx",
 		"assets/textures/swarmTextures");
 
-	/*uint32_t meshId = Scene::getResourceManager()->addAnimations(
+	uint32_t meshId = Scene::getResourceManager()->addAnimations(
 		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx", "assets/models/stickThird.fbx"});
 	this->getResourceManager()->getMesh(meshId).mapAnimations(
 		{"bendIdle", "fastBend", "dumb"});
@@ -142,7 +137,7 @@ void TestDemoScene::init()
 	this->getComponent<MeshComponent>(multiAnimation).meshID = meshId;
 	this->setComponent<AnimationComponent>(multiAnimation);
 	this->getComponent<Transform>(multiAnimation).position.x = -30.f;
-	this->getComponent<Transform>(multiAnimation).rotation.x = 90.f;*/
+	this->getComponent<Transform>(multiAnimation).rotation.x = 90.f;
 
 
 	// Add textures for ui renderer
@@ -179,9 +174,26 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
 
-	uint32_t audioId = ~1u;
-	audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
+	ALBufferId audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
 
+	audioSource1 = this->createEntity();
+	this->setComponent<AudioSource>(audioSource1, audioId);
+	this->setComponent<MeshComponent>(audioSource1, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->getComponent<Transform>(audioSource1).position.x = 30.f;
+	volume1 = this->getComponent<AudioSource>(audioSource1).getVolume();
+
+	audioSource2 = this->createEntity();
+	this->setComponent<AudioSource>(audioSource2, audioId);
+	this->setComponent<MeshComponent>(audioSource2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->getComponent<Transform>(audioSource2).position.x = -30.f;
+	volume2 = this->getComponent<AudioSource>(audioSource2).getVolume();
+
+	this->getAudioHandler()->setMasterVolume(0.5f);
+	master = this->getAudioHandler()->getMasterVolume();
+	this->getAudioHandler()->setMusic("assets/sounds/test-music.wav");
+	this->getAudioHandler()->playMusic();
+
+	music = this->getAudioHandler()->getMusicVolume();
 }
 
 void TestDemoScene::update()
@@ -324,57 +336,68 @@ void TestDemoScene::update()
 	);
 
 	// Skeleton
-	/*Scene::getDebugRenderer()->renderSkeleton(
+	Scene::getDebugRenderer()->renderSkeleton(
 		this->aniIDs[2],
 		glm::vec3(1.0f, 1.0f, 0.0f)
-	);*/
+	);
 
 	this->timer += Time::getDT();
 
-	/*if (ImGui::Begin("Sound"))
+	if (ImGui::Begin("Sound"))
 	{
 		ImGui::PushItemWidth(-100.f);
 
-		static float volume = 0.f, master = 0.f;
-		static bool loop = false, hasListener = false;
-
-		if (this->hasComponents<AudioSource>(this->testEntity))
+		if (this->hasComponents<AudioSource>(this->audioSource1))
 		{
-			AudioSource& source = this->getComponent<AudioSource>(this->testEntity);
+			AudioSource& source = this->getComponent<AudioSource>(this->audioSource1);
+			static bool loop = false;
 
-			if (ImGui::Button("Play"))
+			if (ImGui::Button("Play 1"))
 			{
-				source.sound.play();
+				source.play();
 			}
 			ImGui::SameLine();
 			if (ImGui::Checkbox("Loop", &loop))
 			{
-				source.sound.setLoop(loop);
+				source.setLooping(loop);
 			}
-
-			ImGui::DragFloat("Source volume", &volume, 1.f, 0.f, 100.f);
-
-			source.sound.setVolume(volume);
+			if (ImGui::DragFloat("Source 1 volume", &volume1, 0.01f, 0.f, 1.f))
+			{
+				source.setVolume(volume1);
+			}
 		}
-
-
-		if (ImGui::Checkbox("Listener", &hasListener))
+		if (this->hasComponents<AudioSource>(this->audioSource2))
 		{
-			if (hasListener) this->setComponent<AudioListener>(this->getMainCameraID());
-			else this->removeComponent<AudioListener>(this->getMainCameraID());
+			AudioSource& source = this->getComponent<AudioSource>(this->audioSource2);
+			static bool loop = false;
+
+			if (ImGui::Button("Play 2"))
+			{
+				source.play();
+			}
+			ImGui::SameLine();
+			if (ImGui::Checkbox("Loop", &loop))
+			{
+				source.setLooping(loop);
+			}
+			if (ImGui::DragFloat("Source 2 volume", &volume2, 0.01f, 0.f, 1.f))
+			{
+				source.setVolume(volume2);
+			}
 		}
-		ImGui::DragFloat("Master volume", &master, 1.f, 0.f, 100.f);
-
-		if (this->hasComponents<AudioListener>(this->getMainCameraID()))
+		
+		if (ImGui::DragFloat("Music volume", &music, 0.01f, 0.f, 1.f))
 		{
-			AudioListener& listener = this->getComponent<AudioListener>(this->getMainCameraID());
-
-			listener.setVolume(master);
+			this->getAudioHandler()->setMusicVolume(music);
+		}
+		if (ImGui::DragFloat("Master volume", &master, 0.01f, 0.f, 1.f))
+		{
+			this->getAudioHandler()->setMasterVolume(master);
 		}
 
 		ImGui::PopItemWidth();
 	}
-	ImGui::End();*/
+	ImGui::End();
 
 	if (ImGui::Begin("Set Active"))
 	{

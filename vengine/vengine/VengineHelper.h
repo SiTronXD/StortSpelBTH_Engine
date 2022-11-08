@@ -9,5 +9,5 @@
 
 typedef bool Inactive;
 typedef int Entity;
-typedef unsigned int AudioBufferId;
+typedef unsigned int ALBufferId;
 typedef unsigned int AudioSourceId;

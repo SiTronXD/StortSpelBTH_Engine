@@ -6,9 +6,9 @@
 
 
 AudioHandler::AudioHandler()
-	:sceneHandler(nullptr), musicSourceId(), alBuffers{}
+	:sceneHandler(nullptr), musicSourceId(), alBuffers{}, alSoundFormat(0)
 {
-	ALCdevice* device = alcOpenDevice(NULL);
+	ALCdevice* device = alcOpenDevice(nullptr);
     if (!device)
     {
 		Log::error("Failed creating OpenAL Device");
@@ -19,8 +19,11 @@ AudioHandler::AudioHandler()
     {
 		Log::error("Failed creating OpenAL Context");
     }
-
+	
     alcMakeContextCurrent(context);
+	ALboolean eax = alIsExtensionPresent("EAX2.0");
+	
+	alGetError(); // Clears error code
 
 	alGenSources(1, &this->musicSourceId);
 	alGenBuffers(NUM_BUFFERS, this->alBuffers);
@@ -31,7 +34,11 @@ AudioHandler::AudioHandler()
 
 AudioHandler::~AudioHandler()
 {
-	delete[] audioSamples;
+	if (this->audioSamples)
+	{
+		delete[] this->audioSamples;
+		this->audioSamples = nullptr;
+	}
 }
 
 void AudioHandler::setSceneHandler(SceneHandler* sceneHandler)
@@ -117,15 +124,17 @@ void AudioHandler::setMusic(const std::string& filePath)
 		return;
 	}
 
+	this->alSoundFormat = this->mrStreamer.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
 	memset(this->audioSamples, 0, BUFFER_SIZE);
 	for (int i = 0; i < NUM_BUFFERS; i++)
     {
         this->mrStreamer.read((short*)this->audioSamples, BUFFER_SIZE);
 
 	    alBufferData(this->alBuffers[i], this->alSoundFormat, this->audioSamples, BUFFER_SIZE, this->mrStreamer.getSampleRate());
-        if (alGetError() != AL_NO_ERROR)
+		ALenum error = alGetError();
+        if (error != AL_NO_ERROR)
 		{
-			Log::error("Failed filling audio buffers");
+			Log::error("Failed filling audio buffers. ALError: " + std::to_string(error));
 		}
     }
 }
@@ -143,15 +152,22 @@ void AudioHandler::stopMusic()
 	this->state = State::NotPlaying;
 }
 
-void AudioHandler::resumeMusic()
+void AudioHandler::pauseMusic()
 {
-	alSourcePlay(this->musicSourceId);
-	this->state = State::Playing;
+	alSourcePause(this->musicSourceId);
+	this->state = State::NotPlaying;
 }
 
 void AudioHandler::setMusicVolume(float volume)
 {
 	alSourcef(this->musicSourceId, AL_GAIN, volume);
+}
+
+float AudioHandler::getMusicVolume() const
+{
+	float volume;
+	alGetSourcef(this->musicSourceId, AL_GAIN, &volume);
+	return volume;
 }
 
 void AudioHandler::cleanUp()

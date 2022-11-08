@@ -22,7 +22,7 @@ private:
 
 	State state;
 	AudioSourceId musicSourceId;
-	AudioBufferId alBuffers[NUM_BUFFERS];
+	uint32_t alBuffers[NUM_BUFFERS];
 	char* audioSamples;
 
 	void updateMusic();
@@ -37,7 +37,7 @@ public:
 	// Update for source & listener position
 	void update();
 
-	// Set master volume, value between 0 - 100
+	// Set master volume, value between 0.0 - 1.0
 	void setMasterVolume(float volume);
 	float getMasterVolume() const;
 
@@ -45,6 +45,7 @@ public:
 	void setMusic(const std::string& filePath);
 	void playMusic();
 	void stopMusic();
-	void resumeMusic();
+	void pauseMusic();
 	void setMusicVolume(float volume);
+	float getMusicVolume() const;
 };
