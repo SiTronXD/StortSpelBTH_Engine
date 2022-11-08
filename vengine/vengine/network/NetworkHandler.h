@@ -19,20 +19,22 @@ class NetworkHandler {
 	ResourceManager*    resourceManger;
     int                 ID;
     int                 player;
-	uint32_t            monsterResId[3];
+	int                 monsterResId[3];
 
     //HELPERS
     float fx, fy, fz, fa, fb, fc;
     int   ix, iy, iz, ia, ib, ic;
 
     //data
-    int              seed;
-    std::vector<int> otherPlayers;
-    std::vector<int> otherPlayersServerId;
-    std::vector<int> monsters;
+    int                                         seed;
+    std::vector<std::pair<int, std::string>>    otherPlayers;
+    std::vector<int>                            otherPlayersServerId;
+    std::vector<int>                            monsters;
 
 	std::vector<int> lua_ints;
 	std::vector<float> lua_floats;
+
+    void createAPlayer(int serverId, const std::string& playerName);
 
   public:
     NetworkHandler();
@@ -56,8 +58,10 @@ class NetworkHandler {
     //USER
     void updateNetwork();
     void sendTCPDataToClient(TCPPacketEvent tcpP);
-    void getPlayer(int playerID);
+    void setPlayerNetworkHandler(int playerID);
 	void getLuaData(std::vector<int>& ints, std::vector<float>& floats);
+	const std::vector<std::pair<int, std::string>> getPlayers();
+
     //little cheating here but only one event from client to server via udp
     void sendUDPDataToClient(const glm::vec3 &pos, const glm::vec3 &rot);
     int  getServerSeed();

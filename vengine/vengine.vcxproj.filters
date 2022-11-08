@@ -88,6 +88,7 @@
     <ClCompile Include="vengine\physics\CollisionDispatcher.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneHandler.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp" />
+    <ClCompile Include="vengine\network\ServerGameModes\NetworkLobbyScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -172,6 +173,7 @@
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneHandler.h" />
     <ClInclude Include="vengine\dev\Fail.h" />
     <ClInclude Include="vengine\pch\pch.h" />
+    <ClInclude Include="vengine\network\ServerGameModes\NetworkLobbyScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

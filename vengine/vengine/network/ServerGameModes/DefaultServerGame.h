@@ -1,6 +1,4 @@
 #pragma once
-
-#include "../../ai/AIHandler.hpp"
 #include "../ServerEngine/NetworkScene.h"
 
 class DefaultServerGame : public NetworkScene
@@ -10,5 +8,6 @@ private:
 public:
     DefaultServerGame();
     void init();
+	void start();
     void update(float dt);
 };

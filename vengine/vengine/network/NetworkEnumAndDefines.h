@@ -24,23 +24,26 @@ enum StartingEnum { WaitingForUsers, Start, Running };
 
 enum GameEvents {
 	EMPTY		 = 0,
-	//TCP
-	SpawnEnemy   = 1,
+	//TCP To Client
+	SpawnEnemy = 1,
 	SpawnEnemies = 2,
-	Explosion    = 3,
-	MonsterDied  = 4,
-	PlayerShoot  = 5,
-	HitMonster	 = 6,
-	PlayerDied	 = 7,
-	ID,
-
+	MonsterDied = 3,
+	ID = 4,
 	PlayerJoined,
 	GAMEDATA,
-	START,
-	DISCONNECT,
-	END,
+
+	//TCP to Server
+	HitMonster,				//Call to Scene
+	START,					//Call to Scene
 	POLYGON_DATA,
 	REMOVE_POLYGON_DATA,
+
+	//TCP to Client and Server
+	Explosion,
+	PlayerShoot,
+	PlayerDied,
+	DISCONNECT,
+
 
 	//UDP
 	UpdatePlayerPos,
@@ -53,7 +56,8 @@ enum GameEvents {
 
 	//DEBUG
 	A_Button_Was_Pressed_On_Server,
-	A_Button_Was_Pressed_On_Client
+	A_Button_Was_Pressed_On_Client,
+	END
 };
 /*
 /////////events tcp server -> client////////////////
@@ -65,8 +69,7 @@ MonsterDied			: Monster_id
 SendSeed			: int
 PlayerDied			: PlayerID
 Disconnected		: PlayerID
-PlayerJoined		: name(sfml fix size of string)
-ID					: ID, nrOfPlayers connected - 1
+PlayerJoined		: name(sfml fix size of string), serverID(int)
 
 
 /////////events tcp client -> server///////////////

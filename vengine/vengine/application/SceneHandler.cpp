@@ -12,7 +12,6 @@ void SceneHandler::initSubsystems()
 		this->physicsEngine->init();
 	}
 	
-
 	// Init scene
 	this->scene->init();
 	if (this->luaScript.size() != 0)
