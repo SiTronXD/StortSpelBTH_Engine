@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vengine.h"
-#define AUDIO 1
+#define AUDIO 0
 class TestDemoScene : public Scene
 {
 private:
