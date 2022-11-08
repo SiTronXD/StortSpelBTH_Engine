@@ -60,12 +60,22 @@ glm::vec4 ResTranslator::transformRect(
 glm::vec2 ResTranslator::toInternalPos(
 	const glm::vec2& externalPos)
 {
-	// TODO: fix this
-	Log::error("ResTranslator::toInternalPos does not work atm...");
-
 	float aspectRatio = (float) windowWidth / windowHeight;
-	float newX = (externalPos.x / windowWidth - 0.5f) * INTERNAL_HEIGHT * aspectRatio;
-	float newY = -(externalPos.y / windowHeight - 0.5f) * INTERNAL_HEIGHT;
+	float newX = 0.0f;
+	float newY = 0.0f;
+
+	// 16:9 and wider
+	if (aspectRatio >= INTERNAL_ASPECT_RATIO)
+	{
+		newX = (externalPos.x / windowWidth - 0.5f) * INTERNAL_HEIGHT * aspectRatio;
+		newY = -(externalPos.y / windowHeight - 0.5f) * INTERNAL_HEIGHT;
+	}
+	// Smaller than 16:9
+	else
+	{
+		newX = (externalPos.x / windowWidth - 0.5f) * INTERNAL_WIDTH;
+		newY = -(externalPos.y / windowHeight - 0.5f) * INTERNAL_WIDTH * aspectRatio;
+	}
 
 	return glm::vec2(newX, newY);
 }
