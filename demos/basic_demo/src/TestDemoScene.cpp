@@ -207,7 +207,7 @@ void TestDemoScene::start()
 
 	this->getAudioHandler()->setMasterVolume(0.5f);
 	master = this->getAudioHandler()->getMasterVolume();
-	this->getAudioHandler()->setMusic("assets/sounds/test-music.wav");
+	this->getAudioHandler()->setMusic("assets/sounds/BackgroundMusic.wav");
 	this->getAudioHandler()->playMusic();
 
 	this->getAudioHandler()->setMusicVolume(1.f);
@@ -355,10 +355,11 @@ void TestDemoScene::update()
 	);
 
 	// Skeleton
-	/*Scene::getDebugRenderer()->renderSkeleton(
+	Scene::getDebugRenderer()->renderSkeleton(
 		this->aniIDs[2],
 		glm::vec3(1.0f, 1.0f, 0.0f)
-	);*/
+	);
+
 
 	this->timer += Time::getDT();
 #if AUDIO

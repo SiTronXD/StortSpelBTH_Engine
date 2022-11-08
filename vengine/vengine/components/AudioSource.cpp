@@ -8,7 +8,7 @@ AudioSource::AudioSource()
 	alGenSources(1, &this->sourceId);
 	if (alGetError() != AL_NO_ERROR)
     {
-        Log::warning("Failed generating alAudioSource!\n");
+        Log::warning("AudioSource: Failed generating alAudioSource!\n");
         return;
     }
 }
@@ -19,14 +19,14 @@ AudioSource::AudioSource(uint32_t bufferId)
 	alGenSources(1, &this->sourceId);
 	if (alGetError() != AL_NO_ERROR)
     {
-        Log::warning("Failed generating alAudioSource!\n");
+        Log::warning("AudioSource: Failed generating alAudioSource!\n");
         return;
     }
 
 	alSourcei(this->sourceId, AL_BUFFER, bufferId);
 	if (alGetError() != AL_NO_ERROR)
     {
-        Log::warning("Failed attaching ALBufferId!\n");
+        Log::warning("AudioSource: Failed attaching ALBufferId!\n");
         return;
     }
 }

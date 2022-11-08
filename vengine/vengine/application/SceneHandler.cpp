@@ -132,7 +132,7 @@ void SceneHandler::reloadScene()
 {
 	// Clear registry
 	this->scene->getSceneReg().clear();
-	
+
 	// Init
 	this->initSubsystems();
 }

@@ -24,10 +24,8 @@ AudioHandler::AudioHandler()
     alcMakeContextCurrent(context);
 	alGetError(); // Clears error code
 
-
 	alGenSources(1, &this->musicSourceId);
 	alSourcei(this->musicSourceId, AL_SOURCE_RELATIVE, AL_FALSE);
-	alGenBuffers(NUM_BUFFERS, this->alBuffers);
 }
 
 AudioHandler::~AudioHandler()
@@ -37,6 +35,9 @@ AudioHandler::~AudioHandler()
 		delete[] this->audioSamples;
 		this->audioSamples = nullptr;
 	}
+
+	alDeleteSources(1, &this->musicSourceId);
+	alDeleteBuffers(NUM_BUFFERS, this->alBuffers);
 
     ALCcontext* context = alcGetCurrentContext();
     ALCdevice* device = alcGetContextsDevice(context);
@@ -87,10 +88,13 @@ void AudioHandler::updateMusic()
 
     alGetSourcei(this->musicSourceId, AL_BUFFERS_PROCESSED, &buffersProcessed);
     if (buffersProcessed < 1)
+	{
         return;
+	}
 
     ALuint oldBuffer;
 	size_t actualRead = 0;
+
     // while to to fix all processed buffers
     while (buffersProcessed--)
     {
@@ -126,22 +130,28 @@ void AudioHandler::setMusic(const std::string& filePath)
 		Log::warning("Failed loading music file");
 		return;
 	}
+	
+	alSourceStop(this->musicSourceId);
+	alSourcei(this->musicSourceId, AL_BUFFER, NULL);
+	alDeleteBuffers(NUM_BUFFERS, this->alBuffers);
+	alGenBuffers(NUM_BUFFERS, this->alBuffers);
 
 	this->alSoundFormat = this->mrStreamer.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
 	memset(this->audioSamples, 0, BUFFER_SIZE);
 
-	size_t actualRead = 0;
+	size_t numSamplesRead = 0;
 	for (int i = 0; i < NUM_BUFFERS; i++)
     {
-        actualRead = this->mrStreamer.read((short*)this->audioSamples, NUM_SAMPLES_PER_READ);
+        numSamplesRead = this->mrStreamer.read((short*)this->audioSamples, NUM_SAMPLES_PER_READ);
 
-	    alBufferData(this->alBuffers[i], this->alSoundFormat, this->audioSamples, actualRead * sizeof(short), this->mrStreamer.getSampleRate());
+	    alBufferData(this->alBuffers[i], this->alSoundFormat, this->audioSamples, numSamplesRead * sizeof(short), this->mrStreamer.getSampleRate());
 		ALenum error = alGetError();
         if (error != AL_NO_ERROR)
 		{
-			Log::error("Failed filling audio buffers. ALError: " + std::to_string(error));
+			Log::error("Failed filling music buffers. ALError: " + std::to_string(error));
 		}
     }
+
 	alSourceQueueBuffers(this->musicSourceId, NUM_BUFFERS, this->alBuffers);
 }
 
@@ -182,7 +192,4 @@ void AudioHandler::cleanUp()
 	{
 		alDeleteSources(1, &source.sourceId);
 	});
-	
-	alDeleteSources(1, &this->musicSourceId);
-	alDeleteBuffers(NUM_BUFFERS, this->alBuffers);
 }
