@@ -92,7 +92,7 @@ void PhysicsEngine::updateRigidbodies()
 	view.each(func);
 }
 
-btCollisionShape* PhysicsEngine::createShape(const int& entity, Collider& col)
+btCollisionShape* PhysicsEngine::createShape(Collider& col)
 {
 	// Loop: Find suitable collision shape
 	// Else: Create new shape
@@ -153,7 +153,7 @@ btCollisionShape* PhysicsEngine::createShape(const int& entity, Collider& col)
 void PhysicsEngine::createCollider(const int& entity, Collider& col)
 {
 	// Create shape
-	btCollisionShape* shape = this->createShape(entity, col);
+	btCollisionShape* shape = this->createShape(col);
 
 	btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity));
 	transform.setOrigin(transform.getOrigin() + BulletH::bulletVec(col.offset));
@@ -180,7 +180,7 @@ void PhysicsEngine::createRigidbody(const int& entity, Rigidbody& rb, Collider& 
 	}
 
 	// Create shape
-	btCollisionShape* shape = this->createShape(entity, col);
+	btCollisionShape* shape = this->createShape(col);
 
 	// Create Rigidbody
 	btTransform transform = BulletH::toBulletTransform(this->sceneHandler->getScene()->getComponent<Transform>(entity));
@@ -235,6 +235,8 @@ void PhysicsEngine::cleanup()
 {
 	this->renderDebug = false;
 
+	delete this->testObject;
+
 	// Remove the rigidbodies from the dynamics world and delete them
 	for (int i = this->dynWorld->getNumCollisionObjects() - 1; i >= 0; i--)
 	{
@@ -285,6 +287,7 @@ PhysicsEngine::PhysicsEngine()
 	this->solver = new btSequentialImpulseConstraintSolver();
 	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
 	this->dynWorld->setGravity(btVector3(0, -10, 0));
+	this->testObject = new btCollisionObject();
 }
 
 PhysicsEngine::~PhysicsEngine()
@@ -307,6 +310,7 @@ void PhysicsEngine::init()
 	this->solver = new btSequentialImpulseConstraintSolver();
 	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
 	this->dynWorld->setGravity(btVector3(0, -10, 0));
+	this->testObject = new btCollisionObject();
 }
 
 void PhysicsEngine::update(float dt)
@@ -578,35 +582,18 @@ RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)
 	return payload;
 }
 
-// Optimize (reduce dynamic allocations)
 std::vector<Entity> PhysicsEngine::testContact(Collider& col, glm::vec3 position, glm::vec3 rotation)
 {
-	btCollisionShape* shape = nullptr;
-	btCollisionObject* object = new btCollisionObject();
-	switch (col.type)
-	{
-	case ColType::SPHERE:
-		shape = new btSphereShape(col.radius);
-		break;
-	case ColType::BOX:
-		shape = new btBoxShape(BulletH::bulletVec(col.extents));
-		break;
-	case ColType::CAPSULE:
-		shape = new btCapsuleShape(col.radius, col.height);
-		break;
-	default:
-		return std::vector<int>();
-	}
-	object->setCollisionShape(shape);
+	btCollisionShape* shape = this->createShape(col);
+	this->testObject->setCollisionShape(shape);
 
 	btTransform transform;
 	transform.setOrigin(BulletH::bulletVec(position + col.offset));
 	transform.setRotation(BulletH::bulletQuat(rotation));
-	object->setWorldTransform(transform);
+	this->testObject->setWorldTransform(transform);
 
 	ContactCallback closestResults;
-	this->dynWorld->contactTest(object, closestResults);
-	delete shape;
-	delete object;
+	closestResults.scene = this->sceneHandler->getScene();
+	this->dynWorld->contactTest(this->testObject, closestResults);
 	return closestResults.entitiesHit;
 }

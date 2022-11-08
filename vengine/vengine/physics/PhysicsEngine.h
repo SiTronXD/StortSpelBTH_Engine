@@ -64,11 +64,12 @@ private:
 
 	btAlignedObjectArray<ColShapeInfo> colShapes;
 	std::vector<int> removeIndicies;
+	btCollisionObject* testObject;
 
 	void updateColliders();
 	void updateRigidbodies();
 
-	btCollisionShape* createShape(const int& entity, Collider& col);
+	btCollisionShape* createShape(Collider& col);
 	void createCollider(const int& entity, Collider& col);
 	void createRigidbody(const int& entity, Rigidbody& rb, Collider& col);
 	void removeObject(btCollisionObject* obj, int index);
