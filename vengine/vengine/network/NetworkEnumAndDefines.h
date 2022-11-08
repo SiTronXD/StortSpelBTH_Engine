@@ -95,10 +95,3 @@ GetPlayerNames		: nrOfPlayers(int) PlayerNames(string)
 GetLevelSeed		: Seed(int)
 */
 #pragma endregion
-
-enum MonsterTypes//this should be in game but can't beacuse im dumb
-{
-	Blobb,
-	Lich,
-
-};

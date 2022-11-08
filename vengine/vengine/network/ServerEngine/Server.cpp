@@ -75,6 +75,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 				}
 			}
 			//create a new client that is ready
+			client[client.size() - 1]->clientTcpSocket.setBlocking(false);
 			client.resize(client.size() + 1);
 			client[client.size() - 1] = new clientInfo("");
 		}
@@ -201,18 +202,18 @@ bool Server::update(float dt)
 		{
 			this->clients[i]->TimeToDisconnect += dt;
 		}
-
+		
 		getDataFromUsers();
 		if (this->currentTimeToSend >= this->timeToSend)
 		{
 			this->sceneHandler.update(this->currentTimeToSend);
 			this->scriptHandler.update(this->currentTimeToSend);
 			this->physicsEngine.update(this->currentTimeToSend);
-
+			
 			this->seeIfUsersExist();
 			this->sendDataToAllUsers();
 			this->cleanSendPackages();
-
+			
 			this->currentTimeToSend -= this->timeToSend;
 			if (this->currentTimeToSend > this->timeToSend)
 			{
@@ -319,7 +320,7 @@ void Server::sendDataToAllUsers()
 		//send to the client
 		serverToClientPacketTcp[i] << GameEvents::END;
 		clients[i]->clientTcpSocket.send(serverToClientPacketTcp[i]);
-
+	
 		//send UDP
 		sf::Packet sendUDPPacket;
 		createUDPPacketToClient(i, sendUDPPacket);
@@ -339,7 +340,7 @@ void Server::getDataFromUsers()
 			handlePacketFromUser(i, true);
 		}
 	}
-
+	
 	//do I need to change sender and port and the see if they match?
 	sf::IpAddress tempIPAddress;
 	unsigned short tempPort;
