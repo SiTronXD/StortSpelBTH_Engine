@@ -103,16 +103,16 @@ void SceneHandler::prepareForRendering()
 	view.each(func);
 
 	ScriptHandler& scriptHandler = *this->getScriptHandler();
-	auto uiView = this->scene->getSceneReg().view<UIComponent, Script>(entt::exclude<Inactive>);
-	auto uiFunc = [&](UIComponent& uiComp, Script& script)
+	auto uiView = this->scene->getSceneReg().view<UIArea, Script>(entt::exclude<Inactive>);
+	auto uiFunc = [&](const auto& entity, UIArea& uiArea, Script& script)
 	{
-		if (uiComp.isClicking())
+		if (uiArea.isHovering())
 		{
-			scriptHandler.runFunction(script, "onHover");
-		}
-		else if (uiComp.isHovering())
-		{
-			scriptHandler.runFunction(script, "onClick");
+			scriptHandler.runFunction((Entity)entity, script, "onHover");
+			if (uiArea.isClicking())
+			{
+				scriptHandler.runFunction((Entity)entity, script, "onClick");
+			}
 		}
 	};
 	uiView.each(uiFunc);

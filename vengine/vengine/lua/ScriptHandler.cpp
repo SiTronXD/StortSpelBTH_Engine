@@ -123,9 +123,43 @@ bool ScriptHandler::runScript(std::string& path)
 	return result;
 }
 
-void ScriptHandler::runFunction(Script& script, std::string funcName)
+void ScriptHandler::runFunction(Entity e, Script& script, std::string func)
 {
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+#ifdef _CONSOLE
+	if (luaL_dofile(L, script.path) != LUA_OK)
+	{
+		LuaH::dumpError(L);
+	}
+	else
+	{
+		LuaH::replaceTableFunctions(L, -1, -2);
+		lua_pop(L, 1);
+	}
+#endif
 
+	lua_getfield(L, -1, func.c_str());
+	if (lua_type(L, -1) == LUA_TNIL)
+	{
+		lua_pop(L, 2);
+		return;
+	}
+
+	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e);
+	lua_pushtransform(L, transform);
+	lua_setfield(L, -3, "transform");
+
+	lua_pushvalue(L, -2); // self
+
+	// call function
+	LUA_ERR_CHECK(L, lua_pcall(L, 1, 0, 0));
+
+	lua_getfield(L, -1, "transform");
+	if (!lua_isnil(L, -1))
+	{
+		transform = lua_totransform(L, -1);
+	}
+	lua_pop(L, 2);
 }
 
 void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
@@ -223,14 +257,6 @@ void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, b
 		transform = lua_totransform(L, -1);
 	}
 	lua_pop(L, 2);
-}
-
-void ScriptHandler::runOnHoverFunction(Script& script)
-{
-}
-
-void ScriptHandler::runOnClickFunction(Script& script)
-{
 }
 
 void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)

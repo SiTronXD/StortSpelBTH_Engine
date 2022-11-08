@@ -1,9 +1,10 @@
 #pragma once
 
-struct UIComponent // 2D only
+struct UIArea // 2D only
 {
 	glm::ivec2 position;
 	glm::ivec2 dimension;
+	Mouse clickButton = Mouse::LEFT;
 
 	const bool isHovering() const
 	{
@@ -13,6 +14,6 @@ struct UIComponent // 2D only
 
 	const bool isClicking() const
 	{
-		return this->isHovering() && Input::isMouseButtonPressed(Mouse::LEFT);
+		return this->isHovering() && Input::isMouseButtonPressed(clickButton);
 	}
 };
