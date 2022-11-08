@@ -47,38 +47,17 @@ void main()
 {
 	vec3 normal = normalize(fragNor);
 
-	float diffuse = clamp(
-		dot(normal, -normalize(vec3(-0.43f, -1.0f, 1.0f))), 
-		0.0f, 
-		1.0f
-	) * 0.8f + 0.2f;
-
-	vec3 finalCol = texture(textureSampler0, fragTex).rgb * diffuse;
+	vec3 textureCol = texture(textureSampler0, fragTex).rgb;
 	
-	// Texture + static diffuse light
-	// outColor = vec4(finalCol, 1.0f);
-
-	// Temporary fog
-	const float MIN_DIST = 0.995f;
-	const float MAX_DIST = 1.0f;
-	float distAlpha = clamp(
-		(gl_FragCoord.z - MIN_DIST) / (MAX_DIST - MIN_DIST), 
-		0.0f, 
-		1.0f
-	);
-	distAlpha = distAlpha * distAlpha;
-
-	outColor = vec4(mix(finalCol, vec3(0.8f), distAlpha), 1.0f);
-
 	// Color from lights
-	vec3 finalLightColor = vec3(0.0f);
+	vec3 finalColor = vec3(0.0f);
 
 	// Ambient lights
 	for(uint i = 0; 
 		i < allLightsInfo.ambientLightsEndIndex; 
 		++i)
 	{
-		finalLightColor += lightBuffer.lights[i].color.xyz;
+		finalColor += lightBuffer.lights[i].color.xyz;
 	}
 
 	// Directional lights
@@ -89,7 +68,8 @@ void main()
 		vec3 lightDir = lightBuffer.lights[i].direction.xyz;
 
 		// Regular diffuse light
-		float diffuseLight = 
+		vec3 diffuseLight = 
+			textureCol *
 			clamp(
 				dot(normal, -lightDir),
 				0.0f,
@@ -101,10 +81,11 @@ void main()
 		vec3 fragToViewDir = 
 			normalize(fragCamWorldPos - fragWorldPos);
 		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
-		float specularLight = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
+		vec3 specularLight = 
+			vec3(1.0f) * pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
 		
 		// Add blinn-phong light contribution
-		finalLightColor += 
+		finalColor += 
 			(diffuseLight + specularLight) * lightBuffer.lights[i].color.xyz;
 	}
 
@@ -121,7 +102,8 @@ void main()
 		float atten = 1.0f / (1.0f + length(fragToLight));
 
 		// Regular diffuse light
-		float diffuseLight = 
+		vec3 diffuseLight = 
+			textureCol *
 			clamp(
 				dot(normal, fragToLightDir),
 				0.0f,
@@ -129,12 +111,28 @@ void main()
 			);
 
 		// Blinn specular
-		float specularLight = pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
+		vec3 specularLight = 
+			vec3(1.0f) * pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
 
 		// Add blinn-phong light contribution
-		finalLightColor += 
+		finalColor += 
 			(diffuseLight + specularLight) * atten * 
 			lightBuffer.lights[i].color.xyz;
 	}
-	outColor = vec4(finalLightColor, 1.0f);
+
+	// Temporary fog
+	const float MIN_DIST = 0.995f;
+	const float MAX_DIST = 1.0f;
+	float distAlpha = clamp(
+		(gl_FragCoord.z - MIN_DIST) / (MAX_DIST - MIN_DIST), 
+		0.0f, 
+		1.0f
+	);
+	distAlpha = distAlpha * distAlpha;
+
+	// Composite fog
+	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
+
+	// No fog
+	// outColor = vec4(finalColor, 1.0f);
 }
