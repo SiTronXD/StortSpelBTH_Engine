@@ -20,6 +20,10 @@ scene.setComponent(a, CompType.Script, "assets/scripts/multiAnim.lua")
 local e = scene.createEntity()
 scene.setComponent(e, CompType.Script, "assets/scripts/collisionchecks.lua")
 
+local ui = scene.createEntity()
+scene.setComponent(ui, CompType.UIArea, { position = vector(0, 0, 0), dimension = vector(250, 100, 0) } )
+scene.setComponent(ui, CompType.Script, "assets/scripts/button.lua")
+
 --[[local prefab = {
 	Transform = {
 		position = vector(3, 0, 5),

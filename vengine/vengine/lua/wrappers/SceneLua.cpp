@@ -76,7 +76,8 @@ int SceneLua::lua_iterateView(lua_State* L)
 			std::find(compTypes.begin(), compTypes.end(), CompType::SCRIPT) != compTypes.end() && scene->hasComponents<Script>(entity) &&
 			std::find(compTypes.begin(), compTypes.end(), CompType::COLLIDER) != compTypes.end() && scene->hasComponents<Collider>(entity) &&
 			std::find(compTypes.begin(), compTypes.end(), CompType::RIGIDBODY) != compTypes.end() && scene->hasComponents<Rigidbody>(entity) &&
-			std::find(compTypes.begin(), compTypes.end(), CompType::ANIMATION) != compTypes.end() && scene->hasComponents<AnimationComponent>(entity);
+			std::find(compTypes.begin(), compTypes.end(), CompType::ANIMATION) != compTypes.end() && scene->hasComponents<AnimationComponent>(entity) &&
+			std::find(compTypes.begin(), compTypes.end(), CompType::UIAREA) != compTypes.end() && scene->hasComponents<UIArea>(entity);
 
 		if (scriptPath.size() && addToList)
 		{
@@ -115,6 +116,9 @@ int SceneLua::lua_iterateView(lua_State* L)
 				break;
 			case CompType::ANIMATION:
 				lua_pushanimation(L, scene->getComponent<AnimationComponent>(entity));
+				break;
+			case CompType::UIAREA:
+				lua_pushuiarea(L, scene->getComponent<UIArea>(entity));
 				break;
 			default:
 				break;
@@ -207,6 +211,13 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	}
 	lua_pop(L, 1);
 
+	lua_getfield(L, -1, "UIArea");
+	if (!lua_isnil(L, -1))
+	{
+		scene->setComponent<UIArea>(entity, lua_touiarea(L, -1));
+	}
+	lua_pop(L, 1);
+
 	lua_pushnumber(L, entity);
 	return 1;
 }
@@ -286,6 +297,9 @@ int SceneLua::lua_hasComponent(lua_State* L)
 	case CompType::ANIMATION:
 		hasComp = scene->hasComponents<AnimationComponent>(entity);
 		break;
+	case CompType::UIAREA:
+		hasComp = scene->hasComponents<UIArea>(entity);
+		break;
 	case CompType::AUDIOLISTENER:
 		hasComp = scene->hasComponents<AudioListener>(entity);
 		break;
@@ -333,6 +347,10 @@ int SceneLua::lua_getComponent(lua_State* L)
 	else if ((CompType)type == CompType::ANIMATION && scene->hasComponents<AnimationComponent>(entity))
 	{
 		lua_pushanimation(L, scene->getComponent<AnimationComponent>(entity));
+	}
+	else if ((CompType)type == CompType::UIAREA && scene->hasComponents<UIArea>(entity))
+	{
+		lua_pushuiarea(L, scene->getComponent<UIArea>(entity));
 	}
 	else { lua_pushnil(L); }
 	return 1;
@@ -385,6 +403,9 @@ int SceneLua::lua_setComponent(lua_State* L)
 		}
 		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, boneID));
 		break;
+	case CompType::UIAREA:
+		scene->setComponent<UIArea>(entity, lua_touiarea(L, 3));
+		break;
 	default:
 		break;
 	}
@@ -417,6 +438,9 @@ int SceneLua::lua_removeComponent(lua_State* L)
 		break;
 	case CompType::ANIMATION:
 		scene->removeComponent<AnimationComponent>(entity);
+		break;
+	case CompType::UIAREA:
+		scene->removeComponent<UIArea>(entity);
 		break;
 	case CompType::AUDIOLISTENER:
 		scene->removeComponent<AudioListener>(entity);

@@ -8,6 +8,14 @@ This file contains everything lua related that has been implemented in to Vengin
 * [Exposed Systems:](#Exposed-Systems)
 	* [Scene](#Scene)
 		* [Components](#Components)
+			* [Transform](#Transform)
+			* [MeshComponent](#MeshComponent)
+			* [Script](#Script)
+			*  [Camera](#Camera)
+			*  [Collider](#Collider)
+			*  [Rigidbody](#Rigidbody)
+			*  [Animation](#Animation)
+			*  [UIArea](#UIArea)
 	* [Input](#Input)
 	* [Resource Manager](#Resource-Manager)
 	* [Network](#Network)
@@ -248,6 +256,7 @@ The amount of components supported grows with the engine. This section goes over
 * [Collider](#Collider)
 * [Rigidbody](#Rigidbody)
 * [Animation](#Animation)
+* [UIArea](#UIArea)
 * AudioListener (not completely done)
 * AudioSource (not completely done)
 
@@ -377,6 +386,26 @@ local Animation = {
 local anim = scene.getComponent(e, CompType.Animation)
 anim.timeScale = -2 -- Backwards at double speed
 scene.setComponent(e, CompType.Animation, anim)
+~~~
+
+#### UIArea
+The UIArea component is used to define a 2D area on the screen that can be controlled for UI elements such as buttons and others that need mouse input. It has two overloaded functions called isHovering and isClicking that can be useful. There are also similar functions in [Script components] that will be called automatically from C++ with entities that have both components. 
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local UIArea = {
+	vector : position, -- Only x and y matter (2D)
+	vector : dimension, -- Only x and y matter (2D)
+	int : clickButton -- Mouse button id (useful for script functions)
+}
+
+-- Member functions
+area:isHovering() -- Currently hovered over by mouse
+area:isClicking() -- Currently clicked via clickbutton value
+
+--Example of use
+local area = scene.getComponent(e, CompType.UIArea)
+area.position = vector(10, 20)
+scene.setComponent(e, CompType.UIArea, area)
 ~~~
 
 ## Input
@@ -844,6 +873,8 @@ script:onCollisionExit(e) -- Called when collision with another entity has ended
 script:onTriggerEnter(e) -- Called when triggering with another entity has started
 script:onTriggerStay(e) -- Called when trigger colliding with another entity
 script:onTriggerExit(e) -- Called when triggering with another entity has ended
+script:onHover(e) -- Called when hovered by mouse (must have UIArea component)
+script:onClick(e) -- Called when clicked by mouse (must have UIArea component)
 ~~~
 The script table created and used in these functions also have some extra member elements that has been provided by the C++ side.
 ~~~ Lua
