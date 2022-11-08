@@ -8,28 +8,26 @@
 AudioHandler::AudioHandler()
 	:sceneHandler(nullptr), musicSourceId(), alBuffers{}, alSoundFormat(0)
 {
-	ALCdevice* device = alcOpenDevice(nullptr);
-    if (!device)
-    {
-		Log::error("Failed creating OpenAL Device");
-    }
-
-    ALCcontext* context = alcCreateContext(device, nullptr);
-	if (!context)
-    {
-		Log::error("Failed creating OpenAL Context");
-    }
-	
-    alcMakeContextCurrent(context);
-	ALboolean eax = alIsExtensionPresent("EAX2.0");
-	
-	alGetError(); // Clears error code
-
-	alGenSources(1, &this->musicSourceId);
-	alGenBuffers(NUM_BUFFERS, this->alBuffers);
-
 	this->audioSamples = new char[BUFFER_SIZE];
 	this->state = State::NotPlaying;
+
+	ALCdevice* device = alcOpenDevice(NULL);
+    if (!device)
+    {
+		Log::error("Failed to create OpenAL Device");
+    }
+    ALCcontext* context = alcCreateContext(device, nullptr);
+	if (!context)
+	{
+		Log::error("Failed to create OpenAL Context");
+	}
+    alcMakeContextCurrent(context);
+	alGetError(); // Clears error code
+
+
+	alGenSources(1, &this->musicSourceId);
+	alSourcei(this->musicSourceId, AL_SOURCE_RELATIVE, AL_FALSE);
+	alGenBuffers(NUM_BUFFERS, this->alBuffers);
 }
 
 AudioHandler::~AudioHandler()
@@ -40,7 +38,7 @@ AudioHandler::~AudioHandler()
 		this->audioSamples = nullptr;
 	}
 
-	ALCcontext* context = alcGetCurrentContext();
+    ALCcontext* context = alcGetCurrentContext();
     ALCdevice* device = alcGetContextsDevice(context);
     alcMakeContextCurrent(NULL);
     alcDestroyContext(context);
@@ -179,12 +177,6 @@ float AudioHandler::getMusicVolume() const
 
 void AudioHandler::cleanUp()
 {
-	if (this->audioSamples)
-	{
-		delete[] this->audioSamples;
-		this->audioSamples = nullptr;
-	}
-
 	const auto& sourceView = this->sceneHandler->getScene()->getSceneReg().view<AudioSource>();
 	sourceView.each([&](AudioSource& source)
 	{
