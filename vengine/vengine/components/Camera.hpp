@@ -23,4 +23,6 @@ struct Camera
 		this->projection = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
 		this->invProjection = glm::inverse(this->projection);
 	}
+
+
 };

@@ -35,6 +35,11 @@ UIRenderer::UIRenderer()
 {
 }
 
+void UIRenderer::setSceneHandler(SceneHandler* sceneHandler)
+{
+    this->sceneHandler = sceneHandler;
+}
+
 void UIRenderer::create(
 	PhysicalDevice& physicalDevice,
 	Device& device,
@@ -186,14 +191,9 @@ void UIRenderer::setTexture(const uint32_t& textureIndex)
 }
 
 void UIRenderer::renderTexture(
-    const float& x, 
-    const float& y, 
-    const float& width, 
-    const float& height,
-    const uint32_t& u0,
-    const uint32_t& v0,
-    const uint32_t& u1,
-    const uint32_t& v1)
+    const glm::vec2& position,
+    const glm::vec2& dimension,
+    const glm::uvec4 textureCoords)
 {
     if (this->currentElementIndex >= START_NUM_MAX_ELEMENTS)
     {
@@ -203,21 +203,43 @@ void UIRenderer::renderTexture(
 
     // Set element data
     this->uiElementData[this->currentElementIndex].transform =
-        ResTranslator::transformRect(x, y, width, height);
+        ResTranslator::transformRect(position, dimension);
     this->uiElementData[this->currentElementIndex].uvRect =
-        glm::uvec4(u0, v0, u1, v1);
+        textureCoords;
 
     // Next ui element
     this->currentElementIndex++;
 }
 
+void UIRenderer::renderTexture(
+    const glm::vec3& position,
+    const glm::vec2& dimension,
+    const glm::uvec4 textureCoords)
+{
+    Scene* scene = this->sceneHandler->getScene();
+    if (!scene->entityValid(scene->getMainCameraID())) { return; }
+
+    glm::vec4 pos = scene->getMainCamera()->projection * scene->getMainCamera()->view * glm::vec4(position, 1.0f);
+    glm::vec2 orig = glm::vec2(pos);
+    if (pos.z > pos.w || pos.z <= 0) { return; }
+
+    pos.x = (pos.x / pos.w) * (ResTranslator::INTERNAL_WIDTH >> 1);
+    pos.y = (pos.y / pos.w) * (ResTranslator::INTERNAL_HEIGHT >> 1);
+    pos.z /= pos.w;
+
+    Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
+    float dot = glm::dot(glm::normalize(glm::vec3(pos) - camTransform.position), glm::vec3(0.0f, 0.0f, 1.0f));
+    glm::vec2 size = 10.0f * dimension / (glm::length(glm::vec3(pos) - camTransform.position) * dot);
+    
+    Log::write("(" + std::to_string(size.x) + ", " + std::to_string(size.y) + ")");
+    this->renderTexture(glm::vec2(pos), size, textureCoords);
+}
+
 void UIRenderer::renderString(
     const std::string& text,
-    const float& x,
-    const float& y,
-    const float& characterWidth,
-    const float& characterHeight,
-    const float& characterMargin,
+    const glm::vec2& position,
+    const glm::vec2& charDimension,
+    const float& charMargin,
     const StringAlignment& alignment)
 {
     float currentCharWidth = 0.0f;
@@ -226,7 +248,7 @@ void UIRenderer::renderString(
     CharacterRect* charRect = nullptr;
 
     const float firstCharWidth = 
-        characterWidth *
+        charDimension.x *
         (this->characterRects[text[0]].width * this->oneOverCharTileWidth);
     
         // Start at left edge of the first character
@@ -242,9 +264,9 @@ void UIRenderer::renderString(
 
         // Current character size
         currentCharWidth =
-            characterWidth * (charRect->width * this->oneOverCharTileWidth);
+            charDimension.x * (charRect->width * this->oneOverCharTileWidth);
         
-        stringWidth += characterMargin + currentCharWidth;
+        stringWidth += charMargin + currentCharWidth;
     }
 
     // Alignment offset
@@ -259,23 +281,19 @@ void UIRenderer::renderString(
 
         // Current character size
         currentCharWidth =
-            characterWidth * (charRect->width * this->oneOverCharTileWidth);
+            charDimension.x * (charRect->width * this->oneOverCharTileWidth);
         currentCharHeight =
-            characterHeight * (charRect->height * this->oneOverCharTileWidth);
+            charDimension.y * (charRect->height * this->oneOverCharTileWidth);
 
         // Render character as texture
         this->renderTexture(
-            x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f + 
-                alignmentOffset,
-            y - characterHeight * 0.5f + currentCharHeight * 0.5f,
-            currentCharWidth,
-            currentCharHeight,
-            charRect->x, 
-            charRect->y, 
-            charRect->width, 
-            charRect->height 
+            glm::vec2(
+                position.x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f + alignmentOffset, 
+                position.y - charDimension.y * 0.5f + currentCharHeight * 0.5f),
+            glm::vec2(currentCharWidth, currentCharHeight),
+            glm::uvec4(charRect->x, charRect->y, charRect->width, charRect->height)
         );
 
-        currentSizeX += characterMargin + currentCharWidth;
+        currentSizeX += charMargin + currentCharWidth;
     }
 }

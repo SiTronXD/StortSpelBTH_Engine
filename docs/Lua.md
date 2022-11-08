@@ -11,11 +11,11 @@ This file contains everything lua related that has been implemented in to Vengin
 			* [Transform](#Transform)
 			* [MeshComponent](#MeshComponent)
 			* [Script](#Script)
-			*  [Camera](#Camera)
-			*  [Collider](#Collider)
-			*  [Rigidbody](#Rigidbody)
-			*  [Animation](#Animation)
-			*  [UIArea](#UIArea)
+			* [Camera](#Camera)
+			* [Collider](#Collider)
+			* [Rigidbody](#Rigidbody)
+			* [Animation](#Animation)
+			* [UIArea](#UIArea)
 	* [Input](#Input)
 	* [Resource Manager](#Resource-Manager)
 	* [Network](#Network)
@@ -700,11 +700,11 @@ uiRenderer.setTexture(string : texture_path)
 #### renderTexture
 Renders the active texture to the screen. [setTexture](#setTexture) should be called before. Takes a 2D position and width and height as the argument.
 ~~~ Lua
-uiRenderer.renderTexture(float : x, float : y, float : width, float : height)
+uiRenderer.renderTexture(vector : position, vector : dimension)
 
 --Example use
 uiRenderer.setTexture("test.png")
-uiRenderer.renderTexture(0, 0, 100, 100) -- 100x100 image in the middle of the screen
+uiRenderer.renderTexture(vector(0, 0), vector(100, 100)) -- 100x100 image in the middle of the screen
 ~~~
 
 ## DebugRenderer

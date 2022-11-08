@@ -12,6 +12,7 @@ class PhysicalDevice;
 class Device;
 class ResourceManager;
 class VulkanRenderer;
+class SceneHandler;
 
 struct UIElementData
 {
@@ -67,12 +68,15 @@ private:
     ResourceManager* resourceManager;
     vk::RenderPass* renderPass;
 
+    SceneHandler* sceneHandler;
+
     void prepareForGPU();
     void resetRender();
 
 public:
     UIRenderer();
 
+    void setSceneHandler(SceneHandler* sceneHandler);
     void create(
         PhysicalDevice& physicalDevice,
         Device& device,
@@ -90,22 +94,20 @@ public:
 
     void setTexture(const uint32_t& textureIndex);
     void renderTexture(
-        const float& x,
-        const float& y,
-        const float& width,
-        const float& height,
-        const uint32_t& u0 = 0,
-        const uint32_t& v0 = 0,
-        const uint32_t& u1 = 1,
-        const uint32_t& v1 = 1
+        const glm::vec2& position,
+        const glm::vec2& dimension,
+        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1)
+    );
+    void renderTexture(
+        const glm::vec3& position,
+        const glm::vec2& dimension,
+        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1)
     );
     void renderString(
         const std::string& text,
-        const float& x,
-        const float& y,
-        const float& characterWidth,
-        const float& characterHeight,
-        const float& characterMargin = 0.0f,
+        const glm::vec2& position,
+        const glm::vec2& charDimension,
+        const float& charMargin = 0.0f,
         const StringAlignment& alignment = StringAlignment::CENTER
     );
 

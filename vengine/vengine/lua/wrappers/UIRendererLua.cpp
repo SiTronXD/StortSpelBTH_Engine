@@ -24,9 +24,18 @@ int UIRendererLua::lua_renderTexture(lua_State* L)
 {
 	UIRenderer* uiRenderer = (UIRenderer*)lua_touserdata(L, lua_upvalueindex(1));
 
-	if (lua_gettop(L) >= 4)
+	if (lua_isvector(L, 1) && lua_isvector(L, 2))
 	{
-		uiRenderer->renderTexture((float)lua_tonumber(L, 1), (float)lua_tonumber(L, 2), (float)lua_tonumber(L, 3), (float)lua_tonumber(L, 4));
+		glm::vec3 pos = lua_tovector(L, 1);
+		if (pos.z == 0.0f)
+		{
+			uiRenderer->renderTexture(glm::vec2(pos), lua_tovector(L, 2));
+		}
+		else
+		{
+			uiRenderer->renderTexture(pos, lua_tovector(L, 2));
+		}
+
 	}
 	return 0;
 }

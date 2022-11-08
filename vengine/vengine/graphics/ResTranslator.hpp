@@ -4,21 +4,14 @@
 
 class Swapchain;
 
-struct UIRectangle
-{
-	float x;
-	float y;
-	float width;
-	float height;
-};
-
 class ResTranslator
 {
+public:
+	static const unsigned int INTERNAL_WIDTH = 1920;
+	static const unsigned int INTERNAL_HEIGHT = 1080;
 private:
 	friend Swapchain;
 
-	static const unsigned int INTERNAL_WIDTH = 1920;
-	static const unsigned int INTERNAL_HEIGHT = 1080;
 	static const float INTERNAL_ASPECT_RATIO;
 
 	static uint32_t windowWidth;
@@ -34,10 +27,8 @@ private:
 
 public:
 	static glm::vec4 transformRect(
-		const float& x,
-		const float& y,
-		const float& width,
-		const float& height
+		const glm::vec2 position,
+		const glm::vec2 dimension
 	);
 
 	static glm::vec2 toInternalPos(

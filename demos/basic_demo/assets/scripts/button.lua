@@ -11,7 +11,7 @@ function button:update(dt)
 	local area = scene.getComponent(self.ID, CompType.UIArea)
 
 	uiRenderer.setTexture(self.activeTexture)
-	uiRenderer.renderTexture(area.position.x, area.position.y, area.dimension.x, area.dimension.y)
+	--uiRenderer.renderTexture(area.position, area.dimension)
 	self.activeTexture = self.bTexture
 
 	scene.setComponent(self.ID, CompType.UIArea, area)
