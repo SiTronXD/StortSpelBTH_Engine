@@ -44,5 +44,6 @@
     <None Include="luatestScene.lua">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="assets\scripts\button.lua" />
   </ItemGroup>
 </Project>

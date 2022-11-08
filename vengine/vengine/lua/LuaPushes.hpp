@@ -385,3 +385,70 @@ static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
 	lua_pushnumber(L, anim.timeScale);
 	lua_setfield(L, -2, "timeScale");
 }
+
+static UIArea lua_touiarea(lua_State* L, int index)
+{
+	UIArea area{};
+	glm::vec3 vec;
+
+	// Sanity check
+	if (!lua_istable(L, index)) {
+		std::cout << "Error: not UIArea-table" << std::endl;
+		return area;
+	}
+
+	lua_getfield(L, index, "position");
+	vec = lua_tovector(L, -1);
+	area.position = glm::ivec2((int)vec.x, (int)vec.y);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "dimension");
+	vec = lua_tovector(L, -1);
+	area.dimension = glm::ivec2((int)vec.x, (int)vec.y);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "clickButton");
+	area.clickButton = !lua_isnil(L, -1) ? (Mouse)lua_tointeger(L, -1) : Mouse::LEFT;
+	lua_pop(L, 1);
+
+	return area;
+}
+
+namespace UIAreaLua
+{
+	static int lua_isHovering(lua_State* L)
+	{
+		UIArea area = lua_touiarea(L, 1);
+		lua_pushboolean(L, area.isHovering());
+		return 1;
+	}
+
+	static int lua_isClicking(lua_State* L)
+	{
+		UIArea area = lua_touiarea(L, 1);
+		lua_pushboolean(L, area.isClicking());
+		return 1;
+	}
+}
+
+static void lua_pushuiarea(lua_State* L, const UIArea& area)
+{
+	lua_newtable(L);
+
+	lua_pushvector(L, glm::vec3((float)area.position.x, (float)area.position.y, 0.0f));
+	lua_setfield(L, -2, "position");
+
+	lua_pushvector(L, glm::vec3((float)area.dimension.x, (float)area.dimension.y, 0.0f));
+	lua_setfield(L, -2, "dimension");
+
+	lua_pushinteger(L, (int)area.clickButton);
+	lua_setfield(L, -2, "clickButton");
+	
+	luaL_Reg methods[] = {
+		{ "isHovering", UIAreaLua::lua_isHovering },
+		{ "isClicking", UIAreaLua::lua_isClicking },
+		{ NULL , NULL }
+	};
+
+	luaL_setfuncs(L, methods, 0);
+}

@@ -173,6 +173,8 @@
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneHandler.h" />
     <ClInclude Include="vengine\dev\Fail.h" />
     <ClInclude Include="vengine\pch\pch.h" />
+    <ClInclude Include="vengine\components\UIArea.hpp" />
+    <ClInclude Include="vengine\graphics\StringAlignment.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
