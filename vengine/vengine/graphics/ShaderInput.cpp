@@ -438,10 +438,12 @@ int ShaderInput::addPossibleTexture(
     writeDescriptorSet.setPImageInfo(&imageInfo);
 
     // Update the new Descriptor Set
+    std::vector<vk::WriteDescriptorSet> writeDescriptorSets =
+    {
+        writeDescriptorSet
+    };
     this->device->getVkDevice().updateDescriptorSets(
-        uint32_t(1),
-        &writeDescriptorSet,
-        uint32_t(0),
+        writeDescriptorSets,
         nullptr
     );
 
