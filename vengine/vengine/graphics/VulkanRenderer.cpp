@@ -637,6 +637,18 @@ void VulkanRenderer::initForScene(Scene* scene)
                 vk::ShaderStageFlagBits::eVertex,
                 DescriptorFrequency::PER_FRAME
             );
+        this->animAllLightsInfoUB =
+            this->animShaderInput.addUniformBuffer(
+                sizeof(AllLightsInfo),
+                vk::ShaderStageFlagBits::eFragment,
+                DescriptorFrequency::PER_FRAME
+            );
+        this->animLightBufferSB =
+            this->animShaderInput.addStorageBuffer(
+                sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+                vk::ShaderStageFlagBits::eFragment,
+                DescriptorFrequency::PER_FRAME
+            );
 		this->animSampler = this->animShaderInput.addSampler();
 		this->animShaderInput.endForInput();
 		this->animPipeline.createPipeline(
@@ -1034,7 +1046,10 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
 
     // Update storage buffer containing lights
     this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) &lightBuffer[0]);
-    // this->animShaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data()); 
+    if (this->hasAnimations)
+    {
+        this->animShaderInput.updateStorageBuffer(this->animLightBufferSB, (void*)&lightBuffer[0]);
+    }
 
     // Truncate indices to not overshoot max
     lightsInfo.ambientLightsEndIndex = std::min(
@@ -1056,10 +1071,18 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
     }
 #endif
 
+    // Update all lights info buffer
     this->shaderInput.updateUniformBuffer(
         this->allLightsInfoUB,
         (void*) &lightsInfo
     );
+    if (this->hasAnimations)
+    {
+        this->animShaderInput.updateUniformBuffer(
+            this->animAllLightsInfoUB,
+            (void*)&lightsInfo
+        );
+    }
 }
 
 void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)

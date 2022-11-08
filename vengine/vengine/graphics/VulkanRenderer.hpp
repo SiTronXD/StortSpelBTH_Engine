@@ -70,16 +70,17 @@ class VulkanRenderer
     // Default pipeline
     UniformBufferID viewProjectionUB;
     UniformBufferID allLightsInfoUB;
-    SamplerID sampler;
     StorageBufferID lightBufferSB;
+    SamplerID sampler;
     ShaderInput shaderInput;
     Pipeline pipeline;
 
     // Animations pipeline
 	bool hasAnimations;
     UniformBufferID animViewProjectionUB;
+    UniformBufferID animAllLightsInfoUB;
+    StorageBufferID animLightBufferSB;
     SamplerID animSampler;
-    StorageBufferID animLightBufferID;
     ShaderInput animShaderInput;
     Pipeline animPipeline;
 

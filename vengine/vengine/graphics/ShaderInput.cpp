@@ -377,7 +377,7 @@ void ShaderInput::updateDescriptorSets()
 
             // Data to describe the connection between binding and uniform Buffer
             writeDescriptorSets[j].setDstSet(this->perMeshDescriptorSets[i][j]);              // Descriptor Set to update
-            writeDescriptorSets[j].setDstBinding(uint32_t(j));                                    // Binding to update (Matches with Binding on Layout/Shader)
+            writeDescriptorSets[j].setDstBinding(0 /* 0 for animations */);                                    // Binding to update (Matches with Binding on Layout/Shader)
             writeDescriptorSets[j].setDstArrayElement(uint32_t(0));                                // Index in array we want to update (if we use an array, we do not. thus 0)
             writeDescriptorSets[j].setDescriptorType(this->perMeshResources[j].descriptorType);// Type of Descriptor
             writeDescriptorSets[j].setDescriptorCount(uint32_t(1));                                // Amount of Descriptors to update
