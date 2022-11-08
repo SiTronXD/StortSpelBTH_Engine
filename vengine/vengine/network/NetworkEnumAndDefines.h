@@ -35,6 +35,7 @@ enum GameEvents {
 	//TCP to Server
 	HitMonster,				//Call to Scene
 	START,					//Call to Scene
+	CHANGESCEENE,
 	POLYGON_DATA,
 	REMOVE_POLYGON_DATA,
 
