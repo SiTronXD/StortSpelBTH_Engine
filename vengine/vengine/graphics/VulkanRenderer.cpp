@@ -1034,7 +1034,6 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
 
     // Update storage buffer containing lights
     this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) &lightBuffer[0]);
-    this->shaderInput.setStorageBuffer(this->lightBufferSB);
     // this->animShaderInput.updateStorageBuffer(this->lightBufferSB, lightBuffer.data()); 
 
     // Truncate indices to not overshoot max

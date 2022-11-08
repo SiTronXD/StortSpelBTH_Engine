@@ -39,6 +39,15 @@ struct StorageBufferHandle
 	bool cpuWritable = true;
 };
 
+struct ResourceHandle
+{
+	uint32_t bufferID;
+	vk::DescriptorType descriptorType;
+	vk::ShaderStageFlagBits shaderStage;
+	DescriptorFrequency descriptorFreq;
+	bool cpuWritable = true;
+};
+
 class ShaderInput
 {
 private:
@@ -62,6 +71,10 @@ private:
 	vk::DescriptorPool perFramePool{};
 	vk::DescriptorPool perMeshPool{};
 	vk::DescriptorPool perDrawPool{};
+
+	std::vector<ResourceHandle> perFrameResources;
+	std::vector<ResourceHandle> perMeshResources;
+	std::vector<ResourceHandle> perDrawResources;
 
 	std::vector<UniformBufferHandle> addedUniformBuffers;
 	std::vector<StorageBufferHandle> addedStorageBuffers;
