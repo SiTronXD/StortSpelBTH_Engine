@@ -110,8 +110,10 @@ int ResourceManagerLua::lua_mapAnimations(lua_State* L)
 // TODO change to resource manager later
 int ResourceManagerLua::lua_addAudio(lua_State* L)
 {
+	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
+
 	if (!lua_isstring(L, 1)) { return 0; }
-	int audioID = AudioHandler::loadFile(lua_tostring(L, 1));
+	int audioID = resourceManager->addSound(lua_tostring(L, 1));
 
 	if (audioID < 0) { return 0; }
 	lua_pushinteger(L, audioID);

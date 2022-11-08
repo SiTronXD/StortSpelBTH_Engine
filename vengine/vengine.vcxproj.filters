@@ -88,6 +88,7 @@
     <ClCompile Include="vengine\physics\CollisionDispatcher.cpp" />
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneHandler.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp" />
+    <ClCompile Include="vengine\components\AudioSource.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -298,7 +299,7 @@
     <ClInclude Include="vengine\lua\ScriptHandler.h" />
     <ClInclude Include="vengine\audio\AudioHandler.h" />
     <ClInclude Include="vengine\components\AudioListener.hpp" />
-    <ClInclude Include="vengine\components\AudioSource.hpp" />
+    <ClInclude Include="vengine\components\AudioSource.h" />
     <ClInclude Include="vengine\graphics\MeshData.hpp" />
     <ClInclude Include="vengine\graphics\ShaderInput.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\CommandBuffer.hpp" />

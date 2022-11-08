@@ -4,6 +4,8 @@
 #include "loaders/MeshLoader.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "../graphics/MeshDataModifier.hpp"
+#include "SFML/Audio/InputSoundFile.hpp"
+#include "OpenAL/al.h"
 
 void ResourceManager::init(
     VmaAllocator* vma,
@@ -31,6 +33,11 @@ void ResourceManager::init(
     this->meshLoader.setTextureLoader(&this->textureLoader);
     this->textureLoader.setVulkanRenderer(vulkanRenderer);
     
+}
+
+void ResourceManager::cleanUp()
+{
+    alDeleteBuffers((int)this->audioBuffers.size(), this->audioBuffers.data());
 }
 
 uint32_t ResourceManager::addMesh(
@@ -199,6 +206,51 @@ uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
 	 collisionsData.insert({collisionsData.size(), collisions});
 
 	return collisionsData.size() - 1;
+}
+
+uint32_t ResourceManager::addSound(std::string&& soundPath)
+{
+    if (this->soundPaths.count(soundPath) != 0)
+    {
+        return this->soundPaths[soundPath];   
+    }
+
+    sf::InputSoundFile reader;
+    if (!reader.openFromFile(soundPath))
+    {
+        Log::warning("Failed opening audio file: " + soundPath);
+        return 0;
+    }
+
+    // Allocate memory for samples
+    const uint32_t sampleCount = (uint32_t)reader.getSampleCount();
+    short* samples = new short[sampleCount]{};
+    reader.read(samples, sampleCount);
+    
+    // Generate buffer
+    uint32_t bufferId = -1;
+    alGenBuffers(1, &bufferId);
+    if (alGetError() != AL_NO_ERROR)
+    {
+        Log::warning("Failed generating audio buffer! File: " + soundPath);
+        delete[]samples;
+        return 0;
+    }
+
+    // Fill buffer
+    const ALenum format = reader.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
+    alBufferData(bufferId, format, samples, sizeof(short) * sampleCount, reader.getSampleRate());
+    delete[]samples;
+    if (alGetError() != AL_NO_ERROR)
+    {
+        Log::warning("Failed filling audio buffer! File: " + soundPath);
+        return 0;
+    }
+
+    this->soundPaths.insert({soundPath, bufferId});
+    this->audioBuffers.emplace_back(bufferId);
+
+    return this->audioBuffers.back();
 }
 
 void ResourceManager::cleanup()

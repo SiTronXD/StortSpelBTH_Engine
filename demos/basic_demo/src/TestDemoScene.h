@@ -1,7 +1,7 @@
 #pragma once
 
 #include "vengine.h"
-
+#define AUDIO 0
 class TestDemoScene : public Scene
 {
 private:
@@ -17,8 +17,15 @@ private:
 
 	Entity aniIDs[4];
 	bool aniActive[4];
-  
-  int floor;
+
+	Entity audioSource1;
+	Entity audioSource2;
+	float volume1;
+	float volume2;
+	float master;
+	float music;
+
+    int floor;
 	bool rotDir = false;
 public:
 	TestDemoScene();
@@ -26,6 +33,7 @@ public:
 
 	//  Inherited via Scene
 	virtual void init() override;
+	virtual void start() override;
 	virtual void update() override;
 
 	virtual void onCollisionEnter(Entity e1, Entity e2) override;
