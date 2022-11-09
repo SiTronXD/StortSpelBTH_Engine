@@ -149,7 +149,12 @@ bool NetworkHandler::connectClient(const std::string& serverIP)
 		std::cout << "client doesn't exist" << std::endl;
 		return false;
 	}
-	return client->connect(serverIP);
+	if (!client->connect(serverIP))
+	{
+		client->disconnect();
+		return false;
+	}
+	return true;
 }
 
 void NetworkHandler::updateNetwork()
