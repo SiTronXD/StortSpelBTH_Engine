@@ -90,7 +90,7 @@ public:
     void setBitmapFont(
         const std::vector<std::string>& characters,
         const uint32_t& bitmapFontTextureIndex,
-        const glm::vec2& tileDimension);
+        const glm::uvec2& tileDimension);
 
     void setTexture(const uint32_t& textureIndex);
     void renderTexture(
@@ -99,20 +99,20 @@ public:
         const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1)
     );
     void renderTexture(
-        const glm::vec3& position,
+        const glm::vec3& worldPosition,
         const glm::vec2& dimension,
         const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1)
     );
     void renderString(
         const std::string& text,
-        const glm::vec3& position,
+        const glm::vec2& position,
         const glm::vec2& charDimension,
         const float& charMargin = 0.0f,
         const StringAlignment& alignment = StringAlignment::CENTER
     );
     void renderString(
         const std::string& text,
-        const glm::vec2& position,
+        const glm::vec3& worldPosition,
         const glm::vec2& charDimension,
         const float& charMargin = 0.0f,
         const StringAlignment& alignment = StringAlignment::CENTER

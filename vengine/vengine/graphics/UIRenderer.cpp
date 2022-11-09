@@ -102,7 +102,7 @@ void UIRenderer::cleanup()
 void UIRenderer::setBitmapFont(
     const std::vector<std::string>& characters,
     const uint32_t& bitmapFontTextureIndex,
-    const glm::vec2& tileDimension)
+    const glm::uvec2& tileDimension)
 {
     const Texture& fontTexture = 
         this->resourceManager->getTexture(bitmapFontTextureIndex);
@@ -209,8 +209,8 @@ void UIRenderer::renderTexture(
 
     glm::vec2 extent = dimension / 2.0f;
     glm::vec2 resTranslatorExtent = glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
-    if (position.x - extent.x < resTranslatorExtent.x && position.x + extent.x > -resTranslatorExtent.x &&
-        position.y - extent.y < resTranslatorExtent.y && position.y + extent.y > -resTranslatorExtent.y) // Within UI window
+    if (position.x - extent.x <= resTranslatorExtent.x && position.x + extent.x >= -resTranslatorExtent.x &&
+        position.y - extent.y <= resTranslatorExtent.y && position.y + extent.y >= -resTranslatorExtent.y) // Within UI window
     {
         // Set element data
         this->uiElementData[this->currentElementIndex].transform =
@@ -224,7 +224,7 @@ void UIRenderer::renderTexture(
 }
 
 void UIRenderer::renderTexture(
-    const glm::vec3& position,
+    const glm::vec3& worldPosition,
     const glm::vec2& dimension,
     const glm::uvec4 textureCoords)
 {
@@ -235,38 +235,13 @@ void UIRenderer::renderTexture(
     Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
     cam->updateMatrices(camTransform);
 
-    glm::vec4 pos = cam->viewAndProj * glm::vec4(position, 1.0f);
-    if (pos.z > pos.w || pos.z <= 0) { return; }
+    glm::vec4 pos = cam->viewAndProj * glm::vec4(worldPosition, 1.0f);
+    if (pos.z > pos.w || pos.z < 0) { return; }
 
     glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
-    glm::vec2 size = 5.0f * dimension / glm::dot(position - camTransform.position, camTransform.forward());
+    glm::vec2 size = 5.0f * dimension / glm::dot(worldPosition - camTransform.position, camTransform.forward());
 
     this->renderTexture(screenPos, size, textureCoords);
-}
-
-void UIRenderer::renderString(
-    const std::string& text,
-    const glm::vec3& position,
-    const glm::vec2& charDimension,
-    const float& charMargin,
-    const StringAlignment& alignment)
-{
-    Scene* scene = this->sceneHandler->getScene();
-    if (!scene->entityValid(scene->getMainCameraID())) { return; }
-
-    Camera* cam = scene->getMainCamera();
-    Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
-    cam->updateMatrices(camTransform);
-
-    glm::vec4 pos = cam->viewAndProj * glm::vec4(position, 1.0f);
-    if (pos.z > pos.w || pos.z <= 0) { return; }
-
-    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
-    float dot = 5.0f / glm::dot(position - camTransform.position, camTransform.forward());
-    glm::vec2 size = charDimension * dot;
-    float margin = charMargin * dot;
-
-    this->renderString(text, screenPos, size, margin, alignment);
 }
 
 void UIRenderer::renderString(
@@ -333,4 +308,29 @@ void UIRenderer::renderString(
 
         currentSizeX += charMargin + currentCharWidth;
     }
+}
+
+void UIRenderer::renderString(
+    const std::string& text,
+    const glm::vec3& worldPosition,
+    const glm::vec2& charDimension,
+    const float& charMargin,
+    const StringAlignment& alignment)
+{
+    Scene* scene = this->sceneHandler->getScene();
+    if (!scene->entityValid(scene->getMainCameraID())) { return; }
+
+    Camera* cam = scene->getMainCamera();
+    Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
+    cam->updateMatrices(camTransform);
+
+    glm::vec4 pos = cam->viewAndProj * glm::vec4(worldPosition, 1.0f);
+    if (pos.z > pos.w || pos.z < 0) { return; }
+
+    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    float dot = 5.0f / glm::dot(worldPosition - camTransform.position, camTransform.forward());
+    glm::vec2 size = charDimension * dot;
+    float margin = charMargin * dot;
+
+    this->renderString(text, screenPos, size, margin, alignment);
 }
