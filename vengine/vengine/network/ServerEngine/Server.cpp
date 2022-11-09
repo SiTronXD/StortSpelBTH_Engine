@@ -432,12 +432,13 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					break;
 				case GameEvents::GetPlayerNames:
 					//send player names
-					serverToClientPacketTcp[ClientID] << (int)clients.size();
+					sf::Packet playerNamesPacket;
+					playerNamesPacket << (int)clients.size();
 					for (int i = 0; i < clients.size(); i++)
 					{
-						serverToClientPacketTcp[ClientID] << clients[i]->id << clients[i]->name;
+						playerNamesPacket << clients[i]->id << clients[i]->name;
 					}
-
+					clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
 					break;
 			}
 		}
