@@ -263,12 +263,14 @@ SET ERRORLEVEL = 0</Command>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\LobbyScene.cpp" />
     <ClCompile Include="src\NetworkTestScene.cpp" />
+    <ClCompile Include="src\NewTestScene.cpp" />
     <ClCompile Include="src\TestDemoScene.cpp" />
     <ClCompile Include="src\TheServerGame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\LobbyScene.h" />
     <ClInclude Include="src\NetworkTestScene.h" />
+    <ClInclude Include="src\NewTestScene.h" />
     <ClInclude Include="src\TestDemoScene.h" />
     <ClInclude Include="src\TheServerGame.h" />
   </ItemGroup>

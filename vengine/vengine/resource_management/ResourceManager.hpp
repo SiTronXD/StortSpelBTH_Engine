@@ -24,11 +24,13 @@ private:
     std::unordered_map<std::string, uint32_t> texturePaths;
     std::unordered_map<std::string, uint32_t> samplerSettings;
 	std::unordered_map<std::string, uint32_t> collisionPaths;
+    std::unordered_map<std::string, uint32_t> soundPaths;
 
     std::unordered_map<uint32_t, Mesh>  meshes;
 	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
+    std::vector<uint32_t> audioBuffers; // Is this even needed ?
 
     MeshLoader      meshLoader;
 	ColliderLoader  collisionLoader;
@@ -46,6 +48,8 @@ public:
         vk::CommandPool* transCmdPool,
         VulkanRenderer* vulkanRenderer);
 		
+    void cleanUp();
+
     uint32_t addMesh(std::string&& meshPath, 
         std::string&& texturesPath = "");
     uint32_t addTexture(std::string&& texturePath,
@@ -53,6 +57,7 @@ public:
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
 	uint32_t addAnimations(const std::vector<std::string>& paths, std::string&& texturesPath = "");
     bool mapAnimations(uint32_t meshid, const std::vector<std::string>& names);
+    uint32_t addSound(std::string&& soundPath);
 
     Mesh& getMesh(uint32_t id);
     Texture& getTexture(uint32_t id);
