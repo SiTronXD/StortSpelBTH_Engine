@@ -9,7 +9,8 @@ Texture::Texture(Device& device, VmaAllocator& vma)
     imageMemory(nullptr),
     width(0),
     height(0),
-    textureSamplerIndex(~0u)
+    textureSamplerIndex(~0u),
+    descriptorIndex(~0u)
 { }
 
 Texture::~Texture()
@@ -53,6 +54,11 @@ void Texture::setCpuInfo(
             this->pixels.push_back(pixel);
         }
     }
+}
+
+void Texture::setDescriptorIndex(const uint32_t& descriptorIndex)
+{
+    this->descriptorIndex = descriptorIndex;
 }
 
 void Texture::cleanup() 

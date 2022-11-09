@@ -48,6 +48,7 @@ struct ResourceHandle
 	bool cpuWritable = true;
 };
 
+// Initial layout
 #define MAX_NUM_SET_BINDINGS 4
 struct FrequencyInputLayout
 {
@@ -68,10 +69,17 @@ struct FrequencyInputLayout
 	}
 };
 
+// One instance per descriptor set. All instances should
+// follow the same frequency input layout.
+struct FrequencyInputBindings
+{
+	Texture* texture = nullptr;
+};
+
 class ShaderInput
 {
 private:
-	const uint32_t MAX_NUM_TEXTURES = 250;
+	const uint32_t MAX_NUM_PER_DRAW_DESCRIPTOR_SETS = 256;
 
 	PipelineLayout pipelineLayout;
 
@@ -104,8 +112,8 @@ private:
 	std::vector<std::vector<vk::DescriptorSet>> perMeshDescriptorSets;
 	std::vector<vk::DescriptorSet> perDrawDescriptorSets;
 
-	// Bindings in per draw descriptor set
-	FrequencyInputLayout perDrawBindingsLayout;
+	// Input layout in per draw descriptor set
+	FrequencyInputLayout perDrawInputLayout;
 
 	std::vector<vk::DescriptorSetLayout> bindDescriptorSetLayouts;
 	std::vector<vk::DescriptorSet*> bindDescriptorSets;
@@ -156,16 +164,13 @@ public:
 	);
 	void setCurrentFrame(const uint32_t& currentFrame);
 	void setStorageBuffer(const StorageBufferID& storageBufferID);
-	void setTexture(
-		const uint32_t& textureIndex);
 
-	int addPossibleTexture(
-		const uint32_t& textureIndex,
-		TextureSampler& textureSampler);
-
-	void makeFrequencyBindingsLayout(
-		const DescriptorFrequency& descriptorFrequency,
+	// Only PER_DRAW_CALL for now, but should be made more general.
+	void makeFrequencyInputLayout(
 		const FrequencyInputLayout& bindingsLayout);
+	uint32_t addFrequencyInput(
+		const std::vector<FrequencyInputBindings>& bindings);
+	void setFrequencyInput(uint32_t descriptorIndex);
 
 	inline const vk::ShaderStageFlagBits& getPushConstantShaderStage() const { return this->pushConstantShaderStage; }
 	inline const uint32_t& getPushConstantSize() const { return this->pushConstantSize; }

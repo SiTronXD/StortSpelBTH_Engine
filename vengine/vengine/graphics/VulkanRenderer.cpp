@@ -539,8 +539,8 @@ void VulkanRenderer::initForScene(Scene* scene)
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
-    this->shaderInput.makeFrequencyBindingsLayout(
-        DescriptorFrequency::PER_DRAW_CALL, 
+    this->shaderInput.makeFrequencyInputLayout(
+        // DescriptorFrequency::PER_DRAW_CALL, 
         perDrawInputLayout
     );
 	this->shaderInput.endForInput();
@@ -660,8 +660,8 @@ void VulkanRenderer::initForScene(Scene* scene)
                 vk::ShaderStageFlagBits::eFragment,
                 DescriptorFrequency::PER_FRAME
             );
-        this->animShaderInput.makeFrequencyBindingsLayout(
-            DescriptorFrequency::PER_DRAW_CALL,
+        this->animShaderInput.makeFrequencyInputLayout(
+            // DescriptorFrequency::PER_DRAW_CALL,
             perDrawInputLayout
         );
 		this->animShaderInput.endForInput();
@@ -674,8 +674,85 @@ void VulkanRenderer::initForScene(Scene* scene)
 		);
 	}
 
-    // Add all textures for possible use in the shader 
+    // Add all materials for possible use in the shaders
+    size_t numMeshes = this->resourceManager->getNumMeshes();
+    for (size_t i = 0; i < numMeshes; ++i)
+    {
+        Mesh& mesh = this->resourceManager->getMesh(i);
+        const std::vector<SubmeshData>& submeshes = mesh.getSubmeshData();
+
+        // No animations
+        if (mesh.getMeshData().bones.size() <= 0)
+        {
+            for (size_t j = 0, numSubmeshes = submeshes.size(); j < numSubmeshes; ++j)
+            {
+                // Get material
+                Material& submeshMaterial = this->resourceManager->getMaterial(submeshes[j].materialIndex);
+                
+                // Make binding recognize material parameters
+                FrequencyInputBindings diffuseTextureInputBinding{};
+                diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.diffuseTextureIndex);
+
+                // Update material's descriptor index
+                submeshMaterial.descriptorIndex = 
+                    this->shaderInput.addFrequencyInput(
+                        { 
+                            diffuseTextureInputBinding 
+                        }
+                    );
+
+                // TODO: remove this
+                this->animShaderInput.addFrequencyInput(
+                    {
+                        diffuseTextureInputBinding
+                    }
+                );
+            }
+        }
+        // Animations
+        else
+        {
+            for (size_t j = 0, numSubmeshes = submeshes.size(); j < numSubmeshes; ++j)
+            {
+                // Get material
+                Material& submeshMaterial = this->resourceManager->getMaterial(submeshes[j].materialIndex);
+                
+                // Make binding recognize material parameters
+                FrequencyInputBindings diffuseTextureInputBinding{};
+                diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.diffuseTextureIndex);
+
+                // Update material's descriptor index
+                submeshMaterial.descriptorIndex = 
+                    this->animShaderInput.addFrequencyInput(
+                        { 
+                            diffuseTextureInputBinding 
+                        }
+                    );
+
+                // TODO: remove this
+                this->shaderInput.addFrequencyInput(
+                    {
+                        diffuseTextureInputBinding
+                    }
+                );
+            }
+        }
+    }
+
+    // Add all textures for possible use in the ui renderer
     size_t numTextures = this->resourceManager->getNumTextures();
+    for (size_t i = 0; i < numTextures; ++i)
+    {
+        Texture& texture = this->resourceManager->getTexture(i);
+
+        texture.setDescriptorIndex(
+            this->uiRenderer->getShaderInput().addFrequencyInput(
+                { FrequencyInputBindings{ &texture } }
+            )
+        );
+    }
+
+    /*size_t numTextures = this->resourceManager->getNumTextures();
     for (size_t i = 0; i < numTextures; ++i) 
     {
         // Get texture sampler for this texture
@@ -701,7 +778,7 @@ void VulkanRenderer::initForScene(Scene* scene)
             i,
             textureSampler
         );
-    }
+    }*/
 
     // Set aspect ratio for the main camera
     Camera* mainCam = scene->getMainCamera();
@@ -1293,7 +1370,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                             const SubmeshData& currentSubmesh = submeshes[i];
 
                             // Update for descriptors
-                            this->shaderInput.setTexture(
+                            this->shaderInput.setFrequencyInput(
                                 this->resourceManager->getMaterial(currentSubmesh.materialIndex).
                                     descriptorIndex
                             );
@@ -1380,7 +1457,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                             const SubmeshData& currentSubmesh = submeshes[i];
 
                             // Update for descriptors
-                            this->animShaderInput.setTexture(
+                            this->animShaderInput.setFrequencyInput(
                                 this->resourceManager->getMaterial(currentSubmesh.materialIndex).
                                     descriptorIndex
                             );
@@ -1425,8 +1502,9 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                     for (size_t i = 0; i < drawCallData.size(); ++i)
                     {
                         // UI texture
-                        this->uiRenderer->getShaderInput().setTexture(
-                            drawCallData[i].textureIndex
+                        this->uiRenderer->getShaderInput().setFrequencyInput(
+                            this->resourceManager->getTexture(drawCallData[i].textureIndex)
+                                .getDescriptorIndex()
                         );
                         currentCommandBuffer.bindShaderInputFrequency(
                             this->uiRenderer->getShaderInput(),

@@ -76,8 +76,8 @@ void UIRenderer::initForScene()
         vk::ShaderStageFlagBits::eVertex,
         DescriptorFrequency::PER_MESH // TODO: change this
     );
-    this->uiShaderInput.makeFrequencyBindingsLayout(
-        DescriptorFrequency::PER_DRAW_CALL,
+    this->uiShaderInput.makeFrequencyInputLayout(
+        //DescriptorFrequency::PER_DRAW_CALL,
         perDrawInputLayout
     );
     this->uiShaderInput.endForInput();
