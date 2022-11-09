@@ -369,7 +369,8 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 			{
 				//send player names
 				sf::Packet playerNamesPacket;
-				playerNamesPacket << (int)clients.size();
+				
+				playerNamesPacket << GameEvents::GetPlayerNames << (int) clients.size();
 				for (int i = 0; i < clients.size(); i++)
 				{
 					playerNamesPacket << clients[i]->id << clients[i]->name;
