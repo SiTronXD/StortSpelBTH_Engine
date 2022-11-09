@@ -151,7 +151,8 @@ bool NetworkHandler::connectClient(const std::string& serverIP)
 	}
 	if (!client->connect(serverIP))
 	{
-		client->disconnect();
+		delete client;
+		client = nullptr;
 		return false;
 	}
 	return true;
