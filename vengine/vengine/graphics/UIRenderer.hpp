@@ -105,6 +105,13 @@ public:
     );
     void renderString(
         const std::string& text,
+        const glm::vec3& position,
+        const glm::vec2& charDimension,
+        const float& charMargin = 0.0f,
+        const StringAlignment& alignment = StringAlignment::CENTER
+    );
+    void renderString(
+        const std::string& text,
         const glm::vec2& position,
         const glm::vec2& charDimension,
         const float& charMargin = 0.0f,
