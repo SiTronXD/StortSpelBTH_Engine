@@ -276,7 +276,7 @@ void NetworkHandler::updateNetwork()
 		else if (gameEvent == GameEvents::GetPlayerNames)
 		{
 			cTCPP >> ix;
-			while (ix > otherPlayers.size())
+			for(int i = 0; i < ix; i++)
 			{
 				std::string playerName;
 				cTCPP >> iy >> playerName;
