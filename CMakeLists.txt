@@ -178,7 +178,7 @@ else() # Use Git Submodules
     add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/deps/glm/src)
     #Sdl should be installed through systems own package manager...
 
-    target_include_directories(vengine PRIVATE ${VENGINE_SOURCE_DIR}/../)
+    target_include_directories(vengine PRIVATE ${VENGINE_SOURCE_DIR}/../)    
     target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/include)
     #target_include_directories(vengine PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/deps/assimp_522/src/include)
     target_include_directories(vengine PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/deps/tracy/src/public)
@@ -222,6 +222,9 @@ target_sources(vengine
     ${ENTT_HEADERS}
     
     )
+
+# Precompile header include 
+target_include_directories(vengine PUBLIC  ${VENGINE_SOURCE_DIR}/pch)
 
 # Linker Options 
 target_link_options(vengine
