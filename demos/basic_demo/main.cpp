@@ -10,6 +10,7 @@
 #include "vengine/test/TestScene2.hpp"
 #include "src/TestDemoScene.h"
 #include "src/NetworkTestScene.h"
+#include "src/NewTestScene.h"
 
 int main(int argc, char* argv[])
 {
@@ -23,6 +24,7 @@ int main(int argc, char* argv[])
         Engine engine;
         // engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
         //engine.run("Demo Application", "", new NetworkTestScene());
+        //engine.run("Demo Application", "assets/scripts/scene.lua", new NewTestScene());
         engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());
     }
 

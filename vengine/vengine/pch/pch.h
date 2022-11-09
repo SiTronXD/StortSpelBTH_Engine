@@ -16,9 +16,13 @@
 #include <unordered_map>
 #include <set>
 
+#include <glm/glm.hpp>
+
 #include "../dev/Log.hpp"
+#include "../application/Input.hpp"
 #include "../application/Time.hpp"
 #include "../dev/StringHelper.hpp"
+#include "../graphics/StringAlignment.h"
 
 #include "../components/Transform.hpp"
 #include "../components/MeshComponent.hpp"
@@ -27,8 +31,8 @@
 #include "../components/Collider.h"
 #include "../components/Rigidbody.h"
 #include "../components/AnimationComponent.hpp"
-#include "../components/AudioListener.hpp"
-#include "../components/AudioSource.hpp"
+#include "../components/AudioSource.h"
+#include "../components/UIArea.hpp"
 #include "../components/BTAgent.hpp"
 #include "../components/BTComponent.hpp"
 #include "../components/FSMAgentComponent.hpp"

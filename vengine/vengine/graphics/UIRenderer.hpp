@@ -6,6 +6,7 @@
 #include "vulkan/VmaUsage.hpp"
 #include "ShaderInput.hpp"
 #include "vulkan/Pipeline.hpp"
+#include "StringAlignment.h"
 
 class PhysicalDevice;
 class Device;
@@ -31,13 +32,6 @@ struct CharacterRect
     uint32_t y;
     uint32_t width;
     uint32_t height;
-};
-
-enum class StringAlignment
-{
-    LEFT = -1,
-    CENTER = 0,
-    RIGHT = 1
 };
 
 class UIRenderer

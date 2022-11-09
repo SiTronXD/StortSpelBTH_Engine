@@ -8,8 +8,8 @@ function script:init()
 end
 
 function script:update()
-	uiRenderer.setTexture(self.texture)
-	uiRenderer.renderTexture(0, 0, 100, 100)
+	--uiRenderer.setTexture(self.texture)
+	--uiRenderer.renderTexture(0, 0, 100, 100)
 	debugRenderer.renderCapsule(vector(), vector(), 10, 3, core.YELLOW)
 
 	local payload = physics.raycast(self.transform.position, self.transform:forward(), 100)

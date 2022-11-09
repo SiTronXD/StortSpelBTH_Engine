@@ -103,8 +103,10 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 Server::Server(NetworkScene* serverGame)
 {
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
-	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
+	this->sceneHandler.setPhysicsEngine(&this->physicsEngine);
+	this->scriptHandler.setSceneHandler(&this->sceneHandler);
+	this->scriptHandler.setPhysicsEngine(&this->physicsEngine);
 	this->physicsEngine.setSceneHandler(&this->sceneHandler);
 
 	if (serverGame == nullptr)

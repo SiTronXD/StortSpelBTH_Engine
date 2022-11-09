@@ -146,11 +146,27 @@ bool Scene::removeEntity(Entity entity)
 void Scene::setInactive(Entity entity)
 {
 	this->setComponent<Inactive>(entity);
+	if (this->hasComponents<AudioSource>(entity))
+	{
+		AudioSource& source = this->getComponent<AudioSource>(entity);
+		if (source.playingb4Inactive = source.isPlaying())
+		{
+			source.pause();
+		}
+	}
 }
 
 void Scene::setActive(Entity entity)
 {
 	this->removeComponent<Inactive>(entity);
+	if (this->hasComponents<AudioSource>(entity))
+	{
+		AudioSource& source = this->getComponent<AudioSource>(entity);
+		if (source.playingb4Inactive)
+		{
+			source.play();
+		}
+	}
 }
 
 bool Scene::isActive(Entity entity)
