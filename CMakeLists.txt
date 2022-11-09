@@ -194,6 +194,12 @@ else() # Use Git Submodules
 
     find_package(Lua REQUIRED)
     target_include_directories(vengine PRIVATE ${LUA_INCLUDE_DIR})
+
+    # ADD OPENAL 
+    find_package(OpenAL REQUIRED)
+    target_link_libraries(vengine PRIVATE ${OPENAL_LIBRARY})
+    message("wat is: " ${OPENAL_INCLUDE_DIR})
+    target_include_directories(vengine PRIVATE ${OPENAL_INCLUDE_DIR})
     
     # ADD BULLET LIB 
     find_package(Bullet)    

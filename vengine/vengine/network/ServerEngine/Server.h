@@ -51,9 +51,6 @@ private:
 	float        currentTimeToSend;
 	float        timeToSend;
 
-	//objects
-	std::thread* connectThread;
-
 	std::vector<clientInfo*> clients;
 	sf::UdpSocket            udpSocket;
 	sf::TcpListener          listener;
@@ -90,4 +87,7 @@ public:
 	std::string getServerIP();
 	std::string getLocalAddress();
 	void        disconnect();
+
+	void startGettingClients();
+	void stopGettingClients();
 };

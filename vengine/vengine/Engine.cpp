@@ -70,6 +70,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setWindow(&window);
     this->sceneHandler.setAudioHandler(&audioHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
+	this->networkHandler.setResourceManager(&resourceManager);
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);

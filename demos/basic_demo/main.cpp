@@ -11,6 +11,7 @@
 #include "src/TestDemoScene.h"
 #include "src/NetworkTestScene.h"
 #include "src/NewTestScene.h"
+#include "src/LobbyScene.h"
 
 int main(int argc, char* argv[])
 {
@@ -23,9 +24,8 @@ int main(int argc, char* argv[])
     {
         Engine engine;
         // engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
-        //engine.run("Demo Application", "", new NetworkTestScene());
-        //engine.run("Demo Application", "assets/scripts/scene.lua", new NewTestScene());
-        engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());
+        engine.run("Demo Application", "", new LobbyScene());
+        //engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());
     }
 
 	return EXIT_SUCCESS;
