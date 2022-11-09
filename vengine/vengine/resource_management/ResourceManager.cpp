@@ -5,7 +5,7 @@
 #include "loaders/TextureLoader.hpp"
 #include "../graphics/MeshDataModifier.hpp"
 #include "SFML/Audio/InputSoundFile.hpp"
-#include "OpenAL/al.h"
+#include "al.h"
 
 void ResourceManager::init(
     VmaAllocator* vma,
