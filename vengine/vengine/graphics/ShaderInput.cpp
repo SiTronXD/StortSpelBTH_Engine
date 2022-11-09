@@ -92,7 +92,7 @@ void ShaderInput::createDescriptorSetLayouts()
     // --------- Create descriptor set layout for per frame descriptor sets ---------
     this->perFrameSetLayout = this->device->getVkDevice().createDescriptorSetLayout(
         perFrameLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout PerFrame", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perFrameSetLayout)));
+    VulkanDbg::registerVkObjectDbgInfo("PerFrameDescriptorSetLayout", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perFrameSetLayout)));
 
     // Per mesh
     vk::DescriptorSetLayoutCreateInfo perMeshLayoutCreateInfo;
@@ -105,7 +105,7 @@ void ShaderInput::createDescriptorSetLayouts()
     this->perMeshSetLayout =
         this->device->getVkDevice().createDescriptorSetLayout(
             perMeshLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout PerMesh", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perMeshSetLayout)));
+    VulkanDbg::registerVkObjectDbgInfo("PerMeshDescriptorSetLayout", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perMeshSetLayout)));
 
     // Per draw
     vk::DescriptorSetLayoutCreateInfo perDrawLayoutCreateInfo;
@@ -117,7 +117,7 @@ void ShaderInput::createDescriptorSetLayouts()
     // --------- Create descriptor set layout for per draw descriptor sets ---------
     this->perDrawSetLayout = this->device->getVkDevice().createDescriptorSetLayout(
         perDrawLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("DescriptorSetLayout PerDraw", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perDrawSetLayout)));
+    VulkanDbg::registerVkObjectDbgInfo("PerDrawDescriptorSetLayout", vk::ObjectType::eDescriptorSetLayout, reinterpret_cast<uint64_t>(vk::DescriptorSetLayout::CType(this->perDrawSetLayout)));
 }
 
 void ShaderInput::createDescriptorPools()
@@ -200,7 +200,7 @@ void ShaderInput::createDescriptorPools()
         this->perFramePool =
             this->device->getVkDevice().createDescriptorPool(
                 perFramePoolCreateInfo);
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorPool UboPool", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perFramePool)));
+        VulkanDbg::registerVkObjectDbgInfo("PerFrameDescriptorPool", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perFramePool)));
     }
 
     // --------- Descriptor pool for per mesh descriptor sets ---------
@@ -215,7 +215,7 @@ void ShaderInput::createDescriptorPools()
 
     if (perMeshDescriptorCount > 0)
     {
-        // Pool create info
+        // Pool create info 
         vk::DescriptorPoolCreateInfo perMeshPoolCreateInfo{};
         perMeshPoolCreateInfo.setMaxSets(perMeshDescriptorCount);
         perMeshPoolCreateInfo.setPoolSizeCount(
@@ -226,7 +226,7 @@ void ShaderInput::createDescriptorPools()
         this->perMeshPool =
             this->device->getVkDevice().createDescriptorPool(
                 perMeshPoolCreateInfo);
-        VulkanDbg::registerVkObjectDbgInfo("DescriptorPool SboPool", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perMeshPool)));
+        VulkanDbg::registerVkObjectDbgInfo("PerMeshDescriptorPool", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perMeshPool)));
     }
 
     // --------- Descriptor pool for per draw descriptor sets ---------
@@ -347,7 +347,7 @@ void ShaderInput::updateDescriptorSets()
             nullptr
         );
 
-        VulkanDbg::registerVkObjectDbgInfo("PerFrameDescriptorSet[" + std::to_string(i) + "]  UniformBuffer", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->perFrameDescriptorSets[i])));
+        VulkanDbg::registerVkObjectDbgInfo("PerFrameDescriptorSet[" + std::to_string(i) + "]", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->perFrameDescriptorSets[i])));
     }
 
 
@@ -383,7 +383,7 @@ void ShaderInput::updateDescriptorSets()
             writeDescriptorSets[j].setDescriptorCount(uint32_t(1));                                // Amount of Descriptors to update
             writeDescriptorSets[j].setPBufferInfo(&descriptorBufferInfos[j]);
 
-            VulkanDbg::registerVkObjectDbgInfo("PerMeshDescriptorSet[" + std::to_string(i) + "]  UniformBuffer", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->perMeshDescriptorSets[i][j])));
+            VulkanDbg::registerVkObjectDbgInfo("PerMeshDescriptorSet[" + std::to_string(i) + "]", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->perMeshDescriptorSets[i][j])));
         }
 
         // Update the descriptor sets with new buffer/binding info

@@ -44,6 +44,27 @@ layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D textureSampler1;
 
 layout(location = 0) out vec4 outColor; // final output color (must also have location)
 
+vec3 calcDiffuse(in vec3 diffuseTexCol, in vec3 normal, in vec3 fragToLightDir)
+{
+	return 
+		diffuseTexCol *
+		clamp(
+			dot(normal, fragToLightDir),
+			0.0f,
+			1.0f
+		);
+}
+
+vec3 calcSpecular(in vec4 specularTexCol, in vec3 normal, in vec3 halfwayDir)
+{
+	return 
+		specularTexCol.rgb * 
+		pow(
+			max(dot(normal, halfwayDir), 0.0f), 
+			specularTexCol.a * 256.0f
+		);
+}
+
 void main() 
 {
 	vec3 normal = normalize(fragNor);
@@ -68,28 +89,21 @@ void main()
 		++i)
 	{
 		vec3 lightDir = lightBuffer.lights[i].direction.xyz;
-
-		// Regular diffuse light
-		vec3 diffuseLight = 
-			diffuseTextureCol *
-			clamp(
-				dot(normal, -lightDir),
-				0.0f,
-				1.0f
-			);
-
-		// Blinn specular
 		vec3 fragToLightDir = -lightDir;
 		vec3 fragToViewDir = 
 			normalize(fragCamWorldPos - fragWorldPos);
 		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
-		vec3 specularLight = 
-			specularTextureCol.rgb * 
-			pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
+
+		// Regular diffuse light
+		vec3 diffuseLight = calcDiffuse(diffuseTextureCol, normal, fragToLightDir);
+
+		// Blinn specular
+		vec3 specularLight = calcSpecular(specularTextureCol, normal, halfwayDir);
 		
 		// Add blinn-phong light contribution
 		finalColor += 
-			(diffuseLight + specularLight) * lightBuffer.lights[i].color.xyz;
+			(diffuseLight + specularLight) * 
+			lightBuffer.lights[i].color.xyz;
 	}
 
 	// Point lights
@@ -105,18 +119,10 @@ void main()
 		float atten = 1.0f / (1.0f + length(fragToLight));
 
 		// Regular diffuse light
-		vec3 diffuseLight = 
-			diffuseTextureCol *
-			clamp(
-				dot(normal, fragToLightDir),
-				0.0f,
-				1.0f
-			);
+		vec3 diffuseLight = calcDiffuse(diffuseTextureCol, normal, fragToLightDir);
 
 		// Blinn specular
-		vec3 specularLight =
-			specularTextureCol.rgb * 
-			pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
+		vec3 specularLight = calcSpecular(specularTextureCol, normal, halfwayDir);
 
 		// Add blinn-phong light contribution
 		finalColor += 
