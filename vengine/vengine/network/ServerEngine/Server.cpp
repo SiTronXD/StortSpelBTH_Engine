@@ -305,13 +305,6 @@ void Server::sendDataToAllUsers()
 void Server::getDataFromUsers()
 {
 	//see if we recv something from
-	if (this->starting == StartingEnum::WaitingForUsers && clients.size() > 0 && 
-		clients[0]->clientTcpSocket.receive(clientToServerPacketTcp[0]) == sf::Socket::Done)
-	{
-		handlePacketFromUser(0, true);
-		return;
-	}
-
 	for (int i = 0; i < clientToServerPacketTcp.size(); i++)
 	{
 		if (clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done)
@@ -367,6 +360,17 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					this->sceneHandler.sendCallFromClient(GameEvents::START);
 				}
 			}
+			else if (gameEvent == GameEvents::GetPlayerNames)
+			{
+				//send player names
+				sf::Packet playerNamesPacket;
+				playerNamesPacket << (int)clients.size();
+				for (int i = 0; i < clients.size(); i++)
+				{
+					playerNamesPacket << clients[i]->id << clients[i]->name;
+				}
+				clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
+			}	
 		}
 	}
 	if (tcp)
