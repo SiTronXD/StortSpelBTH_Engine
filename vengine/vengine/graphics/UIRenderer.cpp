@@ -21,6 +21,7 @@ void UIRenderer::resetRender()
 
 UIRenderer::UIRenderer()
     : currentElementIndex(0),
+    uiFontTextureIndex(~0u),
     uiTextureIndex(~0u),
     uiTextureWidth(0),
     uiTextureHeight(0),
@@ -101,14 +102,13 @@ void UIRenderer::cleanup()
 void UIRenderer::setBitmapFont(
     const std::vector<std::string>& characters,
     const uint32_t& bitmapFontTextureIndex,
-    const uint32_t& tileWidth,
-    const uint32_t& tileHeight)
+    const glm::vec2& tileDimension)
 {
     const Texture& fontTexture = 
         this->resourceManager->getTexture(bitmapFontTextureIndex);
 
-    this->oneOverCharTileWidth = 1.0f / static_cast<float>(tileWidth);
-    this->oneOverCharTileHeight = 1.0f / static_cast<float>(tileHeight);
+    this->oneOverCharTileWidth = 1.0f / static_cast<float>(tileDimension.x);
+    this->oneOverCharTileHeight = 1.0f / static_cast<float>(tileDimension.y);
 
     // Go through rows
     for (uint32_t y = 0, rows = (uint32_t) characters.size(); 
@@ -122,10 +122,10 @@ void UIRenderer::setBitmapFont(
         {
             const char& currentChar = characters[y][x];
 
-            uint32_t charX = x * tileWidth;
-            uint32_t charY = y * tileHeight;
-            uint32_t charWidth = tileWidth;
-            uint32_t charHeight = tileHeight;
+            uint32_t charX = x * tileDimension.x;
+            uint32_t charY = y * tileDimension.y;
+            uint32_t charWidth = tileDimension.x;
+            uint32_t charHeight = tileDimension.y;
 
             // Make rect smaller, but not for spaces
             if (currentChar != ' ')
@@ -136,9 +136,9 @@ void UIRenderer::setBitmapFont(
                 uint32_t maxY = charY;
 
                 // Loop through pixels inside char rect
-                for (uint32_t tempCharY = charY; tempCharY < charY + tileHeight; ++tempCharY)
+                for (uint32_t tempCharY = charY; tempCharY < charY + tileDimension.y; ++tempCharY)
                 {
-                    for (uint32_t tempCharX = charX; tempCharX < charX + tileWidth; ++tempCharX)
+                    for (uint32_t tempCharX = charX; tempCharX < charX + tileDimension.x; ++tempCharX)
                     {
                         // Found pixel
                         if (fontTexture.getCpuPixel(tempCharX, tempCharY).a > 0)
@@ -169,25 +169,31 @@ void UIRenderer::setBitmapFont(
             this->characterRects.insert({ currentChar, charRect });
         }
     }
+
+    this->uiFontTextureIndex = bitmapFontTextureIndex;
 }
 
 void UIRenderer::setTexture(const uint32_t& textureIndex)
 {
-    // Add data for unique draw call
-    UIDrawCallData drawCallData{};
-    drawCallData.textureIndex = textureIndex;
-    drawCallData.startVertex = this->currentElementIndex * 6;
-
-    // Set number of vertices for previous draw call
-    if (this->uiDrawCallData.size() > 0)
+    if (textureIndex != this->uiTextureIndex)
     {
-        // Num vertices for last draw call
-        this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
-            this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
-    }
+        // Add data for unique draw call
+        UIDrawCallData drawCallData{};
+        drawCallData.textureIndex = textureIndex;
+        drawCallData.startVertex = this->currentElementIndex * 6;
 
-    // Set draw call
-    this->uiDrawCallData.push_back(drawCallData);
+        // Set number of vertices for previous draw call
+        if (this->uiDrawCallData.size() > 0)
+        {
+            // Num vertices for last draw call
+            this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
+                this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
+        }
+
+        // Set draw call
+        this->uiDrawCallData.push_back(drawCallData);
+        this->uiTextureIndex = textureIndex;
+    }
 }
 
 void UIRenderer::renderTexture(
@@ -257,7 +263,6 @@ void UIRenderer::renderString(
 
     glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
     float dot = 5.0f / glm::dot(position - camTransform.position, camTransform.forward());
-
     glm::vec2 size = charDimension * dot;
     float margin = charMargin * dot;
 
@@ -301,6 +306,9 @@ void UIRenderer::renderString(
     // Alignment offset
     float alignmentOffset = 
         -((int) alignment) * (stringWidth + firstCharWidth) * 0.5f;
+
+    // Set texture to font texture
+    this->setTexture(this->uiFontTextureIndex);
 
     // Render character by character
     for (size_t i = 0; i < text.length(); ++i)

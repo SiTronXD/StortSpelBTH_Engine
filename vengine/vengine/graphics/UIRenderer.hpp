@@ -43,6 +43,7 @@ private:
     const uint32_t START_NUM_MAX_ELEMENTS = 256;
 
     std::unordered_map<char, CharacterRect> characterRects;
+    uint32_t uiFontTextureIndex;
 
     std::vector<UIElementData> uiElementData;
     std::vector<UIDrawCallData> uiDrawCallData;
@@ -89,8 +90,7 @@ public:
     void setBitmapFont(
         const std::vector<std::string>& characters,
         const uint32_t& bitmapFontTextureIndex,
-        const uint32_t& tileWidth,
-        const uint32_t& tileHeight);
+        const glm::vec2& tileDimension);
 
     void setTexture(const uint32_t& textureIndex);
     void renderTexture(

@@ -170,7 +170,7 @@ void TestDemoScene::init()
 			"@         "
 		},
 		this->fontTextureIndex,
-		16, 16
+		glm::vec2(16, 16)
 	);
 
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
@@ -267,8 +267,7 @@ void TestDemoScene::update()
 	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, 540.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, -540.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
-	//Scene::getUIRenderer()->renderTexture(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(200.0f));
-	Scene::getUIRenderer()->setTexture(this->fontTextureIndex);
+	Scene::getUIRenderer()->renderTexture(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->renderString(
 		"fps: " + std::to_string(1.0 / Time::getDT()),
 		glm::vec3(0.0f),
