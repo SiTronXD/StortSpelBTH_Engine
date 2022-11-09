@@ -179,7 +179,6 @@ public:
 		}
         checkForCommonErrors();
     }
-//Hej oscar (Submodule test)
     void registerEntity(Entity entityId)
     {
         // Add Components that FSM needs
