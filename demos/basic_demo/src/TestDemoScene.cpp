@@ -159,7 +159,7 @@ void TestDemoScene::init()
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
 
-		// Make separate materials
+		// Make separate material
 		if(i == 2)
 			this->getResourceManager()->makeUniqueMaterials(
 				this->getComponent<MeshComponent>(aniIDs[i]));
@@ -218,7 +218,7 @@ void TestDemoScene::update()
 			1.0f, 
 			0.2f, 
 			0.2f, 
-			std::sin(this->getComponent<AnimationComponent>(aniIDs[2]).timer * 0.3f) * 0.5f + 0.5f
+			std::sin(this->getComponent<AnimationComponent>(aniIDs[2]).timer * 0.2f) * 0.5f + 0.5f
 		);
 
 	// Debug rendering on colliders

@@ -65,6 +65,9 @@ public:
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(std::string&& collisionPath);
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(uint32_t id);
     Material& getMaterial(uint32_t id);
+    Material& getMaterial(
+        const MeshComponent& meshComponent,
+        const uint32_t& submeshIndex);
 
     size_t getNumMeshes();
     size_t getNumTextures();
@@ -135,6 +138,16 @@ inline Material& ResourceManager::getMaterial(uint32_t id)
         Log::error("Failed to find material with the given ID : " + std::to_string(id));
     }
     return map_iterator->second;
+}
+
+inline Material& ResourceManager::getMaterial(
+    const MeshComponent& meshComponent,
+    const uint32_t& submeshIndex)
+{
+    return this->getMaterial(
+        this->getMesh(meshComponent.meshID)
+            .getSubmeshData()[submeshIndex].materialIndex
+    );
 }
 
 inline size_t ResourceManager::getNumMeshes() 
