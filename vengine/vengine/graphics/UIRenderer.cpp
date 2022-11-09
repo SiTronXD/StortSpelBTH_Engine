@@ -219,20 +219,25 @@ void UIRenderer::renderTexture(
     Scene* scene = this->sceneHandler->getScene();
     if (!scene->entityValid(scene->getMainCameraID())) { return; }
 
-    glm::vec4 pos = scene->getMainCamera()->projection * scene->getMainCamera()->view * glm::vec4(position, 1.0f);
-    glm::vec2 orig = glm::vec2(pos);
+    Camera* cam = scene->getMainCamera();
+    Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
+    cam->updateMatrices(camTransform);
+
+    glm::vec4 pos = cam->viewAndProj * glm::vec4(position, 1.0f);
     if (pos.z > pos.w || pos.z <= 0) { return; }
 
-    pos.x = (pos.x / pos.w) * (ResTranslator::INTERNAL_WIDTH >> 1);
-    pos.y = (pos.y / pos.w) * (ResTranslator::INTERNAL_HEIGHT >> 1);
-    pos.z /= pos.w;
+    glm::vec2 resTranslatorExtent = glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    pos.x = (pos.x / pos.w) * resTranslatorExtent.x;
+    pos.y = (pos.y / pos.w) * resTranslatorExtent.y;
 
-    Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
-    float dot = glm::dot(glm::normalize(glm::vec3(pos) - camTransform.position), glm::vec3(0.0f, 0.0f, 1.0f));
-    glm::vec2 size = 10.0f * dimension / (glm::length(glm::vec3(pos) - camTransform.position) * dot);
-    
-    Log::write("(" + std::to_string(size.x) + ", " + std::to_string(size.y) + ")");
-    this->renderTexture(glm::vec2(pos), size, textureCoords);
+    glm::vec2 size = 5.0f * dimension / glm::dot(position - camTransform.position, camTransform.forward());
+    glm::vec2 extent = size / 2.0f;
+
+    if (pos.x - extent.x < resTranslatorExtent.x && pos.x + extent.x > -resTranslatorExtent.x &&
+        pos.y - extent.y < resTranslatorExtent.y && pos.y + extent.y > -resTranslatorExtent.y)
+    {
+        this->renderTexture(glm::vec2(pos), size, textureCoords);
+    }
 }
 
 void UIRenderer::renderString(

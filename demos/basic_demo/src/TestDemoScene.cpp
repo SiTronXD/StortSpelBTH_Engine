@@ -253,7 +253,7 @@ void TestDemoScene::update()
 		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
 		glm::vec3 rotVec = glm::vec3(Input::isKeyDown(Keys::I) - Input::isKeyDown(Keys::K), Input::isKeyDown(Keys::J) - Input::isKeyDown(Keys::L), 0.0f);
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
-		camTransform.position += (moveVec.x * camTransform.right() + moveVec.y * camTransform.up() + moveVec.z * camTransform.forward()) * 25.0f * Time::getDT();
+		camTransform.position += (moveVec.x * camTransform.right() + glm::vec3(0.0f, moveVec.y, 0.0f) + moveVec.z * camTransform.forward()) * 25.0f * Time::getDT();
 		camTransform.rotation += rotVec * 100.0f * Time::getDT();
 	}
 
@@ -267,7 +267,7 @@ void TestDemoScene::update()
 	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, 540.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, -540.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
-	Scene::getUIRenderer()->renderTexture(glm::vec3(0.0f), glm::vec2(200.0f));
+	Scene::getUIRenderer()->renderTexture(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->setTexture(this->fontTextureIndex);
 	Scene::getUIRenderer()->renderString(
 		"fps: " + std::to_string(1.0 / Time::getDT()),

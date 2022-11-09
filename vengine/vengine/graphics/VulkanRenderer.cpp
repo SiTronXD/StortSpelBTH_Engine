@@ -326,12 +326,13 @@ void VulkanRenderer::draw(Scene* scene)
     bool deleteCamera = false;
     if (camera)
     {
-        Transform& transform = scene->getComponent<Transform>(scene->getMainCameraID());
+        /*Transform& transform = scene->getComponent<Transform>(scene->getMainCameraID());
         camera->view = glm::lookAt(
             transform.position,
             transform.position + transform.forward(),
             transform.up()
-        );
+        );*/
+        camera->updateMatrices(scene->getComponent<Transform>(scene->getMainCameraID()));
 
         if (!scene->isActive(scene->getMainCameraID()))
         {
