@@ -124,8 +124,6 @@ sf::Packet& Client::getTcpPacket()
 
 void Client::sendDataToServer()
 {
-    //add a GameEvents::END in the end so we not never sending something to server
-    this->clientTcpPacketSend << GameEvents::END;
     this->tcpSocket.send(clientTcpPacketSend);
 
     //if we have started we send our position to the server

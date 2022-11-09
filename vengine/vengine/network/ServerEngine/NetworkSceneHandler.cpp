@@ -25,6 +25,22 @@ void NetworkSceneHandler::setScene(Scene* scene, std::string path) {
 	((NetworkScene*)scene)->givePacketInfo(*serverToClientPacketTcp);
 }
 
+void NetworkSceneHandler::sendCallFromClient(int call)
+{
+	this->callsFromClient.push(call);
+}
+
+int NetworkSceneHandler::getCallFromClient()
+{
+	if (!callsFromClient.empty())
+	{
+		int theRet = callsFromClient.back();
+		callsFromClient.pop();
+		return theRet;
+	}
+	return -1;// no call has been given
+}
+
 NetworkScene* NetworkSceneHandler::getScene() const
 {
 	return static_cast<NetworkScene*>(SceneHandler::getScene());

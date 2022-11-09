@@ -354,6 +354,7 @@ SET ERRORLEVEL = 0</Command>
   <ItemGroup>
     <ClInclude Include="vengine\components\UIArea.hpp" />
     <ClInclude Include="vengine\graphics\StringAlignment.h" />
+    <ClInclude Include="vengine\network\ServerGameModes\NetworkLobbyScene.h" />
     <ClInclude Include="vengine\pch\pch.h" />
     <ClInclude Include="vengine\physics\CallbackType.h" />
     <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
@@ -470,6 +471,7 @@ SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\components\AudioSource.cpp" />
+    <ClCompile Include="vengine\network\ServerGameModes\NetworkLobbyScene.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>

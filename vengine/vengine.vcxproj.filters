@@ -89,6 +89,7 @@
     <ClCompile Include="vengine\network\ServerEngine\NetworkSceneHandler.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp" />
     <ClCompile Include="vengine\components\AudioSource.cpp" />
+    <ClCompile Include="vengine\network\ServerGameModes\NetworkLobbyScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -175,6 +176,7 @@
     <ClInclude Include="vengine\pch\pch.h" />
     <ClInclude Include="vengine\components\UIArea.hpp" />
     <ClInclude Include="vengine\graphics\StringAlignment.h" />
+    <ClInclude Include="vengine\network\ServerGameModes\NetworkLobbyScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
