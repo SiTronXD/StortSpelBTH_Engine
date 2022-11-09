@@ -11,3 +11,4 @@ struct Material
 	// Vulkan
 	uint32_t descriptorIndex;
 };
+

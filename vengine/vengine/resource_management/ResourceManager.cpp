@@ -32,6 +32,28 @@ void ResourceManager::init(
     
 }
 
+void ResourceManager::makeUniqueMaterials(MeshComponent& meshComponent)
+{
+    const Mesh& mesh = this->getMesh(meshComponent.meshID);
+    const std::vector<SubmeshData>& submeshData = mesh.getSubmeshData();
+
+    // Copy over each material
+    meshComponent.numOverrideMaterials = 0;
+    for (size_t i = 0, numSubmeshes = submeshData.size(); i < numSubmeshes; ++i)
+    {
+        // Make sure the limit hasn't been reached
+        if (meshComponent.numOverrideMaterials >= MAX_NUM_MESH_MATERIALS)
+        {
+            Log::warning("The number of materials was larger than the maximum. The remaining materials were ignored.");
+            return;
+        }
+
+        // Copy material
+        meshComponent.overrideMaterials[meshComponent.numOverrideMaterials++] =
+            Material(this->getMaterial(submeshData[i].materialIndex));
+    }
+}
+
 uint32_t ResourceManager::addMesh(
     std::string&& meshPath,
     std::string&& texturesPath)

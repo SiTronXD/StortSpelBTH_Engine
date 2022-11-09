@@ -7,8 +7,8 @@
 #include "../graphics/Mesh.hpp"
 #include "../graphics/Texture.hpp"
 #include "../graphics/TextureSampler.hpp"
-#include "../graphics/MaterialData.hpp"
 #include "../dev/Log.hpp"
+#include "../components/MeshComponent.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "loaders/MeshLoader.hpp"
 #include "loaders/ColliderLoader.hpp"
@@ -47,6 +47,8 @@ public:
         Device* dev, vk::Queue* transQueue,
         vk::CommandPool* transCmdPool,
         VulkanRenderer* vulkanRenderer);
+
+    void makeUniqueMaterials(MeshComponent& meshComponent);
 
     uint32_t addMesh(std::string&& meshPath, 
         std::string&& texturesPath = "");

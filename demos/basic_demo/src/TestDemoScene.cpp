@@ -158,6 +158,11 @@ void TestDemoScene::init()
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
+
+		// Make separate materials
+		if(i == 2)
+			this->getResourceManager()->makeUniqueMaterials(
+				this->getComponent<MeshComponent>(aniIDs[i]));
 	}
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
@@ -208,11 +213,7 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
-	this->getResourceManager()->getMaterial(
-		this->getResourceManager()->getMesh(
-			this->getComponent<MeshComponent>(aniIDs[2]).meshID
-		).getSubmeshData()[0].materialIndex
-	).tintColor = 
+	this->getComponent<MeshComponent>(aniIDs[2]).overrideMaterials[0].tintColor =
 		glm::vec4(
 			1.0f, 
 			0.2f, 

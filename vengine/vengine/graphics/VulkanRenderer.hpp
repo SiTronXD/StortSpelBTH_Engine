@@ -139,6 +139,11 @@ private:
     // - Record Functions
     void recordCommandBuffer(Scene* scene, uint32_t imageIndex);    // Using renderpass
 
+    const Material& getAppropriateMaterial(
+        const MeshComponent& meshComponent,
+        const std::vector<SubmeshData>& submeshes,
+        const uint32_t& submeshIndex);
+
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
 private: 

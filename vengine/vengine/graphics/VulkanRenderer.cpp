@@ -681,36 +681,63 @@ void VulkanRenderer::initForScene(Scene* scene)
 	}
 
     // Add all materials for possible use in the shaders
-    size_t numMeshes = this->resourceManager->getNumMeshes();
-    for (size_t i = 0; i < numMeshes; ++i)
+    size_t numMaterials = this->resourceManager->getNumMaterials();
+    for (size_t i = 0; i < numMaterials; ++i)
     {
-        Mesh& mesh = this->resourceManager->getMesh(i);
-        const std::vector<SubmeshData>& submeshes = mesh.getSubmeshData();
+        Material& material = this->resourceManager->getMaterial(i);
 
-        // No animations
-        if (mesh.getMeshData().bones.size() <= 0)
+        FrequencyInputBindings diffuseTextureInputBinding{};
+        FrequencyInputBindings specularTextureInputBinding{};
+        diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
+        specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+
+        // Update material's descriptor index
+        material.descriptorIndex =
+            this->shaderInput.addFrequencyInput(
+                {
+                    diffuseTextureInputBinding,
+                    specularTextureInputBinding
+                }
+        );
+
+        // Add one descriptor in animShaderInput for 
+        // each added descriptor in shaderInput
+        this->animShaderInput.addFrequencyInput(
+            {
+                diffuseTextureInputBinding,
+                specularTextureInputBinding
+            }
+        );
+    }
+
+    // Add all unique materials as well for possible use in the shaders
+    auto meshView =
+        scene->getSceneReg().view<MeshComponent>();
+    meshView.each(
+        [&](MeshComponent& meshComponent)
         {
-            for (size_t j = 0, numSubmeshes = submeshes.size(); j < numSubmeshes; ++j)
+            for (uint32_t i = 0; i < meshComponent.numOverrideMaterials; ++i)
             {
                 // Get material
-                Material& submeshMaterial = this->resourceManager->getMaterial(submeshes[j].materialIndex);
-                
+                Material& material = meshComponent.overrideMaterials[i];
+
                 // Make binding recognize material parameters
                 FrequencyInputBindings diffuseTextureInputBinding{};
                 FrequencyInputBindings specularTextureInputBinding{};
-                diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.diffuseTextureIndex);
-                specularTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.specularTextureIndex);
+                diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
+                specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
 
                 // Update material's descriptor index
-                submeshMaterial.descriptorIndex = 
+                material.descriptorIndex =
                     this->shaderInput.addFrequencyInput(
-                        { 
+                        {
                             diffuseTextureInputBinding,
                             specularTextureInputBinding
                         }
-                    );
+                );
 
-                // TODO: remove this
+                // Add one descriptor in animShaderInput for 
+                // each added descriptor in shaderInput
                 this->animShaderInput.addFrequencyInput(
                     {
                         diffuseTextureInputBinding,
@@ -719,39 +746,7 @@ void VulkanRenderer::initForScene(Scene* scene)
                 );
             }
         }
-        // Animations
-        else
-        {
-            for (size_t j = 0, numSubmeshes = submeshes.size(); j < numSubmeshes; ++j)
-            {
-                // Get material
-                Material& submeshMaterial = this->resourceManager->getMaterial(submeshes[j].materialIndex);
-                
-                // Make binding recognize material parameters
-                FrequencyInputBindings diffuseTextureInputBinding{};
-                FrequencyInputBindings specularTextureInputBinding{};
-                diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.diffuseTextureIndex);
-                specularTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.specularTextureIndex);
-
-                // Update material's descriptor index
-                submeshMaterial.descriptorIndex = 
-                    this->animShaderInput.addFrequencyInput(
-                        { 
-                            diffuseTextureInputBinding,
-                            specularTextureInputBinding
-                        }
-                    );
-
-                // TODO: remove this
-                this->shaderInput.addFrequencyInput(
-                    {
-                        diffuseTextureInputBinding,
-                        specularTextureInputBinding
-                    }
-                );
-            }
-        }
-    }
+    );
 
     // Add all textures for possible use in the ui renderer
     size_t numTextures = this->resourceManager->getNumTextures();
@@ -765,34 +760,6 @@ void VulkanRenderer::initForScene(Scene* scene)
             )
         );
     }
-
-    /*size_t numTextures = this->resourceManager->getNumTextures();
-    for (size_t i = 0; i < numTextures; ++i) 
-    {
-        // Get texture sampler for this texture
-        TextureSampler& textureSampler = 
-            this->resourceManager->getTextureSampler(
-                this->resourceManager->getTexture(i).getSamplerIndex()
-            );
-
-        this->shaderInput.addPossibleTexture(
-            i,
-            textureSampler
-        );
-
-        if (this->hasAnimations)
-		{
-			this->animShaderInput.addPossibleTexture(
-                i, 
-                textureSampler
-            );
-		}
-
-        this->uiRenderer->getShaderInput().addPossibleTexture(
-            i,
-            textureSampler
-        );
-    }*/
 
     // Set aspect ratio for the main camera
     Camera* mainCam = scene->getMainCamera();
@@ -1190,6 +1157,21 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
     }
 }
 
+const Material& VulkanRenderer::getAppropriateMaterial(
+    const MeshComponent& meshComponent,
+    const std::vector<SubmeshData>& submeshes,
+    const uint32_t& submeshIndex)
+{
+    // Unique overriden materials
+    if (meshComponent.numOverrideMaterials > 0)
+    {
+        return meshComponent.overrideMaterials[submeshIndex];
+    }
+
+    // Default mesh materials
+    return this->resourceManager->getMaterial(submeshes[submeshIndex].materialIndex);
+}
+
 void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -1357,8 +1339,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
                         this->pushConstantData.modelMatrix = transform.getMatrix();
-                        this->pushConstantData.tintColor = 
-                            this->resourceManager->getMaterial(submeshes[0].materialIndex).tintColor;
+                        this->pushConstantData.tintColor =
+                            this->getAppropriateMaterial(meshComponent, submeshes, 0).tintColor;
                         currentCommandBuffer.pushConstant(
                             this->shaderInput, 
                             (void*) &this->pushConstantData
@@ -1387,8 +1369,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 
                             // Update for descriptors
                             this->shaderInput.setFrequencyInput(
-                                this->resourceManager->getMaterial(currentSubmesh.materialIndex).
-                                    descriptorIndex
+                                this->getAppropriateMaterial(meshComponent, submeshes, i)
+                                    .descriptorIndex
                             );
                             currentCommandBuffer.bindShaderInputFrequency(
                                 this->shaderInput,
@@ -1446,7 +1428,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
                         this->pushConstantData.modelMatrix = transform.getMatrix();
                         this->pushConstantData.tintColor =
-                            this->resourceManager->getMaterial(submeshes[0].materialIndex).tintColor;
+                            this->getAppropriateMaterial(meshComponent, submeshes, 0).tintColor;
                         currentCommandBuffer.pushConstant(
                             this->animShaderInput, 
                             (void*) &this->pushConstantData
@@ -1475,8 +1457,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 
                             // Update for descriptors
                             this->animShaderInput.setFrequencyInput(
-                                this->resourceManager->getMaterial(currentSubmesh.materialIndex).
-                                    descriptorIndex
+                                this->getAppropriateMaterial(meshComponent, submeshes, i)
+                                    .descriptorIndex
                             );
                             currentCommandBuffer.bindShaderInputFrequency(
                                 this->animShaderInput,
