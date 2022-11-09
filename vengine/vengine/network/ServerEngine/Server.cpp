@@ -408,7 +408,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				case GameEvents::A_Button_Was_Pressed_On_Client:
 					std::cout << "Server: client pressed Button wow (TCP)" << std::endl;
 					break;
-	
+
 				case GameEvents::POLYGON_DATA:
 					std::cout << "Server: client sent polygon data" << std::endl;
 					clientToServerPacketTcp[ClientID] >> packetHelper2;
@@ -429,6 +429,15 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				case GameEvents::START:
 					std::cout << "a client said start" << std::endl;
 					this->sceneHandler.sendCallFromClient(GameEvents::START);
+					break;
+				case GameEvents::GetPlayerNames:
+					//send player names
+					serverToClientPacketTcp[ClientID] << (int)clients.size();
+					for (int i = 0; i < clients.size(); i++)
+					{
+						serverToClientPacketTcp[ClientID] << clients[i]->id << clients[i]->name;
+					}
+
 					break;
 			}
 		}

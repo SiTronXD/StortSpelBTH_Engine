@@ -280,7 +280,18 @@ void NetworkHandler::updateNetwork()
 			{
 				std::string playerName;
 				cTCPP >> iy >> playerName;
-				createAPlayer(iy, playerName);
+				bool alreadyHavePlayer = false;
+				for (int i = 0; i < otherPlayersServerId.size() && !alreadyHavePlayer; i++)
+				{
+					if (iy == otherPlayersServerId[i])
+					{
+						alreadyHavePlayer = true;
+					}
+				}
+				if (!alreadyHavePlayer)
+				{
+					createAPlayer(iy, playerName);
+				}
 			}
 		}
 	}
