@@ -162,12 +162,13 @@ uint32_t ResourceManager::addMaterial(uint32_t textureIndex)
     newMaterial.diffuseTextureIndex = textureIndex;
     newMaterial.descriptorIndex = textureIndex; // ~0u;
 
+    uint32_t newMaterialIndex =
+        static_cast<uint32_t>(this->materials.size());
+
     // Insert material
-    this->materials.insert({ this->materials.size(), newMaterial });
+    this->materials.insert({ newMaterialIndex, newMaterial });
 
-    //return this->materials.size() - 1;
-
-    return textureIndex;
+    return newMaterialIndex;
 }
 
 void ResourceManager::cleanup()
