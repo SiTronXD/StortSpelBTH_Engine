@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ResTranslator.hpp"
 #include "../dev/Log.hpp"
 

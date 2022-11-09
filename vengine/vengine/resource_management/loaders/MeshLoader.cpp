@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "MeshLoader.hpp"
 
 #include "../Configurator.hpp"

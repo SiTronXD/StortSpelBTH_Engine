@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "StringHelper.hpp"
 
 void StringHelper::splitString(

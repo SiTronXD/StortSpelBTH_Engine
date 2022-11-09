@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ResourceManagerLua.h"
 
 #include "../../audio/AudioHandler.h" //TEMP
@@ -88,7 +89,7 @@ int ResourceManagerLua::lua_mapAnimations(lua_State* L)
 {
 	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
 
-	if (!lua_isinteger(L, 1) || !lua_istable(L, 2)) { return 0; }
+	if (!lua_isnumber(L, 1) || !lua_istable(L, 2)) { return 0; }
 
 	std::vector<std::string> names;
 	lua_pushvalue(L, 2);

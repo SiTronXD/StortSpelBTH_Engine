@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "polygon.h"
 
 #include <algorithm>
