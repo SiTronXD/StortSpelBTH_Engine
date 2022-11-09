@@ -25,12 +25,9 @@ bool duplicateUser(std::vector<clientInfo*>& client)
 void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
 {
 	static int id = 0;
-	//say we already have a client but he's not connected
-	client.resize(client.size() + 1);
-	client[client.size() - 1] = new clientInfo("");
 
 	//while the game has NOT started look for players
-	while (start == StartingEnum::WaitingForUsers)
+	if (start == StartingEnum::WaitingForUsers)
 	{
 		//if we got a connection
 		if (listener.accept(client[client.size() - 1]->clientTcpSocket) == sf::Socket::Done)
@@ -54,7 +51,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 				//if we didn't get a name end
 				delete client[client.size() - 1];
 				client[client.size() - 1] = new clientInfo("");
-				continue;
+				return;
 			}
 
 			sf::Packet socketData;
@@ -93,15 +90,14 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 					{
 						std::cout << "Server: start" << std::endl;
 						start = StartingEnum::Start;
+						//delete a client that we don't have
+						delete client[client.size() - 1];
+						client.resize(client.size() - 1);
 					}
 				}
 			}
 		}
 	}
-
-	//delete a client that we don't have
-	delete client[client.size() - 1];
-	client.resize(client.size() - 1);
 }
 
 Server::Server(NetworkScene* serverGame)
@@ -491,6 +487,9 @@ void Server::createUDPPacketToClient(const int& clientID, sf::Packet& packet)
 
 void Server::startGettingClients() 
 {
+	clients.resize(clients.size() + 1);
+	clients[clients.size() - 1] = new clientInfo("");
+
 	serverToClientPacketUdp.resize(clients.size());
 	clientToServerPacketTcp.resize(clients.size());
 	clientToServerPacketUdp.resize(clients.size());
@@ -500,6 +499,8 @@ void Server::startGettingClients()
 
 void Server::stopGettingClients() 
 {
+	delete clients[clients.size() - 1];
+	clients.resize(clients.size() - 1);
 	this->starting = StartingEnum::Start;
 }
 

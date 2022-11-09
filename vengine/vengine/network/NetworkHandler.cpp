@@ -214,8 +214,10 @@ void NetworkHandler::updateNetwork()
 		{
 			//ix = what type of enemy
 			cTCPP >> ix;
+			
 			//should we really create a new entity everytime?
 			iy = sceneHandler->getScene()->createEntity();
+			std::cout << "spawn enemy" << iy << std::endl;
 			monsters.push_back(iy);
 
 			sceneHandler->getScene()->setComponent<MeshComponent>(iy, monsterResId[ix]);

@@ -16,7 +16,5 @@ void NetworkLobbyScene::update(float dt)
 		std::cout << "got start in network lobby" << std::endl;
 		((NetworkSceneHandler*)this->getSceneHandler())->setScene(new DefaultServerGame());
 		this->addEvent({(int)GameEvents::START});
-		((NetworkSceneHandler*)this->getSceneHandler())->clientStopFunc();
 	}
-	
 }
