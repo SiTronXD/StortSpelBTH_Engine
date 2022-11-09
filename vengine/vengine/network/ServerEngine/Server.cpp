@@ -24,9 +24,9 @@ bool duplicateUser(std::vector<clientInfo*>& client)
     //can I do this better?
 void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
 {
-	int id = 0;
+	static int id = 0;
 	//say we already have a client but he's not connected
-	client.resize(1);
+	client.resize(client.size() + 1);
 	client[client.size() - 1] = new clientInfo("");
 
 	//while the game has NOT started look for players
@@ -38,7 +38,6 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 			id++;
 
 			client[client.size() - 1]->sender = client[client.size() - 1]->clientTcpSocket.getRemoteAddress();  //may be wrong address here 2?
-
 			client[client.size() - 1]->id = id;
 
 			std::cout << "Server: " << client[client.size() - 1]->clientTcpSocket.getRemoteAddress().toString() << " Connected" << std::endl;
@@ -54,6 +53,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 			{
 				//if we didn't get a name end
 				delete client[client.size() - 1];
+				client[client.size() - 1] = new clientInfo("");
 				continue;
 			}
 
@@ -491,7 +491,6 @@ void Server::createUDPPacketToClient(const int& clientID, sf::Packet& packet)
 
 void Server::startGettingClients() 
 {
-	clients.push_back(new clientInfo(""));
 	serverToClientPacketUdp.resize(clients.size());
 	clientToServerPacketTcp.resize(clients.size());
 	clientToServerPacketUdp.resize(clients.size());
