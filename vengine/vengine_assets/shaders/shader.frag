@@ -8,6 +8,7 @@ layout(location = 0) in vec3 fragWorldPos;
 layout(location = 1) in vec3 fragNor;
 layout(location = 2) in vec2 fragTex;
 layout(location = 3) in vec3 fragCamWorldPos;
+layout(location = 4) in vec4 fragTintCol;
 
 // Uniform buffer for light indices
 // Ambient: [0, ambientLightsEndIndex)
@@ -69,7 +70,7 @@ void main()
 {
 	vec3 normal = normalize(fragNor);
 
-	vec3 diffuseTextureCol = texture(textureSampler0, fragTex).rgb;
+	vec3 diffuseTextureCol = mix(texture(textureSampler0, fragTex).rgb, fragTintCol.rgb, fragTintCol.a);
 	vec4 specularTextureCol = texture(textureSampler1, fragTex);
 	
 	// Color from lights

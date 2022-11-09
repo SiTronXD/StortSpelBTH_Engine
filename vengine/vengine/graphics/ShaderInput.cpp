@@ -239,7 +239,7 @@ void ShaderInput::createDescriptorPools()
     samplerPoolCreateInfo.setPoolSizeCount(uint32_t(1));
     samplerPoolCreateInfo.setPPoolSizes(&perDrawPoolSize);
 
-    // Create combined image sampler descriptor pool
+    // Create combined image sampler descriptor pool 
     this->perDrawPool = 
         this->device->getVkDevice().createDescriptorPool(
             samplerPoolCreateInfo);

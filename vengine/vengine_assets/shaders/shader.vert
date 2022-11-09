@@ -17,21 +17,23 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
     vec4 worldPos;
 } cameraBuffer;
 
-// Push Constant to update the model Matrix! 
-layout(push_constant) uniform PushConstant_Model
+// Push constant
+layout(push_constant) uniform PushConstantData
 {
     mat4 model;
-} pushConstant_Model;
+    vec4 tintColor;
+} pushConstantData;
 
 // Vertex shader outputs
 layout(location = 0) out vec3 fragWorldPos;
 layout(location = 1) out vec3 fragNor;
 layout(location = 2) out vec2 fragTex;
 layout(location = 3) out vec3 fragCamWorldPos;
+layout(location = 4) out vec4 fragTintCol;
 
 void main()
 {
-    vec4 worldPos = pushConstant_Model.model * vec4(pos, 1.0);
+    vec4 worldPos = pushConstantData.model * vec4(pos, 1.0);
 
     gl_Position = 
         cameraBuffer.projection *
@@ -39,7 +41,8 @@ void main()
         worldPos;
 
     fragWorldPos = worldPos.xyz;
-    fragNor = (pushConstant_Model.model * vec4(nor, 0.0f)).xyz;
+    fragNor = (pushConstantData.model * vec4(nor, 0.0f)).xyz;
     fragTex = tex;
     fragCamWorldPos = cameraBuffer.worldPos.xyz;
+    fragTintCol = pushConstantData.tintColor;
 }

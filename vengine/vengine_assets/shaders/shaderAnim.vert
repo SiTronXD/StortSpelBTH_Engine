@@ -29,17 +29,19 @@ layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer BoneTransformsB
     BoneTransformsData transforms[];
 } bones;
 
-// Push Constant to update the model Matrix! 
-layout(push_constant) uniform PushConstant_Model
+// Push constant
+layout(push_constant) uniform PushConstantData
 {
     mat4 model;
-} pushConstant_Model;
+    vec4 tintColor;
+} pushConstantData;
 
 // Vertex shader outputs
 layout(location = 0) out vec3 fragWorldPos;
 layout(location = 1) out vec3 fragNor;
 layout(location = 2) out vec2 fragTex;
 layout(location = 3) out vec3 fragCamWorldPos;
+layout(location = 4) out vec4 fragTintCol;
 
 void main()
 {
@@ -54,7 +56,7 @@ void main()
         animTransform += bones.transforms[boneIndices.w].boneTransform * weights.w;
 
     vec4 worldPos = 
-        pushConstant_Model.model *
+        pushConstantData.model *
         animTransform *
         vec4(pos, 1.0);
 
@@ -64,7 +66,8 @@ void main()
         worldPos;
     
     fragWorldPos = worldPos.xyz;
-    fragNor = (pushConstant_Model.model * animTransform * vec4(nor, 0.0f)).xyz;
+    fragNor = (pushConstantData.model * animTransform * vec4(nor, 0.0f)).xyz;
     fragTex = tex;
     fragCamWorldPos = cameraBuffer.worldPos.xyz;
+    fragTintCol = pushConstantData.tintColor;
 }

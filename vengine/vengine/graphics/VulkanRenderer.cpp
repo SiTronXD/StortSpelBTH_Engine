@@ -524,7 +524,8 @@ void VulkanRenderer::initForScene(Scene* scene)
 	    MAX_FRAMES_IN_FLIGHT
 	);
 	this->shaderInput.addPushConstant(
-	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+	    sizeof(PushConstantData), 
+        vk::ShaderStageFlagBits::eVertex
 	);
 	this->viewProjectionUB =
 	    this->shaderInput.addUniformBuffer(
@@ -588,7 +589,8 @@ void VulkanRenderer::initForScene(Scene* scene)
 		    MAX_FRAMES_IN_FLIGHT
 		);
 		this->animShaderInput.addPushConstant(
-		    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+		    sizeof(PushConstantData), 
+            vk::ShaderStageFlagBits::eVertex
 		);
 		this->animShaderInput.setNumShaderStorageBuffers(1);
 
@@ -1350,12 +1352,16 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                     {
                         Mesh& currentMesh =
                             this->resourceManager->getMesh(meshComponent.meshID);
-
-                        const glm::mat4& modelMatrix = transform.getMatrix();
+                        const std::vector<SubmeshData>& submeshes =
+                            currentMesh.getSubmeshData();
 
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                        this->pushConstantData.modelMatrix = transform.getMatrix();
+                        this->pushConstantData.tintColor = 
+                            this->resourceManager->getMaterial(submeshes[0].materialIndex).tintColor;
                         currentCommandBuffer.pushConstant(
-                            this->shaderInput, (void*)&modelMatrix
+                            this->shaderInput, 
+                            (void*) &this->pushConstantData
                         );
 
                         // Bind vertex buffer
@@ -1375,8 +1381,6 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                             DescriptorFrequency::PER_MESH
                         );
 
-                        const std::vector<SubmeshData>& submeshes =
-                            currentMesh.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
                         {
                             const SubmeshData& currentSubmesh = submeshes[i];
@@ -1421,9 +1425,10 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                     {
                         Mesh& currentMesh =
                             this->resourceManager->getMesh(meshComponent.meshID);
-
                         MeshData& currentMeshData =
 					        currentMesh.getMeshData();
+                        const std::vector<SubmeshData>& submeshes =
+                            currentMesh.getSubmeshData();
 
                         // Get bone transformations
                         const std::vector<glm::mat4>& boneTransforms =
@@ -1438,11 +1443,13 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                             animationComponent.boneTransformsID
                         );
 
-                        const glm::mat4& modelMatrix = transform.getMatrix();
-
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                        this->pushConstantData.modelMatrix = transform.getMatrix();
+                        this->pushConstantData.tintColor =
+                            this->resourceManager->getMaterial(submeshes[0].materialIndex).tintColor;
                         currentCommandBuffer.pushConstant(
-                            this->animShaderInput, (void*)&modelMatrix
+                            this->animShaderInput, 
+                            (void*) &this->pushConstantData
                         );
 
                         // Bind vertex buffer
@@ -1462,8 +1469,6 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                             DescriptorFrequency::PER_MESH
                         );
 
-                        const std::vector<SubmeshData>& submeshes =
-					        currentMesh.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
                         {
                             const SubmeshData& currentSubmesh = submeshes[i];

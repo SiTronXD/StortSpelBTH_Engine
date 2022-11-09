@@ -208,6 +208,18 @@ void TestDemoScene::init()
 
 void TestDemoScene::update()
 {
+	this->getResourceManager()->getMaterial(
+		this->getResourceManager()->getMesh(
+			this->getComponent<MeshComponent>(aniIDs[2]).meshID
+		).getSubmeshData()[0].materialIndex
+	).tintColor = 
+		glm::vec4(
+			1.0f, 
+			0.2f, 
+			0.2f, 
+			std::sin(this->getComponent<AnimationComponent>(aniIDs[2]).timer * 0.3f) * 0.5f + 0.5f
+		);
+
 	// Debug rendering on colliders
 	this->getPhysicsEngine()->renderDebugShapes(Input::isKeyDown(Keys::Y));
 

@@ -32,6 +32,12 @@ class VulkanRenderer
 
     const uint32_t MAX_NUM_LIGHTS = 8;
 
+    struct PushConstantData
+    {
+        glm::mat4 modelMatrix;
+        glm::vec4 tintColor; // vec4(R, G, B, lerp alpha)
+    } pushConstantData{};
+
     ResourceManager* resourceManager;
     UIRenderer* uiRenderer;
     DebugRenderer* debugRenderer;
