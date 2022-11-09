@@ -223,7 +223,6 @@ void NetworkHandler::updateNetwork()
 			cTCPP >> fx >> fy >> fz;
 			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
 			transform.position = glm::vec3(fx, fy, fz);
-			std::cout << "Client: spawn enemy at:" << fx << ", " << fy << ", " << fz << "penis" << std::endl;
 		}
 		else if (gameEvent == GameEvents::SpawnEnemies)
 		{
