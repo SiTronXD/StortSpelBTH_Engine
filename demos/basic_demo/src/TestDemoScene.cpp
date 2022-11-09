@@ -6,6 +6,7 @@
 #include "vengine.h"
 
 #include "vengine/test/TestScene2.hpp"
+#include "vengine/VengineMath.hpp"
 
 TestDemoScene::TestDemoScene()
 	: camEntity(-1), testEntity(-1)//, testEntity2(-1)
@@ -17,7 +18,7 @@ TestDemoScene::TestDemoScene()
 TestDemoScene::~TestDemoScene()
 {
 }
-#include "vengine/VengineMath.hpp"
+
 void TestDemoScene::init()
 {	
 	this->timer = 0.0f;
@@ -160,9 +161,15 @@ void TestDemoScene::init()
 		newAnimComp.timeScale += i % 2;
 
 		// Make separate material
-		if(i == 2)
+		if (i == 2)
+		{
 			this->getResourceManager()->makeUniqueMaterials(
-				this->getComponent<MeshComponent>(aniIDs[i]));
+				this->getComponent<MeshComponent>(aniIDs[i])
+			);
+
+			this->getComponent<MeshComponent>(aniIDs[i]).overrideMaterials[0].specularTextureIndex =
+				this->getResourceManager()->addTexture("vengine_assets/textures/NoSpecular.png");
+		}
 	}
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
