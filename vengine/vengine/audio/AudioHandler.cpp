@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "AudioHandler.h"
 #include "../application/SceneHandler.hpp"
-#include "OpenAL/alc.h"
-#include "OpenAL/al.h"
+#include "alc.h"
+#include "al.h"
 
 
 AudioHandler::AudioHandler()

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "AudioSource.h"
-#include "OpenAL/al.h"
+#include "al.h"
 
 AudioSource::AudioSource(uint32_t bufferId)
 		:sourceId(sourceId), bufferId(bufferId), playingb4Inactive(false)
