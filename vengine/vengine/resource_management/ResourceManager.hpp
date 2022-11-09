@@ -53,7 +53,9 @@ public:
     uint32_t addTexture(std::string&& texturePath,
         const TextureSettings& textureSettings = {});
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
-    uint32_t addMaterial(uint32_t textureIndex);
+    uint32_t addMaterial(
+        uint32_t diffuseTextureIndex,
+        uint32_t specularTextureIndex);
 
     Mesh& getMesh(uint32_t id);
     Texture& getTexture(uint32_t id);

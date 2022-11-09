@@ -114,10 +114,10 @@ uint32_t ResourceManager::addTexture(
             createSampler(*this->dev, textureSettings.samplerSettings);
     }
 
-    //NOTE: texturePaths.size() as key only works if we never remove resources the map...
+    // NOTE: texturePaths.size() as key only works if we never remove resources the map...
     this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
 
-    //NOTE: textures.size as key only works if we never remove resources the map...    
+    // NOTE: textures.size as key only works if we never remove resources the map...    
     // Create texture, insert into map of textures
     textures.insert(
         {
@@ -155,11 +155,14 @@ uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
 	return collisionsData.size() - 1;
 }
 
-uint32_t ResourceManager::addMaterial(uint32_t textureIndex)
+uint32_t ResourceManager::addMaterial(
+    uint32_t diffuseTextureIndex,
+    uint32_t specularTextureIndex)
 {
     // Created material
     Material newMaterial{};
-    newMaterial.diffuseTextureIndex = textureIndex;
+    newMaterial.diffuseTextureIndex = diffuseTextureIndex;
+    newMaterial.specularTextureIndex = specularTextureIndex;
     newMaterial.descriptorIndex = ~0u;
 
     uint32_t newMaterialIndex =

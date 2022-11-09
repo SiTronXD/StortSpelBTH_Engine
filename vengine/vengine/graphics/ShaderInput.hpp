@@ -52,7 +52,7 @@ struct ResourceHandle
 #define MAX_NUM_SET_BINDINGS 4
 struct FrequencyInputLayout
 {
-	vk::DescriptorType descriptorBindings[MAX_NUM_SET_BINDINGS]{};
+	vk::DescriptorType descriptorBindingsTypes[MAX_NUM_SET_BINDINGS]{};
 	uint32_t numBindings = 0;
 
 	void addBinding(const vk::DescriptorType& addedBindingType)
@@ -65,7 +65,7 @@ struct FrequencyInputLayout
 		}
 
 		// Add descriptor type
-		descriptorBindings[numBindings++] = addedBindingType;
+		descriptorBindingsTypes[numBindings++] = addedBindingType;
 	}
 };
 

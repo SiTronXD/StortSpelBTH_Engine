@@ -162,6 +162,9 @@ int VulkanRenderer::init(
         this->resourceManager->addMaterial(
             this->resourceManager->addTexture(
                 DEF<std::string>(P_TEXTURES) + "missing_texture.png"
+            ),
+            this->resourceManager->addTexture(
+                DEF<std::string>(P_TEXTURES) + "missing_texture.png"
             )
         );
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
@@ -511,6 +514,7 @@ void VulkanRenderer::initForScene(Scene* scene)
     // Default per draw bindings
     FrequencyInputLayout perDrawInputLayout{};
     perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+    perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
     
 	this->shaderInput.beginForInput(
 	    this->physicalDevice,
@@ -691,20 +695,24 @@ void VulkanRenderer::initForScene(Scene* scene)
                 
                 // Make binding recognize material parameters
                 FrequencyInputBindings diffuseTextureInputBinding{};
+                FrequencyInputBindings specularTextureInputBinding{};
                 diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.diffuseTextureIndex);
+                specularTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.specularTextureIndex);
 
                 // Update material's descriptor index
                 submeshMaterial.descriptorIndex = 
                     this->shaderInput.addFrequencyInput(
                         { 
-                            diffuseTextureInputBinding 
+                            diffuseTextureInputBinding,
+                            specularTextureInputBinding
                         }
                     );
 
                 // TODO: remove this
                 this->animShaderInput.addFrequencyInput(
                     {
-                        diffuseTextureInputBinding
+                        diffuseTextureInputBinding,
+                        specularTextureInputBinding
                     }
                 );
             }
@@ -719,20 +727,24 @@ void VulkanRenderer::initForScene(Scene* scene)
                 
                 // Make binding recognize material parameters
                 FrequencyInputBindings diffuseTextureInputBinding{};
+                FrequencyInputBindings specularTextureInputBinding{};
                 diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.diffuseTextureIndex);
+                specularTextureInputBinding.texture = &this->resourceManager->getTexture(submeshMaterial.specularTextureIndex);
 
                 // Update material's descriptor index
                 submeshMaterial.descriptorIndex = 
                     this->animShaderInput.addFrequencyInput(
                         { 
-                            diffuseTextureInputBinding 
+                            diffuseTextureInputBinding,
+                            specularTextureInputBinding
                         }
                     );
 
                 // TODO: remove this
                 this->shaderInput.addFrequencyInput(
                     {
-                        diffuseTextureInputBinding
+                        diffuseTextureInputBinding,
+                        specularTextureInputBinding
                     }
                 );
             }

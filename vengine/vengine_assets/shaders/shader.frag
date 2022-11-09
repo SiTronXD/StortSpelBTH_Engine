@@ -40,6 +40,7 @@ layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
 } lightBuffer;
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
+layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D textureSampler1;
 
 layout(location = 0) out vec4 outColor; // final output color (must also have location)
 
@@ -47,7 +48,8 @@ void main()
 {
 	vec3 normal = normalize(fragNor);
 
-	vec3 textureCol = texture(textureSampler0, fragTex).rgb;
+	vec3 diffuseTextureCol = texture(textureSampler0, fragTex).rgb;
+	vec4 specularTextureCol = texture(textureSampler1, fragTex);
 	
 	// Color from lights
 	vec3 finalColor = vec3(0.0f);
@@ -69,7 +71,7 @@ void main()
 
 		// Regular diffuse light
 		vec3 diffuseLight = 
-			textureCol *
+			diffuseTextureCol *
 			clamp(
 				dot(normal, -lightDir),
 				0.0f,
@@ -82,7 +84,8 @@ void main()
 			normalize(fragCamWorldPos - fragWorldPos);
 		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
 		vec3 specularLight = 
-			vec3(1.0f) * pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
+			specularTextureCol.rgb * 
+			pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
 		
 		// Add blinn-phong light contribution
 		finalColor += 
@@ -103,7 +106,7 @@ void main()
 
 		// Regular diffuse light
 		vec3 diffuseLight = 
-			textureCol *
+			diffuseTextureCol *
 			clamp(
 				dot(normal, fragToLightDir),
 				0.0f,
@@ -111,8 +114,9 @@ void main()
 			);
 
 		// Blinn specular
-		vec3 specularLight = 
-			vec3(1.0f) * pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
+		vec3 specularLight =
+			specularTextureCol.rgb * 
+			pow(max(dot(normal, halfwayDir), 0.0f), 32.0f);
 
 		// Add blinn-phong light contribution
 		finalColor += 
