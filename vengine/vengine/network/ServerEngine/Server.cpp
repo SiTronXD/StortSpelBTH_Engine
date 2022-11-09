@@ -66,7 +66,7 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 				// send that a player has joined
 				sf::Packet playerJoinedPacket;
 				playerJoinedPacket << GameEvents::PlayerJoined << client[client.size() - 1]->id;
-				for (int i = 0; i < client.size() - 1; i++)
+				for (int i = 0; i < client.size(); i++)
 				{
 					client[i]->clientTcpSocket.send(playerJoinedPacket);
 				}
