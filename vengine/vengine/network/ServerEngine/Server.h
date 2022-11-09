@@ -28,6 +28,7 @@ private:
 	void handleDisconnects(int clientID); //if a player have wanted to disconnect
 	void cleanRecvPackages();
 	void cleanSendPackages();
+	void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start);
 
 	//To users
 	void sendDataToAllUsers();

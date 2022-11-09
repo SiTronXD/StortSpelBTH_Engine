@@ -22,7 +22,7 @@ bool duplicateUser(std::vector<clientInfo*>& client)
 }
 
     //can I do this better?
-void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
+void Server::ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
 {
 	static int id = 0;
 
@@ -59,6 +59,11 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 			socketData >> client[client.size() - 1]->name;
 			socketData >> client[client.size() - 1]->port;
 			std::cout << "Server: " << client[client.size() - 1]->name << " joined the lobby" << std::endl;
+
+			clientToServerPacketTcp.resize(client.size());
+			serverToClientPacketTcp.resize(client.size());
+			clientToServerPacketUdp.resize(client.size());
+			serverToClientPacketUdp.resize(client.size());
 
 			if (!duplicatedUser)
 			{
