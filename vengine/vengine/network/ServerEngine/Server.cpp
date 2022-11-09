@@ -76,27 +76,6 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 			client.resize(client.size() + 1);
 			client[client.size() - 1] = new clientInfo("");
 		}
-		//if we have a client try to recv "start" and start the game
-		if (client.size() > 0)
-		{
-			sf::Packet packet;
-			if (client[0]->clientTcpSocket.receive(packet) == sf::Socket::Done)
-			{
-				int event;
-				if (!packet.endOfPacket())
-				{
-					packet >> event;
-					if (event == GameEvents::START)
-					{
-						std::cout << "Server: start" << std::endl;
-						start = StartingEnum::Start;
-						//delete a client that we don't have
-						delete client[client.size() - 1];
-						client.resize(client.size() - 1);
-					}
-				}
-			}
-		}
 	}
 }
 
@@ -198,8 +177,6 @@ bool Server::update(float dt)
 		{
 			this->clients[i]->TimeToDisconnect += dt;
 		}
-		
-		getDataFromUsers();
 		if (this->currentTimeToSend >= this->timeToSend)
 		{
 			this->sceneHandler.update(this->currentTimeToSend);
@@ -220,6 +197,7 @@ bool Server::update(float dt)
 		}
 		cleanRecvPackages();
 	}
+	getDataFromUsers();
 	
 	return false;  //server is not done
 }
@@ -327,7 +305,14 @@ void Server::sendDataToAllUsers()
 void Server::getDataFromUsers()
 {
 	//see if we recv something from
-	for (int i = 0; i < clients.size(); i++)
+	if (this->starting == StartingEnum::WaitingForUsers && clients.size() > 0 && 
+		clients[0]->clientTcpSocket.receive(clientToServerPacketTcp[0]) == sf::Socket::Done)
+	{
+		handlePacketFromUser(0, true);
+		return;
+	}
+
+	for (int i = 0; i < clientToServerPacketTcp.size(); i++)
 	{
 		if (clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done)
 		{
@@ -344,7 +329,7 @@ void Server::getDataFromUsers()
 	while (udpSocket.receive(tempPacket, tempIPAddress, tempPort) == sf::Socket::Done)  //shall I really have a while loop?
 	{
 		//check whos it from
-		for (int i = 0; i < clients.size(); i++)
+		for (int i = 0; i < clientToServerPacketUdp.size(); i++)
 		{
 			if (clients[i]->sender == tempIPAddress && clients[i]->port == tempPort)
 			{
@@ -364,6 +349,26 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 	float packetHelper1;
 	int packetHelper2;
 	std::vector<float> points;
+	if (tcp && this->starting == StartingEnum::WaitingForUsers)
+	{
+		while (!clientToServerPacketTcp[ClientID].endOfPacket())
+		{
+			clientToServerPacketTcp[ClientID] >> gameEvent;
+			if (gameEvent == GameEvents::START)
+			{
+				if (ClientID == 0)
+				{
+					if (this->starting == StartingEnum::WaitingForUsers)
+					{
+						delete clients[clients.size() - 1];
+						clients.resize(clients.size() - 1);
+					}
+					this->starting = StartingEnum::Start;
+					this->sceneHandler.sendCallFromClient(GameEvents::START);
+				}
+			}
+		}
+	}
 	if (tcp)
 	{
 		while (!clientToServerPacketTcp[ClientID].endOfPacket())
@@ -420,7 +425,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					std::cout << "We shall start over with polygon data" << std::endl;
 					this->sceneHandler.getScene()->removeAllPolygons();
 					break;
-				//Calls to Scene
+					//Calls to Scene
 				case GameEvents::START:
 					std::cout << "a client said start" << std::endl;
 					this->sceneHandler.sendCallFromClient(GameEvents::START);
