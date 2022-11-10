@@ -11,12 +11,10 @@ private:
 	IDXGIAdapter* dxgiAdapter;
 	IDXGIAdapter4* dxgiAdapter4;
 
-	void ramUsage();
-	void vramUsage();
-
 public:
 	StatisticsCollector();
 	~StatisticsCollector();
 
-	void update();
+	float getRamUsage();
+	float getVramUsage();
 };
