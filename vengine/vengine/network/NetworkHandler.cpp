@@ -462,7 +462,16 @@ void NetworkHandler::createPlayers()
 	for (int i = 0; i < otherPlayers.size(); i++)
 	{
 		otherPlayers[i].first = sceneHandler->getScene()->createEntity();
-		sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[i].first, 0);
+		
+		if (this->networkHandlerMeshes.find("PlayerMesh") == this->networkHandlerMeshes.end())
+		{
+			sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[i].first);
+		}
+		else
+		{
+			sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[i].first, this->networkHandlerMeshes.find("PlayerMesh")->second
+			);
+		}
 	}
 }
 
