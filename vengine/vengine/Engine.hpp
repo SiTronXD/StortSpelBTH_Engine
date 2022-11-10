@@ -9,6 +9,7 @@
 #include "graphics/UIRenderer.hpp"
 #include "graphics/DebugRenderer.hpp"
 #include "ai/AIHandler.hpp"
+#include "dev/StatisticsCollector.hpp"
 
 class Engine
 {
@@ -29,6 +30,8 @@ public:
 	UIRenderer uiRenderer;
 	DebugRenderer debugRenderer;
     AIHandler aiHandler;
+
+#ifdef _CONSOLE
+	StatisticsCollector statsCollector;
+#endif
 };
-
-

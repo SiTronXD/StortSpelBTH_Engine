@@ -111,7 +111,11 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         this->sceneHandler.update();
         this->scriptHandler.update();
         this->audioHandler.update();
-		this->networkHandler.updateNetwork();                
+		this->networkHandler.updateNetwork();
+
+#ifdef _CONSOLE
+        this->statsCollector.update();
+#endif
 
 
 #if defined(_CONSOLE) // Debug/Release, but not distribution        
