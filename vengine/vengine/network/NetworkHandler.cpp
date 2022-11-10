@@ -67,6 +67,8 @@ void NetworkHandler::createServer(NetworkScene* serverGame)
 {
 	if (serverThread == nullptr)
 	{
+		this->shutDownServer = false;
+		this->createdServer = false;
 		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
 
 		Timer timer;
@@ -88,6 +90,7 @@ void NetworkHandler::createServer(NetworkScene* serverGame)
 		delete serverThread;
 		serverThread = nullptr;
 		this->shutDownServer = false;
+		this->createdServer = false;
 		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
 
 		Timer timer;
