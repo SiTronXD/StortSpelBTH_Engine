@@ -248,7 +248,14 @@ void NetworkHandler::updateNetwork()
 			for (int i = 0; i < iy; i++)
 			{
 				iz = sceneHandler->getScene()->createEntity();
-				sceneHandler->getScene()->setComponent<MeshComponent>(iz);
+				if (ix == 0)
+				{
+					sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
+				}
+				else
+				{
+					sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
+				}
 
 				//ix = what type of enemy
 				cTCPP >> fx >> fy >> fz;
