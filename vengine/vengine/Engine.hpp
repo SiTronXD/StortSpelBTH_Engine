@@ -9,7 +9,10 @@
 #include "graphics/UIRenderer.hpp"
 #include "graphics/DebugRenderer.hpp"
 #include "ai/AIHandler.hpp"
+
+#ifdef _CONSOLE
 #include "dev/StatisticsCollector.hpp"
+#endif
 
 class Engine
 {
