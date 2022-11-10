@@ -689,7 +689,7 @@ uint32_t ShaderInput::addFrequencyInput(
 
     if (bindings.size() != this->perDrawInputLayout.numBindings)
     {
-        Log::error("The number of bindings does not match the provided layout.");
+        Log::error("The number of bindings (" + std::to_string(this->perDrawInputLayout.numBindings) + ") does not match the provided layout (" + std::to_string(bindings.size()) + ").");
         return ~0u;
     }
 
