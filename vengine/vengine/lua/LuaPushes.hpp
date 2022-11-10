@@ -9,8 +9,7 @@
 #include "../components/Collider.h"
 #include "../components/Rigidbody.h"
 #include "../components/AnimationComponent.hpp"
-#include "../components/AudioListener.hpp"
-#include "../components/AudioSource.hpp"
+#include "../components/AudioSource.h"
 
 static bool lua_isvector(lua_State* L, int index)
 {
@@ -201,6 +200,10 @@ static Collider lua_tocollider(lua_State* L, int index)
 	ColType type = (ColType)lua_tointeger(L, -1);
 	lua_pop(L, 1);
 
+	lua_getfield(L, index, "offset");
+	glm::vec3 offset = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(0.0f);
+	lua_pop(L, 1);
+
 	lua_getfield(L, index, "isTrigger");
 	bool trigger = lua_toboolean(L, -1);
 	lua_pop(L, 1);
@@ -215,14 +218,14 @@ static Collider lua_tocollider(lua_State* L, int index)
 		radius = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 		lua_pop(L, 1);
 
-		col = Collider::createSphere(radius, trigger);
+		col = Collider::createSphere(radius, offset, trigger);
 		break;
 	case ColType::BOX:
 		lua_getfield(L, index, "extents");
 		extents = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(1.0f);
 		lua_pop(L, 1);
 
-		col = Collider::createBox(extents, trigger);
+		col = Collider::createBox(extents, offset, trigger);
 		break;
 	case ColType::CAPSULE:
 		lua_getfield(L, index, "radius");
@@ -233,7 +236,7 @@ static Collider lua_tocollider(lua_State* L, int index)
 		height = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 		lua_pop(L, 1);
 
-		col = Collider::createCapsule(radius, height, trigger);
+		col = Collider::createCapsule(radius, height, offset, trigger);
 		break;
 	default:
 		break;
@@ -306,11 +309,11 @@ static Rigidbody lua_torigidbody(lua_State* L, int index, bool assigned = false)
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "acceleration");
-	rb.acceleration = lua_tovector(L, -1);
+	rb.acceleration = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(0.0f);
 	lua_pop(L, 1);
 
 	lua_getfield(L, index, "velocity");
-	rb.velocity = lua_tovector(L, -1);
+	rb.velocity = !lua_isnil(L, -1) ? lua_tovector(L, -1) : glm::vec3(0.0f);
 	lua_pop(L, 1);
 
 	return rb;
@@ -342,17 +345,20 @@ static void lua_pushrigidbody(lua_State* L, const Rigidbody& rb)
 	lua_setfield(L, -2, "velocity");
 }
 
-static AnimationComponent lua_toanimation(lua_State* L, int index, float endTime, StorageBufferID boneID)
+static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBufferID boneID)
 {
 	AnimationComponent anim{};
 	anim.boneTransformsID = boneID;
-	anim.endTime = endTime;
 
 	// Sanity check
 	if (!lua_istable(L, index)) {
 		std::cout << "Error: not animation-table" << std::endl;
 		return anim;
 	}
+
+	lua_getfield(L, index, "animationIndex");
+	anim.animationIndex = (int)lua_tonumber(L, -1);
+	lua_pop(L, 1);
 
 	lua_getfield(L, index, "timer");
 	anim.timer = (float)lua_tonumber(L, -1);
@@ -369,9 +375,79 @@ static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
 {
 	lua_newtable(L);
 
+	lua_pushinteger(L, anim.animationIndex);
+	lua_setfield(L, -2, "animationIndex");
+
 	lua_pushnumber(L, anim.timer);
 	lua_setfield(L, -2, "timer");
 
 	lua_pushnumber(L, anim.timeScale);
 	lua_setfield(L, -2, "timeScale");
+}
+
+static UIArea lua_touiarea(lua_State* L, int index)
+{
+	UIArea area{};
+	glm::vec3 vec;
+
+	// Sanity check
+	if (!lua_istable(L, index)) {
+		std::cout << "Error: not UIArea-table" << std::endl;
+		return area;
+	}
+
+	lua_getfield(L, index, "position");
+	vec = lua_tovector(L, -1);
+	area.position = glm::ivec2((int)vec.x, (int)vec.y);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "dimension");
+	vec = lua_tovector(L, -1);
+	area.dimension = glm::ivec2((int)vec.x, (int)vec.y);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "clickButton");
+	area.clickButton = !lua_isnil(L, -1) ? (Mouse)lua_tointeger(L, -1) : Mouse::LEFT;
+	lua_pop(L, 1);
+
+	return area;
+}
+
+namespace UIAreaLua
+{
+	static int lua_isHovering(lua_State* L)
+	{
+		UIArea area = lua_touiarea(L, 1);
+		lua_pushboolean(L, area.isHovering());
+		return 1;
+	}
+
+	static int lua_isClicking(lua_State* L)
+	{
+		UIArea area = lua_touiarea(L, 1);
+		lua_pushboolean(L, area.isClicking());
+		return 1;
+	}
+}
+
+static void lua_pushuiarea(lua_State* L, const UIArea& area)
+{
+	lua_newtable(L);
+
+	lua_pushvector(L, glm::vec3((float)area.position.x, (float)area.position.y, 0.0f));
+	lua_setfield(L, -2, "position");
+
+	lua_pushvector(L, glm::vec3((float)area.dimension.x, (float)area.dimension.y, 0.0f));
+	lua_setfield(L, -2, "dimension");
+
+	lua_pushinteger(L, (int)area.clickButton);
+	lua_setfield(L, -2, "clickButton");
+	
+	luaL_Reg methods[] = {
+		{ "isHovering", UIAreaLua::lua_isHovering },
+		{ "isClicking", UIAreaLua::lua_isClicking },
+		{ NULL , NULL }
+	};
+
+	luaL_setfuncs(L, methods, 0);
 }

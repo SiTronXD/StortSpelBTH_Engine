@@ -11,7 +11,7 @@ class SceneLua
 {
 private:
 	// COUNT: Getting the number of Components
-	enum class CompType { TRANSFORM, MESH, SCRIPT, CAMERA, COLLIDER, RIGIDBODY, ANIMATION, AUDIOLISTENER, AUDIOSOURCE, COUNT };
+	enum class CompType { TRANSFORM, MESH, SCRIPT, CAMERA, COLLIDER, RIGIDBODY, ANIMATION, UIAREA, AUDIOSOURCE, COUNT };
 	inline static const std::vector<std::string> compTypes {
 		"Transform",
 		"Mesh",
@@ -20,7 +20,7 @@ private:
 		"Collider",
 		"Rigidbody",
 		"Animation",
-		"AudioListener",
+		"UIArea",
 		"AudioSource"
 	};
 
@@ -50,6 +50,7 @@ private:
 	static int lua_setActive(lua_State* L);
 	static int lua_setInactive(lua_State* L);
 	static int lua_isActive(lua_State* L);
+	static int lua_setAnimation(lua_State* L);
 
    public:
 	static void lua_openscene(lua_State* L, SceneHandler* sceneHandler);

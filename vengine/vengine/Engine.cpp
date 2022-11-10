@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Engine.hpp"
 
 #include <vulkan/vulkan.hpp>
@@ -66,15 +67,20 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setUIRenderer(&uiRenderer);
     this->sceneHandler.setDebugRenderer(&debugRenderer);
     this->sceneHandler.setAIHandler(&aiHandler);
+    this->sceneHandler.setWindow(&window);
+    this->sceneHandler.setAudioHandler(&audioHandler);
     this->networkHandler.setSceneHandler(&sceneHandler);
+	this->networkHandler.setResourceManager(&resourceManager);
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
     this->scriptHandler.setPhysicsEngine(&physicsEngine);
     this->scriptHandler.setUIRenderer(&uiRenderer);
     this->scriptHandler.setDebugRenderer(&debugRenderer);
+    this->uiRenderer.setSceneHandler(&sceneHandler);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
+    this->audioHandler.setSceneHandler(&sceneHandler);
 
     // Initialize the start scene
     if (startScene == nullptr) { startScene = new Scene(); }
@@ -83,9 +89,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
     //Needs to run after scene is initialized
     this->aiHandler.init(&this->sceneHandler);    
-
-    // Temporary, should be called before creating the scene
-    this->audioHandler.setSceneHandler(&sceneHandler);
 
     // Game loop
     while (window.getIsRunning())
@@ -103,7 +106,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         ImGui::NewFrame();
 
         Time::updateDeltaTime();
-		this->physicsEngine.update();
+		this->physicsEngine.update(Time::getDT());
         this->aiHandler.update();
         this->sceneHandler.update();
         this->scriptHandler.update();
@@ -135,6 +138,8 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->networkHandler.deleteServer();
     this->scriptHandler.cleanup();
     this->aiHandler.clean();
+    this->audioHandler.cleanUp();
+    this->resourceManager.cleanUp();
 
     renderer.cleanup();
 }

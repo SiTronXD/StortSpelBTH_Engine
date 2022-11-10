@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Window.hpp"
 #include <vulkan/vulkan.hpp>
 #include <SDL2/SDL_vulkan.h>
@@ -225,6 +226,11 @@ void Window::getVulkanExtensions(
 void Window::getSize(int& outputWidth, int& outputHeight)
 {
     SDL_GetWindowSize(this->windowHandle, &outputWidth, &outputHeight);
+}
+
+void Window::close()
+{
+    this->isRunning = false;
 }
 
 Window::~Window() {

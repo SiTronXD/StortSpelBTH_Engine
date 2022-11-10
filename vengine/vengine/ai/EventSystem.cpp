@@ -1,6 +1,8 @@
+#include "pch.h"
 #include "EventSystem.hpp"
 #include "FSM.hpp"
 #include "../components/FSMAgentComponent.hpp"
+#include "../dev/Log.hpp"
 
 //void registerEvent(FSM_Node* who, Event* event)
 
@@ -10,7 +12,7 @@ void EventSystem::registerGlobalEvent(
 {
 	// TODO: Replace vector with map to get better performance...
 	bool found = false;
-	for (auto& s : globalSubscribers[event])
+	for (auto& s : this->globalSubscribers[event])
 	{
 		if (s.node == who)
 		{
@@ -21,7 +23,7 @@ void EventSystem::registerGlobalEvent(
 
 	if (!found)
 	{
-		globalSubscribers[event].push_back({fsm, who});
+		this->globalSubscribers[event].push_back({fsm, who});
 	}
 	else
 	{
@@ -29,7 +31,7 @@ void EventSystem::registerGlobalEvent(
 	}
 
 	//TODO: might not be a good idea to use bool, first time its neither true or false. Use enum?
-	globalEventLastReturn[event] = false;
+	this->globalEventLastReturn[event] = false;
 }
 
 void EventSystem::registerEntityEvent(
@@ -38,7 +40,7 @@ void EventSystem::registerEntityEvent(
 {
 	// TODO: Replace vector with map to get better performance...
 	bool found = false;
-	for (const auto& s : entityEvents[event])
+	for (const auto& s : this->entityEvents[event])
 	{
 		if (s.node == who)
 		{
@@ -49,8 +51,8 @@ void EventSystem::registerEntityEvent(
 
 	if (!found)
 	{	
-		entityEvents[event].push_back({fsm, who});
-		fsmEvents[fsm].push_back({event, who});
+		this->entityEvents[event].push_back({fsm, who});
+		this->fsmEvents[fsm].push_back({event, who});
 	}
 	else
 	{
@@ -62,19 +64,19 @@ void EventSystem::registerEntityEvent(
 }
 
 void EventSystem::update()
-{
-    if(currentScene != this->sh->getScene())
+{	
+    if(this->currentScene != this->sh->getScene())
     {
-        entitySubscribers.clear();
-        entityEventLastReturn.clear();
+        this->entitySubscribers.clear();
+        this->entityEventLastReturn.clear();
     }
 
-	for (auto& event : globalSubscribers)
+	for (auto& event : this->globalSubscribers)
 	{
 
 		if (event.first->checkEvent())
 		{
-			if (!globalEventLastReturn[event.first])
+			if (!this->globalEventLastReturn[event.first])
 			{
 				for (auto subscriber : event.second)
 				{
@@ -83,16 +85,17 @@ void EventSystem::update()
 				}
 				std::cout << event.second[0].fsm->getCurrentNode()->status
 				          << std::endl;
-				globalEventLastReturn[event.first] = true;
+				this->globalEventLastReturn[event.first] = true;
 			}
 		}
-		else if (globalEventLastReturn[event.first])
+		else if (this->globalEventLastReturn[event.first])
 		{
-			globalEventLastReturn[event.first] = false;
+			this->globalEventLastReturn[event.first] = false;
 		}
 	}	
 
 	//TODO: Move to separate update funtion
+    std::vector<std::string*> activeEntityEventNames; 
 	// For All Entities ...
 	for (auto& eventsPerEntity : this->entitySubscribers)
 	{
@@ -104,11 +107,13 @@ void EventSystem::update()
 
 		for (auto& currNeighbor : agent.currentNode->neighbors)
 		{
-			auto* eventTransition = (EntityEvent*)currNeighbor.first;
-			
+			auto* eventTransition = (EntityEvent*)currNeighbor.first;			
+
 			if (eventTransition->checkEvent(entityID))
 			{
-				if (!entityEventLastReturn[entityID][eventTransition])
+                activeEntityEventNames.emplace_back(&eventTransition->getName());
+                
+				if (!this->entityEventLastReturn[entityID][eventTransition])
 				{
 					// TODO: Maybe currentEvent could be held by the FSMComponent?
 					// NOTE: Unsure, but I think we have multiple instances of FSMs right now?...
@@ -120,14 +125,28 @@ void EventSystem::update()
 					std::cout << agent.currentNode->status
 								<< std::endl;
 
-					entityEventLastReturn[entityID][eventTransition] = true;
-				}
+					this->entityEventLastReturn[entityID][eventTransition] = true;
+				}                
 			}
-			else if (entityEventLastReturn[entityID][eventTransition])
+			else if (this->entityEventLastReturn[entityID][eventTransition])
 			{
-				entityEventLastReturn[entityID][eventTransition] = false;
+				this->entityEventLastReturn[entityID][eventTransition] = false;
 			}
 
+            if(activeEntityEventNames.size() > 1 )
+            {
+                std::string activeEventsStr; 
+                size_t c = 0; 
+                for(auto& e:activeEntityEventNames){
+                    if(c != activeEntityEventNames.size() -1)
+                    {activeEventsStr += *e+", ";}
+                    else {activeEventsStr += *e;}
+                    c++;
+                }
+                Log::warning("Entity["+std::to_string(entityID)+"] More than one FSM Transition Events {"+activeEventsStr+"} are active, will cause problems");
+            }
+
 		}
+        activeEntityEventNames.clear();
 	}
 }

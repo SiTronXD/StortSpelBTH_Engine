@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "SceneLua.h"
 #include "../../application/Time.hpp"
 
@@ -75,7 +76,8 @@ int SceneLua::lua_iterateView(lua_State* L)
 			std::find(compTypes.begin(), compTypes.end(), CompType::SCRIPT) != compTypes.end() && scene->hasComponents<Script>(entity) &&
 			std::find(compTypes.begin(), compTypes.end(), CompType::COLLIDER) != compTypes.end() && scene->hasComponents<Collider>(entity) &&
 			std::find(compTypes.begin(), compTypes.end(), CompType::RIGIDBODY) != compTypes.end() && scene->hasComponents<Rigidbody>(entity) &&
-			std::find(compTypes.begin(), compTypes.end(), CompType::ANIMATION) != compTypes.end() && scene->hasComponents<AnimationComponent>(entity);
+			std::find(compTypes.begin(), compTypes.end(), CompType::ANIMATION) != compTypes.end() && scene->hasComponents<AnimationComponent>(entity) &&
+			std::find(compTypes.begin(), compTypes.end(), CompType::UIAREA) != compTypes.end() && scene->hasComponents<UIArea>(entity);
 
 		if (scriptPath.size() && addToList)
 		{
@@ -114,6 +116,9 @@ int SceneLua::lua_iterateView(lua_State* L)
 				break;
 			case CompType::ANIMATION:
 				lua_pushanimation(L, scene->getComponent<AnimationComponent>(entity));
+				break;
+			case CompType::UIAREA:
+				lua_pushuiarea(L, scene->getComponent<UIArea>(entity));
 				break;
 			default:
 				break;
@@ -196,14 +201,20 @@ int SceneLua::lua_createPrefab(lua_State* L)
 	{
 		if (scene->hasComponents<AnimationComponent>(entity))
 		{
-			float endTime = scene->getComponent<AnimationComponent>(entity).endTime;
 			StorageBufferID boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
-			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, endTime, boneID));
+			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, boneID));
 		}
 		else
 		{
-			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, 0, 0));
+			scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, -1, 0));
 		}
+	}
+	lua_pop(L, 1);
+
+	lua_getfield(L, -1, "UIArea");
+	if (!lua_isnil(L, -1))
+	{
+		scene->setComponent<UIArea>(entity, lua_touiarea(L, -1));
 	}
 	lua_pop(L, 1);
 
@@ -286,8 +297,8 @@ int SceneLua::lua_hasComponent(lua_State* L)
 	case CompType::ANIMATION:
 		hasComp = scene->hasComponents<AnimationComponent>(entity);
 		break;
-	case CompType::AUDIOLISTENER:
-		hasComp = scene->hasComponents<AudioListener>(entity);
+	case CompType::UIAREA:
+		hasComp = scene->hasComponents<UIArea>(entity);
 		break;
 	case CompType::AUDIOSOURCE:
 		hasComp = scene->hasComponents<AudioSource>(entity);
@@ -334,6 +345,10 @@ int SceneLua::lua_getComponent(lua_State* L)
 	{
 		lua_pushanimation(L, scene->getComponent<AnimationComponent>(entity));
 	}
+	else if ((CompType)type == CompType::UIAREA && scene->hasComponents<UIArea>(entity))
+	{
+		lua_pushuiarea(L, scene->getComponent<UIArea>(entity));
+	}
 	else { lua_pushnil(L); }
 	return 1;
 }
@@ -347,7 +362,6 @@ int SceneLua::lua_setComponent(lua_State* L)
 	int type = (int)lua_tointeger(L, 2);
 	std::string path;
 
-	float endTime = 0;
 	StorageBufferID boneID = 0;
 	bool assigned = false;
 
@@ -382,10 +396,12 @@ int SceneLua::lua_setComponent(lua_State* L)
 	case CompType::ANIMATION:
 		if (scene->hasComponents<AnimationComponent>(entity)) 
 		{ 
-			endTime = scene->getComponent<AnimationComponent>(entity).endTime;
 			boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
 		}
-		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, endTime, boneID));
+		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, boneID));
+		break;
+	case CompType::UIAREA:
+		scene->setComponent<UIArea>(entity, lua_touiarea(L, 3));
 		break;
 	default:
 		break;
@@ -420,8 +436,8 @@ int SceneLua::lua_removeComponent(lua_State* L)
 	case CompType::ANIMATION:
 		scene->removeComponent<AnimationComponent>(entity);
 		break;
-	case CompType::AUDIOLISTENER:
-		scene->removeComponent<AudioListener>(entity);
+	case CompType::UIAREA:
+		scene->removeComponent<UIArea>(entity);
 		break;
 	case CompType::AUDIOSOURCE:
 		scene->removeComponent<AudioSource>(entity);
@@ -460,6 +476,18 @@ int SceneLua::lua_isActive(lua_State* L)
 	return 1;
 }
 
+int SceneLua::lua_setAnimation(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2)) { return 0; }
+
+	Entity entity = (Entity)lua_tointeger(L, 1);
+	bool reset = lua_isboolean(L, 3) ? lua_toboolean(L, 3) : true;
+	scene->setAnimation(entity, lua_tostring(L, 2), reset);
+
+	return 0;
+}
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -482,6 +510,7 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "setActive", lua_setActive },
 		{ "setInactive", lua_setInactive },
 		{ "isActive", lua_isActive },
+		{ "setAnimation", lua_setAnimation },
 		{ NULL , NULL }
 	};
 

@@ -1,13 +1,18 @@
+#include "pch.h"
 #include "SceneHandler.hpp"
 #include "Time.hpp"
 #include "../components/AnimationComponent.hpp"
 #include "../graphics/VulkanRenderer.hpp"
+#include "../graphics/UIRenderer.hpp"
 #include "../lua/ScriptHandler.h"
 
 void SceneHandler::initSubsystems()
 {
-	this->physicsEngine->init();
-
+	if (physicsEngine != nullptr)
+	{
+		this->physicsEngine->init();
+	}
+	
 	// Init scene
 	this->scene->init();
 	if (this->luaScript.size() != 0)
@@ -17,8 +22,11 @@ void SceneHandler::initSubsystems()
 	this->scene->start();
 
 	// Init renderer for scene
-	this->vulkanRenderer->initForScene(this->scene);
-  
+	if (vulkanRenderer != nullptr)
+	{
+		this->vulkanRenderer->initForScene(this->scene);
+	}
+	
 	// Reset delta time counter
 	Time::reset();
 }
@@ -27,10 +35,13 @@ SceneHandler::SceneHandler()
 	: scene(nullptr), 
 	nextScene(nullptr), 
 	networkHandler(nullptr), 
-	scriptHandler(nullptr),
+	scriptHandler(nullptr), 
+	aiHandler(nullptr),
 	resourceManager(nullptr),
+    physicsEngine(nullptr),
 	vulkanRenderer(nullptr),
-	uiRenderer(nullptr)
+	uiRenderer(nullptr), 
+	debugRenderer(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -67,23 +78,43 @@ void SceneHandler::updateToNextScene()
 void SceneHandler::prepareForRendering()
 {
 	// Update animation timer
-	auto animView = this->scene->getSceneReg().view<AnimationComponent>(entt::exclude<Inactive>);
+	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
 	animView.each([&]
-	(AnimationComponent& animationComponent)
+	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
 		{
+			const float endTime = 
+				this->resourceManager->getMesh(meshComponent.meshID)
+				.getMeshData().animations[animationComponent.animationIndex].endTime;
+
 			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
-			if (animationComponent.timer >= animationComponent.endTime)
+			if (animationComponent.timer >= endTime)
 			{
-				animationComponent.timer -= animationComponent.endTime;
+				animationComponent.timer -= endTime;
 			}
 		}
 	);
+
 	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
 	auto func = [](Transform& transform)
 	{
 		transform.updateMatrix();
 	};
 	view.each(func);
+
+	ScriptHandler& scriptHandler = *this->getScriptHandler();
+	auto uiView = this->scene->getSceneReg().view<UIArea, Script>(entt::exclude<Inactive>);
+	auto uiFunc = [&](const auto& entity, UIArea& uiArea, Script& script)
+	{
+		if (uiArea.isHovering())
+		{
+			scriptHandler.runFunction((Entity)entity, script, "onHover");
+			if (uiArea.isClicking())
+			{
+				scriptHandler.runFunction((Entity)entity, script, "onClick");
+			}
+		}
+	};
+	uiView.each(uiFunc);
 }
 
 void SceneHandler::setScene(Scene* scene, std::string path)
@@ -100,7 +131,7 @@ void SceneHandler::reloadScene()
 {
 	// Clear registry
 	this->scene->getSceneReg().clear();
-	
+
 	// Init
 	this->initSubsystems();
 }
@@ -168,4 +199,24 @@ VulkanRenderer* SceneHandler::getVulkanRenderer()
 Scene* SceneHandler::getScene() const
 {
 	return this->scene;
+}
+
+void SceneHandler::setWindow(Window* window)
+{
+	this->window = window;
+}
+
+Window* SceneHandler::getWindow()
+{
+	return this->window;
+}
+
+void SceneHandler::setAudioHandler(AudioHandler* audioHandler)
+{
+	this->audioHandler = audioHandler;
+}
+
+AudioHandler* SceneHandler::getAudioHandler()
+{
+	return this->audioHandler;
 }

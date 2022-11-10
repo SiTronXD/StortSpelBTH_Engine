@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "NetworkHandlerLua.h"
 
 int NetworkHandlerLua::lua_sendPolygons(lua_State* L)
@@ -129,7 +130,7 @@ int NetworkHandlerLua::lua_getNetworkData(lua_State* L)
 int NetworkHandlerLua::lua_sendPlayer(lua_State* L)
 {
 	NetworkHandler* networkHandler = ((NetworkHandler*)lua_touserdata(L, lua_upvalueindex(1)));
-	networkHandler->getPlayer(lua_tointeger(L,1));
+	networkHandler->setPlayerNetworkHandler(lua_tointeger(L,1));
 	return 0;
 }
 

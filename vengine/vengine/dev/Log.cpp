@@ -1,3 +1,4 @@
+#include "pch.h"
 #ifdef WIN32
 #include <comdef.h>
 #endif 

@@ -169,6 +169,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -200,6 +201,7 @@ SET ERRORLEVEL = 0</Command>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -233,6 +235,7 @@ SET ERRORLEVEL = 0</Command>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>$(SolutionDir)vengine\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -258,12 +261,16 @@ SET ERRORLEVEL = 0</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\LobbyScene.cpp" />
     <ClCompile Include="src\NetworkTestScene.cpp" />
+    <ClCompile Include="src\NewTestScene.cpp" />
     <ClCompile Include="src\TestDemoScene.cpp" />
     <ClCompile Include="src\TheServerGame.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\LobbyScene.h" />
     <ClInclude Include="src\NetworkTestScene.h" />
+    <ClInclude Include="src\NewTestScene.h" />
     <ClInclude Include="src\TestDemoScene.h" />
     <ClInclude Include="src\TheServerGame.h" />
   </ItemGroup>
@@ -274,6 +281,7 @@ SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\vengine\.clang-format" />
+    <None Include="assets\scripts\button.lua" />
     <None Include="luatestScene.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -1,5 +1,6 @@
+#include "pch.h"
 #include "Input.hpp"
-// #include "../Dev/Log.hpp"
+#include "../graphics/ResTranslator.hpp"
 
 std::map<Keys, bool> Input::keyDown;
 std::map<Keys, bool> Input::lastKeyDown;
@@ -127,4 +128,9 @@ void Input::setHideCursor(const bool& hide)
 	Input::shouldHideCursor = hide;
 #endif
 
+}
+
+const glm::vec2 Input::getMouseUITranslated()
+{
+	return ResTranslator::toInternalPos(glm::vec2((float)Input::getMouseX(), (float)Input::getMouseY()));
 }

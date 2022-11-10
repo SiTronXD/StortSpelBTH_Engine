@@ -3,9 +3,8 @@
 #include <vector>
 #include <thread>
 #include "../NetworkEnumAndDefines.h"
-#include "ServerGame.h"
-#include "NetworkScene.h"
-#include "ServerScriptHandler.h"
+#include "NetworkSceneHandler.h"
+#include "NetworkScriptHandler.h"
 
 struct clientInfo {
 	clientInfo(std::string name)
@@ -29,6 +28,7 @@ private:
 	void handleDisconnects(int clientID); //if a player have wanted to disconnect
 	void cleanRecvPackages();
 	void cleanSendPackages();
+	void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start);
 
 	//To users
 	void sendDataToAllUsers();
@@ -38,8 +38,10 @@ private:
 	void getDataFromUsers();
 	void createUDPPacketToClient(const int& clientID, sf::Packet& packet);
 
-	//serverMode
-	ServerGameMode *serverGame;
+	//engine objects
+	NetworkSceneHandler sceneHandler;
+	PhysicsEngine physicsEngine;
+	NetworkScriptHandler scriptHandler;
 
 	//print all users
 	void printAllUsers();
@@ -49,13 +51,6 @@ private:
 	StartingEnum starting;
 	float        currentTimeToSend;
 	float        timeToSend;
-
-	//engine objects
-	NetworkScene scene;
-	ServerScriptHandler scriptHandler;
-
-	//objects
-	std::thread* connectThread;
 
 	std::vector<clientInfo*> clients;
 	sf::UdpSocket            udpSocket;
@@ -86,11 +81,14 @@ private:
 	}
 
 public:
-	Server(ServerGameMode* serverGame = nullptr);
+	Server(NetworkScene* serverGame = nullptr);
 	~Server();
 	void        start();
 	bool        update(float dt);
 	std::string getServerIP();
 	std::string getLocalAddress();
 	void        disconnect();
+
+	void startGettingClients();
+	void stopGettingClients();
 };

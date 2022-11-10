@@ -25,6 +25,19 @@ struct VertexStreams
     std::vector<glm::uvec4> boneIndices;
 };
 
+struct BonePoses
+{
+    std::vector<std::pair<float, glm::vec3>> translationStamps;
+    std::vector<std::pair<float, glm::quat>> rotationStamps;
+    std::vector<std::pair<float, glm::vec3>> scaleStamps;
+};
+
+struct Animation
+{
+    float endTime;
+    std::vector<BonePoses> boneStamps;
+};
+
 struct Bone 
 {
 #if defined(_DEBUG) || defined(DEBUG)
@@ -34,9 +47,6 @@ struct Bone
     int parentIndex;
     glm::mat4 inverseBindPoseMatrix;
     glm::mat4 boneMatrix;
-    std::vector<std::pair<float, glm::vec3>> translationStamps;
-    std::vector<std::pair<float, glm::quat>> rotationStamps; // quaternion x, y, z, w
-    std::vector<std::pair<float, glm::vec3>> scaleStamps;
 };
 
 struct SubmeshData
@@ -52,4 +62,5 @@ struct MeshData
     VertexStreams vertexStreams;
     std::vector<uint32_t> indicies;
     std::vector<Bone> bones;
+    std::vector<Animation> animations; 
 };

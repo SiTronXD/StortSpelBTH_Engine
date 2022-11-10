@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ScriptHandler.h"
 #include "../dev/Log.hpp"
 #include "../application/SceneHandler.hpp"
@@ -122,6 +123,45 @@ bool ScriptHandler::runScript(std::string& path)
 	return result;
 }
 
+void ScriptHandler::runFunction(Entity e, Script& script, const std::string& func)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+#ifdef _CONSOLE
+	if (luaL_dofile(L, script.path) != LUA_OK)
+	{
+		LuaH::dumpError(L);
+	}
+	else
+	{
+		LuaH::replaceTableFunctions(L, -1, -2);
+		lua_pop(L, 1);
+	}
+#endif
+
+	lua_getfield(L, -1, func.c_str());
+	if (lua_type(L, -1) == LUA_TNIL)
+	{
+		lua_pop(L, 2);
+		return;
+	}
+
+	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e);
+	lua_pushtransform(L, transform);
+	lua_setfield(L, -3, "transform");
+
+	lua_pushvalue(L, -2); // self
+
+	// call function
+	LUA_ERR_CHECK(L, lua_pcall(L, 1, 0, 0));
+
+	lua_getfield(L, -1, "transform");
+	if (!lua_isnil(L, -1))
+	{
+		transform = lua_totransform(L, -1);
+	}
+	lua_pop(L, 2);
+}
+
 void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 {
 	Scene* scene = this->sceneHandler->getScene();
@@ -162,9 +202,24 @@ void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 	}
 }
 
-void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger)
+void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger, CallbackType type)
 {
-	const char* func = isTrigger ? "onTriggerStay" : "onCollisionStay";
+	std::string func = isTrigger ? "onTrigger" : "onCollision";
+	std::string typeStr;
+	switch (type)
+	{
+	case CallbackType::ENTER:
+		typeStr = "Enter";
+		break;
+	case CallbackType::STAY:
+		typeStr = "Stay";
+		break;
+	case CallbackType::EXIT:
+		typeStr = "Exit";
+		break;
+	}
+
+	func += typeStr;
 	Transform& transform = this->sceneHandler->getScene()->getComponent<Transform>(e1);
 
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
@@ -180,7 +235,7 @@ void ScriptHandler::runCollisionFunction(Script& script, Entity e1, Entity e2, b
 	}
 #endif
 
-	lua_getfield(L, -1, func);
+	lua_getfield(L, -1, func.c_str());
 	if (lua_type(L, -1) == LUA_TNIL)
 	{
 		lua_pop(L, 2);

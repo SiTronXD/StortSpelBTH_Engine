@@ -6,6 +6,7 @@
 
 struct ContactCallback : btCollisionWorld::ContactResultCallback
 {
+	Scene* scene;
 	std::vector<int> entitiesHit;
 
 	// Inherited via ContactResultCallback

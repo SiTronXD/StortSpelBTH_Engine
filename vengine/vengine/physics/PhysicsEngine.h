@@ -9,11 +9,13 @@
 #include "../components/Transform.hpp"
 #include "../components/Rigidbody.h"
 #include "../components/Collider.h"
+#include "CallbackType.h"
 
 typedef int Entity;
 class SceneHandler;
 class btCollisionShape;
 class btCollisionObject;
+class CollisionDispatcher;
 class btCollisionDispatcher;
 class btBroadphaseInterface;
 class btSequentialImpulseConstraintSolver;
@@ -58,13 +60,16 @@ private:
 	btDefaultCollisionConfiguration* collconfig;
 	btDiscreteDynamicsWorld* dynWorld;
 
+	CollisionDispatcher* collDispCallbacks;
+
 	btAlignedObjectArray<ColShapeInfo> colShapes;
 	std::vector<int> removeIndicies;
+	btCollisionObject* testObject;
 
 	void updateColliders();
 	void updateRigidbodies();
 
-	btCollisionShape* createShape(const int& entity, Collider& col);
+	btCollisionShape* createShape(Collider& col);
 	void createCollider(const int& entity, Collider& col);
 	void createRigidbody(const int& entity, Rigidbody& rb, Collider& col);
 	void removeObject(btCollisionObject* obj, int index);
@@ -78,7 +83,7 @@ public:
 	void setSceneHandler(SceneHandler* sceneHandler);
 
 	void init();
-	void update();
+	void update(float dt);
 
 	// Function to automatically render all collider shapes
 	void renderDebugShapes(bool renderDebug);

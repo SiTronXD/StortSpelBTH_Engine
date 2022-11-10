@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "VulkanRenderer.hpp"
 #include "Utilities.hpp"
 #include "assimp/Importer.hpp"
@@ -325,11 +326,7 @@ void VulkanRenderer::draw(Scene* scene)
     if (camera)
     {
         cameraTransform = &scene->getComponent<Transform>(scene->getMainCameraID());
-        camera->view = glm::lookAt(
-            cameraTransform->position,
-            cameraTransform->position + cameraTransform->forward(),
-            cameraTransform->up()
-        );
+        camera->updateMatrices(*cameraTransform);
 
         if (!scene->isActive(scene->getMainCameraID()))
         {
@@ -603,7 +600,10 @@ void VulkanRenderer::initForScene(Scene* scene)
 			    // Extract mesh information
 			    Mesh& currentMesh =
 			        this->resourceManager->getMesh(meshComponent.meshID);
+
 			    std::vector<Bone>& bones = currentMesh.getMeshData().bones;
+                const Animation& animation = currentMesh.getMeshData().animations[animationComponent.animationIndex];
+
 			    uint32_t numAnimationBones =
 			        currentMesh.getMeshData().bones.size();
 
@@ -617,37 +617,8 @@ void VulkanRenderer::initForScene(Scene* scene)
 
 			    // Update animation component with storage buffer ID
 			    animationComponent.boneTransformsID = newStorageBufferID;
-
-			    // Set end time
-			    float maxTimeStamp = 0.0f;
-			    for (size_t i = 0; i < bones.size(); ++i)
-			    {
-				    // Translation
-				    for (size_t j = 0; j < bones[i].translationStamps.size();
-				         ++j)
-				    {
-					    if (bones[i].translationStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = bones[i].translationStamps[j].first;
-				    }
-
-				    // Rotation
-				    for (size_t j = 0; j < bones[i].rotationStamps.size(); ++j)
-				    {
-					    if (bones[i].rotationStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = bones[i].rotationStamps[j].first;
-				    }
-
-				    // Scale
-				    for (size_t j = 0; j < bones[i].scaleStamps.size(); ++j)
-				    {
-					    if (bones[i].scaleStamps[j].first > maxTimeStamp)
-						    maxTimeStamp = bones[i].scaleStamps[j].first;
-				    }
-			    }
-			    animationComponent.endTime = maxTimeStamp;
 		    }
 		);
-
 		this->animViewProjectionUB =
 		    this->animShaderInput.addUniformBuffer(
                 sizeof(CameraBufferData),
@@ -1414,7 +1385,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 
                         // Get bone transformations
                         const std::vector<glm::mat4>& boneTransforms =
-                            currentMesh.getBoneTransforms(animationComponent.timer);
+                            currentMesh.getBoneTransforms(animationComponent.timer, 
+                                animationComponent.animationIndex);
 
                         // Update transformations in storage buffer
 					    this->animShaderInput.updateStorageBuffer(

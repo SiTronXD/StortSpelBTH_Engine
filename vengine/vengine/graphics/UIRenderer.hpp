@@ -6,11 +6,13 @@
 #include "vulkan/VmaUsage.hpp"
 #include "ShaderInput.hpp"
 #include "vulkan/Pipeline.hpp"
+#include "StringAlignment.h"
 
 class PhysicalDevice;
 class Device;
 class ResourceManager;
 class VulkanRenderer;
+class SceneHandler;
 
 struct UIElementData
 {
@@ -33,13 +35,6 @@ struct CharacterRect
     uint32_t height;
 };
 
-enum class StringAlignment
-{
-    LEFT = -1,
-    CENTER = 0,
-    RIGHT = 1
-};
-
 class UIRenderer
 {
 private:
@@ -48,6 +43,7 @@ private:
     const uint32_t START_NUM_MAX_ELEMENTS = 256;
 
     std::unordered_map<char, CharacterRect> characterRects;
+    uint32_t uiFontTextureIndex;
 
     std::vector<UIElementData> uiElementData;
     std::vector<UIDrawCallData> uiDrawCallData;
@@ -72,12 +68,15 @@ private:
     ResourceManager* resourceManager;
     vk::RenderPass* renderPass;
 
+    SceneHandler* sceneHandler;
+
     void prepareForGPU();
     void resetRender();
 
 public:
     UIRenderer();
 
+    void setSceneHandler(SceneHandler* sceneHandler);
     void create(
         PhysicalDevice& physicalDevice,
         Device& device,
@@ -90,27 +89,31 @@ public:
     void setBitmapFont(
         const std::vector<std::string>& characters,
         const uint32_t& bitmapFontTextureIndex,
-        const uint32_t& tileWidth,
-        const uint32_t& tileHeight);
+        const glm::uvec2& tileDimension);
 
     void setTexture(const uint32_t& textureIndex);
     void renderTexture(
-        const float& x,
-        const float& y,
-        const float& width,
-        const float& height,
-        const uint32_t& u0 = 0,
-        const uint32_t& v0 = 0,
-        const uint32_t& u1 = 1,
-        const uint32_t& v1 = 1
+        const glm::vec2& position,
+        const glm::vec2& dimension,
+        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1)
+    );
+    void renderTexture(
+        const glm::vec3& worldPosition,
+        const glm::vec2& dimension,
+        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1)
     );
     void renderString(
         const std::string& text,
-        const float& x,
-        const float& y,
-        const float& characterWidth,
-        const float& characterHeight,
-        const float& characterMargin = 0.0f,
+        const glm::vec2& position,
+        const glm::vec2& charDimension,
+        const float& charMargin = 0.0f,
+        const StringAlignment& alignment = StringAlignment::CENTER
+    );
+    void renderString(
+        const std::string& text,
+        const glm::vec3& worldPosition,
+        const glm::vec2& charDimension,
+        const float& charMargin = 0.0f,
         const StringAlignment& alignment = StringAlignment::CENTER
     );
 

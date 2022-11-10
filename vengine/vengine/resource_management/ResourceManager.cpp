@@ -1,8 +1,11 @@
+#include "pch.h"
 #include "ResourceManager.hpp"
 #include "Configurator.hpp"
 #include "loaders/MeshLoader.hpp"
 #include "loaders/TextureLoader.hpp"
 #include "../graphics/MeshDataModifier.hpp"
+#include "SFML/Audio/InputSoundFile.hpp"
+#include "al.h"
 
 void ResourceManager::init(
     VmaAllocator* vma,
@@ -54,13 +57,18 @@ void ResourceManager::makeUniqueMaterials(MeshComponent& meshComponent)
     }
 }
 
+void ResourceManager::cleanUp()
+{
+    alDeleteBuffers((int)this->audioBuffers.size(), this->audioBuffers.data());
+}
+
 uint32_t ResourceManager::addMesh(
     std::string&& meshPath,
     std::string&& texturesPath)
 {        
     using namespace vengine_helper::config;
 
-    if(this->meshPaths.count(meshPath) != 0)
+    if (this->meshPaths.count(meshPath) != 0)
     {
         // Log::warning("Mesh \""+meshPath+"\" was already added!");                
 
@@ -89,6 +97,51 @@ uint32_t ResourceManager::addMesh(
     ); 
 
     return meshes.size() - 1;
+}
+
+uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, std::string&& texturesPath)
+{
+    if (!paths.size())
+    {
+        Log::warning("Animation array contains no elements!");
+        return 0;
+    }
+
+    if (this->meshPaths.count(paths[0]) != 0)
+    {
+        // Log::warning("Mesh \""+meshPath+"\" was already added!");                
+
+        return this->meshPaths[paths[0]];        
+    }
+
+    // load and store animations in meshData
+    MeshData meshData;
+    this->meshLoader.loadAnimations(paths, texturesPath, meshData);
+    
+    // No mesh imported, send default mesh back
+    if (meshData.vertexStreams.positions.size() == 0) { return 0; }
+    
+    for (const std::string& path : paths)
+    {
+        this->meshPaths.insert({path, this->meshPaths.size()}); 
+    }
+
+    meshes.insert({(uint32_t)meshes.size(), meshLoader.createMesh(meshData)});
+    return (uint32_t)meshes.size() - 1;
+}
+
+bool ResourceManager::mapAnimations(uint32_t meshid, const std::vector<std::string>& names)
+{
+    auto map_iterator = this->meshes.find(meshid);
+    if (this->meshes.end() == map_iterator)
+    {
+        Log::error("mapAnimations failed to find a mesh with the given ID : "
+            + std::to_string(meshid));
+        return false;
+    }
+    this->getMesh(meshid).mapAnimations(names);
+
+    return true;
 }
 
 uint32_t ResourceManager::addTexture(
@@ -194,6 +247,50 @@ uint32_t ResourceManager::addMaterial(
     this->materials.insert({ newMaterialIndex, newMaterial });
 
     return newMaterialIndex;
+}
+uint32_t ResourceManager::addSound(std::string&& soundPath)
+{
+    if (this->soundPaths.count(soundPath) != 0)
+    {
+        return this->soundPaths[soundPath];   
+    }
+
+    sf::InputSoundFile reader;
+    if (!reader.openFromFile(soundPath))
+    {
+        Log::warning("Failed opening audio file: " + soundPath);
+        return 0;
+    }
+
+    // Allocate memory for samples
+    const uint32_t sampleCount = (uint32_t)reader.getSampleCount();
+    short* samples = new short[sampleCount]{};
+    reader.read(samples, sampleCount);
+    
+    // Generate buffer
+    uint32_t bufferId = -1;
+    alGenBuffers(1, &bufferId);
+    if (alGetError() != AL_NO_ERROR)
+    {
+        Log::warning("Failed generating audio buffer! File: " + soundPath);
+        delete[]samples;
+        return 0;
+    }
+
+    // Fill buffer
+    const ALenum format = reader.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
+    alBufferData(bufferId, format, samples, sizeof(short) * sampleCount, reader.getSampleRate());
+    delete[]samples;
+    if (alGetError() != AL_NO_ERROR)
+    {
+        Log::warning("Failed filling audio buffer! File: " + soundPath);
+        return 0;
+    }
+
+    this->soundPaths.insert({soundPath, bufferId});
+    this->audioBuffers.emplace_back(bufferId);
+
+    return this->audioBuffers.back();
 }
 
 void ResourceManager::cleanup()

@@ -4,7 +4,6 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
-
 #include "vengine/test/TestScene2.hpp"
 #include "vengine/VengineMath.hpp"
 
@@ -76,7 +75,7 @@ void TestDemoScene::init()
 	this->getComponent<Transform>(puzzleTest).rotation = glm::vec3(0, 180, 0);
 	this->getComponent<Transform>(puzzleTest).position = glm::vec3(5, 0, 0);
 	addCollisionToScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), *this, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
-	addCollisionToNetworkScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), nullptr, glm::vec3(5, 0, 0), glm::vec3(0,180,0));
+	addCollisionToNetworkScene(this->getResourceManager()->getCollisionShapeFromMesh(this->getResourceManager()->addCollisionShapeFromMesh("assets/models/pussel1_5.fbx")), glm::vec3(5, 0, 0), glm::vec3(0,180,0));
 
 	// Floor
 	this->floor = this->createEntity();
@@ -97,7 +96,7 @@ void TestDemoScene::init()
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
 			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
 
-			this->setComponent<Collider>(e, Collider::createBox(t.scale, rand() % 2));
+			this->setComponent<Collider>(e, Collider::createBox(t.scale, glm::vec3(0.0f, -5.0f, 0.0f), rand() % 2));
 			this->setComponent<Rigidbody>(e);
 			this->setComponent<MeshComponent>(e, 0);
 		}
@@ -114,14 +113,15 @@ void TestDemoScene::init()
 	// meshComp.meshID = this->getResourceManager()->addMesh("ghost.obj");
 
 	//  AudioSource component
-	int soundID = AudioHandler::loadFile("assets/sounds/test-audio.wav");
+	/*int soundID = AudioHandler::loadFile("assets/sounds/test-audio.wav");
 	if (soundID != -1)
 	{
 		this->setComponent<AudioSource>(this->testEntity);
 		this->getComponent<AudioSource>(this->testEntity).sound.setBuffer(*AudioHandler::getBuffer(soundID));
-	}
+	}*/
 
 	// Create other test entities
+	uint32_t audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
 	uint32_t amogusMeshID = ~0u;
 	for (uint32_t i = 0; i < 4; ++i)
 	{
@@ -137,8 +137,8 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/Amogus/source/1.fbx");
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
+				"assets/models/Amogus/source/1.fbx"});
 			amogusMeshID = newMeshComp.meshID;
 		}
 		else
@@ -149,8 +149,8 @@ void TestDemoScene::init()
 
 			/*newMeshComp.meshID = Scene::getResourceManager()->addMesh(
 				"assets/models/run_forward_correct.fbx");*/
-			newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/Stormtrooper/source/silly_dancing.fbx",
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
+				"assets/models/Stormtrooper/source/silly_dancing.fbx"},
 				"assets/models/Stormtrooper/textures");
 		}
 
@@ -183,6 +183,19 @@ void TestDemoScene::init()
 		"assets/models/Swarm_Model.fbx",
 		"assets/textures/swarmTextures");
 
+	/*uint32_t meshId = Scene::getResourceManager()->addAnimations(
+		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx", "assets/models/stickThird.fbx"});
+	this->getResourceManager()->getMesh(meshId).mapAnimations(
+		{"bendIdle", "fastBend", "dumb"});
+
+	multiAnimation = this->createEntity();
+	this->setComponent<MeshComponent>(multiAnimation);
+	this->getComponent<MeshComponent>(multiAnimation).meshID = meshId;
+	this->setComponent<AnimationComponent>(multiAnimation);
+	this->getComponent<Transform>(multiAnimation).position.x = -30.f;
+	this->getComponent<Transform>(multiAnimation).rotation.x = 90.f;*/
+
+
 	// Add textures for ui renderer
 	TextureSamplerSettings samplerSettings{};
 	samplerSettings.filterMode = vk::Filter::eNearest;
@@ -201,7 +214,7 @@ void TestDemoScene::init()
 			"@         "
 		},
 		this->fontTextureIndex,
-		16, 16
+		glm::vec2(16, 16)
 	);
 
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
@@ -216,6 +229,38 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
+
+}
+
+void TestDemoScene::start()
+{
+#if AUDIO
+	uint32_t audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
+
+	audioSource1 = this->createEntity();
+	this->setComponent<AudioSource>(audioSource1, audioId);
+	this->setComponent<MeshComponent>(audioSource1, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->getComponent<Transform>(audioSource1).position.x = 30.f;
+	volume1 = this->getComponent<AudioSource>(audioSource1).getVolume();
+
+	audioSource2 = this->createEntity();
+	this->setComponent<AudioSource>(audioSource2, audioId);
+	this->setComponent<MeshComponent>(audioSource2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->getComponent<Transform>(audioSource2).position.x = -30.f;
+	volume2 = this->getComponent<AudioSource>(audioSource2).getVolume();
+
+	this->getAudioHandler()->setMasterVolume(0.5f);
+	master = this->getAudioHandler()->getMasterVolume();
+	this->getAudioHandler()->setMusic("assets/sounds/notSusMusic.ogg");
+	this->getAudioHandler()->playMusic();
+
+	this->getAudioHandler()->setMusicVolume(music = 0.005f);
+
+	//this->setComponent<AudioSource>(aniIDs[0], audioId);
+	//this->getComponent<AudioSource>(aniIDs[0]).setVolume(0.2f);
+	//this->getComponent<AudioSource>(aniIDs[0]).play();
+	//this->getComponent<AudioSource>(aniIDs[0]).setLooping(true);
+#endif
 }
 
 void TestDemoScene::update()
@@ -227,6 +272,19 @@ void TestDemoScene::update()
 			0.2f, 
 			std::sin(this->getComponent<AnimationComponent>(aniIDs[2]).timer * 0.2f) * 0.5f + 0.5f
 		);
+    
+	/*if (Input::isKeyReleased(Keys::ONE))
+	{
+		this->setAnimation(multiAnimation, "bendIdle");
+	}
+	else if (Input::isKeyReleased(Keys::TWO))
+	{
+		this->setAnimation(multiAnimation, "fastBend");
+	}
+	else if (Input::isKeyReleased(Keys::THREE))
+	{
+		this->setAnimation(multiAnimation, "dumb", false);
+	}*/
 
 	// Debug rendering on colliders
 	this->getPhysicsEngine()->renderDebugShapes(Input::isKeyDown(Keys::Y));
@@ -277,10 +335,10 @@ void TestDemoScene::update()
 	if (this->entityValid(this->getMainCameraID()))
 	{
 		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
+		glm::vec3 rotVec = glm::vec3(Input::isKeyDown(Keys::I) - Input::isKeyDown(Keys::K), Input::isKeyDown(Keys::J) - Input::isKeyDown(Keys::L), 0.0f);
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
-		camTransform.position += moveVec * 25.0f * Time::getDT();
-
-		camTransform.rotation.y += (float) (Input::isKeyDown(Keys::RIGHT) - Input::isKeyDown(Keys::LEFT)) * -360.0f * Time::getDT();
+		camTransform.position += (moveVec.x * camTransform.right() + glm::vec3(0.0f, moveVec.y, 0.0f) + moveVec.z * camTransform.forward()) * 25.0f * Time::getDT();
+		camTransform.rotation += rotVec * 100.0f * Time::getDT();
 	}
 
 	if (Input::isKeyPressed(Keys::T))
@@ -290,19 +348,16 @@ void TestDemoScene::update()
 
 	// UI
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
-	Scene::getUIRenderer()->renderTexture(-960.0f, 540.0f, 200.0f, 200.0f);
-	Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
+	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, 540.0f), glm::vec2(200.0f));
+	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, -540.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
-	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
-	Scene::getUIRenderer()->setTexture(this->fontTextureIndex);
+	Scene::getUIRenderer()->renderTexture(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->renderString(
-		"fps: " + std::to_string(1.0/Time::getDT()), 
-		-400, 
-		400, 
-		50, 
-		50,
-		0,
-		StringAlignment::LEFT
+		"fps: " + std::to_string(1.0 / Time::getDT()),
+		glm::vec3(0.0f),
+		glm::vec2(50.0f),
+		0.0f,
+		StringAlignment::CENTER
 	);
 
 	// Debug rendering
@@ -360,52 +415,65 @@ void TestDemoScene::update()
 		glm::vec3(1.0f, 1.0f, 0.0f)
 	);
 
-	this->timer += Time::getDT();
 
+	this->timer += Time::getDT();
+#if AUDIO
 	if (ImGui::Begin("Sound"))
 	{
 		ImGui::PushItemWidth(-100.f);
 
-		static float volume = 0.f, master = 0.f;
-		static bool loop = false, hasListener = false;
-
-		if (this->hasComponents<AudioSource>(this->testEntity))
+		if (this->hasComponents<AudioSource>(this->audioSource1))
 		{
-			AudioSource& source = this->getComponent<AudioSource>(this->testEntity);
+			AudioSource& source = this->getComponent<AudioSource>(this->audioSource1);
+			static bool loop = false;
 
-			if (ImGui::Button("Play"))
+			if (ImGui::Button("Play 1"))
 			{
-				source.sound.play();
+				source.play();
 			}
 			ImGui::SameLine();
 			if (ImGui::Checkbox("Loop", &loop))
 			{
-				source.sound.setLoop(loop);
+				source.setLooping(loop);
 			}
-
-			ImGui::DragFloat("Source volume", &volume, 1.f, 0.f, 100.f);
-
-			source.sound.setVolume(volume);
+			if (ImGui::DragFloat("Source 1 volume", &volume1, 0.01f, 0.f, 1.f))
+			{
+				source.setVolume(volume1);
+			}
 		}
-
-
-		if (ImGui::Checkbox("Listener", &hasListener))
+		if (this->hasComponents<AudioSource>(this->audioSource2))
 		{
-			if (hasListener) this->setComponent<AudioListener>(this->getMainCameraID());
-			else this->removeComponent<AudioListener>(this->getMainCameraID());
+			AudioSource& source = this->getComponent<AudioSource>(this->audioSource2);
+			static bool loop = false;
+
+			if (ImGui::Button("Play 2"))
+			{
+				source.play();
+			}
+			ImGui::SameLine();
+			if (ImGui::Checkbox("Loop 2", &loop))
+			{
+				source.setLooping(loop);
+			}
+			if (ImGui::DragFloat("Source 2 volume", &volume2, 0.01f, 0.f, 1.f))
+			{
+				source.setVolume(volume2);
+			}
 		}
-		ImGui::DragFloat("Master volume", &master, 1.f, 0.f, 100.f);
-
-		if (this->hasComponents<AudioListener>(this->getMainCameraID()))
+		
+		if (ImGui::DragFloat("Music volume", &music, 0.01f, 0.f, 1.f))
 		{
-			AudioListener& listener = this->getComponent<AudioListener>(this->getMainCameraID());
-
-			listener.setVolume(master);
+			this->getAudioHandler()->setMusicVolume(music);
+		}
+		if (ImGui::DragFloat("Master volume", &master, 0.01f, 0.f, 1.f))
+		{
+			this->getAudioHandler()->setMasterVolume(master);
 		}
 
 		ImGui::PopItemWidth();
 	}
 	ImGui::End();
+#endif
 
 	if (ImGui::Begin("Set Active"))
 	{
@@ -442,14 +510,39 @@ void TestDemoScene::update()
 	if (Input::isKeyPressed(Keys::I)) {
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
 	}
+
+	if (Input::isKeyReleased(Keys::V))
+	{
+		this->getSceneHandler()->getWindow()->close();
+	}
+}
+
+void TestDemoScene::onCollisionEnter(Entity e1, Entity e2)
+{
+	
 }
 
 void TestDemoScene::onCollisionStay(Entity e1, Entity e2)
 {
-	//Log::write("Collision Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+	
+}
+
+void TestDemoScene::onCollisionExit(Entity e1, Entity e2)
+{
+	
+}
+
+void TestDemoScene::onTriggerEnter(Entity e1, Entity e2)
+{
+
 }
 
 void TestDemoScene::onTriggerStay(Entity e1, Entity e2)
 {
-	//Log::write("Trigger Hit! " + std::to_string(e1) + " and " + std::to_string(e2));
+
+}
+
+void TestDemoScene::onTriggerExit(Entity e1, Entity e2)
+{
+
 }

@@ -8,6 +8,7 @@
 typedef int Entity;
 struct lua_State;
 struct LuaSystem;
+enum class CallbackType;
 class SceneHandler;
 class ResourceManager;
 class NetworkHandler;
@@ -17,7 +18,7 @@ class DebugRenderer;
 
 class ScriptHandler
 {
-private:
+protected:
 	static inline const std::string SCRIPT_PATH = "vengine_assets/scripts/";
 
 	lua_State* L;
@@ -40,8 +41,9 @@ public:
 	void setDebugRenderer(DebugRenderer* debugRenderer);
 
 	bool runScript(std::string& path);
+	void runFunction(Entity e, Script& script, const std::string& func);
 	void setScriptComponent(Entity entity, std::string& path);
-	void runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger);
+	void runCollisionFunction(Script& script, Entity e1, Entity e2, bool isTrigger, CallbackType type);
 	void updateSystems(std::vector<LuaSystem>& vec);
 
 	void update();

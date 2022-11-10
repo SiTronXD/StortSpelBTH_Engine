@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Utilities.hpp"
 #include "tracy/Tracy.hpp"
 #include "../graphics/vulkan/VmaUsage.hpp"
