@@ -56,6 +56,9 @@ private:
 	uint32_t width;
 	uint32_t height;
 
+	// Vulkan
+	uint32_t descriptorIndex;
+
 public:
     VmaAllocation imageMemory;
     vk::Image image;
@@ -73,12 +76,15 @@ public:
 		const uint32_t& outputHeight,
 		const TextureSettings& textureSettings);
 
+	void setDescriptorIndex(const uint32_t& descriptorIndex);
+
 	void cleanup();
 
 	inline const vk::ImageView& getImageView() const { return this->imageView; }
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }
 	inline const uint32_t& getSamplerIndex() const { return this->textureSamplerIndex; }
+	inline const uint32_t& getDescriptorIndex() const { return this->descriptorIndex; }
 	inline const Pixel& getCpuPixel(const uint32_t& x, const uint32_t& y) const { return this->pixels[y * this->width + x]; }
 
 	static vk::Format chooseSupportedFormat(

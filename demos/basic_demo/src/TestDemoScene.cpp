@@ -5,6 +5,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
 #include "vengine/test/TestScene2.hpp"
+#include "vengine/VengineMath.hpp"
 
 TestDemoScene::TestDemoScene()
 	: camEntity(-1), testEntity(-1)//, testEntity2(-1)
@@ -16,7 +17,7 @@ TestDemoScene::TestDemoScene()
 TestDemoScene::~TestDemoScene()
 {
 }
-#include "vengine/VengineMath.hpp"
+
 void TestDemoScene::init()
 {	
 	this->timer = 0.0f;
@@ -37,6 +38,36 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
+	this->setComponent<PointLight>(this->testEntity);
+	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f) * 3.0f;
+
+	// Create entity (already has transform)
+	Entity ghostEntity2 = this->createEntity();
+
+	// Transform component
+	Transform& transform2 = this->getComponent<Transform>(ghostEntity2);
+	transform2.position = glm::vec3(15.f, 0.f, 30.f);
+	//transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+	this->setComponent<MeshComponent>(ghostEntity2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->setComponent<Collider>(ghostEntity2, Collider::createCapsule(2.0f, 5.0f));
+	this->setComponent<Rigidbody>(ghostEntity2);
+	this->getComponent<Rigidbody>(ghostEntity2).rotFactor = glm::vec3(0.0f);
+	this->setComponent<PointLight>(ghostEntity2);
+	this->getComponent<PointLight>(ghostEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 2.0f;
+
+	// Ambient light
+	Entity ambientLightEntity = this->createEntity();
+	this->setComponent<AmbientLight>(ambientLightEntity);
+	this->getComponent<AmbientLight>(ambientLightEntity).color = 
+		glm::vec3(0.1f);
+
+	// Directional light
+	Entity directionalLightEntity = this->createEntity();
+	this->setComponent<DirectionalLight>(directionalLightEntity);
+	this->getComponent<DirectionalLight>(directionalLightEntity).color =
+		glm::vec3(0.7);
+	this->getComponent<DirectionalLight>(directionalLightEntity).direction =
+		glm::vec3(-1.0f, -1.0f, 1.0f);
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
@@ -106,8 +137,10 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
-				"assets/models/Amogus/source/1.fbx"});
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
+				{ "assets/models/Amogus/source/1.fbx" }, 
+				"assets/models/Stormtrooper/textures"
+			);
 			amogusMeshID = newMeshComp.meshID;
 		}
 		else
@@ -116,21 +149,31 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
-			/*newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/run_forward_correct.fbx");*/
-			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
-				"assets/models/Stormtrooper/source/silly_dancing.fbx"},
-				"assets/models/Stormtrooper/textures");
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
+				{ "assets/models/Stormtrooper/source/silly_dancing.fbx" },
+				"assets/models/Stormtrooper/textures"
+			);
 		}
 
+		// Animation component
 		this->setComponent<AnimationComponent>(aniIDs[i]);
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
-	}
-	// Output test
-	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
+		newAnimComp.animationIndex = 0;
 
+		// Make separate material
+		if (i == 2)
+		{
+			this->getResourceManager()->makeUniqueMaterials(
+				this->getComponent<MeshComponent>(aniIDs[i])
+			);
+
+			this->getComponent<MeshComponent>(aniIDs[i]).overrideMaterials[0].specularTextureIndex =
+				this->getResourceManager()->addTexture("vengine_assets/textures/NoSpecular.png");
+		}
+	}
+	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
 	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
@@ -171,7 +214,7 @@ void TestDemoScene::init()
 			"@         "
 		},
 		this->fontTextureIndex,
-		16, 16
+		glm::vec2(16, 16)
 	);
 
 	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
@@ -222,6 +265,14 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	/*this->getComponent<MeshComponent>(aniIDs[2]).overrideMaterials[0].tintColor =
+		glm::vec4(
+			1.0f, 
+			0.2f, 
+			0.2f, 
+			std::sin(this->getComponent<AnimationComponent>(aniIDs[2]).timer * 0.2f) * 0.5f + 0.5f
+		);*/
+    
 	/*if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->setAnimation(multiAnimation, "bendIdle");
@@ -284,8 +335,10 @@ void TestDemoScene::update()
 	if (this->entityValid(this->getMainCameraID()))
 	{
 		glm::vec3 moveVec = glm::vec3(Input::isKeyDown(Keys::A) - Input::isKeyDown(Keys::D), Input::isKeyDown(Keys::Q) - Input::isKeyDown(Keys::E), Input::isKeyDown(Keys::W) - Input::isKeyDown(Keys::S));
+		glm::vec3 rotVec = glm::vec3(Input::isKeyDown(Keys::I) - Input::isKeyDown(Keys::K), Input::isKeyDown(Keys::J) - Input::isKeyDown(Keys::L), 0.0f);
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
-		camTransform.position += moveVec * 25.0f * Time::getDT();
+		camTransform.position += (moveVec.x * camTransform.right() + glm::vec3(0.0f, moveVec.y, 0.0f) + moveVec.z * camTransform.forward()) * 25.0f * Time::getDT();
+		camTransform.rotation += rotVec * 100.0f * Time::getDT();
 	}
 
 	if (Input::isKeyPressed(Keys::T))
@@ -295,19 +348,16 @@ void TestDemoScene::update()
 
 	// UI
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
-	Scene::getUIRenderer()->renderTexture(-960.0f, 540.0f, 200.0f, 200.0f);
-	Scene::getUIRenderer()->renderTexture(-960.0f, -540.0f, 200.0f, 200.0f);
+	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, 540.0f), glm::vec2(200.0f));
+	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, -540.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
-	Scene::getUIRenderer()->renderTexture(700.0f, 0.0f, 200.0f, 200.0f);
-	Scene::getUIRenderer()->setTexture(this->fontTextureIndex);
+	Scene::getUIRenderer()->renderTexture(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->renderString(
-		"fps: " + std::to_string(1.0/Time::getDT()), 
-		-400, 
-		400, 
-		50, 
-		50,
-		0,
-		StringAlignment::LEFT
+		"fps: " + std::to_string(1.0 / Time::getDT()),
+		glm::vec3(0.0f),
+		glm::vec2(50.0f),
+		0.0f,
+		StringAlignment::CENTER
 	);
 
 	// Debug rendering

@@ -58,17 +58,17 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 	this->sceneHandler = sceneHandler;
 }
 
-void NetworkHandler::setResourceManager(ResourceManager* resourceManager) {
+void NetworkHandler::setResourceManager(ResourceManager* resourceManager) 
+{
 	this->resourceManger = resourceManager;
-	monsterResId[0] = this->resourceManger->addMesh("assets/models/Swarm_model.obj");
-	monsterResId[1] = this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx");
-	monsterResId[2] = this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx");
 }
 
 void NetworkHandler::createServer(NetworkScene* serverGame)
 {
 	if (serverThread == nullptr)
 	{
+		this->shutDownServer = false;
+		this->createdServer = false;
 		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
 
 		Timer timer;
@@ -90,6 +90,7 @@ void NetworkHandler::createServer(NetworkScene* serverGame)
 		delete serverThread;
 		serverThread = nullptr;
 		this->shutDownServer = false;
+		this->createdServer = false;
 		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
 
 		Timer timer;
@@ -226,7 +227,14 @@ void NetworkHandler::updateNetwork()
 			std::cout << "spawn enemy" << iy << std::endl;
 			monsters.push_back(iy);
 
-			sceneHandler->getScene()->setComponent<MeshComponent>(iy, monsterResId[ix]);
+			if (ix == 0)
+			{
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
+			}
+			else
+			{
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
+			}
 
 			cTCPP >> fx >> fy >> fz;
 			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
@@ -240,7 +248,14 @@ void NetworkHandler::updateNetwork()
 			for (int i = 0; i < iy; i++)
 			{
 				iz = sceneHandler->getScene()->createEntity();
-				sceneHandler->getScene()->setComponent<MeshComponent>(iz);
+				if (ix == 0)
+				{
+					sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
+				}
+				else
+				{
+					sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
+				}
 
 				//ix = what type of enemy
 				cTCPP >> fx >> fy >> fz;
