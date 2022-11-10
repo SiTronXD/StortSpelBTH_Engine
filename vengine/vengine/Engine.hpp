@@ -10,8 +10,8 @@
 #include "graphics/DebugRenderer.hpp"
 #include "ai/AIHandler.hpp"
 
-#ifdef _CONSOLE
-#include "dev/StatisticsCollector.hpp"
+#if defined(_CONSOLE) && defined(_WIN32)
+#include "windows/StatisticsCollector.hpp"
 #endif
 
 class Engine
@@ -34,7 +34,7 @@ public:
 	DebugRenderer debugRenderer;
     AIHandler aiHandler;
 
-#ifdef _CONSOLE
+#if defined(_CONSOLE) && defined(_WIN32)
 	StatisticsCollector statsCollector;
 #endif
 };

@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "StatisticsCollector.hpp"
-#include "Log.hpp"
+#include "../dev/Log.hpp"
 
 #include <psapi.h>
 #include <string>
