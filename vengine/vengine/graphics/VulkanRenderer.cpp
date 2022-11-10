@@ -600,12 +600,14 @@ void VulkanRenderer::initForScene(Scene* scene)
 			    // Extract mesh information
 			    Mesh& currentMesh =
 			        this->resourceManager->getMesh(meshComponent.meshID);
+			    const std::vector<Bone>& bones = currentMesh.getMeshData().bones;
+			    uint32_t numAnimationBones = bones.size();
 
-			    std::vector<Bone>& bones = currentMesh.getMeshData().bones;
-                const Animation& animation = currentMesh.getMeshData().animations[animationComponent.animationIndex];
-
-			    uint32_t numAnimationBones =
-			        currentMesh.getMeshData().bones.size();
+                // Make sure the mesh actually has bones
+                if (numAnimationBones == 0)
+                {
+                    Log::error("Mesh ID " + std::to_string(meshComponent.meshID) + " does not have any bones for skeletal animations. Please remove the animation component from this entity.");
+                }
 
 			    // Add new storage buffer for animations
 			    StorageBufferID newStorageBufferID =
@@ -1088,10 +1090,13 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
     );
 
     // Update storage buffer containing lights
-    this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) &lightBuffer[0]);
-    if (this->hasAnimations)
+    if (this->lightBuffer.size() > 0)
     {
-        this->animShaderInput.updateStorageBuffer(this->animLightBufferSB, (void*)&lightBuffer[0]);
+        this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) this->lightBuffer.data());
+        if (this->hasAnimations)
+        {
+            this->animShaderInput.updateStorageBuffer(this->animLightBufferSB, (void*) this->lightBuffer.data());
+        }
     }
 
     // Truncate indices to not overshoot max

@@ -137,8 +137,10 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
 
-			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
-				"assets/models/Amogus/source/1.fbx"});
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
+				{ "assets/models/Amogus/source/1.fbx" }, 
+				"assets/models/Stormtrooper/textures"
+			);
 			amogusMeshID = newMeshComp.meshID;
 		}
 		else
@@ -147,11 +149,10 @@ void TestDemoScene::init()
 			newTransform.rotation = glm::vec3(0.0f, 180.0f, 0.0f);
 			newTransform.scale = glm::vec3(1.0f, 1.0f, 1.0f);
 
-			/*newMeshComp.meshID = Scene::getResourceManager()->addMesh(
-				"assets/models/run_forward_correct.fbx");*/
-			newMeshComp.meshID = Scene::getResourceManager()->addAnimations({
-				"assets/models/Stormtrooper/source/silly_dancing.fbx"},
-				"assets/models/Stormtrooper/textures");
+			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
+				{ "assets/models/Stormtrooper/source/silly_dancing.fbx" },
+				"assets/models/Stormtrooper/textures"
+			);
 		}
 
 		// Animation component
@@ -159,6 +160,7 @@ void TestDemoScene::init()
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
+		newAnimComp.animationIndex = 0;
 
 		// Make separate material
 		if (i == 2)
@@ -171,9 +173,7 @@ void TestDemoScene::init()
 				this->getResourceManager()->addTexture("vengine_assets/textures/NoSpecular.png");
 		}
 	}
-	// Output test
-	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
-
+	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
 	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
@@ -265,13 +265,13 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
-	this->getComponent<MeshComponent>(aniIDs[2]).overrideMaterials[0].tintColor =
+	/*this->getComponent<MeshComponent>(aniIDs[2]).overrideMaterials[0].tintColor =
 		glm::vec4(
 			1.0f, 
 			0.2f, 
 			0.2f, 
 			std::sin(this->getComponent<AnimationComponent>(aniIDs[2]).timer * 0.2f) * 0.5f + 0.5f
-		);
+		);*/
     
 	/*if (Input::isKeyReleased(Keys::ONE))
 	{

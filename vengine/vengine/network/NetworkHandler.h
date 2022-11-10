@@ -19,7 +19,6 @@ class NetworkHandler {
 	ResourceManager*    resourceManger;
     int                 ID;
     int                 player;
-	int                 monsterResId[3];
 
     //HELPERS
     float fx, fy, fz, fa, fb, fc;
