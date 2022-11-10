@@ -3,7 +3,6 @@
 #include "ServerEngine/Timer.h"
 #include <iostream>
 
-
 void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
 {
 	Timer serverTime;
@@ -20,7 +19,8 @@ void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
 	return;
 }
 
-void NetworkHandler::createAPlayer(int serverId, const std::string& playerName) {
+void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
+{
 	otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
 	otherPlayersServerId.push_back(serverId);
 	//TODO : get player mesh
@@ -58,7 +58,7 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 	this->sceneHandler = sceneHandler;
 }
 
-void NetworkHandler::setResourceManager(ResourceManager* resourceManager) 
+void NetworkHandler::setResourceManager(ResourceManager* resourceManager)
 {
 	this->resourceManger = resourceManager;
 }
@@ -222,20 +222,20 @@ void NetworkHandler::updateNetwork()
 		{
 			//ix = what type of enemy
 			cTCPP >> ix;
-			
+
 			//should we really create a new entity everytime?
 			iy = sceneHandler->getScene()->createEntity();
 			std::cout << "spawn enemy" << iy << std::endl;
 			monsters.push_back(iy);
 
-			if (ix == 0)
-			{
-				sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
-			}
-			else
-			{
-				sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
-			}
+			//if (ix == 0)
+			//{
+			//	sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
+			//}
+			//else
+			//{
+			//	sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
+			//}
 
 			cTCPP >> fx >> fy >> fz;
 			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
@@ -298,7 +298,7 @@ void NetworkHandler::updateNetwork()
 		else if (gameEvent == GameEvents::GetPlayerNames)
 		{
 			cTCPP >> ix;
-			for(int i = 0; i < ix; i++)
+			for (int i = 0; i < ix; i++)
 			{
 				std::string playerName;
 				cTCPP >> iy >> playerName;
@@ -428,16 +428,17 @@ const bool NetworkHandler::hasServer()
 	return serverThread != nullptr;
 }
 
-const std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers() 
+const std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers()
 {
 	return this->otherPlayers;
 }
 
-void NetworkHandler::createPlayers() 
+void NetworkHandler::createPlayers()
 {
 	for (int i = 0; i < otherPlayers.size(); i++)
 	{
 		otherPlayers[i].first = sceneHandler->getScene()->createEntity();
+		sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[i].first, 0);
 	}
 }
 
