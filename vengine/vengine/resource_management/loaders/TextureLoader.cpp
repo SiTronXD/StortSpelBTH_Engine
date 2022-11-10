@@ -77,9 +77,15 @@ void TextureLoader::assimpTextureImport(
             // Extract the name from texture path, and add custom folder path
             this->processTextureName(textureNames[i], texturesFolderPath);
 
+            // Add material
+            uint32_t addedMaterialIndex =
+                this->resourceMan->addMaterial(
+                    this->resourceMan->addTexture(textureNames[i].c_str()),
+                    this->resourceMan->addTexture("vengine_assets/textures/FullSpecular.png")
+                );
+
             // Create texture, use the index returned by our createTexture function
-            materialToTexture[i] =
-                this->resourceMan->addTexture(textureNames[i].c_str());
+            materialToTexture[i] = addedMaterialIndex;
         }
     }
 }

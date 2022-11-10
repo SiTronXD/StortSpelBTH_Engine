@@ -35,6 +35,28 @@ void ResourceManager::init(
     
 }
 
+void ResourceManager::makeUniqueMaterials(MeshComponent& meshComponent)
+{
+    const Mesh& mesh = this->getMesh(meshComponent.meshID);
+    const std::vector<SubmeshData>& submeshData = mesh.getSubmeshData();
+
+    // Copy over each material
+    meshComponent.numOverrideMaterials = 0;
+    for (size_t i = 0, numSubmeshes = submeshData.size(); i < numSubmeshes; ++i)
+    {
+        // Make sure the limit hasn't been reached
+        if (meshComponent.numOverrideMaterials >= MAX_NUM_MESH_MATERIALS)
+        {
+            Log::warning("The number of materials was larger than the maximum. The remaining materials were ignored.");
+            return;
+        }
+
+        // Copy material
+        meshComponent.overrideMaterials[meshComponent.numOverrideMaterials++] =
+            Material(this->getMaterial(submeshData[i].materialIndex));
+    }
+}
+
 void ResourceManager::cleanUp()
 {
     alDeleteBuffers((int)this->audioBuffers.size(), this->audioBuffers.data());
@@ -167,10 +189,10 @@ uint32_t ResourceManager::addTexture(
             createSampler(*this->dev, textureSettings.samplerSettings);
     }
 
-    //NOTE: texturePaths.size() as key only works if we never remove resources the map...
+    // NOTE: texturePaths.size() as key only works if we never remove resources the map...
     this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
 
-    //NOTE: textures.size as key only works if we never remove resources the map...    
+    // NOTE: textures.size as key only works if we never remove resources the map...    
     // Create texture, insert into map of textures
     textures.insert(
         {
@@ -208,6 +230,24 @@ uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
 	return collisionsData.size() - 1;
 }
 
+uint32_t ResourceManager::addMaterial(
+    uint32_t diffuseTextureIndex,
+    uint32_t specularTextureIndex)
+{
+    // Created material
+    Material newMaterial{};
+    newMaterial.diffuseTextureIndex = diffuseTextureIndex;
+    newMaterial.specularTextureIndex = specularTextureIndex;
+    newMaterial.descriptorIndex = ~0u;
+
+    uint32_t newMaterialIndex =
+        static_cast<uint32_t>(this->materials.size());
+
+    // Insert material
+    this->materials.insert({ newMaterialIndex, newMaterial });
+
+    return newMaterialIndex;
+}
 uint32_t ResourceManager::addSound(std::string&& soundPath)
 {
     if (this->soundPaths.count(soundPath) != 0)

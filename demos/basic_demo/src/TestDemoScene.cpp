@@ -5,6 +5,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "vengine.h"
 #include "vengine/test/TestScene2.hpp"
+#include "vengine/VengineMath.hpp"
 
 TestDemoScene::TestDemoScene()
 	: camEntity(-1), testEntity(-1)//, testEntity2(-1)
@@ -16,7 +17,7 @@ TestDemoScene::TestDemoScene()
 TestDemoScene::~TestDemoScene()
 {
 }
-#include "vengine/VengineMath.hpp"
+
 void TestDemoScene::init()
 {	
 	this->timer = 0.0f;
@@ -37,6 +38,36 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
+	this->setComponent<PointLight>(this->testEntity);
+	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f) * 3.0f;
+
+	// Create entity (already has transform)
+	Entity ghostEntity2 = this->createEntity();
+
+	// Transform component
+	Transform& transform2 = this->getComponent<Transform>(ghostEntity2);
+	transform2.position = glm::vec3(15.f, 0.f, 30.f);
+	//transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+	this->setComponent<MeshComponent>(ghostEntity2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->setComponent<Collider>(ghostEntity2, Collider::createCapsule(2.0f, 5.0f));
+	this->setComponent<Rigidbody>(ghostEntity2);
+	this->getComponent<Rigidbody>(ghostEntity2).rotFactor = glm::vec3(0.0f);
+	this->setComponent<PointLight>(ghostEntity2);
+	this->getComponent<PointLight>(ghostEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 2.0f;
+
+	// Ambient light
+	Entity ambientLightEntity = this->createEntity();
+	this->setComponent<AmbientLight>(ambientLightEntity);
+	this->getComponent<AmbientLight>(ambientLightEntity).color = 
+		glm::vec3(0.1f);
+
+	// Directional light
+	Entity directionalLightEntity = this->createEntity();
+	this->setComponent<DirectionalLight>(directionalLightEntity);
+	this->getComponent<DirectionalLight>(directionalLightEntity).color =
+		glm::vec3(0.7);
+	this->getComponent<DirectionalLight>(directionalLightEntity).direction =
+		glm::vec3(-1.0f, -1.0f, 1.0f);
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
@@ -123,10 +154,22 @@ void TestDemoScene::init()
 				"assets/models/Stormtrooper/textures");
 		}
 
+		// Animation component
 		this->setComponent<AnimationComponent>(aniIDs[i]);
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
+
+		// Make separate material
+		if (i == 2)
+		{
+			this->getResourceManager()->makeUniqueMaterials(
+				this->getComponent<MeshComponent>(aniIDs[i])
+			);
+
+			this->getComponent<MeshComponent>(aniIDs[i]).overrideMaterials[0].specularTextureIndex =
+				this->getResourceManager()->addTexture("vengine_assets/textures/NoSpecular.png");
+		}
 	}
 	// Output test
 	Scene::getResourceManager()->getMesh(amogusMeshID).outputRigDebugInfo("skeletalAnimation.txt");
@@ -222,6 +265,14 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	this->getComponent<MeshComponent>(aniIDs[2]).overrideMaterials[0].tintColor =
+		glm::vec4(
+			1.0f, 
+			0.2f, 
+			0.2f, 
+			std::sin(this->getComponent<AnimationComponent>(aniIDs[2]).timer * 0.2f) * 0.5f + 0.5f
+		);
+    
 	/*if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->setAnimation(multiAnimation, "bendIdle");

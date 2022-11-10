@@ -169,6 +169,10 @@
     <ClInclude Include="vengine\lua\wrappers\PhysicsEngineLua.h" />
     <ClInclude Include="vengine\dev\StringHelper.hpp" />
     <ClInclude Include="vengine\graphics\MeshDataModifier.hpp" />
+    <ClInclude Include="vengine\components\PointLight.hpp" />
+    <ClInclude Include="vengine\components\AmbientLight.hpp" />
+    <ClInclude Include="vengine\components\DirectionalLight.hpp" />
+    <ClInclude Include="vengine\graphics\MaterialData.hpp" />
     <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
     <ClInclude Include="vengine\physics\CallbackType.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneHandler.h" />

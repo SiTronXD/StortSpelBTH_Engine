@@ -2,6 +2,7 @@
 
 #define FREQ_PER_FRAME 0
 #define FREQ_PER_MESH 1
+#define FREQ_PER_DRAW 2
 
 // Vertex data
 layout(location = 0) in vec3 pos;
@@ -11,11 +12,12 @@ layout(location = 3) in vec4 weights;
 layout(location = 4) in uvec4 boneIndices;
 
 // Uniform buffer
-layout(set = FREQ_PER_FRAME, binding = 0) uniform UboViewProjection
+layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 {
     mat4 projection;
-    mat4 view;    
-} uboViewProjection;
+    mat4 view;
+    vec4 worldPos;
+} cameraBuffer;
 
 // Storage buffer
 struct BoneTransformsData
@@ -27,15 +29,19 @@ layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer BoneTransformsB
     BoneTransformsData transforms[];
 } bones;
 
-// Push Constant to update the model Matrix! 
-layout(push_constant) uniform PushConstant_Model
+// Push constant
+layout(push_constant) uniform PushConstantData
 {
     mat4 model;
-} pushConstant_Model;
+    vec4 tintColor;
+} pushConstantData;
 
 // Vertex shader outputs
-layout(location = 0) out vec3 fragNor;
-layout(location = 1) out vec2 fragTex;
+layout(location = 0) out vec3 fragWorldPos;
+layout(location = 1) out vec3 fragNor;
+layout(location = 2) out vec2 fragTex;
+layout(location = 3) out vec3 fragCamWorldPos;
+layout(location = 4) out vec4 fragTintCol;
 
 void main()
 {
@@ -49,13 +55,19 @@ void main()
     if(weights.w > 0.0f)
         animTransform += bones.transforms[boneIndices.w].boneTransform * weights.w;
 
-    gl_Position = 
-        uboViewProjection.projection *
-        uboViewProjection.view *
-        pushConstant_Model.model *
+    vec4 worldPos = 
+        pushConstantData.model *
         animTransform *
         vec4(pos, 1.0);
-        
-    fragNor = (pushConstant_Model.model * animTransform * vec4(nor, 0.0f)).xyz;
+
+    gl_Position = 
+        cameraBuffer.projection *
+        cameraBuffer.view *
+        worldPos;
+    
+    fragWorldPos = worldPos.xyz;
+    fragNor = (pushConstantData.model * animTransform * vec4(nor, 0.0f)).xyz;
     fragTex = tex;
+    fragCamWorldPos = cameraBuffer.worldPos.xyz;
+    fragTintCol = pushConstantData.tintColor;
 }

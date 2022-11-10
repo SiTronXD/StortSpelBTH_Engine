@@ -25,7 +25,6 @@ UIRenderer::UIRenderer()
     uiTextureIndex(~0u),
     uiTextureWidth(0),
     uiTextureHeight(0),
-    uiSamplerID(~0u),
     storageBufferID(~0u),
     physicalDevice(nullptr),
     device(nullptr),
@@ -66,6 +65,10 @@ void UIRenderer::initForScene()
     // Cleanup ui shader input if possible
     this->cleanup();
 
+    // Per draw bindings
+    FrequencyInputLayout perDrawInputLayout{};
+    perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+
     // UI renderer shader input
     this->uiShaderInput.beginForInput(
         *this->physicalDevice,
@@ -73,11 +76,16 @@ void UIRenderer::initForScene()
         *this->vma,
         *this->resourceManager,
         this->framesInFlight);
-    this->uiSamplerID = this->uiShaderInput.addSampler();
     this->uiShaderInput.setNumShaderStorageBuffers(1);
     this->storageBufferID = this->uiShaderInput.addStorageBuffer(
         this->uiElementData.size() *
-        sizeof(this->uiElementData[0])
+        sizeof(this->uiElementData[0]),
+        vk::ShaderStageFlagBits::eVertex,
+        DescriptorFrequency::PER_MESH // TODO: change this
+    );
+    this->uiShaderInput.makeFrequencyInputLayout(
+        //DescriptorFrequency::PER_DRAW_CALL,
+        perDrawInputLayout
     );
     this->uiShaderInput.endForInput();
 
