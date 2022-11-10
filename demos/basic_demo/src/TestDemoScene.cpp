@@ -39,7 +39,8 @@ void TestDemoScene::init()
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
 	this->setComponent<PointLight>(this->testEntity);
-	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f) * 3.0f;
+	this->getComponent<PointLight>(this->testEntity).positionOffset = glm::vec3(0.0f, 0.0f, 10.0f);
+	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f) * 20.0f;
 
 	// Create entity (already has transform)
 	Entity ghostEntity2 = this->createEntity();
@@ -265,13 +266,8 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
-	/*this->getComponent<MeshComponent>(aniIDs[2]).overrideMaterials[0].tintColor =
-		glm::vec4(
-			1.0f, 
-			0.2f, 
-			0.2f, 
-			std::sin(this->getComponent<AnimationComponent>(aniIDs[2]).timer * 0.2f) * 0.5f + 0.5f
-		);*/
+	this->getComponent<Transform>(this->testEntity).rotation.x +=
+		180.0f * Time::getDT();
     
 	/*if (Input::isKeyReleased(Keys::ONE))
 	{
