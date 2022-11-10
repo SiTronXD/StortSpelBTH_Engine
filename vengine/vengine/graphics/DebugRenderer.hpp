@@ -74,6 +74,8 @@ private:
     void prepareGPU(const uint32_t& currentFrame);
     void resetRender();
 
+    glm::vec3 toneMappingACES(const glm::vec3& x);
+
 public:
     DebugRenderer();
 
@@ -94,6 +96,8 @@ public:
         const glm::vec3& pos0, 
         const glm::vec3& pos1,
         const glm::vec3& color);
+    void renderPointLight(
+        const Entity& pointLightEntity);
     void renderSphere(
         const glm::vec3& position,
         const float& radius,
