@@ -128,6 +128,7 @@ Client* NetworkHandler::createClient(const std::string& name)
 {
 	if (client == nullptr)
 	{
+		this->playerName = name;
 		client = new Client(name);
 	}
 	return client;
@@ -329,9 +330,9 @@ void NetworkHandler::updateNetwork()
 				//fxyz position, fabc rotation
 				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
 
-				if (otherPlayers.size() < i)
+				while (otherPlayers.size() < i)
 				{
-					//create entity
+					otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), "unknown"));
 				}
 
 				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i].first);
@@ -411,6 +412,11 @@ void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
 	client->sendTCPEvent(polygonEvent);
 }
 
+const std::string& NetworkHandler::getClientName()
+{
+	return this->playerName;
+}
+
 void NetworkHandler::getLuaData(std::vector<int>& ints, std::vector<float>& floats)
 {
 	ints = this->lua_ints;
@@ -425,6 +431,14 @@ const bool NetworkHandler::hasServer()
 const std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers() 
 {
 	return this->otherPlayers;
+}
+
+void NetworkHandler::createPlayers() 
+{
+	for (int i = 0; i < otherPlayers.size(); i++)
+	{
+		otherPlayers[i].first = sceneHandler->getScene()->createEntity();
+	}
 }
 
 void NetworkHandler::disconnectClient()

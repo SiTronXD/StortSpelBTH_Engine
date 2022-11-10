@@ -370,10 +370,13 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				//send player names
 				sf::Packet playerNamesPacket;
 				
-				playerNamesPacket << GameEvents::GetPlayerNames << (int) clients.size() - 1;
-				for (int i = 0; i < clients.size() - 1; i++)
+				playerNamesPacket << GameEvents::GetPlayerNames << (int) clients.size() - 2;
+				for (int i = 0; i < clients.size() - 2; i++)
 				{
-					playerNamesPacket << clients[i]->id << clients[i]->name;
+					if (ClientID != i)
+					{
+						playerNamesPacket << clients[i]->id << clients[i]->name;
+					}
 				}
 				clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
 			}	

@@ -19,6 +19,7 @@ class NetworkHandler {
 	ResourceManager*    resourceManger;
     int                 ID;
     int                 player;
+	std::string         playerName;
 
     //HELPERS
     float fx, fy, fz, fa, fb, fc;
@@ -53,6 +54,7 @@ class NetworkHandler {
     void    disconnectClient();
     const bool hasServer();
 	void sendAIPolygons(std::vector<glm::vec2> points);
+	const std::string &getClientName();
 
     //USER
     void updateNetwork();
@@ -60,6 +62,7 @@ class NetworkHandler {
     void setPlayerNetworkHandler(int playerID);
 	void getLuaData(std::vector<int>& ints, std::vector<float>& floats);
 	const std::vector<std::pair<int, std::string>> getPlayers();
+	void createPlayers();
 
     //little cheating here but only one event from client to server via udp
     void sendUDPDataToClient(const glm::vec3 &pos, const glm::vec3 &rot);
