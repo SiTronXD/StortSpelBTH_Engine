@@ -278,8 +278,8 @@ void ScriptHandler::updateSystems(std::vector<LuaSystem>& vec)
 		}
 		lua_rawgeti(L, LUA_REGISTRYINDEX, (*it).luaRef);
 
-		lua_getfield(L, -2, "update"); // Get new update
-		if (!lua_isnil(L, -1)) // Found update
+		lua_getfield(L, -2, "update");
+		if (!lua_isnil(L, -1))
 		{
 			lua_pushvalue(L, -2);
 			lua_pushnumber(L, Time::getDT());
@@ -309,10 +309,12 @@ void ScriptHandler::update()
 		lua_pop(L, lua_gettop(L));
 	}
 
+#ifdef _CONSOLE
 	if (Input::isKeyPressed(Keys::R) && Input::isKeyDown(Keys::CTRL))
 	{
 		this->sceneHandler->reloadScene();
 	}
+#endif
 }
 
 void ScriptHandler::cleanup()
@@ -320,7 +322,7 @@ void ScriptHandler::cleanup()
 	lua_close(L);
 }
 
-bool ScriptHandler::getScriptComponentValue(Script& script, int& ret, std::string name)
+bool ScriptHandler::getScriptComponentValue(Script& script, int& ret, const std::string& name)
 {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
 	lua_getfield(L, -1, name.c_str());
@@ -331,7 +333,7 @@ bool ScriptHandler::getScriptComponentValue(Script& script, int& ret, std::strin
 	return result;
 }
 
-bool ScriptHandler::getScriptComponentValue(Script& script, float& ret, std::string name)
+bool ScriptHandler::getScriptComponentValue(Script& script, float& ret, const std::string& name)
 {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
 	lua_getfield(L, -1, name.c_str());
@@ -342,7 +344,7 @@ bool ScriptHandler::getScriptComponentValue(Script& script, float& ret, std::str
 	return result;
 }
 
-bool ScriptHandler::getScriptComponentValue(Script& script, std::string& ret, std::string name)
+bool ScriptHandler::getScriptComponentValue(Script& script, std::string& ret, const std::string& name)
 {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
 	lua_getfield(L, -1, name.c_str());
@@ -353,7 +355,46 @@ bool ScriptHandler::getScriptComponentValue(Script& script, std::string& ret, st
 	return result;
 }
 
-bool ScriptHandler::getGlobal(int& ret, std::string& name)
+bool ScriptHandler::getScriptComponentValue(Script& script, glm::vec3& ret, const std::string& name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_getfield(L, -1, name.c_str());
+
+	bool result = lua_isstring(L, -1);
+	if (result) { ret = lua_tovector(L, -1); }
+	lua_pop(L, 2);
+	return result;
+}
+
+void ScriptHandler::setScriptComponentValue(Script& script, const int& val, const std::string& name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_pushinteger(L, val);
+	lua_setfield(L, -2, name.c_str());
+}
+
+void ScriptHandler::setScriptComponentValue(Script& script, const float& val, const std::string& name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_pushnumber(L, val);
+	lua_setfield(L, -2, name.c_str());
+}
+
+void ScriptHandler::setScriptComponentValue(Script& script, const std::string& val, const std::string& name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_pushstring(L, val.c_str());
+	lua_setfield(L, -2, name.c_str());
+}
+
+void ScriptHandler::setScriptComponentValue(Script& script, const glm::vec3& val, const std::string& name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_pushvector(L, val);
+	lua_setfield(L, -2, name.c_str());
+}
+
+bool ScriptHandler::getGlobal(int& ret, const std::string& name)
 {
 	lua_getglobal(L, name.c_str());
 
@@ -363,7 +404,7 @@ bool ScriptHandler::getGlobal(int& ret, std::string& name)
 	return result;
 }
 
-bool ScriptHandler::getGlobal(float& ret, std::string& name)
+bool ScriptHandler::getGlobal(float& ret, const std::string& name)
 {
 	lua_getglobal(L, name.c_str());
 
@@ -373,7 +414,7 @@ bool ScriptHandler::getGlobal(float& ret, std::string& name)
 	return result;
 }
 
-bool ScriptHandler::getGlobal(std::string& ret, std::string& name)
+bool ScriptHandler::getGlobal(std::string& ret, const std::string& name)
 {
 	lua_getglobal(L, name.c_str());
 
@@ -381,4 +422,56 @@ bool ScriptHandler::getGlobal(std::string& ret, std::string& name)
 	if (result) { ret = lua_tostring(L, -1); }
 	lua_pop(L, 1);
 	return result;
+}
+
+bool ScriptHandler::getGlobal(glm::vec3& ret, const std::string& name)
+{
+	lua_getglobal(L, name.c_str());
+
+	bool result = lua_isstring(L, -1);
+	if (result) { ret = lua_tovector(L, -1); }
+	lua_pop(L, 1);
+	return result;
+}
+
+void ScriptHandler::setGlobal(const int& val, const std::string& name)
+{
+	lua_pushinteger(L, val);
+	lua_setglobal(L, name.c_str());
+}
+
+void ScriptHandler::setGlobal(const float& val, const std::string& name)
+{
+	std::vector<std::string> names;
+	StringHelper::splitString(name, '.', names);
+	lua_getglobal(L, names[0].c_str());
+	if (!lua_isnil(L, -1))
+	{
+		LuaH::openTableTree(L, names);
+		LuaH::dumpStack(L);
+
+		lua_pushnumber(L, val);
+		lua_setfield(L, -1, name.c_str());
+		LuaH::dumpStack(L);
+
+		lua_pop(L, (int)names.size());
+	}
+	else
+	{
+		lua_pop(L, 1);
+		lua_pushnumber(L, val);
+		lua_setglobal(L, name.c_str());
+	}
+}
+
+void ScriptHandler::setGlobal(const std::string& val, const std::string& name)
+{
+	lua_pushstring(L, val.c_str());
+	lua_setglobal(L, name.c_str());
+}
+
+void ScriptHandler::setGlobal(const glm::vec3& val, const std::string& name)
+{
+	lua_pushvector(L, val);
+	lua_setglobal(L, name.c_str());
 }

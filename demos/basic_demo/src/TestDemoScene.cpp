@@ -286,6 +286,21 @@ void TestDemoScene::update()
 		this->setAnimation(multiAnimation, "dumb", false);
 	}*/
 
+	if (this->entityValid(this->getMainCameraID()))
+	{
+		Script& script = this->getComponent<Script>(this->getMainCameraID());
+		ScriptHandler* sh = this->getScriptHandler();
+		int ID;
+		sh->getScriptComponentValue(script, ID, "texture");
+		Log::write("Texture: " + std::to_string(ID));
+		if(Input::isKeyPressed(Keys::B)) { sh->setScriptComponentValue(script, (int)this->uiTextureIndex1, "texture"); }
+		if(Input::isKeyPressed(Keys::Y)) 
+		{
+
+			sh->setGlobal(4.0f, "test.z");
+		}
+	}
+
 	// Debug rendering on colliders
 	this->getPhysicsEngine()->renderDebugShapes(Input::isKeyDown(Keys::Y));
 
