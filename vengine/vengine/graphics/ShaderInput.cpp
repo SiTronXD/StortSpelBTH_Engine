@@ -619,6 +619,11 @@ void ShaderInput::cleanup()
     }
     this->addedStorageBuffers.clear();
 
+    // Resource handles
+    this->perFrameResources.clear();
+    this->perMeshResources.clear();
+    this->perDrawResources.clear();
+
     // Descriptor pools
     this->perFrameDescriptorSets.clear();
     this->perMeshDescriptorSets.clear();

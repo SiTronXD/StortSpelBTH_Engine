@@ -81,7 +81,7 @@ void TextureLoader::assimpTextureImport(
             uint32_t addedMaterialIndex =
                 this->resourceMan->addMaterial(
                     this->resourceMan->addTexture(textureNames[i].c_str()),
-                    this->resourceMan->addTexture("vengine_assets/textures/FullSpecular.png")
+                    this->resourceMan->addTexture("vengine_assets/textures/NoSpecular.png")
                 );
 
             // Create texture, use the index returned by our createTexture function
