@@ -24,7 +24,18 @@ void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 	otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
 	otherPlayersServerId.push_back(serverId);
 	//TODO : get player mesh
-	sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1].first);
+	if (this->networkHandlerMeshes.find("PlayerMesh") == this->networkHandlerMeshes.end())
+	{
+		sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1].first);
+	}
+	else
+	{
+		sceneHandler->getScene()->setComponent<MeshComponent>(
+			otherPlayers[otherPlayers.size() - 1].first, 
+			this->networkHandlerMeshes.find("PlayerMesh")->second
+			);
+	}
+	
 }
 
 NetworkHandler::NetworkHandler() : sceneHandler(nullptr)
@@ -61,6 +72,11 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 void NetworkHandler::setResourceManager(ResourceManager* resourceManager)
 {
 	this->resourceManger = resourceManager;
+}
+
+void NetworkHandler::setMeshes(const std::string& meshName, const int meshID)
+{
+	this->networkHandlerMeshes.insert(std::pair<std::string, int>(meshName, meshID));
 }
 
 void NetworkHandler::createServer(NetworkScene* serverGame)
@@ -228,14 +244,22 @@ void NetworkHandler::updateNetwork()
 			std::cout << "spawn enemy" << iy << std::endl;
 			monsters.push_back(iy);
 
-			//if (ix == 0)
-			//{
-			//	sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
-			//}
-			//else
-			//{
-			//	sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
-			//}
+			if (ix == 0)//blob
+			{
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("blob")->second);
+			}
+			else if (ix == 1)//range
+			{
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("range")->second);
+			}
+			else if (ix == 2)//tank
+			{
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("tank")->second);
+			}
+			else
+			{
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
+			}
 
 			cTCPP >> fx >> fy >> fz;
 			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);

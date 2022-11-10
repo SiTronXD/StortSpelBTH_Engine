@@ -20,6 +20,9 @@ class NetworkHandler {
     int                 ID;
     int                 player;
 	std::string         playerName;
+    
+    //meshes for networkHandler
+	std::map<std::string, int> networkHandlerMeshes;
 
     //HELPERS
     float fx, fy, fz, fa, fb, fc;
@@ -41,6 +44,8 @@ class NetworkHandler {
     virtual ~NetworkHandler();
     void setSceneHandler(SceneHandler* sceneHandler);
 	void setResourceManager(ResourceManager* resourceManager);
+
+    void setMeshes(const std::string& meshName, const int meshID);
 
     //SERVER
     void createServer(NetworkScene* serverGame = nullptr); //create new server on a new thread
