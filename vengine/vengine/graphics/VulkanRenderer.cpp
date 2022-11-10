@@ -673,14 +673,17 @@ void VulkanRenderer::initForScene(Scene* scene)
                 }
         );
 
-        // Add one descriptor in animShaderInput for 
-        // each added descriptor in shaderInput
-        this->animShaderInput.addFrequencyInput(
-            {
-                diffuseTextureInputBinding,
-                specularTextureInputBinding
-            }
-        );
+        if (this->hasAnimations)
+        {
+            // Add one descriptor in animShaderInput for 
+            // each added descriptor in shaderInput
+            this->animShaderInput.addFrequencyInput(
+                {
+                    diffuseTextureInputBinding,
+                    specularTextureInputBinding
+                }
+            );
+        }
     }
 
     // Add all unique materials as well for possible use in the shaders
@@ -709,14 +712,17 @@ void VulkanRenderer::initForScene(Scene* scene)
                         }
                 );
 
-                // Add one descriptor in animShaderInput for 
-                // each added descriptor in shaderInput
-                this->animShaderInput.addFrequencyInput(
-                    {
-                        diffuseTextureInputBinding,
-                        specularTextureInputBinding
-                    }
-                );
+                if (this->hasAnimations)
+                {
+                    // Add one descriptor in animShaderInput for 
+                    // each added descriptor in shaderInput
+                    this->animShaderInput.addFrequencyInput(
+                        {
+                            diffuseTextureInputBinding,
+                            specularTextureInputBinding
+                        }
+                    );
+                }
             }
         }
     );
