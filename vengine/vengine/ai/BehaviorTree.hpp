@@ -207,7 +207,7 @@ public:
         bool someDecoratorHasMoreThanOneChild = false;
         for(auto decorator : create.decorator.getDecorators())
         {
-            if(decorator->children.size() > 1)
+            if(decorator->children.size() > 1 && decorator->nodeType != NodeType::Random)
             {
                 someDecoratorHasMoreThanOneChild = true; 
                 break;
