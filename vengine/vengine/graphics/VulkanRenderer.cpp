@@ -1075,24 +1075,17 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
     );
 
     // Loop through all point lights in scene
-    glm::mat3 currentRotMat(1.0f);
     lightsInfo.pointLightsEndIndex = lightsInfo.directionalLightsEndIndex;
     auto lightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
     lightView.each([&](
         Transform& transform,
         const PointLight& pointLightComp)
         {
-            currentRotMat = glm::mat3(
-                transform.right(),
-                transform.up(),
-                transform.forward()
-            );
-
             // Create point light data
             LightBufferData lightData{};
             lightData.position = glm::vec4(
                 transform.position + 
-                    currentRotMat * pointLightComp.positionOffset,
+                    transform.getRotationMatrix() * pointLightComp.positionOffset,
                 1.0f);
             lightData.color = glm::vec4(pointLightComp.color, 1.0f);
 

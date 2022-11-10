@@ -6,6 +6,7 @@
 #include "../components/AnimationComponent.hpp"
 #include "../components/MeshComponent.hpp"
 #include "../components/Transform.hpp"
+#include "../components/PointLight.hpp"
 #include "../VengineMath.hpp"
 #include "../application/SceneHandler.hpp"
 
@@ -30,6 +31,21 @@ void DebugRenderer::resetRender()
     this->numVertices = 0;
 
     this->meshDrawData.clear();
+}
+
+glm::vec3 DebugRenderer::toneMappingACES(const glm::vec3& x)
+{
+    const float a = 2.51f;
+    const float b = 0.03f;
+    const float c = 2.43f;
+    const float d = 0.59f;
+    const float e = 0.14f;
+    return
+        glm::vec3(
+            ((x.x * (a * x.x + b)) / (x.x * (c * x.x + d) + e)),
+            ((x.y * (a * x.y + b)) / (x.y * (c * x.y + d) + e)),
+            ((x.z * (a * x.z + b)) / (x.z * (c * x.z + d) + e))
+        );
 }
 
 DebugRenderer::DebugRenderer()
@@ -198,6 +214,27 @@ void DebugRenderer::renderLine(
     this->numVertices++;
 
 #endif
+}
+
+void DebugRenderer::renderPointLight(const Entity& pointLightEntity)
+{
+    Scene* scene = this->sceneHandler->getScene();
+
+    Transform& transform = scene->getComponent<Transform>(pointLightEntity);
+    PointLight& pointLight = scene->getComponent<PointLight>(pointLightEntity);
+    transform.updateMatrix();
+    
+    // Transform position
+    glm::vec3 position = transform.position + 
+        transform.getRotationMatrix() * pointLight.positionOffset;
+
+    // Render point light as box
+    this->renderBox(
+        position, 
+        transform.rotation, 
+        glm::vec3(0.3f), 
+        this->toneMappingACES(pointLight.color)
+    );
 }
 
 void DebugRenderer::renderSphere(

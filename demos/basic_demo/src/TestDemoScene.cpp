@@ -268,7 +268,8 @@ void TestDemoScene::update()
 {
 	this->getComponent<Transform>(this->testEntity).rotation.x +=
 		180.0f * Time::getDT();
-    
+	this->getDebugRenderer()->renderPointLight(this->testEntity);
+
 	/*if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->setAnimation(multiAnimation, "bendIdle");
