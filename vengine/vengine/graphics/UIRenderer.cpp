@@ -16,6 +16,7 @@ void UIRenderer::prepareForGPU()
 void UIRenderer::resetRender()
 {
     this->currentElementIndex = 0;
+    this->uiTextureIndex = ~0u;
     this->uiDrawCallData.clear();
 }
 
@@ -294,7 +295,7 @@ void UIRenderer::renderString(
     this->setTexture(this->uiFontTextureIndex);
 
     // Render character by character
-    for (size_t i = 0; i < text.length(); ++i)
+    for (size_t i = 0, textLength = text.length(); i < textLength; ++i)
     {
         // Find rectangle from map
         charRect = &this->characterRects[text[i]];
