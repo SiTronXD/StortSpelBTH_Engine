@@ -184,6 +184,7 @@
     <ClInclude Include="vengine\network\ServerGameModes\NetworkLobbyScene.h" />
     <ClInclude Include="vengine\windows\StatisticsCollector.hpp" />
     <ClInclude Include="vengine\components\Spotlight.hpp" />
+    <ClInclude Include="vengine\dev\Random.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
