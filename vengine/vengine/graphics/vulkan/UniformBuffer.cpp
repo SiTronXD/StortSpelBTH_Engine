@@ -43,18 +43,3 @@ void UniformBuffer::createUniformBuffer(
         VulkanDbg::registerVkObjectDbgInfo("UniformBuffer[" + std::to_string(i) + "]", vk::ObjectType::eBuffer, reinterpret_cast<uint64_t>(vk::Buffer::CType(buffers[i])));
     }
 }
-
-void UniformBuffer::update(
-    void* copyData,
-    const uint32_t& currentFrame)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    void* data = nullptr;
-
-    Buffer::map(data, currentFrame);
-    memcpy(data, copyData, Buffer::getBufferSize());
-    Buffer::unmap(currentFrame);
-}
