@@ -1148,6 +1148,9 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
     lightsInfo.pointLightsEndIndex = std::min(
         lightsInfo.pointLightsEndIndex,
         MAX_NUM_LIGHTS);
+    lightsInfo.spotlightsEndIndex = std::min(
+        lightsInfo.spotlightsEndIndex,
+        MAX_NUM_LIGHTS);
 
 #ifdef _CONSOLE
     if (this->lightBuffer.size() > MAX_NUM_LIGHTS)
