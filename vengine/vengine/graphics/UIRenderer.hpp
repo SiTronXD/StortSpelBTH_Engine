@@ -40,7 +40,7 @@ class UIRenderer
 private:
     friend VulkanRenderer;
 
-    const uint32_t START_NUM_MAX_ELEMENTS = 256;
+    const uint32_t START_NUM_MAX_ELEMENTS = 512;
 
     std::unordered_map<char, CharacterRect> characterRects;
     uint32_t uiFontTextureIndex;
