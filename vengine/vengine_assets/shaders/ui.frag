@@ -4,7 +4,8 @@
 
 // Input data from vertex shader
 layout(location = 0) in vec2 fragUV;
-layout(location = 1) in flat uvec4 fragBoundsUV;
+layout(location = 1) in vec4 fragMultiplyColor;
+layout(location = 2) in flat uvec4 fragBoundsUV;
 
 // Output color
 layout(location = 0) out vec4 outColor; 
@@ -25,5 +26,5 @@ void main()
 			fragBoundsUV.xy + fragBoundsUV.zw
 		), 
 		0
-	);
+	) * fragMultiplyColor;
 }

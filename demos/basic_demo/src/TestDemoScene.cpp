@@ -360,7 +360,8 @@ void TestDemoScene::update()
 		glm::vec3(0.0f),
 		glm::vec2(50.0f),
 		0.0f,
-		StringAlignment::CENTER
+		StringAlignment::CENTER,
+		glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)
 	);
 
 	// Debug rendering

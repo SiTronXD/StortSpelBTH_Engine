@@ -17,6 +17,7 @@ class SceneHandler;
 struct UIElementData
 {
     glm::vec4 transform;    // vec4(x, y, scaleX, scaleY)
+    glm::vec4 multiplyColor;
     glm::uvec4 uvRect;       // ivec4(u, v, sizeU, sizeV)
 };
 
@@ -95,26 +96,30 @@ public:
     void renderTexture(
         const glm::vec2& position,
         const glm::vec2& dimension,
-        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1)
+        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1),
+        const glm::vec4 multiplyColor = glm::vec4(1.0f)
     );
     void renderTexture(
         const glm::vec3& worldPosition,
         const glm::vec2& dimension,
-        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1)
+        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1),
+        const glm::vec4 multiplyColor = glm::vec4(1.0f)
     );
     void renderString(
         const std::string& text,
         const glm::vec2& position,
         const glm::vec2& charDimension,
         const float& charMargin = 0.0f,
-        const StringAlignment& alignment = StringAlignment::CENTER
+        const StringAlignment& alignment = StringAlignment::CENTER,
+        const glm::vec4 multiplyColor = glm::vec4(1.0f)
     );
     void renderString(
         const std::string& text,
         const glm::vec3& worldPosition,
         const glm::vec2& charDimension,
         const float& charMargin = 0.0f,
-        const StringAlignment& alignment = StringAlignment::CENTER
+        const StringAlignment& alignment = StringAlignment::CENTER,
+        const glm::vec4 multiplyColor = glm::vec4(1.0f)
     );
 
     inline const StorageBufferID& getStorageBufferID() const { return this->storageBufferID; }
