@@ -3,7 +3,6 @@
 #include "ServerEngine/Timer.h"
 #include <iostream>
 
-
 void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
 {
 	Timer serverTime;
@@ -20,11 +19,23 @@ void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
 	return;
 }
 
-void NetworkHandler::createAPlayer(int serverId, const std::string& playerName) {
+void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
+{
 	otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
 	otherPlayersServerId.push_back(serverId);
 	//TODO : get player mesh
-	sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1].first);
+	if (this->networkHandlerMeshes.find("PlayerMesh") == this->networkHandlerMeshes.end())
+	{
+		sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1].first);
+	}
+	else
+	{
+		sceneHandler->getScene()->setComponent<MeshComponent>(
+			otherPlayers[otherPlayers.size() - 1].first, 
+			this->networkHandlerMeshes.find("PlayerMesh")->second
+			);
+	}
+	
 }
 
 NetworkHandler::NetworkHandler() : sceneHandler(nullptr)
@@ -58,9 +69,14 @@ void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 	this->sceneHandler = sceneHandler;
 }
 
-void NetworkHandler::setResourceManager(ResourceManager* resourceManager) 
+void NetworkHandler::setResourceManager(ResourceManager* resourceManager)
 {
 	this->resourceManger = resourceManager;
+}
+
+void NetworkHandler::setMeshes(const std::string& meshName, const int meshID)
+{
+	this->networkHandlerMeshes.insert(std::pair<std::string, int>(meshName, meshID));
 }
 
 void NetworkHandler::createServer(NetworkScene* serverGame)
@@ -128,6 +144,7 @@ Client* NetworkHandler::createClient(const std::string& name)
 {
 	if (client == nullptr)
 	{
+		this->playerName = name;
 		client = new Client(name);
 	}
 	return client;
@@ -221,19 +238,27 @@ void NetworkHandler::updateNetwork()
 		{
 			//ix = what type of enemy
 			cTCPP >> ix;
-			
+
 			//should we really create a new entity everytime?
 			iy = sceneHandler->getScene()->createEntity();
 			std::cout << "spawn enemy" << iy << std::endl;
 			monsters.push_back(iy);
 
-			if (ix == 0)
+			if (ix == 0)//blob
 			{
-				sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("blob")->second);
+			}
+			else if (ix == 1)//range
+			{
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("range")->second);
+			}
+			else if (ix == 2)//tank
+			{
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("tank")->second);
 			}
 			else
 			{
-				sceneHandler->getScene()->setComponent<MeshComponent>(iy, (int) this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
+				sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
 			}
 
 			cTCPP >> fx >> fy >> fz;
@@ -297,7 +322,7 @@ void NetworkHandler::updateNetwork()
 		else if (gameEvent == GameEvents::GetPlayerNames)
 		{
 			cTCPP >> ix;
-			for(int i = 0; i < ix; i++)
+			for (int i = 0; i < ix; i++)
 			{
 				std::string playerName;
 				cTCPP >> iy >> playerName;
@@ -329,9 +354,9 @@ void NetworkHandler::updateNetwork()
 				//fxyz position, fabc rotation
 				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
 
-				if (otherPlayers.size() < i)
+				while (otherPlayers.size() < i)
 				{
-					//create entity
+					otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), "unknown"));
 				}
 
 				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i].first);
@@ -411,6 +436,11 @@ void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
 	client->sendTCPEvent(polygonEvent);
 }
 
+const std::string& NetworkHandler::getClientName()
+{
+	return this->playerName;
+}
+
 void NetworkHandler::getLuaData(std::vector<int>& ints, std::vector<float>& floats)
 {
 	ints = this->lua_ints;
@@ -422,9 +452,27 @@ const bool NetworkHandler::hasServer()
 	return serverThread != nullptr;
 }
 
-const std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers() 
+const std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers()
 {
 	return this->otherPlayers;
+}
+
+void NetworkHandler::createPlayers()
+{
+	for (int i = 0; i < otherPlayers.size(); i++)
+	{
+		otherPlayers[i].first = sceneHandler->getScene()->createEntity();
+		
+		if (this->networkHandlerMeshes.find("PlayerMesh") == this->networkHandlerMeshes.end())
+		{
+			sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[i].first);
+		}
+		else
+		{
+			sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[i].first, this->networkHandlerMeshes.find("PlayerMesh")->second
+			);
+		}
+	}
 }
 
 void NetworkHandler::disconnectClient()
