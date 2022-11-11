@@ -1,5 +1,5 @@
 #pragma once
-#include "../ServerEngine/NetworkScene.h"
+#include "../ServerEngine/NetworkSceneHandler.h"
 
 class DefaultServerGame : public NetworkScene
 {
