@@ -98,6 +98,8 @@ public:
         const glm::vec3& color);
     void renderPointLight(
         const Entity& pointLightEntity);
+    void renderSpotlight(
+        const Entity& spotlightEntity);
     void renderSphere(
         const glm::vec3& position,
         const float& radius,

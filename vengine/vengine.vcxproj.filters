@@ -183,6 +183,7 @@
     <ClInclude Include="vengine\graphics\StringAlignment.h" />
     <ClInclude Include="vengine\network\ServerGameModes\NetworkLobbyScene.h" />
     <ClInclude Include="vengine\windows\StatisticsCollector.hpp" />
+    <ClInclude Include="vengine\components\Spotlight.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

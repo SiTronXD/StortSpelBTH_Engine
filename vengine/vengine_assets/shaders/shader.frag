@@ -19,20 +19,20 @@ layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
     uint ambientLightsEndIndex;
     uint directionalLightsEndIndex;
     uint pointLightsEndIndex;
-	
-    uint padding0;
+	uint spotlightsEndIndex;
 } allLightsInfo;
 
 // Storage buffer
 struct LightBufferData
 {
-	// Point lights
+	// Point lights/Spotlights
     vec4 position;
 
-	// Directional lights
+	// Directional lights/Spotlights
+	// vec4(x, y, z, cos(angle / 2))
     vec4 direction;
 
-	// Ambient/Directional/Point lights
+	// Ambient/Directional/Point lights/Spotlights
     vec4 color;
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
@@ -112,7 +112,9 @@ void main()
 		i < allLightsInfo.pointLightsEndIndex; 
 		++i)
 	{
-		vec3 fragToLight = lightBuffer.lights[i].position.xyz - fragWorldPos;
+		LightBufferData lightData = lightBuffer.lights[i];
+
+		vec3 fragToLight = lightData.position.xyz - fragWorldPos;
 		vec3 fragToLightDir = normalize(fragToLight);
 		vec3 fragToViewDir = 
 			normalize(fragCamWorldPos - fragWorldPos);
@@ -128,7 +130,39 @@ void main()
 		// Add blinn-phong light contribution
 		finalColor += 
 			(diffuseLight + specularLight) * atten * 
-			lightBuffer.lights[i].color.xyz;
+			lightData.color.xyz;
+	}
+
+	// Spotlights
+	for(uint i = allLightsInfo.pointLightsEndIndex;
+		i < allLightsInfo.spotlightsEndIndex;
+		++i)
+	{
+		LightBufferData lightData = lightBuffer.lights[i];
+
+		vec3 fragToLight = lightData.position.xyz - fragWorldPos;
+		vec3 fragToLightDir = normalize(fragToLight);
+		vec3 fragToViewDir = 
+			normalize(fragCamWorldPos - fragWorldPos);
+		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
+		float atten = 1.0f / (1.0f + length(fragToLight));
+
+		// Regular diffuse light
+		vec3 diffuseLight = calcDiffuse(diffuseTextureCol, normal, fragToLightDir);
+
+		// Blinn specular
+		vec3 specularLight = calcSpecular(specularTextureCol, normal, halfwayDir);
+
+		// Add blinn-phong light contribution
+		finalColor += 
+			(diffuseLight + specularLight) * atten * 
+			lightData.color.xyz *
+			clamp(
+				(dot(-fragToLightDir, lightData.direction.xyz) - lightData.direction.w) /
+					(1.0f - lightData.direction.w), 
+				0.0f, 
+				1.0f
+			);
 	}
 
 	// Temporary fog

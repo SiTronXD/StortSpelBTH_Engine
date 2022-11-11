@@ -35,6 +35,7 @@
 #include "../components/AmbientLight.hpp"
 #include "../components/DirectionalLight.hpp"
 #include "../components/PointLight.hpp"
+#include "../components/Spotlight.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../resource_management/loaders/MeshLoader.hpp"
@@ -1076,8 +1077,8 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
 
     // Loop through all point lights in scene
     lightsInfo.pointLightsEndIndex = lightsInfo.directionalLightsEndIndex;
-    auto lightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
-    lightView.each([&](
+    auto pointLightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
+    pointLightView.each([&](
         Transform& transform,
         const PointLight& pointLightComp)
         {
@@ -1094,6 +1095,36 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
 
             // Increment end index
             lightsInfo.pointLightsEndIndex++;
+        }
+    );
+
+    // Loop through all spotlights in scene
+    lightsInfo.spotlightsEndIndex = lightsInfo.pointLightsEndIndex;
+    auto spotlightView = scene->getSceneReg().view<Transform, Spotlight>(entt::exclude<Inactive>);
+    spotlightView.each([&](
+        Transform& transform,
+        const Spotlight& spotlightComp)
+        {
+            const glm::mat3 rotMat = transform.getRotationMatrix();
+
+            // Create point light data
+            LightBufferData lightData{};
+            lightData.position = glm::vec4(
+                transform.position +
+                    rotMat * spotlightComp.positionOffset,
+                1.0f
+            );
+            lightData.direction = glm::vec4(
+                glm::normalize(rotMat * spotlightComp.direction),
+                std::cos(glm::radians(spotlightComp.angle * 0.5f))
+            );
+            lightData.color = glm::vec4(spotlightComp.color, 1.0f);
+
+            // Add to list
+            this->lightBuffer.push_back(lightData);
+
+            // Increment end index
+            lightsInfo.spotlightsEndIndex++;
         }
     );
 
