@@ -8,6 +8,16 @@
 #include "Texture.hpp"
 #include "../dev/Log.hpp"
 
+uint64_t ShaderInput::createResourceID(
+    const DescriptorFrequency& descriptorFrequency)
+{
+    uint32_t frequencyIndex = (uint32_t)descriptorFrequency;
+    uint64_t resourceIndex = 
+        static_cast<uint64_t>(this->resources[frequencyIndex].size());
+
+    return (uint64_t(frequencyIndex) << 32) | resourceIndex;
+}
+
 void ShaderInput::createDescriptorSetLayouts()
 {
 #ifndef VENGINE_NO_PROFILING
@@ -432,32 +442,24 @@ UniformBufferID ShaderInput::addUniformBuffer(
     const vk::ShaderStageFlagBits& shaderStage,
     const DescriptorFrequency& descriptorFrequency)
 {
-    UniformBufferID uniformBufferID = this->addedUniformBuffers.size();
+    UniformBufferID uniformBufferID = this->createResourceID();
 
-    // Create buffer and set info
-    UniformBufferHandle uniformBufferHandle{};
-    uniformBufferHandle.uniformBuffer.createUniformBuffer(
+    // Create uniform buffer
+    UniformBuffer* uniformBuffer = new UniformBuffer();
+    uniformBuffer->createUniformBuffer(
         *this->device,
         *this->vma,
         contentsSize,
         this->framesInFlight
     );
-    uniformBufferHandle.shaderStage = shaderStage;
-    uniformBufferHandle.descriptorFreq = descriptorFrequency;
-    uniformBufferHandle.cpuWritable = true;
-
-    // Add to list
-    this->addedUniformBuffers.push_back(uniformBufferHandle);
-
-    // TODO: cleanup and use only resourceHandle in the future
 
     // Create resource handle and add it to the lists
     ResourceHandle resourceHandle{};
-    resourceHandle.bufferID = uniformBufferID;
+    resourceHandle.buffer = uniformBuffer;
     resourceHandle.descriptorType = vk::DescriptorType::eUniformBuffer;
-    resourceHandle.shaderStage = uniformBufferHandle.shaderStage;
-    resourceHandle.descriptorFreq = uniformBufferHandle.descriptorFreq;
-    resourceHandle.cpuWritable = uniformBufferHandle.cpuWritable;
+    resourceHandle.shaderStage = shaderStage;
+    resourceHandle.descriptorFreq = descriptorFrequency;
+    resourceHandle.cpuWritable = true;
     switch (descriptorFrequency)
     {
     case DescriptorFrequency::PER_FRAME:
@@ -487,32 +489,24 @@ StorageBufferID ShaderInput::addStorageBuffer(
     const vk::ShaderStageFlagBits& shaderStage,
     const DescriptorFrequency& descriptorFrequency)
 {
-    StorageBufferID storageBufferID = this->addedStorageBuffers.size();
+    StorageBufferID storageBufferID = this->createResourceID();
 
-    // Create buffer and set info
-    StorageBufferHandle storageBufferHandle{};
-    storageBufferHandle.storageBuffer.createStorageBuffer(
+    // Create storage buffer
+    StorageBuffer* storageBuffer = new StorageBuffer();
+    storageBuffer->createStorageBuffer(
         *this->device,
         *this->vma,
         contentsSize,
         this->framesInFlight
     );
-    storageBufferHandle.shaderStage = shaderStage;
-    storageBufferHandle.descriptorFreq = descriptorFrequency;
-    storageBufferHandle.cpuWritable = true;
-
-    // Add to list
-    this->addedStorageBuffers.push_back(storageBufferHandle);
-
-    // TODO: cleanup and use only resourceHandle in the future
 
     // Create resource handle and add it to the lists
     ResourceHandle resourceHandle{};
-    resourceHandle.bufferID = storageBufferID;
+    resourceHandle.buffer = storageBuffer;
     resourceHandle.descriptorType = vk::DescriptorType::eStorageBuffer;
-    resourceHandle.shaderStage = storageBufferHandle.shaderStage;
-    resourceHandle.descriptorFreq = storageBufferHandle.descriptorFreq;
-    resourceHandle.cpuWritable = storageBufferHandle.cpuWritable;
+    resourceHandle.shaderStage = shaderStage;
+    resourceHandle.descriptorFreq = descriptorFrequency;
+    resourceHandle.cpuWritable = true;
     switch (descriptorFrequency)
     {
     case DescriptorFrequency::PER_FRAME:
@@ -605,24 +599,25 @@ void ShaderInput::cleanup()
     // Undo after destroying objects
     this->hasBeenCreated = false;
 
-    // Uniform buffers
-    for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
-    {
-        this->addedUniformBuffers[i].uniformBuffer.cleanup();
-    }
-    this->addedUniformBuffers.clear();
-
-    // Storage buffers
-    for (size_t i = 0; i < this->addedStorageBuffers.size(); ++i)
-    {
-        this->addedStorageBuffers[i].storageBuffer.cleanup();
-    }
-    this->addedStorageBuffers.clear();
-
     // Resource handles
-    this->perFrameResources.clear();
-    this->perMeshResources.clear();
-    this->perDrawResources.clear();
+    for (size_t i = 0; 
+        i < (size_t) DescriptorFrequency::NUM_FREQUENCY_TYPES; 
+        ++i)
+    {
+        // Resources
+        for (size_t j = 0, numResources = this->resources[i].size();
+            j < numResources;
+            ++j)
+        {
+            this->resources[i][j].buffer->cleanup();
+
+            delete this->resources[i][j].buffer;
+            this->resources[i][j].buffer = nullptr;
+
+        }
+
+        this->resources[i].clear();
+    }
 
     // Descriptor pools
     this->perFrameDescriptorSets.clear();
@@ -649,7 +644,10 @@ void ShaderInput::updateUniformBuffer(
     const UniformBufferID& id,
     void* data)
 {
-    this->addedUniformBuffers[id].uniformBuffer.update(data, this->currentFrame);
+    this->resources
+        [this->getResourceFrequencyIndex(id)]
+        [this->getResourceIndex(id)]
+        .buffer->update(data, this->currentFrame);
 }
 
 void ShaderInput::updateStorageBuffer(
