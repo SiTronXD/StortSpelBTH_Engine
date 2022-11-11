@@ -81,7 +81,7 @@ int UIRendererLua::lua_renderString(lua_State* L)
 	if (lua_isstring(L, 1) && lua_isvector(L, 2) && lua_isvector(L, 3))
 	{
 		float charMargin = lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0.0f;
-		StringAlignment alignment = lua_isinteger(L, 5) ? (StringAlignment)lua_tointeger(L, 5) : StringAlignment::CENTER;
+		StringAlignment alignment = lua_isnumber(L, 5) ? (StringAlignment)lua_tointeger(L, 5) : StringAlignment::CENTER;
 
 		uiRenderer->renderString(lua_tostring(L, 1), glm::vec2(lua_tovector(L, 2)), lua_tovector(L, 3), charMargin, alignment);
 	}
@@ -95,7 +95,7 @@ int UIRendererLua::lua_renderString3D(lua_State* L)
 	if (lua_isstring(L, 1) && lua_isvector(L, 2) && lua_isvector(L, 3))
 	{
 		float charMargin = lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0.0f;
-		StringAlignment alignment = lua_isinteger(L, 5) ? (StringAlignment)lua_tointeger(L, 5) : StringAlignment::CENTER;
+		StringAlignment alignment = lua_isnumber(L, 5) ? (StringAlignment)lua_tointeger(L, 5) : StringAlignment::CENTER;
 
 		uiRenderer->renderString(lua_tostring(L, 1), lua_tovector(L, 2), lua_tovector(L, 3), charMargin, alignment);
 	}
