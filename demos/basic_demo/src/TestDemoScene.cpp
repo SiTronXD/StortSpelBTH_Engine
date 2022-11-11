@@ -38,9 +38,11 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
-	this->setComponent<PointLight>(this->testEntity);
-	this->getComponent<PointLight>(this->testEntity).positionOffset = glm::vec3(0.0f, 0.0f, 10.0f);
-	this->getComponent<PointLight>(this->testEntity).color = glm::vec3(0.05f, 0.95f, 0.05f) * 20.0f;
+	this->setComponent<Spotlight>(this->testEntity);
+	this->getComponent<Spotlight>(this->testEntity).positionOffset = glm::vec3(0.0f, 5.0f, 0.0f);
+	this->getComponent<Spotlight>(this->testEntity).direction = glm::vec3(0.0f, -1.0f, 0.0f); 
+	this->getComponent<Spotlight>(this->testEntity).angle = 90.0f;
+	this->getComponent<Spotlight>(this->testEntity).color = glm::vec3(0.02f, 0.95f, 0.02f) * 10.0f;
 
 	// Create entity (already has transform)
 	Entity ghostEntity2 = this->createEntity();
@@ -266,9 +268,13 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
-	this->getComponent<Transform>(this->testEntity).rotation.x +=
-		180.0f * Time::getDT();
-	this->getDebugRenderer()->renderPointLight(this->testEntity);
+	// Rotate testEntity
+	/*this->getComponent<Transform>(this->testEntity).rotation.x +=
+		180.0f * Time::getDT(); */
+	static float tim = 0.0f;
+	tim += Time::getDT();
+	this->getComponent<Spotlight>(this->testEntity).direction.x = std::sin(tim);
+	this->getDebugRenderer()->renderSpotlight(this->testEntity);
 
 	/*if (Input::isKeyReleased(Keys::ONE))
 	{
@@ -354,7 +360,8 @@ void TestDemoScene::update()
 		glm::vec3(0.0f),
 		glm::vec2(50.0f),
 		0.0f,
-		StringAlignment::CENTER
+		StringAlignment::CENTER,
+		glm::vec4(1.0f, 0.0f, 0.0f, 0.5f)
 	);
 
 	// Debug rendering

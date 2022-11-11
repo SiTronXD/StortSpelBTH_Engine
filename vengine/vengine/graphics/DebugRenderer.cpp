@@ -7,6 +7,7 @@
 #include "../components/MeshComponent.hpp"
 #include "../components/Transform.hpp"
 #include "../components/PointLight.hpp"
+#include "../components/Spotlight.hpp"
 #include "../VengineMath.hpp"
 #include "../application/SceneHandler.hpp"
 
@@ -220,6 +221,12 @@ void DebugRenderer::renderPointLight(const Entity& pointLightEntity)
 {
     Scene* scene = this->sceneHandler->getScene();
 
+    if (!scene->hasComponents<PointLight>(pointLightEntity))
+    {
+        Log::warning("Entity ID " + std::to_string(pointLightEntity) + " does not have a point light. Please remove the call to DebugRenderer::renderPointLight() for this entity.");
+        return;
+    }
+
     Transform& transform = scene->getComponent<Transform>(pointLightEntity);
     PointLight& pointLight = scene->getComponent<PointLight>(pointLightEntity);
     transform.updateMatrix();
@@ -234,6 +241,74 @@ void DebugRenderer::renderPointLight(const Entity& pointLightEntity)
         transform.rotation, 
         glm::vec3(0.3f), 
         this->toneMappingACES(pointLight.color)
+    );
+}
+
+void DebugRenderer::renderSpotlight(const Entity& spotlightEntity)
+{
+    Scene* scene = this->sceneHandler->getScene();
+
+    if (!scene->hasComponents<Spotlight>(spotlightEntity))
+    {
+        Log::warning("Entity ID " + std::to_string(spotlightEntity) + " does not have a spotlight. Please remove the call to DebugRenderer::renderSpotlight() for this entity.");
+        return;
+    }
+
+    Transform& transform = scene->getComponent<Transform>(spotlightEntity);
+    Spotlight& spotlight = scene->getComponent<Spotlight>(spotlightEntity);
+    transform.updateMatrix();
+
+    // Transform
+    glm::vec3 position = transform.position +
+        transform.getRotationMatrix() * spotlight.positionOffset;
+    glm::vec3 direction = transform.getRotationMatrix() * spotlight.direction;
+
+    glm::vec3 color = this->toneMappingACES(spotlight.color);
+
+    // Render point light position as sphere
+    this->renderSphere(
+        position,
+        0.1f,
+        color
+    );
+
+    float len = 15.0f;
+
+    // Render direction as line
+    /*this->renderLine(
+        position, 
+        position + direction * len,
+        color
+    );*/
+
+    // World up
+    glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    if (abs(dot(worldUp, direction)) >= 0.95f)
+        worldUp = glm::vec3(1.0f, 0.0f, 0.0f);
+
+    // Render tangents to cone
+    glm::vec3 rightVec = normalize(glm::cross(direction, worldUp));
+    glm::vec3 upVec = normalize(glm::cross(rightVec, direction));
+    float perpLen = std::sin(glm::radians(spotlight.angle) * 0.5f) * len;
+    this->renderLine(
+        position,
+        position + direction * len + rightVec * perpLen,
+        color
+    );
+    this->renderLine(
+        position,
+        position + direction * len - rightVec * perpLen,
+        color
+    );
+    this->renderLine(
+        position,
+        position + direction * len + upVec * perpLen,
+        color
+    );
+    this->renderLine(
+        position,
+        position + direction * len - upVec * perpLen,
+        color
     );
 }
 

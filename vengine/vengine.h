@@ -8,6 +8,7 @@
 #include "vengine/components/AmbientLight.hpp"
 #include "vengine/components/DirectionalLight.hpp"
 #include "vengine/components/PointLight.hpp"
+#include "vengine/components/Spotlight.hpp"
 #include "vengine/components/UIArea.hpp"
 #include "vengine/dev/Log.hpp"
 #include "vengine/test/TestScene.hpp"

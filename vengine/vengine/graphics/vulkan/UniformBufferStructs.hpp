@@ -23,13 +23,14 @@ struct AllLightsInfo
     // [directionalLightsEndIndex, pointLightsEndIndex)
     uint32_t pointLightsEndIndex; 
 
-    uint32_t padding0;
+    // [pointLightsEndIndex, spotlightsEndIndex)
+    uint32_t spotlightsEndIndex;
 };
 
 // Light data per light
 struct LightBufferData
 {
     glm::vec4 position;
-    glm::vec4 direction;
+    glm::vec4 direction; // vec4(x, y, z, cos(angle / 2))
     glm::vec4 color;
 };

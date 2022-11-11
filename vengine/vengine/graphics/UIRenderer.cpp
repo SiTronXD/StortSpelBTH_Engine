@@ -208,7 +208,8 @@ void UIRenderer::setTexture(const uint32_t& textureIndex)
 void UIRenderer::renderTexture(
     const glm::vec2& position,
     const glm::vec2& dimension,
-    const glm::uvec4 textureCoords)
+    const glm::uvec4 textureCoords,
+    const glm::vec4 multiplyColor)
 {
     if (this->currentElementIndex >= START_NUM_MAX_ELEMENTS)
     {
@@ -224,6 +225,7 @@ void UIRenderer::renderTexture(
         // Set element data
         this->uiElementData[this->currentElementIndex].transform =
             ResTranslator::transformRect(position, dimension);
+        this->uiElementData[this->currentElementIndex].multiplyColor = multiplyColor;
         this->uiElementData[this->currentElementIndex].uvRect =
             textureCoords;
 
@@ -235,7 +237,8 @@ void UIRenderer::renderTexture(
 void UIRenderer::renderTexture(
     const glm::vec3& worldPosition,
     const glm::vec2& dimension,
-    const glm::uvec4 textureCoords)
+    const glm::uvec4 textureCoords,
+    const glm::vec4 multiplyColor)
 {
     Scene* scene = this->sceneHandler->getScene();
     if (!scene->entityValid(scene->getMainCameraID())) { return; }
@@ -250,7 +253,7 @@ void UIRenderer::renderTexture(
     glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
     glm::vec2 size = 5.0f * dimension / glm::dot(worldPosition - camTransform.position, camTransform.forward());
 
-    this->renderTexture(screenPos, size, textureCoords);
+    this->renderTexture(screenPos, size, textureCoords, multiplyColor);
 }
 
 void UIRenderer::renderString(
@@ -258,7 +261,8 @@ void UIRenderer::renderString(
     const glm::vec2& position,
     const glm::vec2& charDimension,
     const float& charMargin,
-    const StringAlignment& alignment)
+    const StringAlignment& alignment,
+    const glm::vec4 multiplyColor)
 {
     float currentCharWidth = 0.0f;
     float currentCharHeight = 0.0f;
@@ -312,7 +316,8 @@ void UIRenderer::renderString(
                 position.x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f + alignmentOffset, 
                 position.y - charDimension.y * 0.5f + currentCharHeight * 0.5f),
             glm::vec2(currentCharWidth, currentCharHeight),
-            glm::uvec4(charRect->x, charRect->y, charRect->width, charRect->height)
+            glm::uvec4(charRect->x, charRect->y, charRect->width, charRect->height),
+            multiplyColor
         );
 
         currentSizeX += charMargin + currentCharWidth;
@@ -324,7 +329,8 @@ void UIRenderer::renderString(
     const glm::vec3& worldPosition,
     const glm::vec2& charDimension,
     const float& charMargin,
-    const StringAlignment& alignment)
+    const StringAlignment& alignment,
+    const glm::vec4 multiplyColor)
 {
     Scene* scene = this->sceneHandler->getScene();
     if (!scene->entityValid(scene->getMainCameraID())) { return; }
@@ -341,5 +347,5 @@ void UIRenderer::renderString(
     glm::vec2 size = charDimension * dot;
     float margin = charMargin * dot;
 
-    this->renderString(text, screenPos, size, margin, alignment);
+    this->renderString(text, screenPos, size, margin, alignment, multiplyColor);
 }
