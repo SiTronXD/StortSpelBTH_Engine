@@ -344,6 +344,17 @@ bool ScriptHandler::getScriptComponentValue(Script& script, float& ret, const st
 	return result;
 }
 
+bool ScriptHandler::getScriptComponentValue(Script& script, bool& ret, const std::string& name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_getfield(L, -1, name.c_str());
+
+	bool result = lua_isboolean(L, -1);
+	if (result) { ret = lua_toboolean(L, -1); }
+	lua_pop(L, 2);
+	return result;
+}
+
 bool ScriptHandler::getScriptComponentValue(Script& script, std::string& ret, const std::string& name)
 {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
@@ -377,6 +388,13 @@ void ScriptHandler::setScriptComponentValue(Script& script, const float& val, co
 {
 	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
 	lua_pushnumber(L, val);
+	lua_setfield(L, -2, name.c_str());
+}
+
+void ScriptHandler::setScriptComponentValue(Script& script, const bool& val, const std::string& name)
+{
+	lua_rawgeti(L, LUA_REGISTRYINDEX, script.luaRef);
+	lua_pushboolean(L, val);
 	lua_setfield(L, -2, name.c_str());
 }
 
@@ -414,6 +432,16 @@ bool ScriptHandler::getGlobal(float& ret, const std::string& name)
 	return result;
 }
 
+bool ScriptHandler::getGlobal(bool& ret, const std::string& name)
+{
+	lua_getglobal(L, name.c_str());
+
+	bool result = lua_isboolean(L, -1);
+	if (result) { ret = lua_toboolean(L, -1); }
+	lua_pop(L, 1);
+	return result;
+}
+
 bool ScriptHandler::getGlobal(std::string& ret, const std::string& name)
 {
 	lua_getglobal(L, name.c_str());
@@ -442,26 +470,14 @@ void ScriptHandler::setGlobal(const int& val, const std::string& name)
 
 void ScriptHandler::setGlobal(const float& val, const std::string& name)
 {
-	std::vector<std::string> names;
-	StringHelper::splitString(name, '.', names);
-	lua_getglobal(L, names[0].c_str());
-	if (!lua_isnil(L, -1))
-	{
-		LuaH::openTableTree(L, names);
-		LuaH::dumpStack(L);
+	lua_pushnumber(L, val);
+	lua_setglobal(L, name.c_str());
+}
 
-		lua_pushnumber(L, val);
-		lua_setfield(L, -1, name.c_str());
-		LuaH::dumpStack(L);
-
-		lua_pop(L, (int)names.size());
-	}
-	else
-	{
-		lua_pop(L, 1);
-		lua_pushnumber(L, val);
-		lua_setglobal(L, name.c_str());
-	}
+void ScriptHandler::setGlobal(const bool& val, const std::string& name)
+{
+	lua_pushboolean(L, val);
+	lua_setglobal(L, name.c_str());
 }
 
 void ScriptHandler::setGlobal(const std::string& val, const std::string& name)

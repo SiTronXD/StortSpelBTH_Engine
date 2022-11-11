@@ -51,21 +51,25 @@ public:
 
 	bool getScriptComponentValue(Script& script, int& ret, const std::string& name);
 	bool getScriptComponentValue(Script& script, float& ret, const std::string& name);
+	bool getScriptComponentValue(Script& script, bool& ret, const std::string& name);
 	bool getScriptComponentValue(Script& script, std::string& ret, const std::string& name);
 	bool getScriptComponentValue(Script& script, glm::vec3& ret, const std::string& name);
 
 	void setScriptComponentValue(Script& script, const int& val, const std::string& name);
 	void setScriptComponentValue(Script& script, const float& val, const std::string& name);
+	void setScriptComponentValue(Script& script, const bool& val, const std::string& name);
 	void setScriptComponentValue(Script& script, const std::string& val, const std::string& name);
 	void setScriptComponentValue(Script& script, const glm::vec3& val, const std::string& name);
 
 	bool getGlobal(int& ret, const std::string& name);
 	bool getGlobal(float& ret, const std::string& name);
+	bool getGlobal(bool& ret, const std::string& name);
 	bool getGlobal(std::string& ret, const std::string& name);
 	bool getGlobal(glm::vec3& ret, const std::string& name);
 
 	void setGlobal(const int& val, const std::string& name);
 	void setGlobal(const float& val, const std::string& name);
+	void setGlobal(const bool& val, const std::string& name);
 	void setGlobal(const std::string& val, const std::string& name);
 	void setGlobal(const glm::vec3& val, const std::string& name);
 };

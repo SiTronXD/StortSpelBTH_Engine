@@ -112,14 +112,5 @@ namespace LuaH
 
 		lua_pop(L, 2);
 	}
-
-	// Assumes table is at -1 and table name is first element
-	static void openTableTree(lua_State* L, const std::vector<std::string>& names)
-	{
-		for (int i = 1, len = (int)names.size() - 1; i < len; i++)
-		{
-			lua_getfield(L, -1, names[i].c_str());
-		}
-	}
 }
 
