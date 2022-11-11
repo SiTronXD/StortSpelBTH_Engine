@@ -3,10 +3,13 @@
 #include "glm/common.hpp"
 #include "glm/gtc/quaternion.hpp"
 
+
 class SMath
 {
- public:
+private:
+    inline static uint32_t seed = 0;
 
+ public:
 	 static glm::vec3 getRandomVector(float scalar);
 	 static glm::vec3 rotateVectorByQuaternion(const glm::quat& quaternion, const glm::vec3& vector);
      static glm::vec3 extractTranslation(const glm::mat4& mat);
@@ -14,6 +17,10 @@ class SMath
      static glm::mat4 rotateTowards(const glm::vec3& dir, const glm::vec3& up);
      static glm::mat4 rotateEuler(const glm::vec3& angles);
 	 static glm::vec3 rotateVector(const glm::vec3& angles, const glm::vec3 vector);
+
+     // Replace srand/rand
+     static void srand(const uint32_t& seed);
+     static uint32_t rand();
 };
 
 inline glm::vec3 SMath::getRandomVector(float scalar) 
@@ -78,4 +85,24 @@ inline glm::vec3 SMath::rotateVector(const glm::vec3& angles, glm::vec3 vector) 
 	vector = glm::mat3(cos(glm::radians(angles.y)), 0.f, sin(glm::radians(angles.y)), 0.f, 1.f, 0.f, -sin(glm::radians(angles.y)), 0.f, cos(glm::radians(angles.y))) * vector;
 
     return vector;
+}
+
+inline void SMath::srand(const uint32_t& seed)
+{
+    SMath::seed = seed;
+}
+
+inline uint32_t SMath::rand()
+{
+    // Wang hash
+    uint32_t newSeed = uint32_t(SMath::seed ^ uint32_t(61)) ^ uint32_t(SMath::seed >> uint32_t(16));
+    newSeed *= 9u;
+    newSeed = newSeed ^ (newSeed >> 4);
+    newSeed *= uint32_t(0x27d4eb2d);
+    newSeed = newSeed ^ (newSeed >> 15);
+
+    // Next seed
+    SMath::seed++;
+
+    return newSeed;
 }
