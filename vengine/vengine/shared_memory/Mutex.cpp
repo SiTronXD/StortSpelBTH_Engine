@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Mutex.h"
 
 Mutex::Mutex(LPCWSTR mutexName)

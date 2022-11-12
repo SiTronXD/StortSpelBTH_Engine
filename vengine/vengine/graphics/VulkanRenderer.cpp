@@ -1387,9 +1387,6 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                             this->shaderInput,
                             DescriptorFrequency::PER_MESH
                         );
-
-                        const std::vector<SubmeshData>& submeshes =
-                            currentMesh.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
                         {
                             const SubmeshData& currentSubmesh = submeshes[i];

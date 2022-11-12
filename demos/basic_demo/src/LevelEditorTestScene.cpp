@@ -35,7 +35,7 @@ void LevelEditorTestScene::update()
 {
 	while (comLib->Recieve(msg, header))
 	{
-		if (header->messageType == NEW_MESH)
+		if (header->messageType == MESH_NEW)
 		{
 			MeshHeader mesh;
 			int offset = 0;

@@ -50,9 +50,6 @@
     <ClInclude Include="src\LevelEditorTestScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Headers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\NewTestScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>

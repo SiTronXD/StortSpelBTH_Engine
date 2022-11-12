@@ -359,7 +359,6 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\graphics\StringAlignment.h" />
     <ClInclude Include="vengine\pch\pch.h" />
     <ClInclude Include="vengine\components\MaterialComponent.hpp" />
-    <ClInclude Include="vengine\graphics\Material.hpp" />
     <ClInclude Include="vengine\physics\CallbackType.h" />
     <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
     <ClInclude Include="vengine\ai\AgentStatus.hpp" />
@@ -492,7 +491,6 @@ SET ERRORLEVEL = 0</Command>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Release|x64'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
-    <ClCompile Include="vengine\graphics\Material.cpp" />
     <ClCompile Include="vengine\physics\CollisionDispatcher.cpp" />
     <ClCompile Include="vengine\ai\AIHandler.cpp" />
     <ClCompile Include="vengine\ai\BehaviorTree.cpp" />

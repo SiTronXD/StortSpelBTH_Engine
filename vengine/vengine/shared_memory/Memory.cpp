@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Memory.h"
 
 Memory::Memory(LPCWSTR bufferName, size_t bufferSize)

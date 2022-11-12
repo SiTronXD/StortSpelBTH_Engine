@@ -5,7 +5,7 @@
 #include <string>
 #include "ResourceManagerStructs.hpp"
 #include "../graphics/Mesh.hpp"
-#include "../graphics/Material.hpp"
+//#include "../graphics/Material.hpp"
 #include "../graphics/Texture.hpp"
 #include "../graphics/TextureSampler.hpp"
 #include "../dev/Log.hpp"
@@ -30,7 +30,6 @@ private:
     std::unordered_map<std::string, uint32_t> soundPaths;
 
     std::unordered_map<uint32_t, Mesh> meshes;
-	std::unordered_map<uint32_t, Material> materials;
 	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;

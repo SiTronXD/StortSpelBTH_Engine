@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Comlib.h"
 
 Comlib::Comlib(LPCWSTR bufferName, size_t bufferSize, ProcessType type)

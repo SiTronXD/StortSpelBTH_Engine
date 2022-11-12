@@ -23,7 +23,7 @@ void Log::warning(const std::string& message, std::string filter)
 
 #ifdef _WIN32
 #include <Windows.h>
-void Log::error(const std::string& errorMessage)
+void Log::error(const std::string& errorMessage, std::string filter)
 {
 	std::cout << "[Log Error]: " << errorMessage << std::endl;
 
