@@ -262,14 +262,18 @@ SET ERRORLEVEL = 0</Command>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="src\LevelEditorTestScene.cpp" />
+    <ClCompile Include="src\LobbyScene.cpp" />
     <ClCompile Include="src\NetworkTestScene.cpp" />
+    <ClCompile Include="src\NewTestScene.cpp" />
     <ClCompile Include="src\TestDemoScene.cpp" />
     <ClCompile Include="src\TheServerGame.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Headers.h" />
     <ClInclude Include="src\LevelEditorTestScene.h" />
+    <ClInclude Include="src\LobbyScene.h" />
     <ClInclude Include="src\NetworkTestScene.h" />
+    <ClInclude Include="src\NewTestScene.h" />
     <ClInclude Include="src\TestDemoScene.h" />
     <ClInclude Include="src\TheServerGame.h" />
   </ItemGroup>
@@ -280,6 +284,7 @@ SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\vengine\.clang-format" />
+    <None Include="assets\scripts\button.lua" />
     <None Include="luatestScene.lua" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

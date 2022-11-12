@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ResTranslator.hpp"
 #include "../dev/Log.hpp"
 
@@ -23,10 +24,8 @@ void ResTranslator::updateWindowSize(
 }
 
 glm::vec4 ResTranslator::transformRect(
-	const float& x,
-	const float& y,
-	const float& width,
-	const float& height)
+	const glm::vec2 position,
+	const glm::vec2 dimension)
 {
 	glm::vec4 result(0.0f);
 
@@ -34,23 +33,23 @@ glm::vec4 ResTranslator::transformRect(
 	if (aspectRatio >= INTERNAL_ASPECT_RATIO)
 	{
 		// Scale
-		result.z = width / INTERNAL_HEIGHT * 2.0f * screenSizeScaleY / screenSizeScaleX / INTERNAL_ASPECT_RATIO;
-		result.w = height / INTERNAL_HEIGHT * 2.0f;
+		result.z = dimension.x / INTERNAL_HEIGHT * 2.0f * screenSizeScaleY / screenSizeScaleX / INTERNAL_ASPECT_RATIO;
+		result.w = dimension.y / INTERNAL_HEIGHT * 2.0f;
 
 		// Position
-		result.x = x / INTERNAL_WIDTH * 2.0f * screenSizeScaleY / screenSizeScaleX;
-		result.y = y / INTERNAL_HEIGHT * 2.0f;
+		result.x = position.x / INTERNAL_WIDTH * 2.0f * screenSizeScaleY / screenSizeScaleX;
+		result.y = position.y / INTERNAL_HEIGHT * 2.0f;
 	}
 	// Smaller than 16:9
 	else
 	{
 		// Scale
-		result.z = width / INTERNAL_WIDTH * 2.0f;
-		result.w = height / INTERNAL_WIDTH * 2.0f * screenSizeScaleX / screenSizeScaleY * INTERNAL_ASPECT_RATIO;
+		result.z = dimension.x / INTERNAL_WIDTH * 2.0f;
+		result.w = dimension.y / INTERNAL_WIDTH * 2.0f * screenSizeScaleX / screenSizeScaleY * INTERNAL_ASPECT_RATIO;
 
 		// Position
-		result.x = x / INTERNAL_WIDTH * 2.0f;
-		result.y = y / INTERNAL_HEIGHT * 2.0f * screenSizeScaleX / screenSizeScaleY;
+		result.x = position.x / INTERNAL_WIDTH * 2.0f;
+		result.y = position.y / INTERNAL_HEIGHT * 2.0f * screenSizeScaleX / screenSizeScaleY;
 	}
 
 	return result;
@@ -59,12 +58,22 @@ glm::vec4 ResTranslator::transformRect(
 glm::vec2 ResTranslator::toInternalPos(
 	const glm::vec2& externalPos)
 {
-	// TODO: fix this
-	Log::error("ResTranslator::toInternalPos does not work atm...");
-
 	float aspectRatio = (float) windowWidth / windowHeight;
-	float newX = (externalPos.x / windowWidth - 0.5f) * INTERNAL_HEIGHT * aspectRatio;
-	float newY = -(externalPos.y / windowHeight - 0.5f) * INTERNAL_HEIGHT;
+	float newX = 0.0f;
+	float newY = 0.0f;
+
+	// 16:9 and wider
+	if (aspectRatio >= INTERNAL_ASPECT_RATIO)
+	{
+		newX = (externalPos.x / windowWidth - 0.5f) * INTERNAL_HEIGHT * aspectRatio;
+		newY = -(externalPos.y / windowHeight - 0.5f) * INTERNAL_HEIGHT;
+	}
+	// Smaller than 16:9
+	else
+	{
+		newX = (externalPos.x / windowWidth - 0.5f) * INTERNAL_WIDTH;
+		newY = -(externalPos.y / windowHeight - 0.5f) * INTERNAL_WIDTH * aspectRatio;
+	}
 
 	return glm::vec2(newX, newY);
 }

@@ -8,6 +8,14 @@ This file contains everything lua related that has been implemented in to Vengin
 * [Exposed Systems:](#Exposed-Systems)
 	* [Scene](#Scene)
 		* [Components](#Components)
+			* [Transform](#Transform)
+			* [MeshComponent](#MeshComponent)
+			* [Script](#Script)
+			* [Camera](#Camera)
+			* [Collider](#Collider)
+			* [Rigidbody](#Rigidbody)
+			* [Animation](#Animation)
+			* [UIArea](#UIArea)
 	* [Input](#Input)
 	* [Resource Manager](#Resource-Manager)
 	* [Network](#Network)
@@ -248,6 +256,7 @@ The amount of components supported grows with the engine. This section goes over
 * [Collider](#Collider)
 * [Rigidbody](#Rigidbody)
 * [Animation](#Animation)
+* [UIArea](#UIArea)
 * AudioListener (not completely done)
 * AudioSource (not completely done)
 
@@ -379,6 +388,26 @@ anim.timeScale = -2 -- Backwards at double speed
 scene.setComponent(e, CompType.Animation, anim)
 ~~~
 
+#### UIArea
+The UIArea component is used to define a 2D area on the screen that can be controlled for UI elements such as buttons and others that need mouse input. It has two overloaded functions called isHovering and isClicking that can be useful. There are also similar functions in [Script components] that will be called automatically from C++ with entities that have both components. 
+~~~ Lua
+-- Members (also how it's defined in prefabs)
+local UIArea = {
+	vector : position, -- Only x and y matter (2D)
+	vector : dimension, -- Only x and y matter (2D)
+	int : clickButton -- Mouse button id (useful for script functions)
+}
+
+-- Member functions
+area:isHovering() -- Currently hovered over by mouse
+area:isClicking() -- Currently clicked via clickbutton value
+
+--Example of use
+local area = scene.getComponent(e, CompType.UIArea)
+area.position = vector(10, 20)
+scene.setComponent(e, CompType.UIArea, area)
+~~~
+
 ## Input
 The input global that has been created in the lua environment is the main interface of the keyboard and mouse inputs.
 
@@ -491,7 +520,7 @@ input.setHideCursor(bool : hide)
 ## Resource Manager
 The resources global that has been created in the lua environment is the main interface of the resource manager in C++. It is used to load in a variety of assets from disk, such as meshes and textures.
 
-With the resources global comes another global table that is related to texture settings. These value can be used in a table when [adding a texture](#addTexture) to the resource manager.
+With the resources global comes another global table that is related to texture settings. These values can be used in a table when [adding a texture](#addTexture) to the resource manager.
 ~~~ Lua
 -- Filters
 Filters.Nearest
@@ -658,24 +687,69 @@ end
 ## UIRenderer
 The uiRenderer global that has been created for the lua environment is the main interface to render textures to the screen as UI.
 
+With the uiRenderer global comes another global table that is related to string alignment. These values can be used when rendering a string in [renderString](#renderString) and [renderString3D](#renderString3D)
+
 ### Functions
 List of functions related to the *uiRenderer* global.
 
 #### setTexture
-Sets the active texture resource to be rendered when calling [renderTexture](#renderTexture). It can be used with a texture ID or the path to the texture.
+Sets the active texture resource to be rendered when calling [renderTexture](#renderTexture) and [renderTexture3D](#renderTexture3D). It can be used with a texture ID or the path to the texture.
 ~~~ Lua
 uiRenderer.setTexture(int : textureID)
 uiRenderer.setTexture(string : texture_path)
 ~~~
 
-#### renderTexture
-Renders the active texture to the screen. [setTexture](#setTexture) should be called before. Takes a 2D position and width and height as the argument.
+#### setBitmapFont
+Used to set the active texture resource as the active font texture to be used. Also calculates the tiles and positions from information sent in.
 ~~~ Lua
-uiRenderer.renderTexture(float : x, float : y, float : width, float : height)
+uiRenderer.setBitmapFont(table : char_table, int : textureID, vector : tile_size)
+uiRenderer.setBitmapFont(table : char_table, string : path, vector : tile_size)
+~~~
+
+#### renderTexture
+Renders the active texture to the screen. [setTexture](#setTexture) should be called before. Takes a 2D position and dimension as the argument. 
+~~~ Lua
+uiRenderer.renderTexture(vector : position, vector : dimension)
 
 --Example use
 uiRenderer.setTexture("test.png")
-uiRenderer.renderTexture(0, 0, 100, 100) -- 100x100 image in the middle of the screen
+uiRenderer.renderTexture(vector(0, 0), vector(100, 100)) -- 100x100 image in the middle of the screen
+~~~
+
+#### renderTexture3D
+Renders the active texture and translate the 3D position to the screen. [setTexture](#setTexture) should be called before. Takes a 3D position and dimension as the argument.
+~~~ Lua
+uiRenderer.renderTexture3D(vector : position, vector : dimension)
+
+--Example use
+uiRenderer.setTexture("test.png")
+uiRenderer.renderTexture3D(vector(0, 0, 0), vector(100, 100)) -- 100x100 image in the middle of the world
+~~~
+
+#### renderString
+Renders text with the active font to the screen. [setBitmapFont](#setBitmapFont) should be called before. Takes a text string, 2D position and character dimension as the argument. Optional values such as margin and string alignment can be sent in.
+~~~ Lua
+uiRenderer.renderString(string text, vector : position, vector : char_dimension)
+uiRenderer.renderString(string text, vector : position, vector : char_dimension,
+float char_margin, int : alignment) -- Optional (StringAlignment useful here)
+
+--Example use
+uiRenderer.setBitmapFont("test_font.png")
+uiRenderer.renderString("test", vector(0, 0), vector(100, 100),
+0, StringAlignment.Left)
+~~~
+
+#### renderString3D
+Renders text with the active font and translate the 3D position to the screen. [setBitmapFont](#setBitmapFont) should be called before. Takes a text string, 3D position and character dimension as the argument. Optional values such as margin and string alignment can be sent in.
+~~~ Lua
+uiRenderer.renderString3D(string text, vector : position, vector : char_dimension)
+uiRenderer.renderString3D(string text, vector : position, vector : char_dimension,
+float char_margin, int : alignment) -- Optional (StringAlignment useful here)
+
+--Example use
+uiRenderer.setBitmapFont("test_font.png")
+uiRenderer.renderString3D("test", vector(0, 0, 0), vector(100, 100),
+0, StringAlignment.Left)
 ~~~
 
 ## DebugRenderer
@@ -844,6 +918,8 @@ script:onCollisionExit(e) -- Called when collision with another entity has ended
 script:onTriggerEnter(e) -- Called when triggering with another entity has started
 script:onTriggerStay(e) -- Called when trigger colliding with another entity
 script:onTriggerExit(e) -- Called when triggering with another entity has ended
+script:onHover(e) -- Called when hovered by mouse (must have UIArea component)
+script:onClick(e) -- Called when clicked by mouse (must have UIArea component)
 ~~~
 The script table created and used in these functions also have some extra member elements that has been provided by the C++ side.
 ~~~ Lua

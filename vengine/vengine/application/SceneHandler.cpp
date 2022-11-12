@@ -1,7 +1,9 @@
+#include "pch.h"
 #include "SceneHandler.hpp"
 #include "Time.hpp"
 #include "../components/AnimationComponent.hpp"
 #include "../graphics/VulkanRenderer.hpp"
+#include "../graphics/UIRenderer.hpp"
 #include "../lua/ScriptHandler.h"
 
 void SceneHandler::initSubsystems()
@@ -11,7 +13,6 @@ void SceneHandler::initSubsystems()
 		this->physicsEngine->init();
 	}
 	
-
 	// Init scene
 	this->scene->init();
 	if (this->luaScript.size() != 0)
@@ -92,12 +93,28 @@ void SceneHandler::prepareForRendering()
 			}
 		}
 	);
+
 	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
 	auto func = [](Transform& transform)
 	{
 		transform.updateMatrix();
 	};
 	view.each(func);
+
+	ScriptHandler& scriptHandler = *this->getScriptHandler();
+	auto uiView = this->scene->getSceneReg().view<UIArea, Script>(entt::exclude<Inactive>);
+	auto uiFunc = [&](const auto& entity, UIArea& uiArea, Script& script)
+	{
+		if (uiArea.isHovering())
+		{
+			scriptHandler.runFunction((Entity)entity, script, "onHover");
+			if (uiArea.isClicking())
+			{
+				scriptHandler.runFunction((Entity)entity, script, "onClick");
+			}
+		}
+	};
+	uiView.each(uiFunc);
 }
 
 void SceneHandler::setScene(Scene* scene, std::string path)
@@ -114,7 +131,7 @@ void SceneHandler::reloadScene()
 {
 	// Clear registry
 	this->scene->getSceneReg().clear();
-	
+
 	// Init
 	this->initSubsystems();
 }

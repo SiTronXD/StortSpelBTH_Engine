@@ -29,7 +29,15 @@ class VulkanRenderer
     std::vector<TracyVkCtx> tracyContext;
 #endif
     const int MAX_FRAMES_IN_FLIGHT = 3;
-    friend class TextureLoader;         /// TODO: REMOVE , Just to give TextureLoader access to SamplerDescriptor...
+
+    const uint32_t MAX_NUM_LIGHTS = 16;
+
+    struct PushConstantData
+    {
+        glm::mat4 modelMatrix;
+        glm::vec4 tintColor; // vec4(R, G, B, lerp alpha)
+    } pushConstantData{};
+
     ResourceManager* resourceManager;
     UIRenderer* uiRenderer;
     DebugRenderer* debugRenderer;
@@ -41,9 +49,9 @@ class VulkanRenderer
 
     bool windowResized = false;
 
-    UboViewProjection uboViewProjection{};
+    CameraBufferData cameraDataUBO{};
 
-    //Vulkan Components
+    // Vulkan Components
     // - Main
     VulkanInstance instance;
     vk::DispatchLoaderDynamic dynamicDispatch;
@@ -58,27 +66,25 @@ class VulkanRenderer
     
     Swapchain swapchain;
     
-    // - Assets    
-
-    std::vector<vk::Image>        textureImages;
-    std::vector<VmaAllocation> textureImageMemory;
-    std::vector<vk::ImageView>    textureImageViews;
-
     vk::RenderPass renderPassBase{};
     vk::RenderPass renderPassImgui{};
     vk::CommandPool commandPool{};
     CommandBufferArray commandBuffers;
 
+    std::vector<LightBufferData> lightBuffer;
+
     // Default pipeline
     UniformBufferID viewProjectionUB;
-    SamplerID sampler;
+    UniformBufferID allLightsInfoUB;
+    StorageBufferID lightBufferSB;
     ShaderInput shaderInput;
     Pipeline pipeline;
 
     // Animations pipeline
 	bool hasAnimations;
     UniformBufferID animViewProjectionUB;
-    SamplerID animSampler;
+    UniformBufferID animAllLightsInfoUB;
+    StorageBufferID animLightBufferSB;
     ShaderInput animShaderInput;
     Pipeline animPipeline;
 
@@ -128,14 +134,15 @@ private:
     void createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name);
     void createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
 
-    void updateUboProjection();
-    void updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up = glm::vec3(0.F,1.F,0.F));
+    void updateLightBuffer(Scene* scene);
 
     // - Record Functions
-    void recordRenderPassCommandsBase(Scene* scene, uint32_t imageIndex);    // Using renderpass
+    void recordCommandBuffer(Scene* scene, uint32_t imageIndex);    // Using renderpass
 
-    // -- Create Functions    
-    [[nodiscard]] vk::ShaderModule createShaderModule(const std::vector<char> &code);
+    const Material& getAppropriateMaterial(
+        const MeshComponent& meshComponent,
+        const std::vector<SubmeshData>& submeshes,
+        const uint32_t& submeshIndex);
 
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
@@ -157,7 +164,6 @@ public:
         ResourceManager* resourceMan,
         UIRenderer* uiRenderer,
         DebugRenderer* debugRenderer);
-    void updateModel(int modelIndex, glm::mat4 newModel);
     void draw(Scene* scene);
 
     void initForScene(Scene* scene);

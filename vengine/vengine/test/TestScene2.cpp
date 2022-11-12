@@ -1,3 +1,4 @@
+#include "pch.h"
 #include <iostream>
 #include "TestScene2.hpp"
 #include "../application/Input.hpp"
@@ -48,8 +49,8 @@ void TestScene2::update()
 
 	// Render UI
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
-	Scene::getUIRenderer()->renderTexture(-0.25f, 0.0f, 0.1f, 0.1f);
-	Scene::getUIRenderer()->renderTexture(-0.25f, -0.5f, 0.1f, 0.1f);
+	Scene::getUIRenderer()->renderTexture(glm::vec2(-0.25, 0.0f), glm::vec2(0.1f));
+	Scene::getUIRenderer()->renderTexture(glm::vec2(-0.25, -0.5f), glm::vec2(0.1f));
 	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
-	Scene::getUIRenderer()->renderTexture(0.25f, 0.3f, 0.1f, 0.1f);
+	Scene::getUIRenderer()->renderTexture(glm::vec2(-0.25, 0.3f), glm::vec2(0.1f));
 }

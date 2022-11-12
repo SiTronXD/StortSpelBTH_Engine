@@ -30,6 +30,12 @@
     <ClCompile Include="src\LevelEditorTestScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\NewTestScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\LobbyScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\TestDemoScene.h">
@@ -47,11 +53,18 @@
     <ClInclude Include="src\Headers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\NewTestScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\LobbyScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\vengine\.clang-format" />
     <None Include="luatestScene.lua">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="assets\scripts\button.lua" />
   </ItemGroup>
 </Project>

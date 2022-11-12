@@ -64,6 +64,20 @@ protected:
 			}
 		}
 	}
+	template <typename I>
+	void addEvent(std::initializer_list<I> ints)
+	{
+		//always 0 in "this->serverToClient[0][i]"
+		//beacuse it points to the first object in array that doesn't exist
+		//so it points at start
+		for (int i = 0; i < serverToClient->size(); i++)
+		{
+			for (auto el : ints)
+			{
+				this->serverToClient[0][i] << el;
+			}
+		}
+	}
 
 	template <typename I, typename F>
 	void addEvent(std::vector<I> ints, std::vector<F> floats)

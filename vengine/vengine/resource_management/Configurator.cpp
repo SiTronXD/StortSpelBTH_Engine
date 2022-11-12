@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "Configurator.hpp"
 #include <iostream>
 #include <algorithm>

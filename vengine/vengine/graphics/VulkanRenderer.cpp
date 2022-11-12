@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "VulkanRenderer.hpp"
 #include "Utilities.hpp"
 #include "assimp/Importer.hpp"
@@ -32,6 +33,10 @@
 #include "../components/MeshComponent.hpp"
 #include "../components/MaterialComponent.hpp"
 #include "../components/AnimationComponent.hpp"
+#include "../components/AmbientLight.hpp"
+#include "../components/DirectionalLight.hpp"
+#include "../components/PointLight.hpp"
+#include "../components/Spotlight.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../resource_management/loaders/MeshLoader.hpp"
@@ -149,11 +154,6 @@ int VulkanRenderer::init(
 
         this->createSynchronisation();        
 
-        this->updateUboProjection();
-        this->updateUboView(
-            glm::vec3(DEF<float>(CAM_EYE_X),DEF<float>(CAM_EYE_Y),DEF<float>(CAM_EYE_Z)),
-            glm::vec3(DEF<float>(CAM_TARGET_X),DEF<float>(CAM_TARGET_Y), DEF<float>(CAM_TARGET_Z)));
-
 #ifndef VENGINE_NO_PROFILING
         this->initTracy();
 #endif
@@ -162,7 +162,14 @@ int VulkanRenderer::init(
         this->initResourceManager();
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
-        this->resourceManager->addTexture(DEF<std::string>(P_TEXTURES) + "missing_texture.png");
+        this->resourceManager->addMaterial(
+            this->resourceManager->addTexture(
+                DEF<std::string>(P_TEXTURES) + "missing_texture.png"
+            ),
+            this->resourceManager->addTexture(
+                DEF<std::string>(P_TEXTURES) + "missing_texture.png"
+            )
+        );
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
 
         // Create ui renderer
@@ -242,13 +249,6 @@ void VulkanRenderer::cleanup()
     }
 #endif
 
-    for(size_t i = 0; i < this->textureImages.size();i++)
-    {
-        this->getVkDevice().destroyImageView(this->textureImageViews[i]);
-        this->getVkDevice().destroyImage(this->textureImages[i]);
-        vmaFreeMemory(this->vma,this->textureImageMemory[i]);
-    }
-
     for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         this->getVkDevice().destroySemaphore(this->renderFinished[i]);
@@ -305,15 +305,15 @@ void VulkanRenderer::draw(Scene* scene)
 
         ImGui::Render();
         
-        //TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
+        // TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
         // Wait for The Fence to be signaled from last Draw for this currrent Frame; 
         // This will freeze the CPU operations here and wait for the Fence to open
         vk::Bool32 waitForAllFences = VK_TRUE;
 
         auto result = this->getVkDevice().waitForFences(
-            uint32_t(1),                          // number of Fences to wait on
+            uint32_t(1),                          // Number of Fences to wait on
             &this->drawFences[this->currentFrame],// Which Fences to wait on
-            waitForAllFences,                     // should we wait for all Fences or not?              
+            waitForAllFences,                     // Should we wait for all Fences or not?
             std::numeric_limits<uint64_t>::max());
         if(result != vk::Result::eSuccess) 
         {
@@ -323,15 +323,12 @@ void VulkanRenderer::draw(Scene* scene)
 
     // Get scene camera and update view matrix
     Camera* camera = scene->getMainCamera();
+    Transform* cameraTransform = nullptr;
     bool deleteCamera = false;
     if (camera)
     {
-        Transform& transform = scene->getComponent<Transform>(scene->getMainCameraID());
-        camera->view = glm::lookAt(
-            transform.position,
-            transform.position + transform.forward(),
-            transform.up()
-        );
+        cameraTransform = &scene->getComponent<Transform>(scene->getMainCameraID());
+        camera->updateMatrices(*cameraTransform);
 
         if (!scene->isActive(scene->getMainCameraID()))
         {
@@ -342,7 +339,10 @@ void VulkanRenderer::draw(Scene* scene)
     {
         Log::error("No main camera exists!");
         camera = new Camera((float)this->swapchain.getWidth() / (float)this->swapchain.getHeight());
-        camera->view = uboViewProjection.view;
+        camera->view = cameraDataUBO.view;
+
+        cameraTransform = new Transform();
+
         deleteCamera = true;
     }
 
@@ -351,7 +351,7 @@ void VulkanRenderer::draw(Scene* scene)
         #ifndef VENGINE_NO_PROFILING
         ZoneNamedN(draw_zone2, "Get Next Image", true); //:NOLINT   
         #endif 
-        // -- Get Next Image -- 
+        // -- Get Next Image --
         //1. Get Next available image image to draw to and set a Semaphore to signal when we're finished with the image 
 
         vk::Result result{};
@@ -383,12 +383,17 @@ void VulkanRenderer::draw(Scene* scene)
     }
     
     // Set view and projection in ubo
-    uboViewProjection.view = camera->view;
-    uboViewProjection.projection = camera->projection;
-    if (deleteCamera) { delete camera; }
+    this->cameraDataUBO.projection = camera->projection;
+    this->cameraDataUBO.view = camera->view;
+    this->cameraDataUBO.worldPosition = glm::vec4(cameraTransform->position, 1.0f);
+    if (deleteCamera) 
+    {
+        delete camera; 
+        delete cameraTransform;
+    }
 
     // Record the current commandBuffer
-    recordRenderPassCommandsBase(scene, imageIndex);
+    this->recordCommandBuffer(scene, imageIndex);
     
     // Submit to graphics queue
     {
@@ -505,6 +510,11 @@ void VulkanRenderer::initForScene(Scene* scene)
     defaultStream.normals.resize(1);
     defaultStream.texCoords.resize(1);
 
+    // Default per draw bindings
+    FrequencyInputLayout perDrawInputLayout{};
+    perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+    perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+    
 	this->shaderInput.beginForInput(
 	    this->physicalDevice,
 	    this->device,
@@ -513,11 +523,30 @@ void VulkanRenderer::initForScene(Scene* scene)
 	    MAX_FRAMES_IN_FLIGHT
 	);
 	this->shaderInput.addPushConstant(
-	    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+	    sizeof(PushConstantData), 
+        vk::ShaderStageFlagBits::eVertex
 	);
 	this->viewProjectionUB =
-	    this->shaderInput.addUniformBuffer(sizeof(UboViewProjection));
-	this->sampler = this->shaderInput.addSampler();
+	    this->shaderInput.addUniformBuffer(
+            sizeof(CameraBufferData),
+            vk::ShaderStageFlagBits::eVertex,
+            DescriptorFrequency::PER_FRAME);
+    this->allLightsInfoUB =
+        this->shaderInput.addUniformBuffer(
+            sizeof(AllLightsInfo), 
+            vk::ShaderStageFlagBits::eFragment,
+            DescriptorFrequency::PER_FRAME
+        );
+    this->lightBufferSB = 
+        this->shaderInput.addStorageBuffer(
+            sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+            vk::ShaderStageFlagBits::eFragment,
+            DescriptorFrequency::PER_FRAME
+        );
+    this->shaderInput.makeFrequencyInputLayout(
+        // DescriptorFrequency::PER_DRAW_CALL, 
+        perDrawInputLayout
+    );
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
 	    this->device, 
@@ -559,7 +588,8 @@ void VulkanRenderer::initForScene(Scene* scene)
 		    MAX_FRAMES_IN_FLIGHT
 		);
 		this->animShaderInput.addPushConstant(
-		    sizeof(ModelMatrix), vk::ShaderStageFlagBits::eVertex
+		    sizeof(PushConstantData), 
+            vk::ShaderStageFlagBits::eVertex
 		);
 		this->animShaderInput.setNumShaderStorageBuffers(1);
 
@@ -572,17 +602,21 @@ void VulkanRenderer::initForScene(Scene* scene)
 			    // Extract mesh information
 			    Mesh& currentMesh =
 			        this->resourceManager->getMesh(meshComponent.meshID);
+			    const std::vector<Bone>& bones = currentMesh.getMeshData().bones;
+			    uint32_t numAnimationBones = bones.size();
 
-			    std::vector<Bone>& bones = currentMesh.getMeshData().bones;
-                const Animation& animation = currentMesh.getMeshData().animations[animationComponent.animationIndex];
-
-			    uint32_t numAnimationBones =
-			        currentMesh.getMeshData().bones.size();
+                // Make sure the mesh actually has bones
+                if (numAnimationBones == 0)
+                {
+                    Log::error("Mesh ID " + std::to_string(meshComponent.meshID) + " does not have any bones for skeletal animations. Please remove the animation component from this entity.");
+                }
 
 			    // Add new storage buffer for animations
 			    StorageBufferID newStorageBufferID =
 			        this->animShaderInput.addStorageBuffer(
-			            numAnimationBones * sizeof(glm::mat4)
+			            numAnimationBones * sizeof(glm::mat4),
+                        vk::ShaderStageFlagBits::eVertex,
+                        DescriptorFrequency::PER_MESH
 			        );
 
 			    // Update animation component with storage buffer ID
@@ -590,8 +624,27 @@ void VulkanRenderer::initForScene(Scene* scene)
 		    }
 		);
 		this->animViewProjectionUB =
-		    this->animShaderInput.addUniformBuffer(sizeof(UboViewProjection));
-		this->animSampler = this->animShaderInput.addSampler();
+		    this->animShaderInput.addUniformBuffer(
+                sizeof(CameraBufferData),
+                vk::ShaderStageFlagBits::eVertex,
+                DescriptorFrequency::PER_FRAME
+            );
+        this->animAllLightsInfoUB =
+            this->animShaderInput.addUniformBuffer(
+                sizeof(AllLightsInfo),
+                vk::ShaderStageFlagBits::eFragment,
+                DescriptorFrequency::PER_FRAME
+            );
+        this->animLightBufferSB =
+            this->animShaderInput.addStorageBuffer(
+                sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+                vk::ShaderStageFlagBits::eFragment,
+                DescriptorFrequency::PER_FRAME
+            );
+        this->animShaderInput.makeFrequencyInputLayout(
+            // DescriptorFrequency::PER_DRAW_CALL,
+            perDrawInputLayout
+        );
 		this->animShaderInput.endForInput();
 		this->animPipeline.createPipeline(
 		    this->device,
@@ -602,32 +655,90 @@ void VulkanRenderer::initForScene(Scene* scene)
 		);
 	}
 
-    // Add all textures for possible use in the shader 
-    size_t numTextures = this->resourceManager->getNumTextures();
-    for (size_t i = 0; i < numTextures; ++i) 
+    // Add all materials for possible use in the shaders
+    size_t numMaterials = this->resourceManager->getNumMaterials();
+    for (size_t i = 0; i < numMaterials; ++i)
     {
-        // Get texture sampler for this texture
-        TextureSampler& textureSampler = 
-            this->resourceManager->getTextureSampler(
-                this->resourceManager->getTexture(i).getSamplerIndex()
-            );
+        Material& material = this->resourceManager->getMaterial(i);
 
-        this->shaderInput.addPossibleTexture(
-            i,
-            textureSampler
+        FrequencyInputBindings diffuseTextureInputBinding{};
+        FrequencyInputBindings specularTextureInputBinding{};
+        diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
+        specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+
+        // Update material's descriptor index
+        material.descriptorIndex =
+            this->shaderInput.addFrequencyInput(
+                {
+                    diffuseTextureInputBinding,
+                    specularTextureInputBinding
+                }
         );
 
         if (this->hasAnimations)
-		{
-			this->animShaderInput.addPossibleTexture(
-                i, 
-                textureSampler
+        {
+            // Add one descriptor in animShaderInput for 
+            // each added descriptor in shaderInput
+            this->animShaderInput.addFrequencyInput(
+                {
+                    diffuseTextureInputBinding,
+                    specularTextureInputBinding
+                }
             );
-		}
+        }
+    }
 
-        this->uiRenderer->getShaderInput().addPossibleTexture(
-            i,
-            textureSampler
+    // Add all unique materials as well for possible use in the shaders
+    auto meshView =
+        scene->getSceneReg().view<MeshComponent>();
+    meshView.each(
+        [&](MeshComponent& meshComponent)
+        {
+            for (uint32_t i = 0; i < meshComponent.numOverrideMaterials; ++i)
+            {
+                // Get material
+                Material& material = meshComponent.overrideMaterials[i];
+
+                // Make binding recognize material parameters
+                FrequencyInputBindings diffuseTextureInputBinding{};
+                FrequencyInputBindings specularTextureInputBinding{};
+                diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
+                specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+
+                // Update material's descriptor index
+                material.descriptorIndex =
+                    this->shaderInput.addFrequencyInput(
+                        {
+                            diffuseTextureInputBinding,
+                            specularTextureInputBinding
+                        }
+                );
+
+                if (this->hasAnimations)
+                {
+                    // Add one descriptor in animShaderInput for 
+                    // each added descriptor in shaderInput
+                    this->animShaderInput.addFrequencyInput(
+                        {
+                            diffuseTextureInputBinding,
+                            specularTextureInputBinding
+                        }
+                    );
+                }
+            }
+        }
+    );
+
+    // Add all textures for possible use in the ui renderer
+    size_t numTextures = this->resourceManager->getNumTextures();
+    for (size_t i = 0; i < numTextures; ++i)
+    {
+        Texture& texture = this->resourceManager->getTexture(i);
+
+        texture.setDescriptorIndex(
+            this->uiRenderer->getShaderInput().addFrequencyInput(
+                { FrequencyInputBindings{ &texture } }
+            )
         );
     }
 
@@ -920,32 +1031,174 @@ void VulkanRenderer::createFramebuffer(
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eFramebuffer, reinterpret_cast<uint64_t>(vk::Framebuffer::CType(frameBuffer)));
 }
 
-void VulkanRenderer::updateUboProjection()
+void VulkanRenderer::updateLightBuffer(Scene* scene)
 {
-    using namespace vengine_helper::config;
-    uboViewProjection.projection  = glm::perspective(                                        // View Angle in the y-axis
-                            glm::radians(DEF<float>(CAM_FOV)),                               // View Angle in the y-axis
-                            (float)this->swapchain.getWidth()/(float)swapchain.getHeight(),  // Setting up the Aspect Ratio
-                            DEF<float>(CAM_NP),                                              // The Near Plane
-                            DEF<float>(CAM_FP));                                             // The Far Plane
+    this->lightBuffer.clear();
+    
+    // Info about all lights in the shader
+    AllLightsInfo lightsInfo{};
+
+    // Loop through all ambient lights in scene
+    auto ambientLightView = scene->getSceneReg().view<AmbientLight>(entt::exclude<Inactive>);
+    ambientLightView.each([&](
+        const AmbientLight& ambientLightComp)
+        {
+            // Create point light data
+            LightBufferData lightData{};
+            lightData.color = glm::vec4(ambientLightComp.color, 1.0f);
+
+            // Add to list
+            this->lightBuffer.push_back(lightData);
+
+            // Increment end index
+            lightsInfo.ambientLightsEndIndex++;
+        }
+    );
+
+    // Loop through all directional lights in the scene
+    lightsInfo.directionalLightsEndIndex = lightsInfo.ambientLightsEndIndex;
+    auto directionalLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
+    directionalLightView.each([&](
+        const DirectionalLight& directionalLightComp)
+        {
+            // Create point light data
+            LightBufferData lightData{};
+            lightData.direction = 
+                glm::vec4(glm::normalize(directionalLightComp.direction), 1.0f);
+            lightData.color = 
+                glm::vec4(directionalLightComp.color, 1.0f);
+
+            // Add to list
+            this->lightBuffer.push_back(lightData);
+
+            // Increment end index
+            lightsInfo.directionalLightsEndIndex++;
+        }
+    );
+
+    // Loop through all point lights in scene
+    lightsInfo.pointLightsEndIndex = lightsInfo.directionalLightsEndIndex;
+    auto pointLightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
+    pointLightView.each([&](
+        Transform& transform,
+        const PointLight& pointLightComp)
+        {
+            // Create point light data
+            LightBufferData lightData{};
+            lightData.position = glm::vec4(
+                transform.position + 
+                    transform.getRotationMatrix() * pointLightComp.positionOffset,
+                1.0f);
+            lightData.color = glm::vec4(pointLightComp.color, 1.0f);
+
+            // Add to list
+            this->lightBuffer.push_back(lightData);
+
+            // Increment end index
+            lightsInfo.pointLightsEndIndex++;
+        }
+    );
+
+    // Loop through all spotlights in scene
+    lightsInfo.spotlightsEndIndex = lightsInfo.pointLightsEndIndex;
+    auto spotlightView = scene->getSceneReg().view<Transform, Spotlight>(entt::exclude<Inactive>);
+    spotlightView.each([&](
+        Transform& transform,
+        const Spotlight& spotlightComp)
+        {
+            const glm::mat3 rotMat = transform.getRotationMatrix();
+
+            // Create point light data
+            LightBufferData lightData{};
+            lightData.position = glm::vec4(
+                transform.position +
+                    rotMat * spotlightComp.positionOffset,
+                1.0f
+            );
+            lightData.direction = glm::vec4(
+                glm::normalize(rotMat * spotlightComp.direction),
+                std::cos(glm::radians(spotlightComp.angle * 0.5f))
+            );
+            lightData.color = glm::vec4(spotlightComp.color, 1.0f);
+
+            // Add to list
+            this->lightBuffer.push_back(lightData);
+
+            // Increment end index
+            lightsInfo.spotlightsEndIndex++;
+        }
+    );
+
+    // Update storage buffer containing lights
+    if (this->lightBuffer.size() > 0)
+    {
+        this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) this->lightBuffer.data());
+        if (this->hasAnimations)
+        {
+            this->animShaderInput.updateStorageBuffer(this->animLightBufferSB, (void*) this->lightBuffer.data());
+        }
+    }
+
+    // Truncate indices to not overshoot max
+    lightsInfo.ambientLightsEndIndex = std::min(
+        lightsInfo.ambientLightsEndIndex,
+        MAX_NUM_LIGHTS);
+    lightsInfo.directionalLightsEndIndex = std::min(
+        lightsInfo.directionalLightsEndIndex,
+        MAX_NUM_LIGHTS);
+    lightsInfo.pointLightsEndIndex = std::min(
+        lightsInfo.pointLightsEndIndex,
+        MAX_NUM_LIGHTS);
+    lightsInfo.spotlightsEndIndex = std::min(
+        lightsInfo.spotlightsEndIndex,
+        MAX_NUM_LIGHTS);
+
+#ifdef _CONSOLE
+    if (this->lightBuffer.size() > MAX_NUM_LIGHTS)
+    {
+        Log::warning("The number of lights is larger than the maximum allowed number. Truncates " + 
+            std::to_string(this->lightBuffer.size()) + " lights to " + 
+            std::to_string(MAX_NUM_LIGHTS));
+    }
+#endif
+
+    // Update all lights info buffer
+    this->shaderInput.updateUniformBuffer(
+        this->allLightsInfoUB,
+        (void*) &lightsInfo
+    );
+    if (this->hasAnimations)
+    {
+        this->animShaderInput.updateUniformBuffer(
+            this->animAllLightsInfoUB,
+            (void*)&lightsInfo
+        );
+    }
 }
 
-void VulkanRenderer::updateUboView(glm::vec3 eye, glm::vec3 center, glm::vec3 up)
+const Material& VulkanRenderer::getAppropriateMaterial(
+    const MeshComponent& meshComponent,
+    const std::vector<SubmeshData>& submeshes,
+    const uint32_t& submeshIndex)
 {
-    uboViewProjection.view = glm::lookAt(
-                            eye,            // Eye   : Where the Camera is positioned in the world
-                            center,         // Target: Point the Camera is looking at
-                            up);            // Up    : Up direction 
+    // Unique overriden materials
+    if (meshComponent.numOverrideMaterials > 0)
+    {
+        return meshComponent.overrideMaterials[submeshIndex];
+    }
+
+    // Default mesh materials
+    return this->resourceManager->getMaterial(submeshes[submeshIndex].materialIndex);
 }
 
-void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIndex)
+void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
     ZoneTransient(recordRenderPassCommands_zone1,  true); //:NOLINT   
 #endif
-    // Information about how to befin each Command Buffer...
 
+    // Information about how to begin each Command Buffer...
     vk::CommandBufferBeginInfo bufferBeginInfo;
     bufferBeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
     
@@ -1021,7 +1274,7 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
             this->shaderInput.setCurrentFrame(this->currentFrame);
             this->shaderInput.updateUniformBuffer(
                 this->viewProjectionUB,
-                (void*)&this->uboViewProjection
+                (void*)&this->cameraDataUBO
             );
 
             // Animation shader input
@@ -1029,7 +1282,8 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 			{
 				this->animShaderInput.setCurrentFrame(this->currentFrame);
 				this->animShaderInput.updateUniformBuffer(
-				    this->viewProjectionUB, (void*)&this->uboViewProjection
+				    this->viewProjectionUB, 
+                    (void*)&this->cameraDataUBO
 				);
 			}
 
@@ -1046,15 +1300,18 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
             );
             this->debugRenderer->getLineShaderInput().updateUniformBuffer(
                 this->viewProjectionUB,
-                (void*)&this->uboViewProjection
+                (void*)&this->cameraDataUBO
             );
             this->debugRenderer->getMeshShaderInput().setCurrentFrame(
                 this->currentFrame
             );
             this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
                 this->viewProjectionUB,
-                (void*)&this->uboViewProjection
+                (void*)&this->cameraDataUBO
             );
+
+            // Update lights
+            this->updateLightBuffer(scene);
 
             // Begin Render Pass!    
             // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -1102,12 +1359,16 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
 
                         Mesh& currentMesh =
                             this->resourceManager->getMesh(meshComponent.meshID);
-
-                        const glm::mat4& modelMatrix = transform.getMatrix();
+                        const std::vector<SubmeshData>& submeshes =
+                            currentMesh.getSubmeshData();
 
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                        this->pushConstantData.modelMatrix = transform.getMatrix();
+                        this->pushConstantData.tintColor =
+                            this->getAppropriateMaterial(meshComponent, submeshes, 0).tintColor;
                         currentCommandBuffer.pushConstant(
-                            this->shaderInput, (void*)&modelMatrix
+                            this->shaderInput, 
+                            (void*) &this->pushConstantData
                         );
 
                         // Bind vertex buffer
@@ -1127,23 +1388,17 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             DescriptorFrequency::PER_MESH
                         );
 
-                        MaterialComponent* material = scene->getSceneReg().try_get<MaterialComponent>(entity);
-				        
                         const std::vector<SubmeshData>& submeshes =
                             currentMesh.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
                         {
                             const SubmeshData& currentSubmesh = submeshes[i];
 
-                            // if entity has material component set, use that material for all submeshes
-					        if (material != nullptr)
-					        {
-						        this->shaderInput.setTexture(this->sampler, material->textureID);
-					        }
-					        else
-					        {
-						        this->shaderInput.setTexture(this->sampler, currentSubmesh.materialIndex);
-					        }
+                            // Update for descriptors
+                            this->shaderInput.setFrequencyInput(
+                                this->getAppropriateMaterial(meshComponent, submeshes, i)
+                                    .descriptorIndex
+                            );
                             currentCommandBuffer.bindShaderInputFrequency(
                                 this->shaderInput,
                                 DescriptorFrequency::PER_DRAW_CALL
@@ -1179,9 +1434,10 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     {
                         Mesh& currentMesh =
                             this->resourceManager->getMesh(meshComponent.meshID);
-
                         MeshData& currentMeshData =
 					        currentMesh.getMeshData();
+                        const std::vector<SubmeshData>& submeshes =
+                            currentMesh.getSubmeshData();
 
                         // Get bone transformations
                         const std::vector<glm::mat4>& boneTransforms =
@@ -1197,11 +1453,13 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             animationComponent.boneTransformsID
                         );
 
-                        const glm::mat4& modelMatrix = transform.getMatrix();
-
                         // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+                        this->pushConstantData.modelMatrix = transform.getMatrix();
+                        this->pushConstantData.tintColor =
+                            this->getAppropriateMaterial(meshComponent, submeshes, 0).tintColor;
                         currentCommandBuffer.pushConstant(
-                            this->animShaderInput, (void*)&modelMatrix
+                            this->animShaderInput, 
+                            (void*) &this->pushConstantData
                         );
 
                         // Bind vertex buffer
@@ -1221,16 +1479,14 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                             DescriptorFrequency::PER_MESH
                         );
 
-                        const std::vector<SubmeshData>& submeshes =
-					        currentMesh.getSubmeshData();
                         for (size_t i = 0; i < submeshes.size(); ++i)
                         {
                             const SubmeshData& currentSubmesh = submeshes[i];
 
                             // Update for descriptors
-                            this->animShaderInput.setTexture(
-                                this->animSampler, 
-                                currentSubmesh.materialIndex
+                            this->animShaderInput.setFrequencyInput(
+                                this->getAppropriateMaterial(meshComponent, submeshes, i)
+                                    .descriptorIndex
                             );
                             currentCommandBuffer.bindShaderInputFrequency(
                                 this->animShaderInput,
@@ -1273,9 +1529,9 @@ void VulkanRenderer::recordRenderPassCommandsBase(Scene* scene, uint32_t imageIn
                     for (size_t i = 0; i < drawCallData.size(); ++i)
                     {
                         // UI texture
-                        this->uiRenderer->getShaderInput().setTexture(
-                            this->uiRenderer->getSamplerID(),
-                            drawCallData[i].textureIndex
+                        this->uiRenderer->getShaderInput().setFrequencyInput(
+                            this->resourceManager->getTexture(drawCallData[i].textureIndex)
+                                .getDescriptorIndex()
                         );
                         currentCommandBuffer.bindShaderInputFrequency(
                             this->uiRenderer->getShaderInput(),

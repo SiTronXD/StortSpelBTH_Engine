@@ -28,6 +28,7 @@ private:
 	void handleDisconnects(int clientID); //if a player have wanted to disconnect
 	void cleanRecvPackages();
 	void cleanSendPackages();
+	void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start);
 
 	//To users
 	void sendDataToAllUsers();
@@ -50,9 +51,6 @@ private:
 	StartingEnum starting;
 	float        currentTimeToSend;
 	float        timeToSend;
-
-	//objects
-	std::thread* connectThread;
 
 	std::vector<clientInfo*> clients;
 	sf::UdpSocket            udpSocket;
@@ -90,4 +88,7 @@ public:
 	std::string getServerIP();
 	std::string getLocalAddress();
 	void        disconnect();
+
+	void startGettingClients();
+	void stopGettingClients();
 };

@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "ResourceManagerLua.h"
 
 #include "../../audio/AudioHandler.h" //TEMP
@@ -38,7 +39,7 @@ int ResourceManagerLua::lua_addTexture(lua_State* L)
 			lua_pop(L, 1);
 
 			lua_getfield(L, -1, "unnormalizedCoordinates");
-			if (lua_isboolean(L, -1)) { settings.samplerSettings.unnormalizedCoordinates = lua_toboolean(L, -1) ? VK_TRUE : VK_FALSE; }
+			if (lua_isboolean(L, -1)) { settings.samplerSettings.unnormalizedCoordinates = lua_toboolean(L, -1); }
 			lua_pop(L, 1);
 		}
 		lua_pop(L, 1);
@@ -88,7 +89,7 @@ int ResourceManagerLua::lua_mapAnimations(lua_State* L)
 {
 	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
 
-	if (!lua_isinteger(L, 1) || !lua_istable(L, 2)) { return 0; }
+	if (!lua_isnumber(L, 1) || !lua_istable(L, 2)) { return 0; }
 
 	std::vector<std::string> names;
 	lua_pushvalue(L, 2);
@@ -109,8 +110,10 @@ int ResourceManagerLua::lua_mapAnimations(lua_State* L)
 // TODO change to resource manager later
 int ResourceManagerLua::lua_addAudio(lua_State* L)
 {
+	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
+
 	if (!lua_isstring(L, 1)) { return 0; }
-	int audioID = AudioHandler::loadFile(lua_tostring(L, 1));
+	int audioID = resourceManager->addSound(lua_tostring(L, 1));
 
 	if (audioID < 0) { return 0; }
 	lua_pushinteger(L, audioID);

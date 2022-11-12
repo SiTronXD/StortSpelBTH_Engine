@@ -1,3 +1,4 @@
+#include "pch.h"
 #include "UIRenderer.hpp"
 #include "ResTranslator.hpp"
 #include "../resource_management/ResourceManager.hpp"
@@ -15,15 +16,16 @@ void UIRenderer::prepareForGPU()
 void UIRenderer::resetRender()
 {
     this->currentElementIndex = 0;
+    this->uiTextureIndex = ~0u;
     this->uiDrawCallData.clear();
 }
 
 UIRenderer::UIRenderer()
     : currentElementIndex(0),
+    uiFontTextureIndex(~0u),
     uiTextureIndex(~0u),
     uiTextureWidth(0),
     uiTextureHeight(0),
-    uiSamplerID(~0u),
     storageBufferID(~0u),
     physicalDevice(nullptr),
     device(nullptr),
@@ -32,6 +34,11 @@ UIRenderer::UIRenderer()
     renderPass(nullptr),
     framesInFlight(0)
 {
+}
+
+void UIRenderer::setSceneHandler(SceneHandler* sceneHandler)
+{
+    this->sceneHandler = sceneHandler;
 }
 
 void UIRenderer::create(
@@ -59,6 +66,10 @@ void UIRenderer::initForScene()
     // Cleanup ui shader input if possible
     this->cleanup();
 
+    // Per draw bindings
+    FrequencyInputLayout perDrawInputLayout{};
+    perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+
     // UI renderer shader input
     this->uiShaderInput.beginForInput(
         *this->physicalDevice,
@@ -66,11 +77,16 @@ void UIRenderer::initForScene()
         *this->vma,
         *this->resourceManager,
         this->framesInFlight);
-    this->uiSamplerID = this->uiShaderInput.addSampler();
     this->uiShaderInput.setNumShaderStorageBuffers(1);
     this->storageBufferID = this->uiShaderInput.addStorageBuffer(
         this->uiElementData.size() *
-        sizeof(this->uiElementData[0])
+        sizeof(this->uiElementData[0]),
+        vk::ShaderStageFlagBits::eVertex,
+        DescriptorFrequency::PER_MESH // TODO: change this
+    );
+    this->uiShaderInput.makeFrequencyInputLayout(
+        //DescriptorFrequency::PER_DRAW_CALL,
+        perDrawInputLayout
     );
     this->uiShaderInput.endForInput();
 
@@ -95,14 +111,13 @@ void UIRenderer::cleanup()
 void UIRenderer::setBitmapFont(
     const std::vector<std::string>& characters,
     const uint32_t& bitmapFontTextureIndex,
-    const uint32_t& tileWidth,
-    const uint32_t& tileHeight)
+    const glm::uvec2& tileDimension)
 {
     const Texture& fontTexture = 
         this->resourceManager->getTexture(bitmapFontTextureIndex);
 
-    this->oneOverCharTileWidth = 1.0f / static_cast<float>(tileWidth);
-    this->oneOverCharTileHeight = 1.0f / static_cast<float>(tileHeight);
+    this->oneOverCharTileWidth = 1.0f / static_cast<float>(tileDimension.x);
+    this->oneOverCharTileHeight = 1.0f / static_cast<float>(tileDimension.y);
 
     // Go through rows
     for (uint32_t y = 0, rows = (uint32_t) characters.size(); 
@@ -116,10 +131,10 @@ void UIRenderer::setBitmapFont(
         {
             const char& currentChar = characters[y][x];
 
-            uint32_t charX = x * tileWidth;
-            uint32_t charY = y * tileHeight;
-            uint32_t charWidth = tileWidth;
-            uint32_t charHeight = tileHeight;
+            uint32_t charX = x * tileDimension.x;
+            uint32_t charY = y * tileDimension.y;
+            uint32_t charWidth = tileDimension.x;
+            uint32_t charHeight = tileDimension.y;
 
             // Make rect smaller, but not for spaces
             if (currentChar != ' ')
@@ -130,9 +145,9 @@ void UIRenderer::setBitmapFont(
                 uint32_t maxY = charY;
 
                 // Loop through pixels inside char rect
-                for (uint32_t tempCharY = charY; tempCharY < charY + tileHeight; ++tempCharY)
+                for (uint32_t tempCharY = charY; tempCharY < charY + tileDimension.y; ++tempCharY)
                 {
-                    for (uint32_t tempCharX = charX; tempCharX < charX + tileWidth; ++tempCharX)
+                    for (uint32_t tempCharX = charX; tempCharX < charX + tileDimension.x; ++tempCharX)
                     {
                         // Found pixel
                         if (fontTexture.getCpuPixel(tempCharX, tempCharY).a > 0)
@@ -163,36 +178,38 @@ void UIRenderer::setBitmapFont(
             this->characterRects.insert({ currentChar, charRect });
         }
     }
+
+    this->uiFontTextureIndex = bitmapFontTextureIndex;
 }
 
 void UIRenderer::setTexture(const uint32_t& textureIndex)
 {
-    // Add data for unique draw call
-    UIDrawCallData drawCallData{};
-    drawCallData.textureIndex = textureIndex;
-    drawCallData.startVertex = this->currentElementIndex * 6;
-
-    // Set number of vertices for previous draw call
-    if (this->uiDrawCallData.size() > 0)
+    if (textureIndex != this->uiTextureIndex)
     {
-        // Num vertices for last draw call
-        this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
-            this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
-    }
+        // Add data for unique draw call
+        UIDrawCallData drawCallData{};
+        drawCallData.textureIndex = textureIndex;
+        drawCallData.startVertex = this->currentElementIndex * 6;
 
-    // Set draw call
-    this->uiDrawCallData.push_back(drawCallData);
+        // Set number of vertices for previous draw call
+        if (this->uiDrawCallData.size() > 0)
+        {
+            // Num vertices for last draw call
+            this->uiDrawCallData[this->uiDrawCallData.size() - 1].numVertices =
+                this->currentElementIndex * 6 - this->uiDrawCallData[this->uiDrawCallData.size() - 1].startVertex;
+        }
+
+        // Set draw call
+        this->uiDrawCallData.push_back(drawCallData);
+        this->uiTextureIndex = textureIndex;
+    }
 }
 
 void UIRenderer::renderTexture(
-    const float& x, 
-    const float& y, 
-    const float& width, 
-    const float& height,
-    const uint32_t& u0,
-    const uint32_t& v0,
-    const uint32_t& u1,
-    const uint32_t& v1)
+    const glm::vec2& position,
+    const glm::vec2& dimension,
+    const glm::uvec4 textureCoords,
+    const glm::vec4 multiplyColor)
 {
     if (this->currentElementIndex >= START_NUM_MAX_ELEMENTS)
     {
@@ -200,24 +217,52 @@ void UIRenderer::renderTexture(
         return;
     }
 
-    // Set element data
-    this->uiElementData[this->currentElementIndex].transform =
-        ResTranslator::transformRect(x, y, width, height);
-    this->uiElementData[this->currentElementIndex].uvRect =
-        glm::uvec4(u0, v0, u1, v1);
+    glm::vec2 extent = dimension / 2.0f;
+    glm::vec2 resTranslatorExtent = glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    if (position.x - extent.x <= resTranslatorExtent.x && position.x + extent.x >= -resTranslatorExtent.x &&
+        position.y - extent.y <= resTranslatorExtent.y && position.y + extent.y >= -resTranslatorExtent.y) // Within UI window
+    {
+        // Set element data
+        this->uiElementData[this->currentElementIndex].transform =
+            ResTranslator::transformRect(position, dimension);
+        this->uiElementData[this->currentElementIndex].multiplyColor = multiplyColor;
+        this->uiElementData[this->currentElementIndex].uvRect =
+            textureCoords;
 
-    // Next ui element
-    this->currentElementIndex++;
+        // Next ui element
+        this->currentElementIndex++;
+    }
+}
+
+void UIRenderer::renderTexture(
+    const glm::vec3& worldPosition,
+    const glm::vec2& dimension,
+    const glm::uvec4 textureCoords,
+    const glm::vec4 multiplyColor)
+{
+    Scene* scene = this->sceneHandler->getScene();
+    if (!scene->entityValid(scene->getMainCameraID())) { return; }
+
+    Camera* cam = scene->getMainCamera();
+    Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
+    cam->updateMatrices(camTransform);
+
+    glm::vec4 pos = cam->viewAndProj * glm::vec4(worldPosition, 1.0f);
+    if (pos.z > pos.w || pos.z < 0) { return; }
+
+    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    glm::vec2 size = 5.0f * dimension / glm::dot(worldPosition - camTransform.position, camTransform.forward());
+
+    this->renderTexture(screenPos, size, textureCoords, multiplyColor);
 }
 
 void UIRenderer::renderString(
     const std::string& text,
-    const float& x,
-    const float& y,
-    const float& characterWidth,
-    const float& characterHeight,
-    const float& characterMargin,
-    const StringAlignment& alignment)
+    const glm::vec2& position,
+    const glm::vec2& charDimension,
+    const float& charMargin,
+    const StringAlignment& alignment,
+    const glm::vec4 multiplyColor)
 {
     float currentCharWidth = 0.0f;
     float currentCharHeight = 0.0f;
@@ -225,7 +270,7 @@ void UIRenderer::renderString(
     CharacterRect* charRect = nullptr;
 
     const float firstCharWidth = 
-        characterWidth *
+        charDimension.x *
         (this->characterRects[text[0]].width * this->oneOverCharTileWidth);
     
         // Start at left edge of the first character
@@ -241,40 +286,66 @@ void UIRenderer::renderString(
 
         // Current character size
         currentCharWidth =
-            characterWidth * (charRect->width * this->oneOverCharTileWidth);
+            charDimension.x * (charRect->width * this->oneOverCharTileWidth);
         
-        stringWidth += characterMargin + currentCharWidth;
+        stringWidth += charMargin + currentCharWidth;
     }
 
     // Alignment offset
     float alignmentOffset = 
         -((int) alignment) * (stringWidth + firstCharWidth) * 0.5f;
 
+    // Set texture to font texture
+    this->setTexture(this->uiFontTextureIndex);
+
     // Render character by character
-    for (size_t i = 0; i < text.length(); ++i)
+    for (size_t i = 0, textLength = text.length(); i < textLength; ++i)
     {
         // Find rectangle from map
         charRect = &this->characterRects[text[i]];
 
         // Current character size
         currentCharWidth =
-            characterWidth * (charRect->width * this->oneOverCharTileWidth);
+            charDimension.x * (charRect->width * this->oneOverCharTileWidth);
         currentCharHeight =
-            characterHeight * (charRect->height * this->oneOverCharTileWidth);
+            charDimension.y * (charRect->height * this->oneOverCharTileWidth);
 
         // Render character as texture
         this->renderTexture(
-            x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f + 
-                alignmentOffset,
-            y - characterHeight * 0.5f + currentCharHeight * 0.5f,
-            currentCharWidth,
-            currentCharHeight,
-            charRect->x, 
-            charRect->y, 
-            charRect->width, 
-            charRect->height 
+            glm::vec2(
+                position.x + currentSizeX + currentCharWidth * 0.5f - stringWidth * 0.5f + alignmentOffset, 
+                position.y - charDimension.y * 0.5f + currentCharHeight * 0.5f),
+            glm::vec2(currentCharWidth, currentCharHeight),
+            glm::uvec4(charRect->x, charRect->y, charRect->width, charRect->height),
+            multiplyColor
         );
 
-        currentSizeX += characterMargin + currentCharWidth;
+        currentSizeX += charMargin + currentCharWidth;
     }
+}
+
+void UIRenderer::renderString(
+    const std::string& text,
+    const glm::vec3& worldPosition,
+    const glm::vec2& charDimension,
+    const float& charMargin,
+    const StringAlignment& alignment,
+    const glm::vec4 multiplyColor)
+{
+    Scene* scene = this->sceneHandler->getScene();
+    if (!scene->entityValid(scene->getMainCameraID())) { return; }
+
+    Camera* cam = scene->getMainCamera();
+    Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
+    cam->updateMatrices(camTransform);
+
+    glm::vec4 pos = cam->viewAndProj * glm::vec4(worldPosition, 1.0f);
+    if (pos.z > pos.w || pos.z < 0) { return; }
+
+    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    float dot = 5.0f / glm::dot(worldPosition - camTransform.position, camTransform.forward());
+    glm::vec2 size = charDimension * dot;
+    float margin = charMargin * dot;
+
+    this->renderString(text, screenPos, size, margin, alignment, multiplyColor);
 }

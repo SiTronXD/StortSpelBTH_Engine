@@ -3,6 +3,7 @@
 #include <map>
 #include <SDL2/SDL.h>
 #include <string>
+#include <glm/glm.hpp>
 
 enum class Keys
 {
@@ -37,6 +38,9 @@ enum class Keys
 	RIGHT = SDLK_RIGHT,
 	UP = SDLK_UP,
 	DOWN = SDLK_DOWN,
+
+	DOT = SDLK_PERIOD,
+	BACK = SDLK_BACKSPACE,
 
 	ONE = SDLK_1,
 	TWO = SDLK_2,
@@ -101,6 +105,9 @@ private:
 		{ "RIGHT" , SDLK_RIGHT },
 		{ "UP" , SDLK_UP },
 		{ "DOWN" , SDLK_DOWN },
+
+		{ "DOT", SDLK_PERIOD }, 
+		{ "BACK", SDLK_BACKSPACE },
 		
 		{ "ONE" , SDLK_1 },
 		{ "TWO" , SDLK_2 },
@@ -117,7 +124,8 @@ private:
 		{ "SHIFT" , SDLK_LSHIFT },
 		{ "CTRL" , SDLK_LCTRL },
 		{ "SPACE" , SDLK_SPACE },
-		{ "ESCAPE", SDLK_ESCAPE }
+		{ "ESCAPE", SDLK_ESCAPE }, 
+		{}
     };
     inline static const std::map<std::string, int> mouseMap {
         { "LEFT", SDL_BUTTON_LEFT },
@@ -167,4 +175,5 @@ public:
 	static inline const int getMouseDeltaX() { return Input::deltaCursorX; }
 	static inline const int getMouseDeltaY() { return Input::deltaCursorY; }
 	static inline const int getScrollWheelDelta() { return Input::deltaScrollWheel; }
+	static const glm::vec2 getMouseUITranslated();
 };

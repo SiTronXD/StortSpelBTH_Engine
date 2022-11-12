@@ -11,6 +11,8 @@
 #include "src/LevelEditorTestScene.h"
 #include "src/TestDemoScene.h"
 #include "src/NetworkTestScene.h"
+#include "src/NewTestScene.h"
+#include "src/LobbyScene.h"
 
 int main(int argc, char* argv[])
 {

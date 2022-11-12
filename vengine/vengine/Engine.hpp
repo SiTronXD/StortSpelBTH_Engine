@@ -10,6 +10,10 @@
 #include "graphics/DebugRenderer.hpp"
 #include "ai/AIHandler.hpp"
 
+#if defined(_CONSOLE) && defined(_WIN32)
+#include "windows/StatisticsCollector.hpp"
+#endif
+
 class Engine
 {
 private:
@@ -29,6 +33,8 @@ public:
 	UIRenderer uiRenderer;
 	DebugRenderer debugRenderer;
     AIHandler aiHandler;
+
+#if defined(_CONSOLE) && defined(_WIN32)
+	StatisticsCollector statsCollector;
+#endif
 };
-
-

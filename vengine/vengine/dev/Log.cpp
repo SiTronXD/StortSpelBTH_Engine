@@ -1,3 +1,4 @@
+#include "pch.h"
 #ifdef WIN32
 #include <comdef.h>
 #endif 
@@ -6,14 +7,17 @@
 #include "Log.hpp"
 #include <cassert>
 
+std::map<std::string, Filter> Log::filters;
 
-void Log::write(const std::string& message)
+void Log::write(const std::string& message, std::string filter)
 {
+    if(Log::filters[filter].value)
 	std::cout << "[Log]: " << message << std::endl;
 }
 
-void Log::warning(const std::string& message)
+void Log::warning(const std::string& message, std::string filter)
 {
+    if(Log::filters[filter].value)
 	std::cout << "[Log Warning]: " << message << std::endl;
 }
 
@@ -35,9 +39,23 @@ void Log::error(const std::string& errorMessage)
 	delete[] wString;
 }
 #else
-void Log::error(const std::string& message)
+void Log::error(const std::string& message, std::string filter)
 {
-	std::cout << "[Log Error]: " << message << std::endl;
-    assert(false);
+    if(Log::filters[filter].value){
+        std::cout << "[Log Error]: " << message << std::endl;
+        assert(false);
+    }
 }
 #endif
+
+std::string Log::vecToStr(const glm::vec3& vec)
+{
+	return "(" + std::to_string(vec.x) + ", " + 
+		std::to_string(vec.y) + ", " + 
+		std::to_string(vec.z) + ")";
+}
+
+void Log::addFilter(const std::string& filterName)
+{
+    Log::filters.insert({filterName, {false}});
+}

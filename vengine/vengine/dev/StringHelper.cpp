@@ -1,8 +1,9 @@
+#include "pch.h"
 #include "StringHelper.hpp"
 
 void StringHelper::splitString(
-	std::string& str, 
-	const char& delim, 
+	std::string& str,
+	const char& delim,
 	std::vector<std::string>& output)
 {
 	size_t pos = 0;

@@ -6,6 +6,7 @@
 struct UIElementData
 {
     vec4 transform;
+    vec4 multiplyColor;
     uvec4 uvRect;
 };
 layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer UIElementDataBuffer
@@ -15,7 +16,8 @@ layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer UIElementDataBu
 
 // Output data
 layout(location = 0) out vec2 fragUV;
-layout(location = 1) out uvec4 fragBoundsUV;
+layout(location = 1) out vec4 fragMultiplyColor;
+layout(location = 2) out uvec4 fragBoundsUV;
 
 void main()
 {
@@ -65,4 +67,7 @@ void main()
     vec2 localUV = vec2(position.x, -position.y) * 0.5f + vec2(0.5f);
     fragUV = uvRect.xy + localUV * uvRect.zw;
     fragBoundsUV = uiData.uvRect;
+
+    // Multiply color
+    fragMultiplyColor = uiData.multiplyColor;
 }
