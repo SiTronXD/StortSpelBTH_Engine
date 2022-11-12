@@ -9,39 +9,47 @@
 
 std::map<std::string, Filter> Log::filters;
 
-void Log::write(const std::string& message, std::string filter)
+void Log::write(const std::string& message, const std::string& filter)
 {
-    if(Log::filters[filter].value)
-	std::cout << "[Log]: " << message << std::endl;
+	if (Log::filters[filter].value)
+	{
+		std::cout << "[Log]: " << message << std::endl;
+	}
 }
 
-void Log::warning(const std::string& message, std::string filter)
+void Log::warning(const std::string& message, const std::string& filter)
 {
-    if(Log::filters[filter].value)
-	std::cout << "[Log Warning]: " << message << std::endl;
+	if (Log::filters[filter].value)
+	{
+		std::cout << "[Log Warning]: " << message << std::endl;
+	}
 }
 
 #ifdef _WIN32
 #include <Windows.h>
-void Log::error(const std::string& errorMessage)
+void Log::error(const std::string& errorMessage, const std::string& filter)
 {
-	std::cout << "[Log Error]: " << errorMessage << std::endl;
+	if (Log::filters[filter].value)
+	{
+		std::cout << "[Log Error]: " << errorMessage << std::endl;
+	
+		// Convert const char* to LPCWSTR
+		wchar_t* wString = new wchar_t[4096];
+		MultiByteToWideChar(CP_ACP, 0, errorMessage.c_str(), -1, wString, 4096);
 
-	// Convert const char* to LPCWSTR
-	wchar_t* wString = new wchar_t[4096];
-	MultiByteToWideChar(CP_ACP, 0, errorMessage.c_str(), -1, wString, 4096);
+		// Simple message box
+		MessageBox(
+			NULL, wString, L"ERROR", MB_OK
+		);
 
-	// Simple message box
-	MessageBox(
-		NULL, wString, L"ERROR", MB_OK
-	);
-
-	delete[] wString;
+		delete[] wString;
+	}
 }
 #else
-void Log::error(const std::string& message, std::string filter)
+void Log::error(const std::string& message, const std::string& filter)
 {
-    if(Log::filters[filter].value){
+    if (Log::filters[filter].value)
+	{
         std::cout << "[Log Error]: " << message << std::endl;
         assert(false);
     }
