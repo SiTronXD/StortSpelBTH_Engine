@@ -93,6 +93,7 @@
     <ClCompile Include="vengine\shared_memory\Comlib.cpp" />
     <ClCompile Include="vengine\shared_memory\Memory.cpp" />
     <ClCompile Include="vengine\shared_memory\Mutex.cpp" />
+    <ClCompile Include="vengine\network\ServerGameModes\NetworkLobbyScene.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -191,6 +192,7 @@
     <ClInclude Include="vengine\shared_memory\Memory.h" />
     <ClInclude Include="vengine\shared_memory\Mutex.h" />
     <ClInclude Include="vengine\shared_memory\MayaStructures.h" />
+    <ClInclude Include="vengine\network\ServerGameModes\NetworkLobbyScene.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

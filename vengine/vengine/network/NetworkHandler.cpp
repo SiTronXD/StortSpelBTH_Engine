@@ -46,7 +46,6 @@ NetworkHandler::NetworkHandler() : sceneHandler(nullptr)
 	this->client = nullptr;
 	this->serverThread = nullptr;
 	this->player = -1;
-	this->seed = -1;
 }
 
 NetworkHandler::~NetworkHandler()
@@ -316,11 +315,6 @@ void NetworkHandler::updateNetwork()
 
 			cTCPP >> this->seed;  //seed nr;
 		}
-		else if (gameEvent == GameEvents::GetLevelSeed)
-		{
-			cTCPP >> ix;
-			this->seed = ix;
-		}
 		else if (gameEvent == GameEvents::PlayerDied)
 		{
 			//don't know how this should be implemented right now
@@ -422,17 +416,8 @@ void NetworkHandler::sendUDPDataToClient(const glm::vec3& pos, const glm::vec3& 
 
 int NetworkHandler::getServerSeed()
 {
-	if (seed == -1)
-	{
-		for (int i = 0; i < 5 && seed == -1; i++)
-		{
-			Sleep(1000);
-			updateNetwork();
-		}
-	}
 	return seed;
 }
-
 void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
 {
 	TCPPacketEvent polygonEvent;
