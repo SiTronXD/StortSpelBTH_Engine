@@ -46,9 +46,9 @@ private:
 	vk::Extent2D extent{};
 	uint32_t numMinimumImages;
 
-	std::vector<vk::Image> depthBufferImage;
-	std::vector<VmaAllocation> depthBufferImageMemory;
-	std::vector<vk::ImageView> depthBufferImageView;
+	vk::Image depthBufferImage;
+	VmaAllocation depthBufferImageMemory;
+	vk::ImageView depthBufferImageView;
 	vk::Format depthFormat{};
 
 	Window* window;
@@ -97,11 +97,10 @@ public:
 	inline const uint32_t& getHeight() { return this->extent.height; }
 	inline const uint32_t& getNumMinimumImages() { return this->numMinimumImages; }
 	inline size_t getNumImages() { return this->images.size(); }
-	inline size_t getNumDepthBufferImages() { return this->depthBufferImage.size(); }
 	inline vk::Image& getImage(const uint32_t& index) { return this->images[index]; }
-	inline vk::Image& getDepthBufferImage(const uint32_t& index) { return this->depthBufferImage[index]; }
+	inline vk::Image& getDepthBufferImage() { return this->depthBufferImage; }
 	inline vk::ImageView& getImageView(const uint32_t& index) { return this->imageViews[index]; }
-	inline vk::ImageView& getDepthBufferImageView(const uint32_t& index) { return this->depthBufferImageView[index]; }
+	inline vk::ImageView& getDepthBufferImageView() { return this->depthBufferImageView; }
 	inline vk::SwapchainKHR& getVkSwapchain() { return this->swapchain; }
 	inline vk::Format& getVkFormat() { return this->imageFormat; }
 	inline vk::Format& getVkDepthFormat() { return this->depthFormat; }
