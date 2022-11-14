@@ -104,7 +104,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
         Time::updateDeltaTime();
 		this->physicsEngine.update(Time::getDT());
-        this->aiHandler.update();
         this->sceneHandler.update();
         this->scriptHandler.update();
         this->audioHandler.update();
