@@ -45,18 +45,3 @@ void StorageBuffer::createStorageBuffer(
             reinterpret_cast<uint64_t>(vk::Buffer::CType(buffers[i])));
     }
 }
-
-void StorageBuffer::update(
-    void* copyData, 
-    const uint32_t& currentFrame)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    void* data = nullptr;
-
-    Buffer::map(data, currentFrame);
-    memcpy(data, copyData, Buffer::getBufferSize());
-    Buffer::unmap(currentFrame);
-}
