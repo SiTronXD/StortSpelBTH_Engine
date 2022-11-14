@@ -87,9 +87,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
 
-    //Needs to run after scene is initialized
-    this->aiHandler.init(&this->sceneHandler);    
-
     // Game loop
     while (window.getIsRunning())
     {
