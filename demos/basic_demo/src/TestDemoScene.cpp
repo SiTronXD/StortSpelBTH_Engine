@@ -353,6 +353,9 @@ void TestDemoScene::update()
 			Log::write("Hit raycast at pos (" +
 				std::to_string(payload.hitPoint.x) + ", " +
 				std::to_string(payload.hitPoint.y) + ", " +
+				std::to_string(payload.hitPoint.z) + ")");
+		}
+	}
 
 	if (this->entityValid(this->getMainCameraID()))
 	{
@@ -361,9 +364,6 @@ void TestDemoScene::update()
 		Transform& camTransform = this->getComponent<Transform>(this->getMainCameraID());
 		camTransform.position += (moveVec.x * camTransform.right() + glm::vec3(0.0f, moveVec.y, 0.0f) + moveVec.z * camTransform.forward()) * 25.0f * Time::getDT();
 		camTransform.rotation += rotVec * 100.0f * Time::getDT();
-				std::to_string(payload.hitPoint.z) + ")");
-		}
-	}
 	}
 
 	if (Input::isKeyPressed(Keys::T))
