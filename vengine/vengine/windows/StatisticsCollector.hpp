@@ -1,5 +1,6 @@
 #pragma once
 
+#if defined(_WIN32)
 #include <d3d11_4.h>
 #include <dxgi1_6.h>
 #pragma comment(lib, "dxgi.lib")
@@ -18,3 +19,6 @@ public:
 	float getRamUsage();
 	float getVramUsage();
 };
+
+
+#endif

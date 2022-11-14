@@ -1,4 +1,5 @@
 #include "pch.h"
+#if defined(_WIN32)
 #include "StatisticsCollector.hpp"
 #include "../dev/Log.hpp"
 
@@ -83,3 +84,5 @@ float StatisticsCollector::getVramUsage()
 
 	return memoryUsage;
 }
+
+#endif

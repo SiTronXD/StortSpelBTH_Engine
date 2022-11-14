@@ -11,8 +11,4 @@ public:
 		VmaAllocator& vma,
 		const size_t& bufferSize, 
 		const uint32_t& framesInFlight);
-
-	void update(
-		void* data,
-		const uint32_t& currentFrame);
 };
