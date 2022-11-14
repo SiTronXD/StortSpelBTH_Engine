@@ -477,6 +477,7 @@ SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\components\AudioSource.cpp" />
+    <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
     <ClCompile Include="vengine\windows\StatisticsCollector.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

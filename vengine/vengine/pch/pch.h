@@ -36,3 +36,14 @@
 #include "../components/BTAgent.hpp"
 #include "../components/BTComponent.hpp"
 #include "../components/FSMAgentComponent.hpp"
+#include "../components/AmbientLight.hpp"
+#include "../components/DirectionalLight.hpp"
+#include "../components/PointLight.hpp"
+#include "../components/Spotlight.hpp"
+
+#include "backends/imgui_impl_vulkan.h"          
+#include "stb_image.h"
+
+#include "assimp/Importer.hpp"
+#include "assimp/scene.h"
+#include "assimp/postprocess.h"

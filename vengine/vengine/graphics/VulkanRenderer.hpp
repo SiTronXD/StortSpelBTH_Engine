@@ -70,6 +70,7 @@ class VulkanRenderer
     vk::RenderPass renderPassImgui{};
     vk::CommandPool commandPool{};
     CommandBufferArray commandBuffers;
+    CommandBuffer* currentCommandBuffer;
 
     std::vector<LightBufferData> lightBuffer;
 
@@ -117,7 +118,7 @@ private:
     // - Create functions
     void setupDebugMessenger();
     void createSurface();
-    void recreateSwapchain(Camera* camera);
+    void windowResize(Camera* camera);
     void createRenderPassBase();
     void createRenderPassImgui();
     void createCommandPool();   //TODO: Deprecate! 
@@ -135,6 +136,21 @@ private:
     void createFramebuffer(vk::Framebuffer& frameBuffer,std::vector<vk::ImageView>& attachments,vk::RenderPass& renderPass, vk::Extent2D& extent, std::string&& name);
 
     void updateLightBuffer(Scene* scene);
+
+    // Renderpass for screen rendering
+    void beginRenderpass(
+        const uint32_t& imageIndex);
+    void renderDefaultMeshes(Scene* scene);
+    void renderSkeletalAnimations(Scene* scene);
+    void renderUI();
+    void renderDebugElements();
+    void endRenderpass();
+
+    // Renderpass for imgui rendering
+    void beginRenderpassImgui(
+        const uint32_t& imageIndex);
+    void renderImgui();
+    void endRenderpassImgui();
 
     // - Record Functions
     void recordCommandBuffer(Scene* scene, uint32_t imageIndex);    // Using renderpass

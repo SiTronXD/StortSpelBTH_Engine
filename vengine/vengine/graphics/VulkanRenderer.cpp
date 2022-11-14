@@ -14,28 +14,14 @@
 #include <utility>
 #include <fstream>
 #include <set>
-#include <vector>
-#include <limits>               
-#include <algorithm>            
-#include "stb_image.h"
+#include <limits>
+#include <algorithm>
 #include "Texture.hpp"
 #include "Buffer.hpp"
-
-#include "assimp/Importer.hpp"
-#include "assimp/scene.h"
-#include "assimp/postprocess.h"
-
-#include "backends/imgui_impl_vulkan.h"
 
 #include "../application/Input.hpp"
 #include "../application/Scene.hpp"
 #include "../application/Time.hpp"
-#include "../components/MeshComponent.hpp"
-#include "../components/AnimationComponent.hpp"
-#include "../components/AmbientLight.hpp"
-#include "../components/DirectionalLight.hpp"
-#include "../components/PointLight.hpp"
-#include "../components/Spotlight.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../resource_management/loaders/MeshLoader.hpp"
@@ -362,8 +348,9 @@ void VulkanRenderer::draw(Scene* scene)
             this->imageAvailable[this->currentFrame], // The Semaphore to signal, when it's available to be used!
             VK_NULL_HANDLE                            // The Fence to signal, when it's available to be used...(??)
         );
-        if(result == vk::Result::eErrorOutOfDateKHR){
-            this->recreateSwapchain(camera);    
+        if(result == vk::Result::eErrorOutOfDateKHR)
+        {
+            this->windowResize(camera);
             return;
         }
         else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) 
@@ -467,7 +454,7 @@ void VulkanRenderer::draw(Scene* scene)
         if (resultvk == vk::Result::eErrorOutOfDateKHR || resultvk == vk::Result::eSuboptimalKHR || this->windowResized )
         {
             this->windowResized = false;       
-            this->recreateSwapchain(camera);
+            this->windowResize(camera);
         }
         else if(resultvk != vk::Result::eSuccess) 
         {
@@ -784,7 +771,7 @@ void VulkanRenderer::createSurface()
     this->window->createVulkanSurface(this->instance, this->surface);
 }
 
-void VulkanRenderer::recreateSwapchain(Camera* camera)
+void VulkanRenderer::windowResize(Camera* camera)
 {
     this->device.waitIdle();
     
@@ -1197,64 +1184,14 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
     ZoneTransient(recordRenderPassCommands_zone1,  true); //:NOLINT   
 #endif
 
-    // Information about how to begin each Command Buffer...
-    vk::CommandBufferBeginInfo bufferBeginInfo;
-    bufferBeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
-    
-    // Information about how to begin a render pass (Only needed for graphical applications)
-    vk::RenderPassBeginInfo renderPassBeginInfo;
-    renderPassBeginInfo.setRenderPass(this->renderPassBase);                      // Render Pass to Begin
-    renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
-    renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());      // Size of region to run render pass on (starting at offset)
-     
-    static const vk::ClearColorValue clearColor(
-        // Sky color
-        /*std::array<float, 4> 
-        {
-            119.0f / 256.0f, 
-            172.0f / 256.0f,
-            222.0f / 256.0f, 
-            1.0f
-        }*/
-
-        // Fog color
-        std::array<float, 4>
-        {
-            0.8f,
-            0.8f,
-            0.8f,
-            1.0f
-        }
-    );
-
-    std::array<vk::ClearValue, 2> clearValues = 
-    {
-            vk::ClearValue(                         // of type VkClearColorValue 
-                vk::ClearColorValue{ clearColor }     // Clear Value for Attachment 0
-            ),  
-            vk::ClearValue(                         // Clear Value for Attachment 1
-                vk::ClearDepthStencilValue(
-                    1.F,    // depth
-                    0       // stencil
-                )
-            )
-    };
-
-    renderPassBeginInfo.setPClearValues(clearValues.data());         // List of clear values
-    renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
-
-    // The only changes we do per commandbuffer is to change the swapChainFrameBuffer a renderPass should point to...
-    renderPassBeginInfo.setFramebuffer(this->swapchain.getVkFramebuffer(imageIndex));
-
-    vk::SubpassBeginInfoKHR subpassBeginInfo;
-    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-    
-
-    CommandBuffer& currentCommandBuffer =
-        this->commandBuffers.getCommandBuffer(this->currentFrame);
+    this->currentCommandBuffer =
+        &this->commandBuffers.getCommandBuffer(this->currentFrame);
 
     // Start recording commands to commandBuffer!
-    currentCommandBuffer.begin(bufferBeginInfo);
+    vk::CommandBufferBeginInfo commandBufferBeginInfo;
+    commandBufferBeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+    this->currentCommandBuffer->begin(commandBufferBeginInfo);
+
     {   // Scope for Tracy Vulkan Zone...
         #ifndef VENGINE_NO_PROFILING
         TracyVkZone(
@@ -1312,360 +1249,33 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
             // Update lights
             this->updateLightBuffer(scene);
 
-            // Begin Render Pass!    
-            // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
-            currentCommandBuffer.beginRenderPass2(
-                renderPassBeginInfo, 
-                subpassBeginInfo
+            // Render to screen
+            this->beginRenderpass(
+                imageIndex
             );
-
-                vk::Viewport viewport{};
-                viewport.x = 0.0f;
-                viewport.y = (float)swapchain.getHeight();
-                viewport.width = (float)this->swapchain.getWidth();
-                viewport.height = -((float)swapchain.getHeight());
-                viewport.minDepth = 0.0f;
-                viewport.maxDepth = 1.0f;
-                currentCommandBuffer.setViewport(viewport);
-
-                vk::Rect2D scissor{};
-                scissor.offset = vk::Offset2D{ 0, 0 };
-                scissor.extent = this->swapchain.getVkExtent();
-                currentCommandBuffer.setScissor(scissor);
-
-                // Bind Pipeline to be used in render pass
-                currentCommandBuffer.bindGraphicsPipeline(
-                    this->pipeline
-                );
-                
-                // Update for descriptors
-                currentCommandBuffer.bindShaderInputFrequency(
-                    this->shaderInput,
-                    DescriptorFrequency::PER_FRAME
-                );
-
-                // For every non-animating mesh we have
-                auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent, Inactive>);
-                meshView.each([&](
-                    const Transform& transform, 
-                    const MeshComponent& meshComponent)
-                    {
-                        Mesh& currentMesh =
-                            this->resourceManager->getMesh(meshComponent.meshID);
-                        const std::vector<SubmeshData>& submeshes =
-                            currentMesh.getSubmeshData();
-
-                        // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                        this->pushConstantData.modelMatrix = transform.getMatrix();
-                        this->pushConstantData.tintColor =
-                            this->getAppropriateMaterial(meshComponent, submeshes, 0).tintColor;
-                        currentCommandBuffer.pushConstant(
-                            this->shaderInput, 
-                            (void*) &this->pushConstantData
-                        );
-
-                        // Bind vertex buffer
-                        currentCommandBuffer.bindVertexBuffers2(
-                            currentMesh.getVertexBufferArray(),
-                            this->currentFrame
-                        );
-
-                        // Bind index buffer
-                        currentCommandBuffer.bindIndexBuffer(
-                            currentMesh.getIndexBuffer()
-                        );
-
-                        // Update for descriptors
-                        currentCommandBuffer.bindShaderInputFrequency(
-                            this->shaderInput,
-                            DescriptorFrequency::PER_MESH
-                        );
-
-                        for (size_t i = 0; i < submeshes.size(); ++i)
-                        {
-                            const SubmeshData& currentSubmesh = submeshes[i];
-
-                            // Update for descriptors
-                            this->shaderInput.setFrequencyInput(
-                                this->getAppropriateMaterial(meshComponent, submeshes, i)
-                                    .descriptorIndex
-                            );
-                            currentCommandBuffer.bindShaderInputFrequency(
-                                this->shaderInput,
-                                DescriptorFrequency::PER_DRAW_CALL
-                            );
-
-                            // Draw
-                            currentCommandBuffer.drawIndexed(
-                                currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
-                            );
-                        }
-                    }
-                );
-
-                if (this->hasAnimations)
-			    {
-				    // Bind Pipeline to be used in render pass
-				    currentCommandBuffer.bindGraphicsPipeline(
-                        this->animPipeline
-				    );
-
-				    // Update for descriptors
-				    currentCommandBuffer.bindShaderInputFrequency(
-				        this->animShaderInput, DescriptorFrequency::PER_FRAME
-				    );
-			    }
-
-                // For every animating mesh we have
-                auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<Inactive>);
-                animView.each(
-                    [&](const Transform& transform,
-                        const MeshComponent& meshComponent,
-                        const AnimationComponent& animationComponent)
-                    {
-                        Mesh& currentMesh =
-                            this->resourceManager->getMesh(meshComponent.meshID);
-                        MeshData& currentMeshData =
-					        currentMesh.getMeshData();
-                        const std::vector<SubmeshData>& submeshes =
-                            currentMesh.getSubmeshData();
-
-                        // Get bone transformations
-                        const std::vector<glm::mat4>& boneTransforms =
-                            currentMesh.getBoneTransforms(animationComponent.timer, 
-                                animationComponent.animationIndex);
-
-                        // Update transformations in storage buffer
-					    this->animShaderInput.updateStorageBuffer(
-                            animationComponent.boneTransformsID,
-					        (void *)&boneTransforms[0]
-					    );
-                        this->animShaderInput.setStorageBuffer(
-                            animationComponent.boneTransformsID
-                        );
-
-                        // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-                        this->pushConstantData.modelMatrix = transform.getMatrix();
-                        this->pushConstantData.tintColor =
-                            this->getAppropriateMaterial(meshComponent, submeshes, 0).tintColor;
-                        currentCommandBuffer.pushConstant(
-                            this->animShaderInput, 
-                            (void*) &this->pushConstantData
-                        );
-
-                        // Bind vertex buffer
-                        currentCommandBuffer.bindVertexBuffers2(
-					        currentMesh.getVertexBufferArray(),
-                            this->currentFrame
-                        );
-
-                        // Bind index buffer
-                        currentCommandBuffer.bindIndexBuffer(
-					        currentMesh.getIndexBuffer()
-                        );
-
-                        // Update for descriptors
-                        currentCommandBuffer.bindShaderInputFrequency(
-                            this->animShaderInput,
-                            DescriptorFrequency::PER_MESH
-                        );
-
-                        for (size_t i = 0; i < submeshes.size(); ++i)
-                        {
-                            const SubmeshData& currentSubmesh = submeshes[i];
-
-                            // Update for descriptors
-                            this->animShaderInput.setFrequencyInput(
-                                this->getAppropriateMaterial(meshComponent, submeshes, i)
-                                    .descriptorIndex
-                            );
-                            currentCommandBuffer.bindShaderInputFrequency(
-                                this->animShaderInput,
-                                DescriptorFrequency::PER_DRAW_CALL
-                            );
-
-                            // Draw
-                            currentCommandBuffer.drawIndexed(
-                                currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
-                            );
-                        }
-                    }
-                );
-
-                // UI rendering
-                {
-                    // UI pipeline
-                    currentCommandBuffer.bindGraphicsPipeline(
-                        this->uiRenderer->getPipeline()
-                    );
-
-                    // UI storage buffer
-                    this->uiRenderer->getShaderInput().setStorageBuffer(
-                        this->uiRenderer->getStorageBufferID()
-                    );
-                    currentCommandBuffer.bindShaderInputFrequency(
-                        this->uiRenderer->getShaderInput(),
-                        DescriptorFrequency::PER_MESH
-                    );
-
-                    // UI update storage buffer
-                    this->uiRenderer->getShaderInput().updateStorageBuffer(
-                        this->uiRenderer->getStorageBufferID(),
-                        this->uiRenderer->getUiElementData().data()
-                    );
-
-                    // One draw call for all ui elements with the same texture
-                    const std::vector<UIDrawCallData>& drawCallData =
-                        this->uiRenderer->getUiDrawCallData();
-                    for (size_t i = 0; i < drawCallData.size(); ++i)
-                    {
-                        // UI texture
-                        this->uiRenderer->getShaderInput().setFrequencyInput(
-                            this->resourceManager->getTexture(drawCallData[i].textureIndex)
-                                .getDescriptorIndex()
-                        );
-                        currentCommandBuffer.bindShaderInputFrequency(
-                            this->uiRenderer->getShaderInput(),
-                            DescriptorFrequency::PER_DRAW_CALL
-                        );
-
-                        // UI draw
-                        currentCommandBuffer.draw(
-                            drawCallData[i].numVertices,
-                            1,
-                            drawCallData[i].startVertex
-                        );
-                    }
-                }
-                this->uiRenderer->resetRender();
-
-                // Debug rendering
-                {
-                    // ---------- Lines ----------
-                    
-                    // Pipeline
-                    currentCommandBuffer.bindGraphicsPipeline(
-                        this->debugRenderer->getLinePipeline()
-                    );
-
-                    // Bind shader input per frame
-                    currentCommandBuffer.bindShaderInputFrequency(
-                        this->debugRenderer->getLineShaderInput(),
-                        DescriptorFrequency::PER_FRAME
-                    );
-
-                    // Bind vertex buffer
-                    currentCommandBuffer.bindVertexBuffers2(
-                        this->debugRenderer->getLineVertexBufferArray(),
-                        this->currentFrame
-                    );
-
-                    // Draw
-                    currentCommandBuffer.draw(this->debugRenderer->getNumVertices());
-
-                    // ---------- Meshes ----------
-
-                    // Pipeline
-                    currentCommandBuffer.bindGraphicsPipeline(
-                        this->debugRenderer->getMeshPipeline()
-                    );
-
-                    // Bind shader input per frame
-                    currentCommandBuffer.bindShaderInputFrequency(
-                        this->debugRenderer->getMeshShaderInput(),
-                        DescriptorFrequency::PER_FRAME
-                    );
-
-                    // Loop through meshes and render them
-                    const std::vector<DebugMeshDrawCallData>& debugDrawCallData
-                        = this->debugRenderer->getMeshDrawCallData();
-                    for (size_t i = 0; i < debugDrawCallData.size(); ++i)
-                    {
-                        const Mesh& currentMesh =
-                            this->resourceManager->getMesh(debugDrawCallData[i].meshID);
-                        const SubmeshData& currentSubmesh = 
-                            currentMesh.getSubmeshData()[0];
-
-                        // Push constant
-                        currentCommandBuffer.pushConstant(
-                            this->debugRenderer->getMeshShaderInput(),
-                            (void*) &debugDrawCallData[i].pushConstantData
-                        );
-
-                        // Bind vertex buffer
-                        currentCommandBuffer.bindVertexBuffers2(
-                            currentMesh.getVertexBufferArray(),
-                            this->currentFrame
-                        );
-
-                        // Bind index buffer
-                        currentCommandBuffer.bindIndexBuffer(
-                            currentMesh.getIndexBuffer()
-                        );
-
-                        // Draw
-                        currentCommandBuffer.drawIndexed(
-                            currentSubmesh.numIndicies, 
-                            1, 
-                            currentSubmesh.startIndex
-                        );
-                    }
-                }
-                this->debugRenderer->resetRender();
-
-            // End Render Pass!
-            vk::SubpassEndInfo subpassEndInfo;
-            currentCommandBuffer.endRenderPass2(subpassEndInfo);
+                this->renderDefaultMeshes(scene);
+                this->renderSkeletalAnimations(scene);
+                this->renderUI();
+                this->renderDebugElements();
+            this->endRenderpass();
             
-            // Begin second render pass
-            vk::RenderPassBeginInfo renderPassBeginInfo{};
-            vk::SubpassBeginInfo subpassBeginInfo;
-            subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-            renderPassBeginInfo.setRenderPass(this->renderPassImgui);
-            renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());
-            renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));
-            renderPassBeginInfo.setFramebuffer(this->frameBuffersImgui[imageIndex]);
-            renderPassBeginInfo.setClearValueCount(uint32_t(0));
-
-            currentCommandBuffer.beginRenderPass2(
-                renderPassBeginInfo, 
-                subpassBeginInfo
-            );
-
-                // Viewport
-                viewport = vk::Viewport{};
-                viewport.x = 0.0f;
-                viewport.y = 0.0f;
-                viewport.width = (float)this->swapchain.getWidth();
-                viewport.height = (float)swapchain.getHeight();
-                viewport.minDepth = 0.0f;
-                viewport.maxDepth = 1.0f;
-                currentCommandBuffer.setViewport(viewport);
-
-                // Reuse the previous scissor
-                currentCommandBuffer.setScissor(scissor);
-
-                ImGui_ImplVulkan_RenderDrawData(
-                    ImGui::GetDrawData(), 
-                    currentCommandBuffer.getVkCommandBuffer()
-                );
-
-            // End second render pass
-            vk::SubpassEndInfo imgui_subpassEndInfo;
-            currentCommandBuffer.endRenderPass2(imgui_subpassEndInfo);
+            // Imgui
+            this->beginRenderpassImgui(imageIndex);
+                this->renderImgui();
+            this->endRenderpassImgui();
         }
         #pragma endregion commandBufferRecording
         
         #ifndef VENGINE_NO_PROFILING
         TracyVkCollect(
             this->tracyContext[imageIndex],
-            currentCommandBuffer.getVkCommandBuffer()
+            this->currentCommandBuffer->getVkCommandBuffer()
         );
         #endif
     }
 
     // Stop recording to a command buffer
-    currentCommandBuffer.end();
+    this->currentCommandBuffer->end();
 }
 
 #ifndef VENGINE_NO_PROFILING 

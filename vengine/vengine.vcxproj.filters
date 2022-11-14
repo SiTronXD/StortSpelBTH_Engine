@@ -90,6 +90,7 @@
     <ClCompile Include="vengine\pch\pch.cpp" />
     <ClCompile Include="vengine\components\AudioSource.cpp" />
     <ClCompile Include="vengine\windows\StatisticsCollector.cpp" />
+    <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
