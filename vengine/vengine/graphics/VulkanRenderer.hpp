@@ -12,6 +12,7 @@
 #include "vulkan/Pipeline.hpp"
 #include "vulkan/UniformBuffer.hpp"
 #include "vulkan/CommandBufferArray.hpp"
+#include "vulkan/FramebufferArray.hpp"
 
 #include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
@@ -103,10 +104,8 @@ class VulkanRenderer
 
     // ImGui
     void initImgui();
-    void createFramebufferImgui();
-    void cleanupFramebufferImgui();
     vk::DescriptorPool descriptorPoolImgui;
-    std::vector<vk::Framebuffer> frameBuffersImgui;
+    FramebufferArray frameBuffersImgui;
 
     // Tracy
 #ifndef VENGINE_NO_PROFILING    
@@ -123,12 +122,6 @@ private:
     void createCommandPool(
         vk::CommandPool& commandPool,
         vk::CommandPoolCreateFlags flags,
-        std::string&& name);
-    void createFramebuffer(
-        vk::Framebuffer& frameBuffer,
-        std::vector<vk::ImageView>& attachments,
-        RenderPass& renderPass,
-        vk::Extent2D& extent,
         std::string&& name);
 
     // initializations of subsystems

@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "RenderPass.hpp"
-#include "Device.hpp"
 #include "Swapchain.hpp"
 
 void RenderPass::createRenderPassBase(Device& device, Swapchain& swapchain)

@@ -1,9 +1,7 @@
 #include "pch.h"
 #include "Pipeline.hpp"
 
-#include "Device.hpp"
 #include "RenderPass.hpp"
-#include "VulkanDbg.hpp"
 #include "../MeshData.hpp"
 #include "../../dev/Log.hpp"
 

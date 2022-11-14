@@ -217,7 +217,7 @@ void VulkanRenderer::cleanup()
     this->window->shutdownImgui();
     ImGui::DestroyContext();
 
-    this->cleanupFramebufferImgui();
+    this->frameBuffersImgui.cleanup();
 
     this->renderPassImgui.cleanup();
     this->getVkDevice().destroyDescriptorPool(this->descriptorPoolImgui);
@@ -399,7 +399,7 @@ void VulkanRenderer::draw(Scene* scene)
         std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos
         {
             vk::CommandBufferSubmitInfo{
-                this->commandBuffers.getCommandBuffer(this->currentFrame).
+                this->commandBuffers[this->currentFrame].
                     getVkCommandBuffer()
             }
         };        
@@ -783,11 +783,23 @@ void VulkanRenderer::windowResize(Camera* camera)
     Time::reset();
 
     // Cleanup framebuffers
-    cleanupFramebufferImgui();
+    this->frameBuffersImgui.cleanup();
 
     // Recreate swapchain and framebuffers
     this->swapchain.recreateSwapchain(this->renderPassBase);
-    createFramebufferImgui();
+    std::vector<std::vector<vk::ImageView>> imguiFramebufferAttachments(this->swapchain.getNumImages());
+    for (size_t i = 0; i < imguiFramebufferAttachments.size(); ++i)
+    {
+        imguiFramebufferAttachments[i].push_back(
+            this->swapchain.getImageView(i)
+        );
+    }
+    this->frameBuffersImgui.create(
+        device,
+        this->renderPassImgui,
+        this->swapchain.getVkExtent(),
+        imguiFramebufferAttachments
+    );
 
     ImGui_ImplVulkan_SetMinImageCount(this->swapchain.getNumMinimumImages());
 
@@ -865,25 +877,6 @@ void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::Command
     commandPool = this->getVkDevice().createCommandPool(commandPoolCreateInfo);
 
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(commandPool)));
-}
-
-void VulkanRenderer::createFramebuffer(
-    vk::Framebuffer& frameBuffer,
-    std::vector<vk::ImageView>& attachments,
-    RenderPass& renderPass, 
-    vk::Extent2D& extent, 
-    std::string&& name = "NoName")
-{
-    vk::FramebufferCreateInfo framebufferCreateInfo{};
-    framebufferCreateInfo.setRenderPass(renderPass.getVkRenderPass());
-    framebufferCreateInfo.setAttachmentCount(static_cast<uint32_t>(attachments.size()));
-    framebufferCreateInfo.setPAttachments(attachments.data());
-    framebufferCreateInfo.setWidth(extent.width);
-    framebufferCreateInfo.setHeight(extent.height);
-    framebufferCreateInfo.setLayers(uint32_t(1));
-
-    frameBuffer = getVkDevice().createFramebuffer(framebufferCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eFramebuffer, reinterpret_cast<uint64_t>(vk::Framebuffer::CType(frameBuffer)));
 }
 
 void VulkanRenderer::updateLightBuffer(Scene* scene)
@@ -1054,7 +1047,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 #endif
 
     this->currentCommandBuffer =
-        &this->commandBuffers.getCommandBuffer(this->currentFrame);
+        &this->commandBuffers[this->currentFrame];
 
     // Start recording commands to commandBuffer!
     vk::CommandBufferBeginInfo commandBufferBeginInfo;
@@ -1065,7 +1058,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
         #ifndef VENGINE_NO_PROFILING
         TracyVkZone(
             this->tracyContext[this->currentFrame],
-            this->commandBuffers.getCommandBuffer(this->currentFrame).getVkCommandBuffer(),
+            this->commandBuffers[this->currentFrame].getVkCommandBuffer(),
             "Render Record Commands");
         #endif
         {
@@ -1166,7 +1159,7 @@ void VulkanRenderer::initTracy()
             this->physicalDevice.getVkPhysicalDevice(),
             this->getVkDevice(),             
             this->queueFamilies.getGraphicsQueue(),
-            this->commandBuffers.getCommandBuffer(i).getVkCommandBuffer(),
+            this->commandBuffers[i].getVkCommandBuffer(),
             pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
             pfnvkGetCalibratedTimestampsEXT
         );
@@ -1235,7 +1228,20 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.CheckVkResultFn = checkVkResult;
     ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPassImgui.getVkRenderPass());
 
-    this->createFramebufferImgui();
+    // Imgui framebuffers
+    std::vector<std::vector<vk::ImageView>> imguiFramebufferAttachments(this->swapchain.getNumImages());
+    for (size_t i = 0; i < imguiFramebufferAttachments.size(); ++i)
+    {
+        imguiFramebufferAttachments[i].push_back(
+            this->swapchain.getImageView(i)
+        );
+    }
+    this->frameBuffersImgui.create(
+        device,
+        this->renderPassImgui,
+        this->swapchain.getVkExtent(),
+        imguiFramebufferAttachments
+    );
 
     // Upload imgui font
     this->getVkDevice().resetCommandPool(this->commandPool);
@@ -1244,7 +1250,7 @@ void VulkanRenderer::initImgui()
     begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
     begin_info.flags |= VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
     const vk::CommandBuffer& firstCommandBuffer = 
-        this->commandBuffers.getCommandBuffer(0).getVkCommandBuffer();
+        this->commandBuffers[0].getVkCommandBuffer();
     firstCommandBuffer.begin(begin_info);
     
     ImGui_ImplVulkan_CreateFontsTexture(firstCommandBuffer);
@@ -1268,30 +1274,4 @@ void VulkanRenderer::initImgui()
     this->device.waitIdle();
 
     ImGui_ImplVulkan_DestroyFontUploadObjects();
-}
-
-void VulkanRenderer::createFramebufferImgui()
-{
-    std::vector<vk::ImageView> attachment;    
-    attachment.resize(1);
-    this->frameBuffersImgui.resize(this->swapchain.getNumImages());
-    for(size_t i = 0; i < this->frameBuffersImgui.size(); i++)
-    {        
-        attachment[0] = this->swapchain.getImageView(i); 
-        this->createFramebuffer(
-            this->frameBuffersImgui[i], 
-            attachment, 
-            this->renderPassImgui, 
-            this->swapchain.getVkExtent(), 
-            std::string("frameBuffers_imgui["+std::to_string(i)+"]")
-        );
-    }
-}
-
-void VulkanRenderer::cleanupFramebufferImgui()
-{
-    for (auto framebuffer: this->frameBuffersImgui) 
-    {
-        this->getVkDevice().destroyFramebuffer(framebuffer);        
-    }
 }

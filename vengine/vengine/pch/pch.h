@@ -26,6 +26,11 @@
 #include "../application/Time.hpp"
 #include "../dev/StringHelper.hpp"
 #include "../graphics/StringAlignment.h"
+#include "../graphics/vulkan/VulkanInstance.hpp"
+#include "../graphics/vulkan/PhysicalDevice.hpp"
+#include "../graphics/vulkan/Device.hpp"
+#include "../graphics/vulkan/QueueFamilies.hpp"
+#include "../graphics/vulkan/VulkanValidation.hpp"
 #include "../graphics/vulkan/VulkanDbg.hpp"
 
 #include "../components/Transform.hpp"

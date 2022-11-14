@@ -1,8 +1,5 @@
 #include "pch.h"
-#include "PhysicalDevice.hpp"
-#include "VulkanInstance.hpp"
 #include "Swapchain.hpp"
-#include "QueueFamilies.hpp"
 #include "../../dev/Log.hpp"
 
 bool PhysicalDevice::checkPhysicalDeviceSuitability(
