@@ -12,6 +12,7 @@ enum Headers
 	CAMERA,
 	CAMERA_UPDATE,
 	MATERIAL_DATA,
+	MESH_MATERIAL_CONNECTION,
 };
 
 enum CameraTypes
@@ -95,8 +96,14 @@ struct CameraUpdateHeader
 
 struct MaterialHeader
 {
-	char meshName[64];
+	char materialName[64];
 	float ambientColor[3];
-	char albedoMapPath[64];
+	char diffusePath[64];
 	char normalMapPath[64];
+};
+
+struct MeshMaterialConnectionHeader
+{
+	char meshName[64];
+	char materialName[64];
 };

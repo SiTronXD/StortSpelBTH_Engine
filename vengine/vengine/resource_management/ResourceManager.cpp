@@ -155,6 +155,22 @@ uint32_t ResourceManager::addMaterial(std::string&& materialPath)
 	return materials.size() -1;
 }
 
+uint32_t ResourceManager::addMaterial(std::string&& materialName, Material materialData)
+{
+	if (this->materialPaths.count(materialName) != 0)
+	{
+        //if already added, update data
+        materials[materialPaths[materialName]] = materialData;
+		return this->materialPaths[materialName];
+	}
+
+	this->materialPaths.insert({materialName, this->materials.size()});
+
+	materials.insert({materials.size(), materialData});
+
+	return materials.size() - 1;
+}
+
 uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, std::string&& texturesPath)
 {
     if (!paths.size())

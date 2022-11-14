@@ -60,6 +60,7 @@ public:
         std::string&& texturesPath = "");
 	uint32_t addMesh(std::string meshPath, MeshData meshData);
 	uint32_t addMaterial(std::string&& materialPath);
+	uint32_t addMaterial(std::string&& materialName, Material materialData);
     uint32_t addTexture(std::string&& texturePath,
         const TextureSettings& textureSettings = {});
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
@@ -75,7 +76,7 @@ public:
     TextureSampler& getTextureSampler(uint32_t id);
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(std::string&& collisionPath);
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(uint32_t id);
-    Material& getMaterial(uint32_t id);
+	Material& getMaterial(uint32_t id);
     Material& getMaterial(
         const MeshComponent& meshComponent,
         const uint32_t& submeshIndex);
