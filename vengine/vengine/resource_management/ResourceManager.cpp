@@ -84,14 +84,16 @@ uint32_t ResourceManager::addMesh(
     // Smooth normals in mesh data
     // MeshDataModifier::smoothNormals(meshData);
 
-    // NOTE: prevSize as key only works if we never remove resources the map...
-    this->meshPaths.insert({meshPath,this->meshPaths.size()}); 
 
-    // NOTE: meshes.size as key only works if we never remove resources the map...    
+
+    // NOTE: prevSize as key only works if we never remove resources the map...
+    const uint32_t meshId = (uint32_t)this->meshes.size();
+    this->meshPaths.insert({meshPath, meshId}); 
+
     // Create mesh, insert into map of meshes
-    meshes.insert({
-        meshes.size(),
-        meshLoader.createMesh(meshData)}        
+    this->meshes.insert({
+        meshId,
+        this->meshLoader.createMesh(meshData)}        
     ); 
 
     return meshes.size() - 1;
@@ -105,11 +107,14 @@ uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, s
         return 0;
     }
 
-    if (this->meshPaths.count(paths[0]) != 0)
+    for (const std::string& path : paths)
     {
-        // Log::warning("Mesh \""+meshPath+"\" was already added!");                
+        if (this->meshPaths.count(path) != 0)
+        {
+            // Log::warning("Mesh \""+meshPath+"\" was already added!");                
 
-        return this->meshPaths[paths[0]];        
+            return this->meshPaths[path];
+        }
     }
 
     // load and store animations in meshData
@@ -119,12 +124,13 @@ uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, s
     // No mesh imported, send default mesh back
     if (meshData.vertexStreams.positions.size() == 0) { return 0; }
     
+    const uint32_t meshId = (uint32_t)meshes.size();
+    this->meshes.insert({meshId, this->meshLoader.createMesh(meshData)});
     for (const std::string& path : paths)
     {
-        this->meshPaths.insert({path, this->meshPaths.size()}); 
+        this->meshPaths.insert({path, meshId});
     }
 
-    meshes.insert({(uint32_t)meshes.size(), meshLoader.createMesh(meshData)});
     return (uint32_t)meshes.size() - 1;
 }
 
