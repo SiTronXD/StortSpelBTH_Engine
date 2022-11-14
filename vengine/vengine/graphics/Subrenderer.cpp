@@ -38,8 +38,8 @@ void VulkanRenderer::beginRenderpass(
     };
 
     // Information about how to begin a render pass
-    vk::RenderPassBeginInfo renderPassBeginInfo;
-    renderPassBeginInfo.setRenderPass(this->renderPassBase);                      // Render pass to begin
+    vk::RenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.setRenderPass(this->renderPassBase.getVkRenderPass());                      // Render pass to begin
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
     renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
@@ -371,16 +371,16 @@ void VulkanRenderer::endRenderpass()
 void VulkanRenderer::beginRenderpassImgui(
     const uint32_t& imageIndex)
 {
-    // Begin second render pass
+    // Begin render pass
     vk::RenderPassBeginInfo renderPassBeginInfo{};
-    vk::SubpassBeginInfo subpassBeginInfo;
-    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-    renderPassBeginInfo.setRenderPass(this->renderPassImgui);
+    renderPassBeginInfo.setRenderPass(this->renderPassImgui.getVkRenderPass());
     renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));
     renderPassBeginInfo.setFramebuffer(this->frameBuffersImgui[imageIndex]);
     renderPassBeginInfo.setClearValueCount(uint32_t(0));
 
+    vk::SubpassBeginInfo subpassBeginInfo{};
+    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
     this->currentCommandBuffer->beginRenderPass2(
         renderPassBeginInfo,
         subpassBeginInfo

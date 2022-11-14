@@ -6,6 +6,7 @@
 #include "PhysicalDevice.hpp"
 #include "Device.hpp"
 #include "QueueFamilies.hpp"
+#include "RenderPass.hpp"
 #include "../ResTranslator.hpp"
 #include "../../application/Window.hpp"
 #include "../../dev/Log.hpp"
@@ -355,7 +356,7 @@ void Swapchain::createSwapchain(
     }
 }
 
-void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
+void Swapchain::createFramebuffers(RenderPass& renderPass)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -372,8 +373,8 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
                 this->depthBufferImageView[i]
         };
 
-        vk::FramebufferCreateInfo framebufferCreateInfo;
-        framebufferCreateInfo.setRenderPass(renderPass);                                      // Render pass layout the framebuyfffeer will be used with
+        vk::FramebufferCreateInfo framebufferCreateInfo{};
+        framebufferCreateInfo.setRenderPass(renderPass.getVkRenderPass());                                      // Render pass layout the framebuyfffeer will be used with
         framebufferCreateInfo.setAttachmentCount(static_cast<uint32_t>(attachments.size()));
         framebufferCreateInfo.setPAttachments(attachments.data());                            // List of attatchemnts (1:1 with render pass)
         framebufferCreateInfo.setWidth(this->swapchainExtent.width);
@@ -385,7 +386,7 @@ void Swapchain::createFramebuffers(vk::RenderPass& renderPass)
     }
 }
 
-void Swapchain::recreateSwapchain(vk::RenderPass& renderPass)
+void Swapchain::recreateSwapchain(RenderPass& renderPass)
 {
     this->cleanup(false);
 

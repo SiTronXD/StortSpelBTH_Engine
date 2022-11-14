@@ -7,6 +7,7 @@ class Window;
 class PhysicalDevice;
 class Device;
 class QueueFamilies;
+class RenderPass;
 
 // Defines what kind of surface we can create with our given surface
 struct SwapchainDetails
@@ -77,10 +78,10 @@ public:
 		QueueFamilies& queueFamilies,
 		VmaAllocator& vma);
 	void createFramebuffers(
-		vk::RenderPass& renderPass);
+		RenderPass& renderPass);
 
 	void recreateSwapchain(
-		vk::RenderPass& renderPass);
+		RenderPass& renderPass);
 
 	static void getDetails(
 		vk::PhysicalDevice& physDevice,

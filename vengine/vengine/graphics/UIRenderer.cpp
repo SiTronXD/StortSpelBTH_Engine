@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "UIRenderer.hpp"
 #include "ResTranslator.hpp"
+#include "vulkan/RenderPass.hpp"
 #include "../resource_management/ResourceManager.hpp"
 
 void UIRenderer::prepareForGPU()
@@ -46,7 +47,7 @@ void UIRenderer::create(
 	Device& device,
 	VmaAllocator& vma,
 	ResourceManager& resourceManager,
-	vk::RenderPass& renderPass,
+	RenderPass& renderPass,
 	const uint32_t& framesInFlight)
 {
     this->physicalDevice = &physicalDevice;

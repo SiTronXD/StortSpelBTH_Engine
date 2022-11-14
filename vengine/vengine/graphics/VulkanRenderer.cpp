@@ -3,7 +3,6 @@
 #include "Utilities.hpp"
 #include "assimp/Importer.hpp"
 #include "vulkan/VulkanValidation.hpp"
-#include "vulkan/VulkanDbg.hpp"
 #include "../dev/defs.hpp"
 #include "../dev/tracyHelper.hpp"
 #include "../resource_management/Configurator.hpp"
@@ -11,9 +10,7 @@
 #include <cstdint>
 #include <cstring>
 #include <stdexcept>
-#include <utility>
 #include <fstream>
-#include <set>
 #include <limits>
 #include <algorithm>
 #include "Texture.hpp"
@@ -127,8 +124,8 @@ int VulkanRenderer::init(
             this->vma
         );
 
-        this->createRenderPassBase();
-        this->createRenderPassImgui();
+        this->renderPassBase.createRenderPassBase(this->device, this->swapchain);
+        this->renderPassImgui.createRenderPassImgui(this->device, this->swapchain);
         this->swapchain.createFramebuffers(this->renderPassBase);
         this->createCommandPool();
         this->commandBuffers.createCommandBuffers(
@@ -222,7 +219,7 @@ void VulkanRenderer::cleanup()
 
     this->cleanupFramebufferImgui();
 
-    this->getVkDevice().destroyRenderPass(this->renderPassImgui);
+    this->renderPassImgui.cleanup();
     this->getVkDevice().destroyDescriptorPool(this->descriptorPoolImgui);
     
 #ifndef VENGINE_NO_PROFILING
@@ -255,8 +252,7 @@ void VulkanRenderer::cleanup()
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
 
-    this->getVkDevice().destroyRenderPass(this->renderPassBase);
-
+    this->renderPassBase.cleanup();
     this->swapchain.cleanup();
 
     this->instance.destroy(this->surface); //NOTE: No warnings/errors if we run this line... Is it useless? Mayber gets destroyed by SDL?
@@ -801,16 +797,6 @@ void VulkanRenderer::windowResize(Camera* camera)
     );
 }
 
-void VulkanRenderer::cleanupRenderPassImgui()
-{
-    this->getVkDevice().destroyRenderPass(this->renderPassImgui);
-}
-
-void VulkanRenderer::cleanupRenderPassBase()
-{
-    this->getVkDevice().destroyRenderPass(this->renderPassBase);
-}
-
 VulkanRenderer::VulkanRenderer()
     : resourceManager(nullptr), 
     uiRenderer(nullptr), 
@@ -819,123 +805,6 @@ VulkanRenderer::VulkanRenderer()
     hasAnimations(false)
 {
     loadConfIntoMemory();
-}
-
-void VulkanRenderer::createRenderPassBase() 
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    // Array of our subPasses        
-    std::array<vk::SubpassDescription2, 1> subPasses{};
-
-    // Color Attachment
-    vk::AttachmentDescription2 colorAttachment {};
-    colorAttachment.setFormat(this->swapchain.getVkFormat());
-    colorAttachment.setSamples(vk::SampleCountFlagBits::e1);
-    colorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);        // When we start the renderpass, first thing to do is to clear since there is no values in it yet
-    colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);      // How to store it after the RenderPass; We dont care! But we do care what happens after the first SubPass! (not handled here)
-    colorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
-    colorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
-    colorAttachment.setInitialLayout(vk::ImageLayout::eUndefined);            // We dont care what the image layout is when we start. But we do care about what layout it is when it enter the first SubPass! (not handled here)
-    colorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); //(!!) Should be the same value as it was after the subpass finishes (??)
-
-    // Depth Attatchment
-    vk::AttachmentDescription2 depthAttachment{};
-    depthAttachment.setFormat(this->swapchain.getVkDepthFormat());
-    depthAttachment.setSamples(vk::SampleCountFlagBits::e1);
-    depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);                         // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
-    depthAttachment.setStoreOp(vk::AttachmentStoreOp::eDontCare);                    // Whenever it's used, we dont care what happens with the data... (we dont present it or anything)
-    depthAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);               // Even though the Stencil i present, we dont plan to use it. so we dont care    
-    depthAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);             // Even though the Stencil i present, we dont plan to use it. so we dont care
-    depthAttachment.setInitialLayout(vk::ImageLayout::eUndefined);                   // We don't care how the image layout is initially, so let it be undefined
-    depthAttachment.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // Final layout should be Optimal for Depth Stencil attachment!
-
-    // Color attachment reference
-    vk::AttachmentReference2 colorAttachmentReference {};    
-    colorAttachmentReference.setAttachment(uint32_t(0));                          // Match the number/ID of the Attachment to the index of the FrameBuffer!
-    colorAttachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal); // The Layout the Subpass must be in! 
-
-    // Depth attachment reference
-    vk::AttachmentReference2 depthAttachmentReference {};
-    depthAttachmentReference.setAttachment(uint32_t(1)); 
-    depthAttachmentReference.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // The layout the subpass must be in! Should be same as 'final layout'(??)
-
-    // Setup Subpass 0
-    subPasses[0].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics); 
-    subPasses[0].setColorAttachmentCount(uint32_t(1)); 
-    subPasses[0].setPColorAttachments(&colorAttachmentReference); 
-    subPasses[0].setPDepthStencilAttachment(&depthAttachmentReference); 
-
-    // Override the first implicit subpass
-    std::array<vk::SubpassDependency2, 1> subpassDependencies{};
-    subpassDependencies[0].setSrcSubpass(VK_SUBPASS_EXTERNAL);
-    subpassDependencies[0].setDstSubpass(0);
-    subpassDependencies[0].setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests);
-    subpassDependencies[0].setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput | vk::PipelineStageFlagBits::eEarlyFragmentTests);
-    subpassDependencies[0].setSrcAccessMask(vk::AccessFlagBits::eNone);
-    subpassDependencies[0].setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
-    subpassDependencies[0].setDependencyFlags(vk::DependencyFlagBits::eByRegion);
-
-    // Vector with the Attatchments
-    std::array<vk::AttachmentDescription2, 2> attachments
-    {
-        colorAttachment,
-        depthAttachment
-    };
-
-    //Create info for render pass
-    vk::RenderPassCreateInfo2 renderPassCreateInfo;
-    renderPassCreateInfo.setAttachmentCount(static_cast<uint32_t>(attachments.size()));
-    renderPassCreateInfo.setPAttachments(attachments.data());
-    renderPassCreateInfo.setSubpassCount(static_cast<uint32_t>(subPasses.size()));
-    renderPassCreateInfo.setPSubpasses(subPasses.data());
-    renderPassCreateInfo.setDependencyCount(static_cast<uint32_t> (subpassDependencies.size()));
-    renderPassCreateInfo.setPDependencies(subpassDependencies.data());
-
-    this->renderPassBase = this->getVkDevice().createRenderPass2(renderPassCreateInfo);
-
-    VulkanDbg::registerVkObjectDbgInfo("The RenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPassBase)));
-}
-
-void VulkanRenderer::createRenderPassImgui()
-{
-    vk::AttachmentDescription2 attachment{};
-    attachment.setFormat(this->swapchain.getVkFormat());
-    attachment.setSamples(vk::SampleCountFlagBits::e1);
-    attachment.setLoadOp(vk::AttachmentLoadOp::eDontCare);
-    attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
-    attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
-    attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
-    attachment.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal);
-    attachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-
-    vk::AttachmentReference2 attachment_reference{};
-    attachment_reference.setAttachment(uint32_t(0));
-    attachment_reference.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    vk::SubpassDescription2 subpass{};
-    subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
-    subpass.setColorAttachmentCount(uint32_t(1));
-    subpass.setPColorAttachments(&attachment_reference);
-
-    vk::SubpassDependency2 subpassDependecy{};
-    subpassDependecy.setSrcSubpass(VK_SUBPASS_EXTERNAL);
-    subpassDependecy.setDstSubpass(uint32_t(0));
-    subpassDependecy.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput); // Wait until all other graphics have been rendered
-    subpassDependecy.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
-    subpassDependecy.setSrcAccessMask(vk::AccessFlags());
-    subpassDependecy.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
-
-    vk::RenderPassCreateInfo2 renderpassCreateinfo{};
-    renderpassCreateinfo.setAttachmentCount(uint32_t (1));
-    renderpassCreateinfo.setPAttachments(&attachment);
-    renderpassCreateinfo.setSubpassCount(uint32_t (1));
-    renderpassCreateinfo.setPSubpasses(&subpass);
-    renderpassCreateinfo.setDependencyCount(uint32_t(1));
-    renderpassCreateinfo.setPDependencies(&subpassDependecy);
-    this->renderPassImgui = this->getVkDevice().createRenderPass2(renderpassCreateinfo);
 }
 
 void VulkanRenderer::createCommandPool()
@@ -1001,12 +870,12 @@ void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::Command
 void VulkanRenderer::createFramebuffer(
     vk::Framebuffer& frameBuffer,
     std::vector<vk::ImageView>& attachments,
-    vk::RenderPass& renderPass, 
+    RenderPass& renderPass, 
     vk::Extent2D& extent, 
     std::string&& name = "NoName")
 {
     vk::FramebufferCreateInfo framebufferCreateInfo{};
-    framebufferCreateInfo.setRenderPass(renderPass);
+    framebufferCreateInfo.setRenderPass(renderPass.getVkRenderPass());
     framebufferCreateInfo.setAttachmentCount(static_cast<uint32_t>(attachments.size()));
     framebufferCreateInfo.setPAttachments(attachments.data());
     framebufferCreateInfo.setWidth(extent.width);
@@ -1364,7 +1233,7 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     imguiInitInfo.Allocator = nullptr;
     imguiInitInfo.CheckVkResultFn = checkVkResult;
-    ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPassImgui);
+    ImGui_ImplVulkan_Init(&imguiInitInfo, this->renderPassImgui.getVkRenderPass());
 
     this->createFramebufferImgui();
 
