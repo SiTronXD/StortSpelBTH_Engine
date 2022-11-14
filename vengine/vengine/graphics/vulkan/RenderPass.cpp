@@ -26,7 +26,7 @@ void RenderPass::createRenderPassBase(Device& device, Swapchain& swapchain)
 
     // Depth attachment
     vk::AttachmentDescription2 depthAttachment{};
-    depthAttachment.setFormat(swapchain.getVkDepthFormat());
+    depthAttachment.setFormat(swapchain.getDepthTexture().getVkFormat());
     depthAttachment.setSamples(vk::SampleCountFlagBits::e1);
     depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);                         // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
     depthAttachment.setStoreOp(vk::AttachmentStoreOp::eDontCare);                    // Whenever it's used, we dont care what happens with the data... (we dont present it or anything)

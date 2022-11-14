@@ -36,11 +36,11 @@ void VulkanRenderer::initResourceManager()
 {
     this->resourceManager->init(
         &this->vma,
-        &this->physicalDevice.getVkPhysicalDevice(),
+        &this->physicalDevice,
         &this->device,
         &this->queueFamilies.getGraphicsQueue(),
-        &this->commandPool,
-        this); /// TODO:  <-- REMOVE THIS, temporary used before making createTexture part of resourceManager...
+        &this->commandPool
+    );
 }
 
 using namespace vengine_helper::config;

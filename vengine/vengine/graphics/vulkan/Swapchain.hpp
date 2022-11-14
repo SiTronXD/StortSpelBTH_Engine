@@ -3,12 +3,14 @@
 #include "../Utilities.hpp"
 #include "../TempPCH.hpp"
 #include "FramebufferArray.hpp"
+#include "../Texture.hpp"
 
 class Window;
 class PhysicalDevice;
 class Device;
 class QueueFamilies;
 class RenderPass;
+class Texture;
 
 // Defines what kind of surface we can create with our given surface
 struct SwapchainDetails
@@ -46,10 +48,7 @@ private:
 	vk::Extent2D extent{};
 	uint32_t numMinimumImages;
 
-	vk::Image depthBufferImage;
-	VmaAllocation depthBufferImageMemory;
-	vk::ImageView depthBufferImageView;
-	vk::Format depthFormat{};
+	Texture depthTexture;
 
 	Window* window;
 	PhysicalDevice* physicalDevice;
@@ -65,11 +64,8 @@ private:
 	vk::Extent2D chooseBestImageResolution(
 		const vk::SurfaceCapabilities2KHR& surfaceCapabilities);
 
-	void createDepthBuffer();
-
 public:
 	Swapchain();
-	~Swapchain();
 
 	void createSwapchain(
 		Window& window,
@@ -98,12 +94,10 @@ public:
 	inline const uint32_t& getNumMinimumImages() { return this->numMinimumImages; }
 	inline size_t getNumImages() { return this->images.size(); }
 	inline vk::Image& getImage(const uint32_t& index) { return this->images[index]; }
-	inline vk::Image& getDepthBufferImage() { return this->depthBufferImage; }
 	inline vk::ImageView& getImageView(const uint32_t& index) { return this->imageViews[index]; }
-	inline vk::ImageView& getDepthBufferImageView() { return this->depthBufferImageView; }
 	inline vk::SwapchainKHR& getVkSwapchain() { return this->swapchain; }
 	inline vk::Format& getVkFormat() { return this->imageFormat; }
-	inline vk::Format& getVkDepthFormat() { return this->depthFormat; }
+	inline const Texture& getDepthTexture() const { return this->depthTexture; }
 	inline vk::Extent2D& getVkExtent() { return this->extent; }
 	inline const vk::Framebuffer& getVkFramebuffer(const uint32_t& index) const { return this->framebuffers[index]; }
 };

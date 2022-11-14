@@ -120,51 +120,6 @@ vk::Extent2D Swapchain::chooseBestImageResolution(
     }
 }
 
-void Swapchain::createDepthBuffer()
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-    
-    // Get supported VkFormat for the depth buffer
-    this->depthFormat = Texture::chooseSupportedFormat(
-        *this->physicalDevice,
-        {  
-            // Atleast one of these should be available...
-            vk::Format::eD32Sfloat,
-            vk::Format::eD24UnormS8Uint
-        },
-        vk::ImageTiling::eOptimal,                         // We want to use the Optimal Tiling
-        vk::FormatFeatureFlagBits::eDepthStencilAttachment); // Make sure the Format supports the Depth Stencil Attatchment Bit....
-
-    
-    // Create Depth Buffer Image
-    this->depthBufferImage = Texture::createImage(
-        *this->vma,
-        {
-            .width = this->getWidth(),
-            .height = this->getHeight(),
-            .format = this->depthFormat,
-            .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
-            .useFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment
-                        // TODO: remove this
-                        | vk::ImageUsageFlagBits::eInputAttachment,     // Image will be used as a Depth Stencil
-            .imageMemory = &this->depthBufferImageMemory
-        },
-        "depthBufferImage"
-    );
-
-    // Create Depth Buffer Image View
-    this->depthBufferImageView = Texture::createImageView(
-        *this->device,
-        this->depthBufferImage,
-        depthFormat,
-        vk::ImageAspectFlagBits::eDepth
-    );
-    VulkanDbg::registerVkObjectDbgInfo("depthBufferImageView", vk::ObjectType::eImageView, reinterpret_cast<uint64_t>(vk::ImageView::CType(this->depthBufferImageView)));
-    VulkanDbg::registerVkObjectDbgInfo("depthBufferImage", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->depthBufferImage)));
-}
-
 Swapchain::Swapchain()
     : swapchain(VK_NULL_HANDLE),
     window(nullptr),
@@ -174,10 +129,6 @@ Swapchain::Swapchain()
     queueFamilies(nullptr),
     vma(nullptr),
     numMinimumImages(0)
-{
-}
-
-Swapchain::~Swapchain()
 {
 }
 
@@ -330,12 +281,20 @@ void Swapchain::createSwapchain(
             VulkanDbg::registerVkObjectDbgInfo("Swapchain_Image[" + std::to_string(i) + "]", vk::ObjectType::eImage, reinterpret_cast<uint64_t>(vk::Image::CType(this->images[i])));
         }
 
+        // Destroy old swapchain
         if (oldSwapchain)
         {
             this->device->getVkDevice().destroySwapchainKHR(oldSwapchain);
         }
 
-        this->createDepthBuffer();
+        // Create depth texture
+        this->depthTexture.createAsDepthTexture(
+            *this->physicalDevice,
+            *this->device,
+            *this->vma,
+            this->getWidth(),
+            this->getHeight()
+        );
 
         // Update resolution translator
         ResTranslator::updateWindowSize(
@@ -355,7 +314,7 @@ void Swapchain::createFramebuffers(RenderPass& renderPass)
     for (size_t i = 0; i < framebufferAttachments.size(); ++i)
     {
         framebufferAttachments[i].push_back(this->getImageView(i));
-        framebufferAttachments[i].push_back(this->depthBufferImageView);
+        framebufferAttachments[i].push_back(this->depthTexture.getImageView());
     }
     this->framebuffers.create(
         *this->device,
@@ -415,9 +374,7 @@ void Swapchain::getDetails(
 void Swapchain::cleanup(bool destroySwapchain)
 {
     // Depth buffer
-    this->device->getVkDevice().destroyImageView(this->depthBufferImageView);
-    this->device->getVkDevice().destroyImage(this->depthBufferImage);
-    vmaFreeMemory(*this->vma, this->depthBufferImageMemory);
+    this->depthTexture.cleanup();
 
     // Swapchain image views
     for (auto view : this->imageViews)
