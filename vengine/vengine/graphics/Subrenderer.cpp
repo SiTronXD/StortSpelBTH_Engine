@@ -16,12 +16,12 @@ void VulkanRenderer::beginRenderpass(
 
         // Fog color
         std::array<float, 4>
-    {
-        0.8f,
+        {
+            0.8f,
             0.8f,
             0.8f,
             1.0f
-    }
+        }
     );
 
     const std::array<vk::ClearValue, 2> clearValues =
@@ -90,7 +90,7 @@ void VulkanRenderer::renderDefaultMeshes(
     auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent, Inactive>);
     meshView.each([&](
         const Transform& transform,
-        const MeshComponent& meshComponent)
+        MeshComponent& meshComponent)
         {
             Mesh& currentMesh =
                 this->resourceManager->getMesh(meshComponent.meshID);
@@ -126,11 +126,46 @@ void VulkanRenderer::renderDefaultMeshes(
             for (size_t i = 0; i < submeshes.size(); ++i)
             {
                 const SubmeshData& currentSubmesh = submeshes[i];
+                Material& material = 
+                    this->getAppropriateMaterial(meshComponent, submeshes, i);
+
+                // Create new material if found material is new
+#if defined(_DEBUG) || defined(DEBUG)
+                if (material.descriptorIndex >= ~0u)
+                {
+                    this->device.waitIdle();
+
+                    FrequencyInputBindings diffuseTextureInputBinding{};
+                    FrequencyInputBindings specularTextureInputBinding{};
+                    diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
+                    specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+
+                    // Add descriptor set
+                    material.descriptorIndex =
+                        this->shaderInput.addFrequencyInput(
+                            {
+                                diffuseTextureInputBinding,
+                                specularTextureInputBinding
+                            }
+                    );
+
+                    if (this->hasAnimations)
+                    {
+                        // Add one descriptor in animShaderInput for 
+                        // each added descriptor in shaderInput
+                        this->animShaderInput.addFrequencyInput(
+                            {
+                                diffuseTextureInputBinding,
+                                specularTextureInputBinding
+                            }
+                        );
+                    }
+                }
+#endif
 
                 // Update for descriptors
                 this->shaderInput.setFrequencyInput(
-                    this->getAppropriateMaterial(meshComponent, submeshes, i)
-                    .descriptorIndex
+                    material.descriptorIndex
                 );
                 this->currentCommandBuffer->bindShaderInputFrequency(
                     this->shaderInput,

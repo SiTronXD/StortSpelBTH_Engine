@@ -242,7 +242,6 @@ uint32_t ResourceManager::addMaterial(
     Material newMaterial{};
     newMaterial.diffuseTextureIndex = diffuseTextureIndex;
     newMaterial.specularTextureIndex = specularTextureIndex;
-    newMaterial.descriptorIndex = ~0u;
 
     uint32_t newMaterialIndex =
         static_cast<uint32_t>(this->materials.size());

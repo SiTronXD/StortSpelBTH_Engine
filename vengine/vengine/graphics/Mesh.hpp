@@ -53,7 +53,8 @@ public:
     inline const vk::Buffer& getIndexBuffer() const;
 	inline MeshData& getMeshData();
     inline const std::vector<SubmeshData>& getSubmeshData() const;
-    
+    inline SubmeshData& getSubmesh(const uint32_t& index) { return this->submeshData[index]; }
+
     void mapAnimations(const std::vector<std::string>& names);
     uint32_t getAnimationIndex(const std::string& name) const;
 

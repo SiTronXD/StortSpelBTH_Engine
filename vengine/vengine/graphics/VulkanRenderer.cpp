@@ -208,7 +208,7 @@ void VulkanRenderer::cleanup()
     tracy::GetProfiler().RequestShutdown();  
 #endif
     
-    //Wait until no actions is run on device...
+    // Wait until no actions is run on device...
     this->device.waitIdle(); // Dont destroy semaphores before they are done
 
     this->resourceManager->cleanup(); //TODO: Rewrite cleanup, "sartCleanup"
@@ -1026,6 +1026,21 @@ void VulkanRenderer::updateLightBuffer(Scene* scene)
 
 const Material& VulkanRenderer::getAppropriateMaterial(
     const MeshComponent& meshComponent,
+    const std::vector<SubmeshData>& submeshes,
+    const uint32_t& submeshIndex)
+{
+    // Unique overriden materials
+    if (meshComponent.numOverrideMaterials > 0)
+    {
+        return meshComponent.overrideMaterials[submeshIndex];
+    }
+
+    // Default mesh materials
+    return this->resourceManager->getMaterial(submeshes[submeshIndex].materialIndex);
+}
+
+Material& VulkanRenderer::getAppropriateMaterial(
+    MeshComponent& meshComponent,
     const std::vector<SubmeshData>& submeshes,
     const uint32_t& submeshIndex)
 {
