@@ -36,10 +36,6 @@ void ShaderInput::createDescriptorSetLayouts()
     ZoneScoped; //:NOLINT
 #endif
 
-    // std::vector<vk::DescriptorSetLayoutBinding> perFrameLayoutBindings;
-    // std::vector<vk::DescriptorSetLayoutBinding> perMeshLayoutBindings;
-    // std::vector<vk::DescriptorSetLayoutBinding> perDrawLayoutBindings;
-
     // layoutBindings[DescriptorFrequency][bindingIndex]
     std::vector<std::vector<vk::DescriptorSetLayoutBinding>> layoutBindings((uint32_t) DescriptorFrequency::NUM_FREQUENCY_TYPES);
 
