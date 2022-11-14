@@ -151,6 +151,10 @@ private:
         const MeshComponent& meshComponent,
         const std::vector<SubmeshData>& submeshes,
         const uint32_t& submeshIndex);
+    Material& getAppropriateMaterial(
+        MeshComponent& meshComponent,
+        const std::vector<SubmeshData>& submeshes,
+        const uint32_t& submeshIndex);
 
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
@@ -178,7 +182,7 @@ public:
     
     void cleanup();
 
-    // - - VMA 
+    // VMA 
     void generateVmaDump();
 
     bool& getWindowResized() { return this->windowResized; }
