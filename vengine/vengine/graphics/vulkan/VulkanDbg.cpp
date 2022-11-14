@@ -1,8 +1,4 @@
 #include "pch.h"
-#include "VulkanDbg.hpp"
-#include "VulkanValidation.hpp"
-#include "VulkanInstance.hpp"
-#include "Device.hpp"
 
 VulkanInstance* VulkanDbg::instance = nullptr;
 Device* VulkanDbg::device = nullptr;

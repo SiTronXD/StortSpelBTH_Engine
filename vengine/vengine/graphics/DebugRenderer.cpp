@@ -72,7 +72,7 @@ void DebugRenderer::create(
     Device& device,
     VmaAllocator& vma,
     ResourceManager& resourceManager,
-    vk::RenderPass& renderPass,
+    RenderPass& renderPass,
     vk::Queue& transferQueue,
     vk::CommandPool& transferCommandPool,
     const uint32_t& framesInFlight)
@@ -82,8 +82,8 @@ void DebugRenderer::create(
     this->vma = &vma;
     this->resourceManager = &resourceManager;
     this->renderPass = &renderPass;
-    this->transferQueue = &transferQueue,
-    this->transferCommandPool = &transferCommandPool,
+    this->transferQueue = &transferQueue;
+    this->transferCommandPool = &transferCommandPool;
     this->framesInFlight = framesInFlight;
 }
 

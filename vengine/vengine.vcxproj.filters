@@ -90,6 +90,9 @@
     <ClCompile Include="vengine\pch\pch.cpp" />
     <ClCompile Include="vengine\components\AudioSource.cpp" />
     <ClCompile Include="vengine\windows\StatisticsCollector.cpp" />
+    <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -183,6 +186,8 @@
     <ClInclude Include="vengine\windows\StatisticsCollector.hpp" />
     <ClInclude Include="vengine\components\Spotlight.hpp" />
     <ClInclude Include="vengine\dev\Random.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\RenderPass.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\FramebufferArray.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

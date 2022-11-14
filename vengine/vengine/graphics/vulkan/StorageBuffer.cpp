@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "StorageBuffer.hpp"
-#include "VulkanDbg.hpp"
 
 void StorageBuffer::createStorageBuffer(
     Device& device, 

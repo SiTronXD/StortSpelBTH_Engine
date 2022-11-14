@@ -1,10 +1,6 @@
 #include "pch.h"
-#include "VulkanInstance.hpp"
-
 #include "../../application/Window.hpp"
 #include "../../dev/Log.hpp"
-#include "VulkanValidation.hpp"
-#include "VulkanDbg.hpp"
 
 bool VulkanInstance::checkInstanceExtensionSupport(
     std::vector<const char*>* checkExtensions)

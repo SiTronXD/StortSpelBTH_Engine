@@ -45,10 +45,9 @@ public:
     ResourceManager() = default;
     void init(
         VmaAllocator * vma,
-        vk::PhysicalDevice* physiscalDev,
+        PhysicalDevice* physicalDevice,
         Device* dev, vk::Queue* transQueue,
-        vk::CommandPool* transCmdPool,
-        VulkanRenderer* vulkanRenderer);
+        vk::CommandPool* transCmdPool);
 		
     void cleanUp();
 

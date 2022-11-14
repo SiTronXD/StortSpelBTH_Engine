@@ -16,13 +16,22 @@
 #include <unordered_map>
 #include <set>
 
+#include <vulkan/vulkan.hpp>
 #include <glm/glm.hpp>
+#include "backends/imgui_impl_vulkan.h"          
+#include "stb_image.h"
 
 #include "../dev/Log.hpp"
 #include "../application/Input.hpp"
 #include "../application/Time.hpp"
 #include "../dev/StringHelper.hpp"
 #include "../graphics/StringAlignment.h"
+#include "../graphics/vulkan/VulkanInstance.hpp"
+#include "../graphics/vulkan/PhysicalDevice.hpp"
+#include "../graphics/vulkan/Device.hpp"
+#include "../graphics/vulkan/QueueFamilies.hpp"
+#include "../graphics/vulkan/VulkanValidation.hpp"
+#include "../graphics/vulkan/VulkanDbg.hpp"
 
 #include "../components/Transform.hpp"
 #include "../components/MeshComponent.hpp"
@@ -36,3 +45,11 @@
 #include "../components/BTAgent.hpp"
 #include "../components/BTComponent.hpp"
 #include "../components/FSMAgentComponent.hpp"
+#include "../components/AmbientLight.hpp"
+#include "../components/DirectionalLight.hpp"
+#include "../components/PointLight.hpp"
+#include "../components/Spotlight.hpp"
+
+#include "assimp/Importer.hpp"
+#include "assimp/scene.h"
+#include "assimp/postprocess.h"

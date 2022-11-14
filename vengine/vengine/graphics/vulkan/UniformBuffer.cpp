@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "UniformBuffer.hpp"
 
-#include "VulkanDbg.hpp"
-
 void UniformBuffer::createUniformBuffer(
     Device& device,
     VmaAllocator& vma,

@@ -34,7 +34,13 @@ private:
     void loadAnimation(const aiScene* scene, MeshData& outMeshData);
     void loadSkeleton(const aiScene* scene, MeshData& outMeshData);
 public: 
-    void init(VmaAllocator* vma, vk::PhysicalDevice* physiscalDev, Device* dev, vk::Queue* transQueue, vk::CommandPool* transCmdPool, ResourceManager* resourceMan);
+    void init(
+        VmaAllocator* vma, 
+        PhysicalDevice* physicalDevice, 
+        Device* dev, 
+        vk::Queue* transQueue, 
+        vk::CommandPool* transCmdPool, 
+        ResourceManager* resourceMan);
     void setTextureLoader(TextureLoader* textureLoader);
 
     MeshData importMeshData(

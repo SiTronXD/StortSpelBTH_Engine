@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "Pipeline.hpp"
 
-#include "Device.hpp"
-#include "VulkanDbg.hpp"
+#include "RenderPass.hpp"
 #include "../MeshData.hpp"
 #include "../../dev/Log.hpp"
 
@@ -80,7 +79,7 @@ Pipeline::~Pipeline()
 void Pipeline::createPipeline(
     Device& device,
     ShaderInput& shaderInput,
-    vk::RenderPass& renderPass,
+    RenderPass& renderPass,
     const VertexStreams& targetVertexStream,
     const std::string& vertexShaderName,
     const std::string& fragmentShaderName,
@@ -237,7 +236,7 @@ void Pipeline::createPipeline(
     pipelineCreateInfo.setPColorBlendState(&colorBlendingCreateInfo);
     pipelineCreateInfo.setPDepthStencilState(&depthStencilCreateInfo);
     pipelineCreateInfo.setLayout(shaderInput.getPipelineLayout().getVkPipelineLayout());                                 // Pipeline layout pipeline should use
-    pipelineCreateInfo.setRenderPass(renderPass);                                 // Render pass description the pipeline is compatible with
+    pipelineCreateInfo.setRenderPass(renderPass.getVkRenderPass());                                 // Render pass description the pipeline is compatible with
     pipelineCreateInfo.setSubpass(uint32_t(0));                                             // subpass of render pass to use with pipeline
 
     // Pipeline Derivatives : Can Create multiple pipelines that derive from one another for optimization

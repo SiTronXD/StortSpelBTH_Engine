@@ -9,29 +9,27 @@
 
 void ResourceManager::init(
     VmaAllocator* vma,
-    vk::PhysicalDevice* physiscalDev,
+    PhysicalDevice* physicalDevice,
     Device* dev, vk::Queue* transQueue,
-    vk::CommandPool* transCmdPool,
-    VulkanRenderer* vulkanRenderer)
+    vk::CommandPool* transCmdPool)
 {
     this->dev = dev;
 
     this->meshLoader.init(
         vma,
-        physiscalDev,
+        physicalDevice,
         dev,
         transQueue,
         transCmdPool,
         this);
     this->textureLoader.init(
         vma,
-        physiscalDev,
+        physicalDevice,
         dev,
         transQueue,
         transCmdPool,
         this);
     this->meshLoader.setTextureLoader(&this->textureLoader);
-    this->textureLoader.setVulkanRenderer(vulkanRenderer);
     
 }
 
