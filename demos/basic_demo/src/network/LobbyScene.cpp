@@ -6,6 +6,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "NetworkTestScene.h"
 #include "vengine/network/ServerGameModes/DefaultServerGame.h"
+#include "NetworkHandlerTest.h"
 
 LobbyScene::LobbyScene()
 {
@@ -21,6 +22,12 @@ void LobbyScene::init()
 	int camEntity = this->createEntity();
 	this->setComponent<Camera>(camEntity);
 	this->setMainCamera(camEntity);
+
+	this->floor = this->createEntity();
+	this->setComponent<MeshComponent>(this->floor);
+	Transform& t = this->getComponent<Transform>(this->floor);
+	t.position.y = -5.0f;
+	t.scale = glm::vec3(25.0f, 1.0f, 25.0f);
 }
 
 void LobbyScene::start()
@@ -59,7 +66,19 @@ void LobbyScene::update()
 		if (ip == "a") {
 			ip = "192.168.1.104";
 		}
+		else if (ip == "b") {
+			ip = "192.168.1.225";
+		}
 		this->getNetworkHandler()->connectClient(ip);
+	}
+
+	if (Input::isKeyPressed(Keys::Q))
+	{
+		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ (int)GameEvent::SAY_HELLO, 1, { 5 } });
+	}
+	if (Input::isKeyPressed(Keys::E))
+	{
+		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ (int)GameEvent::SAY_BYE });
 	}
 
 	this->getNetworkHandler()->sendUDPDataToClient(

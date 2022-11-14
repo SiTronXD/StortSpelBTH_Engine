@@ -6,8 +6,8 @@
 #include "NetworkSceneHandler.h"
 #include "NetworkScriptHandler.h"
 
-struct clientInfo {
-	clientInfo(std::string name)
+struct ClientInfo {
+	ClientInfo(std::string name)
 	{
 		this->name = name;
 	}
@@ -21,48 +21,48 @@ struct clientInfo {
 
 class Server {
 private:
-	//functions
-	//see if user is still connected by seeing if user has been to the sending messages the last 3 seconds or so
-	//else send a message that they have been disconnected
+	// Functions
+	// See if user is still connected by seeing if user has been to the sending messages the last 3 seconds or so
+	// Else send a message that they have been disconnected
 	void seeIfUsersExist();
 	void handleDisconnects(int clientID); //if a player have wanted to disconnect
 	void cleanRecvPackages();
 	void cleanSendPackages();
-	void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start);
+	void ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& listener, StartingEnum& start);
 
-	//To users
+	// To users
 	void sendDataToAllUsers();
 	void handlePacketFromUser(const int& clientID, bool tcp = true);
 
-	//From users
+	// From users
 	void getDataFromUsers();
 	void createUDPPacketToClient(const int& clientID, sf::Packet& packet);
 
-	//engine objects
+	// Engine objects
 	NetworkSceneHandler sceneHandler;
 	PhysicsEngine physicsEngine;
 	NetworkScriptHandler scriptHandler;
 
-	//print all users
+	// Print all users
 	void printAllUsers();
 	int getClientSize();
 
-	//varibles
+	// Varibles
 	StartingEnum starting;
 	float        currentTimeToSend;
 	float        timeToSend;
 
-	std::vector<clientInfo*> clients;
+	std::vector<ClientInfo*> clients;
 	sf::UdpSocket            udpSocket;
 	sf::TcpListener          listener;
 
-	std::vector<sf::Packet> clientToServerPacketTcp; //packet from client to server i = clientID
+	std::vector<sf::Packet> clientToServerPacketTcp; // Packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketTcp;
 
-	std::vector<sf::Packet> clientToServerPacketUdp; //packet from client to server i = clientID
+	std::vector<sf::Packet> clientToServerPacketUdp; // Packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketUdp;
 
-	//help functions
+	// Helper functions
 	template <typename T> void getToAllExeptIDTCP(int clientID, T var)
 	{
 		for (int i = 0; i < serverToClientPacketTcp.size(); i++) {

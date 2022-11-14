@@ -48,7 +48,6 @@ int NetworkHandlerLua::lua_sendTCPData(lua_State* L)
 	int ints[3] = {0,0,0};
 	int nrOfInts = 0;
 	std::vector<float> floats;
-	
 
 	//check the first table
 	lua_pushnil(L);
@@ -81,7 +80,7 @@ int NetworkHandlerLua::lua_sendTCPData(lua_State* L)
 	ev.ints[1] = ints[1];
 	ev.ints[2] = ints[2];
 	ev.floats = floats;
-	ev.gameEvent = typeOfCall;
+	ev.event = typeOfCall;
 	ev.nrOfInts = nrOfInts;
 
 	networkHandler->sendTCPDataToClient(ev);

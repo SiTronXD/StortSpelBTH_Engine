@@ -6,7 +6,7 @@
 
 class NetworkScene : public Scene
 {
-  private:
+private:
 	std::vector<sf::Packet>* serverToClient;
 
 protected:
@@ -15,7 +15,7 @@ protected:
 	std::vector<int> players;
 	PathFindingManager pf;
 
-  public:
+public:
 	NetworkScene();
 	virtual ~NetworkScene();
 	

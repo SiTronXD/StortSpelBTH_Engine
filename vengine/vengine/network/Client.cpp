@@ -109,7 +109,7 @@ void Client::disconnect()
 
 void Client::sendTCPEvent(TCPPacketEvent& eventTCP)
 {
-    this->clientTcpPacketSend << eventTCP.gameEvent;
+    this->clientTcpPacketSend << eventTCP.event;
     for (int i = 0; i < eventTCP.nrOfInts; i++) {
         this->clientTcpPacketSend << eventTCP.ints[i];
     }

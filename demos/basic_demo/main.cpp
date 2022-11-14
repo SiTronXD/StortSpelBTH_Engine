@@ -9,9 +9,10 @@
 #include "vengine.h"
 #include "vengine/test/TestScene2.hpp"
 #include "src/TestDemoScene.h"
-#include "src/NetworkTestScene.h"
 #include "src/NewTestScene.h"
-#include "src/LobbyScene.h"
+#include "src/network/NetworkTestScene.h"
+#include "src/network/LobbyScene.h"
+#include "src/network/NetworkHandlerTest.h"
 
 int main(int argc, char* argv[])
 {
@@ -23,9 +24,10 @@ int main(int argc, char* argv[])
 
     {
         Engine engine;
+        engine.setCustomNetworkHandler(new NetworkHandlerTest());
         // engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
-        //engine.run("Demo Application", "", new LobbyScene());
-        engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());
+        engine.run("Demo Application", "", new LobbyScene());
+        //engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());
     }
 
 	return EXIT_SUCCESS;

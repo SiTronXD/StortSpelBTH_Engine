@@ -4,7 +4,8 @@
 #include "../application/SceneHandler.hpp"
 #include "glm/vec3.hpp"
 
-class Client {
+class Client 
+{
 private:
     //data
     std::string clientName;
@@ -15,15 +16,16 @@ private:
     float        currentTimeToSendDataToServer;
     float        timeToSendDataToServer;
 
+    // Packets
     sf::Packet clientTcpPacketSend;
     sf::Packet clientUdpPacketSend;
 
-    //sockets
+    // Sockets
     sf::TcpSocket   tcpSocket;
     sf::TcpListener tcpListener;
     sf::UdpSocket   udpSocket;
 
-    //functions
+    // Functions
     void sendDataToServer();
     void cleanPackageAndGameEvents();
 
@@ -39,9 +41,9 @@ public:
     void starting();
     void disconnect();
 
-    //send events
+    // Send events
     void sendTCPEvent(TCPPacketEvent& eventTCP);
-    //only exist one udp event from client to server
+    // Only exist one udp event from client to server
     void sendUDPEvent(const GameEvents& gameEvent, const glm::vec3& pos, const glm::vec3& rot);
 
     sf::Packet& getTcpPacket();

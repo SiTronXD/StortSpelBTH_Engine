@@ -5,7 +5,7 @@
 class LobbyScene : public Scene
 {
 private:
-	int stone;
+	int floor;
 	int Player;
 public:
 	LobbyScene();

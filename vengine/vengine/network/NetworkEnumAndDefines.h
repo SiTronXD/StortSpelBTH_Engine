@@ -11,14 +11,24 @@
 
 #pragma endregion
 
-struct TCPPacketEvent {
-	int                gameEvent;
+struct TCPPacketEvent 
+{
+	int                event;
 	int                nrOfInts;
 	int                ints[3]; //max nr of ints is 3
 	std::vector<float> floats;
 };
 
-enum StartingEnum { WaitingForUsers, Start, Running };
+enum class NetworkEvent
+{
+	ERR = -1,
+	EMPTY = 0,
+	CLIENTJOINED,
+	DISCONNECT,
+	END
+};
+
+enum StartingEnum { WaitingForUsers, /*PlayerJoined,*/ Start, Running };
 
 #pragma region GAMEEVENTS_NETWORK
 

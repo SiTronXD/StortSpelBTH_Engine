@@ -5,11 +5,10 @@
 #include "../components/MeshComponent.hpp"
 #include "../../vengine/resource_management/ResourceManager.hpp"
 
-class NetworkHandler {
-  private:
+class NetworkHandler 
+{
+private:
 	const float waitTimeForServerCreation = 10.0f;
-
-  private:
 
     std::thread*        serverThread;
     bool                shutDownServer;
@@ -39,7 +38,7 @@ class NetworkHandler {
 
     void createAPlayer(int serverId, const std::string& playerName);
 
-  public:
+public:
     NetworkHandler();
     virtual ~NetworkHandler();
     void setSceneHandler(SceneHandler* sceneHandler);
@@ -47,11 +46,15 @@ class NetworkHandler {
 
     void setMeshes(const std::string& meshName, const int meshID);
 
-    //SERVER
+    // Virtual functions (customization)
+    virtual void handleTCPEvent(sf::Packet& tcpPacket, int event);
+    virtual void handleUDPEvent(sf::Packet& udpPacket, int event);
+
+    // SERVER
     void createServer(NetworkScene* serverGame = nullptr); //create new server on a new thread
     void deleteServer();
 
-    //CLIENT
+    // CLIENT
     Client* createClient(const std::string &name = "BOB"); //should return a client
     Client* getClient();
     bool    connectClientToThis();
@@ -61,15 +64,15 @@ class NetworkHandler {
 	void sendAIPolygons(std::vector<glm::vec2> points);
 	const std::string &getClientName();
 
-    //USER
-    void updateNetwork();
+    // USER
+    void update();
     void sendTCPDataToClient(TCPPacketEvent tcpP);
     void setPlayerNetworkHandler(int playerID);
 	void getLuaData(std::vector<int>& ints, std::vector<float>& floats);
 	const std::vector<std::pair<int, std::string>> getPlayers();
 	void createPlayers();
 
-    //little cheating here but only one event from client to server via udp
+    // little cheating here but only one event from client to server via udp
     void sendUDPDataToClient(const glm::vec3 &pos, const glm::vec3 &rot);
     int  getServerSeed();
 };
