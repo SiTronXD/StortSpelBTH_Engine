@@ -77,6 +77,20 @@ class VulkanRenderer
 
     std::vector<LightBufferData> lightBuffer;
 
+
+
+
+    // Shadow map stuff, TODO: place this somewhere else later
+    Texture shadowMapTexture;
+    RenderPass shadowMapRenderPass;
+    FramebufferArray shadowMapFramebuffer;
+    UniformBufferID shadowMapViewProjectionUB;
+    ShaderInput shadowMapShaderInput;
+    Pipeline shadowMapPipeline;
+    CommandBufferArray shadowMapCommandBuffers;
+
+
+
     // Default pipeline
     UniformBufferID viewProjectionUB;
     UniformBufferID allLightsInfoUB;

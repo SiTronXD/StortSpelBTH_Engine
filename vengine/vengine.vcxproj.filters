@@ -386,5 +386,6 @@
     <CustomBuild Include="vengine_assets\shaders\ui.vert" />
     <CustomBuild Include="vengine_assets\shaders\dbgMesh.vert" />
     <CustomBuild Include="vengine_assets\shaders\dbg.frag" />
+    <CustomBuild Include="vengine_assets\shaders\shadowMap.vert" />
   </ItemGroup>
 </Project>

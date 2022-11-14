@@ -182,6 +182,61 @@ int VulkanRenderer::init(
         return EXIT_FAILURE;
     }
 
+
+    uint32_t shadowMapWidth = 1024;
+    uint32_t shadowMapHeight = 1024;
+
+    VertexStreams shadowMapVertexStream{};
+    shadowMapVertexStream.positions.resize(1);
+
+    this->shadowMapTexture.createAsDepthTexture(
+        this->physicalDevice,
+        this->device,
+        this->vma,
+        shadowMapWidth,
+        shadowMapHeight
+    );
+    this->shadowMapRenderPass.createRenderPassShadowMap(
+        this->device, 
+        this->shadowMapTexture
+    );
+    this->shadowMapFramebuffer.create(
+        this->device,
+        this->shadowMapRenderPass,
+        vk::Extent2D(shadowMapWidth, shadowMapHeight),
+        {
+            {
+                this->shadowMapTexture.getImageView()
+            }
+        }
+    );
+    this->shadowMapShaderInput.beginForInput(
+        this->physicalDevice,
+        this->device,
+        this->vma,
+        *this->resourceManager,
+        MAX_FRAMES_IN_FLIGHT
+    );
+    this->shadowMapShaderInput.addPushConstant(
+        sizeof(PushConstantData),
+        vk::ShaderStageFlagBits::eVertex
+    );
+    this->shadowMapViewProjectionUB =
+        this->shadowMapShaderInput.addUniformBuffer(
+            sizeof(CameraBufferData),
+            vk::ShaderStageFlagBits::eVertex,
+            DescriptorFrequency::PER_FRAME
+        );
+    this->shadowMapShaderInput.endForInput();
+    this->shadowMapPipeline.createPipeline(
+        this->device,
+        this->shadowMapShaderInput,
+        this->shadowMapRenderPass,
+        shadowMapVertexStream,
+        "shadowMap.vert.spv",
+        ""
+    );
+
     return EXIT_SUCCESS;
 }
 
@@ -251,6 +306,16 @@ void VulkanRenderer::cleanup()
 
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
+
+
+    shadowMapTexture.cleanup();
+    shadowMapRenderPass.cleanup();
+    shadowMapFramebuffer.cleanup();
+    shadowMapShaderInput.cleanup();
+    shadowMapPipeline.cleanup();
+
+
+
 
     this->renderPassBase.cleanup();
     this->swapchain.cleanup();
