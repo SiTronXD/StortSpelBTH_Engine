@@ -597,6 +597,11 @@ void VulkanRenderer::initForScene(Scene* scene)
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
+    /*this->shaderInput.addCombinedImageSampler(
+        this->shadowMapTexture,
+        vk::ShaderStageFlagBits::eFragment,
+        DescriptorFrequency::PER_FRAME
+    );*/
     this->shaderInput.makeFrequencyInputLayout(
         // DescriptorFrequency::PER_DRAW_CALL, 
         perDrawInputLayout
