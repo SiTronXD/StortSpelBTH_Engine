@@ -183,8 +183,15 @@ int VulkanRenderer::init(
     }
 
 
+
+
+
     uint32_t shadowMapWidth = 1024;
     uint32_t shadowMapHeight = 1024;
+    this->shadowMapExtent = vk::Extent2D(
+        shadowMapWidth,
+        shadowMapHeight
+    );
 
     VertexStreams shadowMapVertexStream{};
     shadowMapVertexStream.positions.resize(1);
@@ -1133,6 +1140,28 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
         
         #pragma region commandBufferRecording
 
+            // Shadow map shader input
+            glm::vec3 lightCamPos = glm::vec3(50.0f, 50.0f, 50.0f);
+            glm::vec3 lightCamDir = glm::normalize(glm::vec3(-1.0f));
+            CameraBufferData lightCameraBuffer{};
+            lightCameraBuffer.projection = 
+                glm::orthoRH(
+                    -100.0f, 100.0f, 
+                    -100.0f, 100.0f, 
+                    0.1f, 1000.0f
+                );
+            lightCameraBuffer.view = glm::lookAt(
+                lightCamPos, 
+                glm::vec3(0.0f),
+                glm::vec3(0.0f, 1.0f, 0.0f)
+            );
+            this->shadowMapShaderInput.setCurrentFrame(
+                this->currentFrame);
+            this->shadowMapShaderInput.updateUniformBuffer(
+                this->shadowMapViewProjectionUB,
+                (void*) &lightCameraBuffer
+            );
+
             // Default shader input
             this->shaderInput.setCurrentFrame(this->currentFrame);
             this->shaderInput.updateUniformBuffer(
@@ -1175,6 +1204,13 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 
             // Update lights
             this->updateLightBuffer(scene);
+
+            // Render shadow map
+            this->beginShadowMapRenderPass(
+                imageIndex
+            );
+                this->renderShadowMapDefaultMeshes(scene);
+            this->endShadowMapRenderPass();
 
             // Render to screen
             this->beginRenderpass(

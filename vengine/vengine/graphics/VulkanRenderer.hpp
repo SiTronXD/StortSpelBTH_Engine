@@ -38,8 +38,8 @@ class VulkanRenderer
 
     struct PushConstantData
     {
-        glm::mat4 modelMatrix;
-        glm::vec4 tintColor; // vec4(R, G, B, lerp alpha)
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
+        glm::vec4 tintColor = glm::vec4(0.0f); // vec4(R, G, B, lerp alpha)
     } pushConstantData{};
 
     ResourceManager* resourceManager;
@@ -88,6 +88,8 @@ class VulkanRenderer
     ShaderInput shadowMapShaderInput;
     Pipeline shadowMapPipeline;
     CommandBufferArray shadowMapCommandBuffers;
+    vk::Extent2D shadowMapExtent;
+
 
 
 
@@ -143,7 +145,14 @@ private:
 
     void updateLightBuffer(Scene* scene);
 
-    // Renderpass for screen rendering
+    // ------- Render functions within render passes -------
+
+    // Render pass for shadow map rendering
+    void beginShadowMapRenderPass(const uint32_t& imageIndex);
+    void renderShadowMapDefaultMeshes(Scene* scene);
+    void endShadowMapRenderPass();
+
+    // Render pass for screen rendering
     void beginRenderpass(
         const uint32_t& imageIndex);
     void renderDefaultMeshes(Scene* scene);
@@ -152,7 +161,7 @@ private:
     void renderDebugElements();
     void endRenderpass();
 
-    // Renderpass for imgui rendering
+    // Render pass for imgui rendering
     void beginRenderpassImgui(
         const uint32_t& imageIndex);
     void renderImgui();

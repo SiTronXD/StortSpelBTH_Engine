@@ -1,6 +1,138 @@
 #include "pch.h"
 #include "VulkanRenderer.hpp"
 
+void VulkanRenderer::beginShadowMapRenderPass(
+    const uint32_t& imageIndex)
+{
+    const std::array<vk::ClearValue, 1> clearValues =
+    {
+            vk::ClearValue(                         // Clear value for attachment 0
+                vk::ClearDepthStencilValue(
+                    1.F,    // depth
+                    0       // stencil
+                )
+            )
+    };
+
+    // Information about how to begin a render pass
+    vk::RenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.setRenderPass(this->shadowMapRenderPass.getVkRenderPass());                      // Render pass to begin
+    renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
+    renderPassBeginInfo.renderArea.setExtent(this->shadowMapExtent);      // Size of region to run render pass on (starting at offset)
+    renderPassBeginInfo.setPClearValues(clearValues.data());
+    renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
+    renderPassBeginInfo.setFramebuffer(this->shadowMapFramebuffer[0]);
+
+    // Begin Render Pass!    
+    // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
+    vk::SubpassBeginInfoKHR subpassBeginInfo;
+    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
+    this->currentCommandBuffer->beginRenderPass2(
+        renderPassBeginInfo,
+        subpassBeginInfo
+    );
+
+    // Viewport
+    vk::Viewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float) this->shadowMapExtent.width;
+    viewport.height = (float) this->shadowMapExtent.height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    this->currentCommandBuffer->setViewport(viewport);
+
+    // Scissor
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D{ 0, 0 };
+    scissor.extent = this->shadowMapExtent;
+    this->currentCommandBuffer->setScissor(scissor);
+}
+
+void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
+{
+    // Bind Pipeline to be used in render pass
+    this->currentCommandBuffer->bindGraphicsPipeline(
+        this->shadowMapPipeline
+    );
+
+    // Update for descriptors
+    this->currentCommandBuffer->bindShaderInputFrequency(
+        this->shadowMapShaderInput,
+        DescriptorFrequency::PER_FRAME
+    );
+
+    // For every non-animating mesh we have
+    auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent, Inactive>);
+    meshView.each([&](
+        const Transform& transform,
+        const MeshComponent& meshComponent)
+        {
+            Mesh& currentMesh =
+                this->resourceManager->getMesh(meshComponent.meshID);
+            const std::vector<SubmeshData>& submeshes =
+                currentMesh.getSubmeshData();
+
+            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+            this->pushConstantData.modelMatrix = transform.getMatrix();
+            this->currentCommandBuffer->pushConstant(
+                this->shadowMapShaderInput,
+                (void*) &this->pushConstantData
+            );
+
+            // Bind only vertex buffer containing positions
+            this->currentCommandBuffer->bindVertexBuffers2(
+                currentMesh.getVertexBufferArray()
+                    .getVertexBuffers()[0]
+            );
+            /*------this->currentCommandBuffer->bindVertexBuffers2(
+                currentMesh.getVertexBufferArray(),
+                this->currentFrame
+            );*/
+
+            // Bind index buffer
+            this->currentCommandBuffer->bindIndexBuffer(
+                currentMesh.getIndexBuffer()
+            );
+
+            // Update for descriptors
+            this->currentCommandBuffer->bindShaderInputFrequency(
+                this->shadowMapShaderInput,
+                DescriptorFrequency::PER_MESH
+            );
+
+            for (size_t i = 0; i < submeshes.size(); ++i)
+            {
+                const SubmeshData& currentSubmesh = submeshes[i];
+
+                // Update for descriptors
+                /*this->shadowMapShaderInput.setFrequencyInput(
+                    this->getAppropriateMaterial(meshComponent, submeshes, i)
+                    .descriptorIndex
+                );
+                this->currentCommandBuffer->bindShaderInputFrequency(
+                    this->shadowMapShaderInput,
+                    DescriptorFrequency::PER_DRAW_CALL
+                );*/
+
+                // Draw
+                this->currentCommandBuffer->drawIndexed(
+                    currentSubmesh.numIndicies, 
+                    1, 
+                    currentSubmesh.startIndex
+                );
+            }
+        }
+    );
+}
+
+void VulkanRenderer::endShadowMapRenderPass()
+{
+    // End render pass
+    vk::SubpassEndInfo subpassEndInfo;
+    this->currentCommandBuffer->endRenderPass2(subpassEndInfo);
+}
+
 void VulkanRenderer::beginRenderpass(
     const uint32_t& imageIndex)
 {

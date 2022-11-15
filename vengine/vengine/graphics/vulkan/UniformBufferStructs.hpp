@@ -6,9 +6,9 @@
 // View/projection matrices and position
 struct CameraBufferData
 {
-    glm::mat4 projection;
-    glm::mat4 view;
-    glm::vec4 worldPosition;
+    glm::mat4 projection = glm::mat4(1.0f);
+    glm::mat4 view = glm::mat4(1.0f);
+    glm::vec4 worldPosition = glm::vec4(glm::vec3(0.0f), 1.0f);
 };
 
 // Offset indicies into the light buffer
