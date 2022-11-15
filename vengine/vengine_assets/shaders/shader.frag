@@ -22,6 +22,13 @@ layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
 	uint spotlightsEndIndex;
 } allLightsInfo;
 
+layout(set = FREQ_PER_FRAME, binding = 4) uniform LightCameraBuffer
+{
+    mat4 projection;
+    mat4 view;
+    vec4 worldPos;
+} lightCameraBuffer;
+
 // Storage buffer
 struct LightBufferData
 {
@@ -39,8 +46,9 @@ layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
 {
     LightBufferData lights[];
 } lightBuffer;
-layout(set = FREQ_PER_FRAME, binding = 3) uniform sampler2D shadowMapSampler;
 
+// Combined image samplers
+layout(set = FREQ_PER_FRAME, binding = 3) uniform sampler2D shadowMapSampler;
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
 layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D textureSampler1;
 
@@ -65,6 +73,38 @@ vec3 calcSpecular(in vec4 specularTexCol, in vec3 normal, in vec3 halfwayDir)
 			max(dot(normal, halfwayDir), 0.0f), 
 			specularTexCol.a * 256.0f
 		);
+}
+
+#define SHADOW_BIAS 0.005f
+float getShadowFactor()
+{
+	// Transform to the light's NDC
+	vec4 fragLightNDC = 
+		lightCameraBuffer.projection * 
+		lightCameraBuffer.view * 
+		vec4(fragWorldPos, 1.0f);
+	fragLightNDC.xyz /= fragLightNDC.w;
+
+	// Fragment is outside light frustum
+	if( fragLightNDC.x < -1.0f || fragLightNDC.x > 1.0f ||
+		fragLightNDC.y < -1.0f || fragLightNDC.y > 1.0f ||
+		fragLightNDC.z < 0.0f || fragLightNDC.z > 1.0f)
+	{
+		return 1.0f;
+	}
+
+	// Texture coordinates
+	fragLightNDC.xy = fragLightNDC.xy * 0.5f + vec2(0.5f);
+
+	// Sample shadow map
+	float shadowMapValue = 
+		texture(shadowMapSampler, fragLightNDC.xy).r;
+
+	// Calculate shadow factor
+	float shadowFactor = 
+		fragLightNDC.z - SHADOW_BIAS >= shadowMapValue ? 0.0f : 1.0f;
+
+	return shadowFactor;
 }
 
 void main() 
@@ -105,7 +145,8 @@ void main()
 		// Add blinn-phong light contribution
 		finalColor += 
 			(diffuseLight + specularLight) * 
-			lightBuffer.lights[i].color.xyz;
+			lightBuffer.lights[i].color.xyz * 
+			getShadowFactor();
 	}
 
 	// Point lights
@@ -181,6 +222,4 @@ void main()
 
 	// No fog
 	// outColor = vec4(finalColor, 1.0f);
-
-	outColor = texture(shadowMapSampler, fragTex);
 }

@@ -186,15 +186,21 @@ int VulkanRenderer::init(
 
 
 
-    uint32_t shadowMapWidth = 1024;
-    uint32_t shadowMapHeight = 1024;
+    uint32_t shadowMapWidth = 1024 * 4;
+    uint32_t shadowMapHeight = 1024 * 4;
     this->shadowMapExtent = vk::Extent2D(
         shadowMapWidth,
         shadowMapHeight
     );
 
+    // Bind only positions when rendering shadow map
     VertexStreams shadowMapVertexStream{};
     shadowMapVertexStream.positions.resize(1);
+
+    // Sampling settings
+    TextureSettings depthTextureSettings{};
+    depthTextureSettings.samplerSettings.filterMode =
+        vk::Filter::eNearest;
 
     this->shadowMapTexture.createAsDepthTexture(
         this->physicalDevice,
@@ -202,7 +208,8 @@ int VulkanRenderer::init(
         this->vma,
         shadowMapWidth,
         shadowMapHeight,
-        vk::ImageUsageFlagBits::eSampled
+        vk::ImageUsageFlagBits::eSampled,
+        this->resourceManager->addSampler(depthTextureSettings)
     );
     this->shadowMapRenderPass.createRenderPassShadowMap(
         this->device, 
@@ -648,6 +655,12 @@ void VulkanRenderer::initForScene(Scene* scene)
         vk::ShaderStageFlagBits::eFragment,
         DescriptorFrequency::PER_FRAME
     );
+    this->lightViewProjectionUB =
+        this->shaderInput.addUniformBuffer(
+            sizeof(CameraBufferData),
+            vk::ShaderStageFlagBits::eFragment,
+            DescriptorFrequency::PER_FRAME
+        );
     this->shaderInput.makeFrequencyInputLayout(
         // DescriptorFrequency::PER_DRAW_CALL, 
         perDrawInputLayout
@@ -751,6 +764,12 @@ void VulkanRenderer::initForScene(Scene* scene)
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
+        this->animLightViewProjectionUB =
+            this->animShaderInput.addUniformBuffer(
+                sizeof(CameraBufferData),
+                vk::ShaderStageFlagBits::eFragment,
+                DescriptorFrequency::PER_FRAME
+            );
         this->animShaderInput.makeFrequencyInputLayout(
             // DescriptorFrequency::PER_DRAW_CALL,
             perDrawInputLayout
@@ -1204,15 +1223,15 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
         
         #pragma region commandBufferRecording
 
-            // Shadow map shader input
+            // Shadow map shader input 
             glm::vec3 lightCamPos = glm::vec3(50.0f, 50.0f, 50.0f);
             glm::vec3 lightCamDir = glm::normalize(glm::vec3(-1.0f));
             CameraBufferData lightCameraBuffer{};
             lightCameraBuffer.projection = 
                 glm::orthoRH(
-                    -100.0f, 100.0f, 
-                    -100.0f, 100.0f, 
-                    0.1f, 1000.0f
+                    -50.0f, 50.0f, 
+                    -50.0f, 50.0f, 
+                    0.1f, 200.0f
                 );
             lightCameraBuffer.view = glm::lookAt(
                 lightCamPos, 
@@ -1232,6 +1251,10 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 this->viewProjectionUB,
                 (void*)&this->cameraDataUBO
             );
+            this->shaderInput.updateUniformBuffer(
+                this->lightViewProjectionUB,
+                (void*) &lightCameraBuffer
+            );
 
             // Animation shader input
             if (this->hasAnimations)
@@ -1241,6 +1264,10 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 				    this->viewProjectionUB, 
                     (void*)&this->cameraDataUBO
 				);
+                this->shaderInput.updateUniformBuffer(
+                    this->animLightViewProjectionUB,
+                    (void*)&lightCameraBuffer
+                );
 			}
 
             // UI shader input

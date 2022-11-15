@@ -24,13 +24,15 @@ void Texture::createAsDepthTexture(
     VmaAllocator& vma,
     const uint32_t& width,
     const uint32_t& height,
-    const vk::ImageUsageFlagBits& extraUsageFlags)
+    const vk::ImageUsageFlagBits& extraUsageFlags,
+    const uint32_t& textureSamplerIndex)
 {
     this->physicalDevice = &physicalDevice;
     this->device = &device;
     this->vma = &vma;
     this->width = width;
     this->height = height;
+    this->textureSamplerIndex = textureSamplerIndex;
 
     // Get supported VkFormat for the depth buffer
     this->format = Texture::chooseSupportedFormat(

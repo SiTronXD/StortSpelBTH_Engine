@@ -73,7 +73,8 @@ public:
 		VmaAllocator& vma,
 		const uint32_t& width,
 		const uint32_t& height,
-		const vk::ImageUsageFlagBits& extraUsageFlags = (vk::ImageUsageFlagBits) 0);
+		const vk::ImageUsageFlagBits& extraUsageFlags = (vk::ImageUsageFlagBits) 0,
+		const uint32_t& textureSamplerIndex = 0);
 	void create(
 		PhysicalDevice& physicalDevice,
 		Device& device,

@@ -359,7 +359,11 @@ void ShaderInput::updateDescriptorSets()
             {
                 descriptorImageInfos[j].setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // The image layout when it is in use
                 descriptorImageInfos[j].setImageView(texture->getImageView());
-                descriptorImageInfos[j].setSampler(this->resourceManager->getTextureSampler(0).getVkSampler());
+                descriptorImageInfos[j].setSampler(
+                    this->resourceManager->getTextureSampler(
+                        texture->getSamplerIndex()
+                    ).getVkSampler()
+                );
 
                 writeDescriptorSets[j].setPImageInfo(&descriptorImageInfos[j]);
             }
