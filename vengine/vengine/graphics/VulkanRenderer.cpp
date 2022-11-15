@@ -657,9 +657,9 @@ void VulkanRenderer::initForScene(Scene* scene)
         vk::ShaderStageFlagBits::eFragment,
         DescriptorFrequency::PER_FRAME
     );
-    this->lightViewProjectionUB =
+    this->shadowMapDataUB =
         this->shaderInput.addUniformBuffer(
-            sizeof(CameraBufferData),
+            sizeof(ShadowMapData),
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
@@ -766,9 +766,9 @@ void VulkanRenderer::initForScene(Scene* scene)
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
-        this->animLightViewProjectionUB =
+        this->animShadowMapDataUB =
             this->animShaderInput.addUniformBuffer(
-                sizeof(CameraBufferData),
+                sizeof(ShadowMapData),
                 vk::ShaderStageFlagBits::eFragment,
                 DescriptorFrequency::PER_FRAME
             );
@@ -1269,7 +1269,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 (void*)&this->cameraDataUBO
             );
             this->shaderInput.updateUniformBuffer(
-                this->lightViewProjectionUB,
+                this->shadowMapDataUB,
                 (void*) &shadowMapData
             );
 
@@ -1281,8 +1281,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 				    this->viewProjectionUB, 
                     (void*)&this->cameraDataUBO
 				);
-                this->shaderInput.updateUniformBuffer(
-                    this->animLightViewProjectionUB,
+                this->animShaderInput.updateUniformBuffer(
+                    this->animShadowMapDataUB,
                     (void*)&shadowMapData
                 );
 			}

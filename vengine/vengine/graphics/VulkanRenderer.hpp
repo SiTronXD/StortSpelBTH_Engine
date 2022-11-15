@@ -98,7 +98,7 @@ class VulkanRenderer
     // Default pipeline
     UniformBufferID viewProjectionUB;
     UniformBufferID allLightsInfoUB;
-    UniformBufferID lightViewProjectionUB;
+    UniformBufferID shadowMapDataUB;
     StorageBufferID lightBufferSB;
     ShaderInput shaderInput;
     Pipeline pipeline;
@@ -107,7 +107,7 @@ class VulkanRenderer
 	bool hasAnimations;
     UniformBufferID animViewProjectionUB;
     UniformBufferID animAllLightsInfoUB;
-    UniformBufferID animLightViewProjectionUB;
+    UniformBufferID animShadowMapDataUB;
     StorageBufferID animLightBufferSB;
     ShaderInput animShaderInput;
     Pipeline animPipeline;
