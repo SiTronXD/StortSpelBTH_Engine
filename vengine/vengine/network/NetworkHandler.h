@@ -72,7 +72,7 @@ public:
 	const std::vector<std::pair<int, std::string>> getPlayers();
 	void createPlayers();
 
-    // little cheating here but only one event from client to server via udp
+    // Little cheating here but only one event from client to server via udp
     void sendUDPDataToClient(const glm::vec3 &pos, const glm::vec3 &rot);
     int  getServerSeed();
 };

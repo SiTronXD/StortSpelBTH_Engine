@@ -19,16 +19,7 @@ struct TCPPacketEvent
 	std::vector<float> floats;
 };
 
-enum class NetworkEvent
-{
-	ERR = -1,
-	EMPTY = 0,
-	CLIENTJOINED,
-	DISCONNECT,
-	END
-};
-
-enum StartingEnum { WaitingForUsers, /*PlayerJoined,*/ Start, Running };
+enum class ServerStatus { WAITING, START, RUNNING };
 
 #pragma region GAMEEVENTS_NETWORK
 
@@ -70,6 +61,17 @@ enum GameEvents {
 	A_Button_Was_Pressed_On_Client,
 	END
 };
+
+enum class NetworkEvent
+{
+	ERR = -1,
+	EMPTY,
+	CLIENTJOINED,
+	DISCONNECT,
+	START,
+	END
+};
+
 /*
 /////////events tcp server -> client////////////////
 

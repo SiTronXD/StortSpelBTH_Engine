@@ -226,12 +226,24 @@ void NetworkHandler::update()
 
 	client->update(Time::getDT());
 
-	int gameEvent;
+	int event;
 	sf::Packet packet = client->getTCPDataFromServer();
 	while (!packet.endOfPacket())
 	{
-		packet >> gameEvent;
-		if (gameEvent == (int)NetworkEvent::DISCONNECT)
+		if (!(packet >> event))
+		{
+			Log::write("Client: couldn't extract event TCP from server");
+			packet.clear();
+		}
+
+		if (event == (int)NetworkEvent::CLIENTJOINED)
+		{
+			std::string playerName;
+			packet >> playerName;
+			packet >> ix;
+			this->createAPlayer(ix, playerName);
+		}
+		else if (event == (int)NetworkEvent::DISCONNECT)
 		{
 			packet >> ix;
 			// We got kicked
@@ -257,17 +269,25 @@ void NetworkHandler::update()
 				}
 			}
 		}
-		// Custom event
-		else if (gameEvent >= (int)NetworkEvent::END)
+		else if (event == (int)GameEvents::START)
 		{
-			this->handleTCPEvent(packet, gameEvent);
+			this->client->starting();
+		}
+		// Custom event
+		else if (event >= (int)NetworkEvent::END)
+		{
+			this->handleTCPEvent(packet, event);
 		}
 	}
 
 	packet = client->getUDPDataFromServer();
 	while (!packet.endOfPacket())
 	{
-		packet >> gameEvent;
+		if (!(packet >> event))
+		{
+			Log::write("Client: couldn't extract UDP event from server");
+			packet.clear();
+		}
 		//if (gameEvent == (int)NetworkEvent::DISCONNECT)
 		//{
 		//	packet >> ix;
@@ -435,9 +455,9 @@ void NetworkHandler::update()
 		//	}
 		//}
 		// Custom event
-		if (gameEvent >= (int)GameEvents::END)
+		if (event >= (int)GameEvents::END)
 		{
-			this->handleTCPEvent(packet, gameEvent);
+			this->handleUDPEvent(packet, event);
 		}
 	}
 	//this->handleTCPPacket(client->getTCPDataFromServer());

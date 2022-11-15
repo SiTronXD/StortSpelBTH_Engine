@@ -10,7 +10,7 @@ bool duplicateUser(std::vector<ClientInfo*>& client)
 		if (client[client.size() - 1]->sender == client[c]->sender &&
 		    client[client.size() - 1]->clientTcpSocket.getRemotePort() == client[c]->clientTcpSocket.getRemotePort())
 		{
-			//delete the client before
+			// Delete the client before
 			delete client[c];
 			client.erase(client.begin() + c);
 
@@ -21,34 +21,33 @@ bool duplicateUser(std::vector<ClientInfo*>& client)
 	return false;
 }
 
-    //can I do this better?
-void Server::ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
+    // Can I do this better?
+void Server::ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& listener, ServerStatus& start)
 {
 	static int id = 0;
 
-	//while the game has NOT started look for players
-	if (start == StartingEnum::WaitingForUsers)
+	// While the game has NOT started look for players
+	if (start == ServerStatus::WAITING)
 	{
-		//if we got a connection
+		// If we got a connection
 		if (listener.accept(client[client.size() - 1]->clientTcpSocket) == sf::Socket::Done)
 		{
 			id++;
 
-			client[client.size() - 1]->sender = client[client.size() - 1]->clientTcpSocket.getRemoteAddress();  //may be wrong address here 2?
+			client[client.size() - 1]->sender = client[client.size() - 1]->clientTcpSocket.getRemoteAddress();  // May be wrong address here 2?
 			client[client.size() - 1]->id = id;
 
 			std::cout << "Server: " << client[client.size() - 1]->clientTcpSocket.getRemoteAddress().toString() << " Connected" << std::endl;
 
+			// Double check so we don't get double players
 			bool duplicatedUser = duplicateUser(client);
-			//double check so we don't get double players
 
-
-			//get name of player
+			// Get name of player
 			sf::SocketSelector selector;
 			selector.add(client[client.size() - 1]->clientTcpSocket);
 			if (!selector.wait(sf::seconds(5.0f)))
 			{
-				//if we didn't get a name end
+				// If we didn't get a name end
 				delete client[client.size() - 1];
 				client[client.size() - 1] = new ClientInfo("");
 				return;
@@ -69,13 +68,13 @@ void Server::ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& lis
 			{
 				// Send that a player has joined
 				sf::Packet playerJoinedPacket;
-				playerJoinedPacket << GameEvents::PlayerJoined << client[client.size() - 1]->name << client[client.size() - 1]->id;
+				playerJoinedPacket << (int)NetworkEvent::CLIENTJOINED << client[client.size() - 1]->name << client[client.size() - 1]->id;
 				for (int i = 0; i < client.size() - 1; i++)
 				{
 					client[i]->clientTcpSocket.send(playerJoinedPacket);
 				}
 			}
-			//create a new client that is ready
+			// Create a new client that is ready
 			client[client.size() - 1]->clientTcpSocket.setBlocking(false);
 			client.resize(client.size() + 1);
 			client[client.size() - 1] = new ClientInfo("");
@@ -84,9 +83,11 @@ void Server::ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& lis
 }
 
 Server::Server(NetworkScene* serverGame)
+	: status(ServerStatus::WAITING)
 {
 	this->udpSocket.setBlocking(false);
 	this->listener.setBlocking(false);
+
 	// Give info to all 
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
@@ -109,7 +110,7 @@ Server::Server(NetworkScene* serverGame)
 	}
 	this->sceneHandler.updateToNextScene();
 
-	//bind socket
+	// Bind socket
 	if (this->udpSocket.bind(UDP_PORT_SERVER) != sf::Socket::Done)
 	{
 		std::cout << "Server: error with server udpSocket" << std::endl;
@@ -119,20 +120,20 @@ Server::Server(NetworkScene* serverGame)
 		std::cout << "Server: error with server tcp listener" << std::endl;
 	}
 
-	//show servers address
+	// Show servers address
 	std::cout << "Server: public address " << sf::IpAddress::getPublicAddress() << std::endl;
 	std::cout << "Server: local address " << sf::IpAddress::getLocalAddress() << std::endl;
 
 	this->currentTimeToSend = 0;
 
-	//how long time it should take before sending next message
+	// How long time it should take before sending next message
 	this->timeToSend = ServerUpdateRate;
 }
 
 Server::~Server()
 {
-	//if we still waiting for users to connect but we want to shut down server
-	this->starting = StartingEnum::Start;
+	// If we still waiting for users to connect but we want to shut down server
+	this->status = ServerStatus::START;
 
 	for (int i = 0; i < clients.size(); i++)
 	{
@@ -159,22 +160,21 @@ void Server::start()
 
 	std::cout << "Server: printing all users" << std::endl;
 	printAllUsers();
-	this->starting = StartingEnum::Running;
-	
+	this->status = ServerStatus::RUNNING;
 }
 
 bool Server::update(float dt)
 {
 	// All users are connected and client host says it's ok to start
-	if (this->starting == StartingEnum::Start)
+	if (this->status == ServerStatus::START)
 	{
 		this->start();
 	}
-	else if (starting == StartingEnum::WaitingForUsers)
+	else if (status == ServerStatus::WAITING)
 	{
-		ConnectUsers(clients, listener, starting);
+		ConnectUsers(clients, listener, status);
 	}
-	else if (starting == StartingEnum::Running)
+	else if (status == ServerStatus::RUNNING)
 	{
 		this->currentTimeToSend += dt;
 		for (int i = 0; i < this->clients.size(); i++)
@@ -203,7 +203,7 @@ bool Server::update(float dt)
 	}
 	getDataFromUsers();
 	
-	return false;  //server is not done
+	return false;  // Server is not done
 }
 
 std::string Server::getServerIP()
@@ -222,7 +222,7 @@ void Server::disconnect()
 	{
 		std::cout << "Server: user " << clients[i]->name << " getting kicked" << std::endl;
 		sf::Packet packet;
-		packet << GameEvents::DISCONNECT << -1;
+		packet << (int)NetworkEvent::DISCONNECT << -1;
 		clients[i]->clientTcpSocket.send(packet);
 		udpSocket.send(packet, clients[i]->sender, clients[i]->port);
 		delete clients[i];
@@ -235,7 +235,7 @@ void Server::handleDisconnects(int clientID)
 	std::cout << "Server: user " << clients[clientID]->name << " getting kicked" << std::endl;
 
 	sf::Packet packetOtherClients;
-	packetOtherClients << GameEvents::DISCONNECT << clients[clientID]->id;
+	packetOtherClients << (int)NetworkEvent::DISCONNECT << clients[clientID]->id;
 	for (int i = 0; i < clients.size(); i++)
 	{
 		if (clientID != i)
@@ -244,9 +244,9 @@ void Server::handleDisconnects(int clientID)
 		}
 	}
 
-	//say to client we ack his/her disconnect
+	// Say to client we ack his/her disconnect
 	sf::Packet packet;
-	packet << GameEvents::DISCONNECT << -1;
+	packet << (int)NetworkEvent::DISCONNECT << -1;
 	clients[clientID]->clientTcpSocket.send(packet);
 	udpSocket.send(packet, clients[clientID]->sender, clients[clientID]->port);
 
@@ -347,30 +347,30 @@ void Server::getDataFromUsers()
 
 void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 {
-	//tcp
-	int gameEvent;
+	// TCP
+	int event;
 	float packetHelper1;
 	int packetHelper2;
 	std::vector<float> points;
-	if (tcp && this->starting == StartingEnum::WaitingForUsers)
+	if (tcp && this->status == ServerStatus::WAITING)
 	{
 		while (!clientToServerPacketTcp[ClientID].endOfPacket())
 		{
-			clientToServerPacketTcp[ClientID] >> gameEvent;
-			if (gameEvent == GameEvents::START)
+			clientToServerPacketTcp[ClientID] >> event;
+			if (event == (int)GameEvents::START)
 			{
 				if (ClientID == 0)
 				{
-					if (this->starting == StartingEnum::WaitingForUsers)
+					if (this->status == ServerStatus::WAITING)
 					{
 						delete clients[clients.size() - 1];
 						clients.resize(clients.size() - 1);
 					}
-					this->starting = StartingEnum::Start;
-					this->sceneHandler.sendCallFromClient(GameEvents::START);
+					this->status = ServerStatus::START;
+					this->sceneHandler.sendCallFromClient((int)GameEvents::START);
 				}
 			}
-			else if (gameEvent == GameEvents::GetPlayerNames)
+			else if (event == GameEvents::GetPlayerNames)
 			{
 				// Send player names
 				sf::Packet playerNamesPacket;
@@ -391,14 +391,14 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 	{
 		while (!clientToServerPacketTcp[ClientID].endOfPacket())
 		{
-			clientToServerPacketTcp[ClientID] >> gameEvent;
+			clientToServerPacketTcp[ClientID] >> event;
 			sf::Packet playerNamesPacket;
-			switch (gameEvent)
+			switch (event)
 			{
 			case GameEvents::EMPTY:
 				break;
 			case GameEvents::Explosion:
-				getToAllExeptIDTCP(ClientID, gameEvent);
+				getToAllExeptIDTCP(ClientID, event);
 				clientToServerPacketTcp[ClientID] >> packetHelper1;  //radius
 				getToAllExeptIDTCP(ClientID, packetHelper1);
 				clientToServerPacketTcp[ClientID] >> packetHelper1;  //x
@@ -410,7 +410,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				break;
 			case GameEvents::PlayerShoot || GameEvents::SpawnEnemy:
 				// Create a new package to send to the rest of the clients
-				getToAllExeptIDTCP(ClientID, gameEvent);
+				getToAllExeptIDTCP(ClientID, event);
 				clientToServerPacketTcp[ClientID] >> packetHelper2;  //type
 				getToAllExeptIDTCP(ClientID, packetHelper2);
 				clientToServerPacketTcp[ClientID] >> packetHelper1;  //x
@@ -420,14 +420,13 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				clientToServerPacketTcp[ClientID] >> packetHelper1;  //z
 				getToAllExeptIDTCP(ClientID, packetHelper1);
 				break;
-			case GameEvents::DISCONNECT:
+			case (int)NetworkEvent::DISCONNECT:
 				std::cout << "Server: user disconnected by own choice" << std::endl;
 				handleDisconnects(ClientID);
 				break;
 			case GameEvents::A_Button_Was_Pressed_On_Client:
 				std::cout << "Server: client pressed Button wow (TCP)" << std::endl;
 				break;
-
 			case GameEvents::POLYGON_DATA:
 				std::cout << "Server: client sent polygon data" << std::endl;
 				clientToServerPacketTcp[ClientID] >> packetHelper2;
@@ -459,18 +458,18 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
 				break;
 			default:
-				serverToClientPacketTcp[ClientID] << gameEvent;
+				serverToClientPacketTcp[ClientID] << event;
 				break;
 			}
 		}
 	}
 	else
 	{
-		//udp
+		// UDP
 		while (!clientToServerPacketUdp[ClientID].endOfPacket())
 		{
-			clientToServerPacketUdp[ClientID] >> gameEvent;
-			switch (gameEvent)
+			clientToServerPacketUdp[ClientID] >> event;
+			switch (event)
 			{
 				case GameEvents::EMPTY:
 					break;
@@ -530,14 +529,14 @@ void Server::startGettingClients()
 	clientToServerPacketTcp.resize(clients.size());
 	clientToServerPacketUdp.resize(clients.size());
 	serverToClientPacketTcp.resize(clients.size());
-	this->starting = StartingEnum::WaitingForUsers;
+	this->status = ServerStatus::WAITING;
 }
 
 void Server::stopGettingClients() 
 {
 	delete clients[clients.size() - 1];
 	clients.resize(clients.size() - 1);
-	this->starting = StartingEnum::Start;
+	this->status = ServerStatus::START;
 }
 
 void Server::printAllUsers()

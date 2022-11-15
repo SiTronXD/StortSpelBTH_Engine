@@ -7,12 +7,12 @@
 class Client 
 {
 private:
-    //data
+    // Data
     std::string clientName;
     std::string serverIP;
     bool        isConnectedToServer;
 
-    StartingEnum startingEnum;
+    ServerStatus serverStatus;
     float        currentTimeToSendDataToServer;
     float        timeToSendDataToServer;
 

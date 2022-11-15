@@ -28,7 +28,7 @@ private:
 	void handleDisconnects(int clientID); //if a player have wanted to disconnect
 	void cleanRecvPackages();
 	void cleanSendPackages();
-	void ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& listener, StartingEnum& start);
+	void ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& listener, ServerStatus& start);
 
 	// To users
 	void sendDataToAllUsers();
@@ -48,7 +48,7 @@ private:
 	int getClientSize();
 
 	// Varibles
-	StartingEnum starting;
+	ServerStatus status;
 	float        currentTimeToSend;
 	float        timeToSend;
 

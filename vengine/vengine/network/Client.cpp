@@ -4,11 +4,13 @@
 
 Client::Client(const std::string& clientName)
 {
-    this->startingEnum                  = StartingEnum::Start;
+    this->serverStatus                  = ServerStatus::START;
     this->isConnectedToServer           = false;
     this->currentTimeToSendDataToServer = 0;
     this->timeToSendDataToServer        = ServerUpdateRate;
     this->clientName                    = clientName;
+
+    //this->cleanPackageAndGameEvents();
 }
 
 Client::~Client() {}
@@ -86,18 +88,18 @@ void Client::update(const float& dt)
 
 bool Client::hasStarted() const
 {
-    return this->startingEnum == StartingEnum::Running;
+    return this->serverStatus == ServerStatus::RUNNING;
 }
 
 void Client::starting()
 {
-    this->startingEnum = StartingEnum::Running;
+    this->serverStatus = ServerStatus::RUNNING;
 }
 
 void Client::disconnect()
 {
-    //send to server that we are going to disconnect
-    this->clientTcpPacketSend << GameEvents::DISCONNECT;
+    // Send to server that we are going to disconnect
+    this->clientTcpPacketSend << (int)GameEvents::DISCONNECT;
     this->clientTcpPacketSend << GameEvents::END;
     if (this->clientTcpPacketSend.getDataSize() > 0) {
         this->tcpSocket.send(clientTcpPacketSend);
@@ -120,7 +122,7 @@ void Client::sendTCPEvent(TCPPacketEvent& eventTCP)
 
 void Client::sendUDPEvent(const GameEvents& gameEvent, const glm::vec3& pos, const glm::vec3& rot)
 {
-    //write over the current udp packet
+    // Write over the current udp packet
     sf::Packet p;
     p << gameEvent << pos.x << pos.y << pos.z << rot.x << rot.y << rot.z;
     this->clientUdpPacketSend = p;
@@ -136,7 +138,7 @@ void Client::sendDataToServer()
     this->tcpSocket.send(clientTcpPacketSend);
 
     //if we have started we send our position to the server
-    if (this->startingEnum == StartingEnum::Running) {
+    if (this->serverStatus == ServerStatus::RUNNING) {
         this->udpSocket.send(clientUdpPacketSend, this->serverIP, UDP_PORT_SERVER);
     }
 }
