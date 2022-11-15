@@ -36,7 +36,6 @@ void TestDemoScene::init()
 	//transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 	this->setComponent<MeshComponent>(this->testEntity, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
-	this->setComponent<MaterialComponent>(this->testEntity);
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
 	this->setComponent<Spotlight>(this->testEntity);

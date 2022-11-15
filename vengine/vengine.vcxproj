@@ -488,6 +488,7 @@ SET ERRORLEVEL = 0</Command>
     <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
+    <ClCompile Include="vengine\network\ServerGameModes\NetworkLobbyScene.cpp" />
     <ClCompile Include="vengine\windows\StatisticsCollector.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
