@@ -195,10 +195,6 @@ int VulkanRenderer::init(
     this->shadowMapData.shadowMapSize.x = (float)this->shadowMapExtent.width;
     this->shadowMapData.shadowMapSize.y = (float)this->shadowMapExtent.height;
 
-    // Bind only positions when rendering shadow map
-    VertexStreams shadowMapVertexStream{};
-    shadowMapVertexStream.positions.resize(1);
-
     // Sampling settings 
     TextureSettings depthTextureSettings{};
     depthTextureSettings.samplerSettings.filterMode =
@@ -227,38 +223,12 @@ int VulkanRenderer::init(
             }
         }
     );
-    this->shadowMapShaderInput.beginForInput(
-        this->physicalDevice,
-        this->device,
-        this->vma,
-        *this->resourceManager,
-        MAX_FRAMES_IN_FLIGHT
-    );
-    this->shadowMapShaderInput.addPushConstant(
-        sizeof(PushConstantData),
-        vk::ShaderStageFlagBits::eVertex
-    );
-    this->shadowMapViewProjectionUB =
-        this->shadowMapShaderInput.addUniformBuffer(
-            sizeof(CameraBufferData),
-            vk::ShaderStageFlagBits::eVertex,
-            DescriptorFrequency::PER_FRAME
-        );
-    this->shadowMapShaderInput.endForInput();
-    this->shadowMapPipeline.createPipeline(
-        this->device,
-        this->shadowMapShaderInput,
-        this->shadowMapRenderPass,
-        shadowMapVertexStream,
-        "shadowMap.vert.spv",
-        ""
-    );
     this->shadowMapCommandBuffers.createCommandBuffers(
         this->device, 
         this->commandPool, 
         MAX_FRAMES_IN_FLIGHT
     );
-
+    
     return EXIT_SUCCESS;
 }
 
@@ -331,11 +301,16 @@ void VulkanRenderer::cleanup()
     this->shaderInput.cleanup();
 
 
+
     shadowMapTexture.cleanup();
     shadowMapRenderPass.cleanup();
     shadowMapFramebuffer.cleanup();
+
     shadowMapShaderInput.cleanup();
     shadowMapPipeline.cleanup();
+
+    animShadowMapShaderInput.cleanup();
+    animShadowMapPipeline.cleanup();
 
 
 
@@ -601,10 +576,15 @@ void VulkanRenderer::initForScene(Scene* scene)
     // Try to cleanup before creating new objects
     this->shaderInput.cleanup();
     this->pipeline.cleanup();
+    this->shadowMapShaderInput.cleanup();
+    this->shadowMapPipeline.cleanup();
     if (this->hasAnimations) // (hasAnimations from previous scene)
     {
         this->animShaderInput.cleanup();
         this->animPipeline.cleanup();
+
+        this->animShadowMapShaderInput.cleanup();
+        this->animShadowMapPipeline.cleanup();
     }
 
     // UI renderer
@@ -880,6 +860,104 @@ void VulkanRenderer::initForScene(Scene* scene)
         // Recalculate projection matrix
         mainCam->calculateProjectionMatrix(
             (float) this->swapchain.getWidth()  / this->swapchain.getHeight()
+        );
+    }
+
+
+
+
+    // Bind only positions when rendering shadow map
+    VertexStreams shadowMapVertexStream{};
+    shadowMapVertexStream.positions.resize(1);
+
+    this->shadowMapShaderInput.beginForInput(
+        this->physicalDevice,
+        this->device,
+        this->vma,
+        *this->resourceManager,
+        MAX_FRAMES_IN_FLIGHT
+    );
+    this->shadowMapShaderInput.addPushConstant(
+        sizeof(PushConstantData),
+        vk::ShaderStageFlagBits::eVertex
+    );
+    this->shadowMapViewProjectionUB =
+        this->shadowMapShaderInput.addUniformBuffer(
+            sizeof(CameraBufferData),
+            vk::ShaderStageFlagBits::eVertex,
+            DescriptorFrequency::PER_FRAME
+        );
+    this->shadowMapShaderInput.endForInput();
+    this->shadowMapPipeline.createPipeline(
+        this->device,
+        this->shadowMapShaderInput,
+        this->shadowMapRenderPass,
+        shadowMapVertexStream,
+        "shadowMap.vert.spv",
+        ""
+    );
+
+    // Make sure animated meshes actually exists
+    if (this->hasAnimations)
+    {
+        VertexStreams animShadowMapStream{};
+        animShadowMapStream.positions.resize(1);
+        animShadowMapStream.boneWeights.resize(1);
+        animShadowMapStream.boneIndices.resize(1);
+
+        this->animShadowMapShaderInput.beginForInput(
+            this->physicalDevice,
+            this->device,
+            this->vma,
+            *this->resourceManager,
+            MAX_FRAMES_IN_FLIGHT
+        );
+        this->animShadowMapShaderInput.addPushConstant(
+            sizeof(PushConstantData),
+            vk::ShaderStageFlagBits::eVertex
+        );
+        this->animShadowMapShaderInput.setNumShaderStorageBuffers(1);
+
+        // Add shader inputs for animations
+        tView.each(
+            [&](const Transform& transform,
+                const MeshComponent& meshComponent,
+                AnimationComponent& animationComponent)
+            {
+                // Extract mesh information
+                Mesh& currentMesh =
+                    this->resourceManager->getMesh(meshComponent.meshID);
+                const std::vector<Bone>& bones = currentMesh.getMeshData().bones;
+                uint32_t numAnimationBones = bones.size();
+
+                // Make sure the mesh actually has bones
+                if (numAnimationBones == 0)
+                {
+                    Log::error("Mesh ID " + std::to_string(meshComponent.meshID) + " does not have any bones for skeletal animations. Please remove the animation component from this entity.");
+                }
+
+                // Add new storage buffer for animations
+                this->animShadowMapShaderInput.addStorageBuffer(
+                    numAnimationBones * sizeof(glm::mat4),
+                    vk::ShaderStageFlagBits::eVertex,
+                    DescriptorFrequency::PER_MESH
+                );
+            }
+        );
+        this->animShadowMapViewProjectionUB =
+            this->animShadowMapShaderInput.addUniformBuffer(
+                sizeof(CameraBufferData),
+                vk::ShaderStageFlagBits::eVertex,
+                DescriptorFrequency::PER_FRAME
+            );
+        this->animShadowMapShaderInput.endForInput();
+        this->animShadowMapPipeline.createPipeline(
+            this->device,
+            this->animShadowMapShaderInput,
+            this->shadowMapRenderPass,
+            animShadowMapStream,
+            "shadowMapAnim.vert.spv",
+            ""
         );
     }
 }
@@ -1285,6 +1363,14 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                     this->animShadowMapDataUB,
                     (void*)&shadowMapData
                 );
+
+                this->animShadowMapShaderInput.setCurrentFrame(
+                    this->currentFrame
+                );
+                this->animShadowMapShaderInput.updateUniformBuffer(
+                    this->animShadowMapViewProjectionUB,
+                    (void*) &shadowMapData
+                );
 			}
 
             // UI shader input
@@ -1324,6 +1410,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 imageIndex
             );
                 this->renderShadowMapDefaultMeshes(scene);
+                this->renderShadowMapSkeletalAnimations(scene);
             this->endShadowMapRenderPass();
 
             this->currentShadowMapCommandBuffer->end();

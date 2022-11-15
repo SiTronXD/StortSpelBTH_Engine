@@ -86,13 +86,16 @@ class VulkanRenderer
     Texture shadowMapTexture;
     RenderPass shadowMapRenderPass;
     FramebufferArray shadowMapFramebuffer;
-    UniformBufferID shadowMapViewProjectionUB;
-    ShaderInput shadowMapShaderInput;
-    Pipeline shadowMapPipeline;
     CommandBufferArray shadowMapCommandBuffers;
     vk::Extent2D shadowMapExtent;
 
+    UniformBufferID shadowMapViewProjectionUB;
+    ShaderInput shadowMapShaderInput;
+    Pipeline shadowMapPipeline;
 
+    UniformBufferID animShadowMapViewProjectionUB;
+    ShaderInput animShadowMapShaderInput;
+    Pipeline animShadowMapPipeline;
 
 
     // Default pipeline
@@ -153,8 +156,11 @@ private:
     // ------- Render functions within render passes -------
 
     // Render pass for shadow map rendering
+    std::vector<vk::DeviceSize> bindVertexBufferOffsets;
+    std::vector<vk::Buffer> bindVertexBuffers;
     void beginShadowMapRenderPass(const uint32_t& imageIndex);
     void renderShadowMapDefaultMeshes(Scene* scene);
+    void renderShadowMapSkeletalAnimations(Scene* scene);
     void endShadowMapRenderPass();
 
     // Render pass for screen rendering

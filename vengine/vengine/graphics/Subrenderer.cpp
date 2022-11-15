@@ -85,11 +85,7 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
                 currentMesh.getVertexBufferArray()
                     .getVertexBuffers()[0]
             );
-            /*------this->currentCommandBuffer->bindVertexBuffers2(
-                currentMesh.getVertexBufferArray(),
-                this->currentFrame
-            );*/
-
+            
             // Bind index buffer
             this->currentShadowMapCommandBuffer->bindIndexBuffer(
                 currentMesh.getIndexBuffer()
@@ -105,15 +101,101 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
             {
                 const SubmeshData& currentSubmesh = submeshes[i];
 
-                // Update for descriptors
-                /*this->shadowMapShaderInput.setFrequencyInput(
-                    this->getAppropriateMaterial(meshComponent, submeshes, i)
-                    .descriptorIndex
+                // Draw
+                this->currentShadowMapCommandBuffer->drawIndexed(
+                    currentSubmesh.numIndicies, 
+                    1, 
+                    currentSubmesh.startIndex
                 );
-                this->currentCommandBuffer->bindShaderInputFrequency(
-                    this->shadowMapShaderInput,
-                    DescriptorFrequency::PER_DRAW_CALL
-                );*/
+            }
+        }
+    );
+}
+
+void VulkanRenderer::renderShadowMapSkeletalAnimations(Scene* scene)
+{
+    if (this->hasAnimations)
+    {
+        // Bind Pipeline to be used in render pass
+        this->currentShadowMapCommandBuffer->bindGraphicsPipeline(
+            this->animShadowMapPipeline
+        );
+
+        // Update for descriptors
+        this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
+            this->animShadowMapShaderInput, 
+            DescriptorFrequency::PER_FRAME
+        );
+    }
+
+    // For every animating mesh we have
+    auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<Inactive>);
+    animView.each(
+        [&](const Transform& transform,
+            const MeshComponent& meshComponent,
+            const AnimationComponent& animationComponent)
+        {
+            Mesh& currentMesh =
+                this->resourceManager->getMesh(meshComponent.meshID);
+            MeshData& currentMeshData =
+                currentMesh.getMeshData();
+            const std::vector<SubmeshData>& submeshes =
+                currentMesh.getSubmeshData();
+
+            // Get bone transformations
+            const std::vector<glm::mat4>& boneTransforms =
+                currentMesh.getBoneTransforms(animationComponent.timer,
+                    animationComponent.animationIndex);
+
+            // Update transformations in storage buffer
+            this->animShadowMapShaderInput.updateStorageBuffer(
+                animationComponent.boneTransformsID,
+                (void*)&boneTransforms[0]
+            );
+            this->animShadowMapShaderInput.setStorageBuffer(
+                animationComponent.boneTransformsID
+            );
+
+            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+            this->pushConstantData.modelMatrix = transform.getMatrix();
+            this->currentShadowMapCommandBuffer->pushConstant(
+                this->animShadowMapShaderInput,
+                (void*)&this->pushConstantData
+            );
+
+            // Bind vertex buffer only containing positions, 
+            // bone weights and bone indices
+            this->bindVertexBufferOffsets = 
+            {
+                currentMesh.getVertexBufferArray().getVertexBufferOffsets()[0],
+                currentMesh.getVertexBufferArray().getVertexBufferOffsets()[3],
+                currentMesh.getVertexBufferArray().getVertexBufferOffsets()[4]
+            };
+            this->bindVertexBuffers = 
+            {
+                currentMesh.getVertexBufferArray().getVertexBuffers()[0],
+                currentMesh.getVertexBufferArray().getVertexBuffers()[3],
+                currentMesh.getVertexBufferArray().getVertexBuffers()[4]
+            };
+            this->currentShadowMapCommandBuffer->bindVertexBuffers2(
+                this->bindVertexBufferOffsets,
+                this->bindVertexBuffers
+            );
+
+            // Bind index buffer
+            this->currentShadowMapCommandBuffer->bindIndexBuffer(
+                currentMesh.getIndexBuffer()
+            );
+
+            // Update for descriptors
+            this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
+                this->animShadowMapShaderInput,
+                DescriptorFrequency::PER_MESH
+            );
+
+            for (size_t i = 0; i < submeshes.size(); ++i)
+            {
+                const SubmeshData& currentSubmesh = submeshes[i];
 
                 // Draw
                 this->currentShadowMapCommandBuffer->drawIndexed(
