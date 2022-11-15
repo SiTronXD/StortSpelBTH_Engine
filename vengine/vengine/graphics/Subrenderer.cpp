@@ -35,9 +35,9 @@ void VulkanRenderer::beginShadowMapRenderPass(
     // Viewport
     vk::Viewport viewport{};
     viewport.x = 0.0f;
-    viewport.y = 0.0f;
+    viewport.y = (float) this->shadowMapExtent.height;
     viewport.width = (float) this->shadowMapExtent.width;
-    viewport.height = (float) this->shadowMapExtent.height;
+    viewport.height = -((float) this->shadowMapExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     this->currentShadowMapCommandBuffer->setViewport(viewport);

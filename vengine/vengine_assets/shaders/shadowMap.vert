@@ -8,12 +8,14 @@
 layout(location = 0) in vec3 pos;
 
 // Uniform buffer
-layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
+layout(set = FREQ_PER_FRAME, binding = 0) uniform ShadowMapBuffer
 {
     mat4 projection;
     mat4 view;
-    vec4 worldPos;
-} cameraBuffer;
+    vec2 shadowMapSize;
+	float shadowMapMinBias;
+	float shadowMapAngleBias;
+} shadowMapBuffer;
 
 // Push constant
 layout(push_constant) uniform PushConstantData
@@ -24,10 +26,9 @@ layout(push_constant) uniform PushConstantData
 
 void main()
 {
-    vec4 worldPos = pushConstantData.model * vec4(pos, 1.0);
-
     gl_Position = 
-        cameraBuffer.projection *
-        cameraBuffer.view *
-        worldPos;
+        shadowMapBuffer.projection *
+        shadowMapBuffer.view *
+        pushConstantData.model * 
+        vec4(pos, 1.0);
 }

@@ -54,6 +54,7 @@ class VulkanRenderer
     bool windowResized = false;
 
     CameraBufferData cameraDataUBO{};
+    ShadowMapData shadowMapData{};
 
     // Vulkan Components
     VulkanInstance instance;

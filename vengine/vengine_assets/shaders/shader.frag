@@ -22,12 +22,14 @@ layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
 	uint spotlightsEndIndex;
 } allLightsInfo;
 
-layout(set = FREQ_PER_FRAME, binding = 4) uniform LightCameraBuffer
+layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapBuffer
 {
     mat4 projection;
     mat4 view;
-    vec4 worldPos;
-} lightCameraBuffer;
+    vec2 shadowMapSize;
+	float shadowMapMinBias;
+	float shadowMapAngleBias;
+} shadowMapBuffer;
 
 // Storage buffer
 struct LightBufferData
@@ -79,10 +81,11 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
 	// Transform to the light's NDC
 	vec4 fragLightNDC = 
-		lightCameraBuffer.projection * 
-		lightCameraBuffer.view * 
+		shadowMapBuffer.projection * 
+		shadowMapBuffer.view * 
 		vec4(fragWorldPos, 1.0f);
 	fragLightNDC.xyz /= fragLightNDC.w;
+	fragLightNDC.y = -fragLightNDC.y;
 
 	// Fragment is outside light frustum
 	if( fragLightNDC.x < -1.0f || fragLightNDC.x > 1.0f ||
@@ -95,16 +98,30 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 	// Texture coordinates
 	fragLightNDC.xy = fragLightNDC.xy * 0.5f + vec2(0.5f);
 
-	// Sample shadow map
-	float shadowMapValue = 
-		texture(shadowMapSampler, fragLightNDC.xy).r;
-
 	// Calculate shadow bias
-	float bias = 0.0f + 0.001f * (1.0f - dot(normal, -lightDir));
+	float bias = 
+		shadowMapBuffer.shadowMapMinBias + 
+		shadowMapBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
 
-	// Calculate shadow factor
-	float shadowFactor = 
-		fragLightNDC.z - bias >= shadowMapValue ? 0.0f : 1.0f;
+	// 2x2 PCF
+	vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
+	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
+	vec2 unnormalizedFragTex = fragLightNDC.xy * shadowMapSize;
+	vec2 unnormalizedCorner = floor(unnormalizedFragTex);
+	vec2 fragLightTex00 = (unnormalizedCorner + vec2(0.0f, 0.0f) + vec2(0.5f)) * oneOverSize;
+	vec2 fragLightTex10 = (unnormalizedCorner + vec2(1.0f, 0.0f) + vec2(0.5f)) * oneOverSize;
+	vec2 fragLightTex01 = (unnormalizedCorner + vec2(0.0f, 1.0f) + vec2(0.5f)) * oneOverSize;
+	vec2 fragLightTex11 = (unnormalizedCorner + vec2(1.0f, 1.0f) + vec2(0.5f)) * oneOverSize;
+
+	float shadowMapValue00 = fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightTex00).r ? 0.0f : 1.0f;
+	float shadowMapValue10 = fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightTex10).r ? 0.0f : 1.0f;
+	float shadowMapValue01 = fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightTex01).r ? 0.0f : 1.0f;
+	float shadowMapValue11 = fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightTex11).r ? 0.0f : 1.0f;
+	float shadowFactor = mix(
+		mix(shadowMapValue00, shadowMapValue10, fract(unnormalizedFragTex.x)),
+		mix(shadowMapValue01, shadowMapValue11, fract(unnormalizedFragTex.x)),
+		fract(unnormalizedFragTex.y)
+	);
 
 	return shadowFactor;
 }

@@ -192,6 +192,8 @@ int VulkanRenderer::init(
         shadowMapWidth,
         shadowMapHeight
     );
+    this->shadowMapData.shadowMapSize.x = (float)this->shadowMapExtent.width;
+    this->shadowMapData.shadowMapSize.y = (float)this->shadowMapExtent.height;
 
     // Bind only positions when rendering shadow map
     VertexStreams shadowMapVertexStream{};
@@ -1223,31 +1225,30 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
         
         #pragma region commandBufferRecording
 
-            
-
+        
             // Shadow map shader input
             glm::vec3 camPos = glm::vec3(this->cameraDataUBO.worldPosition);
-            glm::vec3 lightCamPos = glm::vec3(50.0f, 50.0f, 50.0f);
-            glm::vec3 lightCamDir = glm::normalize(glm::vec3(-1.0f));
-            CameraBufferData lightCameraBuffer{};
-            lightCameraBuffer.projection =
+            this->shadowMapData.projection =
                 glm::orthoRH(
                     -50.0f, 50.0f,
                     -50.0f, 50.0f,
-                    0.1f, 200.0f
+                    0.1f, 400.0f
                 );
             auto dirLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
             dirLightView.each([&](
-                const DirectionalLight& dirLightComp)
+                DirectionalLight& dirLightComp)
                 {
+                    dirLightComp.direction = 
+                        glm::normalize(dirLightComp.direction);
+
                     glm::vec3 lightPos = 
-                        camPos - dirLightComp.direction * 100.0f;
+                        camPos - dirLightComp.direction * 200.0f;
 
                     glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
                     if (std::abs(glm::dot(worldUp, dirLightComp.direction)) >= 0.95f)
                         worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
 
-                    lightCameraBuffer.view = glm::lookAt(
+                    this->shadowMapData.view = glm::lookAt(
                         lightPos,
                         lightPos + dirLightComp.direction,
                         worldUp
@@ -1258,7 +1259,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 this->currentFrame);
             this->shadowMapShaderInput.updateUniformBuffer(
                 this->shadowMapViewProjectionUB,
-                (void*) &lightCameraBuffer
+                (void*) &shadowMapData
             );
 
             // Default shader input
@@ -1269,7 +1270,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
             );
             this->shaderInput.updateUniformBuffer(
                 this->lightViewProjectionUB,
-                (void*) &lightCameraBuffer
+                (void*) &shadowMapData
             );
 
             // Animation shader input
@@ -1282,7 +1283,7 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
 				);
                 this->shaderInput.updateUniformBuffer(
                     this->animLightViewProjectionUB,
-                    (void*)&lightCameraBuffer
+                    (void*)&shadowMapData
                 );
 			}
 
