@@ -75,8 +75,7 @@ vec3 calcSpecular(in vec4 specularTexCol, in vec3 normal, in vec3 halfwayDir)
 		);
 }
 
-#define SHADOW_BIAS 0.005f
-float getShadowFactor()
+float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
 	// Transform to the light's NDC
 	vec4 fragLightNDC = 
@@ -100,9 +99,12 @@ float getShadowFactor()
 	float shadowMapValue = 
 		texture(shadowMapSampler, fragLightNDC.xy).r;
 
+	// Calculate shadow bias
+	float bias = 0.0f + 0.001f * (1.0f - dot(normal, -lightDir));
+
 	// Calculate shadow factor
 	float shadowFactor = 
-		fragLightNDC.z - SHADOW_BIAS >= shadowMapValue ? 0.0f : 1.0f;
+		fragLightNDC.z - bias >= shadowMapValue ? 0.0f : 1.0f;
 
 	return shadowFactor;
 }
@@ -146,7 +148,7 @@ void main()
 		finalColor += 
 			(diffuseLight + specularLight) * 
 			lightBuffer.lights[i].color.xyz * 
-			getShadowFactor();
+			getShadowFactor(normal, lightDir);
 	}
 
 	// Point lights
