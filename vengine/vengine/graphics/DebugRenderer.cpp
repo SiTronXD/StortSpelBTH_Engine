@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "DebugRenderer.hpp"
-#include "vulkan/UniformBufferStructs.hpp"
+#include "vulkan/ShaderStructs.hpp"
 #include "../dev/Log.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "../components/AnimationComponent.hpp"

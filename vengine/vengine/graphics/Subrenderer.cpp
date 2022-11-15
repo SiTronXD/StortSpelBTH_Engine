@@ -2,7 +2,8 @@
 #include "VulkanRenderer.hpp"
 
 void VulkanRenderer::beginShadowMapRenderPass(
-    const uint32_t& imageIndex)
+    const uint32_t& imageIndex,
+    LightHandler& lightHandler)
 {
     const std::array<vk::ClearValue, 1> clearValues =
     {
@@ -14,14 +15,17 @@ void VulkanRenderer::beginShadowMapRenderPass(
             )
     };
 
+    const vk::Extent2D& shadowMapExtent = 
+        lightHandler.getShadowMapExtent();
+
     // Information about how to begin a render pass
     vk::RenderPassBeginInfo renderPassBeginInfo{};
-    renderPassBeginInfo.setRenderPass(this->shadowMapRenderPass.getVkRenderPass());                      // Render pass to begin
+    renderPassBeginInfo.setRenderPass(lightHandler.getShadowMapRenderPass().getVkRenderPass());                      // Render pass to begin
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
-    renderPassBeginInfo.renderArea.setExtent(this->shadowMapExtent);      // Size of region to run render pass on (starting at offset)
+    renderPassBeginInfo.renderArea.setExtent(shadowMapExtent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
-    renderPassBeginInfo.setFramebuffer(this->shadowMapFramebuffer[0]);
+    renderPassBeginInfo.setFramebuffer(lightHandler.getShadowMapFramebuffer());
 
     // Begin Render Pass!    
     // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -35,9 +39,9 @@ void VulkanRenderer::beginShadowMapRenderPass(
     // Viewport
     vk::Viewport viewport{};
     viewport.x = 0.0f;
-    viewport.y = (float) this->shadowMapExtent.height;
-    viewport.width = (float) this->shadowMapExtent.width;
-    viewport.height = -((float) this->shadowMapExtent.height);
+    viewport.y = (float) shadowMapExtent.height;
+    viewport.width = (float) shadowMapExtent.width;
+    viewport.height = -((float) shadowMapExtent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     this->currentShadowMapCommandBuffer->setViewport(viewport);
@@ -45,20 +49,25 @@ void VulkanRenderer::beginShadowMapRenderPass(
     // Scissor
     vk::Rect2D scissor{};
     scissor.offset = vk::Offset2D{ 0, 0 };
-    scissor.extent = this->shadowMapExtent;
+    scissor.extent = shadowMapExtent;
     this->currentShadowMapCommandBuffer->setScissor(scissor);
 }
 
-void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
+void VulkanRenderer::renderShadowMapDefaultMeshes(
+    Scene* scene,
+    LightHandler& lightHandler)
 {
+    ShaderInput& shadowMapShaderInput =
+        lightHandler.getShadowMapShaderInput();
+
     // Bind Pipeline to be used in render pass
     this->currentShadowMapCommandBuffer->bindGraphicsPipeline(
-        this->shadowMapPipeline
+        lightHandler.getShadowMapPipeline()
     );
 
     // Update for descriptors
     this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
-        this->shadowMapShaderInput,
+        shadowMapShaderInput,
         DescriptorFrequency::PER_FRAME
     );
 
@@ -76,7 +85,7 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
             this->currentShadowMapCommandBuffer->pushConstant(
-                this->shadowMapShaderInput,
+                shadowMapShaderInput,
                 (void*) &this->pushConstantData
             );
 
@@ -93,7 +102,7 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
 
             // Update for descriptors
             this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
-                this->shadowMapShaderInput,
+                shadowMapShaderInput,
                 DescriptorFrequency::PER_MESH
             );
 
@@ -112,18 +121,23 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
     );
 }
 
-void VulkanRenderer::renderShadowMapSkeletalAnimations(Scene* scene)
+void VulkanRenderer::renderShadowMapSkeletalAnimations(
+    Scene* scene,
+    LightHandler& lightHandler)
 {
+    ShaderInput& animShadowMapShaderInput =
+        lightHandler.getAnimShadowMapShaderInput();
+
     if (this->hasAnimations)
     {
         // Bind Pipeline to be used in render pass
         this->currentShadowMapCommandBuffer->bindGraphicsPipeline(
-            this->animShadowMapPipeline
+            lightHandler.getAnimShadowMapPipeline()
         );
 
         // Update for descriptors
         this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
-            this->animShadowMapShaderInput, 
+            animShadowMapShaderInput, 
             DescriptorFrequency::PER_FRAME
         );
     }
@@ -148,18 +162,18 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(Scene* scene)
                     animationComponent.animationIndex);
 
             // Update transformations in storage buffer
-            this->animShadowMapShaderInput.updateStorageBuffer(
+            animShadowMapShaderInput.updateStorageBuffer(
                 animationComponent.boneTransformsID,
                 (void*)&boneTransforms[0]
             );
-            this->animShadowMapShaderInput.setStorageBuffer(
+            animShadowMapShaderInput.setStorageBuffer(
                 animationComponent.boneTransformsID
             );
 
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
             this->currentShadowMapCommandBuffer->pushConstant(
-                this->animShadowMapShaderInput,
+                animShadowMapShaderInput,
                 (void*)&this->pushConstantData
             );
 
@@ -189,7 +203,7 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(Scene* scene)
 
             // Update for descriptors
             this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
-                this->animShadowMapShaderInput,
+                lightHandler.getAnimShadowMapShaderInput(),
                 DescriptorFrequency::PER_MESH
             );
 

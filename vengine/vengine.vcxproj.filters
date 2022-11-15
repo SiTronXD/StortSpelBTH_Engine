@@ -152,7 +152,7 @@
     <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
     <ClInclude Include="vengine\graphics\DebugRenderer.hpp" />
     <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
-    <ClInclude Include="vengine\graphics\vulkan\UniformBufferStructs.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\ShaderStructs.hpp" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkScene.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkScriptHandler.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneLua.h" />

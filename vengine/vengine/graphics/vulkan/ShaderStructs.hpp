@@ -3,6 +3,12 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
+struct PushConstantData
+{
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    glm::vec4 tintColor = glm::vec4(0.0f); // vec4(R, G, B, lerp alpha)
+};
+
 // View/projection matrices and position
 struct CameraBufferData
 {

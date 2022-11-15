@@ -2,6 +2,195 @@
 #include "LightHandler.hpp"
 #include "../application/Scene.hpp"
 
+LightHandler::LightHandler()
+    : physicalDevice(nullptr),
+    device(nullptr),
+    vma(nullptr)
+{ }
+
+void LightHandler::init(
+    PhysicalDevice& physicalDevice, 
+    Device& device,
+    VmaAllocator& vma,
+    vk::CommandPool& commandPool,
+    ResourceManager& resourceManager,
+    const uint32_t& framesInFlight)
+{
+    this->physicalDevice = &physicalDevice;
+    this->device = &device;
+    this->vma = &vma;
+    this->resourceManager = &resourceManager;
+    this->framesInFlight = framesInFlight;
+
+    this->shadowMapExtent = vk::Extent2D(
+        LightHandler::SHADOW_MAP_SIZE,
+        LightHandler::SHADOW_MAP_SIZE
+    );
+    this->shadowMapData.shadowMapSize.x = (float)this->shadowMapExtent.width;
+    this->shadowMapData.shadowMapSize.y = (float)this->shadowMapExtent.height;
+
+    // Sampling settings 
+    TextureSettings depthTextureSettings{};
+    depthTextureSettings.samplerSettings.filterMode =
+        vk::Filter::eNearest;
+
+    // Texture
+    this->shadowMapTexture.createAsDepthTexture(
+        *this->physicalDevice,
+        *this->device,
+        *this->vma,
+        this->shadowMapExtent.width,
+        this->shadowMapExtent.height,
+        vk::ImageUsageFlagBits::eSampled,
+        resourceManager.addSampler(depthTextureSettings)
+    );
+
+    // Render pass
+    this->shadowMapRenderPass.createRenderPassShadowMap(
+        *this->device,
+        this->shadowMapTexture
+    );
+
+    // Framebuffer
+    this->shadowMapFramebuffer.create(
+        *this->device,
+        this->shadowMapRenderPass,
+        this->shadowMapExtent,
+        {
+            {
+                this->shadowMapTexture.getImageView()
+            }
+        }
+    );
+
+    // Command buffer array
+    this->shadowMapCommandBuffers.createCommandBuffers(
+        *this->device,
+        commandPool,
+        framesInFlight
+    );
+
+    // Preset shadow map data
+    this->shadowMapData.projection =
+        glm::orthoRH(
+            -50.0f, 50.0f,
+            -50.0f, 50.0f,
+            0.1f, 400.0f
+        );
+}
+
+void LightHandler::initForScene(
+    Scene* scene,
+    const bool& oldHasAnimations,
+    const bool& hasAnimations)
+{
+    // Try to cleanup before creating new objects
+    this->shadowMapShaderInput.cleanup();
+    this->shadowMapPipeline.cleanup();
+    if (oldHasAnimations) // (hasAnimations from previous scene)
+    {
+        this->animShadowMapShaderInput.cleanup();
+        this->animShadowMapPipeline.cleanup();
+    }
+
+    // Bind only positions when rendering shadow map
+    VertexStreams shadowMapVertexStream{};
+    shadowMapVertexStream.positions.resize(1);
+
+    this->shadowMapShaderInput.beginForInput(
+        *this->physicalDevice,
+        *this->device,
+        *this->vma,
+        *this->resourceManager,
+        this->framesInFlight
+    );
+    this->shadowMapShaderInput.addPushConstant(
+        sizeof(PushConstantData),
+        vk::ShaderStageFlagBits::eVertex
+    );
+    this->shadowMapViewProjectionUB =
+        this->shadowMapShaderInput.addUniformBuffer(
+            sizeof(CameraBufferData),
+            vk::ShaderStageFlagBits::eVertex,
+            DescriptorFrequency::PER_FRAME
+        );
+    this->shadowMapShaderInput.endForInput();
+    this->shadowMapPipeline.createPipeline(
+        *this->device,
+        this->shadowMapShaderInput,
+        this->shadowMapRenderPass,
+        shadowMapVertexStream,
+        "shadowMap.vert.spv",
+        ""
+    );
+
+    // Make sure animated meshes actually exists
+    if (hasAnimations)
+    {
+        VertexStreams animShadowMapStream{};
+        animShadowMapStream.positions.resize(1);
+        animShadowMapStream.boneWeights.resize(1);
+        animShadowMapStream.boneIndices.resize(1);
+
+        this->animShadowMapShaderInput.beginForInput(
+            *this->physicalDevice,
+            *this->device,
+            *this->vma,
+            *this->resourceManager,
+            this->framesInFlight
+        );
+        this->animShadowMapShaderInput.addPushConstant(
+            sizeof(PushConstantData),
+            vk::ShaderStageFlagBits::eVertex
+        );
+        this->animShadowMapShaderInput.setNumShaderStorageBuffers(1);
+
+        // Add shader inputs for animations
+        auto tView =
+            scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>();
+        tView.each(
+            [&](const Transform& transform,
+                const MeshComponent& meshComponent,
+                AnimationComponent& animationComponent)
+            {
+                // Extract mesh information
+                Mesh& currentMesh =
+                    this->resourceManager->getMesh(meshComponent.meshID);
+                const std::vector<Bone>& bones = currentMesh.getMeshData().bones;
+                uint32_t numAnimationBones = bones.size();
+
+                // Make sure the mesh actually has bones
+                if (numAnimationBones == 0)
+                {
+                    Log::error("Mesh ID " + std::to_string(meshComponent.meshID) + " does not have any bones for skeletal animations. Please remove the animation component from this entity.");
+                }
+
+                // Add new storage buffer for animations
+                this->animShadowMapShaderInput.addStorageBuffer(
+                    numAnimationBones * sizeof(glm::mat4),
+                    vk::ShaderStageFlagBits::eVertex,
+                    DescriptorFrequency::PER_MESH
+                );
+            }
+        );
+        this->animShadowMapViewProjectionUB =
+            this->animShadowMapShaderInput.addUniformBuffer(
+                sizeof(CameraBufferData),
+                vk::ShaderStageFlagBits::eVertex,
+                DescriptorFrequency::PER_FRAME
+            );
+        this->animShadowMapShaderInput.endForInput();
+        this->animShadowMapPipeline.createPipeline(
+            *this->device,
+            this->animShadowMapShaderInput,
+            this->shadowMapRenderPass,
+            animShadowMapStream,
+            "shadowMapAnim.vert.spv",
+            ""
+        );
+    }
+}
+
 void LightHandler::updateLightBuffers(
     Scene* scene,
     ShaderInput& shaderInput,
@@ -10,7 +199,9 @@ void LightHandler::updateLightBuffers(
     const UniformBufferID& animAllLightsInfoUB,
     const StorageBufferID& lightBufferSB,
     const StorageBufferID& animLightBufferSB,
-    const bool& hasAnimations)
+    const bool& hasAnimations,
+    const glm::vec3& camPosition,
+    const uint32_t& currentFrame)
 {
     this->lightBuffer.clear();
 
@@ -153,4 +344,64 @@ void LightHandler::updateLightBuffers(
             (void*)&lightsInfo
         );
     }
+
+    // Update shadow map view matrix
+    auto dirLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
+    dirLightView.each([&](
+        DirectionalLight& dirLightComp)
+        {
+            dirLightComp.direction =
+                glm::normalize(dirLightComp.direction);
+
+            glm::vec3 lightPos =
+                camPosition - dirLightComp.direction * 200.0f;
+
+            glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+            if (std::abs(glm::dot(worldUp, dirLightComp.direction)) >= 0.95f)
+                worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
+
+            if (Input::isKeyDown(Keys::E))
+            {
+                Log::write("xd");
+            }
+
+            this->shadowMapData.view = glm::lookAt(
+                lightPos,
+                lightPos + dirLightComp.direction,
+                worldUp
+            );
+        }
+    );
+
+    // Shadow map shader input
+    this->shadowMapShaderInput.setCurrentFrame(currentFrame);
+    this->shadowMapShaderInput.updateUniformBuffer(
+        this->shadowMapViewProjectionUB,
+        (void*)&shadowMapData
+    );
+
+    // Anim shadow map shader input
+    if (hasAnimations)
+    {
+        this->animShadowMapShaderInput.setCurrentFrame(
+            currentFrame
+        );
+        this->animShadowMapShaderInput.updateUniformBuffer(
+            this->animShadowMapViewProjectionUB,
+            (void*)&shadowMapData
+        );
+    }
+}
+
+void LightHandler::cleanup()
+{
+    this->shadowMapTexture.cleanup();
+    this->shadowMapRenderPass.cleanup();
+    this->shadowMapFramebuffer.cleanup();
+    
+    this->shadowMapShaderInput.cleanup();
+    this->shadowMapPipeline.cleanup();
+
+    this->animShadowMapShaderInput.cleanup();
+    this->animShadowMapPipeline.cleanup();
 }

@@ -35,12 +35,6 @@ class VulkanRenderer
 
     const int MAX_FRAMES_IN_FLIGHT = 3;
 
-    struct PushConstantData
-    {
-        glm::mat4 modelMatrix = glm::mat4(1.0f);
-        glm::vec4 tintColor = glm::vec4(0.0f); // vec4(R, G, B, lerp alpha)
-    } pushConstantData{};
-
     ResourceManager* resourceManager;
     UIRenderer* uiRenderer;
     DebugRenderer* debugRenderer;
@@ -52,8 +46,8 @@ class VulkanRenderer
 
     bool windowResized = false;
 
+    PushConstantData pushConstantData{};
     CameraBufferData cameraDataUBO{};
-    ShadowMapData shadowMapData{};
 
     // Vulkan Components
     VulkanInstance instance;
@@ -75,24 +69,6 @@ class VulkanRenderer
     CommandBufferArray commandBuffers;
     CommandBuffer* currentShadowMapCommandBuffer;
     CommandBuffer* currentCommandBuffer;
-
-
-
-    // Shadow map stuff, TODO: place this somewhere else later
-    Texture shadowMapTexture;
-    RenderPass shadowMapRenderPass;
-    FramebufferArray shadowMapFramebuffer;
-    CommandBufferArray shadowMapCommandBuffers;
-    vk::Extent2D shadowMapExtent;
-
-    UniformBufferID shadowMapViewProjectionUB;
-    ShaderInput shadowMapShaderInput;
-    Pipeline shadowMapPipeline;
-
-    UniformBufferID animShadowMapViewProjectionUB;
-    ShaderInput animShadowMapShaderInput;
-    Pipeline animShadowMapPipeline;
-
 
     // Default pipeline
     UniformBufferID viewProjectionUB;
@@ -154,9 +130,15 @@ private:
     // Render pass for shadow map rendering
     std::vector<vk::DeviceSize> bindVertexBufferOffsets;
     std::vector<vk::Buffer> bindVertexBuffers;
-    void beginShadowMapRenderPass(const uint32_t& imageIndex);
-    void renderShadowMapDefaultMeshes(Scene* scene);
-    void renderShadowMapSkeletalAnimations(Scene* scene);
+    void beginShadowMapRenderPass(
+        const uint32_t& imageIndex,
+        LightHandler& lightHandler);
+    void renderShadowMapDefaultMeshes(
+        Scene* scene,
+        LightHandler& lightHandler);
+    void renderShadowMapSkeletalAnimations(
+        Scene* scene,
+        LightHandler& lightHandler);
     void endShadowMapRenderPass();
 
     // Render pass for screen rendering
