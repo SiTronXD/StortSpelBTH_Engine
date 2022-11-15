@@ -39,6 +39,7 @@ layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
 {
     LightBufferData lights[];
 } lightBuffer;
+layout(set = FREQ_PER_FRAME, binding = 3) uniform sampler2D shadowMapSampler;
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
 layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D textureSampler1;
@@ -180,4 +181,6 @@ void main()
 
 	// No fog
 	// outColor = vec4(finalColor, 1.0f);
+
+	outColor = texture(shadowMapSampler, fragTex);
 }

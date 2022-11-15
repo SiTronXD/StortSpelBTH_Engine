@@ -23,7 +23,8 @@ void Texture::createAsDepthTexture(
     Device& device,
     VmaAllocator& vma,
     const uint32_t& width,
-    const uint32_t& height)
+    const uint32_t& height,
+    const vk::ImageUsageFlagBits& extraUsageFlags)
 {
     this->physicalDevice = &physicalDevice;
     this->device = &device;
@@ -52,8 +53,7 @@ void Texture::createAsDepthTexture(
             .format = this->format,
             .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
             .useFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment
-            // TODO: remove this
-            | vk::ImageUsageFlagBits::eInputAttachment,     // Image will be used as a Depth Stencil
+                | extraUsageFlags,
             .imageMemory = &this->imageMemory
         },
         "depthBufferImage"

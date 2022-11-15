@@ -73,6 +73,7 @@ class VulkanRenderer
     RenderPass renderPassImgui{};
     vk::CommandPool commandPool{};
     CommandBufferArray commandBuffers;
+    CommandBuffer* currentShadowMapCommandBuffer;
     CommandBuffer* currentCommandBuffer;
 
     std::vector<LightBufferData> lightBuffer;
@@ -113,6 +114,7 @@ class VulkanRenderer
 
     // Synchronisation 
     std::vector<vk::Semaphore> imageAvailable;
+    std::vector<vk::Semaphore> shadowMapRenderFinished;
     std::vector<vk::Semaphore> renderFinished;
     std::vector<vk::Fence> drawFences;
     

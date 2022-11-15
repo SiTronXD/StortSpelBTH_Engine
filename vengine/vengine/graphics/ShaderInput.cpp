@@ -615,11 +615,17 @@ void ShaderInput::cleanup()
             j < numResources;
             ++j)
         {
-            this->resources[i][j].buffer->cleanup();
+            Buffer*& buffer =
+                this->resources[i][j].buffer;
 
-            delete this->resources[i][j].buffer;
-            this->resources[i][j].buffer = nullptr;
+            // Only delete buffers
+            if (buffer != nullptr)
+            {
+                buffer->cleanup();
 
+                delete buffer;
+                buffer = nullptr;
+            }
         }
 
         this->resources[i].clear();

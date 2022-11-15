@@ -27,7 +27,7 @@ void VulkanRenderer::beginShadowMapRenderPass(
     // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
     vk::SubpassBeginInfoKHR subpassBeginInfo;
     subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-    this->currentCommandBuffer->beginRenderPass2(
+    this->currentShadowMapCommandBuffer->beginRenderPass2(
         renderPassBeginInfo,
         subpassBeginInfo
     );
@@ -40,24 +40,24 @@ void VulkanRenderer::beginShadowMapRenderPass(
     viewport.height = (float) this->shadowMapExtent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    this->currentCommandBuffer->setViewport(viewport);
+    this->currentShadowMapCommandBuffer->setViewport(viewport);
 
     // Scissor
     vk::Rect2D scissor{};
     scissor.offset = vk::Offset2D{ 0, 0 };
     scissor.extent = this->shadowMapExtent;
-    this->currentCommandBuffer->setScissor(scissor);
+    this->currentShadowMapCommandBuffer->setScissor(scissor);
 }
 
 void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
 {
     // Bind Pipeline to be used in render pass
-    this->currentCommandBuffer->bindGraphicsPipeline(
+    this->currentShadowMapCommandBuffer->bindGraphicsPipeline(
         this->shadowMapPipeline
     );
 
     // Update for descriptors
-    this->currentCommandBuffer->bindShaderInputFrequency(
+    this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
         this->shadowMapShaderInput,
         DescriptorFrequency::PER_FRAME
     );
@@ -75,13 +75,13 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
 
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
-            this->currentCommandBuffer->pushConstant(
+            this->currentShadowMapCommandBuffer->pushConstant(
                 this->shadowMapShaderInput,
                 (void*) &this->pushConstantData
             );
 
             // Bind only vertex buffer containing positions
-            this->currentCommandBuffer->bindVertexBuffers2(
+            this->currentShadowMapCommandBuffer->bindVertexBuffers2(
                 currentMesh.getVertexBufferArray()
                     .getVertexBuffers()[0]
             );
@@ -91,12 +91,12 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
             );*/
 
             // Bind index buffer
-            this->currentCommandBuffer->bindIndexBuffer(
+            this->currentShadowMapCommandBuffer->bindIndexBuffer(
                 currentMesh.getIndexBuffer()
             );
 
             // Update for descriptors
-            this->currentCommandBuffer->bindShaderInputFrequency(
+            this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
                 this->shadowMapShaderInput,
                 DescriptorFrequency::PER_MESH
             );
@@ -116,7 +116,7 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(Scene* scene)
                 );*/
 
                 // Draw
-                this->currentCommandBuffer->drawIndexed(
+                this->currentShadowMapCommandBuffer->drawIndexed(
                     currentSubmesh.numIndicies, 
                     1, 
                     currentSubmesh.startIndex
@@ -130,7 +130,7 @@ void VulkanRenderer::endShadowMapRenderPass()
 {
     // End render pass
     vk::SubpassEndInfo subpassEndInfo;
-    this->currentCommandBuffer->endRenderPass2(subpassEndInfo);
+    this->currentShadowMapCommandBuffer->endRenderPass2(subpassEndInfo);
 }
 
 void VulkanRenderer::beginRenderpass(
