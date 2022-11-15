@@ -4,9 +4,10 @@
 #include "vulkan/Device.hpp"
 #include "vulkan/CommandBuffer.hpp"
 
-Texture::Texture(Device& device, VmaAllocator& vma) 
-    : device(&device), 
-    vma(&vma),
+Texture::Texture() 
+    : physicalDevice(nullptr),
+    device(nullptr), 
+    vma(nullptr),
     imageMemory(nullptr),
     width(0),
     height(0),
@@ -17,22 +18,74 @@ Texture::Texture(Device& device, VmaAllocator& vma)
 Texture::~Texture()
 { }
 
-void Texture::init(
-    const vk::ImageView& imageView,
-    const uint32_t& textureSamplerIndex)
+void Texture::createAsDepthTexture(
+    PhysicalDevice& physicalDevice,
+    Device& device,
+    VmaAllocator& vma,
+    const uint32_t& width,
+    const uint32_t& height)
 {
-    this->imageView = imageView;
-    this->textureSamplerIndex = textureSamplerIndex;
+    this->physicalDevice = &physicalDevice;
+    this->device = &device;
+    this->vma = &vma;
+    this->width = width;
+    this->height = height;
+
+    // Get supported VkFormat for the depth buffer
+    this->format = Texture::chooseSupportedFormat(
+        *this->physicalDevice,
+        {
+            // Atleast one of these should be available...
+            vk::Format::eD32Sfloat,
+            vk::Format::eD24UnormS8Uint
+        },
+        vk::ImageTiling::eOptimal,
+        vk::FormatFeatureFlagBits::eDepthStencilAttachment // Make sure the format supports the depth stencil attachment bit
+    );
+
+    // Image
+    this->image = Texture::createImage(
+        *this->vma,
+        {
+            .width = this->getWidth(),
+            .height = this->getHeight(),
+            .format = this->format,
+            .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
+            .useFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment
+            // TODO: remove this
+            | vk::ImageUsageFlagBits::eInputAttachment,     // Image will be used as a Depth Stencil
+            .imageMemory = &this->imageMemory
+        },
+        "depthBufferImage"
+    );
+
+    // Image view
+    this->imageView = Texture::createImageView(
+        *this->device,
+        this->image,
+        this->format,
+        vk::ImageAspectFlagBits::eDepth
+    );
 }
 
-void Texture::setCpuInfo(
+void Texture::create(
+    PhysicalDevice& physicalDevice,
+    Device& device,
+    VmaAllocator& vma,
+    vk::Queue& transferQueue,
+    vk::CommandPool& transferCommandPool,
     stbi_uc* imageData,
     const uint32_t& width,
     const uint32_t& height,
-    const TextureSettings& textureSettings)
+    const TextureSettings& textureSettings,
+    const uint32_t& textureSamplerIndex)
 {
+    this->physicalDevice = &physicalDevice;
+    this->device = &device;
+    this->vma = &vma;
     this->width = width;
     this->height = height;
+    this->textureSamplerIndex = textureSamplerIndex;
 
     // Save the pixels only if it should keep the info
     if (textureSettings.keepCpuPixelInfo)
@@ -55,6 +108,100 @@ void Texture::setCpuInfo(
             this->pixels.push_back(pixel);
         }
     }
+
+    vk::DeviceSize imageSize = width * height * 4;
+
+    // Create staging buffer for the texture
+    vk::Buffer imageStagingBuffer = nullptr;
+    VmaAllocation imageStagingBufferMemory = nullptr;
+    VmaAllocationInfo allocInfo;
+    Buffer::createBuffer(
+        {
+        .bufferSize = imageSize,
+        .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,
+        .bufferProperties =
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+            VMA_ALLOCATION_CREATE_MAPPED_BIT,
+        .buffer = &imageStagingBuffer,
+        .bufferMemory = &imageStagingBufferMemory,
+        .allocationInfo = &allocInfo,
+        .vma = this->vma 
+        }
+    );
+
+    // Map staging buffer
+    void* data = nullptr;
+    if (vmaMapMemory(*this->vma, imageStagingBufferMemory,
+        &data) != VK_SUCCESS) {
+        throw std::runtime_error(
+            "Failed to allocate Mesh Staging Texture Image Buffer Using VMA!");
+    };
+
+    // Copy data to staging buffer
+    memcpy(data, imageData, imageSize);
+
+    // Unmap stagning buffer
+    vmaUnmapMemory(*this->vma, imageStagingBufferMemory);
+
+    // Create image
+    this->image = Texture::createImage(
+        *this->vma,
+        { 
+            .width = static_cast<uint32_t>(width),
+            .height = static_cast<uint32_t>(height),
+            .format = vk::Format::eR8G8B8A8Unorm, 
+            .tiling = vk::ImageTiling::eOptimal,
+            .useFlags = vk::ImageUsageFlagBits::eTransferDst
+                // TODO: remove this
+                | vk::ImageUsageFlagBits::eSampled,
+            .imageMemory = &this->imageMemory
+        },
+        "insert filename here"
+    );
+
+    // Copy data to image
+    Texture::transitionImageLayout(
+        *this->device,
+        transferQueue, // Same as graphics Queue
+        transferCommandPool,
+        this->image,                    // Image to transition the layout on
+        vk::ImageLayout::eUndefined, // Image Layout to transition the image from
+        vk::ImageLayout::eTransferDstOptimal
+    ); 
+
+    // Copy Data to image
+    Buffer::copyBufferToImage(
+        this->device->getVkDevice(),
+        transferQueue,
+        transferCommandPool, 
+        imageStagingBuffer,
+        this->image, 
+        this->width, 
+        this->height
+    );
+
+    // Transition iamge to be shader readable for shader usage
+    Texture::transitionImageLayout(
+        *this->device,
+        transferQueue,
+        transferCommandPool,
+        this->image,
+        vk::ImageLayout::eTransferDstOptimal,
+        vk::ImageLayout::eShaderReadOnlyOptimal
+    );
+
+    // Deallocate staging buffer
+    this->device->getVkDevice().destroyBuffer(
+        imageStagingBuffer);
+    vmaFreeMemory(*this->vma, imageStagingBufferMemory);
+
+    // Image view
+    this->imageView = Texture::createImageView(
+        *this->device,
+        this->image,
+        vk::Format::eR8G8B8A8Unorm, // Format for rgba
+        vk::ImageAspectFlagBits::eColor
+    );
 }
 
 void Texture::setDescriptorIndex(const uint32_t& descriptorIndex)

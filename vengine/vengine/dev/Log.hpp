@@ -20,8 +20,8 @@ private:
 public:
     static void addFilter(const std::string& filterName);
 
-	static void write(const std::string& message, std::string filter = "");
-	static void warning(const std::string& message, std::string filter = "");
-	static void error(const std::string& errorMessage, std::string filter = "");
+	static void write(const std::string& message, const std::string& filter = "");
+	static void warning(const std::string& message, const std::string& filter = "");
+	static void error(const std::string& errorMessage, const std::string& filter = "");
 	static std::string vecToStr(const glm::vec3& vec);
 };

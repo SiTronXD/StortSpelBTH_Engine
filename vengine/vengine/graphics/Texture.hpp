@@ -45,10 +45,14 @@ struct Pixel
 class Texture
 {
 private:
+	PhysicalDevice* physicalDevice;
     Device* device;
     VmaAllocator* vma;
 
+	vk::Image image;
 	vk::ImageView imageView;
+	VmaAllocation imageMemory;
+	vk::Format format;
 
 	std::vector<Pixel> pixels;
 
@@ -60,27 +64,33 @@ private:
 	uint32_t descriptorIndex;
 
 public:
-    VmaAllocation imageMemory;
-    vk::Image image;
-
-	Texture(Device& device, VmaAllocator& vma);
+	Texture();
 	~Texture();
 
-	void init(
-		const vk::ImageView& imageView, 
+	void createAsDepthTexture(
+		PhysicalDevice& physicalDevice,
+		Device& device,
+		VmaAllocator& vma,
+		const uint32_t& width,
+		const uint32_t& height);
+	void create(
+		PhysicalDevice& physicalDevice,
+		Device& device,
+		VmaAllocator& vma,
+		vk::Queue& transferQueue,
+		vk::CommandPool& transferCommandPool,
+		stbi_uc* imageData,
+		const uint32_t& width,
+		const uint32_t& height,
+		const TextureSettings& textureSettings,
 		const uint32_t& textureSamplerIndex);
-
-	void setCpuInfo(
-		stbi_uc* imageData, 
-		const uint32_t& outputWidth, 
-		const uint32_t& outputHeight,
-		const TextureSettings& textureSettings);
 
 	void setDescriptorIndex(const uint32_t& descriptorIndex);
 
 	void cleanup();
 
 	inline const vk::ImageView& getImageView() const { return this->imageView; }
+	inline const vk::Format& getVkFormat() const { return this->format; }
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }
 	inline const uint32_t& getSamplerIndex() const { return this->textureSamplerIndex; }

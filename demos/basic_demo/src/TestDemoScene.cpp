@@ -277,6 +277,18 @@ void TestDemoScene::update()
 	this->getComponent<Spotlight>(this->testEntity).direction.x = std::sin(tim);
 	this->getDebugRenderer()->renderSpotlight(this->testEntity);
 
+	if (Input::isKeyPressed(Keys::R))
+	{
+		Material& mat = this->getResourceManager()->getMaterial(
+			this->getResourceManager()->getMesh(
+				this->getComponent<MeshComponent>(this->testEntity).meshID
+			).getSubmesh(0).materialIndex
+		);
+
+		mat.specularTextureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/FullSpecular.png");
+		mat.descriptorIndex = ~0u;
+	}
+
 	/*if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->setAnimation(multiAnimation, "bendIdle");

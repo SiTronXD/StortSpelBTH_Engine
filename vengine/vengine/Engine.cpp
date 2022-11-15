@@ -87,9 +87,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
 
-    //Needs to run after scene is initialized
-    this->aiHandler.init(&this->sceneHandler);    
-
     // Game loop
     while (window.getIsRunning())
     {
@@ -107,7 +104,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
         Time::updateDeltaTime();
 		this->physicsEngine.update(Time::getDT());
-        this->aiHandler.update();
         this->sceneHandler.update();
         this->scriptHandler.update();
         this->audioHandler.update();

@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "StorageBuffer.hpp"
-#include "VulkanDbg.hpp"
 
 void StorageBuffer::createStorageBuffer(
     Device& device, 
@@ -44,19 +43,4 @@ void StorageBuffer::createStorageBuffer(
             "StorageBuffer[" + std::to_string(i) + "]", vk::ObjectType::eBuffer,
             reinterpret_cast<uint64_t>(vk::Buffer::CType(buffers[i])));
     }
-}
-
-void StorageBuffer::update(
-    void* copyData, 
-    const uint32_t& currentFrame)
-{
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped; //:NOLINT
-#endif
-
-    void* data = nullptr;
-
-    Buffer::map(data, currentFrame);
-    memcpy(data, copyData, Buffer::getBufferSize());
-    Buffer::unmap(currentFrame);
 }

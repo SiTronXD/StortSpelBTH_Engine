@@ -14,13 +14,14 @@
 #include "../../graphics/MeshDataInfo.hpp"
 
 void MeshLoader::init(VmaAllocator *vma,
-    vk::PhysicalDevice *physiscalDev,
-    Device *dev, vk::Queue *transQueue,
-    vk::CommandPool *transCmdPool,
+    PhysicalDevice* physicalDevice,
+    Device* dev, 
+    vk::Queue* transQueue,
+    vk::CommandPool* transCmdPool,
     ResourceManager* resourceMan) 
 {
     this->importStructs.vma = vma;
-    this->importStructs.physicalDevice = physiscalDev;
+    this->importStructs.physicalDevice = physicalDevice;
     this->importStructs.device = dev;
     this->importStructs.transferQueue = transQueue;
     this->importStructs.transferCommandPool = transCmdPool;
