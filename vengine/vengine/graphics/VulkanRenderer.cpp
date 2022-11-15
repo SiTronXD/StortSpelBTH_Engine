@@ -628,7 +628,7 @@ void VulkanRenderer::initForScene(Scene* scene)
         );
     this->lightBufferSB = 
         this->shaderInput.addStorageBuffer(
-            sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+            sizeof(LightBufferData) * LightHandler::MAX_NUM_LIGHTS,
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
@@ -737,7 +737,7 @@ void VulkanRenderer::initForScene(Scene* scene)
             );
         this->animLightBufferSB =
             this->animShaderInput.addStorageBuffer(
-                sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+                sizeof(LightBufferData) * LightHandler::MAX_NUM_LIGHTS,
                 vk::ShaderStageFlagBits::eFragment,
                 DescriptorFrequency::PER_FRAME
             );
@@ -1112,151 +1112,6 @@ void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::Command
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(commandPool)));
 }
 
-void VulkanRenderer::updateLightBuffer(Scene* scene)
-{
-    this->lightBuffer.clear();
-    
-    // Info about all lights in the shader
-    AllLightsInfo lightsInfo{};
-
-    // Loop through all ambient lights in scene
-    auto ambientLightView = scene->getSceneReg().view<AmbientLight>(entt::exclude<Inactive>);
-    ambientLightView.each([&](
-        const AmbientLight& ambientLightComp)
-        {
-            // Create point light data
-            LightBufferData lightData{};
-            lightData.color = glm::vec4(ambientLightComp.color, 1.0f);
-
-            // Add to list
-            this->lightBuffer.push_back(lightData);
-
-            // Increment end index
-            lightsInfo.ambientLightsEndIndex++;
-        }
-    );
-
-    // Loop through all directional lights in the scene
-    lightsInfo.directionalLightsEndIndex = lightsInfo.ambientLightsEndIndex;
-    auto directionalLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
-    directionalLightView.each([&](
-        const DirectionalLight& directionalLightComp)
-        {
-            // Create point light data
-            LightBufferData lightData{};
-            lightData.direction = 
-                glm::vec4(glm::normalize(directionalLightComp.direction), 1.0f);
-            lightData.color = 
-                glm::vec4(directionalLightComp.color, 1.0f);
-
-            // Add to list
-            this->lightBuffer.push_back(lightData);
-
-            // Increment end index
-            lightsInfo.directionalLightsEndIndex++;
-        }
-    );
-
-    // Loop through all point lights in scene
-    lightsInfo.pointLightsEndIndex = lightsInfo.directionalLightsEndIndex;
-    auto pointLightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
-    pointLightView.each([&](
-        Transform& transform,
-        const PointLight& pointLightComp)
-        {
-            // Create point light data
-            LightBufferData lightData{};
-            lightData.position = glm::vec4(
-                transform.position + 
-                    transform.getRotationMatrix() * pointLightComp.positionOffset,
-                1.0f);
-            lightData.color = glm::vec4(pointLightComp.color, 1.0f);
-
-            // Add to list
-            this->lightBuffer.push_back(lightData);
-
-            // Increment end index
-            lightsInfo.pointLightsEndIndex++;
-        }
-    );
-
-    // Loop through all spotlights in scene
-    lightsInfo.spotlightsEndIndex = lightsInfo.pointLightsEndIndex;
-    auto spotlightView = scene->getSceneReg().view<Transform, Spotlight>(entt::exclude<Inactive>);
-    spotlightView.each([&](
-        Transform& transform,
-        const Spotlight& spotlightComp)
-        {
-            const glm::mat3 rotMat = transform.getRotationMatrix();
-
-            // Create point light data
-            LightBufferData lightData{};
-            lightData.position = glm::vec4(
-                transform.position +
-                    rotMat * spotlightComp.positionOffset,
-                1.0f
-            );
-            lightData.direction = glm::vec4(
-                glm::normalize(rotMat * spotlightComp.direction),
-                std::cos(glm::radians(spotlightComp.angle * 0.5f))
-            );
-            lightData.color = glm::vec4(spotlightComp.color, 1.0f);
-
-            // Add to list
-            this->lightBuffer.push_back(lightData);
-
-            // Increment end index
-            lightsInfo.spotlightsEndIndex++;
-        }
-    );
-
-    // Update storage buffer containing lights
-    if (this->lightBuffer.size() > 0)
-    {
-        this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) this->lightBuffer.data());
-        if (this->hasAnimations)
-        {
-            this->animShaderInput.updateStorageBuffer(this->animLightBufferSB, (void*) this->lightBuffer.data());
-        }
-    }
-
-    // Truncate indices to not overshoot max
-    lightsInfo.ambientLightsEndIndex = std::min(
-        lightsInfo.ambientLightsEndIndex,
-        MAX_NUM_LIGHTS);
-    lightsInfo.directionalLightsEndIndex = std::min(
-        lightsInfo.directionalLightsEndIndex,
-        MAX_NUM_LIGHTS);
-    lightsInfo.pointLightsEndIndex = std::min(
-        lightsInfo.pointLightsEndIndex,
-        MAX_NUM_LIGHTS);
-    lightsInfo.spotlightsEndIndex = std::min(
-        lightsInfo.spotlightsEndIndex,
-        MAX_NUM_LIGHTS);
-
-#ifdef _CONSOLE
-    if (this->lightBuffer.size() > MAX_NUM_LIGHTS)
-    {
-        Log::warning("The number of lights is larger than the maximum allowed number. Truncates " + 
-            std::to_string(this->lightBuffer.size()) + " lights to " + 
-            std::to_string(MAX_NUM_LIGHTS));
-    }
-#endif
-
-    // Update all lights info buffer
-    this->shaderInput.updateUniformBuffer(
-        this->allLightsInfoUB,
-        (void*) &lightsInfo
-    );
-    if (this->hasAnimations)
-    {
-        this->animShaderInput.updateUniformBuffer(
-            this->animAllLightsInfoUB,
-            (void*)&lightsInfo
-        );
-    }
-}
-
 const Material& VulkanRenderer::getAppropriateMaterial(
     const MeshComponent& meshComponent,
     const std::vector<SubmeshData>& submeshes,
@@ -1396,8 +1251,17 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 (void*)&this->cameraDataUBO
             );
 
-            // Update lights
-            this->updateLightBuffer(scene);
+            // Update light buffers
+            this->lightHandler.updateLightBuffers(
+                scene,
+                this->shaderInput,
+                this->animShaderInput,
+                this->allLightsInfoUB,
+                this->animAllLightsInfoUB,
+                this->lightBufferSB,
+                this->animLightBufferSB,
+                this->hasAnimations
+            );
 
 
             // Begin shadow map command buffer

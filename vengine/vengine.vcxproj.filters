@@ -93,6 +93,7 @@
     <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
+    <ClCompile Include="vengine\graphics\LightHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -188,6 +189,7 @@
     <ClInclude Include="vengine\dev\Random.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\RenderPass.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\FramebufferArray.hpp" />
+    <ClInclude Include="vengine\graphics\LightHandler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

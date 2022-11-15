@@ -18,9 +18,9 @@
 #include "imgui.h"              // Need to be included in header
 
 #include "../resource_management/ResourceManager.hpp"
+#include "LightHandler.hpp"
 #include "UIRenderer.hpp"
 #include "DebugRenderer.hpp"
-#include "vulkan/UniformBufferStructs.hpp"
 
 class Scene;
 class Camera;
@@ -34,7 +34,6 @@ class VulkanRenderer
 #endif
 
     const int MAX_FRAMES_IN_FLIGHT = 3;
-    const uint32_t MAX_NUM_LIGHTS = 16;
 
     struct PushConstantData
     {
@@ -77,9 +76,6 @@ class VulkanRenderer
     CommandBuffer* currentShadowMapCommandBuffer;
     CommandBuffer* currentCommandBuffer;
 
-    std::vector<LightBufferData> lightBuffer;
-
-
 
 
     // Shadow map stuff, TODO: place this somewhere else later
@@ -114,6 +110,8 @@ class VulkanRenderer
     StorageBufferID animLightBufferSB;
     ShaderInput animShaderInput;
     Pipeline animPipeline;
+
+    LightHandler lightHandler;
 
     // Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
@@ -150,8 +148,6 @@ private:
 
     // initializations of subsystems
     void initResourceManager();
-
-    void updateLightBuffer(Scene* scene);
 
     // ------- Render functions within render passes -------
 
