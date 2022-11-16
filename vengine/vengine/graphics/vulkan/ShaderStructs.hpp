@@ -23,8 +23,8 @@ struct ShadowMapData
     glm::mat4 projection = glm::mat4(1.0f);
     glm::mat4 view = glm::mat4(1.0f);
     glm::vec2 shadowMapSize = glm::vec2(0.0f);
-    float shadowMapMinBias = 0.00001f;
-    float shadowMapAngleBias = 0.001f;
+    float shadowMapMinBias = 0.0001f;
+    float shadowMapAngleBias = 0.0015f;
 };
 
 // Offset indicies into the light buffer

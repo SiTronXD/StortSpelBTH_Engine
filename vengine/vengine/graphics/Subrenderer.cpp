@@ -156,15 +156,10 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(
             const std::vector<SubmeshData>& submeshes =
                 currentMesh.getSubmeshData();
 
-            // Get bone transformations
-            const std::vector<glm::mat4>& boneTransforms =
-                currentMesh.getBoneTransforms(animationComponent.timer,
-                    animationComponent.animationIndex);
-
             // Update transformations in storage buffer
             animShadowMapShaderInput.updateStorageBuffer(
                 animationComponent.boneTransformsID,
-                (void*)&boneTransforms[0]
+                (void*) animationComponent.getBoneTransformsData()
             );
             animShadowMapShaderInput.setStorageBuffer(
                 animationComponent.boneTransformsID
@@ -403,15 +398,10 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
             const std::vector<SubmeshData>& submeshes =
                 currentMesh.getSubmeshData();
 
-            // Get bone transformations
-            const std::vector<glm::mat4>& boneTransforms =
-                currentMesh.getBoneTransforms(animationComponent.timer,
-                    animationComponent.animationIndex);
-
             // Update transformations in storage buffer
             this->animShaderInput.updateStorageBuffer(
                 animationComponent.boneTransformsID,
-                (void*)&boneTransforms[0]
+                (void*) animationComponent.getBoneTransformsData()
             );
             this->animShaderInput.setStorageBuffer(
                 animationComponent.boneTransformsID

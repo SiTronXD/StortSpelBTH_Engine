@@ -284,6 +284,25 @@ void VulkanRenderer::cleanup()
     this->instance.cleanup();
 }
 
+void VulkanRenderer::updateAnimationTransforms(Scene* scene)
+{
+    auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<Inactive>);
+    animView.each(
+        [&](const Transform& transform,
+            const MeshComponent& meshComponent,
+            AnimationComponent& animationComponent)
+        {
+            Mesh& currentMesh =
+                this->resourceManager->getMesh(meshComponent.meshID);
+            MeshData& currentMeshData =
+                currentMesh.getMeshData();
+
+            // Get bone transformations
+            currentMesh.getBoneTransforms(animationComponent);
+        }
+    );
+}
+
 void VulkanRenderer::draw(Scene* scene)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -298,6 +317,10 @@ void VulkanRenderer::draw(Scene* scene)
 
         ImGui::Render();
         
+        // Update animation transforms once per frames, then reuse 
+        // transforms during multiple render passes
+        this->updateAnimationTransforms(scene);
+
         // TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
         // Wait for The Fence to be signaled from last Draw for this currrent Frame; 
         // This will freeze the CPU operations here and wait for the Fence to open

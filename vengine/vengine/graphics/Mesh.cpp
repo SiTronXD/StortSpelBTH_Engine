@@ -106,8 +106,6 @@ Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
 {  
     this->createVertexBuffers(meshData, importStructs);
     this->createIndexBuffer( meshData, importStructs);
-
-    this->boneTransforms.resize(meshData.bones.size());
 }
 
 Mesh::Mesh(Mesh&& ref)
@@ -115,12 +113,10 @@ Mesh::Mesh(Mesh&& ref)
     meshData(std::move(ref.meshData)),
     device(ref.device),
     vma(ref.vma),
-    boneTransforms(std::move(ref.boneTransforms)),
     vertexBuffers(std::move(ref.vertexBuffers)),
     indexBuffer(std::move(ref.indexBuffer)),
     indexBufferMemory(std::move(ref.indexBufferMemory))
 {
-    this->boneTransforms.resize(meshData.bones.size());
 }
 
 void Mesh::createVertexBuffers(
@@ -231,15 +227,35 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
 
-const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer, const int& animationIndex)
+void Mesh::getBoneTransforms(
+    AnimationComponent& animationCompOut)
 {
+#if defined(_DEBUG) || defined(DEBUG)
+    if (this->meshData.bones.size() > NUM_MAX_BONE_TRANSFORMS)
+    {
+        Log::warning(
+            "Mesh data has too many bones (" + std::to_string(this->meshData.bones.size()) + 
+            "). A maximum of " + std::to_string(NUM_MAX_BONE_TRANSFORMS) + 
+            " bones is allowed. Bone transformations after index " + std::to_string(NUM_MAX_BONE_TRANSFORMS - 1) + 
+            " will not be calculated"
+        );
+    }
+#endif
+
     // Preallocate
+    float timer = animationCompOut.timer;
+    uint32_t animationIndex = animationCompOut.animationIndex;
+    size_t numBones = std::min(
+        static_cast<size_t>(NUM_MAX_BONE_TRANSFORMS), 
+        this->meshData.bones.size()
+    );
     glm::mat4 boneTransform;
 
-    const Animation& animation = this->meshData.animations[animationIndex];
+    const Animation& animation = 
+        this->meshData.animations[animationIndex];
 
     // Loop through bones, from parents to children
-    for (size_t i = 0; i < this->meshData.bones.size(); ++i)
+    for (size_t i = 0; i < numBones; ++i)
     {
         Bone& currentBone = this->meshData.bones[i];
 
@@ -263,12 +279,13 @@ const std::vector<glm::mat4>& Mesh::getBoneTransforms(const float& timer, const 
         currentBone.boneMatrix = boneTransform;
 
         // Apply ((parent * local) * inverseBind)
-        this->boneTransforms[i] = 
+        animationCompOut.boneTransforms[i] =
             currentBone.boneMatrix * currentBone.inverseBindPoseMatrix;
     }
 
     // Return transformed array
-    return this->boneTransforms;
+    animationCompOut.numTransforms =
+        static_cast<uint32_t>(numBones);
 }
 
 void Mesh::mapAnimations(const std::vector<std::string>& names)
