@@ -82,13 +82,14 @@ void LobbyScene::update()
 	}
 	if (Input::isKeyPressed(Keys::E))
 	{
-		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ (int)GameEvent::SAY_BYE });
+		this->getNetworkHandler()->getClient()->getTCPPacket() << (int)GameEvent::SAY_BYE;
 	}
+	this->getNetworkHandler()->getClient()->getUDPPacket() << (int)GameEvent::SPAM;
 
-	this->getNetworkHandler()->sendUDPDataToClient(
+	/*this->getNetworkHandler()->sendUDPDataToClient(
 		this->getComponent<Transform>(this->Player).position,
 		this->getComponent<Transform>(this->Player).rotation
-	);
+	);*/
 	this->getComponent<Transform>(this->getMainCameraID()).position = this->getComponent<Transform>(this->Player).position;
 	if (Input::isKeyDown(Keys::W)) {
 		this->getComponent<Transform>(this->Player).position.z += Time::getDT() * 50;

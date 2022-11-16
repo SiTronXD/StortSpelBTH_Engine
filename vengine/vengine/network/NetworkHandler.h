@@ -14,6 +14,7 @@ private:
     bool                shutDownServer;
 	bool                createdServer;
     Client*             client;
+
     SceneHandler*       sceneHandler;
 	ResourceManager*    resourceManger;
     int                 ID;
@@ -37,7 +38,6 @@ private:
 	std::vector<float> lua_floats;
 
     void createAPlayer(int serverId, const std::string& playerName);
-
 public:
     NetworkHandler();
     virtual ~NetworkHandler();
@@ -47,8 +47,10 @@ public:
     void setMeshes(const std::string& meshName, const int meshID);
 
     // Virtual functions (customization)
-    virtual void handleTCPEvent(sf::Packet& tcpPacket, int event);
-    virtual void handleUDPEvent(sf::Packet& udpPacket, int event);
+    virtual void handleTCPEventClient(sf::Packet& tcpPacket, int event);
+    virtual void handleUDPEventClient(sf::Packet& udpPacket, int event);
+    virtual void handleTCPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event);
+    virtual void handleUDPEventServer(Server* server, int clientID, sf::Packet& udpPacket, int event);
 
     // SERVER
     void createServer(NetworkScene* serverGame = nullptr); //create new server on a new thread

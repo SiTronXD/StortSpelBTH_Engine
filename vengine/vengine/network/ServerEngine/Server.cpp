@@ -2,6 +2,7 @@
 #include "Server.h"
 #include <iostream>
 #include "../ServerGameModes/DefaultServerGame.h"
+#include "../NetworkHandler.h"
 
 bool duplicateUser(std::vector<ClientInfo*>& client)
 {
@@ -82,8 +83,8 @@ void Server::ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& lis
 	}
 }
 
-Server::Server(NetworkScene* serverGame)
-	: status(ServerStatus::WAITING)
+Server::Server(NetworkHandler* networkHandler, NetworkScene* serverGame)
+	: status(ServerStatus::WAITING), networkHandler(networkHandler)
 {
 	this->udpSocket.setBlocking(false);
 	this->listener.setBlocking(false);
@@ -331,7 +332,7 @@ void Server::getDataFromUsers()
 	sf::Packet tempPacket;
 	while (udpSocket.receive(tempPacket, tempIPAddress, tempPort) == sf::Socket::Done)  // Shall I really have a while loop?
 	{
-		// Check whos it from
+		// Check who it's from
 		for (int i = 0; i < clientToServerPacketUdp.size(); i++)
 		{
 			if (clients[i]->sender == tempIPAddress && clients[i]->port == tempPort)
@@ -457,8 +458,8 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				}
 				clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
 				break;
-			default:
-				serverToClientPacketTcp[ClientID] << event;
+			default: 
+				this->networkHandler->handleTCPEventServer(this, ClientID, clientToServerPacketTcp[ClientID], event);
 				break;
 			}
 		}
@@ -469,27 +470,30 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 		while (!clientToServerPacketUdp[ClientID].endOfPacket())
 		{
 			clientToServerPacketUdp[ClientID] >> event;
+			Transform* T;
 			switch (event)
 			{
-				case GameEvents::EMPTY:
-					break;
-				case GameEvents::A_Button_Was_Pressed_On_Client:
-					//std::cout << "Server: client pressed Button wow (UDP)" << std::endl;
-					break;
-				case GameEvents::UpdatePlayerPos:
-				{
-					//std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
-					Transform& T = this->sceneHandler.getScene()->getComponent<Transform>(this->sceneHandler.getScene()->getPlayer(ClientID));
-					glm::vec3 tempVec;
-					clientToServerPacketUdp[ClientID] >> tempVec.x;
-					clientToServerPacketUdp[ClientID] >> tempVec.y;
-					clientToServerPacketUdp[ClientID] >> tempVec.z;
-					T.position = tempVec;
-					clientToServerPacketUdp[ClientID] >> tempVec.x;
-					clientToServerPacketUdp[ClientID] >> tempVec.y;
-					clientToServerPacketUdp[ClientID] >> tempVec.z;
-					T.rotation = tempVec;
-				}
+			case GameEvents::EMPTY:
+				break;
+			case GameEvents::A_Button_Was_Pressed_On_Client:
+				//std::cout << "Server: client pressed Button wow (UDP)" << std::endl;
+				break;
+			case GameEvents::UpdatePlayerPos:
+				//std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
+				T = &this->sceneHandler.getScene()->getComponent<Transform>(this->sceneHandler.getScene()->getPlayer(ClientID));
+				glm::vec3 tempVec;
+				clientToServerPacketUdp[ClientID] >> tempVec.x;
+				clientToServerPacketUdp[ClientID] >> tempVec.y;
+				clientToServerPacketUdp[ClientID] >> tempVec.z;
+				T->position = tempVec;
+				clientToServerPacketUdp[ClientID] >> tempVec.x;
+				clientToServerPacketUdp[ClientID] >> tempVec.y;
+				clientToServerPacketUdp[ClientID] >> tempVec.z;
+				T->rotation = tempVec;
+				break;
+			default:
+				this->networkHandler->handleUDPEventServer(this, ClientID, clientToServerPacketUdp[ClientID], event);
+				break;
 			}
 		}
 	}
@@ -537,6 +541,46 @@ void Server::stopGettingClients()
 	delete clients[clients.size() - 1];
 	clients.resize(clients.size() - 1);
 	this->status = ServerStatus::START;
+}
+
+void Server::sendToAllClientsTCP(sf::Packet packet)
+{
+	const void* data = packet.getData();
+	size_t size = packet.getDataSize();
+	for (int i = 0; i < serverToClientPacketTcp.size(); i++) 
+	{
+		serverToClientPacketTcp[i].append(data, size);
+	}
+}
+
+void Server::sendToAllClientsUDP(sf::Packet packet)
+{
+	const void* data = packet.getData();
+	size_t size = packet.getDataSize();
+	for (int i = 0; i < serverToClientPacketUdp.size(); i++)
+	{
+		serverToClientPacketUdp[i].append(data, size);
+	}
+}
+
+void Server::sendToAllOtherClientsTCP(sf::Packet packet, int clientID)
+{
+	const void* data = packet.getData();
+	size_t size = packet.getDataSize();
+	for (int i = 0; i < serverToClientPacketTcp.size(); i++)
+	{
+		if (i != clientID) { serverToClientPacketTcp[i].append(data, size); }
+	}
+}
+
+void Server::sendToAllOtherClientsUDP(sf::Packet packet, int clientID)
+{
+	const void* data = packet.getData();
+	size_t size = packet.getDataSize();
+	for (int i = 0; i < serverToClientPacketUdp.size(); i++)
+	{
+		if (i != clientID) { serverToClientPacketUdp[i].append(data, size); }
+	}
 }
 
 void Server::printAllUsers()

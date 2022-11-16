@@ -46,7 +46,8 @@ public:
     // Only exist one udp event from client to server
     void sendUDPEvent(const GameEvents& gameEvent, const glm::vec3& pos, const glm::vec3& rot);
 
-    sf::Packet& getTcpPacket();
+    inline sf::Packet& getTCPPacket() { return this->clientTcpPacketSend; }
+    inline sf::Packet& getUDPPacket() { return this->clientUdpPacketSend; }
 
     sf::Packet getTCPDataFromServer();
     sf::Packet getUDPDataFromServer();

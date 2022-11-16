@@ -43,6 +43,9 @@ private:
 	PhysicsEngine physicsEngine;
 	NetworkScriptHandler scriptHandler;
 
+	// Reference used for custom events
+	NetworkHandler* networkHandler;
+
 	// Print all users
 	void printAllUsers();
 	int getClientSize();
@@ -81,8 +84,8 @@ private:
 	}
 
 public:
-	Server(NetworkScene* serverGame = nullptr);
-	~Server();
+	Server(NetworkHandler* networkHandler, NetworkScene* serverGame = nullptr);
+	virtual ~Server();
 	void        start();
 	bool        update(float dt);
 	std::string getServerIP();
@@ -91,4 +94,10 @@ public:
 
 	void startGettingClients();
 	void stopGettingClients();
+
+	// Helper functions
+	void sendToAllClientsTCP(sf::Packet packet);
+	void sendToAllClientsUDP(sf::Packet packet);
+	void sendToAllOtherClientsTCP(sf::Packet packet, int clientID);
+	void sendToAllOtherClientsUDP(sf::Packet packet, int clientID);
 };

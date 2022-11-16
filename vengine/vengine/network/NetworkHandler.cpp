@@ -3,10 +3,10 @@
 #include "ServerEngine/Timer.h"
 #include <iostream>
 
-void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
+void serverMain(bool& shutDownServer, bool& created, NetworkHandler* networkHandler, NetworkScene* game)
 {
 	Timer serverTime;
-	Server server(game);
+	Server server(networkHandler, game);
 	bool serverIsDone = false;
 	created = true;
 
@@ -35,10 +35,10 @@ void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 			this->networkHandlerMeshes.find("PlayerMesh")->second
 			);
 	}
-	
 }
 
-NetworkHandler::NetworkHandler() : sceneHandler(nullptr)
+NetworkHandler::NetworkHandler() 
+	: sceneHandler(nullptr)
 {
 	this->fx = fy = fz = fa = fb = fc = 0.f;
 	this->ix = iy = iz = ia = ib = ic = 0;
@@ -80,11 +80,19 @@ void NetworkHandler::setMeshes(const std::string& meshName, const int meshID)
 	this->networkHandlerMeshes.insert(std::pair<std::string, int>(meshName, meshID));
 }
 
-void NetworkHandler::handleTCPEvent(sf::Packet& tcpPacket, int event)
+void NetworkHandler::handleTCPEventClient(sf::Packet& tcpPacket, int event)
 {
 }
 
-void NetworkHandler::handleUDPEvent(sf::Packet& udpPacket, int event)
+void NetworkHandler::handleUDPEventClient(sf::Packet& udpPacket, int event)
+{
+}
+
+void NetworkHandler::handleTCPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event)
+{
+}
+
+void NetworkHandler::handleUDPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event)
 {
 }
 
@@ -100,7 +108,7 @@ void NetworkHandler::createServer(NetworkScene* serverGame)
 
 	this->shutDownServer = false;
 	this->createdServer = false;
-	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
+	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), this, serverGame);
 
 	Timer timer;
 	float timeSinceStartCreatingServer = 0;
@@ -216,13 +224,13 @@ void NetworkHandler::update()
 		return;
 	}
 
-	if (player != -1)
+	/*if (player != -1)
 	{
 		this->sendUDPDataToClient(
 		    this->sceneHandler->getScene()->getComponent<Transform>(this->player).position,
 		    this->sceneHandler->getScene()->getComponent<Transform>(this->player).rotation
 		);
-	}
+	}*/
 
 	client->update(Time::getDT());
 
@@ -276,7 +284,7 @@ void NetworkHandler::update()
 		// Custom event
 		else if (event >= (int)NetworkEvent::END)
 		{
-			this->handleTCPEvent(packet, event);
+			this->handleTCPEventClient(packet, event);
 		}
 	}
 
@@ -457,7 +465,7 @@ void NetworkHandler::update()
 		// Custom event
 		if (event >= (int)GameEvents::END)
 		{
-			this->handleUDPEvent(packet, event);
+			this->handleUDPEventClient(packet, event);
 		}
 	}
 	//this->handleTCPPacket(client->getTCPDataFromServer());

@@ -15,7 +15,7 @@ struct TCPPacketEvent
 {
 	int                event;
 	int                nrOfInts;
-	int                ints[3]; //max nr of ints is 3
+	int                ints[3]; // Max nr of ints is 3
 	std::vector<float> floats;
 };
 

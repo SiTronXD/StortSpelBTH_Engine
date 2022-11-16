@@ -10,7 +10,7 @@ Client::Client(const std::string& clientName)
     this->timeToSendDataToServer        = ServerUpdateRate;
     this->clientName                    = clientName;
 
-    //this->cleanPackageAndGameEvents();
+    this->cleanPackageAndGameEvents();
 }
 
 Client::~Client() {}
@@ -128,17 +128,13 @@ void Client::sendUDPEvent(const GameEvents& gameEvent, const glm::vec3& pos, con
     this->clientUdpPacketSend = p;
 }
 
-sf::Packet& Client::getTcpPacket()
-{
-    return this->clientTcpPacketSend;
-}
-
 void Client::sendDataToServer()
 {
     this->tcpSocket.send(clientTcpPacketSend);
 
     //if we have started we send our position to the server
-    if (this->serverStatus == ServerStatus::RUNNING) {
+    if (this->clientUdpPacketSend.getDataSize()) {
+        Log::write("Send UDP");
         this->udpSocket.send(clientUdpPacketSend, this->serverIP, UDP_PORT_SERVER);
     }
 }
