@@ -12,6 +12,9 @@ void NetworkHandlerTest::handleTCPEventClient(sf::Packet& tcpPacket, int event)
 	case GameEvent::SAY_BYE:
 		Log::write("Bye");
 		break;
+	case GameEvent::SPAM:
+		Log::write("Client: Spam from server");
+		break;
 	default:
 		break;
 	}
@@ -22,6 +25,7 @@ void NetworkHandlerTest::handleUDPEventClient(sf::Packet& udpPacket, int event)
 	if (event == (int)GameEvent::SPAM)
 	{
 		Log::write("Client: Spam from server");
+		this->getClient()->getUDPPacket() << (int)GameEvent::SPAM;
 	}
 }
 

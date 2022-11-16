@@ -289,6 +289,7 @@ void NetworkHandler::update()
 	}
 
 	packet = client->getUDPDataFromServer();
+	//Log::write(std::to_string(client->getUDPDataFromServer().getDataSize()));
 	while (!packet.endOfPacket())
 	{
 		if (!(packet >> event))

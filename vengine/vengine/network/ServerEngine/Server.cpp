@@ -304,11 +304,12 @@ void Server::sendDataToAllUsers()
 		}
 	
 		// Send UDP
-		sf::Packet sendUDPPacket;
-		createUDPPacketToClient(i, sendUDPPacket);
-		if (sendUDPPacket.getDataSize())
+		//sf::Packet sendUDPPacket;
+		//createUDPPacketToClient(i, sendUDPPacket);
+		if (serverToClientPacketUdp[i].getDataSize())
 		{
-			udpSocket.send(sendUDPPacket, clients[i]->sender, clients[i]->port);
+			//Log::write("Port: " + std::to_string(clients[i]->port));
+			udpSocket.send(serverToClientPacketUdp[i], clients[i]->sender, clients[i]->port);
 		}
 	}
 }

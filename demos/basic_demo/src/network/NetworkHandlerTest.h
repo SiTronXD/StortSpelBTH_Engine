@@ -13,8 +13,6 @@ enum class GameEvent
 class NetworkHandlerTest : public NetworkHandler
 {
 private:
-	enum class Status { WAITING, PLAYERJOINED, START, RUNNING, END };
-	Status status;
 public:
 	virtual void handleTCPEventClient(sf::Packet& tcpPacket, int event) override;
 	virtual void handleUDPEventClient(sf::Packet& udpPacket, int event) override;

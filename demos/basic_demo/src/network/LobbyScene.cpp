@@ -84,7 +84,10 @@ void LobbyScene::update()
 	{
 		this->getNetworkHandler()->getClient()->getTCPPacket() << (int)GameEvent::SAY_BYE;
 	}
-	this->getNetworkHandler()->getClient()->getUDPPacket() << (int)GameEvent::SPAM;
+	if (Input::isKeyPressed(Keys::U))
+	{
+		this->getNetworkHandler()->getClient()->getUDPPacket() << (int)GameEvent::SPAM;
+	}
 
 	/*this->getNetworkHandler()->sendUDPDataToClient(
 		this->getComponent<Transform>(this->Player).position,

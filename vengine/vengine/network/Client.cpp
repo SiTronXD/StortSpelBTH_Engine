@@ -134,7 +134,6 @@ void Client::sendDataToServer()
 
     //if we have started we send our position to the server
     if (this->clientUdpPacketSend.getDataSize()) {
-        Log::write("Send UDP");
         this->udpSocket.send(clientUdpPacketSend, this->serverIP, UDP_PORT_SERVER);
     }
 }
@@ -159,7 +158,8 @@ sf::Packet Client::getUDPDataFromServer()
     sf::Packet     udpPacketRecv;
     sf::IpAddress  sender;
     unsigned short port;
-    if (this->udpSocket.receive(udpPacketRecv, sender, port) == sf::Socket::Done) {
+    if (this->udpSocket.receive(udpPacketRecv, sender, port) == sf::Socket::Done) 
+    {
         if (sender == this->serverIP) //if we get something that is not from server
         {
             return udpPacketRecv;
