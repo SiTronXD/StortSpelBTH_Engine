@@ -50,7 +50,7 @@ layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
 } lightBuffer;
 
 // Combined image samplers
-layout(set = FREQ_PER_FRAME, binding = 3) uniform sampler2D shadowMapSampler;
+layout(set = FREQ_PER_FRAME, binding = 3) uniform sampler2DArray shadowMapSampler;
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
 layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D textureSampler1;
 
@@ -115,7 +115,7 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 			float approxGaussWeight = 4.0f / pow(2.0f, (abs(x) + abs(y))) / 16.0f;
 
 			shadowFactor +=
-				(fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightNDC.xy + offset).r ? 0.0f : 1.0f) 
+				(fragLightNDC.z - bias >= texture(shadowMapSampler, vec3(fragLightNDC.xy + offset, 0.0f)).r ? 0.0f : 1.0f) 
 				* approxGaussWeight;
 		}
 	}

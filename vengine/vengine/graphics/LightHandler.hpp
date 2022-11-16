@@ -50,6 +50,7 @@ private:
 public:
 	static const uint32_t MAX_NUM_LIGHTS = 16;
 	static const uint32_t SHADOW_MAP_SIZE = 1024 * 4;
+	static const uint32_t NUM_CASCADES = 4;
 
 	LightHandler();
 

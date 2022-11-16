@@ -46,6 +46,7 @@ void LightHandler::init(
         *this->vma,
         this->shadowMapExtent.width,
         this->shadowMapExtent.height,
+        LightHandler::NUM_CASCADES,
         vk::ImageUsageFlagBits::eSampled,
         resourceManager.addSampler(depthTextureSettings)
     );
@@ -57,15 +58,19 @@ void LightHandler::init(
     );
 
     // Framebuffer
+    std::vector<std::vector<vk::ImageView>> shadowMapImageViews(LightHandler::NUM_CASCADES);
+    for (size_t i = 0; i < shadowMapImageViews.size(); ++i)
+    {
+        shadowMapImageViews[i] =
+        {
+            this->shadowMapTexture.getImageView(i)
+        };
+    }
     this->shadowMapFramebuffer.create(
         *this->device,
         this->shadowMapRenderPass,
         this->shadowMapExtent,
-        {
-            {
-                this->shadowMapTexture.getImageView()
-            }
-        }
+        shadowMapImageViews
     );
 
     // Command buffer array
