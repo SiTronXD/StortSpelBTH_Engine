@@ -22,9 +22,6 @@ class LightHandler
 private:
 	std::vector<LightBufferData> lightBuffer;
 
-	float frustumHalfWidth;
-	float frustumHalfHeight;
-	float frustumDepth;
 	ShadowMapData shadowMapData{};
 
 	Texture shadowMapTexture;
@@ -52,7 +49,7 @@ private:
 
 public:
 	static const uint32_t MAX_NUM_LIGHTS = 16;
-	static const uint32_t SHADOW_MAP_SIZE = 1024;
+	static const uint32_t SHADOW_MAP_SIZE = 1024 * 4;
 
 	LightHandler();
 

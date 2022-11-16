@@ -103,8 +103,27 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		shadowMapBuffer.shadowMapMinBias + 
 		shadowMapBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
 
-	// 2x2 PCF
+	// 3x3 PCF
 	vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
+	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
+	float shadowFactor = 0.0f;
+	for(int y = -1; y <= 1; ++y)
+	{
+		for(int x = -1; x <= 1; ++x)
+		{
+			vec2 offset = vec2(x, y) * oneOverSize;
+			float approxGaussWeight = 4.0f / pow(2.0f, (abs(x) + abs(y))) / 16.0f;
+
+			shadowFactor +=
+				(fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightNDC.xy + offset).r ? 0.0f : 1.0f) 
+				* approxGaussWeight;
+		}
+	}
+
+	return shadowFactor;
+
+	// 2x2 PCF
+	/*vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
 	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
 	vec2 unnormalizedFragTex = fragLightNDC.xy * shadowMapSize;
 	vec2 unnormalizedCorner = floor(unnormalizedFragTex);
@@ -123,7 +142,7 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		fract(unnormalizedFragTex.y)
 	);
 
-	return shadowFactor;
+	return shadowFactor;*/
 }
 
 void main() 

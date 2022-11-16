@@ -10,10 +10,7 @@ LightHandler::LightHandler()
     resourceManager(nullptr),
     shadowMapViewProjectionUB(~0u),
     animShadowMapViewProjectionUB(~0u),
-    framesInFlight(0),
-    frustumHalfWidth(0.0f),
-    frustumHalfHeight(0.0f),
-    frustumDepth(0.0f)
+    framesInFlight(0)
 { }
 
 void LightHandler::init(
@@ -77,19 +74,6 @@ void LightHandler::init(
         commandPool,
         framesInFlight
     );
-
-    // Preset shadow map data
-    this->frustumHalfWidth = 50.0f;
-    this->frustumHalfHeight = 50.0f;
-    this->frustumDepth = 400.0f;
-    this->shadowMapData.projection =
-        glm::orthoRH(
-            -this->frustumHalfWidth, this->frustumHalfWidth,
-            -this->frustumHalfHeight, this->frustumHalfHeight,
-            0.1f, this->frustumDepth
-        );
-    this->shadowMapData.shadowMapMinBias = 0.0001f;
-    this->shadowMapData.shadowMapAngleBias = 0.0015f;
 }
 
 void LightHandler::initForScene(
@@ -363,21 +347,33 @@ void LightHandler::updateLightBuffers(
     dirLightView.each([&](
         DirectionalLight& dirLightComp)
         {
+            // Normalize direction
             dirLightComp.direction =
                 glm::normalize(dirLightComp.direction);
 
             glm::vec3 lightPos =
-                camPosition - dirLightComp.direction * this->frustumDepth * 0.5f;
+                camPosition - dirLightComp.direction * dirLightComp.shadowMapFrustumDepth * 0.5f;
 
             glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
             if (std::abs(glm::dot(worldUp, dirLightComp.direction)) >= 0.95f)
                 worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
 
+            // View matrix
             this->shadowMapData.view = glm::lookAt(
                 lightPos,
                 lightPos + dirLightComp.direction,
                 worldUp
             );
+
+            // Projection matrix
+            this->shadowMapData.projection =
+                glm::orthoRH(
+                    -dirLightComp.shadowMapFrustumHalfWidth, dirLightComp.shadowMapFrustumHalfWidth,
+                    -dirLightComp.shadowMapFrustumHalfHeight, dirLightComp.shadowMapFrustumHalfHeight,
+                    0.1f, dirLightComp.shadowMapFrustumDepth
+                );
+            this->shadowMapData.shadowMapMinBias = 0.0001f;
+            this->shadowMapData.shadowMapAngleBias = 0.0015f;
         }
     );
 
