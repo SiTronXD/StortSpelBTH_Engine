@@ -360,11 +360,6 @@ void LightHandler::updateLightBuffers(
             if (std::abs(glm::dot(worldUp, dirLightComp.direction)) >= 0.95f)
                 worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
 
-            if (Input::isKeyDown(Keys::E))
-            {
-                Log::write("xd");
-            }
-
             this->shadowMapData.view = glm::lookAt(
                 lightPos,
                 lightPos + dirLightComp.direction,
