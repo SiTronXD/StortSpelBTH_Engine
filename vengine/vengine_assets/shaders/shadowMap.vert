@@ -20,14 +20,14 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform ShadowMapBuffer
 // Push constant
 layout(push_constant) uniform PushConstantData
 {
+    mat4 projection;
     mat4 model;
-    vec4 tintColor;
 } pushConstantData;
 
 void main()
 {
     gl_Position = 
-        shadowMapBuffer.projection *
+        pushConstantData.projection *
         shadowMapBuffer.view *
         pushConstantData.model * 
         vec4(pos, 1.0);

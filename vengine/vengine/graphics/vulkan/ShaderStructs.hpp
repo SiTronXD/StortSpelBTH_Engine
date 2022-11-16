@@ -3,6 +3,12 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
+struct ShadowPushConstantData
+{
+    glm::mat4 projectionMatrix = glm::mat4(1.0f);
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+};
+
 struct PushConstantData
 {
     glm::mat4 modelMatrix = glm::mat4(1.0f);

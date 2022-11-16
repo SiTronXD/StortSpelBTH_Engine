@@ -32,8 +32,8 @@ layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer BoneTransformsB
 // Push constant
 layout(push_constant) uniform PushConstantData
 {
+    mat4 projection;
     mat4 model;
-    vec4 tintColor;
 } pushConstantData;
 
 void main()
@@ -49,7 +49,7 @@ void main()
         animTransform += bones.transforms[boneIndices.w].boneTransform * weights.w;
 
     gl_Position = 
-        shadowMapBuffer.projection *
+        pushConstantData.projection *
         shadowMapBuffer.view *
         pushConstantData.model * 
         animTransform * 

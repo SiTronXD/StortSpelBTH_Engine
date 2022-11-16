@@ -19,10 +19,16 @@ class Texture;
 
 class LightHandler
 {
+public:
+	static const uint32_t NUM_CASCADES = 4;
+
 private:
 	std::vector<LightBufferData> lightBuffer;
 
+	glm::mat4 projectionMatrices[LightHandler::NUM_CASCADES]{};
 	ShadowMapData shadowMapData{};
+
+	ShadowPushConstantData shadowPushConstantData{};
 
 	Texture shadowMapTexture;
 	RenderPass shadowMapRenderPass;
@@ -50,7 +56,6 @@ private:
 public:
 	static const uint32_t MAX_NUM_LIGHTS = 16;
 	static const uint32_t SHADOW_MAP_SIZE = 1024 * 4;
-	static const uint32_t NUM_CASCADES = 4;
 
 	LightHandler();
 
@@ -79,12 +84,18 @@ public:
 		const glm::vec3& camPosition,
 		const uint32_t& currentFrame);
 
+	void updateCamera(
+		const uint32_t& arraySliceCameraIndex);
+	void updateShadowPushConstant(
+		CommandBuffer& currentShadowMapCommandBuffer,
+		const glm::mat4& modelMatrix);
+
 	void cleanup();
 
 	inline const ShadowMapData& getShadowMapData() const { return this->shadowMapData; }
 	inline const RenderPass& getShadowMapRenderPass() const { return this->shadowMapRenderPass; }
 	inline const vk::Extent2D& getShadowMapExtent() const { return this->shadowMapExtent; }
-	inline const vk::Framebuffer& getShadowMapFramebuffer() const { return this->shadowMapFramebuffer[0]; }
+	inline const vk::Framebuffer& getShadowMapFramebuffer(const uint32_t& index) const { return this->shadowMapFramebuffer[index]; }
 	inline const Pipeline& getShadowMapPipeline() const { return this->shadowMapPipeline; }
 	inline const Pipeline& getAnimShadowMapPipeline() const { return this->animShadowMapPipeline; }
 	inline ShaderInput& getShadowMapShaderInput() { return this->shadowMapShaderInput; }

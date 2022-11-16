@@ -134,7 +134,8 @@ private:
     std::vector<vk::Buffer> bindVertexBuffers;
     void beginShadowMapRenderPass(
         const uint32_t& imageIndex,
-        LightHandler& lightHandler);
+        LightHandler& lightHandler,
+        const uint32_t& shadowMapArraySlice);
     void renderShadowMapDefaultMeshes(
         Scene* scene,
         LightHandler& lightHandler);

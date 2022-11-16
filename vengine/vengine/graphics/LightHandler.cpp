@@ -107,7 +107,7 @@ void LightHandler::initForScene(
         this->framesInFlight
     );
     this->shadowMapShaderInput.addPushConstant(
-        sizeof(PushConstantData),
+        sizeof(ShadowPushConstantData),
         vk::ShaderStageFlagBits::eVertex
     );
     this->shadowMapViewProjectionUB =
@@ -142,7 +142,7 @@ void LightHandler::initForScene(
             this->framesInFlight
         );
         this->animShadowMapShaderInput.addPushConstant(
-            sizeof(PushConstantData),
+            sizeof(ShadowPushConstantData),
             vk::ShaderStageFlagBits::eVertex
         );
         this->animShadowMapShaderInput.setNumShaderStorageBuffers(1);
@@ -370,13 +370,25 @@ void LightHandler::updateLightBuffers(
                 worldUp
             );
 
-            // Projection matrix
+            // Projection matrices
+            for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
+            {
+                float scale = i * 0.5f + 1.0f;
+
+                this->projectionMatrices[i] =
+                    glm::orthoRH(
+                        -dirLightComp.shadowMapFrustumHalfWidth * scale,
+                        dirLightComp.shadowMapFrustumHalfWidth * scale,
+                        -dirLightComp.shadowMapFrustumHalfHeight * scale,
+                        dirLightComp.shadowMapFrustumHalfHeight * scale,
+                        0.1f, 
+                        dirLightComp.shadowMapFrustumDepth
+                    );
+            }
             this->shadowMapData.projection =
-                glm::orthoRH(
-                    -dirLightComp.shadowMapFrustumHalfWidth, dirLightComp.shadowMapFrustumHalfWidth,
-                    -dirLightComp.shadowMapFrustumHalfHeight, dirLightComp.shadowMapFrustumHalfHeight,
-                    0.1f, dirLightComp.shadowMapFrustumDepth
-                );
+                this->projectionMatrices[0];
+                
+            // Biases
             this->shadowMapData.shadowMapMinBias = 0.0001f;
             this->shadowMapData.shadowMapAngleBias = 0.0015f;
         }
@@ -386,7 +398,7 @@ void LightHandler::updateLightBuffers(
     this->shadowMapShaderInput.setCurrentFrame(currentFrame);
     this->shadowMapShaderInput.updateUniformBuffer(
         this->shadowMapViewProjectionUB,
-        (void*)&shadowMapData
+        (void*) &this->shadowMapData
     );
 
     // Anim shadow map shader input
@@ -397,9 +409,33 @@ void LightHandler::updateLightBuffers(
         );
         this->animShadowMapShaderInput.updateUniformBuffer(
             this->animShadowMapViewProjectionUB,
-            (void*)&shadowMapData
+            (void*) &this->shadowMapData
         );
     }
+}
+
+void LightHandler::updateCamera(
+    const uint32_t& arraySliceCameraIndex)
+{
+    // Update projection matrix
+    this->shadowPushConstantData.projectionMatrix =
+        this->projectionMatrices[arraySliceCameraIndex];
+}
+
+void LightHandler::updateShadowPushConstant(
+    CommandBuffer& currentShadowMapCommandBuffer,
+    const glm::mat4& modelMatrix)
+{
+    // Update model matrix
+    this->shadowPushConstantData.modelMatrix =
+        modelMatrix;
+
+    // Update push constant data
+    currentShadowMapCommandBuffer.pushConstant(
+        animShadowMapShaderInput,
+        (void*) &this->shadowPushConstantData
+    );
+
 }
 
 void LightHandler::cleanup()
