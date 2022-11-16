@@ -10,6 +10,8 @@
 #include "ShaderInput.hpp"
 #include "VertexBufferArray.hpp"
 
+struct AnimationComponent;
+
 class Mesh
 {
 private: 
@@ -18,7 +20,6 @@ private:
     Device&         device; 
     VmaAllocator&   vma;
 
-    std::vector<glm::mat4> boneTransforms;
     std::unordered_map<std::string, uint32_t> aniNames;
 
     // One vertex buffer per data stream
@@ -47,7 +48,8 @@ public:
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
-    const std::vector<glm::mat4>& getBoneTransforms(const float& timer, const int& animationIndex);
+    void getBoneTransforms(
+        AnimationComponent& animationComponentOutput);
 
     inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;

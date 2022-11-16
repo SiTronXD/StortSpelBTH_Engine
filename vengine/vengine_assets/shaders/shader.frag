@@ -22,6 +22,15 @@ layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
 	uint spotlightsEndIndex;
 } allLightsInfo;
 
+layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapBuffer
+{
+    mat4 projection;
+    mat4 view;
+    vec2 shadowMapSize;
+	float shadowMapMinBias;
+	float shadowMapAngleBias;
+} shadowMapBuffer;
+
 // Storage buffer
 struct LightBufferData
 {
@@ -40,6 +49,8 @@ layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
     LightBufferData lights[];
 } lightBuffer;
 
+// Combined image samplers
+layout(set = FREQ_PER_FRAME, binding = 3) uniform sampler2D shadowMapSampler;
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
 layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D textureSampler1;
 
@@ -64,6 +75,55 @@ vec3 calcSpecular(in vec4 specularTexCol, in vec3 normal, in vec3 halfwayDir)
 			max(dot(normal, halfwayDir), 0.0f), 
 			specularTexCol.a * 256.0f
 		);
+}
+
+float getShadowFactor(in vec3 normal, in vec3 lightDir)
+{
+	// Transform to the light's NDC
+	vec4 fragLightNDC = 
+		shadowMapBuffer.projection * 
+		shadowMapBuffer.view * 
+		vec4(fragWorldPos, 1.0f);
+	fragLightNDC.xyz /= fragLightNDC.w;
+	fragLightNDC.y = -fragLightNDC.y;
+
+	// Fragment is outside light frustum
+	if( fragLightNDC.x < -1.0f || fragLightNDC.x > 1.0f ||
+		fragLightNDC.y < -1.0f || fragLightNDC.y > 1.0f ||
+		fragLightNDC.z < 0.0f || fragLightNDC.z > 1.0f)
+	{
+		return 1.0f;
+	}
+
+	// Texture coordinates
+	fragLightNDC.xy = fragLightNDC.xy * 0.5f + vec2(0.5f);
+
+	// Calculate shadow bias
+	float bias = 
+		shadowMapBuffer.shadowMapMinBias + 
+		shadowMapBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
+
+	// 2x2 PCF
+	vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
+	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
+	vec2 unnormalizedFragTex = fragLightNDC.xy * shadowMapSize;
+	vec2 unnormalizedCorner = floor(unnormalizedFragTex);
+	vec2 fragLightTex00 = (unnormalizedCorner + vec2(0.0f, 0.0f) + vec2(0.5f)) * oneOverSize;
+	vec2 fragLightTex10 = (unnormalizedCorner + vec2(1.0f, 0.0f) + vec2(0.5f)) * oneOverSize;
+	vec2 fragLightTex01 = (unnormalizedCorner + vec2(0.0f, 1.0f) + vec2(0.5f)) * oneOverSize;
+	vec2 fragLightTex11 = (unnormalizedCorner + vec2(1.0f, 1.0f) + vec2(0.5f)) * oneOverSize;
+
+	float shadowMapValue00 = fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightTex00).r ? 0.0f : 1.0f;
+	float shadowMapValue10 = fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightTex10).r ? 0.0f : 1.0f;
+	float shadowMapValue01 = fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightTex01).r ? 0.0f : 1.0f;
+	float shadowMapValue11 = fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightTex11).r ? 0.0f : 1.0f;
+	float shadowFactor = mix(
+		mix(shadowMapValue00, shadowMapValue10, fract(unnormalizedFragTex.x)),
+		mix(shadowMapValue01, shadowMapValue11, fract(unnormalizedFragTex.x)),
+		fract(unnormalizedFragTex.y)
+	);
+
+	return shadowFactor;
 }
 
 void main() 
@@ -104,7 +164,8 @@ void main()
 		// Add blinn-phong light contribution
 		finalColor += 
 			(diffuseLight + specularLight) * 
-			lightBuffer.lights[i].color.xyz;
+			lightBuffer.lights[i].color.xyz * 
+			getShadowFactor(normal, lightDir);
 	}
 
 	// Point lights

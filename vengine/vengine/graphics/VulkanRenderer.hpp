@@ -18,9 +18,9 @@
 #include "imgui.h"              // Need to be included in header
 
 #include "../resource_management/ResourceManager.hpp"
+#include "LightHandler.hpp"
 #include "UIRenderer.hpp"
 #include "DebugRenderer.hpp"
-#include "vulkan/UniformBufferStructs.hpp"
 
 class Scene;
 class Camera;
@@ -34,13 +34,6 @@ class VulkanRenderer
 #endif
 
     const int MAX_FRAMES_IN_FLIGHT = 3;
-    const uint32_t MAX_NUM_LIGHTS = 16;
-
-    struct PushConstantData
-    {
-        glm::mat4 modelMatrix;
-        glm::vec4 tintColor; // vec4(R, G, B, lerp alpha)
-    } pushConstantData{};
 
     ResourceManager* resourceManager;
     UIRenderer* uiRenderer;
@@ -53,6 +46,7 @@ class VulkanRenderer
 
     bool windowResized = false;
 
+    PushConstantData pushConstantData{};
     CameraBufferData cameraDataUBO{};
 
     // Vulkan Components
@@ -73,13 +67,13 @@ class VulkanRenderer
     RenderPass renderPassImgui{};
     vk::CommandPool commandPool{};
     CommandBufferArray commandBuffers;
+    CommandBuffer* currentShadowMapCommandBuffer;
     CommandBuffer* currentCommandBuffer;
-
-    std::vector<LightBufferData> lightBuffer;
 
     // Default pipeline
     UniformBufferID viewProjectionUB;
     UniformBufferID allLightsInfoUB;
+    UniformBufferID shadowMapDataUB;
     StorageBufferID lightBufferSB;
     ShaderInput shaderInput;
     Pipeline pipeline;
@@ -88,15 +82,19 @@ class VulkanRenderer
 	bool hasAnimations;
     UniformBufferID animViewProjectionUB;
     UniformBufferID animAllLightsInfoUB;
+    UniformBufferID animShadowMapDataUB;
     StorageBufferID animLightBufferSB;
     ShaderInput animShaderInput;
     Pipeline animPipeline;
+
+    LightHandler lightHandler;
 
     // Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
 
     // Synchronisation 
     std::vector<vk::Semaphore> imageAvailable;
+    std::vector<vk::Semaphore> shadowMapRenderFinished;
     std::vector<vk::Semaphore> renderFinished;
     std::vector<vk::Fence> drawFences;
     
@@ -127,9 +125,25 @@ private:
     // initializations of subsystems
     void initResourceManager();
 
-    void updateLightBuffer(Scene* scene);
+    void updateAnimationTransforms(Scene* scene);
 
-    // Renderpass for screen rendering
+    // ------- Render functions within render passes -------
+
+    // Render pass for shadow map rendering
+    std::vector<vk::DeviceSize> bindVertexBufferOffsets;
+    std::vector<vk::Buffer> bindVertexBuffers;
+    void beginShadowMapRenderPass(
+        const uint32_t& imageIndex,
+        LightHandler& lightHandler);
+    void renderShadowMapDefaultMeshes(
+        Scene* scene,
+        LightHandler& lightHandler);
+    void renderShadowMapSkeletalAnimations(
+        Scene* scene,
+        LightHandler& lightHandler);
+    void endShadowMapRenderPass();
+
+    // Render pass for screen rendering
     void beginRenderpass(
         const uint32_t& imageIndex);
     void renderDefaultMeshes(Scene* scene);
@@ -138,7 +152,7 @@ private:
     void renderDebugElements();
     void endRenderpass();
 
-    // Renderpass for imgui rendering
+    // Render pass for imgui rendering
     void beginRenderpassImgui(
         const uint32_t& imageIndex);
     void renderImgui();

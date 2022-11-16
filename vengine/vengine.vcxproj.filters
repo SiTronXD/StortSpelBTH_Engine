@@ -93,6 +93,7 @@
     <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
+    <ClCompile Include="vengine\graphics\LightHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -151,7 +152,7 @@
     <ClInclude Include="vengine\graphics\ResTranslator.hpp" />
     <ClInclude Include="vengine\graphics\DebugRenderer.hpp" />
     <ClInclude Include="vengine\graphics\VertexBufferArray.hpp" />
-    <ClInclude Include="vengine\graphics\vulkan\UniformBufferStructs.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\ShaderStructs.hpp" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkScene.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkScriptHandler.h" />
     <ClInclude Include="vengine\network\ServerEngine\NetworkSceneLua.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="vengine\dev\Random.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\RenderPass.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\FramebufferArray.hpp" />
+    <ClInclude Include="vengine\graphics\LightHandler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -386,5 +388,7 @@
     <CustomBuild Include="vengine_assets\shaders\ui.vert" />
     <CustomBuild Include="vengine_assets\shaders\dbgMesh.vert" />
     <CustomBuild Include="vengine_assets\shaders\dbg.frag" />
+    <CustomBuild Include="vengine_assets\shaders\shadowMap.vert" />
+    <CustomBuild Include="vengine_assets\shaders\shadowMapAnim.vert" />
   </ItemGroup>
 </Project>

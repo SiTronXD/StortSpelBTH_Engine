@@ -1,6 +1,229 @@
 #include "pch.h"
 #include "VulkanRenderer.hpp"
 
+void VulkanRenderer::beginShadowMapRenderPass(
+    const uint32_t& imageIndex,
+    LightHandler& lightHandler)
+{
+    const std::array<vk::ClearValue, 1> clearValues =
+    {
+            vk::ClearValue(                         // Clear value for attachment 0
+                vk::ClearDepthStencilValue(
+                    1.F,    // depth
+                    0       // stencil
+                )
+            )
+    };
+
+    const vk::Extent2D& shadowMapExtent = 
+        lightHandler.getShadowMapExtent();
+
+    // Information about how to begin a render pass
+    vk::RenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.setRenderPass(lightHandler.getShadowMapRenderPass().getVkRenderPass());                      // Render pass to begin
+    renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
+    renderPassBeginInfo.renderArea.setExtent(shadowMapExtent);      // Size of region to run render pass on (starting at offset)
+    renderPassBeginInfo.setPClearValues(clearValues.data());
+    renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
+    renderPassBeginInfo.setFramebuffer(lightHandler.getShadowMapFramebuffer());
+
+    // Begin Render Pass!    
+    // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
+    vk::SubpassBeginInfoKHR subpassBeginInfo;
+    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
+    this->currentShadowMapCommandBuffer->beginRenderPass2(
+        renderPassBeginInfo,
+        subpassBeginInfo
+    );
+
+    // Viewport
+    vk::Viewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = (float) shadowMapExtent.height;
+    viewport.width = (float) shadowMapExtent.width;
+    viewport.height = -((float) shadowMapExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    this->currentShadowMapCommandBuffer->setViewport(viewport);
+
+    // Scissor
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D{ 0, 0 };
+    scissor.extent = shadowMapExtent;
+    this->currentShadowMapCommandBuffer->setScissor(scissor);
+}
+
+void VulkanRenderer::renderShadowMapDefaultMeshes(
+    Scene* scene,
+    LightHandler& lightHandler)
+{
+    ShaderInput& shadowMapShaderInput =
+        lightHandler.getShadowMapShaderInput();
+
+    // Bind Pipeline to be used in render pass
+    this->currentShadowMapCommandBuffer->bindGraphicsPipeline(
+        lightHandler.getShadowMapPipeline()
+    );
+
+    // Update for descriptors
+    this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
+        shadowMapShaderInput,
+        DescriptorFrequency::PER_FRAME
+    );
+
+    // For every non-animating mesh we have
+    auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent, Inactive>);
+    meshView.each([&](
+        const Transform& transform,
+        const MeshComponent& meshComponent)
+        {
+            Mesh& currentMesh =
+                this->resourceManager->getMesh(meshComponent.meshID);
+            const std::vector<SubmeshData>& submeshes =
+                currentMesh.getSubmeshData();
+
+            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+            this->pushConstantData.modelMatrix = transform.getMatrix();
+            this->currentShadowMapCommandBuffer->pushConstant(
+                shadowMapShaderInput,
+                (void*) &this->pushConstantData
+            );
+
+            // Bind only vertex buffer containing positions
+            this->currentShadowMapCommandBuffer->bindVertexBuffers2(
+                currentMesh.getVertexBufferArray()
+                    .getVertexBuffers()[0]
+            );
+            
+            // Bind index buffer
+            this->currentShadowMapCommandBuffer->bindIndexBuffer(
+                currentMesh.getIndexBuffer()
+            );
+
+            // Update for descriptors
+            this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
+                shadowMapShaderInput,
+                DescriptorFrequency::PER_MESH
+            );
+
+            for (size_t i = 0; i < submeshes.size(); ++i)
+            {
+                const SubmeshData& currentSubmesh = submeshes[i];
+
+                // Draw
+                this->currentShadowMapCommandBuffer->drawIndexed(
+                    currentSubmesh.numIndicies, 
+                    1, 
+                    currentSubmesh.startIndex
+                );
+            }
+        }
+    );
+}
+
+void VulkanRenderer::renderShadowMapSkeletalAnimations(
+    Scene* scene,
+    LightHandler& lightHandler)
+{
+    ShaderInput& animShadowMapShaderInput =
+        lightHandler.getAnimShadowMapShaderInput();
+
+    if (this->hasAnimations)
+    {
+        // Bind Pipeline to be used in render pass
+        this->currentShadowMapCommandBuffer->bindGraphicsPipeline(
+            lightHandler.getAnimShadowMapPipeline()
+        );
+
+        // Update for descriptors
+        this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
+            animShadowMapShaderInput, 
+            DescriptorFrequency::PER_FRAME
+        );
+    }
+
+    // For every animating mesh we have
+    auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<Inactive>);
+    animView.each(
+        [&](const Transform& transform,
+            const MeshComponent& meshComponent,
+            const AnimationComponent& animationComponent)
+        {
+            Mesh& currentMesh =
+                this->resourceManager->getMesh(meshComponent.meshID);
+            MeshData& currentMeshData =
+                currentMesh.getMeshData();
+            const std::vector<SubmeshData>& submeshes =
+                currentMesh.getSubmeshData();
+
+            // Update transformations in storage buffer
+            animShadowMapShaderInput.updateStorageBuffer(
+                animationComponent.boneTransformsID,
+                (void*) animationComponent.getBoneTransformsData()
+            );
+            animShadowMapShaderInput.setStorageBuffer(
+                animationComponent.boneTransformsID
+            );
+
+            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+            this->pushConstantData.modelMatrix = transform.getMatrix();
+            this->currentShadowMapCommandBuffer->pushConstant(
+                animShadowMapShaderInput,
+                (void*)&this->pushConstantData
+            );
+
+            // Bind vertex buffer only containing positions, 
+            // bone weights and bone indices
+            this->bindVertexBufferOffsets = 
+            {
+                currentMesh.getVertexBufferArray().getVertexBufferOffsets()[0],
+                currentMesh.getVertexBufferArray().getVertexBufferOffsets()[3],
+                currentMesh.getVertexBufferArray().getVertexBufferOffsets()[4]
+            };
+            this->bindVertexBuffers = 
+            {
+                currentMesh.getVertexBufferArray().getVertexBuffers()[0],
+                currentMesh.getVertexBufferArray().getVertexBuffers()[3],
+                currentMesh.getVertexBufferArray().getVertexBuffers()[4]
+            };
+            this->currentShadowMapCommandBuffer->bindVertexBuffers2(
+                this->bindVertexBufferOffsets,
+                this->bindVertexBuffers
+            );
+
+            // Bind index buffer
+            this->currentShadowMapCommandBuffer->bindIndexBuffer(
+                currentMesh.getIndexBuffer()
+            );
+
+            // Update for descriptors
+            this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
+                lightHandler.getAnimShadowMapShaderInput(),
+                DescriptorFrequency::PER_MESH
+            );
+
+            for (size_t i = 0; i < submeshes.size(); ++i)
+            {
+                const SubmeshData& currentSubmesh = submeshes[i];
+
+                // Draw
+                this->currentShadowMapCommandBuffer->drawIndexed(
+                    currentSubmesh.numIndicies, 
+                    1, 
+                    currentSubmesh.startIndex
+                );
+            }
+        }
+    );
+}
+
+void VulkanRenderer::endShadowMapRenderPass()
+{
+    // End render pass
+    vk::SubpassEndInfo subpassEndInfo;
+    this->currentShadowMapCommandBuffer->endRenderPass2(subpassEndInfo);
+}
+
 void VulkanRenderer::beginRenderpass(
     const uint32_t& imageIndex)
 {
@@ -210,15 +433,10 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
             const std::vector<SubmeshData>& submeshes =
                 currentMesh.getSubmeshData();
 
-            // Get bone transformations
-            const std::vector<glm::mat4>& boneTransforms =
-                currentMesh.getBoneTransforms(animationComponent.timer,
-                    animationComponent.animationIndex);
-
             // Update transformations in storage buffer
             this->animShaderInput.updateStorageBuffer(
                 animationComponent.boneTransformsID,
-                (void*)&boneTransforms[0]
+                (void*) animationComponent.getBoneTransformsData()
             );
             this->animShaderInput.setStorageBuffer(
                 animationComponent.boneTransformsID

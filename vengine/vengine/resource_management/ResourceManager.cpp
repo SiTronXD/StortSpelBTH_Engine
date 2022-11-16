@@ -167,6 +167,31 @@ uint32_t ResourceManager::addTexture(
         return 0;
     }
 
+    uint32_t textureSamplerIndex = 
+        this->addSampler(textureSettings);
+
+    // NOTE: texturePaths.size() as key only works if we never remove resources the map...
+    this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
+
+    // NOTE: textures.size as key only works if we never remove resources the map...    
+    // Create texture, insert into map of textures
+    textures.insert(
+        {
+            textures.size(), 
+            textureLoader.createTexture(
+                texturePath,
+                textureSettings,
+                textureSamplerIndex
+            )
+        }
+    );
+
+    return textures.size() - 1;
+}
+
+uint32_t ResourceManager::addSampler(
+    const TextureSettings& textureSettings)
+{
     // Create texture samples if it doesn't exist already
     std::string samplerString;
     TextureSampler::settingsToString(textureSettings.samplerSettings, samplerString);
@@ -193,23 +218,7 @@ uint32_t ResourceManager::addTexture(
             createSampler(*this->dev, textureSettings.samplerSettings);
     }
 
-    // NOTE: texturePaths.size() as key only works if we never remove resources the map...
-    this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
-
-    // NOTE: textures.size as key only works if we never remove resources the map...    
-    // Create texture, insert into map of textures
-    textures.insert(
-        {
-            textures.size(), 
-            textureLoader.createTexture(
-                texturePath,
-                textureSettings,
-                this->samplerSettings[samplerString]
-            )
-        }
-    );
-
-    return textures.size() - 1;
+    return this->samplerSettings[samplerString];
 }
 
 uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)

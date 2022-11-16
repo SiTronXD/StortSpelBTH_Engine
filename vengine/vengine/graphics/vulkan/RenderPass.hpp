@@ -4,6 +4,7 @@
 
 class Device;
 class Swapchain;
+class Texture;
 
 class RenderPass
 {
@@ -14,6 +15,7 @@ private:
 
 public:
 	void createRenderPassBase(Device& device, Swapchain& swapchain);
+	void createRenderPassShadowMap(Device& device, Texture& shadowMapTexture);
 	void createRenderPassImgui(Device& device, Swapchain& swapchain);
 
 	void cleanup();
