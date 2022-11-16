@@ -1,11 +1,18 @@
 #include "pch.h"
 #include "LightHandler.hpp"
 #include "../application/Scene.hpp"
+#include "Texture.hpp"
 
 LightHandler::LightHandler()
     : physicalDevice(nullptr),
     device(nullptr),
-    vma(nullptr)
+    vma(nullptr),
+    resourceManager(nullptr),
+    shadowMapViewProjectionUB(~0u),
+    animShadowMapViewProjectionUB(~0u),
+    framesInFlight(0),
+    frustumHalfSize(0.0f),
+    frustumDepth(0.0f)
 { }
 
 void LightHandler::init(
@@ -71,11 +78,13 @@ void LightHandler::init(
     );
 
     // Preset shadow map data
+    this->frustumHalfSize = 50.0f;
+    this->frustumDepth = 400.0f;
     this->shadowMapData.projection =
         glm::orthoRH(
-            -50.0f, 50.0f,
-            -50.0f, 50.0f,
-            0.1f, 400.0f
+            -this->frustumHalfSize, this->frustumHalfSize,
+            -this->frustumHalfSize, this->frustumHalfSize,
+            0.1f, this->frustumDepth
         );
 }
 
@@ -354,7 +363,7 @@ void LightHandler::updateLightBuffers(
                 glm::normalize(dirLightComp.direction);
 
             glm::vec3 lightPos =
-                camPosition - dirLightComp.direction * 200.0f;
+                camPosition - dirLightComp.direction * this->frustumDepth * 0.5f;
 
             glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
             if (std::abs(glm::dot(worldUp, dirLightComp.direction)) >= 0.95f)

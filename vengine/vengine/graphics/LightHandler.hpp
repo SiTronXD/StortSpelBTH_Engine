@@ -15,12 +15,15 @@ class FramebufferArray;
 class CommandBufferArray;
 class Pipeline;
 class ResourceManager;
+class Texture;
 
 class LightHandler
 {
 private:
 	std::vector<LightBufferData> lightBuffer;
 
+	float frustumHalfSize;
+	float frustumDepth;
 	ShadowMapData shadowMapData{};
 
 	Texture shadowMapTexture;
