@@ -12,7 +12,7 @@ private:
     std::string serverIP;
     bool        isConnectedToServer;
 
-    ServerStatus serverStatus;
+    //ServerStatus serverStatus;
     float        currentTimeToSendDataToServer;
     float        timeToSendDataToServer;
 
@@ -36,9 +36,6 @@ public:
     void update(const float& dt);
 
     bool isConnected() const;
-    bool hasStarted() const;
-
-    void starting();
     void disconnect();
 
     // Send events

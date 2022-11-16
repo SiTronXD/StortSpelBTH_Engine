@@ -25,7 +25,7 @@ private:
 	// See if user is still connected by seeing if user has been to the sending messages the last 3 seconds or so
 	// Else send a message that they have been disconnected
 	void seeIfUsersExist();
-	void handleDisconnects(int clientID); //if a player have wanted to disconnect
+	void handleDisconnects(int clientID); // If a player have wanted to disconnect
 	void cleanRecvPackages();
 	void cleanSendPackages();
 	void ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& listener, ServerStatus& start);
@@ -48,7 +48,6 @@ private:
 
 	// Print all users
 	void printAllUsers();
-	int getClientSize();
 
 	// Varibles
 	ServerStatus status;

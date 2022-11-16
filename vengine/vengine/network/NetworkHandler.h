@@ -14,6 +14,7 @@ private:
     bool                shutDownServer;
 	bool                createdServer;
     Client*             client;
+    ServerStatus        serverStatus;
 
     SceneHandler*       sceneHandler;
 	ResourceManager*    resourceManger;
@@ -45,6 +46,7 @@ public:
 	void setResourceManager(ResourceManager* resourceManager);
 
     void setMeshes(const std::string& meshName, const int meshID);
+    ServerStatus& getStatus() { return this->serverStatus; }
 
     // Virtual functions (customization)
     virtual void handleTCPEventClient(sf::Packet& tcpPacket, int event);

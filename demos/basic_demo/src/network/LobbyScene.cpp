@@ -51,13 +51,13 @@ void LobbyScene::update()
 	}
 
 	if (Input::isKeyPressed(Keys::N)) {
-		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ (int)GameEvents::START });
+		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ (int)NetworkEvent::START });
 	}
 	if (Input::isKeyPressed(Keys::D)) {
 		this->getNetworkHandler()->disconnectClient();
 	}
 
-	if (this->getNetworkHandler()->getClient()->hasStarted()) {
+	if (this->getNetworkHandler()->getStatus() == ServerStatus::RUNNING) {
 		std::cout << "Server is active" << std::endl;
 		this->getSceneHandler()->setScene(new NetworkTestScene());
 	}

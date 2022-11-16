@@ -25,7 +25,7 @@ void NetworkHandlerTest::handleUDPEventClient(sf::Packet& udpPacket, int event)
 	if (event == (int)GameEvent::SPAM)
 	{
 		Log::write("Client: Spam from server");
-		this->getClient()->getUDPPacket() << (int)GameEvent::SPAM;
+		//this->getClient()->getUDPPacket() << (int)GameEvent::SPAM;
 	}
 }
 

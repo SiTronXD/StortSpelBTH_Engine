@@ -277,9 +277,9 @@ void NetworkHandler::update()
 				}
 			}
 		}
-		else if (event == (int)GameEvents::START)
+		else if (event == (int)NetworkEvent::START)
 		{
-			this->client->starting();
+			this->serverStatus = ServerStatus::RUNNING;
 		}
 		// Custom event
 		else if (event >= (int)NetworkEvent::END)
@@ -761,9 +761,9 @@ void NetworkHandler::createPlayers()
 
 void NetworkHandler::disconnectClient()
 {
-	client->disconnect();
 	if (client != nullptr)
 	{
+		client->disconnect();
 		delete client;
 		client = nullptr;
 	}

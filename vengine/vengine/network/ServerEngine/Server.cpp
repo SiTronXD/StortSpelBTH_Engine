@@ -22,64 +22,60 @@ bool duplicateUser(std::vector<ClientInfo*>& client)
 	return false;
 }
 
-    // Can I do this better?
+// Can I do this better?
 void Server::ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& listener, ServerStatus& start)
 {
 	static int id = 0;
 
-	// While the game has NOT started look for players
-	if (start == ServerStatus::WAITING)
+	// If we got a connection
+	if (listener.accept(client[client.size() - 1]->clientTcpSocket) == sf::Socket::Done)
 	{
-		// If we got a connection
-		if (listener.accept(client[client.size() - 1]->clientTcpSocket) == sf::Socket::Done)
+		id++;
+
+		client[client.size() - 1]->sender = client[client.size() - 1]->clientTcpSocket.getRemoteAddress();  // May be wrong address here 2?
+		client[client.size() - 1]->id = id;
+
+		std::cout << "Server: " << client[client.size() - 1]->clientTcpSocket.getRemoteAddress().toString() << " Connected" << std::endl;
+
+		// Double check so we don't get double players
+		bool duplicatedUser = duplicateUser(client);
+
+		// Get name of player
+		sf::SocketSelector selector;
+		selector.add(client[client.size() - 1]->clientTcpSocket);
+		if (!selector.wait(sf::seconds(5.0f)))
 		{
-			id++;
-
-			client[client.size() - 1]->sender = client[client.size() - 1]->clientTcpSocket.getRemoteAddress();  // May be wrong address here 2?
-			client[client.size() - 1]->id = id;
-
-			std::cout << "Server: " << client[client.size() - 1]->clientTcpSocket.getRemoteAddress().toString() << " Connected" << std::endl;
-
-			// Double check so we don't get double players
-			bool duplicatedUser = duplicateUser(client);
-
-			// Get name of player
-			sf::SocketSelector selector;
-			selector.add(client[client.size() - 1]->clientTcpSocket);
-			if (!selector.wait(sf::seconds(5.0f)))
-			{
-				// If we didn't get a name end
-				delete client[client.size() - 1];
-				client[client.size() - 1] = new ClientInfo("");
-				return;
-			}
-
-			sf::Packet socketData;
-			client[client.size() - 1]->clientTcpSocket.receive(socketData);
-			socketData >> client[client.size() - 1]->name;
-			socketData >> client[client.size() - 1]->port;
-			std::cout << "Server: " << client[client.size() - 1]->name << " joined the lobby" << std::endl;
-
-			clientToServerPacketTcp.resize(client.size());
-			serverToClientPacketTcp.resize(client.size());
-			clientToServerPacketUdp.resize(client.size());
-			serverToClientPacketUdp.resize(client.size());
-
-			if (!duplicatedUser)
-			{
-				// Send that a player has joined
-				sf::Packet playerJoinedPacket;
-				playerJoinedPacket << (int)NetworkEvent::CLIENTJOINED << client[client.size() - 1]->name << client[client.size() - 1]->id;
-				for (int i = 0; i < client.size() - 1; i++)
-				{
-					client[i]->clientTcpSocket.send(playerJoinedPacket);
-				}
-			}
-			// Create a new client that is ready
-			client[client.size() - 1]->clientTcpSocket.setBlocking(false);
-			client.resize(client.size() + 1);
+			// If we didn't get a name end
+			delete client[client.size() - 1];
 			client[client.size() - 1] = new ClientInfo("");
+			return;
 		}
+
+		sf::Packet socketData;
+		client[client.size() - 1]->clientTcpSocket.receive(socketData);
+		socketData >> client[client.size() - 1]->name;
+		socketData >> client[client.size() - 1]->port;
+		std::cout << "Server: " << client[client.size() - 1]->name << " joined the lobby" << std::endl;
+
+		clientToServerPacketTcp.resize(client.size());
+		serverToClientPacketTcp.resize(client.size());
+		clientToServerPacketUdp.resize(client.size());
+		serverToClientPacketUdp.resize(client.size());
+
+		if (!duplicatedUser)
+		{
+			// Send that a player has joined
+			sf::Packet playerJoinedPacket;
+			playerJoinedPacket << (int)NetworkEvent::CLIENTJOINED << client[client.size() - 1]->name << client[client.size() - 1]->id;
+			for (int i = 0; i < client.size() - 1; i++)
+			{
+				client[i]->clientTcpSocket.send(playerJoinedPacket);
+			}
+		}
+		// Create a new client that is ready
+		client[client.size() - 1]->clientTcpSocket.setBlocking(false);
+		client.resize(client.size() + 1);
+		client[client.size() - 1] = new ClientInfo("");
 	}
 }
 
@@ -202,7 +198,7 @@ bool Server::update(float dt)
 		}
 		cleanRecvPackages();
 	}
-	getDataFromUsers();
+	this->getDataFromUsers();
 	
 	return false;  // Server is not done
 }
@@ -297,18 +293,14 @@ void Server::sendDataToAllUsers()
 	for (int i = 0; i < clients.size(); i++)
 	{
 		// Send to the client
-		//serverToClientPacketTcp[i] << GameEvents::END;
 		if (serverToClientPacketTcp[i].getDataSize())
 		{
 			clients[i]->clientTcpSocket.send(serverToClientPacketTcp[i]);
 		}
 	
 		// Send UDP
-		//sf::Packet sendUDPPacket;
-		//createUDPPacketToClient(i, sendUDPPacket);
 		if (serverToClientPacketUdp[i].getDataSize())
 		{
-			//Log::write("Port: " + std::to_string(clients[i]->port));
 			udpSocket.send(serverToClientPacketUdp[i], clients[i]->sender, clients[i]->port);
 		}
 	}
@@ -349,6 +341,8 @@ void Server::getDataFromUsers()
 
 void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 {
+	if (!clients.size()) { return; }
+
 	// TCP
 	int event;
 	float packetHelper1;
@@ -359,7 +353,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 		while (!clientToServerPacketTcp[ClientID].endOfPacket())
 		{
 			clientToServerPacketTcp[ClientID] >> event;
-			if (event == (int)GameEvents::START)
+			if (event == (int)NetworkEvent::START)
 			{
 				if (ClientID == 0)
 				{
@@ -369,7 +363,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 						clients.resize(clients.size() - 1);
 					}
 					this->status = ServerStatus::START;
-					this->sceneHandler.sendCallFromClient((int)GameEvents::START);
+					this->sceneHandler.sendCallFromClient((int)NetworkEvent::START);
 				}
 			}
 			else if (event == GameEvents::GetPlayerNames)
@@ -446,9 +440,9 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				this->sceneHandler.getScene()->removeAllPolygons();
 				break;
 				// Calls to Scene
-			case GameEvents::START:
+			case (int)NetworkEvent::START:
 				std::cout << "a client said start" << std::endl;
-				this->sceneHandler.sendCallFromClient(GameEvents::START);
+				this->sceneHandler.sendCallFromClient((int)NetworkEvent::START);
 				break;
 			case GameEvents::GetPlayerNames:
 				// Send player names
@@ -591,9 +585,4 @@ void Server::printAllUsers()
 	{
 		std::cout << clients[i]->name << std::endl;
 	}
-}
-
-int Server::getClientSize()
-{
-	return (int)clients.size();
 }

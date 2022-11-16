@@ -4,7 +4,7 @@
 
 Client::Client(const std::string& clientName)
 {
-    this->serverStatus                  = ServerStatus::START;
+    //this->serverStatus                  = ServerStatus::START;
     this->isConnectedToServer           = false;
     this->currentTimeToSendDataToServer = 0;
     this->timeToSendDataToServer        = ServerUpdateRate;
@@ -86,21 +86,11 @@ void Client::update(const float& dt)
     }
 }
 
-bool Client::hasStarted() const
-{
-    return this->serverStatus == ServerStatus::RUNNING;
-}
-
-void Client::starting()
-{
-    this->serverStatus = ServerStatus::RUNNING;
-}
-
 void Client::disconnect()
 {
     // Send to server that we are going to disconnect
-    this->clientTcpPacketSend << (int)GameEvents::DISCONNECT;
-    this->clientTcpPacketSend << GameEvents::END;
+    this->clientTcpPacketSend << (int)NetworkEvent::DISCONNECT;
+    //this->clientTcpPacketSend << GameEvents::END;
     if (this->clientTcpPacketSend.getDataSize() > 0) {
         this->tcpSocket.send(clientTcpPacketSend);
     }
