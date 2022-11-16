@@ -11,7 +11,8 @@ LightHandler::LightHandler()
     shadowMapViewProjectionUB(~0u),
     animShadowMapViewProjectionUB(~0u),
     framesInFlight(0),
-    frustumHalfSize(0.0f),
+    frustumHalfWidth(0.0f),
+    frustumHalfHeight(0.0f),
     frustumDepth(0.0f)
 { }
 
@@ -78,14 +79,17 @@ void LightHandler::init(
     );
 
     // Preset shadow map data
-    this->frustumHalfSize = 50.0f;
+    this->frustumHalfWidth = 50.0f;
+    this->frustumHalfHeight = 50.0f;
     this->frustumDepth = 400.0f;
     this->shadowMapData.projection =
         glm::orthoRH(
-            -this->frustumHalfSize, this->frustumHalfSize,
-            -this->frustumHalfSize, this->frustumHalfSize,
+            -this->frustumHalfWidth, this->frustumHalfWidth,
+            -this->frustumHalfHeight, this->frustumHalfHeight,
             0.1f, this->frustumDepth
         );
+    this->shadowMapData.shadowMapMinBias = 0.0001f;
+    this->shadowMapData.shadowMapAngleBias = 0.0015f;
 }
 
 void LightHandler::initForScene(

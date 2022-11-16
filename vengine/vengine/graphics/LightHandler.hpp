@@ -22,7 +22,8 @@ class LightHandler
 private:
 	std::vector<LightBufferData> lightBuffer;
 
-	float frustumHalfSize;
+	float frustumHalfWidth;
+	float frustumHalfHeight;
 	float frustumDepth;
 	ShadowMapData shadowMapData{};
 
