@@ -419,7 +419,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 			case (int)NetworkEvent::DISCONNECT:
 				std::cout << "Server: user disconnected by own choice" << std::endl;
 				handleDisconnects(ClientID);
-				break;
+				return;
 			case GameEvents::A_Button_Was_Pressed_On_Client:
 				std::cout << "Server: client pressed Button wow (TCP)" << std::endl;
 				break;
