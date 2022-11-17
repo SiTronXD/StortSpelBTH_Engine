@@ -87,6 +87,8 @@ struct CameraHeader
 struct CameraUpdateHeader
 {
 	char name[64];
+	float position[3];
+	float rotation[3];
 	float transform[4][4];
 	float fieldOfView;
 	float orthoWidth;

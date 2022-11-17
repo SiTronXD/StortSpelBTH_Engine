@@ -114,7 +114,7 @@ uint32_t ResourceManager::addMesh(std::string meshPath, MeshData meshData)
 	if (this->meshPaths.end() == map_iterator)
 	{
         //No mesh exists, create new
-		this->meshPaths.insert({meshPath, this->meshPaths.size()});
+		this->meshPaths.insert({meshPath, this->meshes.size()});
 
 		// NOTE: meshes.size as key only works if we never remove resources the map...
 		// Create mesh, insert into map of meshes
