@@ -33,6 +33,8 @@ void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 			otherPlayers[otherPlayers.size() - 1].first, 
 			this->networkHandlerMeshes.find("PlayerMesh")->second
 			);
+		sceneHandler->getScene()->setComponent<AnimationComponent>(otherPlayers[otherPlayers.size() - 1].first);
+		sceneHandler->getScene()->setAnimation(otherPlayers[otherPlayers.size() - 1].first, "idle", true);
 	}
 	
 }
