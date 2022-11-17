@@ -43,7 +43,7 @@ public:
         VmaAllocator& vma,
         const size_t& bufferSize
     );
-
+    void update(void* copyData, const uint32_t& currentFrame);
     void cleanup();
 
     inline const size_t& getBufferSize() { return this->bufferSize; }

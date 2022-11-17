@@ -1,10 +1,4 @@
 #include "pch.h"
-#include <set>
-
-#include "Device.hpp"
-#include "VulkanDbg.hpp"
-#include "VulkanInstance.hpp"
-#include "QueueFamilies.hpp"
 
 Device::Device()
 {

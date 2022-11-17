@@ -1,8 +1,7 @@
 #include "pch.h"
 #include "Pipeline.hpp"
 
-#include "Device.hpp"
-#include "VulkanDbg.hpp"
+#include "RenderPass.hpp"
 #include "../MeshData.hpp"
 #include "../../dev/Log.hpp"
 
@@ -80,7 +79,7 @@ Pipeline::~Pipeline()
 void Pipeline::createPipeline(
     Device& device,
     ShaderInput& shaderInput,
-    vk::RenderPass& renderPass,
+    RenderPass& renderPass,
     const VertexStreams& targetVertexStream,
     const std::string& vertexShaderName,
     const std::string& fragmentShaderName,
@@ -95,17 +94,21 @@ void Pipeline::createPipeline(
 
 	this->device = &device;
 
+    bool hasFragmentShader = fragmentShaderName != "";
+
     // read in SPIR-V code of shaders
     auto vertexShaderCode = vengine_helper::readShaderFile(vertexShaderName);
-    auto fragShaderCode = vengine_helper::readShaderFile(fragmentShaderName);
+    std::vector<char> fragShaderCode;
+    if (hasFragmentShader)
+    {
+        fragShaderCode = vengine_helper::readShaderFile(fragmentShaderName);
+    }
 
     // Build Shader Modules to link to Graphics Pipeline
     // Create Shader Modules
     vk::ShaderModule vertexShaderModule = this->createShaderModule(vertexShaderCode);
-    vk::ShaderModule fragmentShaderModule = this->createShaderModule(fragShaderCode);
     VulkanDbg::registerVkObjectDbgInfo("ShaderModule VertexShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(vertexShaderModule)));
-    VulkanDbg::registerVkObjectDbgInfo("ShaderModule fragmentShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(fragmentShaderModule)));
-
+    
     // --- SHADER STAGE CREATION INFORMATION ---
     // Vertex Stage Creation Information
     vk::PipelineShaderStageCreateInfo vertexShaderStageCreateInfo{};
@@ -113,19 +116,30 @@ void Pipeline::createPipeline(
     vertexShaderStageCreateInfo.setModule(vertexShaderModule);                                    // Shader Modual to be used by Stage
     vertexShaderStageCreateInfo.setPName("main");                                                 //Name of the vertex Shaders main function (function to run)
 
-    // Fragment Stage Creation Information
-    vk::PipelineShaderStageCreateInfo fragmentShaderPipelineCreatInfo{};
-    fragmentShaderPipelineCreatInfo.setStage(vk::ShaderStageFlagBits::eFragment);                       // Shader Stage Name
-    fragmentShaderPipelineCreatInfo.setModule(fragmentShaderModule);                              // Shader Module used by stage
-    fragmentShaderPipelineCreatInfo.setPName("main");                                             // name of the fragment shader main function (function to run)
-
     // Put shader stage creation infos into array
     // graphics pipeline creation info requires array of shader stage creates
-    std::array<vk::PipelineShaderStageCreateInfo, 2> pipelineShaderStageCreateInfos
+    std::vector<vk::PipelineShaderStageCreateInfo> pipelineShaderStageCreateInfos
     {
         vertexShaderStageCreateInfo,
-        fragmentShaderPipelineCreatInfo
     };
+
+    vk::ShaderModule fragmentShaderModule{};
+    if (hasFragmentShader)
+    {
+        fragmentShaderModule = this->createShaderModule(fragShaderCode);
+        VulkanDbg::registerVkObjectDbgInfo("ShaderModule fragmentShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(fragmentShaderModule)));
+
+        // Fragment Stage Creation Information
+        vk::PipelineShaderStageCreateInfo fragmentShaderPipelineCreatInfo{};
+        fragmentShaderPipelineCreatInfo.setStage(vk::ShaderStageFlagBits::eFragment);                       // Shader Stage Name
+        fragmentShaderPipelineCreatInfo.setModule(fragmentShaderModule);                              // Shader Module used by stage
+        fragmentShaderPipelineCreatInfo.setPName("main");                                             // name of the fragment shader main function (function to run)
+
+        // Add pipeline shader stage create info
+        pipelineShaderStageCreateInfos.push_back(
+            fragmentShaderPipelineCreatInfo
+        );
+    }
 
     // -- FIXED SHADER STAGE CONFIGURATIONS -- 
 
@@ -226,7 +240,7 @@ void Pipeline::createPipeline(
     
     // -- GRAPHICS PIPELINE CREATION --
     vk::GraphicsPipelineCreateInfo pipelineCreateInfo;
-    pipelineCreateInfo.setStageCount(uint32_t(2));                                          // Number of shader stages
+    pipelineCreateInfo.setStageCount(static_cast<uint32_t>(pipelineShaderStageCreateInfos.size()));                                          // Number of shader stages
     pipelineCreateInfo.setPStages(pipelineShaderStageCreateInfos.data());         // List of Shader stages
     pipelineCreateInfo.setPVertexInputState(&vertexInputCreateInfo);              // All the fixed function Pipeline states
     pipelineCreateInfo.setPInputAssemblyState(&inputAssemblyStateCreateInfo);
@@ -237,7 +251,7 @@ void Pipeline::createPipeline(
     pipelineCreateInfo.setPColorBlendState(&colorBlendingCreateInfo);
     pipelineCreateInfo.setPDepthStencilState(&depthStencilCreateInfo);
     pipelineCreateInfo.setLayout(shaderInput.getPipelineLayout().getVkPipelineLayout());                                 // Pipeline layout pipeline should use
-    pipelineCreateInfo.setRenderPass(renderPass);                                 // Render pass description the pipeline is compatible with
+    pipelineCreateInfo.setRenderPass(renderPass.getVkRenderPass());                                 // Render pass description the pipeline is compatible with
     pipelineCreateInfo.setSubpass(uint32_t(0));                                             // subpass of render pass to use with pipeline
 
     // Pipeline Derivatives : Can Create multiple pipelines that derive from one another for optimization

@@ -39,7 +39,7 @@ int ResourceManagerLua::lua_addTexture(lua_State* L)
 			lua_pop(L, 1);
 
 			lua_getfield(L, -1, "unnormalizedCoordinates");
-			if (lua_isboolean(L, -1)) { settings.samplerSettings.unnormalizedCoordinates = lua_toboolean(L, -1) ? VK_TRUE : VK_FALSE; }
+			if (lua_isboolean(L, -1)) { settings.samplerSettings.unnormalizedCoordinates = lua_toboolean(L, -1); }
 			lua_pop(L, 1);
 		}
 		lua_pop(L, 1);

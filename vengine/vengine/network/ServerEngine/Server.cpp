@@ -22,7 +22,7 @@ bool duplicateUser(std::vector<clientInfo*>& client)
 }
 
     //can I do this better?
-void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
+void Server::ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, StartingEnum& start)
 {
 	static int id = 0;
 
@@ -60,13 +60,18 @@ void ConnectUsers(std::vector<clientInfo*>& client, sf::TcpListener& listener, S
 			socketData >> client[client.size() - 1]->port;
 			std::cout << "Server: " << client[client.size() - 1]->name << " joined the lobby" << std::endl;
 
+			clientToServerPacketTcp.resize(client.size());
+			serverToClientPacketTcp.resize(client.size());
+			clientToServerPacketUdp.resize(client.size());
+			serverToClientPacketUdp.resize(client.size());
+
 			if (!duplicatedUser)
 			{
 
 				// send that a player has joined
 				sf::Packet playerJoinedPacket;
-				playerJoinedPacket << GameEvents::PlayerJoined << client[client.size() - 1]->id;
-				for (int i = 0; i < client.size(); i++)
+				playerJoinedPacket << GameEvents::PlayerJoined << client[client.size() - 1]->name << client[client.size() - 1]->id;
+				for (int i = 0; i < client.size() - 1; i++)
 				{
 					client[i]->clientTcpSocket.send(playerJoinedPacket);
 				}
@@ -305,13 +310,6 @@ void Server::sendDataToAllUsers()
 void Server::getDataFromUsers()
 {
 	//see if we recv something from
-	if (this->starting == StartingEnum::WaitingForUsers && clients.size() > 0 && 
-		clients[0]->clientTcpSocket.receive(clientToServerPacketTcp[0]) == sf::Socket::Done)
-	{
-		handlePacketFromUser(0, true);
-		return;
-	}
-
 	for (int i = 0; i < clientToServerPacketTcp.size(); i++)
 	{
 		if (clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done)
@@ -367,6 +365,21 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					this->sceneHandler.sendCallFromClient(GameEvents::START);
 				}
 			}
+			else if (gameEvent == GameEvents::GetPlayerNames)
+			{
+				//send player names
+				sf::Packet playerNamesPacket;
+				
+				playerNamesPacket << GameEvents::GetPlayerNames << (int) clients.size() - 2;
+				for (int i = 0; i < clients.size() - 2; i++)
+				{
+					if (ClientID != i)
+					{
+						playerNamesPacket << clients[i]->id << clients[i]->name;
+					}
+				}
+				clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
+			}	
 		}
 	}
 	if (tcp)
@@ -408,7 +421,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				case GameEvents::A_Button_Was_Pressed_On_Client:
 					std::cout << "Server: client pressed Button wow (TCP)" << std::endl;
 					break;
-	
+
 				case GameEvents::POLYGON_DATA:
 					std::cout << "Server: client sent polygon data" << std::endl;
 					clientToServerPacketTcp[ClientID] >> packetHelper2;
@@ -429,6 +442,16 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				case GameEvents::START:
 					std::cout << "a client said start" << std::endl;
 					this->sceneHandler.sendCallFromClient(GameEvents::START);
+					break;
+				case GameEvents::GetPlayerNames:
+					//send player names
+					sf::Packet playerNamesPacket;
+					playerNamesPacket << (int)clients.size();
+					for (int i = 0; i < clients.size(); i++)
+					{
+						playerNamesPacket << clients[i]->id << clients[i]->name;
+					}
+					clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
 					break;
 			}
 		}

@@ -3,7 +3,9 @@
 
 DefaultServerGame::DefaultServerGame() {}
 
-void DefaultServerGame::init() {}
+void DefaultServerGame::init() {
+	((NetworkSceneHandler*)this->getSceneHandler())->clientGetFunc();
+}
 
 void DefaultServerGame::start()
 {
@@ -22,6 +24,7 @@ void DefaultServerGame::start()
 void DefaultServerGame::update(float dt)
 {
 	static bool wentIn = false;
+	
 	for (int i = 0; i < this->getEnemySize(); i++)
 	{
 		this->getComponent<Transform>(this->getEnemies(i)).rotation.y += dt * 50 * (i + 1);

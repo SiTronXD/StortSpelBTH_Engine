@@ -5,7 +5,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "NetworkTestScene.h"
-#include "../vengine/vengine/network/ServerGameModes/NetworkLobbyScene.h"
+#include "vengine/network/ServerGameModes/DefaultServerGame.h"
 
 LobbyScene::LobbyScene()
 {
@@ -31,7 +31,7 @@ void LobbyScene::start()
 void LobbyScene::update()
 {
 	if (Input::isKeyPressed(Keys::B)) {
-		this->getNetworkHandler()->createServer(new NetworkLobbyScene());
+		this->getNetworkHandler()->createServer(new DefaultServerGame());
 		if (this->getNetworkHandler()->connectClientToThis())
 		{
 			std::cout << "connect" << std::endl;

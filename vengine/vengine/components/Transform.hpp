@@ -21,6 +21,7 @@ public:
 	glm::vec3 right() { return glm::normalize(glm::vec3(this->matrix[0])); }
 	glm::vec3 up() { return glm::normalize(glm::vec3(this->matrix[1])); }
 	glm::vec3 forward() { return glm::normalize(glm::vec3(this->matrix[2])); }
+	glm::mat3 getRotationMatrix() { return glm::mat3(this->right(), this->up(), this->forward()); }
 
 	void updateMatrix() // Only useful before right, up, forward or rendering the object
 	{

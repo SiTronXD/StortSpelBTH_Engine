@@ -352,9 +352,14 @@ SET ERRORLEVEL = 0</Command>
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\graphics\LightHandler.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\FramebufferArray.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\RenderPass.hpp" />
+    <ClInclude Include="vengine\components\Spotlight.hpp" />
     <ClInclude Include="vengine\components\UIArea.hpp" />
+    <ClInclude Include="vengine\dev\Random.hpp" />
+    <ClInclude Include="vengine\windows\StatisticsCollector.hpp" />
     <ClInclude Include="vengine\graphics\StringAlignment.h" />
-    <ClInclude Include="vengine\network\ServerGameModes\NetworkLobbyScene.h" />
     <ClInclude Include="vengine\pch\pch.h" />
     <ClInclude Include="vengine\physics\CallbackType.h" />
     <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
@@ -366,9 +371,13 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\ai\BTCreateHelper.hpp" />
     <ClInclude Include="vengine\ai\EventSystem.hpp" />
     <ClInclude Include="vengine\ai\FSM.hpp" />
+    <ClInclude Include="vengine\components\AmbientLight.hpp" />
     <ClInclude Include="vengine\components\BTAgent.hpp" />
     <ClInclude Include="vengine\components\BTComponent.hpp" />
+    <ClInclude Include="vengine\components\DirectionalLight.hpp" />
     <ClInclude Include="vengine\components\FSMAgentComponent.hpp" />
+    <ClInclude Include="vengine\components\PointLight.hpp" />
+    <ClInclude Include="vengine\graphics\MaterialData.hpp" />
     <ClInclude Include="vengine\dev\Fail.h" />
     <ClInclude Include="vengine\graphics\MeshDataModifier.hpp" />
     <ClInclude Include="vengine\lua\wrappers\PhysicsEngineLua.h" />
@@ -387,7 +396,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\graphics\MeshDataInfo.hpp" />
     <ClInclude Include="vengine\components\AnimationComponent.hpp" />
     <ClInclude Include="vengine\graphics\UIRenderer.hpp" />
-    <ClInclude Include="vengine\graphics\vulkan\UniformBufferStructs.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\ShaderStructs.hpp" />
     <ClInclude Include="vengine\lua\wrappers\NetworkHandlerLua.h" />
     <ClInclude Include="vengine\lua\wrappers\ResourceManagerLua.h" />
     <ClInclude Include="vengine\graphics\vulkan\StorageBuffer.hpp" />
@@ -471,7 +480,11 @@ SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\components\AudioSource.cpp" />
-    <ClCompile Include="vengine\network\ServerGameModes\NetworkLobbyScene.cpp" />
+    <ClCompile Include="vengine\graphics\LightHandler.cpp" />
+    <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
+    <ClCompile Include="vengine\windows\StatisticsCollector.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
@@ -635,6 +648,12 @@ SET ERRORLEVEL = 0</Command>
       <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Include="vengine_assets\shaders\dbg.frag">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\shadowMap.vert">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\shadowMapAnim.vert">
       <FileType>Document</FileType>
     </CustomBuild>
   </ItemGroup>

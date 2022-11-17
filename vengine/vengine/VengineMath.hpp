@@ -3,10 +3,10 @@
 #include "glm/common.hpp"
 #include "glm/gtc/quaternion.hpp"
 
+
 class SMath
 {
  public:
-
 	 static glm::vec3 getRandomVector(float scalar);
 	 static glm::vec3 rotateVectorByQuaternion(const glm::quat& quaternion, const glm::vec3& vector);
      static glm::vec3 extractTranslation(const glm::mat4& mat);

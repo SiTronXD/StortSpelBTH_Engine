@@ -1,7 +1,5 @@
 #include "pch.h"
 #include "CommandBufferArray.hpp"
-#include "Device.hpp"
-#include "VulkanDbg.hpp"
 
 void CommandBufferArray::createCommandBuffers(
     Device& device,

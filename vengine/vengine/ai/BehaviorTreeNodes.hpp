@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <iostream>
 
+#define BT_FILTER "bt"
 
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32__) || defined(__NT__)
 #include <intrin.h>

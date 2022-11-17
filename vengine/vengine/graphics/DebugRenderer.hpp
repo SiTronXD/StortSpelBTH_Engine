@@ -10,6 +10,7 @@
 
 class PhysicalDevice;
 class Device;
+class RenderPass;
 class ResourceManager;
 class VulkanRenderer;
 class SceneHandler;
@@ -56,7 +57,7 @@ private:
     Device* device;
     VmaAllocator* vma;
     ResourceManager* resourceManager;
-    vk::RenderPass* renderPass;
+    RenderPass* renderPass;
     vk::Queue* transferQueue;
     vk::CommandPool* transferCommandPool;
 
@@ -74,6 +75,8 @@ private:
     void prepareGPU(const uint32_t& currentFrame);
     void resetRender();
 
+    glm::vec3 toneMappingACES(const glm::vec3& x);
+
 public:
     DebugRenderer();
 
@@ -83,7 +86,7 @@ public:
         Device& device,
         VmaAllocator& vma,
         ResourceManager& resourceManager,
-        vk::RenderPass& renderPass,
+        RenderPass& renderPass,
         vk::Queue& transferQueue,
         vk::CommandPool& transferCommandPool,
         const uint32_t& framesInFlight);
@@ -94,6 +97,10 @@ public:
         const glm::vec3& pos0, 
         const glm::vec3& pos1,
         const glm::vec3& color);
+    void renderPointLight(
+        const Entity& pointLightEntity);
+    void renderSpotlight(
+        const Entity& spotlightEntity);
     void renderSphere(
         const glm::vec3& position,
         const float& radius,

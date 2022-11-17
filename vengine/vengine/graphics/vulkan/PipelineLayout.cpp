@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "PipelineLayout.hpp"
 
-#include "Device.hpp"
-#include "VulkanDbg.hpp"
 #include "../ShaderInput.hpp"
 
 PipelineLayout::PipelineLayout()

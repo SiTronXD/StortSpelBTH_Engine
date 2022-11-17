@@ -571,8 +571,9 @@ RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)
 
 	this->dynWorld->rayTest(closestResults.m_rayFromWorld, closestResults.m_rayToWorld, closestResults);
 
+	// Hit and entity valid (could be removed before)
 	RayPayload payload{};
-	if (closestResults.hasHit())
+	if (closestResults.hasHit() && this->sceneHandler->getScene()->entityValid(closestResults.m_collisionObject->getUserIndex()))
 	{
 		payload.hit = true;
 		payload.entity = closestResults.m_collisionObject->getUserIndex();

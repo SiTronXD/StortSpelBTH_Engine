@@ -7,6 +7,7 @@
 #include "../MeshData.hpp"
 
 class Device;
+class RenderPass;
 
 class Pipeline
 {
@@ -40,7 +41,7 @@ public:
 	void createPipeline(
 		Device& device,
 		ShaderInput& shaderInput,
-		vk::RenderPass& renderPass,
+		RenderPass& renderPass,
 		const VertexStreams& targetVertexStream,
 		const std::string& vertexShaderName,
 		const std::string& fragmentShaderName = "shader.frag.spv",

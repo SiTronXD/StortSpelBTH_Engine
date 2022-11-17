@@ -77,6 +77,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->scriptHandler.setPhysicsEngine(&physicsEngine);
     this->scriptHandler.setUIRenderer(&uiRenderer);
     this->scriptHandler.setDebugRenderer(&debugRenderer);
+    this->uiRenderer.setSceneHandler(&sceneHandler);
     this->debugRenderer.setSceneHandler(&sceneHandler);
     this->scriptHandler.setNetworkHandler(&networkHandler);
     this->audioHandler.setSceneHandler(&sceneHandler);
@@ -85,9 +86,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     if (startScene == nullptr) { startScene = new Scene(); }
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
-
-    //Needs to run after scene is initialized
-    this->aiHandler.init(&this->sceneHandler);    
 
     // Game loop
     while (window.getIsRunning())
@@ -106,12 +104,10 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
 
         Time::updateDeltaTime();
 		this->physicsEngine.update(Time::getDT());
-        this->aiHandler.update();
         this->sceneHandler.update();
         this->scriptHandler.update();
         this->audioHandler.update();
-		this->networkHandler.updateNetwork();                
-
+		this->networkHandler.updateNetwork();
 
 #if defined(_CONSOLE) // Debug/Release, but not distribution        
         static bool debugInfo = true;
@@ -119,7 +115,11 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);
         ImGui::SetWindowPos(ImVec2{0.f,0.f}, ImGuiCond_Once);
         ImGui::Begin("Debug info",&debugInfo,ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize );
-            ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);                                    
+            ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+#if defined(_WIN32)
+            ImGui::Text("RAM: %.3f MiB", this->statsCollector.getRamUsage());
+            ImGui::Text("VRAM: %.3f MiB", this->statsCollector.getVramUsage());
+#endif
         ImGui::End();
         ImGui::PopStyleVar();
 #endif                

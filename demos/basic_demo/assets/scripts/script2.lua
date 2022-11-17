@@ -1,4 +1,5 @@
 local script = {}
+test = vector(1, 2, 3)
 
 function script:init()
 	print("Cam: " .. self.ID)
@@ -8,12 +9,13 @@ function script:init()
 end
 
 function script:update()
-	--uiRenderer.setTexture(self.texture)
-	--uiRenderer.renderTexture(0, 0, 100, 100)
-	debugRenderer.renderCapsule(vector(), vector(), 10, 3, core.YELLOW)
+	--debugRenderer.renderCapsule(vector(), vector(), 10, 3, core.YELLOW)
 
 	local payload = physics.raycast(self.transform.position, self.transform:forward(), 100)
-	physics.renderDebugShapes(payload ~= nil)
+	--physics.renderDebugShapes(payload ~= nil)
+	uiRenderer.setTexture(self.texture)
+	uiRenderer.renderTexture(vector(0, 0), vector(100, 100))
+	--print(test)
 
 	input.setHideCursor(input.isKeyDown(Keys.L))
 end
