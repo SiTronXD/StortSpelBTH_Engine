@@ -83,7 +83,7 @@ int NetworkHandlerLua::lua_sendTCPData(lua_State* L)
 	ev.event = typeOfCall;
 	ev.nrOfInts = nrOfInts;
 
-	networkHandler->sendTCPDataToClient(ev);
+	//networkHandler->sendTCPDataToClient(ev);
 
 	return 0;
 }

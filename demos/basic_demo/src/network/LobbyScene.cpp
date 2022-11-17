@@ -50,8 +50,10 @@ void LobbyScene::update()
 		//no visulation that we connected
 	}
 
+	sf::Packet packet;
 	if (Input::isKeyPressed(Keys::N)) {
-		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ (int)NetworkEvent::START });
+		packet << (int)NetworkEvent::START;
+		this->getNetworkHandler()->sendDataToServerTCP(packet);
 	}
 	if (Input::isKeyPressed(Keys::D)) {
 		this->getNetworkHandler()->disconnectClient();
@@ -76,7 +78,6 @@ void LobbyScene::update()
 		this->getNetworkHandler()->connectClient(ip);
 	}
 
-	sf::Packet packet;
 	if (Input::isKeyPressed(Keys::Q))
 	{
 		packet << (int)GameEvent::SAY_HELLO << 5;
@@ -101,6 +102,11 @@ void LobbyScene::update()
 	{
 		packet << (int)NetworkEvent::ECHO << "Hello World!";
 		this->getNetworkHandler()->sendDataToServerTCP(packet);
+	}
+	else if (Input::isKeyPressed(Keys::J))
+	{
+		packet << (int)NetworkEvent::ECHO << "Hello World!";
+		this->getNetworkHandler()->sendDataToServerUDP(packet);
 	}
 
 	/*this->getNetworkHandler()->sendUDPDataToClient(

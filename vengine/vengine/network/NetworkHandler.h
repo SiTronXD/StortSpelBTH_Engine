@@ -25,18 +25,9 @@ private:
     //meshes for networkHandler
 	std::map<std::string, int> networkHandlerMeshes;
 
-    //HELPERS
-    float fx, fy, fz, fa, fb, fc;
-    int   ix, iy, iz, ia, ib, ic;
-
     //data
-    int                                         seed;
     std::vector<std::pair<int, std::string>>    otherPlayers;
     std::vector<int>                            otherPlayersServerId;
-    std::vector<int>                            monsters;
-
-	std::vector<int> lua_ints;
-	std::vector<float> lua_floats;
 
     void createAPlayer(int serverId, const std::string& playerName);
 public:
@@ -55,30 +46,23 @@ public:
     virtual void handleUDPEventServer(Server* server, int clientID, sf::Packet& udpPacket, int event);
 
     // SERVER
-    void createServer(NetworkScene* serverGame = nullptr); //create new server on a new thread
+    void createServer(NetworkScene* serverGame = nullptr); // Create new server on a new thread
     void deleteServer();
 
     // CLIENT
-    Client* createClient(const std::string &name = "BOB"); //should return a client
+    Client* createClient(const std::string &name = "BOB"); // Should return a client
     Client* getClient();
     bool connectClientToThis();
     bool connectClient(const std::string &serverIP);
     void disconnectClient();
     const bool hasServer();
-	//void sendAIPolygons(std::vector<glm::vec2> points);
 	const std::string &getClientName();
 
     // USER
     void update();
     void sendDataToServerTCP(sf::Packet packet);
     void sendDataToServerUDP(sf::Packet packet);
-    void sendTCPDataToClient(TCPPacketEvent tcpP);
     void setPlayerNetworkHandler(int playerID);
-	void getLuaData(std::vector<int>& ints, std::vector<float>& floats);
 	const std::vector<std::pair<int, std::string>> getPlayers();
 	void createPlayers();
-
-    // Little cheating here but only one event from client to server via udp
-    //void sendUDPDataToClient(const glm::vec3 &pos, const glm::vec3 &rot);
-    int  getServerSeed();
 };

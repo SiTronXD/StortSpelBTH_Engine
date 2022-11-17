@@ -41,13 +41,10 @@ void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 NetworkHandler::NetworkHandler() 
 	: sceneHandler(nullptr)
 {
-	this->fx = fy = fz = fa = fb = fc = 0.f;
-	this->ix = iy = iz = ia = ib = ic = 0;
 	this->shutDownServer = false;
 	this->client = nullptr;
 	this->serverThread = nullptr;
 	this->player = -1;
-	this->seed = -1;
 }
 
 NetworkHandler::~NetworkHandler()
@@ -225,17 +222,10 @@ void NetworkHandler::update()
 		return;
 	}
 
-	/*if (player != -1)
-	{
-		this->sendUDPDataToClient(
-		    this->sceneHandler->getScene()->getComponent<Transform>(this->player).position,
-		    this->sceneHandler->getScene()->getComponent<Transform>(this->player).rotation
-		);
-	}*/
-
 	client->update(Time::getDT());
 
 	int event;
+	int h1, h2;
 	sf::Packet packet = client->getTCPDataFromServer();
 	while (!packet.endOfPacket())
 	{
@@ -249,19 +239,19 @@ void NetworkHandler::update()
 		{
 			std::string playerName;
 			packet >> playerName;
-			packet >> ix;
-			this->createAPlayer(ix, playerName);
+			packet >> h1;
+			this->createAPlayer(h1, playerName);
 		}
 		else if (event == (int)NetworkEvent::DISCONNECT)
 		{
-			packet >> ix;
+			packet >> h1;
 			// We got kicked
-			if (ix == -1)
+			if (h1 == -1)
 			{
 				this->disconnectClient();
 			}
 			// Server shut down
-			else if (ix == -2)
+			else if (h1 == -2)
 			{
 				Log::write("Server shut down, disconnecting...");
 				this->disconnectClient();
@@ -271,7 +261,7 @@ void NetworkHandler::update()
 			{
 				for (int i = 0; i < otherPlayersServerId.size(); i++)
 				{
-					if (otherPlayersServerId[i] == ix)
+					if (otherPlayersServerId[i] == h1)
 					{
 						if (otherPlayers.size() < i)
 						{
@@ -286,12 +276,12 @@ void NetworkHandler::update()
 		}
 		else if (event == (int)NetworkEvent::GETNAMES)
 		{
-			packet >> ix;
+			packet >> h1;
 			Log::write("Getting names from server:");
-			for (int i = 0; i < ix; i++)
+			for (int i = 0; i < h1; i++)
 			{
 				std::string playerName;
-				packet >> iy >> playerName;
+				packet >> h2 >> playerName;
 				Log::write(playerName);
 			}
 		}
@@ -307,7 +297,6 @@ void NetworkHandler::update()
 	}
 
 	packet = client->getUDPDataFromServer();
-	//Log::write(std::to_string(client->getUDPDataFromServer().getDataSize()));
 	while (!packet.endOfPacket())
 	{
 		if (!(packet >> event))
@@ -317,388 +306,25 @@ void NetworkHandler::update()
 		}
 		else if (event == (int)NetworkEvent::DISCONNECT)
 		{
-			packet >> ix;
+			packet >> h1;
 			// We got kicked
-			if (ix == -1)
+			if (h1 == -1)
 			{
 				this->disconnectClient();
 			}
 			// Server shut down
-			else if (ix == -2)
+			else if (h1 == -2)
 			{
 				Log::write("Server shut down, disconnecting...");
 				this->disconnectClient();
 			}
 		}
-		//if (gameEvent == (int)NetworkEvent::DISCONNECT)
-		//{
-		//	packet >> ix;
-		//	// We got kicked
-		//	if (ix == -1)
-		//	{
-		//		this->disconnectClient();
-		//	}
-		//	// Other client got disconnected
-		//	else
-		//	{
-		//		for (int i = 0; i < otherPlayersServerId.size(); i++)
-		//		{
-		//			if (otherPlayersServerId[i] == ix)
-		//			{
-		//				if (otherPlayers.size() < i)
-		//				{
-		//					return;
-		//				}
-		//				sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
-		//				this->otherPlayers.erase(otherPlayers.begin() + i);
-		//				this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
-		//			}
-		//		}
-		//	}
-		//}
-		//if (gameEvent == GameEvents::DISCONNECT)
-		//{
-		//	packet >> ix;
-		//	if (ix == -1)
-		//	{  //we got kicked
-		//		this->disconnectClient();
-		//		//sceneHandler->setScene();
-		//	}
-		//	else
-		//	{
-		//		for (int i = 0; i < otherPlayersServerId.size(); i++)
-		//		{
-		//			if (otherPlayersServerId[i] == ix)
-		//			{
-		//				if (otherPlayers.size() < i)
-		//				{
-		//					return;
-		//				}
-		//				sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
-		//				this->otherPlayers.erase(otherPlayers.begin() + i);
-		//				this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
-		//			}
-		//		}
-		//	}
-		//}
-		//else if (gameEvent == GameEvents::START)
-		//{
-		//	client->starting();
-		//}
-		//else if (gameEvent == GameEvents::PlayerJoined)
-		//{
-		//	std::string playerName;
-		//	packet >> playerName;
-		//	packet >> ix;
-		//	this->createAPlayer(ix, playerName);
-		//}
-		//else if (gameEvent == GameEvents::SpawnEnemy)
-		//{
-		//	//ix = what type of enemy
-		//	packet >> ix;
-		//	//should we really create a new entity everytime?
-		//	iy = sceneHandler->getScene()->createEntity();
-		//	std::cout << "spawn enemy" << iy << std::endl;
-		//	monsters.push_back(iy);
-		//	if (ix == 0)//blob
-		//	{
-		//		sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("blob")->second);
-		//	}
-		//	else if (ix == 1)//range
-		//	{
-		//		sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("range")->second);
-		//	}
-		//	else if (ix == 2)//tank
-		//	{
-		//		sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("tank")->second);
-		//	}
-		//	else
-		//	{
-		//		sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
-		//	}
-		//	packet >> fx >> fy >> fz;
-		//	Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
-		//	transform.position = glm::vec3(fx, fy, fz);
-		//}
-		//else if (gameEvent == GameEvents::SpawnEnemies)
-		//{
-		//	//ix = what type of enemy, iy how many enemies
-		//	packet >> ix >> iy;
-		//	for (int i = 0; i < iy; i++)
-		//	{
-		//		iz = sceneHandler->getScene()->createEntity();
-		//		if (ix == 0)
-		//		{
-		//			sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
-		//		}
-		//		else
-		//		{
-		//			sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
-		//		}
-		//		//ix = what type of enemy
-		//		packet >> fx >> fy >> fz;
-		//		Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
-		//		transform.position = glm::vec3(fx, fy, fz);
-		//	}
-		//}
-		//else if (gameEvent == GameEvents::Explosion)
-		//{
-		//	//don't know how this should be implemented right now
-		//}
-		//else if (gameEvent == GameEvents::MonsterDied)
-		//{
-		//	//don't know how this should be implemented right now
-		//}
-		//else if (gameEvent == GameEvents::PlayerShoot)
-		//{
-		//	//don't know how this should be implemented right now
-		//}
-		//else if (gameEvent == GameEvents::GAMEDATA)
-		//{
-		//	packet >> ix;  //nrOfPlayers;
-		//	for (int i = 0; i < ix; i++)
-		//	{
-		//		packet >> iz;
-		//		if (iz != this->ID)
-		//		{
-		//			this->otherPlayersServerId.push_back(iz);
-		//		}
-		//	}
-		//	packet >> this->seed;  //seed nr;
-		//}
-		//else if (gameEvent == GameEvents::GetLevelSeed)
-		//{
-		//	packet >> ix;
-		//	this->seed = ix;
-		//}
-		//else if (gameEvent == GameEvents::PlayerDied)
-		//{
-		//	//don't know how this should be implemented right now
-		//}
-		//else if (gameEvent == GameEvents::GetPlayerNames)
-		//{
-		//	packet >> ix;
-		//	for (int i = 0; i < ix; i++)
-		//	{
-		//		std::string playerName;
-		//		packet >> iy >> playerName;
-		//		bool alreadyHavePlayer = false;
-		//		for (int i = 0; i < otherPlayersServerId.size() && !alreadyHavePlayer; i++)
-		//		{
-		//			if (iy == otherPlayersServerId[i])
-		//			{
-		//				alreadyHavePlayer = true;
-		//			}
-		//		}
-		//		if (!alreadyHavePlayer)
-		//		{
-		//			createAPlayer(iy, playerName);
-		//		}
-		//	}
-		//}
 		// Custom event
 		else if (event >= (int)NetworkEvent::END)
 		{
 			this->handleUDPEventClient(packet, event);
 		}
 	}
-	//this->handleTCPPacket(client->getTCPDataFromServer());
-	//this->handleUDPPacket(client->getUDPDataFromServer());
-
-	//tcp
-	//sf::Packet cTCPP = client->getTCPDataFromServer();
-	//int gameEvent;
-	//while (!cTCPP.endOfPacket())
-	//{
-	//	cTCPP >> gameEvent;
-	//	if (gameEvent == GameEvents::DISCONNECT)
-	//	{
-	//		cTCPP >> ix;
-	//		if (ix == -1)
-	//		{  //we got kicked
-	//			this->disconnectClient();
-	//			//sceneHandler->setScene();
-	//		}
-	//		else
-	//		{
-	//			for (int i = 0; i < otherPlayersServerId.size(); i++)
-	//			{
-	//				if (otherPlayersServerId[i] == ix)
-	//				{
-	//					if (otherPlayers.size() < i)
-	//					{
-	//						return;
-	//					}
-	//					sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
-	//					this->otherPlayers.erase(otherPlayers.begin() + i);
-	//					this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
-	//				}
-	//			}
-	//		}
-	//	}
-	//	else if (gameEvent == GameEvents::START)
-	//	{
-	//		client->starting();
-	//	}
-	//	else if (gameEvent == GameEvents::PlayerJoined)
-	//	{
-	//		std::string playerName;
-	//		cTCPP >> playerName;
-	//		cTCPP >> ix;
-	//		this->createAPlayer(ix, playerName);
-	//	}
-	//	else if (gameEvent == GameEvents::SpawnEnemy)
-	//	{
-	//		//ix = what type of enemy
-	//		cTCPP >> ix;
-	//		//should we really create a new entity everytime?
-	//		iy = sceneHandler->getScene()->createEntity();
-	//		std::cout << "spawn enemy" << iy << std::endl;
-	//		monsters.push_back(iy);
-	//		if (ix == 0)//blob
-	//		{
-	//			sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("blob")->second);
-	//		}
-	//		else if (ix == 1)//range
-	//		{
-	//			sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("range")->second);
-	//		}
-	//		else if (ix == 2)//tank
-	//		{
-	//			sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("tank")->second);
-	//		}
-	//		else
-	//		{
-	//			sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
-	//		}
-	//		cTCPP >> fx >> fy >> fz;
-	//		Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
-	//		transform.position = glm::vec3(fx, fy, fz);
-	//	}
-	//	else if (gameEvent == GameEvents::SpawnEnemies)
-	//	{
-	//		//ix = what type of enemy, iy how many enemies
-	//		cTCPP >> ix >> iy;
-	//		for (int i = 0; i < iy; i++)
-	//		{
-	//			iz = sceneHandler->getScene()->createEntity();
-	//			if (ix == 0)
-	//			{
-	//				sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
-	//			}
-	//			else
-	//			{
-	//				sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
-	//			}
-	//			//ix = what type of enemy
-	//			cTCPP >> fx >> fy >> fz;
-	//			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
-	//			transform.position = glm::vec3(fx, fy, fz);
-	//		}
-	//	}
-	//	else if (gameEvent == GameEvents::Explosion)
-	//	{
-	//		//don't know how this should be implemented right now
-	//	}
-	//	else if (gameEvent == GameEvents::MonsterDied)
-	//	{
-	//		//don't know how this should be implemented right now
-	//	}
-	//	else if (gameEvent == GameEvents::PlayerShoot)
-	//	{
-	//		//don't know how this should be implemented right now
-	//	}
-	//	else if (gameEvent == GameEvents::GAMEDATA)
-	//	{
-	//		cTCPP >> ix;  //nrOfPlayers;
-	//		for (int i = 0; i < ix; i++)
-	//		{
-	//			cTCPP >> iz;
-	//			if (iz != this->ID)
-	//			{
-	//				this->otherPlayersServerId.push_back(iz);
-	//			}
-	//		}
-	//		cTCPP >> this->seed;  //seed nr;
-	//	}
-	//	else if (gameEvent == GameEvents::GetLevelSeed)
-	//	{
-	//		cTCPP >> ix;
-	//		this->seed = ix;
-	//	}
-	//	else if (gameEvent == GameEvents::PlayerDied)
-	//	{
-	//		//don't know how this should be implemented right now
-	//	}
-	//	else if (gameEvent == GameEvents::GetPlayerNames)
-	//	{
-	//		cTCPP >> ix;
-	//		for (int i = 0; i < ix; i++)
-	//		{
-	//			std::string playerName;
-	//			cTCPP >> iy >> playerName;
-	//			bool alreadyHavePlayer = false;
-	//			for (int i = 0; i < otherPlayersServerId.size() && !alreadyHavePlayer; i++)
-	//			{
-	//				if (iy == otherPlayersServerId[i])
-	//				{
-	//					alreadyHavePlayer = true;
-	//				}
-	//			}
-	//			if (!alreadyHavePlayer)
-	//			{
-	//				createAPlayer(iy, playerName);
-	//			}
-	//		}
-	//	}
-	//}
-
-	//sf::Packet cUDPP = client->getUDPDataFromServer();
-	//while (!cUDPP.endOfPacket())
-	//{
-	//	cUDPP >> gameEvent;
-	//	if (gameEvent == GameEvents::UpdatePlayerPos)
-	//	{
-	//		//ix = amount of players
-	//		cUDPP >> ix;
-	//		for (int i = 0; i < ix; i++)
-	//		{
-	//			//fxyz position, fabc rotation
-	//			cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
-	//			while (otherPlayers.size() < i)
-	//			{
-	//				otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), "unknown"));
-	//			}
-	//			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i].first);
-	//			transform.position = glm::vec3(fx, fy, fz);
-	//			transform.rotation = glm::vec3(fa, fb, fc);
-	//		}
-	//	}
-	//	else if (gameEvent == GameEvents::UpdateMonsterPos)
-	//	{
-	//		//ix number of monsters
-	//		cUDPP >> ix;
-	//		if (monsters.size() < ix)
-	//		{
-	//			std::cout << "updating size of monster" << std::endl;
-	//			monsters.reserve(ix);
-	//			for (int i = monsters.size(); i < ix; i++)
-	//			{
-	//				iy = sceneHandler->getScene()->createEntity();
-	//				monsters.push_back(iy);
-	//				sceneHandler->getScene()->setComponent<MeshComponent>(iy);
-	//			}
-	//		}
-	//		for (int i = 0; i < ix; i++)
-	//		{
-	//			//fxyz position, fabc rotation
-	//			cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
-	//			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(monsters[i]);
-	//			transform.position = glm::vec3(fx, fy, fz);
-	//			transform.rotation = glm::vec3(fa, fb, fc);
-	//		}
-	//	}
-	//}
 }
 
 void NetworkHandler::sendDataToServerTCP(sf::Packet packet)
@@ -717,67 +343,14 @@ void NetworkHandler::sendDataToServerUDP(sf::Packet packet)
 	}
 }
 
-void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
-{
-	if (client != nullptr)
-	{
-		client->sendTCPEvent(tcpP);
-	}
-}
-
 void NetworkHandler::setPlayerNetworkHandler(int playerID)
 {
 	this->player = playerID;
 }
 
-//void NetworkHandler::sendUDPDataToClient(const glm::vec3& pos, const glm::vec3& rot)
-//{
-//	if (client != nullptr)
-//	{
-//		client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
-//	}
-//}
-
-int NetworkHandler::getServerSeed()
-{
-	if (seed == -1)
-	{
-		for (int i = 0; i < 5 && seed == -1; i++)
-		{
-			Sleep(1000);
-			update();
-		}
-	}
-	return seed;
-}
-
-//void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
-//{
-//	TCPPacketEvent polygonEvent;
-//
-//	polygonEvent.event = GameEvents::POLYGON_DATA;  //change this
-//	polygonEvent.floats.reserve(points.size() * 2);
-//	polygonEvent.ints[0] = (int)points.size();
-//	for (int i = 0; i < points.size(); i++)
-//	{
-//		polygonEvent.floats.push_back((float)points[i].x);
-//		polygonEvent.floats.push_back((float)points[i].y);
-//	}
-//
-//	polygonEvent.nrOfInts = 1;
-//
-//	client->sendTCPEvent(polygonEvent);
-//}
-
 const std::string& NetworkHandler::getClientName()
 {
 	return this->playerName;
-}
-
-void NetworkHandler::getLuaData(std::vector<int>& ints, std::vector<float>& floats)
-{
-	ints = this->lua_ints;
-	floats = this->lua_floats;
 }
 
 const bool NetworkHandler::hasServer()
@@ -813,7 +386,5 @@ void NetworkHandler::disconnectClient()
 	if (client->isConnected())
 	{
 		client->disconnect();
-		/*delete client;
-		client = nullptr;*/
 	}
 }

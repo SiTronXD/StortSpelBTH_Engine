@@ -40,13 +40,10 @@ private:
 	void cleanSendPackages();
 	void ConnectUsers();
 
-	// To users
+	// To/From users
 	void sendDataToAllUsers();
 	void handlePacketFromUser(const int& clientID, bool tcp = true);
-
-	// From users
 	void getDataFromUsers();
-	//void createUDPPacketToClient(const int& clientID, sf::Packet& packet);
 
 	// Engine objects
 	NetworkSceneHandler sceneHandler;
@@ -75,24 +72,6 @@ private:
 	std::vector<sf::Packet> clientToServerPacketUdp; // Packet from client to server i = clientID
 	std::vector<sf::Packet> serverToClientPacketUdp;
 
-	// Helper functions
-	template <typename T> void getToAllExeptIDTCP(int clientID, T var)
-	{
-		for (int i = 0; i < serverToClientPacketTcp.size(); i++) {
-			if (i != clientID) {
-				serverToClientPacketTcp[i] << var;
-			}
-		}
-	}
-	template <typename T> void getToAllExeptIDUDP(int clientID, T var)
-	{
-		for (int i = 0; i < serverToClientPacketUdp.size(); i++) {
-			if (i != clientID) {
-				serverToClientPacketUdp[i] << var;
-			}
-		}
-	}
-
 public:
 	Server(NetworkHandler* networkHandler, NetworkScene* serverGame = nullptr);
 	virtual ~Server();
@@ -101,9 +80,6 @@ public:
 	std::string getServerIP();
 	std::string getLocalAddress();
 	void        disconnect();
-
-	void startGettingClients();
-	void stopGettingClients();
 
 	// Helper functions
 	void sendToAllClientsTCP(sf::Packet packet);

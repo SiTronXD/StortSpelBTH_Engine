@@ -96,7 +96,9 @@ void NetworkTestScene::update()
         //no visulation that we connected
     }
     if (Input::isKeyPressed(Keys::N)) {
-        this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent { (int)NetworkEvent::START });
+		sf::Packet packet;
+		packet << (int)NetworkEvent::START;
+		this->getNetworkHandler()->sendDataToServerTCP(packet);
     }
     if (Input::isKeyPressed(Keys::M)) {
         this->getNetworkHandler()->createClient("Cli");

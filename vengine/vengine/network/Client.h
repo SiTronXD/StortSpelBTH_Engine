@@ -12,7 +12,6 @@ private:
     std::string serverIP;
     bool        isConnectedToServer;
 
-    //ServerStatus serverStatus;
     float        currentTimeToSendDataToServer;
     float        timeToSendDataToServer;
 
@@ -37,11 +36,6 @@ public:
 
     bool isConnected() const;
     void disconnect();
-
-    // Send events
-    void sendTCPEvent(TCPPacketEvent& eventTCP);
-    // Only exist one udp event from client to server
-    void sendUDPEvent(const NetworkEvent& gameEvent, const glm::vec3& pos, const glm::vec3& rot);
 
     inline sf::Packet& getTCPPacket() { return this->clientTcpPacketSend; }
     inline sf::Packet& getUDPPacket() { return this->clientUdpPacketSend; }

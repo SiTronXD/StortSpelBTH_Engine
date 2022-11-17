@@ -33,10 +33,15 @@ void NetworkHandlerTest::handleTCPEventServer(Server* server, int clientID, sf::
 {
 	int h;
 	sf::Packet packet;
+	packet << event;
 	switch ((GameEvent)event)
 	{
+	case GameEvent::SAY_HELLO:
+		tcpPacket >> h;
+		packet << h;
+		server->sendToAllClientsTCP(packet);
+		break;
 	default:
-		packet << event;
 		server->sendToAllClientsTCP(packet);
 		break;
 	}

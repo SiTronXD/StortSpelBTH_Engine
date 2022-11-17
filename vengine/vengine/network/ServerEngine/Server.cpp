@@ -384,7 +384,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 			{
 				std::string str;
 				clientToServerPacketTcp[ClientID] >> str;
-				Log::write("Server echo: " + str);
+				Log::write("Server echo (TCP): " + str);
 			}
 			else if (event == (int)NetworkEvent::DISCONNECT)
 			{
@@ -392,201 +392,42 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 				handleDisconnects(ClientID);
 				return;
 			}
-			else
+			else if (event >= (int)NetworkEvent::END) // Custom event
 			{
 				this->networkHandler->handleTCPEventServer(this, ClientID, clientToServerPacketTcp[ClientID], event);
 			}
 		}
 	}
-
-	if (tcp && this->status == ServerStatus::WAITING)
-	{
-		while (!clientToServerPacketTcp[ClientID].endOfPacket())
-		{
-			clientToServerPacketTcp[ClientID] >> event;
-			if (event == (int)NetworkEvent::START)
-			{
-				if (ClientID == 0)
-				{
-					if (this->status == ServerStatus::WAITING)
-					{
-						delete clients[clients.size() - 1];
-						clients.resize(clients.size() - 1);
-					}
-					this->status = ServerStatus::START;
-					this->sceneHandler.sendCallFromClient((int)NetworkEvent::START);
-				}
-			}
-			else if (event == (int)NetworkEvent::GETNAMES)
-			{
-				// Send player names
-				sf::Packet playerNamesPacket;
-				
-				playerNamesPacket << (int)NetworkEvent::GETNAMES << (int) clients.size() - 2;
-				for (int i = 0; i < clients.size() - 2; i++)
-				{
-					if (ClientID != i)
-					{
-						playerNamesPacket << clients[i]->id << clients[i]->name;
-					}
-				}
-				clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
-			}	
-		}
-	}
-	if (tcp)
-	{
-		while (!clientToServerPacketTcp[ClientID].endOfPacket())
-		{
-			clientToServerPacketTcp[ClientID] >> event;
-			sf::Packet playerNamesPacket;
-			switch (event)
-			{
-			//case GameEvents::EMPTY:
-			//	break;
-			//case GameEvents::Explosion:
-			//	getToAllExeptIDTCP(ClientID, event);
-			//	clientToServerPacketTcp[ClientID] >> packetHelper1;  //radius
-			//	getToAllExeptIDTCP(ClientID, packetHelper1);
-			//	clientToServerPacketTcp[ClientID] >> packetHelper1;  //x
-			//	getToAllExeptIDTCP(ClientID, packetHelper1);
-			//	clientToServerPacketTcp[ClientID] >> packetHelper1;  //y
-			//	getToAllExeptIDTCP(ClientID, packetHelper1);
-			//	clientToServerPacketTcp[ClientID] >> packetHelper1;  //z
-			//	getToAllExeptIDTCP(ClientID, packetHelper1);
-			//	break;
-			//case GameEvents::PlayerShoot || GameEvents::SpawnEnemy:
-			//	// Create a new package to send to the rest of the clients
-			//	getToAllExeptIDTCP(ClientID, event);
-			//	clientToServerPacketTcp[ClientID] >> packetHelper2;  //type
-			//	getToAllExeptIDTCP(ClientID, packetHelper2);
-			//	clientToServerPacketTcp[ClientID] >> packetHelper1;  //x
-			//	getToAllExeptIDTCP(ClientID, packetHelper1);
-			//	clientToServerPacketTcp[ClientID] >> packetHelper1;  //y
-			//	getToAllExeptIDTCP(ClientID, packetHelper1);
-			//	clientToServerPacketTcp[ClientID] >> packetHelper1;  //z
-			//	getToAllExeptIDTCP(ClientID, packetHelper1);
-			//	break;
-			//case (int)NetworkEvent::DISCONNECT:
-			//	std::cout << "Server: user disconnected by own choice" << std::endl;
-			//	handleDisconnects(ClientID);
-			//	return;
-			//case GameEvents::A_Button_Was_Pressed_On_Client:
-			//	std::cout << "Server: client pressed Button wow (TCP)" << std::endl;
-			//	break;
-			//case GameEvents::POLYGON_DATA:
-			//	std::cout << "Server: client sent polygon data" << std::endl;
-			//	clientToServerPacketTcp[ClientID] >> packetHelper2;
-			//	points.reserve(packetHelper2 * 2);
-			//	for (int i = 0; i < packetHelper2 * 2; i++)
-			//	{
-			//		clientToServerPacketTcp[ClientID] >> packetHelper1;
-			//		points.push_back(packetHelper1);
-			//	}
-			//	this->sceneHandler.getScene()->addPolygon(points);
-			//	points.clear();
-			//	break;
-			//case GameEvents::REMOVE_POLYGON_DATA:
-			//	std::cout << "We shall start over with polygon data" << std::endl;
-			//	this->sceneHandler.getScene()->removeAllPolygons();
-			//	break;
-				// Calls to Scene
-			case (int)NetworkEvent::START:
-				std::cout << "a client said start" << std::endl;
-				this->sceneHandler.sendCallFromClient((int)NetworkEvent::START);
-				break;
-			//case GameEvents::GetPlayerNames:
-			//	// Send player names
-			//	playerNamesPacket << (int)clients.size();
-			//	for (int i = 0; i < clients.size(); i++)
-			//	{
-			//		playerNamesPacket << clients[i]->id << clients[i]->name;
-			//	}
-			//	clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
-			//	break;
-			default: 
-				this->networkHandler->handleTCPEventServer(this, ClientID, clientToServerPacketTcp[ClientID], event);
-				break;
-			}
-		}
-	}
+	// UDP
 	else
 	{
-		// UDP
 		while (!clientToServerPacketUdp[ClientID].endOfPacket())
 		{
 			clientToServerPacketUdp[ClientID] >> event;
-			Transform* T;
-			switch (event)
+			if (event == (int)NetworkEvent::GETNAMES)
 			{
-			//case GameEvents::EMPTY:
-			//	break;
-			//case GameEvents::A_Button_Was_Pressed_On_Client:
-			//	//std::cout << "Server: client pressed Button wow (UDP)" << std::endl;
-			//	break;
-			//case GameEvents::UpdatePlayerPos:
-			//	//std::cout << "Server: " << clients[ClientID]->name << " updated player Pos" << std::endl;
-			//	T = &this->sceneHandler.getScene()->getComponent<Transform>(this->sceneHandler.getScene()->getPlayer(ClientID));
-			//	glm::vec3 tempVec;
-			//	clientToServerPacketUdp[ClientID] >> tempVec.x;
-			//	clientToServerPacketUdp[ClientID] >> tempVec.y;
-			//	clientToServerPacketUdp[ClientID] >> tempVec.z;
-			//	T->position = tempVec;
-			//	clientToServerPacketUdp[ClientID] >> tempVec.x;
-			//	clientToServerPacketUdp[ClientID] >> tempVec.y;
-			//	clientToServerPacketUdp[ClientID] >> tempVec.z;
-			//	T->rotation = tempVec;
-			//	break;
-			default:
+				// Send player names
+				sf::Packet playerNamesPacket;
+
+				playerNamesPacket << (int)NetworkEvent::GETNAMES << (int)clients.size();
+				for (int i = 0; i < clients.size(); i++)
+				{
+					playerNamesPacket << clients[i]->id << clients[i]->name;
+				}
+				clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
+			}
+			else if (event == (int)NetworkEvent::ECHO)
+			{
+				std::string str;
+				clientToServerPacketUdp[ClientID] >> str;
+				Log::write("Server echo (UDP): " + str);
+			}
+			else if (event >= (int)NetworkEvent::END) // Custom event
+			{
 				this->networkHandler->handleUDPEventServer(this, ClientID, clientToServerPacketUdp[ClientID], event);
-				break;
 			}
 		}
 	}
-}
-
-//void Server::createUDPPacketToClient(const int& clientID, sf::Packet& packet)
-//{
-//	packet << GameEvents::UpdatePlayerPos << (int)clients.size() - 1;
-//	//get all player position
-//	for (int i = 0; i < clients.size(); i++)
-//	{
-//		if (i != clientID)
-//		{
-//			Transform& T = this->sceneHandler.getScene()->getComponent<Transform>(this->sceneHandler.getScene()->getPlayer(i));
-//			packet << T.position.x << T.position.y
-//			       << T.position.z << T.rotation.x
-//			       << T.rotation.y << T.rotation.z;
-//		}
-//	}
-//	//get all monster position
-//	packet << GameEvents::UpdateMonsterPos << this->sceneHandler.getScene()->getEnemySize();
-//	for (int i = 0; i < this->sceneHandler.getScene()->getEnemySize(); i++)
-//	{
-//		Transform& T = this->sceneHandler.getScene()->getComponent<Transform>(this->sceneHandler.getScene()->getEnemies(i));
-//		packet << T.position.x << T.position.y
-//		       << T.position.z << T.rotation.x
-//		       << T.rotation.y << T.rotation.z;
-//	}
-//}
-
-void Server::startGettingClients() 
-{
-	clients.resize(clients.size());
-	clients[clients.size() - 1] = new ClientInfo("");
-
-	serverToClientPacketUdp.resize(clients.size());
-	clientToServerPacketTcp.resize(clients.size());
-	clientToServerPacketUdp.resize(clients.size());
-	serverToClientPacketTcp.resize(clients.size());
-	this->status = ServerStatus::WAITING;
-}
-
-void Server::stopGettingClients() 
-{
-	delete clients[clients.size() - 1];
-	clients.resize(clients.size() - 1);
-	this->status = ServerStatus::START;
 }
 
 void Server::sendToAllClientsTCP(sf::Packet packet)
