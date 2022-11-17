@@ -22,7 +22,7 @@ void NetworkSceneHandler::updateToNextScene()
 
 void NetworkSceneHandler::setScene(Scene* scene, std::string path) {
 	SceneHandler::setScene(scene, path);
-	((NetworkScene*)scene)->givePacketInfo(*serverToClientPacketTcp);
+	((NetworkScene*)scene)->givePacketInfo(serverToClientPacketTcp);
 
 	//give new scene players
 	if (this->getScene() != nullptr)

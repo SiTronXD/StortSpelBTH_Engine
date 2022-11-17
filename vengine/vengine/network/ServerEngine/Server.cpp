@@ -402,18 +402,6 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					clientToServerPacketTcp[ClientID] >> packetHelper1;  //z
 					getToAllExeptIDTCP(ClientID, packetHelper1);
 					break;
-				case GameEvents::PlayerShoot || GameEvents::SpawnEnemy:
-					//create a new package to send to the rest of the clients
-					getToAllExeptIDTCP(ClientID, gameEvent);
-					clientToServerPacketTcp[ClientID] >> packetHelper2;  //type
-					getToAllExeptIDTCP(ClientID, packetHelper2);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //x
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //y
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //z
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					break;
 				case GameEvents::DISCONNECT:
 					std::cout << "Server: user disconnected by own choice" << std::endl;
 					handleDisconnects(ClientID);

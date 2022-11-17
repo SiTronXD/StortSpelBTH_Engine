@@ -195,6 +195,15 @@ void NetworkHandler::updateNetwork()
 	client->update(Time::getDT());
 	//tcp
 	sf::Packet cTCPP = client->getTCPDataFromServer();
+	readTCPPacket(cTCPP);
+
+	sf::Packet cUDPP = client->getUDPDataFromServer();
+	readUDPPacket(cUDPP);
+}
+
+
+void NetworkHandler::readTCPPacket(sf::Packet& cTCPP)
+{
 	int gameEvent;
 	while (!cTCPP.endOfPacket())
 	{
@@ -239,35 +248,39 @@ void NetworkHandler::updateNetwork()
 		{
 			//ix = what type of enemy
 			cTCPP >> ix;
-
+			cTCPP >> iz;
 			//should we really create a new entity everytime?
 			iy = sceneHandler->getScene()->createEntity();
 			std::cout << "spawn enemy" << iy << std::endl;
-			monsters.push_back(iy);
+			monsters.push_back(std::pair<int, int>(iy, iz));
 
-			if (ix == 0)//blob
+			if (ix == 0)  //blob
 			{
-				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("blob")->second);
+				//sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
+				sceneHandler->getScene()->setScriptComponent(iy, "scripts/loadBlob.lua");
 			}
-			else if (ix == 1)//range
+			else if (ix == 1)  //range
 			{
-				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("range")->second);
+				sceneHandler->getScene()->setScriptComponent(iy, "scripts/loadBlob.lua");
 			}
-			else if (ix == 2)//tank
+			else if (ix == 2)  //tank
 			{
-				sceneHandler->getScene()->setComponent<MeshComponent>(iy, this->networkHandlerMeshes.find("tank")->second);
+				sceneHandler->getScene()->setScriptComponent(iy, "scripts/loadBlob.lua");
 			}
 			else
 			{
+				std::cout << "error spawning enemy" << std::endl;
 				sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
 			}
 
-			cTCPP >> fx >> fy >> fz;
+			cTCPP >> fx >> fy >> fz >> fa >> fb >> fc;
 			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
 			transform.position = glm::vec3(fx, fy, fz);
+			transform.rotation = glm::vec3(fa, fb, fc);
 		}
 		else if (gameEvent == GameEvents::SpawnEnemies)
 		{
+			//TODO : dis doesn't really work NOW
 			//ix = what type of enemy, iy how many enemies
 			cTCPP >> ix >> iy;
 
@@ -294,10 +307,6 @@ void NetworkHandler::updateNetwork()
 			//don't know how this should be implemented right now
 		}
 		else if (gameEvent == GameEvents::MonsterDied)
-		{
-			//don't know how this should be implemented right now
-		}
-		else if (gameEvent == GameEvents::PlayerShoot)
 		{
 			//don't know how this should be implemented right now
 		}
@@ -346,8 +355,47 @@ void NetworkHandler::updateNetwork()
 				}
 			}
 		}
+		else if (gameEvent == GameEvents::Draw_Debug_Line)
+		{
+			cTCPP >> fx >> fy >> fz >> fa >> fb >> fc;
+			scenePacket << gameEvent << fx << fy << fz << fa << fb << fc;
+		}
+		else if (gameEvent == GameEvents::Draw_Debug_CapsuleCollider)
+		{
+			cTCPP >> fx >> fy >> fz >> fa >> fb;
+			scenePacket << gameEvent << fx << fy << fz << fa << fb;
+		}
+		else if (gameEvent == GameEvents::Draw_Debug_BoxCollider)
+		{
+			cTCPP >> fx >> fy >> fz >> fa >> fb >> fc;
+			scenePacket << gameEvent << fx << fy << fz << fa << fb << fc;
+		}
+		else if (gameEvent == GameEvents::MONSTER_HIT)
+		{
+			cTCPP >> ix >> iy >> iz;
+			bool us = true;
+			for (int i = 0; i < this->otherPlayersServerId.size() && us; i++)
+			{
+				if (otherPlayersServerId[i] == iz)
+				{
+					us = false;
+				}
+			}
+			if (us)
+			{
+				scenePacket << gameEvent << ix << iy << iz;
+			}
+		}
+		else
+		{
+			scenePacket << gameEvent;
+		}
 	}
-	sf::Packet cUDPP = client->getUDPDataFromServer();
+}
+
+void NetworkHandler::readUDPPacket(sf::Packet& cUDPP)
+{
+	int gameEvent;
 	while (!cUDPP.endOfPacket())
 	{
 		cUDPP >> gameEvent;
@@ -381,9 +429,9 @@ void NetworkHandler::updateNetwork()
 				for (int i = monsters.size(); i < ix; i++)
 				{
 					iy = sceneHandler->getScene()->createEntity();
-					monsters.push_back(iy);
+					monsters.push_back(std::pair<int, int>(iy, -1));
 
-					sceneHandler->getScene()->setComponent<MeshComponent>(iy);
+					sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
 				}
 			}
 
@@ -391,13 +439,24 @@ void NetworkHandler::updateNetwork()
 			{
 				//fxyz position, fabc rotation
 				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
-				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(monsters[i]);
+				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(monsters[i].first);
 				transform.position = glm::vec3(fx, fy, fz);
 				transform.rotation = glm::vec3(fa, fb, fc);
 			}
 		}
+		else
+		{
+			scenePacket << gameEvent;
+		}
 	}
 }
+
+
+sf::Packet& NetworkHandler::getScenePacket()
+{
+	return this->scenePacket;
+}
+
 
 void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
 {
@@ -422,14 +481,31 @@ void NetworkHandler::sendUDPDataToClient(const glm::vec3& pos, const glm::vec3& 
 
 int NetworkHandler::getServerSeed()
 {
-	if (seed == -1)
+	Timer time;
+	float waitingTime = 0;
+	static const float maxWaitingTime = 10;
+	bool done = false;
+	sf::Packet overFlow;
+
+	while (!(waitingTime > maxWaitingTime) && !done)
 	{
-		for (int i = 0; i < 5 && seed == -1; i++)
+		int gameEvent;
+		sf::Packet cTCPP = client->getTCPDataFromServer();
+		overFlow.append(cTCPP.getData(), cTCPP.getDataSize());
+
+		waitingTime += time.getRealDT();
+		while (!cTCPP.endOfPacket() && !done)
 		{
-			Sleep(1000);
-			updateNetwork();
+			cTCPP >> gameEvent;
+			if (gameEvent == GameEvents::GetLevelSeed)
+			{
+				cTCPP >> seed;
+				done = true;
+			}
 		}
+		time.updateDeltaTime();
 	}
+	readTCPPacket(overFlow);
 	return seed;
 }
 
