@@ -43,13 +43,13 @@ enum GameEvents
 
 	//TCP to Server
 	HitMonster,  //Call to Scene
-	START,       //Call to Scene
 	CHANGESCEENE,
 	POLYGON_DATA,
 	REMOVE_POLYGON_DATA,
+	WentInToNewRoom,
 
 	//TCP to Client and Server
-	Explosion,
+	START,  //Call to Scene
 	PlayerDied,
 	DISCONNECT,
 
@@ -81,16 +81,18 @@ PlayerDied			: PlayerID
 Disconnected		: PlayerID
 PlayerJoined		: name(sfml fix size of string), serverID(int)
 MONSTER_HIT			: monsterID, Damage, PlayerID
+Start				: (nothing)
+Disconnected		: what player
 
 
 /////////events tcp client -> server///////////////
-PlayerShoot			: Type(int), Direction (float x,y,z),
 HitMonster			: Monster_id, Damage
 HitMonsters			: Monster_ids(list/array), Damage
 PlayerDied			: int id
 Disconnected		: (nothig)
 Start				: (nothing)
-GAMEDATA			: NrOfPlayers - 1, PlayerIDs (list, not yours), seed,
+GAMEDATA			: NrOfPlayers - 1, PlayerIDs (list, not yours), seed, // wrong
+WentInToNewRoom		: 
 
 ///////////updates/events udp server -> client//////////////
 UpdatePlayerPos		: nrOfPlayers(int), position(list/array of float x,y,z), rotation(list/array)
