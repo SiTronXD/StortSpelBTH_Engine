@@ -15,6 +15,7 @@ void serverMain(bool& shutDownServer, bool& created, NetworkHandler* networkHand
 		serverIsDone = server.update(serverTime.getDT());
 		serverTime.updateDeltaTime();
 	}
+	server.disconnect();
 
 	return;
 }
@@ -259,6 +260,12 @@ void NetworkHandler::update()
 			{
 				this->disconnectClient();
 			}
+			// Server shut down
+			else if (ix == -2)
+			{
+				Log::write("Server shut down, disconnecting...");
+				this->disconnectClient();
+			}
 			// Other client got disconnected
 			else
 			{
@@ -296,6 +303,21 @@ void NetworkHandler::update()
 		{
 			Log::write("Client: couldn't extract UDP event from server");
 			packet.clear();
+		}
+		else if (event == (int)NetworkEvent::DISCONNECT)
+		{
+			packet >> ix;
+			// We got kicked
+			if (ix == -1)
+			{
+				this->disconnectClient();
+			}
+			// Server shut down
+			else if (ix == -2)
+			{
+				Log::write("Server shut down, disconnecting...");
+				this->disconnectClient();
+			}
 		}
 		//if (gameEvent == (int)NetworkEvent::DISCONNECT)
 		//{
@@ -464,7 +486,7 @@ void NetworkHandler::update()
 		//	}
 		//}
 		// Custom event
-		if (event >= (int)GameEvents::END)
+		else if (event >= (int)GameEvents::END)
 		{
 			this->handleUDPEventClient(packet, event);
 		}
@@ -668,6 +690,22 @@ void NetworkHandler::update()
 	//}
 }
 
+void NetworkHandler::sendDataToServerTCP(sf::Packet packet)
+{
+	if (client != nullptr)
+	{
+		client->getTCPPacket().append(packet.getData(), packet.getDataSize());
+	}
+}
+
+void NetworkHandler::sendDataToServerUDP(sf::Packet packet)
+{
+	if (client != nullptr)
+	{
+		client->getUDPPacket().append(packet.getData(), packet.getDataSize());
+	}
+}
+
 void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
 {
 	if (client != nullptr)
@@ -761,10 +799,10 @@ void NetworkHandler::createPlayers()
 
 void NetworkHandler::disconnectClient()
 {
-	if (client != nullptr)
+	if (client->isConnected())
 	{
 		client->disconnect();
-		delete client;
-		client = nullptr;
+		/*delete client;
+		client = nullptr;*/
 	}
 }

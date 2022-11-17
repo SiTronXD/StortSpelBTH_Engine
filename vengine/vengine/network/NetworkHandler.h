@@ -61,15 +61,17 @@ public:
     // CLIENT
     Client* createClient(const std::string &name = "BOB"); //should return a client
     Client* getClient();
-    bool    connectClientToThis();
-    bool    connectClient(const std::string &serverIP);
-    void    disconnectClient();
+    bool connectClientToThis();
+    bool connectClient(const std::string &serverIP);
+    void disconnectClient();
     const bool hasServer();
 	void sendAIPolygons(std::vector<glm::vec2> points);
 	const std::string &getClientName();
 
     // USER
     void update();
+    void sendDataToServerTCP(sf::Packet packet);
+    void sendDataToServerUDP(sf::Packet packet);
     void sendTCPDataToClient(TCPPacketEvent tcpP);
     void setPlayerNetworkHandler(int playerID);
 	void getLuaData(std::vector<int>& ints, std::vector<float>& floats);

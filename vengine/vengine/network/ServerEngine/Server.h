@@ -17,6 +17,15 @@ struct ClientInfo {
 	sf::TcpSocket  clientTcpSocket;
 	float          TimeToDisconnect = 0;
 	int			   id;
+
+	void clean()
+	{
+		name = "";
+		sender = sf::IpAddress();
+		port = 0;
+		TimeToDisconnect = 0;
+		id = 0;
+	}
 };
 
 class Server {
@@ -24,11 +33,12 @@ private:
 	// Functions
 	// See if user is still connected by seeing if user has been to the sending messages the last 3 seconds or so
 	// Else send a message that they have been disconnected
+	bool duplicateUser();
 	void seeIfUsersExist();
 	void handleDisconnects(int clientID); // If a player have wanted to disconnect
 	void cleanRecvPackages();
 	void cleanSendPackages();
-	void ConnectUsers(std::vector<ClientInfo*>& client, sf::TcpListener& listener, ServerStatus& start);
+	void ConnectUsers();
 
 	// To users
 	void sendDataToAllUsers();
@@ -55,6 +65,7 @@ private:
 	float        timeToSend;
 
 	std::vector<ClientInfo*> clients;
+	ClientInfo*				 tempClient;
 	sf::UdpSocket            udpSocket;
 	sf::TcpListener          listener;
 

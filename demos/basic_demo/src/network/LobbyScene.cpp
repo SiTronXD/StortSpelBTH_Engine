@@ -76,17 +76,21 @@ void LobbyScene::update()
 		this->getNetworkHandler()->connectClient(ip);
 	}
 
+	sf::Packet packet;
 	if (Input::isKeyPressed(Keys::Q))
 	{
-		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ (int)GameEvent::SAY_HELLO, 1, { 5 } });
+		packet << (int)GameEvent::SAY_HELLO << 5;
+		this->getNetworkHandler()->sendDataToServerTCP(packet);
 	}
-	if (Input::isKeyPressed(Keys::E))
+	else if (Input::isKeyPressed(Keys::E))
 	{
-		this->getNetworkHandler()->getClient()->getTCPPacket() << (int)GameEvent::SAY_BYE;
+		packet << (int)GameEvent::SAY_BYE;
+		this->getNetworkHandler()->sendDataToServerTCP(packet);
 	}
-	if (Input::isKeyPressed(Keys::U))
+	else if (Input::isKeyPressed(Keys::U))
 	{
-		this->getNetworkHandler()->getClient()->getUDPPacket() << (int)GameEvent::SPAM;
+		packet << (int)GameEvent::SPAM;
+		this->getNetworkHandler()->sendDataToServerUDP(packet);
 	}
 
 	/*this->getNetworkHandler()->sendUDPDataToClient(

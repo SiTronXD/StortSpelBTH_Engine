@@ -96,6 +96,7 @@ void Client::disconnect()
     }
     this->tcpSocket.disconnect();
     this->udpSocket.unbind();
+    this->isConnectedToServer = false;
 }
 
 
