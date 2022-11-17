@@ -10,9 +10,6 @@ void RenderPass::createRenderPassBase(Device& device, Swapchain& swapchain)
 
     this->device = &device;
 
-    // Array of our subpasses
-    std::array<vk::SubpassDescription2, 1> subPasses{};
-
     // Color attachment
     vk::AttachmentDescription2 colorAttachment{};
     colorAttachment.setFormat(swapchain.getVkFormat());
@@ -45,7 +42,8 @@ void RenderPass::createRenderPassBase(Device& device, Swapchain& swapchain)
     depthAttachmentReference.setAttachment(uint32_t(1));
     depthAttachmentReference.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // The layout the subpass must be in! Should be same as 'final layout'(??)
 
-    // Setup subpass 0
+    // Array of our subpasses
+    std::array<vk::SubpassDescription2, 1> subPasses{};
     subPasses[0].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
     subPasses[0].setColorAttachmentCount(uint32_t(1));
     subPasses[0].setPColorAttachments(&colorAttachmentReference);
@@ -81,6 +79,50 @@ void RenderPass::createRenderPassBase(Device& device, Swapchain& swapchain)
         this->device->getVkDevice().createRenderPass2(renderPassCreateInfo);
 
     VulkanDbg::registerVkObjectDbgInfo("The RenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
+}
+
+void RenderPass::createRenderPassShadowMap(
+    Device& device, 
+    Texture& shadowMapTexture)
+{
+    this->device = &device;
+
+    // Depth attachment
+    vk::AttachmentDescription2 depthAttachment{};
+    depthAttachment.setFormat(shadowMapTexture.getVkFormat());
+    depthAttachment.setSamples(vk::SampleCountFlagBits::e1);
+    depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);
+    depthAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);
+    depthAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
+    depthAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    depthAttachment.setInitialLayout(vk::ImageLayout::eUndefined);
+    depthAttachment.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+    // Depth attachment reference
+    vk::AttachmentReference2 depthAttachmentReference{};
+    depthAttachmentReference.setAttachment(uint32_t(0));                          // Match the number/ID of the Attachment to the index of the FrameBuffer!
+    depthAttachmentReference.setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // The Layout the Subpass must be in! 
+
+    // Array of our subpasses
+    std::array<vk::SubpassDescription2, 1> subPasses{};
+    subPasses[0].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+    subPasses[0].setPDepthStencilAttachment(&depthAttachmentReference);
+
+    // Create render pass
+    vk::RenderPassCreateInfo2 renderPassCreateInfo;
+    renderPassCreateInfo.setAttachmentCount(uint32_t(1));
+    renderPassCreateInfo.setPAttachments(&depthAttachment);
+    renderPassCreateInfo.setSubpassCount(static_cast<uint32_t>(subPasses.size()));
+    renderPassCreateInfo.setPSubpasses(subPasses.data());
+
+    // TODO: consider overriding implicit dependencies
+    // renderPassCreateInfo.setDependencyCount(static_cast<uint32_t> (subpassDependencies.size()));
+    // renderPassCreateInfo.setPDependencies(subpassDependencies.data());
+
+    this->renderPass =
+        this->device->getVkDevice().createRenderPass2(renderPassCreateInfo);
+
+    VulkanDbg::registerVkObjectDbgInfo("ShadowMapRenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
 }
 
 void RenderPass::createRenderPassImgui(Device& device, Swapchain& swapchain)

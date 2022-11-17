@@ -15,7 +15,7 @@ function script:update()
 	--physics.renderDebugShapes(payload ~= nil)
 	uiRenderer.setTexture(self.texture)
 	uiRenderer.renderTexture(vector(0, 0), vector(100, 100))
-	print(test)
+	--print(test)
 
 	input.setHideCursor(input.isKeyDown(Keys.L))
 end

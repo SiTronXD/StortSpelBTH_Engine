@@ -24,7 +24,7 @@ private:
 	float volume2;
 	float master;
 	float music;
-
+	Entity multiAni2;
     int floor;
 	bool rotDir = false;
 public:

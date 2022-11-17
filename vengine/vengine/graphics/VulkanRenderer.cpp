@@ -182,6 +182,15 @@ int VulkanRenderer::init(
         return EXIT_FAILURE;
     }
 
+    this->lightHandler.init(
+        this->physicalDevice,
+        this->device,
+        this->vma,
+        this->commandPool,
+        *this->resourceManager,
+        MAX_FRAMES_IN_FLIGHT
+    );
+    
     return EXIT_SUCCESS;
 }
 
@@ -234,6 +243,7 @@ void VulkanRenderer::cleanup()
     for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
         this->getVkDevice().destroySemaphore(this->renderFinished[i]);
+        this->getVkDevice().destroySemaphore(this->shadowMapRenderFinished[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
         this->getVkDevice().destroyFence(this->drawFences[i]);        
     }
@@ -251,6 +261,8 @@ void VulkanRenderer::cleanup()
 
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
+
+    this->lightHandler.cleanup();
 
     this->renderPassBase.cleanup();
     this->swapchain.cleanup();
@@ -272,6 +284,25 @@ void VulkanRenderer::cleanup()
     this->instance.cleanup();
 }
 
+void VulkanRenderer::updateAnimationTransforms(Scene* scene)
+{
+    auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<Inactive>);
+    animView.each(
+        [&](const Transform& transform,
+            const MeshComponent& meshComponent,
+            AnimationComponent& animationComponent)
+        {
+            Mesh& currentMesh =
+                this->resourceManager->getMesh(meshComponent.meshID);
+            MeshData& currentMeshData =
+                currentMesh.getMeshData();
+
+            // Get bone transformations
+            currentMesh.getBoneTransforms(animationComponent);
+        }
+    );
+}
+
 void VulkanRenderer::draw(Scene* scene)
 {
 #ifndef VENGINE_NO_PROFILING
@@ -286,6 +317,10 @@ void VulkanRenderer::draw(Scene* scene)
 
         ImGui::Render();
         
+        // Update animation transforms once per frames, then reuse 
+        // transforms during multiple render passes
+        this->updateAnimationTransforms(scene);
+
         // TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
         // Wait for The Fence to be signaled from last Draw for this currrent Frame; 
         // This will freeze the CPU operations here and wait for the Fence to open
@@ -387,36 +422,75 @@ void VulkanRenderer::draw(Scene* scene)
         //2. Submit command buffer to queue for execution, making sure it waits for the image to be signalled as 
         //   available before drawing and signals when it has finished renedering. 
         
-        vk::SemaphoreSubmitInfo waitSemaphoreSubmitInfo;
-        waitSemaphoreSubmitInfo.setSemaphore(this->imageAvailable[this->currentFrame]);
-        waitSemaphoreSubmitInfo.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);         
+
+        vk::SemaphoreSubmitInfo shadowMapSignalSemaphore;
+        shadowMapSignalSemaphore.setSemaphore(this->shadowMapRenderFinished[this->currentFrame]);
+        shadowMapSignalSemaphore.setStageMask(vk::PipelineStageFlags2());
+
+        std::array<vk::CommandBufferSubmitInfo, 1> shadowMapCommandBufferSubmit
+        {
+            vk::CommandBufferSubmitInfo
+            {
+                this->currentShadowMapCommandBuffer->
+                    getVkCommandBuffer()
+            }
+        };
+
+        vk::SubmitInfo2 renderToShadowMapSubmit{};
+        renderToShadowMapSubmit.setWaitSemaphoreInfoCount(uint32_t(0));
+        renderToShadowMapSubmit.setCommandBufferInfoCount(uint32_t(shadowMapCommandBufferSubmit.size()));
+        renderToShadowMapSubmit.setPCommandBufferInfos(shadowMapCommandBufferSubmit.data()); // Pointer to the CommandBuffer to execute
+        renderToShadowMapSubmit.setSignalSemaphoreInfoCount(uint32_t(1));
+        renderToShadowMapSubmit.setPSignalSemaphoreInfos(&shadowMapSignalSemaphore);   // Semaphore that will be signaled when CommandBuffer is finished
+
+
+        vk::SemaphoreSubmitInfo waitSemaphoreImageAvailable;
+        waitSemaphoreImageAvailable.setSemaphore(this->imageAvailable[this->currentFrame]);
+        waitSemaphoreImageAvailable.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);         
         // waitSemaphoreSubmitInfo.setDeviceIndex(uint32_t(1));                    // 0: sets all devices in group 1 to valid... bad or good?
+
+        vk::SemaphoreSubmitInfo waitSemaphoreShadowMap;
+        waitSemaphoreShadowMap.setSemaphore(this->shadowMapRenderFinished[this->currentFrame]);
+        waitSemaphoreShadowMap.setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
+
+        std::array<vk::SemaphoreSubmitInfo, 2> waitSemaphores
+        {
+            waitSemaphoreImageAvailable,
+            waitSemaphoreShadowMap
+        };
 
         vk::SemaphoreSubmitInfo signalSemaphoreSubmitInfo;
         signalSemaphoreSubmitInfo.setSemaphore(this->renderFinished[this->currentFrame]);
         signalSemaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
 
-        std::vector<vk::CommandBufferSubmitInfo> commandBufferSubmitInfos
+        std::array<vk::CommandBufferSubmitInfo, 1> commandBufferSubmitInfos
         {
-            vk::CommandBufferSubmitInfo{
-                this->commandBuffers[this->currentFrame].
+            vk::CommandBufferSubmitInfo
+            {
+                this->currentCommandBuffer->
                     getVkCommandBuffer()
             }
-        };        
+        };
         
-        vk::SubmitInfo2 submitInfo {};      
-        submitInfo.setWaitSemaphoreInfoCount(uint32_t(1));
-        submitInfo.setPWaitSemaphoreInfos(&waitSemaphoreSubmitInfo);       // Pointer to the semaphore to wait on.
-        submitInfo.setCommandBufferInfoCount(commandBufferSubmitInfos.size()); 
-        submitInfo.setPCommandBufferInfos(commandBufferSubmitInfos.data()); // Pointer to the CommandBuffer to execute
-        submitInfo.setSignalSemaphoreInfoCount(uint32_t(1));
-        submitInfo.setPSignalSemaphoreInfos(&signalSemaphoreSubmitInfo);   // Semaphore that will be signaled when CommandBuffer is finished
+        vk::SubmitInfo2 renderToScreenSubmit{};
+        renderToScreenSubmit.setWaitSemaphoreInfoCount(uint32_t(waitSemaphores.size()));
+        renderToScreenSubmit.setPWaitSemaphoreInfos(waitSemaphores.data());       // Pointer to the semaphore to wait on.
+        renderToScreenSubmit.setCommandBufferInfoCount(commandBufferSubmitInfos.size()); 
+        renderToScreenSubmit.setPCommandBufferInfos(commandBufferSubmitInfos.data()); // Pointer to the CommandBuffer to execute
+        renderToScreenSubmit.setSignalSemaphoreInfoCount(uint32_t(1));
+        renderToScreenSubmit.setPSignalSemaphoreInfos(&signalSemaphoreSubmitInfo);   // Semaphore that will be signaled when CommandBuffer is finished
+
+        std::array<vk::SubmitInfo2, 2> submitInfos
+        {
+            renderToShadowMapSubmit,
+            renderToScreenSubmit
+        };
 
         // Submit The CommandBuffers to the Queue to begin drawing to the framebuffers
         vk::Result graphicsQueueResult = 
             this->queueFamilies.getGraphicsQueue().submit2(
-                uint32_t(1),
-                &submitInfo, 
+                uint32_t(submitInfos.size()),
+                submitInfos.data(),
                 this->drawFences[this->currentFrame]
         ); // drawing, signal this Fence to open!
         if (graphicsQueueResult != vk::Result::eSuccess)
@@ -471,10 +545,12 @@ void VulkanRenderer::initForScene(Scene* scene)
     // Wait idle before doing anything
     this->device.waitIdle();
 
+    bool oldHasAnimations = this->hasAnimations;
+
     // Try to cleanup before creating new objects
     this->shaderInput.cleanup();
     this->pipeline.cleanup();
-    if (this->hasAnimations) // (hasAnimations from previous scene)
+    if (oldHasAnimations) // (hasAnimations from previous scene)
     {
         this->animShaderInput.cleanup();
         this->animPipeline.cleanup();
@@ -521,7 +597,18 @@ void VulkanRenderer::initForScene(Scene* scene)
         );
     this->lightBufferSB = 
         this->shaderInput.addStorageBuffer(
-            sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+            sizeof(LightBufferData) * LightHandler::MAX_NUM_LIGHTS,
+            vk::ShaderStageFlagBits::eFragment,
+            DescriptorFrequency::PER_FRAME
+        );
+    this->shaderInput.addCombinedImageSampler(
+        this->lightHandler.getShadowMapTexture(),
+        vk::ShaderStageFlagBits::eFragment,
+        DescriptorFrequency::PER_FRAME
+    );
+    this->shadowMapDataUB =
+        this->shaderInput.addUniformBuffer(
+            sizeof(ShadowMapData),
             vk::ShaderStageFlagBits::eFragment,
             DescriptorFrequency::PER_FRAME
         );
@@ -619,7 +706,18 @@ void VulkanRenderer::initForScene(Scene* scene)
             );
         this->animLightBufferSB =
             this->animShaderInput.addStorageBuffer(
-                sizeof(LightBufferData) * MAX_NUM_LIGHTS,
+                sizeof(LightBufferData) * LightHandler::MAX_NUM_LIGHTS,
+                vk::ShaderStageFlagBits::eFragment,
+                DescriptorFrequency::PER_FRAME
+            );
+        this->animShaderInput.addCombinedImageSampler(
+            this->lightHandler.getShadowMapTexture(),
+            vk::ShaderStageFlagBits::eFragment,
+            DescriptorFrequency::PER_FRAME
+        );
+        this->animShadowMapDataUB =
+            this->animShaderInput.addUniformBuffer(
+                sizeof(ShadowMapData),
                 vk::ShaderStageFlagBits::eFragment,
                 DescriptorFrequency::PER_FRAME
             );
@@ -733,6 +831,12 @@ void VulkanRenderer::initForScene(Scene* scene)
             (float) this->swapchain.getWidth()  / this->swapchain.getHeight()
         );
     }
+
+    this->lightHandler.initForScene(
+        scene,
+        oldHasAnimations,
+        this->hasAnimations
+    );
 }
 
 void VulkanRenderer::setupDebugMessenger() 
@@ -843,28 +947,34 @@ void VulkanRenderer::createSynchronisation()
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    // Create Semaphores for each Transition a Image can be in
+    // One semaphore/fence per frame in flight
     this->imageAvailable.resize(MAX_FRAMES_IN_FLIGHT);
+    this->shadowMapRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->renderFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->drawFences.resize(MAX_FRAMES_IN_FLIGHT);
 
-    //  Semaphore Creation information
+    // Semaphore creation information
     vk::SemaphoreCreateInfo semaphoreCreateInfo; 
     
 
-    // Fence Creation Information
+    // Fence creation Information
     vk::FenceCreateInfo fenceCreateInfo;
     fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);           // Make sure the Fence is initially open!
 
-    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++){
-
-        this->imageAvailable[i] = getVkDevice().createSemaphore(semaphoreCreateInfo);
+    for(int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        // Semaphores
+        this->imageAvailable[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore imageAvailable["+std::to_string(i)+"]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->imageAvailable[i])));
         
-        this->renderFinished[i] = getVkDevice().createSemaphore(semaphoreCreateInfo);
+        this->shadowMapRenderFinished[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
+        VulkanDbg::registerVkObjectDbgInfo("Semaphore shadowMapRenderFinished[" + std::to_string(i) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->shadowMapRenderFinished[i])));
+
+        this->renderFinished[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore renderFinished["+std::to_string(i)+"]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->renderFinished[i])));
-            
-        this->drawFences[i] = getVkDevice().createFence(fenceCreateInfo);
+        
+        // Fence
+        this->drawFences[i] = this->getVkDevice().createFence(fenceCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Fence drawFences["+std::to_string(i)+"]", vk::ObjectType::eFence, reinterpret_cast<uint64_t>(vk::Fence::CType(this->drawFences[i])));
     }
 }
@@ -877,151 +987,6 @@ void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::Command
     commandPool = this->getVkDevice().createCommandPool(commandPoolCreateInfo);
 
     VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(commandPool)));
-}
-
-void VulkanRenderer::updateLightBuffer(Scene* scene)
-{
-    this->lightBuffer.clear();
-    
-    // Info about all lights in the shader
-    AllLightsInfo lightsInfo{};
-
-    // Loop through all ambient lights in scene
-    auto ambientLightView = scene->getSceneReg().view<AmbientLight>(entt::exclude<Inactive>);
-    ambientLightView.each([&](
-        const AmbientLight& ambientLightComp)
-        {
-            // Create point light data
-            LightBufferData lightData{};
-            lightData.color = glm::vec4(ambientLightComp.color, 1.0f);
-
-            // Add to list
-            this->lightBuffer.push_back(lightData);
-
-            // Increment end index
-            lightsInfo.ambientLightsEndIndex++;
-        }
-    );
-
-    // Loop through all directional lights in the scene
-    lightsInfo.directionalLightsEndIndex = lightsInfo.ambientLightsEndIndex;
-    auto directionalLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
-    directionalLightView.each([&](
-        const DirectionalLight& directionalLightComp)
-        {
-            // Create point light data
-            LightBufferData lightData{};
-            lightData.direction = 
-                glm::vec4(glm::normalize(directionalLightComp.direction), 1.0f);
-            lightData.color = 
-                glm::vec4(directionalLightComp.color, 1.0f);
-
-            // Add to list
-            this->lightBuffer.push_back(lightData);
-
-            // Increment end index
-            lightsInfo.directionalLightsEndIndex++;
-        }
-    );
-
-    // Loop through all point lights in scene
-    lightsInfo.pointLightsEndIndex = lightsInfo.directionalLightsEndIndex;
-    auto pointLightView = scene->getSceneReg().view<Transform, PointLight>(entt::exclude<Inactive>);
-    pointLightView.each([&](
-        Transform& transform,
-        const PointLight& pointLightComp)
-        {
-            // Create point light data
-            LightBufferData lightData{};
-            lightData.position = glm::vec4(
-                transform.position + 
-                    transform.getRotationMatrix() * pointLightComp.positionOffset,
-                1.0f);
-            lightData.color = glm::vec4(pointLightComp.color, 1.0f);
-
-            // Add to list
-            this->lightBuffer.push_back(lightData);
-
-            // Increment end index
-            lightsInfo.pointLightsEndIndex++;
-        }
-    );
-
-    // Loop through all spotlights in scene
-    lightsInfo.spotlightsEndIndex = lightsInfo.pointLightsEndIndex;
-    auto spotlightView = scene->getSceneReg().view<Transform, Spotlight>(entt::exclude<Inactive>);
-    spotlightView.each([&](
-        Transform& transform,
-        const Spotlight& spotlightComp)
-        {
-            const glm::mat3 rotMat = transform.getRotationMatrix();
-
-            // Create point light data
-            LightBufferData lightData{};
-            lightData.position = glm::vec4(
-                transform.position +
-                    rotMat * spotlightComp.positionOffset,
-                1.0f
-            );
-            lightData.direction = glm::vec4(
-                glm::normalize(rotMat * spotlightComp.direction),
-                std::cos(glm::radians(spotlightComp.angle * 0.5f))
-            );
-            lightData.color = glm::vec4(spotlightComp.color, 1.0f);
-
-            // Add to list
-            this->lightBuffer.push_back(lightData);
-
-            // Increment end index
-            lightsInfo.spotlightsEndIndex++;
-        }
-    );
-
-    // Update storage buffer containing lights
-    if (this->lightBuffer.size() > 0)
-    {
-        this->shaderInput.updateStorageBuffer(this->lightBufferSB, (void*) this->lightBuffer.data());
-        if (this->hasAnimations)
-        {
-            this->animShaderInput.updateStorageBuffer(this->animLightBufferSB, (void*) this->lightBuffer.data());
-        }
-    }
-
-    // Truncate indices to not overshoot max
-    lightsInfo.ambientLightsEndIndex = std::min(
-        lightsInfo.ambientLightsEndIndex,
-        MAX_NUM_LIGHTS);
-    lightsInfo.directionalLightsEndIndex = std::min(
-        lightsInfo.directionalLightsEndIndex,
-        MAX_NUM_LIGHTS);
-    lightsInfo.pointLightsEndIndex = std::min(
-        lightsInfo.pointLightsEndIndex,
-        MAX_NUM_LIGHTS);
-    lightsInfo.spotlightsEndIndex = std::min(
-        lightsInfo.spotlightsEndIndex,
-        MAX_NUM_LIGHTS);
-
-#ifdef _CONSOLE
-    if (this->lightBuffer.size() > MAX_NUM_LIGHTS)
-    {
-        Log::warning("The number of lights is larger than the maximum allowed number. Truncates " + 
-            std::to_string(this->lightBuffer.size()) + " lights to " + 
-            std::to_string(MAX_NUM_LIGHTS));
-    }
-#endif
-
-    // Update all lights info buffer
-    this->shaderInput.updateUniformBuffer(
-        this->allLightsInfoUB,
-        (void*) &lightsInfo
-    );
-    if (this->hasAnimations)
-    {
-        this->animShaderInput.updateUniformBuffer(
-            this->animAllLightsInfoUB,
-            (void*)&lightsInfo
-        );
-    }
 }
 
 const Material& VulkanRenderer::getAppropriateMaterial(
@@ -1061,6 +1026,9 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
     ZoneTransient(recordRenderPassCommands_zone1,  true); //:NOLINT   
 #endif
 
+    this->currentShadowMapCommandBuffer =
+        &this->lightHandler
+        .getShadowMapCommandBuffer(this->currentFrame);
     this->currentCommandBuffer =
         &this->commandBuffers[this->currentFrame];
 
@@ -1083,48 +1051,89 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
         
         #pragma region commandBufferRecording
 
-            // Default shader input
+            // Set current frame
             this->shaderInput.setCurrentFrame(this->currentFrame);
+            if (hasAnimations)
+            {
+                this->animShaderInput.setCurrentFrame(this->currentFrame);
+            }
+            this->uiRenderer->getShaderInput().setCurrentFrame(
+                this->currentFrame
+            );
+            this->debugRenderer->getLineShaderInput().setCurrentFrame(
+                this->currentFrame
+            );
+            this->debugRenderer->getMeshShaderInput().setCurrentFrame(
+                this->currentFrame
+            );
+
+            // Update light buffers
+            this->lightHandler.updateLightBuffers(
+                scene,
+                this->shaderInput,
+                this->animShaderInput,
+                this->allLightsInfoUB,
+                this->animAllLightsInfoUB,
+                this->lightBufferSB,
+                this->animLightBufferSB,
+                this->hasAnimations,
+                glm::vec3(cameraDataUBO.worldPosition),
+                this->currentFrame
+            );
+
+            // Default shader input
             this->shaderInput.updateUniformBuffer(
                 this->viewProjectionUB,
                 (void*)&this->cameraDataUBO
+            );
+            this->shaderInput.updateUniformBuffer(
+                this->shadowMapDataUB,
+                (void*) &this->lightHandler.getShadowMapData()
             );
 
             // Animation shader input
             if (this->hasAnimations)
 			{
-				this->animShaderInput.setCurrentFrame(this->currentFrame);
 				this->animShaderInput.updateUniformBuffer(
 				    this->viewProjectionUB, 
                     (void*)&this->cameraDataUBO
 				);
+                this->animShaderInput.updateUniformBuffer(
+                    this->animShadowMapDataUB,
+                    (void*) &this->lightHandler.getShadowMapData()
+                );
 			}
 
             // UI shader input
             this->uiRenderer->prepareForGPU();
-            this->uiRenderer->getShaderInput().setCurrentFrame(
-                this->currentFrame
-            );
 
             // Debug renderer shader input
             this->debugRenderer->prepareGPU(this->currentFrame);
-            this->debugRenderer->getLineShaderInput().setCurrentFrame(
-                this->currentFrame
-            );
             this->debugRenderer->getLineShaderInput().updateUniformBuffer(
                 this->viewProjectionUB,
                 (void*)&this->cameraDataUBO
-            );
-            this->debugRenderer->getMeshShaderInput().setCurrentFrame(
-                this->currentFrame
             );
             this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
                 this->viewProjectionUB,
                 (void*)&this->cameraDataUBO
             );
 
-            // Update lights
-            this->updateLightBuffer(scene);
+            // Begin shadow map command buffer
+            vk::CommandBufferBeginInfo commandBufferBeginInfo;
+            commandBufferBeginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+            this->currentShadowMapCommandBuffer->begin(commandBufferBeginInfo);
+
+            // Render shadow map
+            this->beginShadowMapRenderPass(
+                imageIndex,
+                this->lightHandler
+            );
+                this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
+                this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
+            this->endShadowMapRenderPass();
+
+            this->currentShadowMapCommandBuffer->end();
+
 
             // Render to screen
             this->beginRenderpass(

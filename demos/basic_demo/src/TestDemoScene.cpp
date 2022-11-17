@@ -105,6 +105,14 @@ void TestDemoScene::init()
 		}
 	}
 
+	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack.fbx" });
+	Scene::getResourceManager()->mapAnimations(playerMesh, {"first", "second", "third"});
+
+	multiAni2 = createEntity();
+	setComponent<MeshComponent>(multiAni2, playerMesh);
+	setComponent<AnimationComponent>(multiAni2);
+	getComponent<Transform>(multiAni2).position.x = 30.f;
+
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
 	//this->setComponent<RigidBody>(this->testEntity);
@@ -233,6 +241,7 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
 
+	
 }
 
 void TestDemoScene::start()
@@ -257,7 +266,7 @@ void TestDemoScene::start()
 	this->getAudioHandler()->setMusic("assets/sounds/notSusMusic.ogg");
 	this->getAudioHandler()->playMusic();
 
-	this->getAudioHandler()->setMusicVolume(music = 0.005f);
+	this->getAudioHandler()->setMusicVolume(music = 0.01f);
 
 	//this->setComponent<AudioSource>(aniIDs[0], audioId);
 	//this->getComponent<AudioSource>(aniIDs[0]).setVolume(0.2f);
@@ -268,6 +277,20 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	if (Input::isKeyReleased(Keys::ONE))
+	{
+		this->setAnimation(multiAni2, "first");
+	}
+	else if (Input::isKeyReleased(Keys::TWO))
+	{
+		this->setAnimation(multiAni2, "second");
+	}
+	else if (Input::isKeyReleased(Keys::THREE))
+	{
+		this->setAnimation(multiAni2, "third", false);
+	}
+
+
 	// Rotate testEntity
 	/*this->getComponent<Transform>(this->testEntity).rotation.x +=
 		180.0f * Time::getDT(); */
@@ -287,19 +310,6 @@ void TestDemoScene::update()
 		mat.specularTextureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/FullSpecular.png");
 		mat.descriptorIndex = ~0u;
 	}
-
-	/*if (Input::isKeyReleased(Keys::ONE))
-	{
-		this->setAnimation(multiAnimation, "bendIdle");
-	}
-	else if (Input::isKeyReleased(Keys::TWO))
-	{
-		this->setAnimation(multiAnimation, "fastBend");
-	}
-	else if (Input::isKeyReleased(Keys::THREE))
-	{
-		this->setAnimation(multiAnimation, "dumb", false);
-	}*/
 
 	// Debug rendering on colliders
 	this->getPhysicsEngine()->renderDebugShapes(Input::isKeyDown(Keys::Y));

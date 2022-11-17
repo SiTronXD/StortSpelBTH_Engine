@@ -26,6 +26,7 @@ enum class DescriptorFrequency
 struct ResourceHandle
 {
 	Buffer* buffer = nullptr;
+	Texture* textureReference = nullptr;
 	vk::DescriptorType descriptorType;
 	vk::ShaderStageFlagBits shaderStage;
 	DescriptorFrequency descriptorFreq;
@@ -136,6 +137,10 @@ public:
 		const DescriptorFrequency& descriptorFrequency);
     StorageBufferID addStorageBuffer(
 		const size_t& contentsSize,
+		const vk::ShaderStageFlagBits& shaderStage,
+		const DescriptorFrequency& descriptorFrequency);
+	void addCombinedImageSampler(
+		Texture& texture,
 		const vk::ShaderStageFlagBits& shaderStage,
 		const DescriptorFrequency& descriptorFrequency);
 	void endForInput();
