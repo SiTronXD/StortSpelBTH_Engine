@@ -111,11 +111,11 @@ void Client::sendTCPEvent(TCPPacketEvent& eventTCP)
     }
 }
 
-void Client::sendUDPEvent(const GameEvents& gameEvent, const glm::vec3& pos, const glm::vec3& rot)
+void Client::sendUDPEvent(const NetworkEvent& gameEvent, const glm::vec3& pos, const glm::vec3& rot)
 {
     // Write over the current udp packet
     sf::Packet p;
-    p << gameEvent << pos.x << pos.y << pos.z << rot.x << rot.y << rot.z;
+    p << (int)gameEvent << pos.x << pos.y << pos.z << rot.x << rot.y << rot.z;
     this->clientUdpPacketSend = p;
 }
 

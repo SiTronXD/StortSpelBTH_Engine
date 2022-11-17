@@ -46,7 +46,7 @@ private:
 
 	// From users
 	void getDataFromUsers();
-	void createUDPPacketToClient(const int& clientID, sf::Packet& packet);
+	//void createUDPPacketToClient(const int& clientID, sf::Packet& packet);
 
 	// Engine objects
 	NetworkSceneHandler sceneHandler;

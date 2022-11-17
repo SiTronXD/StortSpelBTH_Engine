@@ -92,6 +92,16 @@ void LobbyScene::update()
 		packet << (int)GameEvent::SPAM;
 		this->getNetworkHandler()->sendDataToServerUDP(packet);
 	}
+	else if (Input::isKeyPressed(Keys::G))
+	{
+		packet << (int)NetworkEvent::GETNAMES;
+		this->getNetworkHandler()->sendDataToServerTCP(packet);
+	}
+	else if (Input::isKeyPressed(Keys::H))
+	{
+		packet << (int)NetworkEvent::ECHO << "Hello World!";
+		this->getNetworkHandler()->sendDataToServerTCP(packet);
+	}
 
 	/*this->getNetworkHandler()->sendUDPDataToClient(
 		this->getComponent<Transform>(this->Player).position,

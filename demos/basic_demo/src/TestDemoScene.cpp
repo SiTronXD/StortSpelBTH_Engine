@@ -512,7 +512,7 @@ void TestDemoScene::update()
 		this->getNetworkHandler()->connectClientToThis();
 	}
 	if (Input::isKeyPressed(Keys::I)) {
-		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
+		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ (int)NetworkEvent::START});
 	}
 
 	if (Input::isKeyReleased(Keys::V))

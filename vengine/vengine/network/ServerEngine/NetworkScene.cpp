@@ -102,7 +102,7 @@ int NetworkScene::createEnemy(int type, const std::string& script, glm::vec3 pos
 		this->setScriptComponent(e, script);
 	}
 	this->enemies.push_back(std::pair<int, int>(e, type));
-	this->addEvent({(int)GameEvents::SpawnEnemy, type}, {pos.x, pos.y, pos.z, rot.x, rot.y, rot.z});
+	//this->addEvent({(int)GameEvents::SpawnEnemy, type}, {pos.x, pos.y, pos.z, rot.x, rot.y, rot.z});
 	return e;
 }
 

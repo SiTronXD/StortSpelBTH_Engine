@@ -4,7 +4,7 @@
 
 enum class GameEvent
 {
-	EMPTY = (int)GameEvents::END + 1,
+	EMPTY = (int)NetworkEvent::END + 1,
 	SAY_HELLO,
 	SAY_BYE,
 	SPAM

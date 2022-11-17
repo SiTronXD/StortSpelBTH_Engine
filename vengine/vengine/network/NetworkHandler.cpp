@@ -284,6 +284,17 @@ void NetworkHandler::update()
 				}
 			}
 		}
+		else if (event == (int)NetworkEvent::GETNAMES)
+		{
+			packet >> ix;
+			Log::write("Getting names from server:");
+			for (int i = 0; i < ix; i++)
+			{
+				std::string playerName;
+				packet >> iy >> playerName;
+				Log::write(playerName);
+			}
+		}
 		else if (event == (int)NetworkEvent::START)
 		{
 			this->serverStatus = ServerStatus::RUNNING;
@@ -486,7 +497,7 @@ void NetworkHandler::update()
 		//	}
 		//}
 		// Custom event
-		else if (event >= (int)GameEvents::END)
+		else if (event >= (int)NetworkEvent::END)
 		{
 			this->handleUDPEventClient(packet, event);
 		}
@@ -719,13 +730,13 @@ void NetworkHandler::setPlayerNetworkHandler(int playerID)
 	this->player = playerID;
 }
 
-void NetworkHandler::sendUDPDataToClient(const glm::vec3& pos, const glm::vec3& rot)
-{
-	if (client != nullptr)
-	{
-		client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
-	}
-}
+//void NetworkHandler::sendUDPDataToClient(const glm::vec3& pos, const glm::vec3& rot)
+//{
+//	if (client != nullptr)
+//	{
+//		client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
+//	}
+//}
 
 int NetworkHandler::getServerSeed()
 {
@@ -740,23 +751,23 @@ int NetworkHandler::getServerSeed()
 	return seed;
 }
 
-void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
-{
-	TCPPacketEvent polygonEvent;
-
-	polygonEvent.event = GameEvents::POLYGON_DATA;  //change this
-	polygonEvent.floats.reserve(points.size() * 2);
-	polygonEvent.ints[0] = (int)points.size();
-	for (int i = 0; i < points.size(); i++)
-	{
-		polygonEvent.floats.push_back((float)points[i].x);
-		polygonEvent.floats.push_back((float)points[i].y);
-	}
-
-	polygonEvent.nrOfInts = 1;
-
-	client->sendTCPEvent(polygonEvent);
-}
+//void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
+//{
+//	TCPPacketEvent polygonEvent;
+//
+//	polygonEvent.event = GameEvents::POLYGON_DATA;  //change this
+//	polygonEvent.floats.reserve(points.size() * 2);
+//	polygonEvent.ints[0] = (int)points.size();
+//	for (int i = 0; i < points.size(); i++)
+//	{
+//		polygonEvent.floats.push_back((float)points[i].x);
+//		polygonEvent.floats.push_back((float)points[i].y);
+//	}
+//
+//	polygonEvent.nrOfInts = 1;
+//
+//	client->sendTCPEvent(polygonEvent);
+//}
 
 const std::string& NetworkHandler::getClientName()
 {

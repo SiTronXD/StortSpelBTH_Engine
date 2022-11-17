@@ -21,56 +21,58 @@ struct TCPPacketEvent
 
 enum class ServerStatus { WAITING, START, RUNNING };
 
-#pragma region GAMEEVENTS_NETWORK
-
-enum GameEvents {
-	EMPTY		 = 0,
-	//TCP To Client
-	SpawnEnemy = 1,
-	SpawnEnemies = 2,
-	MonsterDied = 3,
-	ID = 4,
-	PlayerJoined,
-	GAMEDATA,
-
-	//TCP to Server
-	HitMonster,				//Call to Scene
-	START,					//Call to Scene
-	CHANGESCEENE,
-	POLYGON_DATA,
-	REMOVE_POLYGON_DATA,
-
-	//TCP to Client and Server
-	Explosion,
-	PlayerShoot,
-	PlayerDied,
-	DISCONNECT,
-
-
-	//UDP
-	UpdatePlayerPos,
-	UpdateMonsterPos,
-
-	//Get from server
-	GetPlayerNames,
-	GetLevelSeed,
-
-
-	//DEBUG
-	A_Button_Was_Pressed_On_Server,
-	A_Button_Was_Pressed_On_Client,
-	END
-};
-
 enum class NetworkEvent
 {
 	ERR = -1,
 	EMPTY,
+	ECHO, // Repeat whatever is sent on server
 	CLIENTJOINED,
 	DISCONNECT,
+	GETNAMES,
 	START,
 	END
 };
+
+#pragma region GAMEEVENTS_NETWORK
+
+//enum GameEvents {
+//	EMPTY		 = 0,
+//	//TCP To Client
+//	SpawnEnemy = 1,
+//	SpawnEnemies = 2,
+//	MonsterDied = 3,
+//	ID = 4,
+//	PlayerJoined,
+//	GAMEDATA,
+//
+//	//TCP to Server
+//	HitMonster,				//Call to Scene
+//	START,					//Call to Scene
+//	CHANGESCEENE,
+//	POLYGON_DATA,
+//	REMOVE_POLYGON_DATA,
+//
+//	//TCP to Client and Server
+//	Explosion,
+//	PlayerShoot,
+//	PlayerDied,
+//	DISCONNECT,
+//
+//
+//	//UDP
+//	UpdatePlayerPos,
+//	UpdateMonsterPos,
+//
+//	//Get from server
+//	GetPlayerNames,
+//	GetLevelSeed,
+//
+//
+//	//DEBUG
+//	A_Button_Was_Pressed_On_Server,
+//	A_Button_Was_Pressed_On_Client,
+//	END
+//};
 
 /*
 /////////events tcp server -> client////////////////

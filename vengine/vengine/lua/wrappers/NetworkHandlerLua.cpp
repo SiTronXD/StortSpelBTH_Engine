@@ -25,7 +25,7 @@ int NetworkHandlerLua::lua_sendPolygons(lua_State* L)
 	//if we are on the server side send
 	if (networkHandler->hasServer())
 	{
-		networkHandler->sendAIPolygons(points);
+		//networkHandler->sendAIPolygons(points);
 	}
 	return 0;
 }
@@ -91,7 +91,7 @@ int NetworkHandlerLua::lua_sendTCPData(lua_State* L)
 int NetworkHandlerLua::lua_sendUDPData(lua_State* L)
 {
 	NetworkHandler* networkHandler = ((NetworkHandler*)lua_touserdata(L, lua_upvalueindex(1)));
-	networkHandler->sendUDPDataToClient(lua_tovector(L, 1), lua_tovector(L, 2));
+	//networkHandler->sendUDPDataToClient(lua_tovector(L, 1), lua_tovector(L, 2));
 	return 0;
 }
 
