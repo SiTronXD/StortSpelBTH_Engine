@@ -1077,6 +1077,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 this->lightBufferSB,
                 this->animLightBufferSB,
                 this->hasAnimations,
+                cameraDataUBO.projection,
+                cameraDataUBO.view,
                 glm::vec3(cameraDataUBO.worldPosition),
                 this->currentFrame
             );

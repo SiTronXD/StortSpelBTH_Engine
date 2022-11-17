@@ -51,7 +51,19 @@ private:
 	VmaAllocator* vma;
 	ResourceManager* resourceManager;
 
+	glm::vec4 frustumCorners[2*2*2];
+
 	uint32_t framesInFlight;
+
+	void getWorldSpaceFrustumCorners(
+		const glm::mat4& invViewProj,
+		glm::vec4 outputCorners[]);
+
+	void setLightProjection(
+		const glm::mat4& camProj,
+		const glm::mat4& camView,
+		const glm::mat4& lightView,
+		glm::mat4& outputProjection);
 
 public:
 	static const uint32_t MAX_NUM_LIGHTS = 16;
@@ -81,6 +93,8 @@ public:
 		const StorageBufferID& lightBufferSB,
 		const StorageBufferID& animLightBufferSB,
 		const bool& hasAnimations,
+		const glm::mat4& camProj,
+		const glm::mat4& camView,
 		const glm::vec3& camPosition,
 		const uint32_t& currentFrame);
 
