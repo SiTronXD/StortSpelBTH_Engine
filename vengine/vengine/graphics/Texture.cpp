@@ -243,6 +243,7 @@ void Texture::cleanup()
     {
         this->device->getVkDevice().destroyImageView(imageView);
     }
+    this->layerImageViews.clear();
 
     this->device->getVkDevice().destroyImage(this->image);
     vmaFreeMemory(*this->vma, this->imageMemory);
