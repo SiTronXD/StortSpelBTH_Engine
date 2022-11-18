@@ -92,7 +92,7 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		fragLightNDC.y < -1.0f || fragLightNDC.y > 1.0f ||
 		fragLightNDC.z < 0.0f || fragLightNDC.z > 1.0f)
 	{
-		return 0.0f;
+		return 1.0f;
 	}
 
 	// Texture coordinates
@@ -103,27 +103,8 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		shadowMapBuffer.shadowMapMinBias + 
 		shadowMapBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
 
-	// 3x3 PCF
-	vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
-	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
-	float shadowFactor = 0.0f;
-	for(int y = -1; y <= 1; ++y)
-	{
-		for(int x = -1; x <= 1; ++x)
-		{
-			vec2 offset = vec2(x, y) * oneOverSize;
-			float approxGaussWeight = 4.0f / pow(2.0f, (abs(x) + abs(y))) / 16.0f;
-
-			shadowFactor +=
-				(fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightNDC.xy + offset).r ? 0.0f : 1.0f) 
-				* approxGaussWeight;
-		}
-	}
-
-	return shadowFactor;
-
 	// 2x2 PCF
-	/*vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
+	vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
 	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
 	vec2 unnormalizedFragTex = fragLightNDC.xy * shadowMapSize;
 	vec2 unnormalizedCorner = floor(unnormalizedFragTex);
@@ -141,8 +122,103 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		mix(shadowMapValue01, shadowMapValue11, fract(unnormalizedFragTex.x)),
 		fract(unnormalizedFragTex.y)
 	);
+	
+	return shadowFactor;
+}
 
-	return shadowFactor;*/
+float gaussWeight(in float len, in float radius)
+{
+	float x = len * 1.33f / radius;
+	return exp(-x * x * 3.1415f);
+}
+
+float getShadowFactorPCSS(in vec3 normal, in vec3 lightDir)
+{
+	// Transform to the light's NDC
+	vec4 fragLightNDC = 
+		shadowMapBuffer.projection * 
+		shadowMapBuffer.view * 
+		vec4(fragWorldPos, 1.0f);
+	fragLightNDC.xyz /= fragLightNDC.w;
+	fragLightNDC.y = -fragLightNDC.y;
+
+	// Fragment is outside light frustum
+	if( fragLightNDC.x < -1.0f || fragLightNDC.x > 1.0f ||
+		fragLightNDC.y < -1.0f || fragLightNDC.y > 1.0f ||
+		fragLightNDC.z < 0.0f || fragLightNDC.z > 1.0f)
+	{
+		return 1.0f;
+	}
+
+	// Texture coordinates
+	fragLightNDC.xy = fragLightNDC.xy * 0.5f + vec2(0.5f);
+
+	// Calculate shadow bias
+	float bias = 
+		shadowMapBuffer.shadowMapMinBias + 
+		shadowMapBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
+
+	vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
+	vec2 oneOverSmSize = vec2(1.0f) / shadowMapSize;
+	
+	// Start sampling
+	const float wLight = 1.0f;
+	float blockerRadius = wLight * 4.0f;
+	float dBlocker = 0.0f;
+	float numSamples = 0.0f;
+	for(float y = -blockerRadius; y <= blockerRadius; y += 1.0f)
+	{
+		for(float x = -blockerRadius; x <= blockerRadius; x += 1.0f)
+		{
+			vec2 offset = (vec2(x, y) + vec2(0.5f)) * oneOverSmSize;
+			float sampleValue = 
+				texture(shadowMapSampler, fragLightNDC.xy + offset).r;
+
+			if(fragLightNDC.z - bias >= sampleValue)
+			{
+				dBlocker += sampleValue;
+				numSamples += 1.0f;
+			}
+		}
+	}
+	dBlocker /= numSamples;
+
+	if(numSamples < 1.0f)
+	{
+		return 1.0f;
+	}
+
+	//float dBlocker = max(texture(shadowMapSampler, fragLightNDC.xy).r, 0.0001f);
+	float dReceiver = fragLightNDC.z;
+	float penumbraSize = (dReceiver - dBlocker) * wLight / dBlocker;
+	penumbraSize = min(penumbraSize, 8.0f);
+	
+	float smDiameter = penumbraSize * 1024.0f * oneOverSmSize.x;
+	smDiameter = clamp(smDiameter, 1.0f, 8.0f);
+	smDiameter = 8.0f;
+	float smRadius = smDiameter * 0.5f;
+
+	// Start sampling
+	float shadowMapFactor = 1.0f;
+	float weightSum = 0.0f;
+	for(float y = -smRadius; y <= smRadius; y += 1.0f)
+	{
+		for(float x = -smRadius; x <= smRadius; x += 1.0f)
+		{
+			vec2 offset = vec2(x, y) * oneOverSmSize;
+			float sampleValue = 
+				fragLightNDC.z - bias >= texture(shadowMapSampler, fragLightNDC.xy + offset).r ? 0.0f : 1.0f;
+			float weight = gaussWeight(length(offset), smRadius);
+			weightSum += weight;
+
+			shadowMapFactor += sampleValue * weight;
+		}
+	}
+
+	// Normalize
+	shadowMapFactor /= weightSum;
+
+	return shadowMapFactor;
 }
 
 void main() 
@@ -184,7 +260,7 @@ void main()
 		finalColor += 
 			(diffuseLight + specularLight) * 
 			lightBuffer.lights[i].color.xyz * 
-			getShadowFactor(normal, lightDir);
+			getShadowFactorPCSS(normal, lightDir);
 	}
 
 	// Point lights

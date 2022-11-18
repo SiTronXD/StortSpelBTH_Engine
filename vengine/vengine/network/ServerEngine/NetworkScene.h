@@ -28,6 +28,8 @@ public:
 	/////////////custom function for server only/////////////
 	int createPlayer();
 	int getPlayer(const int& whatPlayer);
+	int getNearestPlayer(const int& ent);
+	bool isAPlayer(const int& entity);
 	const int getPlayerSize();
 	void removePlayer(int playerID);
 
@@ -44,7 +46,7 @@ public:
 	virtual void update();
 	virtual void update(float dt);
 
-	void givePacketInfo(std::vector<sf::Packet>& serverToClient);
+	void givePacketInfo(std::vector<sf::Packet>* serverToClient);
 
 	template <typename I, typename F>
 	void addEvent(std::initializer_list<I> ints, std::initializer_list<F> floats)
@@ -54,13 +56,13 @@ public:
 		//so it points at start
 		for (int i = 0; i < serverToClient->size(); i++)
 		{
-			for (auto el : ints)
+			for (auto iel : ints)
 			{
-				this->serverToClient[0][i] << el;
+				(*this->serverToClient)[i] << (I)iel;
 			}
-			for (auto el : floats)
+			for (auto fel : floats)
 			{
-				this->serverToClient[0][i] << el;
+				(*this->serverToClient)[i] << (F)fel;
 			}
 		}
 	}
@@ -74,11 +76,10 @@ public:
 		{
 			for (auto el : ints)
 			{
-				this->serverToClient[0][i] << el;
+				(*this->serverToClient)[i] << el;
 			}
 		}
 	}
-
 	template <typename I, typename F>
 	void addEvent(std::vector<I> ints, std::vector<F> floats)
 	{
@@ -89,11 +90,11 @@ public:
 		{
 			for (auto el : ints)
 			{
-				this->serverToClient[0][i] << el;
+				(*this->serverToClient)[i] << el;
 			}
 			for (auto el : floats)
 			{
-				this->serverToClient[0][i] << el;
+				(*this->serverToClient)[i] << el;
 			}
 		}
 	}

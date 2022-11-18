@@ -9,6 +9,6 @@ struct Material
 	glm::vec4 tintColor = glm::vec4(0.0f);
 
 	// Vulkan
-	uint32_t descriptorIndex;
+	uint32_t descriptorIndex = ~0u;
 };
 

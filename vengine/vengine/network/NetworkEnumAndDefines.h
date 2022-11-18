@@ -2,11 +2,11 @@
 #include <vector>
 #pragma region PORTS_AND_OTHER
 
-#define UDP_PORT_CLIENT  55001
-#define UDP_PORT_SERVER  55002
-#define TCP_PORT_SERVER  55003
-#define TCP_PORT_CLIENT  55004
-#define SERVER_IP        "192.168.1.104"
+#define UDP_PORT_CLIENT 55000
+#define UDP_PORT_SERVER 55010
+#define TCP_PORT_SERVER 55020
+#define TCP_PORT_CLIENT 55030
+#define SERVER_IP "192.168.1.104"
 #define ServerUpdateRate 1 / 24.f
 
 #pragma endregion
@@ -85,16 +85,19 @@ SendSeed			: int
 PlayerDied			: PlayerID
 Disconnected		: PlayerID
 PlayerJoined		: name(sfml fix size of string), serverID(int)
+MONSTER_HIT			: monsterID, Damage, PlayerID
+Start				: (nothing)
+Disconnected		: what player
 
 
 /////////events tcp client -> server///////////////
-PlayerShoot			: Type(int), Direction (float x,y,z),
 HitMonster			: Monster_id, Damage
 HitMonsters			: Monster_ids(list/array), Damage
 PlayerDied			: int id
 Disconnected		: (nothig)
 Start				: (nothing)
-GAMEDATA			: NrOfPlayers - 1, PlayerIDs (list, not yours), seed,
+GAMEDATA			: NrOfPlayers - 1, PlayerIDs (list, not yours), seed, // wrong
+WentInToNewRoom		: 
 
 ///////////updates/events udp server -> client//////////////
 UpdatePlayerPos		: nrOfPlayers(int), position(list/array of float x,y,z), rotation(list/array)
@@ -107,5 +110,8 @@ UpdatePlayerPos		: position(float x,y,z), rotation(float x,y,z) (don't think I n
 
 GetPlayerNames		: nrOfPlayers(int) PlayerNames(string)
 GetLevelSeed		: Seed(int)
+
+
+Draw_Debug_Line		: position(list/array of float x,y,z), position(list/array of float x,y,z)
 */
 #pragma endregion

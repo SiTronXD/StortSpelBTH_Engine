@@ -10,6 +10,7 @@
 
 class PhysicalDevice;
 class Device;
+class RenderPass;
 class ResourceManager;
 class VulkanRenderer;
 class SceneHandler;
@@ -67,7 +68,7 @@ private:
     Device* device;
     VmaAllocator* vma;
     ResourceManager* resourceManager;
-    vk::RenderPass* renderPass;
+    RenderPass* renderPass;
 
     SceneHandler* sceneHandler;
 
@@ -83,7 +84,7 @@ public:
         Device& device,
         VmaAllocator& vma,
         ResourceManager& resourceManager,
-        vk::RenderPass& renderPass,
+        RenderPass& renderPass,
         const uint32_t& framesInFlight);
     void initForScene();
     void cleanup();

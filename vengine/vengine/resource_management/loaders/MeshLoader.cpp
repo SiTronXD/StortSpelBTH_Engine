@@ -14,13 +14,14 @@
 #include "../../graphics/MeshDataInfo.hpp"
 
 void MeshLoader::init(VmaAllocator *vma,
-    vk::PhysicalDevice *physiscalDev,
-    Device *dev, vk::Queue *transQueue,
-    vk::CommandPool *transCmdPool,
+    PhysicalDevice* physicalDevice,
+    Device* dev, 
+    vk::Queue* transQueue,
+    vk::CommandPool* transCmdPool,
     ResourceManager* resourceMan) 
 {
     this->importStructs.vma = vma;
-    this->importStructs.physicalDevice = physiscalDev;
+    this->importStructs.physicalDevice = physicalDevice;
     this->importStructs.device = dev;
     this->importStructs.transferQueue = transQueue;
     this->importStructs.transferCommandPool = transCmdPool;
@@ -53,7 +54,7 @@ void MeshLoader::loadAnimations(const std::vector<std::string>& paths, const std
     {
         scene = this->importer.ReadFile(path.c_str(), 
             aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
-
+        
         if (!scene) 
         { 
             Log::warning("Failed loading file \"" + path + "\"!");
@@ -90,7 +91,6 @@ void MeshLoader::loadAnimations(const std::vector<std::string>& paths, const std
 
         this->importer.FreeScene();
     }
-
 }
 
 MeshData MeshLoader::assimpImport(
@@ -411,6 +411,9 @@ void MeshLoader::loadAnimation(const aiScene* scene, MeshData& outMeshData)
     aiAnimation* ani = scene->mAnimations[0];
     Animation& animation = outMeshData.animations.emplace_back();
 
+    uint32_t globalBoneIndex = 0;
+	this->topologicallySortBones(mesh, scene->mRootNode, globalBoneIndex);
+
     animation.endTime = (float)ani->mDuration;
     animation.boneStamps.resize((size_t)mesh->mNumBones);
 
@@ -422,7 +425,7 @@ void MeshLoader::loadAnimation(const aiScene* scene, MeshData& outMeshData)
         aiNodeAnim* nodeAnim = findAnimationNode(ani->mChannels, ani->mNumChannels, mesh->mBones[i]->mName.C_Str());
         if (!nodeAnim) 
         {
-            Log::error("Could not find animation node");
+            Log::warning("Could not find animation node: \"" + std::string(mesh->mBones[i]->mName.C_Str()) + "\", defaulting to identity transform");
             
             // Create and default stamp[0] to avoid future errors
             poses.translationStamps.emplace_back(0.f, glm::vec3(0.f));

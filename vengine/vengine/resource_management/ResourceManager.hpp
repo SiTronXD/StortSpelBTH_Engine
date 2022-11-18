@@ -45,10 +45,9 @@ public:
     ResourceManager() = default;
     void init(
         VmaAllocator * vma,
-        vk::PhysicalDevice* physiscalDev,
+        PhysicalDevice* physicalDevice,
         Device* dev, vk::Queue* transQueue,
-        vk::CommandPool* transCmdPool,
-        VulkanRenderer* vulkanRenderer);
+        vk::CommandPool* transCmdPool);
 		
     void cleanUp();
 
@@ -58,6 +57,7 @@ public:
         std::string&& texturesPath = "");
     uint32_t addTexture(std::string&& texturePath,
         const TextureSettings& textureSettings = {});
+    uint32_t addSampler(const TextureSettings& textureSettings);
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
     uint32_t addMaterial(
         uint32_t diffuseTextureIndex,

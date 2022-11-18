@@ -9,29 +9,27 @@
 
 void ResourceManager::init(
     VmaAllocator* vma,
-    vk::PhysicalDevice* physiscalDev,
+    PhysicalDevice* physicalDevice,
     Device* dev, vk::Queue* transQueue,
-    vk::CommandPool* transCmdPool,
-    VulkanRenderer* vulkanRenderer)
+    vk::CommandPool* transCmdPool)
 {
     this->dev = dev;
 
     this->meshLoader.init(
         vma,
-        physiscalDev,
+        physicalDevice,
         dev,
         transQueue,
         transCmdPool,
         this);
     this->textureLoader.init(
         vma,
-        physiscalDev,
+        physicalDevice,
         dev,
         transQueue,
         transCmdPool,
         this);
     this->meshLoader.setTextureLoader(&this->textureLoader);
-    this->textureLoader.setVulkanRenderer(vulkanRenderer);
     
 }
 
@@ -86,14 +84,16 @@ uint32_t ResourceManager::addMesh(
     // Smooth normals in mesh data
     // MeshDataModifier::smoothNormals(meshData);
 
-    // NOTE: prevSize as key only works if we never remove resources the map...
-    this->meshPaths.insert({meshPath,this->meshPaths.size()}); 
 
-    // NOTE: meshes.size as key only works if we never remove resources the map...    
+
+    // NOTE: prevSize as key only works if we never remove resources the map...
+    const uint32_t meshId = (uint32_t)this->meshes.size();
+    this->meshPaths.insert({meshPath, meshId}); 
+
     // Create mesh, insert into map of meshes
-    meshes.insert({
-        meshes.size(),
-        meshLoader.createMesh(meshData)}        
+    this->meshes.insert({
+        meshId,
+        this->meshLoader.createMesh(meshData)}        
     ); 
 
     return meshes.size() - 1;
@@ -107,11 +107,14 @@ uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, s
         return 0;
     }
 
-    if (this->meshPaths.count(paths[0]) != 0)
+    for (const std::string& path : paths)
     {
-        // Log::warning("Mesh \""+meshPath+"\" was already added!");                
+        if (this->meshPaths.count(path) != 0)
+        {
+            // Log::warning("Mesh \""+meshPath+"\" was already added!");                
 
-        return this->meshPaths[paths[0]];        
+            return this->meshPaths[path];
+        }
     }
 
     // load and store animations in meshData
@@ -121,12 +124,13 @@ uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, s
     // No mesh imported, send default mesh back
     if (meshData.vertexStreams.positions.size() == 0) { return 0; }
     
+    const uint32_t meshId = (uint32_t)meshes.size();
+    this->meshes.insert({meshId, this->meshLoader.createMesh(meshData)});
     for (const std::string& path : paths)
     {
-        this->meshPaths.insert({path, this->meshPaths.size()}); 
+        this->meshPaths.insert({path, meshId});
     }
 
-    meshes.insert({(uint32_t)meshes.size(), meshLoader.createMesh(meshData)});
     return (uint32_t)meshes.size() - 1;
 }
 
@@ -163,6 +167,31 @@ uint32_t ResourceManager::addTexture(
         return 0;
     }
 
+    uint32_t textureSamplerIndex = 
+        this->addSampler(textureSettings);
+
+    // NOTE: texturePaths.size() as key only works if we never remove resources the map...
+    this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
+
+    // NOTE: textures.size as key only works if we never remove resources the map...    
+    // Create texture, insert into map of textures
+    textures.insert(
+        {
+            textures.size(), 
+            textureLoader.createTexture(
+                texturePath,
+                textureSettings,
+                textureSamplerIndex
+            )
+        }
+    );
+
+    return textures.size() - 1;
+}
+
+uint32_t ResourceManager::addSampler(
+    const TextureSettings& textureSettings)
+{
     // Create texture samples if it doesn't exist already
     std::string samplerString;
     TextureSampler::settingsToString(textureSettings.samplerSettings, samplerString);
@@ -189,23 +218,7 @@ uint32_t ResourceManager::addTexture(
             createSampler(*this->dev, textureSettings.samplerSettings);
     }
 
-    // NOTE: texturePaths.size() as key only works if we never remove resources the map...
-    this->texturePaths.insert({texturePath,this->texturePaths.size()}); 
-
-    // NOTE: textures.size as key only works if we never remove resources the map...    
-    // Create texture, insert into map of textures
-    textures.insert(
-        {
-            textures.size(), 
-            textureLoader.createTexture(
-                texturePath,
-                textureSettings,
-                this->samplerSettings[samplerString]
-            )
-        }
-    );
-
-    return textures.size() - 1;
+    return this->samplerSettings[samplerString];
 }
 
 uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
@@ -238,7 +251,6 @@ uint32_t ResourceManager::addMaterial(
     Material newMaterial{};
     newMaterial.diffuseTextureIndex = diffuseTextureIndex;
     newMaterial.specularTextureIndex = specularTextureIndex;
-    newMaterial.descriptorIndex = ~0u;
 
     uint32_t newMaterialIndex =
         static_cast<uint32_t>(this->materials.size());

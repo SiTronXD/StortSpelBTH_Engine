@@ -1,9 +1,9 @@
 #pragma once
-#include "ServerEngine/Server.h"
-#include "Client.h"
+#include "../../vengine/resource_management/ResourceManager.hpp"
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
-#include "../../vengine/resource_management/ResourceManager.hpp"
+#include "Client.h"
+#include "ServerEngine/Server.h"
 
 class NetworkHandler 
 {

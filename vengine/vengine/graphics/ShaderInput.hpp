@@ -11,8 +11,8 @@ class ResourceManager;
 class Texture;
 class TextureSampler;
 
-using UniformBufferID = uint32_t;
-using StorageBufferID = uint32_t;
+using UniformBufferID = uint64_t;
+using StorageBufferID = uint64_t;
 
 enum class DescriptorFrequency
 {
@@ -23,25 +23,10 @@ enum class DescriptorFrequency
 	NUM_FREQUENCY_TYPES
 };
 
-struct UniformBufferHandle
-{
-	UniformBuffer uniformBuffer;
-	vk::ShaderStageFlagBits shaderStage;
-	DescriptorFrequency descriptorFreq;
-	bool cpuWritable = true;
-};
-
-struct StorageBufferHandle
-{
-	StorageBuffer storageBuffer;
-	vk::ShaderStageFlagBits shaderStage;
-	DescriptorFrequency descriptorFreq;
-	bool cpuWritable = true;
-};
-
 struct ResourceHandle
 {
-	uint32_t bufferID;
+	Buffer* buffer = nullptr;
+	Texture* textureReference = nullptr;
 	vk::DescriptorType descriptorType;
 	vk::ShaderStageFlagBits shaderStage;
 	DescriptorFrequency descriptorFreq;
@@ -100,12 +85,8 @@ private:
 	vk::DescriptorPool perMeshPool{};
 	vk::DescriptorPool perDrawPool{};
 
-	std::vector<ResourceHandle> perFrameResources;
-	std::vector<ResourceHandle> perMeshResources;
-	std::vector<ResourceHandle> perDrawResources;
-
-	std::vector<UniformBufferHandle> addedUniformBuffers;
-	std::vector<StorageBufferHandle> addedStorageBuffers;
+	// resources[DescriptorFrequency][resource]
+	std::vector<std::vector<ResourceHandle>> resources;
 
 	// per...DescriptorSets[frameInFlight][bufferID]
 	std::vector<vk::DescriptorSet> perFrameDescriptorSets;
@@ -123,6 +104,13 @@ private:
     bool usePushConstant;
 
 	bool hasBeenCreated;
+
+	uint64_t createResourceID(
+		const DescriptorFrequency& descriptorFrequency);
+	uint32_t getResourceFrequencyIndex(
+		const uint64_t& resourceID);
+	uint32_t getResourceIndex(
+		const uint64_t& resourceID);
 
 	void createDescriptorSetLayouts();
 	void createDescriptorPools();
@@ -149,6 +137,10 @@ public:
 		const DescriptorFrequency& descriptorFrequency);
     StorageBufferID addStorageBuffer(
 		const size_t& contentsSize,
+		const vk::ShaderStageFlagBits& shaderStage,
+		const DescriptorFrequency& descriptorFrequency);
+	void addCombinedImageSampler(
+		Texture& texture,
 		const vk::ShaderStageFlagBits& shaderStage,
 		const DescriptorFrequency& descriptorFrequency);
 	void endForInput();

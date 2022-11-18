@@ -8,67 +8,56 @@
 #include "Texture.hpp"
 #include "../dev/Log.hpp"
 
+uint64_t ShaderInput::createResourceID(
+    const DescriptorFrequency& descriptorFrequency)
+{
+    uint32_t frequencyIndex = (uint32_t)descriptorFrequency;
+    uint64_t resourceIndex = 
+        static_cast<uint64_t>(this->resources[frequencyIndex].size());
+
+    return (uint64_t(frequencyIndex) << 32) | resourceIndex;
+}
+
+uint32_t ShaderInput::getResourceFrequencyIndex(
+    const uint64_t& resourceID)
+{
+    return uint32_t(resourceID >> 32);
+}
+
+uint32_t ShaderInput::getResourceIndex(
+    const uint64_t& resourceID)
+{
+    return uint32_t(resourceID);
+}
+
 void ShaderInput::createDescriptorSetLayouts()
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
 
-    std::vector<vk::DescriptorSetLayoutBinding> perFrameLayoutBindings;
-    std::vector<vk::DescriptorSetLayoutBinding> perMeshLayoutBindings;
-    std::vector<vk::DescriptorSetLayoutBinding> perDrawLayoutBindings;
+    // layoutBindings[DescriptorFrequency][bindingIndex]
+    std::vector<std::vector<vk::DescriptorSetLayoutBinding>> layoutBindings((uint32_t) DescriptorFrequency::NUM_FREQUENCY_TYPES);
 
-    // Uniform buffers
-    for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
+    // Resources
+    for (size_t i = 0; i < layoutBindings.size(); ++i)
     {
-        vk::DescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.setDescriptorType(vk::DescriptorType::eUniformBuffer);    // Type of descriptor (Uniform, Dynamic uniform, image Sampler, etc.)
-        uboLayoutBinding.setDescriptorCount(uint32_t(1));                                   // Amount of actual descriptors we're binding, where just binding one; our MVP struct
-        uboLayoutBinding.setStageFlags(this->addedUniformBuffers[i].shaderStage);               // What Shader Stage we want to bind our Descriptor set to
-        uboLayoutBinding.setPImmutableSamplers(nullptr);          // Used by Textures; whether or not the Sampler should be Immutable
-
-        // Uniform buffers per frame
-        if (this->addedUniformBuffers[i].descriptorFreq == DescriptorFrequency::PER_FRAME)
+        for (size_t j = 0; j < this->resources[i].size(); ++j)
         {
-            uboLayoutBinding.setBinding(uint32_t(perFrameLayoutBindings.size()));                                           // Describes which Binding Point in the shaders this layout is being bound to
+            const ResourceHandle& resource = this->resources[i][j];
 
-            perFrameLayoutBindings.push_back(uboLayoutBinding);
-        }
-        // Uniform buffers per mesh
-        else if (this->addedUniformBuffers[i].descriptorFreq == DescriptorFrequency::PER_MESH)
-        {
-            uboLayoutBinding.setBinding(uint32_t(perMeshLayoutBindings.size()));
-
-            perMeshLayoutBindings.push_back(uboLayoutBinding);
-        }
-    }
-    
-    // Storage buffers
-    for (size_t i = 0; i < this->addedStorageBuffers.size(); ++i)
-    {
-        vk::DescriptorSetLayoutBinding sboLayoutBinding{};
-        sboLayoutBinding.setDescriptorType(vk::DescriptorType::eStorageBuffer);    // Type of descriptor (Uniform, Dynamic uniform, image Sampler, etc.)
-        sboLayoutBinding.setDescriptorCount(uint32_t(1));                                   // Amount of actual descriptors we're binding, where just binding one; our MVP struct
-        sboLayoutBinding.setStageFlags(this->addedStorageBuffers[i].shaderStage);               // What Shader Stage we want to bind our Descriptor set to
-        sboLayoutBinding.setPImmutableSamplers(nullptr);          // Used by Textures; whether or not the Sampler should be Immutable
-
-        // Storage buffers per frame
-        if (this->addedStorageBuffers[i].descriptorFreq == DescriptorFrequency::PER_FRAME)
-        {
-            sboLayoutBinding.setBinding(uint32_t(perFrameLayoutBindings.size()));                                           // Describes which Binding Point in the shaders this layout is being bound to
-
-            perFrameLayoutBindings.push_back(sboLayoutBinding);
-        }
-        // Storage buffers per mesh
-        else if (this->addedStorageBuffers[i].descriptorFreq == DescriptorFrequency::PER_MESH)
-        {
-            sboLayoutBinding.setBinding(uint32_t(perMeshLayoutBindings.size()));                                           // Describes which Binding Point in the shaders this layout is being bound to
-
-            perMeshLayoutBindings.push_back(sboLayoutBinding);
+            vk::DescriptorSetLayoutBinding newLayoutBinding{};
+            newLayoutBinding.setBinding(uint32_t(j));                                           // Describes which Binding Point in the shaders this layout is being bound to
+            newLayoutBinding.setDescriptorType(resource.descriptorType);    // Type of descriptor (Uniform, Dynamic uniform, image Sampler, etc.)
+            newLayoutBinding.setDescriptorCount(uint32_t(1));                                   // Amount of actual descriptors we're binding, where just binding one; our MVP struct
+            newLayoutBinding.setStageFlags(resource.shaderStage);               // What Shader Stage we want to bind our Descriptor set to
+            newLayoutBinding.setPImmutableSamplers(nullptr);          // Used by Textures; whether or not the Sampler should be Immutable
+        
+            layoutBindings[i].push_back(newLayoutBinding);
         }
     }
 
-    // Combined image/samplers
+    // Combined image/samplers per draw
     for (size_t i = 0; i < this->perDrawInputLayout.numBindings; ++i)
     {
         vk::DescriptorSetLayoutBinding combSampLayoutBinding{};
@@ -79,16 +68,16 @@ void ShaderInput::createDescriptorSetLayouts()
         combSampLayoutBinding.setPImmutableSamplers(nullptr);
 
         // Always per draw for now
-        perDrawLayoutBindings.push_back(combSampLayoutBinding);
+        layoutBindings[(uint32_t) DescriptorFrequency::PER_DRAW_CALL].push_back(combSampLayoutBinding);
     }
 
 
     // Per frame
     vk::DescriptorSetLayoutCreateInfo perFrameLayoutCreateInfo{};
     perFrameLayoutCreateInfo.setBindingCount(
-        static_cast<uint32_t>(perFrameLayoutBindings.size()));  // Number of Binding infos
+        static_cast<uint32_t>(layoutBindings[(uint32_t)DescriptorFrequency::PER_FRAME].size()));  // Number of Binding infos
     perFrameLayoutCreateInfo.setPBindings(
-        perFrameLayoutBindings.data());                            // Array containing the binding infos
+        layoutBindings[(uint32_t)DescriptorFrequency::PER_FRAME].data());                            // Array containing the binding infos
 
     // --------- Create descriptor set layout for per frame descriptor sets ---------
     this->perFrameSetLayout = this->device->getVkDevice().createDescriptorSetLayout(
@@ -98,9 +87,9 @@ void ShaderInput::createDescriptorSetLayouts()
     // Per mesh
     vk::DescriptorSetLayoutCreateInfo perMeshLayoutCreateInfo;
     perMeshLayoutCreateInfo.setBindingCount(
-        static_cast<uint32_t>(perMeshLayoutBindings.size()));
+        static_cast<uint32_t>(layoutBindings[(uint32_t)DescriptorFrequency::PER_MESH].size()));
     perMeshLayoutCreateInfo.setPBindings(
-        perMeshLayoutBindings.data());
+        layoutBindings[(uint32_t)DescriptorFrequency::PER_MESH].data());
 
     // --------- Create descriptor set layout for per mesh descriptor sets ---------
     this->perMeshSetLayout =
@@ -111,9 +100,9 @@ void ShaderInput::createDescriptorSetLayouts()
     // Per draw
     vk::DescriptorSetLayoutCreateInfo perDrawLayoutCreateInfo;
     perDrawLayoutCreateInfo.setBindingCount(
-        static_cast<uint32_t>(perDrawLayoutBindings.size()));
+        static_cast<uint32_t>(layoutBindings[(uint32_t)DescriptorFrequency::PER_DRAW_CALL].size()));
     perDrawLayoutCreateInfo.setPBindings(
-        perDrawLayoutBindings.data());
+        layoutBindings[(uint32_t)DescriptorFrequency::PER_DRAW_CALL].data());
 
     // --------- Create descriptor set layout for per draw descriptor sets ---------
     this->perDrawSetLayout = this->device->getVkDevice().createDescriptorSetLayout(
@@ -127,66 +116,81 @@ void ShaderInput::createDescriptorPools()
     ZoneScoped; //:NOLINT
 #endif
 
+    enum DescriptorTypes
+    {
+        UNIFORM_BUFFER,
+        STORAGE_BUFFER,
+        COMBINED_IMAGE_SAMPLER,
+
+        NUM_DESC_TYPES
+    };
+
+    // descriptorToVkDescriptor[i] = vk::DescriptorType
+    vk::DescriptorType descriptorToVkDescriptor[3]
+    {
+        vk::DescriptorType::eUniformBuffer,
+        vk::DescriptorType::eStorageBuffer,
+        vk::DescriptorType::eCombinedImageSampler
+    };
+
+    // vkDescriptorToDescriptor[vk::DesciptorType] = i
+    // (vk::DesciptorType can be a very large number)
+    std::map<vk::DescriptorType, uint32_t> vkDescriptorToDescriptor;
+    for (uint32_t i = 0; i < DescriptorTypes::NUM_DESC_TYPES; ++i)
+    {
+        vkDescriptorToDescriptor.insert(
+            {
+                descriptorToVkDescriptor[i],
+                i
+            }
+        );
+    }
 
     // Pool sizes
-    vk::DescriptorPoolSize perFrameUniformBufferPoolSize{};
-    perFrameUniformBufferPoolSize.setType(vk::DescriptorType::eUniformBuffer);
-    perFrameUniformBufferPoolSize.setDescriptorCount(0);
-    vk::DescriptorPoolSize perFrameStorageBufferPoolSize{};
-    perFrameStorageBufferPoolSize.setType(vk::DescriptorType::eStorageBuffer);
-    perFrameStorageBufferPoolSize.setDescriptorCount(0);
-
-    vk::DescriptorPoolSize perMeshUniformBufferPoolSize{};
-    perMeshUniformBufferPoolSize.setType(vk::DescriptorType::eUniformBuffer);
-    perMeshUniformBufferPoolSize.setDescriptorCount(0);
-    vk::DescriptorPoolSize perMeshStorageBufferPoolSize{};
-    perMeshStorageBufferPoolSize.setType(vk::DescriptorType::eStorageBuffer);
-    perMeshStorageBufferPoolSize.setDescriptorCount(0);
-
-    // Number of ubo descriptor sets
-    for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
+    // poolSizes[descriptorSetFrequency][descriptorType]
+    std::vector<std::vector<vk::DescriptorPoolSize>> poolSizes((uint32_t) DescriptorFrequency::NUM_FREQUENCY_TYPES);
+    for (size_t i = 0; i < poolSizes.size(); ++i)
     {
-        if (this->addedUniformBuffers[i].descriptorFreq == DescriptorFrequency::PER_FRAME)
+        for (size_t j = 0; j < DescriptorTypes::NUM_DESC_TYPES; ++j)
         {
-            perFrameUniformBufferPoolSize.descriptorCount +=
-                this->addedUniformBuffers[i].cpuWritable ?
-                this->framesInFlight : 1;
-        }
-        else if (this->addedUniformBuffers[i].descriptorFreq == DescriptorFrequency::PER_MESH)
-        {
-            perMeshUniformBufferPoolSize.descriptorCount +=
-                this->addedUniformBuffers[i].cpuWritable ?
-                this->framesInFlight : 1;
+            vk::DescriptorPoolSize descPoolSize{};
+            descPoolSize.setType(descriptorToVkDescriptor[j]);
+            descPoolSize.setDescriptorCount(0);
+
+            poolSizes[i].push_back(descPoolSize);
         }
     }
 
-    // Number of sbo descriptor sets
-    for (size_t i = 0; i < this->addedStorageBuffers.size(); ++i)
+    // Find number of descriptor sets to create
+    for (size_t i = 0; i < this->resources.size(); ++i)
     {
-        if (this->addedStorageBuffers[i].descriptorFreq == DescriptorFrequency::PER_FRAME)
+        for (size_t j = 0; j < this->resources[i].size(); ++j)
         {
-            perFrameStorageBufferPoolSize.descriptorCount +=
-                this->addedStorageBuffers[i].cpuWritable ?
-                this->framesInFlight : 1;
-        }
-        else if (this->addedStorageBuffers[i].descriptorFreq == DescriptorFrequency::PER_MESH)
-        {
-            perMeshStorageBufferPoolSize.descriptorCount +=
-                this->addedStorageBuffers[i].cpuWritable ?
-                this->framesInFlight : 1;
+            const ResourceHandle& resource = this->resources[i][j];
+
+            poolSizes
+                [(uint32_t) resource.descriptorFreq]
+                [vkDescriptorToDescriptor[resource.descriptorType]].descriptorCount 
+                    += resource.cpuWritable ?
+                    this->framesInFlight : 1;
         }
     }
+
 
     // --------- Descriptor pool for per frame descriptor sets ---------
-    std::vector<vk::DescriptorPoolSize> perFramePoolSizes;
+    std::vector<vk::DescriptorPoolSize>& perFramePoolSizes = poolSizes[(uint32_t) DescriptorFrequency::PER_FRAME];
     uint32_t perFrameDescriptorCount = 0;
-    if (perFrameUniformBufferPoolSize.descriptorCount > 0) perFramePoolSizes.push_back(perFrameUniformBufferPoolSize);
-    if (perFrameStorageBufferPoolSize.descriptorCount > 0) perFramePoolSizes.push_back(perFrameStorageBufferPoolSize);
     for(size_t i = 0; i < perFramePoolSizes.size(); ++i)
     {
+        if (perFramePoolSizes[i].descriptorCount <= 0)
+        {
+            perFramePoolSizes.erase(perFramePoolSizes.begin() + i);
+            i--;
+            continue;
+        }
+
         perFrameDescriptorCount += perFramePoolSizes[i].descriptorCount;
     }
-
     if (perFrameDescriptorCount > 0)
     {
         // Pool create info
@@ -204,16 +208,21 @@ void ShaderInput::createDescriptorPools()
         VulkanDbg::registerVkObjectDbgInfo("PerFrameDescriptorPool", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perFramePool)));
     }
 
+
     // --------- Descriptor pool for per mesh descriptor sets ---------
-    std::vector<vk::DescriptorPoolSize> perMeshPoolSizes;
+    std::vector<vk::DescriptorPoolSize>& perMeshPoolSizes = poolSizes[(uint32_t) DescriptorFrequency::PER_MESH];
     uint32_t perMeshDescriptorCount = 0;
-    if (perMeshUniformBufferPoolSize.descriptorCount > 0) perMeshPoolSizes.push_back(perMeshUniformBufferPoolSize);
-    if (perMeshStorageBufferPoolSize.descriptorCount > 0) perMeshPoolSizes.push_back(perMeshStorageBufferPoolSize);
     for (size_t i = 0; i < perMeshPoolSizes.size(); ++i)
     {
+        if (perMeshPoolSizes[i].descriptorCount <= 0)
+        {
+            perMeshPoolSizes.erase(perMeshPoolSizes.begin() + i);
+            i--;
+            continue;
+        }
+
         perMeshDescriptorCount += perMeshPoolSizes[i].descriptorCount;
     }
-
     if (perMeshDescriptorCount > 0)
     {
         // Pool create info 
@@ -229,6 +238,7 @@ void ShaderInput::createDescriptorPools()
                 perMeshPoolCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("PerMeshDescriptorPool", vk::ObjectType::eDescriptorPool, reinterpret_cast<uint64_t>(vk::DescriptorPool::CType(this->perMeshPool)));
     }
+
 
     // --------- Descriptor pool for per draw descriptor sets ---------
     vk::DescriptorPoolSize perDrawPoolSize{};
@@ -250,7 +260,9 @@ void ShaderInput::createDescriptorPools()
 void ShaderInput::allocateDescriptorSets()
 {
     // --------- Descriptor sets per frame ---------
-    if (this->perFrameResources.size() > 0)
+    const std::vector<ResourceHandle>& perFrameResources =
+        this->resources[(uint32_t)DescriptorFrequency::PER_FRAME];
+    if (perFrameResources.size() > 0)
     {
         // One descriptor set per frame in flight
         this->perFrameDescriptorSets.resize(this->framesInFlight);
@@ -274,13 +286,15 @@ void ShaderInput::allocateDescriptorSets()
     }
 
     // --------- Descriptor sets per mesh ---------
-    if (this->perMeshResources.size() > 0)
+    const std::vector<ResourceHandle>& perMeshResources =
+        this->resources[(uint32_t)DescriptorFrequency::PER_MESH];
+    if (perMeshResources.size() > 0)
     {
         // One descriptor set per frame in flight per storage buffer
         this->perMeshDescriptorSets.resize(this->framesInFlight);
         for (size_t i = 0; i < this->perMeshDescriptorSets.size(); ++i)
         {
-            this->perMeshDescriptorSets[i].resize(this->perMeshResources.size());
+            this->perMeshDescriptorSets[i].resize(perMeshResources.size());
 
             // Copy our layout so we have one per set
             std::vector<vk::DescriptorSetLayout> perMeshLayouts(
@@ -310,36 +324,56 @@ void ShaderInput::updateDescriptorSets()
     // --------- Per frame descriptor sets ---------
 
     // Update all per frame descriptor set buffer binding
+    const std::vector<ResourceHandle>& perFrameResources =
+        this->resources[(uint32_t) DescriptorFrequency::PER_FRAME];
     for (size_t i = 0; i < this->perFrameDescriptorSets.size(); i++)
     {
         std::vector<vk::DescriptorBufferInfo> descriptorBufferInfos;
+        std::vector<vk::DescriptorImageInfo> descriptorImageInfos;
         std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
-        descriptorBufferInfos.resize(this->perFrameResources.size());
-        writeDescriptorSets.resize(this->perFrameResources.size());
+        descriptorBufferInfos.resize(perFrameResources.size());
+        descriptorImageInfos.resize(perFrameResources.size());
+        writeDescriptorSets.resize(perFrameResources.size());
 
         // Loop through all uniform buffers
         for (size_t j = 0; j < descriptorBufferInfos.size(); ++j)
         {
-            Buffer* buffer =
-                this->perFrameResources[j].descriptorType == vk::DescriptorType::eUniformBuffer ?
-                (Buffer*) (&this->addedUniformBuffers[this->perFrameResources[j].bufferID].uniformBuffer) : 
-                (Buffer*) (&this->addedStorageBuffers[this->perFrameResources[j].bufferID].storageBuffer);
+            Buffer* buffer = perFrameResources[j].buffer;
+            Texture* texture = perFrameResources[j].textureReference;
 
-            // Describe the Buffer info and Data offset Info
-            descriptorBufferInfos[j].setBuffer(
-                buffer->getBuffer(i)); // Buffer to get the Data from
-            descriptorBufferInfos[j].setOffset(
-                0);
-            descriptorBufferInfos[j].setRange(
-                (vk::DeviceSize) buffer->getBufferSize());
+            // Buffer
+            if (buffer != nullptr)
+            {
+                // Describe the Buffer info and Data offset Info
+                descriptorBufferInfos[j].setBuffer(
+                    buffer->getBuffer(i)); // Buffer to get the Data from
+                descriptorBufferInfos[j].setOffset(
+                    0);
+                descriptorBufferInfos[j].setRange(
+                    (vk::DeviceSize)buffer->getBufferSize());
+
+                writeDescriptorSets[j].setPBufferInfo(&descriptorBufferInfos[j]);
+            }
+            // Texture
+            else
+            {
+                descriptorImageInfos[j].setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // The image layout when it is in use
+                descriptorImageInfos[j].setImageView(texture->getImageView());
+                descriptorImageInfos[j].setSampler(
+                    this->resourceManager->getTextureSampler(
+                        texture->getSamplerIndex()
+                    ).getVkSampler()
+                );
+
+                writeDescriptorSets[j].setPImageInfo(&descriptorImageInfos[j]);
+            }
 
             // Data to describe the connection between binding and uniform Buffer
             writeDescriptorSets[j].setDstSet(this->perFrameDescriptorSets[i]);              // Descriptor Set to update
             writeDescriptorSets[j].setDstBinding(uint32_t(j));                                    // Binding to update (Matches with Binding on Layout/Shader)
             writeDescriptorSets[j].setDstArrayElement(uint32_t(0));                                // Index in array we want to update (if we use an array, we do not. thus 0)
-            writeDescriptorSets[j].setDescriptorType(this->perFrameResources[j].descriptorType);// Type of Descriptor
+            writeDescriptorSets[j].setDescriptorType(perFrameResources[j].descriptorType);// Type of Descriptor
             writeDescriptorSets[j].setDescriptorCount(uint32_t(1));                                // Amount of Descriptors to update
-            writeDescriptorSets[j].setPBufferInfo(&descriptorBufferInfos[j]);
         }
 
         // Update the descriptor sets with new buffer/binding info
@@ -351,22 +385,20 @@ void ShaderInput::updateDescriptorSets()
         VulkanDbg::registerVkObjectDbgInfo("PerFrameDescriptorSet[" + std::to_string(i) + "]", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->perFrameDescriptorSets[i])));
     }
 
-
     // --------- Per mesh descriptor sets ---------
+    const std::vector<ResourceHandle>& perMeshResources =
+        this->resources[(uint32_t)DescriptorFrequency::PER_MESH];
     for (size_t i = 0; i < this->perMeshDescriptorSets.size(); i++) 
     {
         std::vector<vk::DescriptorBufferInfo> descriptorBufferInfos;
         std::vector<vk::WriteDescriptorSet> writeDescriptorSets;
-        descriptorBufferInfos.resize(this->perMeshResources.size());
-        writeDescriptorSets.resize(this->perMeshResources.size());
+        descriptorBufferInfos.resize(perMeshResources.size());
+        writeDescriptorSets.resize(perMeshResources.size());
 
         // Loop through all storage buffers
         for (size_t j = 0; j < descriptorBufferInfos.size(); ++j)
         {
-            Buffer* buffer =
-                this->perMeshResources[j].descriptorType == vk::DescriptorType::eUniformBuffer ?
-                (Buffer*)(&this->addedUniformBuffers[this->perMeshResources[j].bufferID].uniformBuffer) :
-                (Buffer*)(&this->addedStorageBuffers[this->perMeshResources[j].bufferID].storageBuffer);
+            Buffer* buffer = perMeshResources[j].buffer;
 
             // Describe the Buffer info and Data offset Info
             descriptorBufferInfos[j].setBuffer(
@@ -380,7 +412,7 @@ void ShaderInput::updateDescriptorSets()
             writeDescriptorSets[j].setDstSet(this->perMeshDescriptorSets[i][j]);              // Descriptor Set to update
             writeDescriptorSets[j].setDstBinding(0 /* 0 for animations */);                                    // Binding to update (Matches with Binding on Layout/Shader)
             writeDescriptorSets[j].setDstArrayElement(uint32_t(0));                                // Index in array we want to update (if we use an array, we do not. thus 0)
-            writeDescriptorSets[j].setDescriptorType(this->perMeshResources[j].descriptorType);// Type of Descriptor
+            writeDescriptorSets[j].setDescriptorType(perMeshResources[j].descriptorType);// Type of Descriptor
             writeDescriptorSets[j].setDescriptorCount(uint32_t(1));                                // Amount of Descriptors to update
             writeDescriptorSets[j].setPBufferInfo(&descriptorBufferInfos[j]);
 
@@ -406,7 +438,9 @@ ShaderInput::ShaderInput()
     pushConstantShaderStage(vk::ShaderStageFlagBits::eAll), 
     usePushConstant(false),
     hasBeenCreated(false)
-{ }
+{ 
+    this->resources.resize((uint32_t) DescriptorFrequency::NUM_FREQUENCY_TYPES);
+}
 
 ShaderInput::~ShaderInput()
 {
@@ -432,52 +466,28 @@ UniformBufferID ShaderInput::addUniformBuffer(
     const vk::ShaderStageFlagBits& shaderStage,
     const DescriptorFrequency& descriptorFrequency)
 {
-    UniformBufferID uniformBufferID = this->addedUniformBuffers.size();
+    UniformBufferID uniformBufferID = 
+        this->createResourceID(descriptorFrequency);
 
-    // Create buffer and set info
-    UniformBufferHandle uniformBufferHandle{};
-    uniformBufferHandle.uniformBuffer.createUniformBuffer(
+    // Create uniform buffer
+    UniformBuffer* uniformBuffer = new UniformBuffer();
+    uniformBuffer->createUniformBuffer(
         *this->device,
         *this->vma,
         contentsSize,
         this->framesInFlight
     );
-    uniformBufferHandle.shaderStage = shaderStage;
-    uniformBufferHandle.descriptorFreq = descriptorFrequency;
-    uniformBufferHandle.cpuWritable = true;
-
-    // Add to list
-    this->addedUniformBuffers.push_back(uniformBufferHandle);
-
-    // TODO: cleanup and use only resourceHandle in the future
 
     // Create resource handle and add it to the lists
     ResourceHandle resourceHandle{};
-    resourceHandle.bufferID = uniformBufferID;
+    resourceHandle.buffer = uniformBuffer;
     resourceHandle.descriptorType = vk::DescriptorType::eUniformBuffer;
-    resourceHandle.shaderStage = uniformBufferHandle.shaderStage;
-    resourceHandle.descriptorFreq = uniformBufferHandle.descriptorFreq;
-    resourceHandle.cpuWritable = uniformBufferHandle.cpuWritable;
-    switch (descriptorFrequency)
-    {
-    case DescriptorFrequency::PER_FRAME:
+    resourceHandle.shaderStage = shaderStage;
+    resourceHandle.descriptorFreq = descriptorFrequency;
+    resourceHandle.cpuWritable = true;
 
-        this->perFrameResources.push_back(resourceHandle);
-
-        break;
-
-    case DescriptorFrequency::PER_MESH:
-
-        this->perMeshResources.push_back(resourceHandle);
-
-        break;
-
-    case DescriptorFrequency::PER_DRAW_CALL:
-
-        this->perDrawResources.push_back(resourceHandle);
-
-        break;
-    }
+    // Add resource to list
+    this->resources[(uint32_t)descriptorFrequency].push_back(resourceHandle);
 
     return uniformBufferID;
 }
@@ -487,54 +497,48 @@ StorageBufferID ShaderInput::addStorageBuffer(
     const vk::ShaderStageFlagBits& shaderStage,
     const DescriptorFrequency& descriptorFrequency)
 {
-    StorageBufferID storageBufferID = this->addedStorageBuffers.size();
+    StorageBufferID storageBufferID = 
+        this->createResourceID(descriptorFrequency);
 
-    // Create buffer and set info
-    StorageBufferHandle storageBufferHandle{};
-    storageBufferHandle.storageBuffer.createStorageBuffer(
+    // Create storage buffer
+    StorageBuffer* storageBuffer = new StorageBuffer();
+    storageBuffer->createStorageBuffer(
         *this->device,
         *this->vma,
         contentsSize,
         this->framesInFlight
     );
-    storageBufferHandle.shaderStage = shaderStage;
-    storageBufferHandle.descriptorFreq = descriptorFrequency;
-    storageBufferHandle.cpuWritable = true;
-
-    // Add to list
-    this->addedStorageBuffers.push_back(storageBufferHandle);
-
-    // TODO: cleanup and use only resourceHandle in the future
 
     // Create resource handle and add it to the lists
     ResourceHandle resourceHandle{};
-    resourceHandle.bufferID = storageBufferID;
+    resourceHandle.buffer = storageBuffer;
     resourceHandle.descriptorType = vk::DescriptorType::eStorageBuffer;
-    resourceHandle.shaderStage = storageBufferHandle.shaderStage;
-    resourceHandle.descriptorFreq = storageBufferHandle.descriptorFreq;
-    resourceHandle.cpuWritable = storageBufferHandle.cpuWritable;
-    switch (descriptorFrequency)
-    {
-    case DescriptorFrequency::PER_FRAME:
+    resourceHandle.shaderStage = shaderStage;
+    resourceHandle.descriptorFreq = descriptorFrequency;
+    resourceHandle.cpuWritable = true;
 
-        this->perFrameResources.push_back(resourceHandle);
-
-        break;
-
-    case DescriptorFrequency::PER_MESH:
-
-        this->perMeshResources.push_back(resourceHandle);
-
-        break;
-
-    case DescriptorFrequency::PER_DRAW_CALL:
-
-        this->perDrawResources.push_back(resourceHandle);
-
-        break;
-    }
+    // Add resource to list
+    this->resources[(uint32_t) descriptorFrequency].push_back(resourceHandle);
 
     return storageBufferID;
+}
+
+void ShaderInput::addCombinedImageSampler(
+    Texture& texture,
+    const vk::ShaderStageFlagBits& shaderStage,
+    const DescriptorFrequency& descriptorFrequency)
+{
+    // Create resource handle and add it to the lists
+    ResourceHandle resourceHandle{};
+    resourceHandle.buffer = nullptr;
+    resourceHandle.textureReference = &texture;
+    resourceHandle.descriptorType = vk::DescriptorType::eCombinedImageSampler;
+    resourceHandle.shaderStage = shaderStage;
+    resourceHandle.descriptorFreq = descriptorFrequency;
+    resourceHandle.cpuWritable = true;
+
+    // Add resource to list
+    this->resources[(uint32_t)descriptorFrequency].push_back(resourceHandle);
 }
 
 void ShaderInput::addPushConstant(
@@ -605,24 +609,31 @@ void ShaderInput::cleanup()
     // Undo after destroying objects
     this->hasBeenCreated = false;
 
-    // Uniform buffers
-    for (size_t i = 0; i < this->addedUniformBuffers.size(); ++i)
-    {
-        this->addedUniformBuffers[i].uniformBuffer.cleanup();
-    }
-    this->addedUniformBuffers.clear();
-
-    // Storage buffers
-    for (size_t i = 0; i < this->addedStorageBuffers.size(); ++i)
-    {
-        this->addedStorageBuffers[i].storageBuffer.cleanup();
-    }
-    this->addedStorageBuffers.clear();
-
     // Resource handles
-    this->perFrameResources.clear();
-    this->perMeshResources.clear();
-    this->perDrawResources.clear();
+    for (size_t i = 0; 
+        i < (size_t) DescriptorFrequency::NUM_FREQUENCY_TYPES; 
+        ++i)
+    {
+        // Resources
+        for (size_t j = 0, numResources = this->resources[i].size();
+            j < numResources;
+            ++j)
+        {
+            Buffer*& buffer =
+                this->resources[i][j].buffer;
+
+            // Only delete buffers
+            if (buffer != nullptr)
+            {
+                buffer->cleanup();
+
+                delete buffer;
+                buffer = nullptr;
+            }
+        }
+
+        this->resources[i].clear();
+    }
 
     // Descriptor pools
     this->perFrameDescriptorSets.clear();
@@ -649,14 +660,20 @@ void ShaderInput::updateUniformBuffer(
     const UniformBufferID& id,
     void* data)
 {
-    this->addedUniformBuffers[id].uniformBuffer.update(data, this->currentFrame);
+    this->resources
+        [this->getResourceFrequencyIndex(id)]
+        [this->getResourceIndex(id)]
+        .buffer->update(data, this->currentFrame);
 }
 
 void ShaderInput::updateStorageBuffer(
     const StorageBufferID& id,
     void* data)
 {
-    this->addedStorageBuffers[id].storageBuffer.update(data, this->currentFrame);
+    this->resources
+        [this->getResourceFrequencyIndex(id)]
+        [this->getResourceIndex(id)]
+        .buffer->update(data, this->currentFrame);
 }
 
 void ShaderInput::setCurrentFrame(const uint32_t& currentFrame)
@@ -674,8 +691,12 @@ void ShaderInput::setCurrentFrame(const uint32_t& currentFrame)
 void ShaderInput::setStorageBuffer(
     const StorageBufferID& storageBufferID)
 {
-    this->bindDescriptorSets[(uint32_t) this->addedStorageBuffers[storageBufferID].descriptorFreq] =
-        &this->perMeshDescriptorSets[this->currentFrame][storageBufferID];
+    // TODO: make this prettier to look at
+    this->bindDescriptorSets
+        [this->getResourceFrequencyIndex(storageBufferID)] =
+            &this->perMeshDescriptorSets
+            [this->currentFrame]
+            [this->getResourceIndex(storageBufferID)];
 }
 
 void ShaderInput::makeFrequencyInputLayout(

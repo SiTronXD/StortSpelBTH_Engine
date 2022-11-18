@@ -24,10 +24,9 @@ void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 {
 	otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
 	otherPlayersServerId.push_back(serverId);
-	//TODO : get player mesh
 	if (this->networkHandlerMeshes.find("PlayerMesh") == this->networkHandlerMeshes.end())
 	{
-		sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1].first);
+		sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1].first, 0);
 	}
 	else
 	{
@@ -35,6 +34,7 @@ void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 			otherPlayers[otherPlayers.size() - 1].first, 
 			this->networkHandlerMeshes.find("PlayerMesh")->second
 			);
+		sceneHandler->getScene()->setComponent<AnimationComponent>(otherPlayers[otherPlayers.size() - 1].first);
 	}
 }
 

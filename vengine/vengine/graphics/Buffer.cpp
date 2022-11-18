@@ -40,6 +40,19 @@ void Buffer::init(
     this->bufferSize = bufferSize;
 }
 
+void Buffer::update(void* copyData, const uint32_t& currentFrame)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
+    void* data = nullptr;
+
+    this->map(data, currentFrame);
+    memcpy(data, copyData, this->getBufferSize());
+    this->unmap(currentFrame);
+}
+
 void Buffer::cleanup()
 {
     for (size_t i = 0; i < this->buffers.size(); i++)
