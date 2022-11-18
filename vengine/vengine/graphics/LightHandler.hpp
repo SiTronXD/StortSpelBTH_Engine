@@ -23,7 +23,7 @@ struct Camera;
 class LightHandler
 {
 public:
-	static const uint32_t NUM_CASCADES = 4;
+	static const uint32_t NUM_CASCADES = 3;
 
 private:
 	std::vector<LightBufferData> lightBuffer;
