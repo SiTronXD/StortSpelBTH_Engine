@@ -531,7 +531,7 @@ const bool NetworkHandler::hasServer()
 	return serverThread != nullptr;
 }
 
-const std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers()
+std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers()
 {
 	return this->otherPlayers;
 }

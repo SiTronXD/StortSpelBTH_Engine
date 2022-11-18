@@ -71,7 +71,7 @@ class NetworkHandler
 	void sendTCPDataToClient(TCPPacketEvent tcpP);
 	void setPlayerNetworkHandler(int playerID);
 	void getLuaData(std::vector<int>& ints, std::vector<float>& floats);
-	const std::vector<std::pair<int, std::string>> getPlayers();
+	std::vector<std::pair<int, std::string>> getPlayers();
 	void createPlayers();
 
 	//little cheating here but only one event from client to server via udp
