@@ -554,6 +554,11 @@ void NetworkHandler::createPlayers()
 	}
 }
 
+const std::vector<std::pair<int, int>>& NetworkHandler::getMonsters()
+{
+	return this->monsters;
+}
+
 void NetworkHandler::disconnectClient()
 {
 	client->disconnect();

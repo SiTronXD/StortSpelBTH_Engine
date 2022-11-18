@@ -73,6 +73,7 @@ class NetworkHandler
 	void getLuaData(std::vector<int>& ints, std::vector<float>& floats);
 	std::vector<std::pair<int, std::string>> getPlayers();
 	void createPlayers();
+	const std::vector<std::pair<int, int>>& getMonsters();
 
 	//little cheating here but only one event from client to server via udp
 	void sendUDPDataToClient(const glm::vec3& pos, const glm::vec3& rot);
