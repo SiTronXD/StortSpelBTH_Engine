@@ -107,7 +107,7 @@ public:
 		CommandBuffer& currentShadowMapCommandBuffer,
 		const glm::mat4& modelMatrix);
 
-	void cleanup();
+	void cleanup(const bool& hasAnimations);
 
 	inline const ShadowMapData& getShadowMapData() const { return this->shadowMapData; }
 	inline const RenderPass& getShadowMapRenderPass() const { return this->shadowMapRenderPass; }

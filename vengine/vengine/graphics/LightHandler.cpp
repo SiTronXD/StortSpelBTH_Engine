@@ -531,7 +531,7 @@ void LightHandler::updateShadowPushConstant(
 
 }
 
-void LightHandler::cleanup()
+void LightHandler::cleanup(const bool& hasAnimations)
 {
     this->shadowMapTexture.cleanup();
     this->shadowMapRenderPass.cleanup();
@@ -540,6 +540,9 @@ void LightHandler::cleanup()
     this->shadowMapShaderInput.cleanup();
     this->shadowMapPipeline.cleanup();
 
-    this->animShadowMapShaderInput.cleanup();
-    this->animShadowMapPipeline.cleanup();
+    if (hasAnimations)
+    {
+        this->animShadowMapShaderInput.cleanup();
+        this->animShadowMapPipeline.cleanup();
+    }
 }
