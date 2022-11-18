@@ -51,7 +51,8 @@ private:
     VmaAllocator* vma;
 
 	vk::Image image;
-	std::vector<vk::ImageView> imageViews;
+	vk::ImageView entireImageView;
+	std::vector<vk::ImageView> layerImageViews;
 	VmaAllocation imageMemory;
 	vk::Format format;
 
@@ -93,8 +94,8 @@ public:
 
 	void cleanup();
 
-	inline const vk::ImageView& getImageView() const { return this->imageViews[0]; }
-	inline const vk::ImageView& getImageView(const uint32_t& index) const { return this->imageViews[index]; }
+	inline const vk::ImageView& getImageView() const { return this->entireImageView; }
+	inline const vk::ImageView& getImageView(const uint32_t& index) const { return this->layerImageViews[index]; }
 	inline const vk::Format& getVkFormat() const { return this->format; }
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }
@@ -120,7 +121,8 @@ public:
 		const vk::Format& format,
 		const vk::ImageAspectFlags& aspectFlags,
 		const uint32_t& arrayLayers = 1,
-		const uint32_t& arrayLayerSlice = 0
+		const uint32_t& arrayLayerSlice = 0,
+		const bool& useEntireArray = false
 	);
 
 	static void transitionImageLayout(

@@ -63,19 +63,32 @@ void Texture::createAsDepthTexture(
     );
 
     // Image views
-    for (uint32_t i = 0; i < arrayLayers; ++i)
+    if (arrayLayers > 1)
     {
-        this->imageViews.push_back(
-            Texture::createImageView(
-                *this->device,
-                this->image,
-                this->format,
-                vk::ImageAspectFlagBits::eDepth,
-                arrayLayers,
-                i
-            )
-        );
+        for (uint32_t i = 0; i < arrayLayers; ++i)
+        {
+            this->layerImageViews.push_back(
+                Texture::createImageView(
+                    *this->device,
+                    this->image,
+                    this->format,
+                    vk::ImageAspectFlagBits::eDepth,
+                    arrayLayers,
+                    i
+                )
+            );
+        }
     }
+    this->entireImageView =
+        Texture::createImageView(
+            *this->device,
+            this->image,
+            this->format,
+            vk::ImageAspectFlagBits::eDepth,
+            arrayLayers,
+            0,
+            true
+        );
 }
 
 void Texture::create(
@@ -206,16 +219,16 @@ void Texture::create(
     vmaFreeMemory(*this->vma, imageStagingBufferMemory);
 
     // Image view
-    this->imageViews.push_back(
+    this->entireImageView =
         Texture::createImageView(
             *this->device,
             this->image,
             vk::Format::eR8G8B8A8Unorm, // Format for rgba
             vk::ImageAspectFlagBits::eColor,
             1,
-            0
-        )
-    );
+            0,
+            true
+        );
 }
 
 void Texture::setDescriptorIndex(const uint32_t& descriptorIndex)
@@ -225,7 +238,8 @@ void Texture::setDescriptorIndex(const uint32_t& descriptorIndex)
 
 void Texture::cleanup() 
 {
-    for (auto& imageView : this->imageViews)
+    this->device->getVkDevice().destroyImageView(this->entireImageView);
+    for (auto& imageView : this->layerImageViews)
     {
         this->device->getVkDevice().destroyImageView(imageView);
     }
@@ -322,7 +336,8 @@ vk::ImageView Texture::createImageView(
 	const vk::Format& format,
 	const vk::ImageAspectFlags& aspectFlags,
     const uint32_t& arrayLayers,
-    const uint32_t& arrayLayerSlice
+    const uint32_t& arrayLayerSlice,
+    const bool& useEntireArray
 )
 {
 #ifndef VENGINE_NO_PROFILING
@@ -355,7 +370,7 @@ vk::ImageView Texture::createImageView(
     viewCreateInfo.subresourceRange.baseMipLevel = 0;                // Which part of the image to view start view from, (a Image can have multiple Mip and Array Layers)...
     viewCreateInfo.subresourceRange.levelCount = 1;                // How many MipMap levels to view, we only view 1 and that will be the "0" referred to by baseMipLevel
     viewCreateInfo.subresourceRange.baseArrayLayer = arrayLayerSlice;                // Which BaseArrayLayer to start from, we pick the first: 0
-    viewCreateInfo.subresourceRange.layerCount = 1;                // How many layers to check from the baseArrayLayer... (i.e. only view the first layer, layer 0...)
+    viewCreateInfo.subresourceRange.layerCount = !useEntireArray ? 1 : arrayLayers;                // How many layers to check from the baseArrayLayer.
 
     // Create image view and Return it
     return device.getVkDevice().createImageView(viewCreateInfo);

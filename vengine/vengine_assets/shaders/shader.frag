@@ -137,7 +137,6 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 			break;
 		}*/
 	}
-	cascadeIndex = 1;
 
 	// Transform to the light's NDC
 	vec4 fragLightNDC = 
@@ -177,7 +176,7 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 			float sampleValue = 
 				texture(
 					shadowMapSampler, 
-					vec3(fragLightNDC.xy + offset, float(3u) + 0.5f)
+					vec3(fragLightNDC.xy + offset, float(cascadeIndex))
 				).r;
 
 			shadowFactor +=
