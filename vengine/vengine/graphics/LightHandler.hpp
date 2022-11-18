@@ -54,6 +54,7 @@ private:
 	uint32_t framesInFlight;
 
 	glm::vec3 lightDir;
+	glm::vec3 lightUpDir;
 
 	float cascadeSizes[LightHandler::NUM_CASCADES - 1];
 	float cascadeDepthScale;
@@ -62,11 +63,10 @@ private:
 		const glm::mat4& invViewProj,
 		glm::vec4 outputCorners[]);
 
-	void setLightMatrices(
+	void setLightFrustum(
 		const glm::mat4& camProj,
 		const glm::mat4& camView,
-		glm::mat4& outputLightProjection,
-		glm::mat4& outputLightView);
+		glm::mat4& outputLightVP);
 
 public:
 	static const uint32_t MAX_NUM_LIGHTS = 16;

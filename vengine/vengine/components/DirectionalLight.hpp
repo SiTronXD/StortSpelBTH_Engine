@@ -13,6 +13,8 @@ struct DirectionalLight
     float cascadeSize2 = 0.5f;
     float cascadeDepthScale = 1.0f;
 
+    bool cascadeVisualization = false;
+
     // Shadow map settings
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;

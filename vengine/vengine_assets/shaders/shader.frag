@@ -28,12 +28,12 @@ layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
 
 layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapInfoBuffer
 {
-    mat4 projection[MAX_NUM_CASCADES];
-    mat4 view[MAX_NUM_CASCADES];
+    mat4 viewProjection[MAX_NUM_CASCADES];
     vec2 shadowMapSize;
 	float shadowMapMinBias;
 	float shadowMapAngleBias;
 	vec4 cascadeFarPlanes;
+	vec4 cascadeSettings;
 } shadowMapInfoBuffer;
 
 // Storage buffer
@@ -86,8 +86,7 @@ vec3 sampleCascade(in uint i)
 {
 	// Transform to the light's NDC
 	vec4 fragLightNDC = 
-		shadowMapInfoBuffer.projection[i] * 
-		shadowMapInfoBuffer.view[i] * 
+		shadowMapInfoBuffer.viewProjection[i] * 
 		vec4(fragWorldPos, 1.0f);
 	fragLightNDC.xyz /= fragLightNDC.w;
 	fragLightNDC.y = -fragLightNDC.y;
@@ -110,22 +109,21 @@ vec3 sampleCascade(in uint i)
 
 float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
-	float viewDepth = abs(fragViewPos.z);
+	vec4 fragLightNDC = vec4(0.0f);
 	uint cascadeIndex = NUM_CASCADES - 1;
 	for(uint i = 0; i < NUM_CASCADES; ++i)
 	{
 		// Transform to the light's NDC
-		vec4 tempFragLightNDC = 
-			shadowMapInfoBuffer.projection[i] * 
-			shadowMapInfoBuffer.view[i] * 
+		fragLightNDC = 
+			shadowMapInfoBuffer.viewProjection[i] * 
 			vec4(fragWorldPos, 1.0f);
-		tempFragLightNDC.xyz /= tempFragLightNDC.w;
-		tempFragLightNDC.y = -tempFragLightNDC.y;
+		fragLightNDC.xyz /= fragLightNDC.w;
+		fragLightNDC.y = -fragLightNDC.y;
 
 		// Fragment is outside light frustum
-		if( tempFragLightNDC.x >= -1.0f && tempFragLightNDC.x <= 1.0f &&
-			tempFragLightNDC.y >= -1.0f && tempFragLightNDC.y <= 1.0f &&
-			tempFragLightNDC.z >= 0.0f && tempFragLightNDC.z <= 1.0f)
+		if( fragLightNDC.x >= -1.0f && fragLightNDC.x <= 1.0f &&
+			fragLightNDC.y >= -1.0f && fragLightNDC.y <= 1.0f &&
+			fragLightNDC.z >= 0.0f && fragLightNDC.z <= 1.0f)
 		{
 			cascadeIndex = i;
 			break;
@@ -137,14 +135,6 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 			break;
 		}*/
 	}
-
-	// Transform to the light's NDC
-	vec4 fragLightNDC = 
-		shadowMapInfoBuffer.projection[cascadeIndex] * 
-		shadowMapInfoBuffer.view[cascadeIndex] * 
-		vec4(fragWorldPos, 1.0f);
-	fragLightNDC.xyz /= fragLightNDC.w;
-	fragLightNDC.y = -fragLightNDC.y;
 
 	// Fragment is outside light frustum
 	if( fragLightNDC.x < -1.0f || fragLightNDC.x > 1.0f ||
@@ -208,6 +198,20 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 	);
 
 	return shadowFactor;*/
+}
+
+void debugCascades(inout vec4 outColor)
+{
+	for(uint i = 0; i < NUM_CASCADES; ++i)
+	{
+		vec4 col = vec4(sampleCascade(i), 0.0f);
+
+		if(dot(col, col) > 0.5f)
+		{
+			outColor += col * 0.1f;
+			break;
+		}
+	}
 }
 
 void main() 
@@ -322,18 +326,11 @@ void main()
 
 	// Composite fog
 	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
+	// outColor = vec4(finalColor, 1.0f); // (No fog)
 
-	for(uint i = 0; i < NUM_CASCADES; ++i)
+	// Debug cascades
+	if(shadowMapInfoBuffer.cascadeSettings.x > 0.5f)
 	{
-		vec4 col = vec4(sampleCascade(i), 0.0f);
-
-		if(dot(col, col) > 0.5f)
-		{
-			outColor += col * 0.1f;
-			break;
-		}
+		debugCascades(outColor);
 	}
-
-	// No fog
-	// outColor = vec4(finalColor, 1.0f);
 }

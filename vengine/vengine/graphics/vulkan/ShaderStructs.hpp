@@ -27,12 +27,12 @@ struct CameraBufferData
 #define MAX_NUM_CASCADES 4
 struct ShadowMapData
 {
-    glm::mat4 projection[MAX_NUM_CASCADES] = { glm::mat4(1.0f) };
-    glm::mat4 view[MAX_NUM_CASCADES] = { glm::mat4(1.0f) };
+    glm::mat4 viewProjection[MAX_NUM_CASCADES] = { glm::mat4(1.0f) };
     glm::vec2 shadowMapSize = glm::vec2(0.0f);
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;
     glm::vec4 cascadeFarPlanes = glm::vec4(0.0f);
+    glm::vec4 cascadeSettings = glm::vec4(0.0f);
 };
 
 // Offset indicies into the light buffer

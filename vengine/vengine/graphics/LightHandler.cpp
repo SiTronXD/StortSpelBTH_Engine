@@ -29,11 +29,10 @@ void LightHandler::getWorldSpaceFrustumCorners(
     }
 }
 
-void LightHandler::setLightMatrices(
+void LightHandler::setLightFrustum(
     const glm::mat4& camProj,
     const glm::mat4& camView,
-    glm::mat4& outputProjection,
-    glm::mat4& outputLightView)
+    glm::mat4& outputLightVP)
 {
     // Find frustum corners in world space
     glm::vec4 frustumCorners[8];
@@ -49,15 +48,16 @@ void LightHandler::setLightMatrices(
     }
     center /= 8.0f;
 
-    outputLightView =
+    // Temporarily set VP to V
+    glm::mat4 lightView =
         glm::lookAt(
             center,
             center + this->lightDir,
-            glm::vec3(0.0f, 1.0f, 0.0f)
+            this->lightUpDir
         );
 
     const auto firstViewSpaceCorner =
-        outputLightView * frustumCorners[0];
+        lightView * frustumCorners[0];
     float minX = firstViewSpaceCorner.x;
     float maxX = firstViewSpaceCorner.x;
     float minY = firstViewSpaceCorner.y;
@@ -67,7 +67,7 @@ void LightHandler::setLightMatrices(
     for (uint32_t i = 1; i < 8; ++i)
     {
         const auto viewSpaceCorner = 
-            outputLightView * frustumCorners[i];
+            lightView * frustumCorners[i];
         minX = std::min(minX, viewSpaceCorner.x);
         maxX = std::max(maxX, viewSpaceCorner.x);
         minY = std::min(minY, viewSpaceCorner.y);
@@ -94,8 +94,9 @@ void LightHandler::setLightMatrices(
         maxZ *= this->cascadeDepthScale;
     }
 
-    outputProjection =
-        glm::orthoRH(minX, maxX, minY, maxY, minZ, maxZ);
+    outputLightVP = 
+        glm::orthoRH(minX, maxX, minY, maxY, minZ, maxZ) * 
+        lightView;
 }
 
 LightHandler::LightHandler()
@@ -429,8 +430,7 @@ void LightHandler::updateLightBuffers(
         );
     }
 
-
-    // Update shadow map view matrix
+    // Update shadow map settings
     auto dirLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
     dirLightView.each([&](
         DirectionalLight& dirLightComp)
@@ -440,15 +440,12 @@ void LightHandler::updateLightBuffers(
                 glm::normalize(dirLightComp.direction);
             this->lightDir = dirLightComp.direction;
 
-            glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-            if (std::abs(glm::dot(worldUp, dirLightComp.direction)) >= 0.95f)
-                worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
-
             // Cascade settings
             this->cascadeSizes[0] = dirLightComp.cascadeSize0;
             this->cascadeSizes[1] = dirLightComp.cascadeSize1;
             this->cascadeSizes[2] = dirLightComp.cascadeSize2;
             this->cascadeDepthScale = dirLightComp.cascadeDepthScale;
+            this->shadowMapData.cascadeSettings.x = dirLightComp.cascadeVisualization ? 1.0f : 0.0f;
 
             // Biases
             this->shadowMapData.shadowMapMinBias = dirLightComp.shadowMapMinBias;
@@ -456,7 +453,12 @@ void LightHandler::updateLightBuffers(
         }
     );
 
-    // ----- Create tightly fit light frustums -----
+    // Update up direction
+    this->lightUpDir = glm::vec3(0.0f, 1.0f, 0.0f);
+    if (std::abs(glm::dot(this->lightUpDir, this->lightDir)) >= 0.95f)
+        this->lightUpDir = glm::vec3(0.0f, 0.0f, 1.0f);
+
+    // Create tightly fit light frustums
     for (uint32_t i = 0; i < LightHandler::NUM_CASCADES - 1; ++i)
     {
         this->shadowMapData.cascadeFarPlanes[i] =
@@ -475,7 +477,7 @@ void LightHandler::updateLightBuffers(
     };
     for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
     {
-        this->setLightMatrices(
+        this->setLightFrustum(
             glm::perspective(
                 glm::radians(90.0f), 
                 16.0f / 9.0f, 
@@ -483,8 +485,7 @@ void LightHandler::updateLightBuffers(
                 this->shadowMapData.cascadeFarPlanes[i]
             ),
             camData.view,
-            this->shadowMapData.projection[i],
-            this->shadowMapData.view[i]
+            this->shadowMapData.viewProjection[i]
         );
     }
 
@@ -505,8 +506,7 @@ void LightHandler::updateCamera(
 {
     // Update projection matrix
     this->shadowPushConstantData.viewProjectionMatrix =
-        this->shadowMapData.projection[arraySliceCameraIndex] *
-        this->shadowMapData.view[arraySliceCameraIndex];
+        this->shadowMapData.viewProjection[arraySliceCameraIndex];
 }
 
 void LightHandler::updateShadowPushConstant(
