@@ -76,7 +76,7 @@ enum GameEvents
 SpawnEnemy			: Type(int), Position(float x,y,z);
 SpawnEnemies		: Type(int), NrOfEnemies(int), Position(list/array)(float x,y,z)   (can only spawn one type of enemy in spawnEnemies)
 Explosion			: Radious(float), Position(float x,y,z)
-MonsterDied			: Monster_id
+MonsterDied			: Monster_id, hpback(int player, int howmuch hp), perk/abilityType(int), multiplier
 SendSeed			: int
 PlayerDied			: PlayerID
 Disconnected		: PlayerID
@@ -87,7 +87,7 @@ Disconnected		: what player
 
 
 /////////events tcp client -> server///////////////
-HitMonster			: Monster_id, Damage
+HitMonster			: Monster_id, Damage(int), knockbackarr(float), 
 HitMonsters			: Monster_ids(list/array), Damage
 PlayerDied			: int id
 Disconnected		: (nothig)

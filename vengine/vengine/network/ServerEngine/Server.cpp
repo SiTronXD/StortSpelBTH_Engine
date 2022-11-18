@@ -422,10 +422,17 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					break;
 				case GameEvents::HitMonster:
 					this->sceneHandler.sendCallFromClient({(int)GameEvents::HitMonster});
+
 					clientToServerPacketTcp[ClientID] >> packetHelper2;//what monster
 					this->sceneHandler.sendCallFromClient({packetHelper2});
+
+					this->sceneHandler.sendCallFromClient({sceneHandler.getScene()->getPlayer(ClientID)});
+
 					clientToServerPacketTcp[ClientID] >> packetHelper2;//how much damage
 					this->sceneHandler.sendCallFromClient({packetHelper2});
+
+					clientToServerPacketTcp[ClientID] >> packetHelper1;  //knockbackarr
+					this->sceneHandler.sendCallFromClient({packetHelper1});
 					break;
 				case GameEvents::GetPlayerNames:
 					//send player names
