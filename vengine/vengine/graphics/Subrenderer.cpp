@@ -3,7 +3,8 @@
 
 void VulkanRenderer::beginShadowMapRenderPass(
     const uint32_t& imageIndex,
-    LightHandler& lightHandler)
+    LightHandler& lightHandler,
+    const uint32_t& shadowMapArraySlice)
 {
     const std::array<vk::ClearValue, 1> clearValues =
     {
@@ -25,7 +26,7 @@ void VulkanRenderer::beginShadowMapRenderPass(
     renderPassBeginInfo.renderArea.setExtent(shadowMapExtent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
-    renderPassBeginInfo.setFramebuffer(lightHandler.getShadowMapFramebuffer());
+    renderPassBeginInfo.setFramebuffer(lightHandler.getShadowMapFramebuffer(shadowMapArraySlice));
 
     // Begin Render Pass!    
     // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -51,6 +52,9 @@ void VulkanRenderer::beginShadowMapRenderPass(
     scissor.offset = vk::Offset2D{ 0, 0 };
     scissor.extent = shadowMapExtent;
     this->currentShadowMapCommandBuffer->setScissor(scissor);
+
+    // Update camera
+    lightHandler.updateCamera(shadowMapArraySlice);
 }
 
 void VulkanRenderer::renderShadowMapDefaultMeshes(
@@ -83,10 +87,9 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(
                 currentMesh.getSubmeshData();
 
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-            this->pushConstantData.modelMatrix = transform.getMatrix();
-            this->currentShadowMapCommandBuffer->pushConstant(
-                shadowMapShaderInput,
-                (void*) &this->pushConstantData
+            lightHandler.updateShadowPushConstant(
+                *this->currentShadowMapCommandBuffer,
+                transform.getMatrix()
             );
 
             // Bind only vertex buffer containing positions
@@ -166,10 +169,9 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(
             );
 
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-            this->pushConstantData.modelMatrix = transform.getMatrix();
-            this->currentShadowMapCommandBuffer->pushConstant(
-                animShadowMapShaderInput,
-                (void*)&this->pushConstantData
+            lightHandler.updateShadowPushConstant(
+                *this->currentShadowMapCommandBuffer,
+                transform.getMatrix()
             );
 
             // Bind vertex buffer only containing positions, 

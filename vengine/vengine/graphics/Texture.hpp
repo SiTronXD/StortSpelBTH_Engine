@@ -28,6 +28,7 @@ struct ImageCreateData
 {
 	uint32_t width;
 	uint32_t height;
+	uint32_t arrayLayers;
 	vk::Format format;
 	vk::ImageTiling tiling;
 	vk::ImageUsageFlags useFlags;
@@ -50,7 +51,8 @@ private:
     VmaAllocator* vma;
 
 	vk::Image image;
-	vk::ImageView imageView;
+	vk::ImageView entireImageView;
+	std::vector<vk::ImageView> layerImageViews;
 	VmaAllocation imageMemory;
 	vk::Format format;
 
@@ -73,6 +75,7 @@ public:
 		VmaAllocator& vma,
 		const uint32_t& width,
 		const uint32_t& height,
+		const uint32_t& arrayLayers = 1,
 		const vk::ImageUsageFlagBits& extraUsageFlags = (vk::ImageUsageFlagBits) 0,
 		const uint32_t& textureSamplerIndex = 0);
 	void create(
@@ -91,7 +94,8 @@ public:
 
 	void cleanup();
 
-	inline const vk::ImageView& getImageView() const { return this->imageView; }
+	inline const vk::ImageView& getImageView() const { return this->entireImageView; }
+	inline const vk::ImageView& getImageView(const uint32_t& index) const { return this->layerImageViews[index]; }
 	inline const vk::Format& getVkFormat() const { return this->format; }
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }
@@ -108,15 +112,18 @@ public:
 
 	static vk::Image createImage(
 		VmaAllocator& vma,
-		ImageCreateData&& imageData,
-		const std::string& imageDescription
+		ImageCreateData&& imageData
 	);
 
 	static vk::ImageView createImageView(
 		Device& device,
-		const vk::Image& image, 
-		const vk::Format& format, 
-		const vk::ImageAspectFlags& aspectFlags
+		const vk::Image& image,
+		const vk::Format& format,
+		const vk::ImageAspectFlags& aspectFlags,
+		const vk::ImageViewType& imageViewType = vk::ImageViewType::e2D,
+		const uint32_t& arrayLayers = 1,
+		const uint32_t& arrayLayerSlice = 0,
+		const bool& useEntireArray = false
 	);
 
 	static void transitionImageLayout(
