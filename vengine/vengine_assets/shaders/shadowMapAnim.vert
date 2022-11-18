@@ -12,8 +12,8 @@ layout(location = 2) in uvec4 boneIndices;
 // Uniform buffer
 layout(set = FREQ_PER_FRAME, binding = 0) uniform ShadowMapBuffer
 {
-    mat4 projection;
-    mat4 view;
+    mat4 projection[4];
+    mat4 view[4];
     vec2 shadowMapSize;
 	float shadowMapMinBias;
 	float shadowMapAngleBias;
@@ -32,7 +32,7 @@ layout(std140, set = FREQ_PER_MESH, binding = 0) readonly buffer BoneTransformsB
 // Push constant
 layout(push_constant) uniform PushConstantData
 {
-    mat4 projection;
+    mat4 viewProjection;
     mat4 model;
 } pushConstantData;
 
@@ -49,8 +49,7 @@ void main()
         animTransform += bones.transforms[boneIndices.w].boneTransform * weights.w;
 
     gl_Position = 
-        pushConstantData.projection *
-        shadowMapBuffer.view *
+        pushConstantData.viewProjection *
         pushConstantData.model * 
         animTransform * 
         vec4(pos, 1.0);

@@ -24,8 +24,8 @@ layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
 
 layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapBuffer
 {
-    mat4 projection;
-    mat4 view;
+    mat4 projection[4];
+    mat4 view[4];
     vec2 shadowMapSize;
 	float shadowMapMinBias;
 	float shadowMapAngleBias;
@@ -77,12 +77,38 @@ vec3 calcSpecular(in vec4 specularTexCol, in vec3 normal, in vec3 halfwayDir)
 		);
 }
 
+vec3 sampleCascade(in uint i)
+{
+	// Transform to the light's NDC
+	vec4 fragLightNDC = 
+		shadowMapBuffer.projection[i] * 
+		shadowMapBuffer.view[i] * 
+		vec4(fragWorldPos, 1.0f);
+	fragLightNDC.xyz /= fragLightNDC.w;
+	fragLightNDC.y = -fragLightNDC.y;
+
+	// Fragment is outside light frustum
+	if( fragLightNDC.x < -1.0f || fragLightNDC.x > 1.0f ||
+		fragLightNDC.y < -1.0f || fragLightNDC.y > 1.0f ||
+		fragLightNDC.z < 0.0f || fragLightNDC.z > 1.0f)
+	{
+		return vec3(0.0f);
+	}
+	{
+		return vec3(
+			i == 0 || i == 3 ? 1.0f : 0.0f,
+			i == 1 || i == 3 ? 1.0f : 0.0f,
+			i == 2 ? 1.0f : 0.0f
+		);
+	}
+}
+
 float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
 	// Transform to the light's NDC
 	vec4 fragLightNDC = 
-		shadowMapBuffer.projection * 
-		shadowMapBuffer.view * 
+		shadowMapBuffer.projection[0] * 
+		shadowMapBuffer.view[0] * 
 		vec4(fragWorldPos, 1.0f);
 	fragLightNDC.xyz /= fragLightNDC.w;
 	fragLightNDC.y = -fragLightNDC.y;
@@ -257,6 +283,17 @@ void main()
 
 	// Composite fog
 	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
+
+	for(uint i = 0; i < 4; ++i)
+	{
+		vec4 col = vec4(sampleCascade(i), 0.0f);
+
+		if(dot(col, col) > 0.5f)
+		{
+			outColor += col;
+			break;
+		}
+	}
 
 	// No fog
 	// outColor = vec4(finalColor, 1.0f);

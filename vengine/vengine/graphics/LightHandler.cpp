@@ -28,23 +28,40 @@ void LightHandler::getWorldSpaceFrustumCorners(
         }
     }
 }
-
+#include "DebugRenderer.hpp"
 void LightHandler::setLightProjection(
     const glm::mat4& camProj,
     const glm::mat4& camView,
-    const glm::mat4& lightView,
-    glm::mat4& outputProjection)
+    const glm::vec3& lightDir,
+    glm::mat4& outputLightView,
+    glm::mat4& outputProjection,
+
+    const uint32_t& i,
+    DebugRenderer& debugRenderer)
 {
     // Find frustum corners in world space
-    glm::vec4 tempFrustumCorners[8];
+    glm::vec4 frustumCorners[8];
     this->getWorldSpaceFrustumCorners(
         glm::inverse(camProj * camView),
-        tempFrustumCorners
+        frustumCorners
     );
 
+    glm::vec3 center(0.0f);
+    for (uint32_t i = 0; i < 8; ++i)
+    {
+        center += glm::vec3(frustumCorners[i]);
+    }
+    center /= 8.0f;
+
+    outputLightView =
+        glm::lookAt(
+            center,
+            center + lightDir,
+            glm::vec3(0.0f, 1.0f, 0.0f)
+        );
 
     const auto firstViewSpaceCorner =
-        lightView * tempFrustumCorners[0];
+        outputLightView * frustumCorners[0];
     float minX = firstViewSpaceCorner.x;
     float maxX = firstViewSpaceCorner.x;
     float minY = firstViewSpaceCorner.y;
@@ -54,13 +71,28 @@ void LightHandler::setLightProjection(
     for (uint32_t i = 1; i < 8; ++i)
     {
         const auto viewSpaceCorner = 
-            lightView * tempFrustumCorners[i];
+            outputLightView * frustumCorners[i];
         minX = std::min(minX, viewSpaceCorner.x);
         maxX = std::max(maxX, viewSpaceCorner.x);
         minY = std::min(minY, viewSpaceCorner.y);
         maxY = std::max(maxY, viewSpaceCorner.y);
         minZ = std::min(minZ, viewSpaceCorner.z);
         maxZ = std::max(maxZ, viewSpaceCorner.z);
+    }
+
+    if (i == 0)
+    {
+        Log::write("X: (" + std::to_string(minX) + ", " + std::to_string(maxX) + ")");
+        Log::write("Y: (" + std::to_string(minY) + ", " + std::to_string(maxY) + ")");
+        Log::write("Z: (" + std::to_string(minZ) + ", " + std::to_string(maxZ) + ")");
+        Log::write("");
+
+        /*debugRenderer.renderBox(
+            glm::vec3(maxX + minX, maxY + minY, maxZ + minZ) * 0.5f,
+            glm::vec3(0.0f),
+            glm::vec3(maxX - minX, maxY - minY, maxZ - minZ),
+            glm::vec3(1.0f, 0.0f, 1.0f)
+        );*/
     }
 
     const float zMult = 10.0f;
@@ -286,7 +318,9 @@ void LightHandler::updateLightBuffers(
     const glm::mat4& camProj,
     const glm::mat4& camView,
     const glm::vec3& camPosition,
-    const uint32_t& currentFrame)
+    const uint32_t& currentFrame,
+    
+    DebugRenderer& debugRenderer)
 {
     this->lightBuffer.clear();
 
@@ -480,39 +514,27 @@ void LightHandler::updateLightBuffers(
 
     // ----- Create tightly fit light frustums -----
 
-    // Find frustum corners in world space
-    this->getWorldSpaceFrustumCorners(
-        glm::inverse(camProj * camView),
-        this->frustumCorners
-    );
-
-    // Create light view matrix
-    glm::vec3 center(0.0f);
-    for (uint32_t i = 0; i < 8; ++i)
-    {
-        center += glm::vec3(this->frustumCorners[i]);
-    }
-    center /= (2.0f * 2.0f * 2.0f);
-    this->shadowMapData.view = 
-        glm::lookAt(
-            center,
-            center + lightDir,
-            glm::vec3(0.0f, 1.0f, 0.0f)
-        );
-
     // Create light projection matrix
     float nearPlanes[LightHandler::NUM_CASCADES]
     {
+        /*0.1f,
+        500.0f,
+        750.0f,
+        875.0f*/
         0.1f,
-        125.0f,
-        250.0f,
-        500.0f
+        1000.0f / 25.0f,
+        1000.0f / 10.0f,
+        1000.0f / 2.0f
     };
     float farPlanes[LightHandler::NUM_CASCADES]
     {
-        125.0f,
-        250.0f,
-        500.0f,
+        /*500.0f,
+        750.0f,
+        875.0f,
+        1000.0f*/
+        1000.0f / 25.0f,
+        1000.0f / 10.0f,
+        1000.0f / 2.0f,
         1000.0f
     };
     for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
@@ -525,12 +547,18 @@ void LightHandler::updateLightBuffers(
                 farPlanes[i]
             ),
             camView,
-            this->shadowMapData.view,
-            this->projectionMatrices[i]
+            lightDir,
+            this->viewMatrices[i],
+            this->projectionMatrices[i],
+            i,
+            debugRenderer
         );
+
+        this->shadowMapData.projection[i] =
+            this->projectionMatrices[i]; 
+        this->shadowMapData.view[i] =
+            this->viewMatrices[i];
     }
-    this->shadowMapData.projection =
-        this->projectionMatrices[0];
 
     // Shadow map shader input
     this->shadowMapShaderInput.setCurrentFrame(currentFrame);
@@ -556,8 +584,9 @@ void LightHandler::updateCamera(
     const uint32_t& arraySliceCameraIndex)
 {
     // Update projection matrix
-    this->shadowPushConstantData.projectionMatrix =
-        this->projectionMatrices[arraySliceCameraIndex];
+    this->shadowPushConstantData.viewProjectionMatrix =
+        this->projectionMatrices[arraySliceCameraIndex] *
+        this->viewMatrices[arraySliceCameraIndex];
 }
 
 void LightHandler::updateShadowPushConstant(

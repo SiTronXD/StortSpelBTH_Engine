@@ -1080,7 +1080,9 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 cameraDataUBO.projection,
                 cameraDataUBO.view,
                 glm::vec3(cameraDataUBO.worldPosition),
-                this->currentFrame
+                this->currentFrame,
+
+                *this->debugRenderer
             );
 
             // Default shader input

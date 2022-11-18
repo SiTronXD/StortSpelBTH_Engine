@@ -16,6 +16,7 @@ class CommandBufferArray;
 class Pipeline;
 class ResourceManager;
 class Texture;
+class DebugRenderer;
 
 class LightHandler
 {
@@ -26,6 +27,7 @@ private:
 	std::vector<LightBufferData> lightBuffer;
 
 	glm::mat4 projectionMatrices[LightHandler::NUM_CASCADES]{};
+	glm::mat4 viewMatrices[LightHandler::NUM_CASCADES]{};
 	ShadowMapData shadowMapData{};
 
 	ShadowPushConstantData shadowPushConstantData{};
@@ -51,8 +53,6 @@ private:
 	VmaAllocator* vma;
 	ResourceManager* resourceManager;
 
-	glm::vec4 frustumCorners[2*2*2];
-
 	uint32_t framesInFlight;
 
 	void getWorldSpaceFrustumCorners(
@@ -62,8 +62,13 @@ private:
 	void setLightProjection(
 		const glm::mat4& camProj,
 		const glm::mat4& camView,
-		const glm::mat4& lightView,
-		glm::mat4& outputProjection);
+		const glm::vec3& lightDir,
+		glm::mat4& outputLightView,
+		glm::mat4& outputProjection,
+
+		// TODO: remove this
+		const uint32_t& i,
+		DebugRenderer& debugRenderer);
 
 public:
 	static const uint32_t MAX_NUM_LIGHTS = 16;
@@ -96,7 +101,10 @@ public:
 		const glm::mat4& camProj,
 		const glm::mat4& camView,
 		const glm::vec3& camPosition,
-		const uint32_t& currentFrame);
+		const uint32_t& currentFrame,
+
+		// TODO: remove this
+		DebugRenderer& debugRenderer);
 
 	void updateCamera(
 		const uint32_t& arraySliceCameraIndex);

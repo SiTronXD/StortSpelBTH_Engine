@@ -10,8 +10,8 @@ layout(location = 0) in vec3 pos;
 // Uniform buffer
 layout(set = FREQ_PER_FRAME, binding = 0) uniform ShadowMapBuffer
 {
-    mat4 projection;
-    mat4 view;
+    mat4 projection[4];
+    mat4 view[4];
     vec2 shadowMapSize;
 	float shadowMapMinBias;
 	float shadowMapAngleBias;
@@ -20,15 +20,14 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform ShadowMapBuffer
 // Push constant
 layout(push_constant) uniform PushConstantData
 {
-    mat4 projection;
+    mat4 viewProjection;
     mat4 model;
 } pushConstantData;
 
 void main()
 {
     gl_Position = 
-        pushConstantData.projection *
-        shadowMapBuffer.view *
+        pushConstantData.viewProjection *
         pushConstantData.model * 
         vec4(pos, 1.0);
 }

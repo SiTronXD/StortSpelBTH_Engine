@@ -5,7 +5,7 @@
 
 struct ShadowPushConstantData
 {
-    glm::mat4 projectionMatrix = glm::mat4(1.0f);
+    glm::mat4 viewProjectionMatrix = glm::mat4(1.0f);
     glm::mat4 modelMatrix = glm::mat4(1.0f);
 };
 
@@ -26,8 +26,8 @@ struct CameraBufferData
 // Shadow map data
 struct ShadowMapData
 {
-    glm::mat4 projection = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 projection[4] = { glm::mat4(1.0f) };
+    glm::mat4 view[4] = { glm::mat4(1.0f) };
     glm::vec2 shadowMapSize = glm::vec2(0.0f);
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;
