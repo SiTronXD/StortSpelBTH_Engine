@@ -179,7 +179,6 @@ public:
 		}
         checkForCommonErrors();
     }
-
     void registerEntity(Entity entityId)
     {
         // Add Components that FSM needs
