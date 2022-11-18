@@ -22,7 +22,7 @@ void NetworkSceneHandler::updateToNextScene()
 
 void NetworkSceneHandler::setScene(Scene* scene, std::string path) {
 	SceneHandler::setScene(scene, path);
-	((NetworkScene*)scene)->givePacketInfo(*serverToClientPacketTcp);
+	((NetworkScene*)scene)->givePacketInfo(serverToClientPacketTcp);
 
 	//give new scene players
 	if (this->getScene() != nullptr)
@@ -34,20 +34,9 @@ void NetworkSceneHandler::setScene(Scene* scene, std::string path) {
 	}
 }
 
-void NetworkSceneHandler::sendCallFromClient(int call)
+sf::Packet &NetworkSceneHandler::getCallFromClient()
 {
-	this->callsFromClient.push(call);
-}
-
-int NetworkSceneHandler::getCallFromClient()
-{
-	if (!callsFromClient.empty())
-	{
-		int theRet = callsFromClient.back();
-		callsFromClient.pop();
-		return theRet;
-	}
-	return -1;// no call has been given
+	return callsFromClient; 
 }
 
 NetworkScene* NetworkSceneHandler::getScene() const
