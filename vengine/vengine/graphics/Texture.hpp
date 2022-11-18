@@ -120,6 +120,7 @@ public:
 		const vk::Image& image,
 		const vk::Format& format,
 		const vk::ImageAspectFlags& aspectFlags,
+		const vk::ImageViewType& imageViewType = vk::ImageViewType::e2D,
 		const uint32_t& arrayLayers = 1,
 		const uint32_t& arrayLayerSlice = 0,
 		const bool& useEntireArray = false

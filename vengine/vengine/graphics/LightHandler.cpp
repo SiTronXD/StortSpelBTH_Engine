@@ -105,7 +105,13 @@ LightHandler::LightHandler()
     vma(nullptr),
     resourceManager(nullptr),
     framesInFlight(0)
-{ }
+{ 
+    this->cascadeSizes.resize(LightHandler::NUM_CASCADES - 1);
+    this->cascadeNearPlanes.resize(LightHandler::NUM_CASCADES);
+
+    this->shadowMapData.cascadeSettings.x = 
+        LightHandler::NUM_CASCADES;
+}
 
 void LightHandler::init(
     PhysicalDevice& physicalDevice, 
@@ -153,7 +159,7 @@ void LightHandler::init(
 
     // Framebuffer
     std::vector<std::vector<vk::ImageView>> shadowMapImageViews(LightHandler::NUM_CASCADES);
-    for (size_t i = 0; i < shadowMapImageViews.size(); ++i)
+    for (size_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
     {
         shadowMapImageViews[i] =
         {
@@ -441,11 +447,12 @@ void LightHandler::updateLightBuffers(
             this->lightDir = dirLightComp.direction;
 
             // Cascade settings
-            this->cascadeSizes[0] = dirLightComp.cascadeSize0;
-            this->cascadeSizes[1] = dirLightComp.cascadeSize1;
-            this->cascadeSizes[2] = dirLightComp.cascadeSize2;
+            for (size_t i = 0; i < this->cascadeSizes.size(); ++i)
+            {
+                this->cascadeSizes[i] = dirLightComp.cascadeSizes[i];
+            }
             this->cascadeDepthScale = dirLightComp.cascadeDepthScale;
-            this->shadowMapData.cascadeSettings.x = dirLightComp.cascadeVisualization ? 1.0f : 0.0f;
+            this->shadowMapData.cascadeSettings.y = dirLightComp.cascadeVisualization ? 1.0f : 0.0f;
 
             // Biases
             this->shadowMapData.shadowMapMinBias = dirLightComp.shadowMapMinBias;
@@ -468,20 +475,19 @@ void LightHandler::updateLightBuffers(
         = camData.farPlane;
 
     // Create light matrices
-    float nearPlanes[LightHandler::NUM_CASCADES]
+    this->cascadeNearPlanes[0] = camData.nearPlane;
+    for (uint32_t i = 1; i < LightHandler::NUM_CASCADES; ++i)
     {
-        camData.nearPlane,
-        this->shadowMapData.cascadeFarPlanes[0],
-        this->shadowMapData.cascadeFarPlanes[1],
-        this->shadowMapData.cascadeFarPlanes[2]
-    };
+        this->cascadeNearPlanes[i] =
+            this->shadowMapData.cascadeFarPlanes[i - 1];
+    }
     for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
     {
         this->setLightFrustum(
             glm::perspective(
                 glm::radians(90.0f), 
                 16.0f / 9.0f, 
-                nearPlanes[i],
+                this->cascadeNearPlanes[i],
                 this->shadowMapData.cascadeFarPlanes[i]
             ),
             camData.view,

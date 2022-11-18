@@ -32,7 +32,7 @@ struct ShadowMapData
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;
     glm::vec4 cascadeFarPlanes = glm::vec4(0.0f);
-    glm::vec4 cascadeSettings = glm::vec4(0.0f);
+    glm::uvec4 cascadeSettings = glm::uvec4(0.0f);
 };
 
 // Offset indicies into the light buffer

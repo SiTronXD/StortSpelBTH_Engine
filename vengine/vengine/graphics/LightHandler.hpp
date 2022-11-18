@@ -56,7 +56,8 @@ private:
 	glm::vec3 lightDir;
 	glm::vec3 lightUpDir;
 
-	float cascadeSizes[LightHandler::NUM_CASCADES - 1];
+	std::vector<float> cascadeNearPlanes;
+	std::vector<float> cascadeSizes;
 	float cascadeDepthScale;
 
 	void getWorldSpaceFrustumCorners(

@@ -293,9 +293,9 @@ void TestDemoScene::update()
 	DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
 	ImGui::Begin("Cascades");
-	ImGui::SliderFloat("Size 0", &dirLight.cascadeSize0, 0.0f, 1.0f);
-	ImGui::SliderFloat("Size 1", &dirLight.cascadeSize1, 0.0f, 1.0f);
-	ImGui::SliderFloat("Size 2", &dirLight.cascadeSize2, 0.0f, 1.0f);
+	ImGui::SliderFloat("Size 0", &dirLight.cascadeSizes[0], 0.0f, 1.0f);
+	ImGui::SliderFloat("Size 1", &dirLight.cascadeSizes[1], 0.0f, 1.0f);
+	ImGui::SliderFloat("Size 2", &dirLight.cascadeSizes[2], 0.0f, 1.0f);
 	ImGui::SliderFloat("Depth", &dirLight.cascadeDepthScale, 1.0f, 50.0f);
 	ImGui::Checkbox("Visualize cascades", &dirLight.cascadeVisualization);
 	ImGui::End();

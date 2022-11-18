@@ -8,9 +8,12 @@ struct DirectionalLight
 	glm::vec3 color;
 
     // Cascade settings
-    float cascadeSize0 = 0.05f;
-    float cascadeSize1 = 0.1f;
-    float cascadeSize2 = 0.5f;
+    float cascadeSizes[3] =
+    {
+        0.05f,
+        0.1f,
+        0.5f
+    };
     float cascadeDepthScale = 1.0f;
 
     bool cascadeVisualization = false;

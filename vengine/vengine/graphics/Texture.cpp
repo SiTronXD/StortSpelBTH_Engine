@@ -63,21 +63,19 @@ void Texture::createAsDepthTexture(
     );
 
     // Image views
-    if (arrayLayers > 1)
+    for (uint32_t i = 0; i < arrayLayers; ++i)
     {
-        for (uint32_t i = 0; i < arrayLayers; ++i)
-        {
-            this->layerImageViews.push_back(
-                Texture::createImageView(
-                    *this->device,
-                    this->image,
-                    this->format,
-                    vk::ImageAspectFlagBits::eDepth,
-                    arrayLayers,
-                    i
-                )
-            );
-        }
+        this->layerImageViews.push_back(
+            Texture::createImageView(
+                *this->device,
+                this->image,
+                this->format,
+                vk::ImageAspectFlagBits::eDepth,
+                vk::ImageViewType::e2DArray,
+                arrayLayers,
+                i
+            )
+        );
     }
     this->entireImageView =
         Texture::createImageView(
@@ -85,6 +83,7 @@ void Texture::createAsDepthTexture(
             this->image,
             this->format,
             vk::ImageAspectFlagBits::eDepth,
+            vk::ImageViewType::e2DArray,
             arrayLayers,
             0,
             true
@@ -225,6 +224,7 @@ void Texture::create(
             this->image,
             vk::Format::eR8G8B8A8Unorm, // Format for rgba
             vk::ImageAspectFlagBits::eColor,
+            vk::ImageViewType::e2D,
             1,
             0,
             true
@@ -335,6 +335,7 @@ vk::ImageView Texture::createImageView(
 	const vk::Image& image,
 	const vk::Format& format,
 	const vk::ImageAspectFlags& aspectFlags,
+    const vk::ImageViewType& imageViewType,
     const uint32_t& arrayLayers,
     const uint32_t& arrayLayerSlice,
     const bool& useEntireArray
@@ -343,11 +344,6 @@ vk::ImageView Texture::createImageView(
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-
-    vk::ImageViewType imageViewType = 
-        arrayLayers <= 1 ? 
-        vk::ImageViewType::e2D : 
-        vk::ImageViewType::e2DArray;
 
     // Creating a ImageView is similar to how we have the Physical Device and from that create a Logical Device...
     vk::ImageViewCreateInfo viewCreateInfo;

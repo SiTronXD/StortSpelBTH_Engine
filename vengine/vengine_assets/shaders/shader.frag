@@ -24,8 +24,6 @@ layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
 } allLightsInfo;
 
 #define MAX_NUM_CASCADES 4
-#define NUM_CASCADES 4
-
 layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapInfoBuffer
 {
     mat4 viewProjection[MAX_NUM_CASCADES];
@@ -33,7 +31,7 @@ layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapInfoBuffer
 	float shadowMapMinBias;
 	float shadowMapAngleBias;
 	vec4 cascadeFarPlanes;
-	vec4 cascadeSettings;
+	uvec4 cascadeSettings; // uvec4(numCascades, cascadeVisualization, 0, 0)
 } shadowMapInfoBuffer;
 
 // Storage buffer
@@ -109,9 +107,11 @@ vec3 sampleCascade(in uint i)
 
 float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
+	uint numCascades = shadowMapInfoBuffer.cascadeSettings.x;
+
 	vec4 fragLightNDC = vec4(0.0f);
-	uint cascadeIndex = NUM_CASCADES - 1;
-	for(uint i = 0; i < NUM_CASCADES; ++i)
+	uint cascadeIndex = numCascades - 1;
+	for(uint i = 0; i < numCascades; ++i)
 	{
 		// Transform to the light's NDC
 		fragLightNDC = 
@@ -202,7 +202,8 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 
 void debugCascades(inout vec4 outColor)
 {
-	for(uint i = 0; i < NUM_CASCADES; ++i)
+	uint numCascades = shadowMapInfoBuffer.cascadeSettings.x;
+	for(uint i = 0; i < numCascades; ++i)
 	{
 		vec4 col = vec4(sampleCascade(i), 0.0f);
 
@@ -329,7 +330,7 @@ void main()
 	// outColor = vec4(finalColor, 1.0f); // (No fog)
 
 	// Debug cascades
-	if(shadowMapInfoBuffer.cascadeSettings.x > 0.5f)
+	if(shadowMapInfoBuffer.cascadeSettings.y > 0u)
 	{
 		debugCascades(outColor);
 	}
