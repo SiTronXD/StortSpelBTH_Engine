@@ -160,7 +160,10 @@ private:
     void endRenderpassImgui();
 
     // Record Functions
-    void recordCommandBuffer(Scene* scene, uint32_t imageIndex);    // Using renderpass
+    void recordCommandBuffers(
+        Scene* scene, 
+        Camera* camera,
+        uint32_t imageIndex);
 
     const Material& getAppropriateMaterial(
         const MeshComponent& meshComponent,

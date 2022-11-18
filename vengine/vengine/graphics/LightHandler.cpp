@@ -28,16 +28,12 @@ void LightHandler::getWorldSpaceFrustumCorners(
         }
     }
 }
-#include "DebugRenderer.hpp"
-void LightHandler::setLightProjection(
+
+void LightHandler::setLightMatrices(
     const glm::mat4& camProj,
     const glm::mat4& camView,
-    const glm::vec3& lightDir,
     glm::mat4& outputLightView,
-    glm::mat4& outputProjection,
-
-    const uint32_t& i,
-    DebugRenderer& debugRenderer)
+    glm::mat4& outputProjection)
 {
     // Find frustum corners in world space
     glm::vec4 frustumCorners[8];
@@ -56,7 +52,7 @@ void LightHandler::setLightProjection(
     outputLightView =
         glm::lookAt(
             center,
-            center + lightDir,
+            center + this->lightDir,
             glm::vec3(0.0f, 1.0f, 0.0f)
         );
 
@@ -80,38 +76,24 @@ void LightHandler::setLightProjection(
         maxZ = std::max(maxZ, viewSpaceCorner.z);
     }
 
-    if (i == 0)
+    // Scale depth
+    if (minZ < 0.0f)
     {
-        Log::write("X: (" + std::to_string(minX) + ", " + std::to_string(maxX) + ")");
-        Log::write("Y: (" + std::to_string(minY) + ", " + std::to_string(maxY) + ")");
-        Log::write("Z: (" + std::to_string(minZ) + ", " + std::to_string(maxZ) + ")");
-        Log::write("");
-
-        /*debugRenderer.renderBox(
-            glm::vec3(maxX + minX, maxY + minY, maxZ + minZ) * 0.5f,
-            glm::vec3(0.0f),
-            glm::vec3(maxX - minX, maxY - minY, maxZ - minZ),
-            glm::vec3(1.0f, 0.0f, 1.0f)
-        );*/
-    }
-
-    const float zMult = 10.0f;
-    /*if (minZ < 0.0f)
-    {
-        minZ *= zMult;
+        minZ *= this->cascadeDepthScale;
     }
     else
     {
-        minZ /= zMult;
+        minZ /= this->cascadeDepthScale;
     }
     if (maxZ < 0.0f)
     {
-        maxZ /= zMult;
+        maxZ /= this->cascadeDepthScale;
     }
     else
     {
-        maxZ *= zMult;
-    }*/
+        maxZ *= this->cascadeDepthScale;
+    }
+
     outputProjection =
         glm::orthoRH(minX, maxX, minY, maxY, minZ, maxZ);
 }
@@ -315,12 +297,9 @@ void LightHandler::updateLightBuffers(
     const StorageBufferID& lightBufferSB,
     const StorageBufferID& animLightBufferSB,
     const bool& hasAnimations,
-    const glm::mat4& camProj,
-    const glm::mat4& camView,
     const glm::vec3& camPosition,
-    const uint32_t& currentFrame,
-    
-    DebugRenderer& debugRenderer)
+    const Camera& camData,
+    const uint32_t& currentFrame)
 {
     this->lightBuffer.clear();
 
@@ -466,7 +445,6 @@ void LightHandler::updateLightBuffers(
 
 
     // Update shadow map view matrix
-    glm::vec3 lightDir(0.0f);
     auto dirLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
     dirLightView.each([&](
         DirectionalLight& dirLightComp)
@@ -474,10 +452,7 @@ void LightHandler::updateLightBuffers(
             // Normalize direction
             dirLightComp.direction =
                 glm::normalize(dirLightComp.direction);
-            lightDir = dirLightComp.direction;
-
-            glm::vec3 lightPos =
-                camPosition - dirLightComp.direction * dirLightComp.shadowMapFrustumDepth * 0.5f;
+            this->lightDir = dirLightComp.direction;
 
             glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
             if (std::abs(glm::dot(worldUp, dirLightComp.direction)) >= 0.95f)
@@ -506,9 +481,15 @@ void LightHandler::updateLightBuffers(
                     );
             }*/
 
+            // Cascade settings
+            this->cascadeSize0 = dirLightComp.cascadeSize0;
+            this->cascadeSize1 = dirLightComp.cascadeSize1;
+            this->cascadeSize2 = dirLightComp.cascadeSize2;
+            this->cascadeDepthScale = dirLightComp.cascadeDepthScale;
+
             // Biases
-            this->shadowMapData.shadowMapMinBias = 0.0001f;
-            this->shadowMapData.shadowMapAngleBias = 0.0015f;
+            this->shadowMapData.shadowMapMinBias = dirLightComp.shadowMapMinBias;
+            this->shadowMapData.shadowMapAngleBias = dirLightComp.shadowMapAngleBias;
         }
     );
 
@@ -517,47 +498,31 @@ void LightHandler::updateLightBuffers(
     // Create light projection matrix
     float nearPlanes[LightHandler::NUM_CASCADES]
     {
-        /*0.1f,
-        500.0f,
-        750.0f,
-        875.0f*/
-        0.1f,
-        1000.0f / 25.0f,
-        1000.0f / 10.0f,
-        1000.0f / 2.0f
+        camData.nearPlane,
+        camData.farPlane * this->cascadeSize0,
+        camData.farPlane * this->cascadeSize1,
+        camData.farPlane * this->cascadeSize2
     };
     float farPlanes[LightHandler::NUM_CASCADES]
     {
-        /*500.0f,
-        750.0f,
-        875.0f,
-        1000.0f*/
-        1000.0f / 25.0f,
-        1000.0f / 10.0f,
-        1000.0f / 2.0f,
-        1000.0f
+        nearPlanes[1],
+        nearPlanes[2],
+        nearPlanes[3],
+        camData.farPlane
     };
     for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
     {
-        this->setLightProjection(
+        this->setLightMatrices(
             glm::perspective(
                 glm::radians(90.0f), 
                 16.0f / 9.0f, 
                 nearPlanes[i],
                 farPlanes[i]
             ),
-            camView,
-            lightDir,
-            this->viewMatrices[i],
-            this->projectionMatrices[i],
-            i,
-            debugRenderer
+            camData.view,
+            this->shadowMapData.view[i],
+            this->shadowMapData.projection[i]
         );
-
-        this->shadowMapData.projection[i] =
-            this->projectionMatrices[i]; 
-        this->shadowMapData.view[i] =
-            this->viewMatrices[i];
     }
 
     // Shadow map shader input
@@ -585,8 +550,8 @@ void LightHandler::updateCamera(
 {
     // Update projection matrix
     this->shadowPushConstantData.viewProjectionMatrix =
-        this->projectionMatrices[arraySliceCameraIndex] *
-        this->viewMatrices[arraySliceCameraIndex];
+        this->shadowMapData.projection[arraySliceCameraIndex] *
+        this->shadowMapData.view[arraySliceCameraIndex];
 }
 
 void LightHandler::updateShadowPushConstant(

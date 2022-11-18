@@ -403,14 +403,15 @@ void VulkanRenderer::draw(Scene* scene)
     this->cameraDataUBO.projection = camera->projection;
     this->cameraDataUBO.view = camera->view;
     this->cameraDataUBO.worldPosition = glm::vec4(cameraTransform->position, 1.0f);
-    if (deleteCamera) 
+    
+    // Record the current commandBuffer
+    this->recordCommandBuffers(scene, camera, imageIndex);
+
+    if (deleteCamera)
     {
-        delete camera; 
+        delete camera;
         delete cameraTransform;
     }
-
-    // Record the current commandBuffer
-    this->recordCommandBuffer(scene, imageIndex);
     
     // Submit to graphics queue
     {
@@ -1019,7 +1020,10 @@ Material& VulkanRenderer::getAppropriateMaterial(
     return this->resourceManager->getMaterial(submeshes[submeshIndex].materialIndex);
 }
 
-void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
+void VulkanRenderer::recordCommandBuffers(
+    Scene* scene, 
+    Camera* camera,
+    uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
@@ -1077,12 +1081,9 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 this->lightBufferSB,
                 this->animLightBufferSB,
                 this->hasAnimations,
-                cameraDataUBO.projection,
-                cameraDataUBO.view,
-                glm::vec3(cameraDataUBO.worldPosition),
-                this->currentFrame,
-
-                *this->debugRenderer
+                glm::vec3(this->cameraDataUBO.worldPosition),
+                *camera,
+                this->currentFrame
             );
 
             // Default shader input

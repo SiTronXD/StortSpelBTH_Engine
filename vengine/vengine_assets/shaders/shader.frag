@@ -290,7 +290,7 @@ void main()
 
 		if(dot(col, col) > 0.5f)
 		{
-			outColor += col;
+			outColor += col * 0.1f;
 			break;
 		}
 	}

@@ -18,6 +18,8 @@ class ResourceManager;
 class Texture;
 class DebugRenderer;
 
+struct Camera;
+
 class LightHandler
 {
 public:
@@ -26,8 +28,6 @@ public:
 private:
 	std::vector<LightBufferData> lightBuffer;
 
-	glm::mat4 projectionMatrices[LightHandler::NUM_CASCADES]{};
-	glm::mat4 viewMatrices[LightHandler::NUM_CASCADES]{};
 	ShadowMapData shadowMapData{};
 
 	ShadowPushConstantData shadowPushConstantData{};
@@ -55,20 +55,22 @@ private:
 
 	uint32_t framesInFlight;
 
+	glm::vec3 lightDir;
+
+	float cascadeSize0;
+	float cascadeSize1;
+	float cascadeSize2;
+	float cascadeDepthScale;
+
 	void getWorldSpaceFrustumCorners(
 		const glm::mat4& invViewProj,
 		glm::vec4 outputCorners[]);
 
-	void setLightProjection(
+	void setLightMatrices(
 		const glm::mat4& camProj,
 		const glm::mat4& camView,
-		const glm::vec3& lightDir,
 		glm::mat4& outputLightView,
-		glm::mat4& outputProjection,
-
-		// TODO: remove this
-		const uint32_t& i,
-		DebugRenderer& debugRenderer);
+		glm::mat4& outputProjection);
 
 public:
 	static const uint32_t MAX_NUM_LIGHTS = 16;
@@ -98,13 +100,9 @@ public:
 		const StorageBufferID& lightBufferSB,
 		const StorageBufferID& animLightBufferSB,
 		const bool& hasAnimations,
-		const glm::mat4& camProj,
-		const glm::mat4& camView,
 		const glm::vec3& camPosition,
-		const uint32_t& currentFrame,
-
-		// TODO: remove this
-		DebugRenderer& debugRenderer);
+		const Camera& camData,
+		const uint32_t& currentFrame);
 
 	void updateCamera(
 		const uint32_t& arraySliceCameraIndex);
