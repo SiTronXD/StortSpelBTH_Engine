@@ -102,7 +102,8 @@ void EventSystem::update()
 		const auto& entityID = eventsPerEntity.first;
 		const auto& entityEventPtrs = eventsPerEntity.second;
 
-        
+		if(!this->sh->getScene()->isActive(entityID)){continue;}
+       
 		auto& agent = this->sh->getScene()->getComponent<FSMAgentComponent>(entityID);
 
 		for (auto& currNeighbor : agent.currentNode->neighbors)

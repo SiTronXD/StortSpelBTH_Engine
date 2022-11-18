@@ -106,10 +106,6 @@ public:
         }
     }
 
-        
-    virtual void initEntityData(Entity entityID) = 0;
-    virtual void update(Entity entityID) = 0;
-
     inline const std::string& getName()const { return this->name;}
     
     //Only run start function one time... (Start is for everything in the tree)
@@ -211,7 +207,7 @@ public:
         bool someDecoratorHasMoreThanOneChild = false;
         for(auto decorator : create.decorator.getDecorators())
         {
-            if(decorator->children.size() > 1)
+            if(decorator->children.size() > 1 && decorator->nodeType != NodeType::Random)
             {
                 someDecoratorHasMoreThanOneChild = true; 
                 break;

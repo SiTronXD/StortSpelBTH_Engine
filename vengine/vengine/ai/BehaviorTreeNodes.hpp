@@ -45,7 +45,8 @@ enum class NodeType {
     ForceFailure,
     Repeat,
     Retry,
-    Breakpoint
+    Breakpoint,
+    Random
 };
 
 
@@ -450,6 +451,20 @@ class Breakpoint : public Decorator
         }
 		lastReturn = this->children[0]->execute(entityID);
 		return lastReturn;
+	}
+};
+
+class Random : public Decorator{
+   private:
+   public:
+	Random() :
+	    Decorator(NodeType::Random, "Random", "random"){};
+	
+	BTStatus decorate(uint32_t entityID) { 
+        
+        int choice = rand() % this->children.size();
+
+        return this->children[choice]->execute(entityID);
 	}
 };
 

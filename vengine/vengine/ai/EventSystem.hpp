@@ -52,7 +52,7 @@ class EntityEvent : public Event
 {
    private:
    public:
-	std::function<bool(uint32_t)> event;
+	std::function<bool(uint32_t)> event;    
 	bool checkEvent(uint32_t entityID) { return event(entityID); }
 	EntityEvent() = default; //TODO: Remove
 	EntityEvent(const std::string& name, std::function<bool(uint32_t)> event) :Event(name), event(event){};
