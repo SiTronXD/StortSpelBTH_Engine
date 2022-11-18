@@ -109,6 +109,7 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
 	uint numCascades = shadowMapInfoBuffer.cascadeSettings.x;
 
+	// Brute force search through each cascade frustum
 	vec4 fragLightNDC = vec4(0.0f);
 	uint cascadeIndex = numCascades - 1;
 	for(uint i = 0; i < numCascades; ++i)
@@ -128,12 +129,6 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 			cascadeIndex = i;
 			break;
 		}
-
-		/*if(viewDepth < shadowMapInfoBuffer.cascadeFarPlanes[i])
-		{
-			cascadeIndex = i;
-			break;
-		}*/
 	}
 
 	// Fragment is outside light frustum
@@ -151,7 +146,6 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 	float bias = 
 		shadowMapInfoBuffer.shadowMapMinBias + 
 		shadowMapInfoBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
-	// bias /= cascadePlaneDists[cascadeIndex];
 
 	// 3x3 PCF
 	vec2 shadowMapSize = shadowMapInfoBuffer.shadowMapSize;
