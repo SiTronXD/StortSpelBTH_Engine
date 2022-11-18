@@ -65,11 +65,11 @@ void TestDemoScene::init()
 		glm::vec3(0.1f);
 
 	// Directional light
-	Entity directionalLightEntity = this->createEntity();
-	this->setComponent<DirectionalLight>(directionalLightEntity);
-	this->getComponent<DirectionalLight>(directionalLightEntity).color =
+	this->directionalLightEntity = this->createEntity();
+	this->setComponent<DirectionalLight>(this->directionalLightEntity);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity).color =
 		glm::vec3(0.7);
-	this->getComponent<DirectionalLight>(directionalLightEntity).direction =
+	this->getComponent<DirectionalLight>(this->directionalLightEntity).direction =
 		glm::vec3(-1.0f, -1.0f, 1.0f);
 
 	// Create entity (already has transform)
@@ -290,6 +290,15 @@ void TestDemoScene::update()
 		this->setAnimation(multiAni2, "third", false);
 	}
 
+	DirectionalLight& dirLight = 
+		this->getComponent<DirectionalLight>(this->directionalLightEntity);
+	ImGui::Begin("Cascades");
+	ImGui::SliderFloat("Size 0", &dirLight.cascadeSizes[0], 0.0f, 1.0f);
+	ImGui::SliderFloat("Size 1", &dirLight.cascadeSizes[1], 0.0f, 1.0f);
+	ImGui::SliderFloat("Size 2", &dirLight.cascadeSizes[2], 0.0f, 1.0f);
+	ImGui::SliderFloat("Depth", &dirLight.cascadeDepthScale, 1.0f, 50.0f);
+	ImGui::Checkbox("Visualize cascades", &dirLight.cascadeVisualization);
+	ImGui::End();
 
 	// Rotate testEntity
 	/*this->getComponent<Transform>(this->testEntity).rotation.x +=

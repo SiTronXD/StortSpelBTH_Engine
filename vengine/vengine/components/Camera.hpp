@@ -10,6 +10,8 @@ private:
 	Transform oldTransform;
 public:
 	float fov;
+	float nearPlane;
+	float farPlane;
 
 	glm::mat4 view;
 	glm::mat4 projection;
@@ -17,7 +19,7 @@ public:
 	glm::mat4 viewAndProj;
 
 	Camera(float fov = 90.0f):
-		fov(fov), view(1.0f), projection(1.0f), invProjection(1.0f), viewAndProj(1.0f)
+		fov(fov), nearPlane(0.1f), farPlane(1000.0f), view(1.0f), projection(1.0f), invProjection(1.0f), viewAndProj(1.0f)
 	{
 		oldTransform.position = glm::vec3(~0u);
 	}
@@ -27,6 +29,9 @@ public:
 		float nearPlane = 0.1f, 
 		float farPlane = 1000.0f)
 	{
+		this->nearPlane = nearPlane;
+		this->farPlane = farPlane;
+
 		this->projection = glm::perspective(glm::radians(fov), aspectRatio, nearPlane, farPlane);
 		this->invProjection = glm::inverse(this->projection);
 		this->viewAndProj = this->projection * this->view;
