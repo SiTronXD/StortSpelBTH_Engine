@@ -72,16 +72,20 @@ void Server::ConnectUsers()
 			// Send that a player has joined
 			sf::Packet playerJoinedPacket;
 			playerJoinedPacket << (int)NetworkEvent::CLIENTJOINED << tempClient->name << tempClient->id;
+
+			// Send to all other players to new client
+			sf::Packet justJoinedInfo;
+			justJoinedInfo << (int)NetworkEvent::JUSTJOINED << clients.size();
+
 			for (int i = 0; i < clients.size() - 1; i++)
 			{
 				clients[i]->clientTcpSocket.send(playerJoinedPacket);
+				justJoinedInfo << clients[i]->name << clients[i]->id;
 			}
+			tempClient->clientTcpSocket.send(justJoinedInfo);
 		}
 		// Create a new client that is ready
 		tempClient = new ClientInfo("");
-		/*clients[clients.size() - 1]->clientTcpSocket.setBlocking(false);
-		clients.resize(clients.size() + 1);
-		clients[clients.size() - 1] = new ClientInfo("");*/
 	}
 }
 
@@ -99,9 +103,6 @@ Server::Server(NetworkHandler* networkHandler, NetworkScene* serverGame)
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->scriptHandler.setPhysicsEngine(&this->physicsEngine);
 	this->physicsEngine.setSceneHandler(&this->sceneHandler);
-
-	//this->sceneHandler.setGetClientFunction(std::bind(&Server::startGettingClients, this));
-	//this->sceneHandler.setStopClientFunction(std::bind(&Server::stopGettingClients, this));
 
 	// Create scene
 	if (serverGame == nullptr)
@@ -150,31 +151,32 @@ Server::~Server()
 
 void Server::start()
 {
-	clientToServerPacketTcp.resize(clients.size());
+	/*clientToServerPacketTcp.resize(clients.size());
 	serverToClientPacketTcp.resize(clients.size());
 	clientToServerPacketUdp.resize(clients.size());
-	serverToClientPacketUdp.resize(clients.size());
+	serverToClientPacketUdp.resize(clients.size());*/
 
-	for (int i = 0; i < this->clients.size(); i++)
+	/*for (int i = 0; i < this->clients.size(); i++)
 	{
 		sceneHandler.getScene()->createPlayer();
-	}
+	}*/
 
 	this->udpSocket.setBlocking(false);
 	this->listener.setBlocking(false);
 
 	std::cout << "Server: printing all users" << std::endl;
 	printAllUsers();
+
+	sf::Packet packet;
+	packet << (int)NetworkEvent::START;
+	this->sendToAllClientsTCP(packet);
+
 	this->status = ServerStatus::RUNNING;
 }
 
 bool Server::update(float dt)
 {
 	// All users are connected and client host says it's ok to start
-	if (Input::isKeyPressed(Keys::P))
-	{
-		this->printAllUsers();
-	}
 	if (this->status == ServerStatus::START)
 	{
 		this->start();
@@ -366,7 +368,6 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 			if (event == (int)NetworkEvent::START && this->status == ServerStatus::WAITING && ClientID == 0)
 			{
 				this->status = ServerStatus::START;
-				this->sceneHandler.sendCallFromClient((int)NetworkEvent::START);
 			}
 			else if (event == (int)NetworkEvent::GETNAMES)
 			{

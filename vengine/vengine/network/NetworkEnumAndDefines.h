@@ -27,6 +27,7 @@ enum class NetworkEvent
 	EMPTY,
 	ECHO, // Repeat whatever is sent on server
 	CLIENTJOINED,
+	JUSTJOINED,
 	DISCONNECT,
 	GETNAMES,
 	START,

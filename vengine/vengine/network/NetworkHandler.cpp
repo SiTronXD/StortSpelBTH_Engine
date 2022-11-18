@@ -34,7 +34,7 @@ void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 			otherPlayers[otherPlayers.size() - 1].first, 
 			this->networkHandlerMeshes.find("PlayerMesh")->second
 			);
-		sceneHandler->getScene()->setComponent<AnimationComponent>(otherPlayers[otherPlayers.size() - 1].first);
+		//sceneHandler->getScene()->setComponent<AnimationComponent>(otherPlayers[otherPlayers.size() - 1].first);
 	}
 }
 
@@ -119,47 +119,6 @@ void NetworkHandler::createServer(NetworkScene* serverGame)
 	{
 		Log::write("Failed to create server");
 	}
-
-	//if (serverThread == nullptr)
-	//{
-	//	this->shutDownServer = false;
-	//	this->createdServer = false;
-	//	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
-
-	//	Timer timer;
-	//	float timeSinceStartCreatingServer = 0;
-	//	while (!this->createdServer && timeSinceStartCreatingServer < waitTimeForServerCreation)
-	//	{
-	//		timeSinceStartCreatingServer += timer.getRealDT();
-	//		timer.updateDeltaTime();
-	//	}
-	//	if (!this->createdServer)
-	//	{
-	//		std::cout << "failed to create server" << std::endl;
-	//	}
-	//}
-	//else
-	//{  //shut down server and create it again
-	//	this->shutDownServer = true;
-	//	serverThread->join();
-	//	delete serverThread;
-	//	serverThread = nullptr;
-	//	this->shutDownServer = false;
-	//	this->createdServer = false;
-	//	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
-
-	//	Timer timer;
-	//	float timeSinceStartCreatingServer = 0;
-	//	while (!this->createdServer && timeSinceStartCreatingServer < waitTimeForServerCreation)
-	//	{
-	//		timeSinceStartCreatingServer += timer.getRealDT();
-	//		timer.updateDeltaTime();
-	//	}
-	//	if (!this->createdServer)
-	//	{
-	//		std::cout << "failed to create server" << std::endl;
-	//	}
-	//}
 }
 
 void NetworkHandler::deleteServer()
@@ -240,7 +199,20 @@ void NetworkHandler::update()
 			std::string playerName;
 			packet >> playerName;
 			packet >> h1;
-			this->createAPlayer(h1, playerName);
+			otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
+			otherPlayersServerId.push_back(h1);
+		}
+		else if (event == (int)NetworkEvent::JUSTJOINED)
+		{
+			std::string playerName;
+			packet >> h1;
+			for (int i = 0; i < h1; i++)
+			{
+				packet >> playerName;
+				packet >> h2;
+				otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
+				otherPlayersServerId.push_back(h2);
+			}
 		}
 		else if (event == (int)NetworkEvent::DISCONNECT)
 		{
@@ -318,6 +290,23 @@ void NetworkHandler::update()
 				Log::write("Server shut down, disconnecting...");
 				this->disconnectClient();
 			}
+			// Other client got disconnected
+			else
+			{
+				for (int i = 0; i < otherPlayersServerId.size(); i++)
+				{
+					if (otherPlayersServerId[i] == h1)
+					{
+						if (otherPlayers.size() < i)
+						{
+							return;
+						}
+						sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
+						this->otherPlayers.erase(otherPlayers.begin() + i);
+						this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
+					}
+				}
+			}
 		}
 		// Custom event
 		else if (event >= (int)NetworkEvent::END)
@@ -358,6 +347,15 @@ const bool NetworkHandler::hasServer()
 	return serverThread != nullptr;
 }
 
+const bool NetworkHandler::isConnected()
+{
+	if (this->client != nullptr)
+	{
+		return this->client->isConnected();
+	}
+	return false;
+}
+
 const std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers()
 {
 	return this->otherPlayers;
@@ -383,8 +381,13 @@ void NetworkHandler::createPlayers()
 
 void NetworkHandler::disconnectClient()
 {
-	if (client->isConnected())
+	if (client != nullptr)
 	{
-		client->disconnect();
+		if (client->isConnected())
+		{
+			client->disconnect();
+			this->otherPlayers.clear();
+			this->otherPlayersServerId.clear();
+		}
 	}
 }

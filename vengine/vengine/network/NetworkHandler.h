@@ -22,10 +22,10 @@ private:
     int                 player;
 	std::string         playerName;
     
-    //meshes for networkHandler
+    // Meshes for networkHandler
 	std::map<std::string, int> networkHandlerMeshes;
 
-    //data
+    // Data
     std::vector<std::pair<int, std::string>>    otherPlayers;
     std::vector<int>                            otherPlayersServerId;
 
@@ -56,6 +56,7 @@ public:
     bool connectClient(const std::string &serverIP);
     void disconnectClient();
     const bool hasServer();
+    const bool isConnected();
 	const std::string &getClientName();
 
     // USER
