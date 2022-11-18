@@ -7,7 +7,6 @@ class TestDemoScene : public Scene
 private:
 	Entity camEntity;
 	Entity testEntity;
-	Entity testEntity2;
 	Entity multiAnimation;
 	Entity directionalLightEntity;
 	uint32_t uiTextureIndex0;

@@ -484,9 +484,7 @@ void MeshLoader::loadSkeleton(const aiScene* scene, MeshData& outMeshData)
         Bone& bone = outMeshData.bones[i];
 
         // Bone name
-#if defined(_DEBUG) || defined(DEBUG)
         bone.boneName = mesh->mBones[i]->mName.C_Str();
-#endif
 
         memcpy(&bone.inverseBindPoseMatrix, &mesh->mBones[i]->mOffsetMatrix, sizeof(glm::mat4));
         bone.inverseBindPoseMatrix = glm::transpose(bone.inverseBindPoseMatrix);

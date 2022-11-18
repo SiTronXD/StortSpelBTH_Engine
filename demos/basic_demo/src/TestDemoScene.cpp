@@ -277,6 +277,16 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	// Make ghost follow skeletal animation
+	this->getComponent<Transform>(this->testEntity).setMatrix(
+		this->getResourceManager()->getJointTransform(
+			this->getComponent<Transform>(this->aniIDs[1]),
+			this->getComponent<MeshComponent>(this->aniIDs[1]),
+			this->getComponent<AnimationComponent>(this->aniIDs[1]),
+			"Left_leg"
+		) * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f))
+	);
+
 	if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->setAnimation(multiAni2, "first");
