@@ -8,6 +8,7 @@
 #define TCP_PORT_CLIENT 55030
 #define SERVER_IP "192.168.1.104"
 #define ServerUpdateRate 1 / 24.f
+#define MAXNUMBEROFPLAYERS 4
 
 #pragma endregion
 

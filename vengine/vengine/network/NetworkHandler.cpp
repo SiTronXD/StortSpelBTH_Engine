@@ -21,21 +21,8 @@ void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
 
 void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 {
-	otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
+	otherPlayers.push_back(std::pair<int, std::string>(0, playerName));
 	otherPlayersServerId.push_back(serverId);
-	if (this->networkHandlerMeshes.find("PlayerMesh") == this->networkHandlerMeshes.end())
-	{
-		sceneHandler->getScene()->setComponent<MeshComponent>(otherPlayers[otherPlayers.size() - 1].first, 0);
-	}
-	else
-	{
-		sceneHandler->getScene()->setComponent<MeshComponent>(
-			otherPlayers[otherPlayers.size() - 1].first, 
-			this->networkHandlerMeshes.find("PlayerMesh")->second
-			);
-		sceneHandler->getScene()->setComponent<AnimationComponent>(otherPlayers[otherPlayers.size() - 1].first);
-	}
-	
 }
 
 NetworkHandler::NetworkHandler() : sceneHandler(nullptr)
