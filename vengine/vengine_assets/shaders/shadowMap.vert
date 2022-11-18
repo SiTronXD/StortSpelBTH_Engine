@@ -7,16 +7,6 @@
 // Vertex data
 layout(location = 0) in vec3 pos;
 
-// Uniform buffer
-layout(set = FREQ_PER_FRAME, binding = 0) uniform ShadowMapBuffer
-{
-    mat4 projection[4];
-    mat4 view[4];
-    vec2 shadowMapSize;
-	float shadowMapMinBias;
-	float shadowMapAngleBias;
-} shadowMapBuffer;
-
 // Push constant
 layout(push_constant) uniform PushConstantData
 {

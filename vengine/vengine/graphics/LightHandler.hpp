@@ -39,12 +39,10 @@ private:
 	vk::Extent2D shadowMapExtent;
 
 	// Default meshes
-	UniformBufferID shadowMapViewProjectionUB;
 	ShaderInput shadowMapShaderInput;
 	Pipeline shadowMapPipeline;
 
 	// Skeletal animations
-	UniformBufferID animShadowMapViewProjectionUB;
 	ShaderInput animShadowMapShaderInput;
 	Pipeline animShadowMapPipeline;
 
@@ -57,9 +55,7 @@ private:
 
 	glm::vec3 lightDir;
 
-	float cascadeSize0;
-	float cascadeSize1;
-	float cascadeSize2;
+	float cascadeSizes[LightHandler::NUM_CASCADES - 1];
 	float cascadeDepthScale;
 
 	void getWorldSpaceFrustumCorners(
@@ -69,8 +65,8 @@ private:
 	void setLightMatrices(
 		const glm::mat4& camProj,
 		const glm::mat4& camView,
-		glm::mat4& outputLightView,
-		glm::mat4& outputProjection);
+		glm::mat4& outputLightProjection,
+		glm::mat4& outputLightView);
 
 public:
 	static const uint32_t MAX_NUM_LIGHTS = 16;

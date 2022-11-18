@@ -9,16 +9,6 @@ layout(location = 0) in vec3 pos;
 layout(location = 1) in vec4 weights;
 layout(location = 2) in uvec4 boneIndices;
 
-// Uniform buffer
-layout(set = FREQ_PER_FRAME, binding = 0) uniform ShadowMapBuffer
-{
-    mat4 projection[4];
-    mat4 view[4];
-    vec2 shadowMapSize;
-	float shadowMapMinBias;
-	float shadowMapAngleBias;
-} shadowMapBuffer;
-
 // Storage buffer
 struct BoneTransformsData
 {

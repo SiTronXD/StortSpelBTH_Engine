@@ -5,10 +5,11 @@
 #define FREQ_PER_DRAW 2
 
 layout(location = 0) in vec3 fragWorldPos;
-layout(location = 1) in vec3 fragNor;
-layout(location = 2) in vec2 fragTex;
-layout(location = 3) in vec3 fragCamWorldPos;
-layout(location = 4) in vec4 fragTintCol;
+layout(location = 1) in vec3 fragViewPos;
+layout(location = 2) in vec3 fragNor;
+layout(location = 3) in vec2 fragTex;
+layout(location = 4) in vec3 fragCamWorldPos;
+layout(location = 5) in vec4 fragTintCol;
 
 // Uniform buffer for light indices
 // Ambient: [0, ambientLightsEndIndex)
@@ -22,14 +23,18 @@ layout(set = FREQ_PER_FRAME, binding = 1) uniform AllLightsInfo
 	uint spotlightsEndIndex;
 } allLightsInfo;
 
-layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapBuffer
+#define MAX_NUM_CASCADES 4
+#define NUM_CASCADES 4
+
+layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapInfoBuffer
 {
-    mat4 projection[4];
-    mat4 view[4];
+    mat4 projection[MAX_NUM_CASCADES];
+    mat4 view[MAX_NUM_CASCADES];
     vec2 shadowMapSize;
 	float shadowMapMinBias;
 	float shadowMapAngleBias;
-} shadowMapBuffer;
+	vec4 cascadeFarPlanes;
+} shadowMapInfoBuffer;
 
 // Storage buffer
 struct LightBufferData
@@ -81,8 +86,8 @@ vec3 sampleCascade(in uint i)
 {
 	// Transform to the light's NDC
 	vec4 fragLightNDC = 
-		shadowMapBuffer.projection[i] * 
-		shadowMapBuffer.view[i] * 
+		shadowMapInfoBuffer.projection[i] * 
+		shadowMapInfoBuffer.view[i] * 
 		vec4(fragWorldPos, 1.0f);
 	fragLightNDC.xyz /= fragLightNDC.w;
 	fragLightNDC.y = -fragLightNDC.y;
@@ -105,10 +110,39 @@ vec3 sampleCascade(in uint i)
 
 float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
+	float viewDepth = abs(fragViewPos.z);
+	uint cascadeIndex = NUM_CASCADES - 1;
+	for(uint i = 0; i < NUM_CASCADES; ++i)
+	{
+		// Transform to the light's NDC
+		vec4 tempFragLightNDC = 
+			shadowMapInfoBuffer.projection[i] * 
+			shadowMapInfoBuffer.view[i] * 
+			vec4(fragWorldPos, 1.0f);
+		tempFragLightNDC.xyz /= tempFragLightNDC.w;
+		tempFragLightNDC.y = -tempFragLightNDC.y;
+
+		// Fragment is outside light frustum
+		if( tempFragLightNDC.x >= -1.0f && tempFragLightNDC.x <= 1.0f &&
+			tempFragLightNDC.y >= -1.0f && tempFragLightNDC.y <= 1.0f &&
+			tempFragLightNDC.z >= 0.0f && tempFragLightNDC.z <= 1.0f)
+		{
+			cascadeIndex = i;
+			break;
+		}
+
+		/*if(viewDepth < shadowMapInfoBuffer.cascadeFarPlanes[i])
+		{
+			cascadeIndex = i;
+			break;
+		}*/
+	}
+	cascadeIndex = 1;
+
 	// Transform to the light's NDC
 	vec4 fragLightNDC = 
-		shadowMapBuffer.projection[0] * 
-		shadowMapBuffer.view[0] * 
+		shadowMapInfoBuffer.projection[cascadeIndex] * 
+		shadowMapInfoBuffer.view[cascadeIndex] * 
 		vec4(fragWorldPos, 1.0f);
 	fragLightNDC.xyz /= fragLightNDC.w;
 	fragLightNDC.y = -fragLightNDC.y;
@@ -126,11 +160,12 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 
 	// Calculate shadow bias
 	float bias = 
-		shadowMapBuffer.shadowMapMinBias + 
-		shadowMapBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
+		shadowMapInfoBuffer.shadowMapMinBias + 
+		shadowMapInfoBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
+	// bias /= cascadePlaneDists[cascadeIndex];
 
 	// 3x3 PCF
-	vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
+	vec2 shadowMapSize = shadowMapInfoBuffer.shadowMapSize;
 	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
 	float shadowFactor = 0.0f;
 	for(int y = -1; y <= 1; ++y)
@@ -139,9 +174,14 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		{
 			vec2 offset = vec2(x, y) * oneOverSize;
 			float approxGaussWeight = 4.0f / pow(2.0f, (abs(x) + abs(y))) / 16.0f;
+			float sampleValue = 
+				texture(
+					shadowMapSampler, 
+					vec3(fragLightNDC.xy + offset, float(3u) + 0.5f)
+				).r;
 
 			shadowFactor +=
-				(fragLightNDC.z - bias >= texture(shadowMapSampler, vec3(fragLightNDC.xy + offset, 0.0f)).r ? 0.0f : 1.0f) 
+				(fragLightNDC.z - bias >= sampleValue ? 0.0f : 1.0f) 
 				* approxGaussWeight;
 		}
 	}
@@ -149,7 +189,7 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 	return shadowFactor;
 
 	// 2x2 PCF
-	/*vec2 shadowMapSize = shadowMapBuffer.shadowMapSize;
+	/*vec2 shadowMapSize = shadowMapInfoBuffer.shadowMapSize;
 	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
 	vec2 unnormalizedFragTex = fragLightNDC.xy * shadowMapSize;
 	vec2 unnormalizedCorner = floor(unnormalizedFragTex);
@@ -284,7 +324,7 @@ void main()
 	// Composite fog
 	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
 
-	for(uint i = 0; i < 4; ++i)
+	for(uint i = 0; i < NUM_CASCADES; ++i)
 	{
 		vec4 col = vec4(sampleCascade(i), 0.0f);
 
