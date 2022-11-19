@@ -449,7 +449,7 @@ void LightHandler::updateLightBuffers(
             // Cascade settings
             for (size_t i = 0; i < this->cascadeSizes.size(); ++i)
             {
-                this->cascadeSizes[i] = dirLightComp.cascadeSizes[i];
+                this->cascadeSizes[i] = dirLightComp.cascadeSizes[i] / camData.aspectRatio * (16.0f / 9.0f);
             }
             this->cascadeDepthScale = dirLightComp.cascadeDepthScale;
             this->shadowMapData.cascadeSettings.y = dirLightComp.cascadeVisualization ? 1.0f : 0.0f;
