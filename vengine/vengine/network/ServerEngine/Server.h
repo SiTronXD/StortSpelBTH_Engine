@@ -31,9 +31,9 @@ struct ClientInfo {
 class Server {
 private:
 	// Functions
+	bool duplicateUser();
 	// See if user is still connected by seeing if user has been to the sending messages the last 3 seconds or so
 	// Else send a message that they have been disconnected
-	bool duplicateUser();
 	void seeIfUsersExist();
 	void handleDisconnects(int clientID); // If a player have wanted to disconnect
 	void cleanRecvPackages();
@@ -86,4 +86,17 @@ public:
 	void sendToAllClientsUDP(sf::Packet packet);
 	void sendToAllOtherClientsTCP(sf::Packet packet, int clientID);
 	void sendToAllOtherClientsUDP(sf::Packet packet, int clientID);
+	void sendToClientTCP(sf::Packet packet, int clientID);
+	void sendToClientUDP(sf::Packet packet, int clientID);
+
+	template<typename T>
+	T* getScene();
+
+	inline int getClientCount() { return (int)this->clients.size(); }
 };
+
+template<typename T>
+inline T* Server::getScene()
+{
+	return dynamic_cast<T*>(this->sceneHandler.getScene());
+}

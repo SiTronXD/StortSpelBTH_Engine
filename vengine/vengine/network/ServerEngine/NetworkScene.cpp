@@ -1,9 +1,15 @@
 #include "pch.h"
 #include "NetworkScene.h"
+#include "Server.h"
 
-NetworkScene::NetworkScene() : serverToClient(nullptr) {}
+NetworkScene::NetworkScene() : serverToClient(nullptr), server(nullptr) {}
 
 NetworkScene::~NetworkScene() {}
+
+void NetworkScene::setServer(Server* server)
+{
+	this->server = server;
+}
 
 PathFindingManager& NetworkScene::getPathFinder()
 {

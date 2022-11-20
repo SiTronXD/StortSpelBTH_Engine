@@ -73,6 +73,11 @@ bool Client::isConnected() const
     return this->isConnectedToServer;
 }
 
+float Client::getAccumulatedTime() const
+{
+	return this->currentTimeToSendDataToServer;
+}
+
 void Client::update(const float& dt)
 {
     this->currentTimeToSendDataToServer += dt;

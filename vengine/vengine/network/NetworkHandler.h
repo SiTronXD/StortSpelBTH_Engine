@@ -16,6 +16,7 @@ private:
     Client*             client;
     ServerStatus        serverStatus;
 
+protected:
     SceneHandler*       sceneHandler;
 	ResourceManager*    resourceManger;
     int                 ID;
@@ -66,4 +67,8 @@ public:
     void setPlayerNetworkHandler(int playerID);
 	const std::vector<std::pair<int, std::string>> getPlayers();
 	void createPlayers();
+
+    // HELPER
+    glm::vec3 getVec(sf::Packet& packet);
+    void sendVec(sf::Packet& packet, const glm::vec3& vec);
 };

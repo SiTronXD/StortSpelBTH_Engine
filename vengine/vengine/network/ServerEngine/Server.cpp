@@ -29,10 +29,10 @@ void Server::ConnectUsers()
 	// If we got a connection
 	if (listener.accept(tempClient->clientTcpSocket) == sf::Socket::Done)
 	{
-		id++;
+		//id++;
 
 		tempClient->sender = tempClient->clientTcpSocket.getRemoteAddress();  // May be wrong address here 2?
-		tempClient->id = id;
+		tempClient->id = id++;
 
 		Log::write("Server: " + tempClient->clientTcpSocket.getRemoteAddress().toString() + " Connected");
 
@@ -73,9 +73,9 @@ void Server::ConnectUsers()
 			sf::Packet playerJoinedPacket;
 			playerJoinedPacket << (int)NetworkEvent::CLIENTJOINED << tempClient->name << tempClient->id;
 
-			// Send to all other players to new client
+			// Send to all other players to new client, also get own ID
 			sf::Packet justJoinedInfo;
-			justJoinedInfo << (int)NetworkEvent::JUSTJOINED << clients.size();
+			justJoinedInfo << (int)NetworkEvent::JUSTJOINED << tempClient->id << clients.size();
 
 			for (int i = 0; i < clients.size() - 1; i++)
 			{
@@ -291,7 +291,7 @@ void Server::cleanSendPackages()
 
 void Server::seeIfUsersExist()
 {
-	static const float MaxTimeUntilDisconnect = 50.f;
+	static const float MaxTimeUntilDisconnect = 10.f;
 
 	for (int i = 0; i < clients.size(); i++)
 	{
@@ -469,6 +469,16 @@ void Server::sendToAllOtherClientsUDP(sf::Packet packet, int clientID)
 	{
 		if (i != clientID) { serverToClientPacketUdp[i].append(data, size); }
 	}
+}
+
+void Server::sendToClientTCP(sf::Packet packet, int clientID)
+{
+	this->serverToClientPacketTcp[clientID].append(packet.getData(), packet.getDataSize());
+}
+
+void Server::sendToClientUDP(sf::Packet packet, int clientID)
+{
+	this->serverToClientPacketUdp[clientID].append(packet.getData(), packet.getDataSize());
 }
 
 void Server::printAllUsers()

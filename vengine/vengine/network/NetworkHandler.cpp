@@ -9,6 +9,7 @@ void serverMain(bool& shutDownServer, bool& created, NetworkHandler* networkHand
 	Server server(networkHandler, game);
 	bool serverIsDone = false;
 	created = true;
+	game->setServer(&server);
 
 	while (!shutDownServer && !serverIsDone)
 	{
@@ -205,11 +206,12 @@ void NetworkHandler::update()
 		else if (event == (int)NetworkEvent::JUSTJOINED)
 		{
 			std::string playerName;
-			packet >> h1;
+			packet >> this->ID; // Own ID in server
+			packet >> h1; // Other client amount
 			for (int i = 0; i < h1; i++)
 			{
 				packet >> playerName;
-				packet >> h2;
+				packet >> h2; // Other client ID
 				otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
 				otherPlayersServerId.push_back(h2);
 			}
@@ -377,6 +379,18 @@ void NetworkHandler::createPlayers()
 			);
 		}
 	}
+}
+
+glm::vec3 NetworkHandler::getVec(sf::Packet& packet)
+{
+	glm::vec3 vec;
+	packet >> vec.x >> vec.y >> vec.z;
+	return vec;
+}
+
+void NetworkHandler::sendVec(sf::Packet& packet, const glm::vec3& vec)
+{
+	packet << vec.x << vec.y << vec.z;
 }
 
 void NetworkHandler::disconnectClient()

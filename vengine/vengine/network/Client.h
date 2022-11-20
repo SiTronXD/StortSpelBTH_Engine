@@ -35,6 +35,7 @@ public:
     void update(const float& dt);
 
     bool isConnected() const;
+    float getAccumulatedTime() const;
     void disconnect();
 
     inline sf::Packet& getTCPPacket() { return this->clientTcpPacketSend; }

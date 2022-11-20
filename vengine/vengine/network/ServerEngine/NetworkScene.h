@@ -4,21 +4,26 @@
 #include "../NetworkEnumAndDefines.h"
 #include <SFML/Network.hpp>
 
+class Server;
+
 class NetworkScene : public Scene
 {
 private:
 	std::vector<sf::Packet>* serverToClient;
 
 protected:
+	Server* server;
+
 	//id, type
 	std::vector<std::pair<int, int>> enemies;
 	std::vector<int> players;
 	PathFindingManager pf;
-
 public:
 	NetworkScene();
 	virtual ~NetworkScene();
 	
+	void setServer(Server* server);
+
 	//AI things
 	PathFindingManager& getPathFinder();
 	void addPolygon(NavMesh::Polygon& polygon);
