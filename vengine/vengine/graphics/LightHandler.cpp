@@ -3,6 +3,10 @@
 #include "../application/Scene.hpp"
 #include "Texture.hpp"
 
+const uint32_t LightHandler::MAX_NUM_LIGHTS   = 16;
+const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 4;
+const uint32_t LightHandler::NUM_CASCADES     = 3;
+
 void LightHandler::getWorldSpaceFrustumCorners(
     const glm::mat4& invViewProj,
     glm::vec4 outputCorners[])

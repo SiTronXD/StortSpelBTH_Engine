@@ -23,7 +23,7 @@ struct Camera;
 class LightHandler
 {
 public:
-	static const uint32_t NUM_CASCADES = 3;
+	static const uint32_t NUM_CASCADES;
 
 private:
 	std::vector<LightBufferData> lightBuffer;
@@ -70,8 +70,8 @@ private:
 		glm::mat4& outputLightVP);
 
 public:
-	static const uint32_t MAX_NUM_LIGHTS = 16;
-	static const uint32_t SHADOW_MAP_SIZE = 1024 * 4;
+	static const uint32_t MAX_NUM_LIGHTS;
+	static const uint32_t SHADOW_MAP_SIZE;
 
 	LightHandler();
 
