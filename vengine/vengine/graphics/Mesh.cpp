@@ -119,7 +119,6 @@ Mesh::Mesh(Mesh&& ref)
 {
 }
 
-
 void Mesh::createVertexBuffers(
     MeshData& meshData, 
     VulkanImportStructs& importStructs)
@@ -227,7 +226,7 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
 
-    void Mesh::getBoneTransforms(
+void Mesh::getBoneTransforms(
     AnimationComponent& animationCompOut)
 {
 #if defined(_DEBUG) || defined(DEBUG)
