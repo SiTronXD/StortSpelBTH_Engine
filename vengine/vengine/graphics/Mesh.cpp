@@ -227,9 +227,6 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
 
-//void Mesh::getBoneTransforms(AnimationComponent& animationCompOut) {
-//
-//}
     void Mesh::getBoneTransforms(
     AnimationComponent& animationCompOut)
 {

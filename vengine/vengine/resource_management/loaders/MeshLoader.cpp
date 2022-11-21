@@ -45,7 +45,6 @@ Mesh MeshLoader::createMesh(MeshData& data)
     return std::move(Mesh(std::move(data), this->importStructs));
 }
 
-
 void MeshLoader::loadAnimations(const std::vector<std::string>& paths, const std::string& textures, MeshData& outMeshData)
 {
     const aiScene* scene = nullptr;

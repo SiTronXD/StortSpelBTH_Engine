@@ -3,8 +3,6 @@
 
 DefaultServerGame::DefaultServerGame() {}
 
-void DefaultServerGame::init() {}
-
 void DefaultServerGame::start()
 {
 	int ground = this->createEntity();

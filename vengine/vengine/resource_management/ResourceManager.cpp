@@ -147,7 +147,6 @@ uint32_t ResourceManager::addMaterial(std::string&& materialPath)
 		return this->materialPaths[materialPath];
 	} 
 
-    //TODO: don't create empty material...
     Material mat = Material();
 
     this->materialPaths.insert({materialPath, this->materialPaths.size()}); 

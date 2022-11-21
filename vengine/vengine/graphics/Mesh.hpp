@@ -40,8 +40,6 @@ public:
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
 
-    void updateMeshData(MeshData&& meshData, VulkanImportStructs& importStructs);
-
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     

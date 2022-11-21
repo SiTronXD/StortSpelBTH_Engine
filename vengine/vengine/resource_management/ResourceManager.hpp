@@ -5,7 +5,6 @@
 #include <string>
 #include "ResourceManagerStructs.hpp"
 #include "../graphics/Mesh.hpp"
-//#include "../graphics/Material.hpp"
 #include "../graphics/Texture.hpp"
 #include "../graphics/TextureSampler.hpp"
 #include "../dev/Log.hpp"
