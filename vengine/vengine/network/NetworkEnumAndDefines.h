@@ -41,6 +41,7 @@ enum GameEvents
 	GAMEDATA,
 	ROOM_CLEAR,
 	MONSTER_HIT,  //a monster hit you
+	GetPlayerHP,
 
 	//TCP to Server
 	HitMonster,  //Call to Scene

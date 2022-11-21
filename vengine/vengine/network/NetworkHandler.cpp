@@ -188,7 +188,7 @@ void NetworkHandler::updateNetwork()
 	readUDPPacket(cUDPP);
 }
 
-
+#include <queue>
 void NetworkHandler::readTCPPacket(sf::Packet& cTCPP)
 {
 	int gameEvent;
@@ -341,6 +341,13 @@ void NetworkHandler::readTCPPacket(sf::Packet& cTCPP)
 				{
 					createAPlayer(iy, playerName);
 				}
+			}
+		}
+		else if (gameEvent == GameEvents::GetPlayerHP){
+			cTCPP >> ix;
+			if(this->ID == ix)
+			{
+				scenePacket << (int)GameEvents::GetPlayerHP;
 			}
 		}
 		else if (gameEvent == GameEvents::Draw_Debug_Line)
