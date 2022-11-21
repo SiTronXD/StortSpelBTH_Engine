@@ -262,7 +262,7 @@ void VulkanRenderer::cleanup()
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
 
-    this->lightHandler.cleanup();
+    this->lightHandler.cleanup(this->hasAnimations);
 
     this->renderPassBase.cleanup();
     this->swapchain.cleanup();
@@ -403,14 +403,15 @@ void VulkanRenderer::draw(Scene* scene)
     this->cameraDataUBO.projection = camera->projection;
     this->cameraDataUBO.view = camera->view;
     this->cameraDataUBO.worldPosition = glm::vec4(cameraTransform->position, 1.0f);
-    if (deleteCamera) 
+    
+    // Record the current commandBuffer
+    this->recordCommandBuffers(scene, camera, imageIndex);
+
+    if (deleteCamera)
     {
-        delete camera; 
+        delete camera;
         delete cameraTransform;
     }
-
-    // Record the current commandBuffer
-    this->recordCommandBuffer(scene, imageIndex);
     
     // Submit to graphics queue
     {
@@ -1019,7 +1020,10 @@ Material& VulkanRenderer::getAppropriateMaterial(
     return this->resourceManager->getMaterial(submeshes[submeshIndex].materialIndex);
 }
 
-void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
+void VulkanRenderer::recordCommandBuffers(
+    Scene* scene, 
+    Camera* camera,
+    uint32_t imageIndex)
 {
 #ifndef VENGINE_NO_PROFILING
     //ZoneScoped; //:NOLINT     
@@ -1077,7 +1081,8 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
                 this->lightBufferSB,
                 this->animLightBufferSB,
                 this->hasAnimations,
-                glm::vec3(cameraDataUBO.worldPosition),
+                glm::vec3(this->cameraDataUBO.worldPosition),
+                *camera,
                 this->currentFrame
             );
 
@@ -1124,13 +1129,17 @@ void VulkanRenderer::recordCommandBuffer(Scene* scene, uint32_t imageIndex)
             this->currentShadowMapCommandBuffer->begin(commandBufferBeginInfo);
 
             // Render shadow map
-            this->beginShadowMapRenderPass(
-                imageIndex,
-                this->lightHandler
-            );
+            for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
+            {
+                this->beginShadowMapRenderPass(
+                    imageIndex,
+                    this->lightHandler,
+                    i
+                );
                 this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
                 this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
-            this->endShadowMapRenderPass();
+                this->endShadowMapRenderPass();
+            }
 
             this->currentShadowMapCommandBuffer->end();
 

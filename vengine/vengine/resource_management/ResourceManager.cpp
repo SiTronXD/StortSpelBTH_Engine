@@ -6,6 +6,7 @@
 #include "../graphics/MeshDataModifier.hpp"
 #include "SFML/Audio/InputSoundFile.hpp"
 #include "al.h"
+#include "../VengineMath.hpp"
 
 void ResourceManager::init(
     VmaAllocator* vma,
@@ -123,6 +124,10 @@ uint32_t ResourceManager::addMesh(std::string meshPath, MeshData meshData)
 	else
 	{
 		uint32_t meshID = map_iterator->second;
+        auto mesh_iterator = this->meshes.find(meshID);
+        dev->waitIdle();
+        mesh_iterator->second.cleanup();
+        //deallocate memory, remove reference and create new mesh
 		meshes.erase(meshID);
 		meshes.insert({meshID, meshLoader.createMesh(meshData)});
     }
@@ -396,4 +401,51 @@ void ResourceManager::cleanup()
     {
         elementPair.second.cleanup();
     }
+}
+
+glm::mat4 ResourceManager::getJointTransform(
+    Transform& animatedMeshTransform,
+    MeshComponent& meshComp,
+    AnimationComponent& animationComp,
+    const std::string& boneName)
+{
+    // Find bone by name
+    Mesh& mesh = this->getMesh(meshComp.meshID);
+    MeshData& meshData = mesh.getMeshData();
+    int32_t index = -1;
+    for (size_t i = 0; i < meshData.bones.size(); ++i)
+    {
+        if (meshData.bones[i].boneName == boneName)
+        {
+            index = i;
+            break;
+        }
+    }
+
+    // Bone was not found
+    if (index < 0)
+    {
+        Log::error("Could not find " + boneName + ".");
+        return glm::mat4(1.0f);
+    }
+
+    const glm::mat4& modelMat = animatedMeshTransform.getMatrix();
+
+    // boneTransform = jointMatrix * inverseBindPoseMatrix
+    // boneTransform * bindPoseMatrix = jointMatrix
+    const glm::mat4 bindPoseMatrix = 
+        glm::inverse(meshData.bones[index].inverseBindPoseMatrix);
+    const glm::mat4& boneTransform =
+        animationComp.getBoneTransformsData()[index];
+    const glm::mat4 jointMatrix = boneTransform * bindPoseMatrix;
+
+    // Composite
+    glm::mat4 finalMatrix = 
+        modelMat *
+        jointMatrix;
+
+    // The other mesh's scale should not affect this mesh
+    SMath::normalizeScale(finalMatrix);
+
+    return finalMatrix;
 }

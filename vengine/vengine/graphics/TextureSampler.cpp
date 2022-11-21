@@ -47,7 +47,7 @@ void TextureSampler::createSampler(
     samplerCreateInfo.setAddressModeU(addressMode);      // How the texture will be Wrapped in U (x) direction
     samplerCreateInfo.setAddressModeV(addressMode);      // How the texture will be Wrapped in V (y) direction
     samplerCreateInfo.setAddressModeW(addressMode);      // How the texture will be Wrapped in W (z) direction
-    samplerCreateInfo.setBorderColor(vk::BorderColor::eIntOpaqueBlack);      // Color of what is around the texture (in case of Repeat, it wont be used)
+    samplerCreateInfo.setBorderColor(vk::BorderColor::eIntOpaqueBlack);      // Color of what is around the texture
     samplerCreateInfo.setUnnormalizedCoordinates(settings.unnormalizedCoordinates);                  // Normalized [0, 1) or unnormalized [0, width) coordinates
     samplerCreateInfo.setMipmapMode(mipmapMode);         // How the mipmap mode will switch between the mipmap images (interpolate between images), (we dont use it, but we set it up)
     samplerCreateInfo.setMipLodBias(0.F);                                    // Level of detail bias for mip level...

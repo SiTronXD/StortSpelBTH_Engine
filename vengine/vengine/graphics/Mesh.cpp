@@ -119,14 +119,14 @@ Mesh::Mesh(Mesh&& ref)
 {
 }
 
+
 void Mesh::createVertexBuffers(
     MeshData& meshData, 
     VulkanImportStructs& importStructs)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
-#endif    
-    
+#endif        
     // Ready array for vertex buffers
     this->vertexBuffers.create(
         *importStructs.device, 
@@ -227,7 +227,10 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }
 
-void Mesh::getBoneTransforms(
+//void Mesh::getBoneTransforms(AnimationComponent& animationCompOut) {
+//
+//}
+    void Mesh::getBoneTransforms(
     AnimationComponent& animationCompOut)
 {
 #if defined(_DEBUG) || defined(DEBUG)

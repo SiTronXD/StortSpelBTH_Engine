@@ -362,7 +362,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 						clients.resize(clients.size() - 1);
 					}
 					this->starting = StartingEnum::Start;
-					this->sceneHandler.sendCallFromClient(GameEvents::START);
+					this->sceneHandler.sendCallFromClient({1});
 				}
 			}
 			else if (gameEvent == GameEvents::GetPlayerNames)
@@ -391,29 +391,6 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 			{
 				case GameEvents::EMPTY:
 					break;
-				case GameEvents::Explosion:
-					getToAllExeptIDTCP(ClientID, gameEvent);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //radius
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //x
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //y
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //z
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					break;
-				case GameEvents::PlayerShoot || GameEvents::SpawnEnemy:
-					//create a new package to send to the rest of the clients
-					getToAllExeptIDTCP(ClientID, gameEvent);
-					clientToServerPacketTcp[ClientID] >> packetHelper2;  //type
-					getToAllExeptIDTCP(ClientID, packetHelper2);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //x
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //y
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					clientToServerPacketTcp[ClientID] >> packetHelper1;  //z
-					getToAllExeptIDTCP(ClientID, packetHelper1);
-					break;
 				case GameEvents::DISCONNECT:
 					std::cout << "Server: user disconnected by own choice" << std::endl;
 					handleDisconnects(ClientID);
@@ -441,7 +418,21 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					//Calls to Scene
 				case GameEvents::START:
 					std::cout << "a client said start" << std::endl;
-					this->sceneHandler.sendCallFromClient(GameEvents::START);
+					this->sceneHandler.sendCallFromClient({(int)GameEvents::START});
+					break;
+				case GameEvents::HitMonster:
+					this->sceneHandler.sendCallFromClient({(int)GameEvents::HitMonster});
+
+					clientToServerPacketTcp[ClientID] >> packetHelper2;//what monster
+					this->sceneHandler.sendCallFromClient({packetHelper2});
+
+					this->sceneHandler.sendCallFromClient({sceneHandler.getScene()->getPlayer(ClientID)});
+
+					clientToServerPacketTcp[ClientID] >> packetHelper2;//how much damage
+					this->sceneHandler.sendCallFromClient({packetHelper2});
+
+					clientToServerPacketTcp[ClientID] >> packetHelper1;  //knockbackarr
+					this->sceneHandler.sendCallFromClient({packetHelper1});
 					break;
 				case GameEvents::GetPlayerNames:
 					//send player names

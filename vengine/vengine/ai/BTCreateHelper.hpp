@@ -27,6 +27,7 @@ public:
         Breakpoint*     breakpoint(std::function<bool(uint32_t)> condition = [](uint32_t ) -> bool {return true;})
         {return registerDecorator<Breakpoint>(condition);}; 
         Message*        message(const std::string& message){return registerDecorator<Message>(message);}; 
+        Random*         random(){return registerDecorator<Random>();}; 
         Repeat*         repeat(int n = 1){return registerDecorator<Repeat>(n);}; 
         Invert*         invert(){return registerDecorator<Invert>();}; 
         Retry*          retry(int n = 1){return registerDecorator<Retry>(n);}; 

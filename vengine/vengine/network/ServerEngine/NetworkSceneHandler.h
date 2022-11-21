@@ -10,7 +10,7 @@ class NetworkSceneHandler : public SceneHandler
 	friend class Server;
   private:
 	std::vector<sf::Packet>* serverToClientPacketTcp;
-	std::queue<int> callsFromClient;
+	sf::Packet callsFromClient;
 
   public:
 	std::function<void()> clientGetFunc;
@@ -21,8 +21,7 @@ class NetworkSceneHandler : public SceneHandler
 	void updateToNextScene();
 	void setScene(Scene* scene, std::string path = "");
 
-	void sendCallFromClient(int call);
-	int getCallFromClient();
+	sf::Packet& getCallFromClient();
 
 	NetworkScene* getScene() const;
 
@@ -34,5 +33,26 @@ class NetworkSceneHandler : public SceneHandler
 	void update()
 	{
 		static_assert(fail<T>::value, "Do not use this function! Use update(float dt)");
+	}
+
+	template <typename I, typename F>
+	void sendCallFromClient(std::initializer_list<I> ints, std::initializer_list<F> floats)
+	{
+			for (auto el : ints)
+			{
+				this->callsFromClient << el;
+			}
+			for (auto el : floats)
+			{
+				this->callsFromClient << el;
+			}
+	}
+	template <typename I>
+	void sendCallFromClient(std::initializer_list<I> ints)
+	{
+			for (auto el : ints)
+			{
+				this->callsFromClient << el;
+			}
 	}
 };

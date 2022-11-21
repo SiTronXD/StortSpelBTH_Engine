@@ -26,21 +26,23 @@ layout(push_constant) uniform PushConstantData
 
 // Vertex shader outputs
 layout(location = 0) out vec3 fragWorldPos;
-layout(location = 1) out vec3 fragNor;
-layout(location = 2) out vec2 fragTex;
-layout(location = 3) out vec3 fragCamWorldPos;
-layout(location = 4) out vec4 fragTintCol;
+layout(location = 1) out vec3 fragViewPos;
+layout(location = 2) out vec3 fragNor;
+layout(location = 3) out vec2 fragTex;
+layout(location = 4) out vec3 fragCamWorldPos;
+layout(location = 5) out vec4 fragTintCol;
 
 void main()
 {
     vec4 worldPos = pushConstantData.model * vec4(pos, 1.0);
+    vec4 viewPos = cameraBuffer.view * worldPos;
 
     gl_Position = 
         cameraBuffer.projection *
-        cameraBuffer.view *
-        worldPos;
+        viewPos;
 
     fragWorldPos = worldPos.xyz;
+    fragViewPos = viewPos.xyz;
     fragNor = (pushConstantData.model * vec4(nor, 0.0f)).xyz;
     fragTex = tex;
     fragCamWorldPos = cameraBuffer.worldPos.xyz;

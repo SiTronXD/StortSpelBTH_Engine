@@ -16,13 +16,21 @@ class CommandBufferArray;
 class Pipeline;
 class ResourceManager;
 class Texture;
+class DebugRenderer;
+
+struct Camera;
 
 class LightHandler
 {
+public:
+	static const uint32_t NUM_CASCADES;
+
 private:
 	std::vector<LightBufferData> lightBuffer;
 
 	ShadowMapData shadowMapData{};
+
+	ShadowPushConstantData shadowPushConstantData{};
 
 	Texture shadowMapTexture;
 	RenderPass shadowMapRenderPass;
@@ -31,12 +39,10 @@ private:
 	vk::Extent2D shadowMapExtent;
 
 	// Default meshes
-	UniformBufferID shadowMapViewProjectionUB;
 	ShaderInput shadowMapShaderInput;
 	Pipeline shadowMapPipeline;
 
 	// Skeletal animations
-	UniformBufferID animShadowMapViewProjectionUB;
 	ShaderInput animShadowMapShaderInput;
 	Pipeline animShadowMapPipeline;
 
@@ -47,9 +53,25 @@ private:
 
 	uint32_t framesInFlight;
 
+	glm::vec3 lightDir;
+	glm::vec3 lightUpDir;
+
+	std::vector<float> cascadeNearPlanes;
+	std::vector<float> cascadeSizes;
+	float cascadeDepthScale;
+
+	void getWorldSpaceFrustumCorners(
+		const glm::mat4& invViewProj,
+		glm::vec4 outputCorners[]);
+
+	void setLightFrustum(
+		const glm::mat4& camProj,
+		const glm::mat4& camView,
+		glm::mat4& outputLightVP);
+
 public:
-	static const uint32_t MAX_NUM_LIGHTS = 16;
-	static const uint32_t SHADOW_MAP_SIZE = 1024 * 4;
+	static const uint32_t MAX_NUM_LIGHTS;
+	static const uint32_t SHADOW_MAP_SIZE;
 
 	LightHandler();
 
@@ -76,14 +98,21 @@ public:
 		const StorageBufferID& animLightBufferSB,
 		const bool& hasAnimations,
 		const glm::vec3& camPosition,
+		const Camera& camData,
 		const uint32_t& currentFrame);
 
-	void cleanup();
+	void updateCamera(
+		const uint32_t& arraySliceCameraIndex);
+	void updateShadowPushConstant(
+		CommandBuffer& currentShadowMapCommandBuffer,
+		const glm::mat4& modelMatrix);
+
+	void cleanup(const bool& hasAnimations);
 
 	inline const ShadowMapData& getShadowMapData() const { return this->shadowMapData; }
 	inline const RenderPass& getShadowMapRenderPass() const { return this->shadowMapRenderPass; }
 	inline const vk::Extent2D& getShadowMapExtent() const { return this->shadowMapExtent; }
-	inline const vk::Framebuffer& getShadowMapFramebuffer() const { return this->shadowMapFramebuffer[0]; }
+	inline const vk::Framebuffer& getShadowMapFramebuffer(const uint32_t& index) const { return this->shadowMapFramebuffer[index]; }
 	inline const Pipeline& getShadowMapPipeline() const { return this->shadowMapPipeline; }
 	inline const Pipeline& getAnimShadowMapPipeline() const { return this->animShadowMapPipeline; }
 	inline ShaderInput& getShadowMapShaderInput() { return this->shadowMapShaderInput; }

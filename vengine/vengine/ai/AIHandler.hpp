@@ -11,6 +11,7 @@ private:
     bool switchedScene = true;
     SceneHandler *sh = nullptr; 
     EventSystem eventSystem;
+    float dt;
     
 
     void updateEntityFSMs()
@@ -28,6 +29,8 @@ public:
 	std::unordered_map<std::string, FSM*> FSMs;
 	std::unordered_map<FSM*, std::function<void(FSM* fsm, uint32_t)>> FSMimguiLambdas;
     std::unordered_map<FSM*, std::vector<uint32_t>> FSMsEntities;
+
+    float getDeltaTime(){return this->dt;}
 
     void addFSM(FSM* fsm, const std::string& name) { 
 		
@@ -89,7 +92,8 @@ public:
     void drawImgui();
     Scene* currentScene = nullptr; //TODO make const...
     
-    void update(){
+    void update(float dt){
+        this->dt = dt;
         if(currentScene != this->sh->getScene())
         {
             FSMimguiLambdas.clear();
