@@ -179,17 +179,18 @@ std::vector<ColliderDataRes> ColliderLoader::loadCollisionShape(const std::strin
     return collisionList;
 }
 
-void addCollisionToScene(
+std::vector<int> addCollisionToScene(
     std::vector<ColliderDataRes> colliders, Scene& currentScene, const glm::vec3& offset, const glm::vec3& rotationOffset, const float& scaleOffset
 )
 {
+    std::vector<int> entities(colliders.size());
     for (int i = 0; i < colliders.size(); i++)
     {
         glm::vec3 rotationOffset2 = glm::vec3(90, 0, 180) + rotationOffset;
         glm::vec3 colliderPos = SMath::rotateVector(rotationOffset2, colliders[i].position);
 
-        int e = currentScene.createEntity();
-        Transform& t = currentScene.getComponent<Transform>(e);
+        entities[i] = currentScene.createEntity();
+        Transform& t = currentScene.getComponent<Transform>(entities[i]);
         t.position = offset + (colliderPos * scaleOffset);
         glm::vec3 rot = colliders[i].rotation;
         t.rotation = glm::vec3(rot.x, rot.z, rot.y);
@@ -197,8 +198,9 @@ void addCollisionToScene(
         colliderCopy.extents *= scaleOffset;
         colliderCopy.radius *= scaleOffset;
         colliderCopy.height *= scaleOffset;
-        currentScene.setComponent<Collider>(e, colliderCopy);
+        currentScene.setComponent<Collider>(entities[i], colliderCopy);
     }
+    return entities;
 }
 
 void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, const glm::vec3& offset, const glm::vec3& rotationOffset)

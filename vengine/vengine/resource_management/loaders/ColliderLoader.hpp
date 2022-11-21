@@ -32,7 +32,7 @@ class ColliderLoader
     std::vector<ColliderDataRes> loadCollisionShape(const std::string& modelFile);
 };
 
-void addCollisionToScene(
+std::vector<int> addCollisionToScene(
     std::vector<ColliderDataRes> colliders, Scene& currentScene, const glm::vec3& offset = glm::vec3(0, 0, 0),
     const glm::vec3& rotationOffset = glm::vec3(0, 0, 0), const float& scaleOffset = 1
 );
