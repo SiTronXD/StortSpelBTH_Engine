@@ -480,6 +480,7 @@ SET ERRORLEVEL = 0</Command>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\components\AudioSource.cpp" />
+    <ClCompile Include="vengine\dev\Random.cpp" />
     <ClCompile Include="vengine\graphics\LightHandler.cpp" />
     <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />

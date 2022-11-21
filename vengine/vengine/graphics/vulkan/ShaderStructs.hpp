@@ -3,6 +3,12 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
+struct ShadowPushConstantData
+{
+    glm::mat4 viewProjectionMatrix = glm::mat4(1.0f);
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+};
+
 struct PushConstantData
 {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -18,13 +24,15 @@ struct CameraBufferData
 };
 
 // Shadow map data
+#define MAX_NUM_CASCADES 4
 struct ShadowMapData
 {
-    glm::mat4 projection = glm::mat4(1.0f);
-    glm::mat4 view = glm::mat4(1.0f);
+    glm::mat4 viewProjection[MAX_NUM_CASCADES] = { glm::mat4(1.0f) };
     glm::vec2 shadowMapSize = glm::vec2(0.0f);
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;
+    glm::vec4 cascadeFarPlanes = glm::vec4(0.0f);
+    glm::uvec4 cascadeSettings = glm::uvec4(0.0f);
 };
 
 // Offset indicies into the light buffer

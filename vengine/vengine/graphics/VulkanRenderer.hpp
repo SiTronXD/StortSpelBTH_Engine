@@ -134,7 +134,8 @@ private:
     std::vector<vk::Buffer> bindVertexBuffers;
     void beginShadowMapRenderPass(
         const uint32_t& imageIndex,
-        LightHandler& lightHandler);
+        LightHandler& lightHandler,
+        const uint32_t& shadowMapArraySlice);
     void renderShadowMapDefaultMeshes(
         Scene* scene,
         LightHandler& lightHandler);
@@ -159,7 +160,10 @@ private:
     void endRenderpassImgui();
 
     // Record Functions
-    void recordCommandBuffer(Scene* scene, uint32_t imageIndex);    // Using renderpass
+    void recordCommandBuffers(
+        Scene* scene, 
+        Camera* camera,
+        uint32_t imageIndex);
 
     const Material& getAppropriateMaterial(
         const MeshComponent& meshComponent,

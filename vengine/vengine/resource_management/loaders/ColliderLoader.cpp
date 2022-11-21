@@ -60,7 +60,7 @@ Collider ColliderLoader::makeCollisionShape(const ColType& type, const aiMesh* m
 	if (type == ColType::SPHERE)
 	{
 		float radius =
-		    sqrt(mesh->mVertices[0].x * mesh->mVertices[0].x + mesh->mVertices[0].y * mesh->mVertices[0].y + mesh->mVertices[0].z * mesh->mVertices[0].z) * 100;
+		    sqrt(mesh->mVertices[0].x * mesh->mVertices[0].x + mesh->mVertices[0].y * mesh->mVertices[0].y + mesh->mVertices[0].z * mesh->mVertices[0].z);
 		return Collider::createSphere(radius);
 	}
 	//else if (type == shapeType::Plane)//not supported by engine
@@ -73,7 +73,7 @@ Collider ColliderLoader::makeCollisionShape(const ColType& type, const aiMesh* m
 	//}
 	else if (type == ColType::BOX)
 	{
-		glm::vec3 whd(abs(mesh->mVertices[0].x) * 100, abs(mesh->mVertices[0].z) * 100, abs(mesh->mVertices[0].y) * 100);
+		glm::vec3 whd(abs(mesh->mVertices[0].x), abs(mesh->mVertices[0].z), abs(mesh->mVertices[0].y));
 
 		return Collider::createBox(whd);
 	}

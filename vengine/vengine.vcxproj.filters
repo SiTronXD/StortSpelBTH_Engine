@@ -94,6 +94,7 @@
     <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
     <ClCompile Include="vengine\graphics\LightHandler.cpp" />
+    <ClCompile Include="vengine\dev\Random.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />

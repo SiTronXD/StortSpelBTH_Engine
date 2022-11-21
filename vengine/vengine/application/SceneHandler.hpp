@@ -5,6 +5,7 @@ class UIRenderer;
 class DebugRenderer;
 class Window;
 class AudioHandler;
+class VulkanRenderer;
 
 class SceneHandler
 {

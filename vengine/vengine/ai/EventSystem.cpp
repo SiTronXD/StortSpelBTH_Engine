@@ -27,7 +27,7 @@ void EventSystem::registerGlobalEvent(
 	}
 	else
 	{
-		std::cout << "Warning! Node was already subscribed to event! \n";
+		Log::warning("Warning! Node was already subscribed to event!");
 	}
 
 	//TODO: might not be a good idea to use bool, first time its neither true or false. Use enum?
@@ -56,7 +56,7 @@ void EventSystem::registerEntityEvent(
 	}
 	else
 	{
-		std::cout << "Warning! Node was already subscribed to event! \n";
+		Log::warning("Warning! Node was already subscribed to event!");
 	}
 
 	//TODO: might need to implement this later (Active sensing)
@@ -83,8 +83,7 @@ void EventSystem::update()
 					//TODO: What will happen, how can I call whatever func my subscriber want me to call?
 					subscriber.fsm->setCurrentNode(subscriber.node);
 				}
-				std::cout << event.second[0].fsm->getCurrentNode()->status
-				          << std::endl;
+                Log::write(event.second[0].fsm->getCurrentNode()->status, BT_FILTER);
 				this->globalEventLastReturn[event.first] = true;
 			}
 		}
@@ -123,8 +122,7 @@ void EventSystem::update()
 					agent.fsm->setCurrentNode(currNeighbor.second);
 					agent.currentNode = currNeighbor.second;
 
-					std::cout << agent.currentNode->status
-								<< std::endl;
+                    Log::write(agent.currentNode->status, BT_FILTER);					
 
 					this->entityEventLastReturn[entityID][eventTransition] = true;
 				}                

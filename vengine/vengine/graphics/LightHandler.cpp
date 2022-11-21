@@ -3,15 +3,119 @@
 #include "../application/Scene.hpp"
 #include "Texture.hpp"
 
+const uint32_t LightHandler::MAX_NUM_LIGHTS   = 16;
+const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 4;
+const uint32_t LightHandler::NUM_CASCADES     = 3;
+
+void LightHandler::getWorldSpaceFrustumCorners(
+    const glm::mat4& invViewProj,
+    glm::vec4 outputCorners[])
+{
+    // Find frustum corners in world space
+    for (uint32_t x = 0; x < 2; ++x)
+    {
+        for (uint32_t y = 0; y < 2; ++y)
+        {
+            for (uint32_t z = 0; z < 2; ++z)
+            {
+                uint32_t index = x * 2 * 2 + y * 2 + z;
+
+                outputCorners[index] =
+                    invViewProj * glm::vec4(
+                        2.0f * float(x) - 1.0f,
+                        2.0f * float(y) - 1.0f,
+                        float(z),
+                        1.0f
+                    );
+                outputCorners[index] /= outputCorners[index].w;
+            }
+        }
+    }
+}
+
+void LightHandler::setLightFrustum(
+    const glm::mat4& camProj,
+    const glm::mat4& camView,
+    glm::mat4& outputLightVP)
+{
+    // Find frustum corners in world space
+    glm::vec4 frustumCorners[8];
+    this->getWorldSpaceFrustumCorners(
+        glm::inverse(camProj * camView),
+        frustumCorners
+    );
+
+    glm::vec3 center(0.0f);
+    for (uint32_t i = 0; i < 8; ++i)
+    {
+        center += glm::vec3(frustumCorners[i]);
+    }
+    center /= 8.0f;
+
+    // Temporarily set VP to V
+    glm::mat4 lightView =
+        glm::lookAt(
+            center,
+            center + this->lightDir,
+            this->lightUpDir
+        );
+
+    const auto firstViewSpaceCorner =
+        lightView * frustumCorners[0];
+    float minX = firstViewSpaceCorner.x;
+    float maxX = firstViewSpaceCorner.x;
+    float minY = firstViewSpaceCorner.y;
+    float maxY = firstViewSpaceCorner.y;
+    float minZ = firstViewSpaceCorner.z;
+    float maxZ = firstViewSpaceCorner.z;
+    for (uint32_t i = 1; i < 8; ++i)
+    {
+        const auto viewSpaceCorner = 
+            lightView * frustumCorners[i];
+        minX = std::min(minX, viewSpaceCorner.x);
+        maxX = std::max(maxX, viewSpaceCorner.x);
+        minY = std::min(minY, viewSpaceCorner.y);
+        maxY = std::max(maxY, viewSpaceCorner.y);
+        minZ = std::min(minZ, viewSpaceCorner.z);
+        maxZ = std::max(maxZ, viewSpaceCorner.z);
+    }
+
+    // Scale depth
+    if (minZ < 0.0f)
+    {
+        minZ *= this->cascadeDepthScale;
+    }
+    else
+    {
+        minZ /= this->cascadeDepthScale;
+    }
+    if (maxZ < 0.0f)
+    {
+        maxZ /= this->cascadeDepthScale;
+    }
+    else
+    {
+        maxZ *= this->cascadeDepthScale;
+    }
+
+    outputLightVP = 
+        glm::orthoRH(minX, maxX, minY, maxY, minZ, maxZ) * 
+        lightView;
+}
+
 LightHandler::LightHandler()
     : physicalDevice(nullptr),
     device(nullptr),
     vma(nullptr),
     resourceManager(nullptr),
-    shadowMapViewProjectionUB(~0u),
-    animShadowMapViewProjectionUB(~0u),
     framesInFlight(0)
-{ }
+{ 
+    this->cascadeSizes.resize(LightHandler::NUM_CASCADES - 1);
+    this->cascadeNearPlanes.resize(LightHandler::NUM_CASCADES);
+
+    this->shadowMapData.cascadeSettings.x = 
+        LightHandler::NUM_CASCADES;
+}
 
 void LightHandler::init(
     PhysicalDevice& physicalDevice, 
@@ -46,6 +150,7 @@ void LightHandler::init(
         *this->vma,
         this->shadowMapExtent.width,
         this->shadowMapExtent.height,
+        LightHandler::NUM_CASCADES,
         vk::ImageUsageFlagBits::eSampled,
         resourceManager.addSampler(depthTextureSettings)
     );
@@ -57,15 +162,19 @@ void LightHandler::init(
     );
 
     // Framebuffer
+    std::vector<std::vector<vk::ImageView>> shadowMapImageViews(LightHandler::NUM_CASCADES);
+    for (size_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
+    {
+        shadowMapImageViews[i] =
+        {
+            this->shadowMapTexture.getImageView(i)
+        };
+    }
     this->shadowMapFramebuffer.create(
         *this->device,
         this->shadowMapRenderPass,
         this->shadowMapExtent,
-        {
-            {
-                this->shadowMapTexture.getImageView()
-            }
-        }
+        shadowMapImageViews
     );
 
     // Command buffer array
@@ -102,15 +211,9 @@ void LightHandler::initForScene(
         this->framesInFlight
     );
     this->shadowMapShaderInput.addPushConstant(
-        sizeof(PushConstantData),
+        sizeof(ShadowPushConstantData),
         vk::ShaderStageFlagBits::eVertex
     );
-    this->shadowMapViewProjectionUB =
-        this->shadowMapShaderInput.addUniformBuffer(
-            sizeof(CameraBufferData),
-            vk::ShaderStageFlagBits::eVertex,
-            DescriptorFrequency::PER_FRAME
-        );
     this->shadowMapShaderInput.endForInput();
     this->shadowMapPipeline.createPipeline(
         *this->device,
@@ -137,7 +240,7 @@ void LightHandler::initForScene(
             this->framesInFlight
         );
         this->animShadowMapShaderInput.addPushConstant(
-            sizeof(PushConstantData),
+            sizeof(ShadowPushConstantData),
             vk::ShaderStageFlagBits::eVertex
         );
         this->animShadowMapShaderInput.setNumShaderStorageBuffers(1);
@@ -170,12 +273,6 @@ void LightHandler::initForScene(
                 );
             }
         );
-        this->animShadowMapViewProjectionUB =
-            this->animShadowMapShaderInput.addUniformBuffer(
-                sizeof(CameraBufferData),
-                vk::ShaderStageFlagBits::eVertex,
-                DescriptorFrequency::PER_FRAME
-            );
         this->animShadowMapShaderInput.endForInput();
         this->animShadowMapPipeline.createPipeline(
             *this->device,
@@ -198,6 +295,7 @@ void LightHandler::updateLightBuffers(
     const StorageBufferID& animLightBufferSB,
     const bool& hasAnimations,
     const glm::vec3& camPosition,
+    const Camera& camData,
     const uint32_t& currentFrame)
 {
     this->lightBuffer.clear();
@@ -342,7 +440,7 @@ void LightHandler::updateLightBuffers(
         );
     }
 
-    // Update shadow map view matrix
+    // Update shadow map settings
     auto dirLightView = scene->getSceneReg().view<DirectionalLight>(entt::exclude<Inactive>);
     dirLightView.each([&](
         DirectionalLight& dirLightComp)
@@ -350,39 +448,59 @@ void LightHandler::updateLightBuffers(
             // Normalize direction
             dirLightComp.direction =
                 glm::normalize(dirLightComp.direction);
+            this->lightDir = dirLightComp.direction;
 
-            glm::vec3 lightPos =
-                camPosition - dirLightComp.direction * dirLightComp.shadowMapFrustumDepth * 0.5f;
+            // Cascade settings
+            for (size_t i = 0; i < this->cascadeSizes.size(); ++i)
+            {
+                this->cascadeSizes[i] = dirLightComp.cascadeSizes[i] / camData.aspectRatio * (16.0f / 9.0f);
+            }
+            this->cascadeDepthScale = dirLightComp.cascadeDepthScale;
+            this->shadowMapData.cascadeSettings.y = dirLightComp.cascadeVisualization ? 1.0f : 0.0f;
 
-            glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-            if (std::abs(glm::dot(worldUp, dirLightComp.direction)) >= 0.95f)
-                worldUp = glm::vec3(0.0f, 0.0f, 1.0f);
-
-            // View matrix
-            this->shadowMapData.view = glm::lookAt(
-                lightPos,
-                lightPos + dirLightComp.direction,
-                worldUp
-            );
-
-            // Projection matrix
-            this->shadowMapData.projection =
-                glm::orthoRH(
-                    -dirLightComp.shadowMapFrustumHalfWidth, dirLightComp.shadowMapFrustumHalfWidth,
-                    -dirLightComp.shadowMapFrustumHalfHeight, dirLightComp.shadowMapFrustumHalfHeight,
-                    0.1f, dirLightComp.shadowMapFrustumDepth
-                );
-            this->shadowMapData.shadowMapMinBias = 0.0001f;
-            this->shadowMapData.shadowMapAngleBias = 0.0015f;
+            // Biases
+            this->shadowMapData.shadowMapMinBias = dirLightComp.shadowMapMinBias;
+            this->shadowMapData.shadowMapAngleBias = dirLightComp.shadowMapAngleBias;
         }
     );
 
+    // Update up direction
+    this->lightUpDir = glm::vec3(0.0f, 1.0f, 0.0f);
+    if (std::abs(glm::dot(this->lightUpDir, this->lightDir)) >= 0.95f)
+        this->lightUpDir = glm::vec3(0.0f, 0.0f, 1.0f);
+
+    // Create tightly fit light frustums
+    for (uint32_t i = 0; i < LightHandler::NUM_CASCADES - 1; ++i)
+    {
+        this->shadowMapData.cascadeFarPlanes[i] =
+            camData.farPlane * this->cascadeSizes[i];
+    }
+    this->shadowMapData.cascadeFarPlanes[LightHandler::NUM_CASCADES - 1]
+        = camData.farPlane;
+
+    // Create light matrices
+    this->cascadeNearPlanes[0] = camData.nearPlane;
+    for (uint32_t i = 1; i < LightHandler::NUM_CASCADES; ++i)
+    {
+        this->cascadeNearPlanes[i] =
+            this->shadowMapData.cascadeFarPlanes[i - 1];
+    }
+    for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
+    {
+        this->setLightFrustum(
+            glm::perspective(
+                glm::radians(camData.fov),
+                camData.aspectRatio, 
+                this->cascadeNearPlanes[i],
+                this->shadowMapData.cascadeFarPlanes[i]
+            ),
+            camData.view,
+            this->shadowMapData.viewProjection[i]
+        );
+    }
+
     // Shadow map shader input
     this->shadowMapShaderInput.setCurrentFrame(currentFrame);
-    this->shadowMapShaderInput.updateUniformBuffer(
-        this->shadowMapViewProjectionUB,
-        (void*)&shadowMapData
-    );
 
     // Anim shadow map shader input
     if (hasAnimations)
@@ -390,14 +508,34 @@ void LightHandler::updateLightBuffers(
         this->animShadowMapShaderInput.setCurrentFrame(
             currentFrame
         );
-        this->animShadowMapShaderInput.updateUniformBuffer(
-            this->animShadowMapViewProjectionUB,
-            (void*)&shadowMapData
-        );
     }
 }
 
-void LightHandler::cleanup()
+void LightHandler::updateCamera(
+    const uint32_t& arraySliceCameraIndex)
+{
+    // Update projection matrix
+    this->shadowPushConstantData.viewProjectionMatrix =
+        this->shadowMapData.viewProjection[arraySliceCameraIndex];
+}
+
+void LightHandler::updateShadowPushConstant(
+    CommandBuffer& currentShadowMapCommandBuffer,
+    const glm::mat4& modelMatrix)
+{
+    // Update model matrix
+    this->shadowPushConstantData.modelMatrix =
+        modelMatrix;
+
+    // Update push constant data
+    currentShadowMapCommandBuffer.pushConstant(
+        animShadowMapShaderInput,
+        (void*) &this->shadowPushConstantData
+    );
+
+}
+
+void LightHandler::cleanup(const bool& hasAnimations)
 {
     this->shadowMapTexture.cleanup();
     this->shadowMapRenderPass.cleanup();
@@ -406,6 +544,9 @@ void LightHandler::cleanup()
     this->shadowMapShaderInput.cleanup();
     this->shadowMapPipeline.cleanup();
 
-    this->animShadowMapShaderInput.cleanup();
-    this->animShadowMapPipeline.cleanup();
+    if (hasAnimations)
+    {
+        this->animShadowMapShaderInput.cleanup();
+        this->animShadowMapPipeline.cleanup();
+    }
 }
