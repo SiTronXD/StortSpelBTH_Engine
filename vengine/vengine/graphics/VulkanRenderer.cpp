@@ -221,7 +221,8 @@ int VulkanRenderer::init(
         this->renderPassBase,
         this->queueFamilies.getGraphicsQueue(),
         this->commandPool,
-        *this->resourceManager
+        *this->resourceManager,
+        MAX_FRAMES_IN_FLIGHT
     );
     this->postProcessHandler.create(
         this->swapchain.getVkExtent()
@@ -1238,12 +1239,12 @@ void VulkanRenderer::recordCommandBuffers(
     this->currentCommandBuffer->beginOneTimeSubmit();
 
     // Render to screen
-    this->beginRenderpass();
+    this->beginRenderPass();
         this->renderDefaultMeshes(scene);
         this->renderSkeletalAnimations(scene);
         this->renderUI();
         this->renderDebugElements();
-    this->endRenderpass();
+    this->endRenderPass();
 
     this->currentCommandBuffer->end();
 

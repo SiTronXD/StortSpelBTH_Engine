@@ -23,7 +23,8 @@ void PostProcessHandler::init(
 	RenderPass& renderPassBase,
 	vk::Queue& transferQueue,
 	vk::CommandPool& commandPool,
-	ResourceManager& resourceManager)
+	ResourceManager& resourceManager,
+	const uint32_t& framesInFlight)
 {
 	this->physicalDevice = &physicalDevice;
 	this->device = &device;
@@ -32,6 +33,7 @@ void PostProcessHandler::init(
 	this->transferQueue = &transferQueue;
 	this->commandPool = &commandPool;
 	this->resourceManager = &resourceManager;
+	this->framesInFlight = framesInFlight;
 }
 
 void PostProcessHandler::create(const vk::Extent2D& windowExtent)
@@ -63,7 +65,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	);
 
 	// Render pass
-	this->renderPass.createRenderPassBloom(
+	this->downRenderPass.createRenderPassBloom(
 		*this->device,
 		this->hdrRenderTexture
 	);
@@ -71,15 +73,15 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	// Downsampling image views and extents
 	uint32_t currentWidth = windowExtent.width;
 	uint32_t currentHeight = windowExtent.height;
-	this->extents.resize(NUM_MIP_LEVELS);
+	this->mipExtents.resize(NUM_MIP_LEVELS);
 	std::vector<std::vector<vk::ImageView>> framebufferImageViews(NUM_MIP_LEVELS);
 	for (uint32_t i = 0; i < NUM_MIP_LEVELS; ++i)
 	{
 		framebufferImageViews[i] = { this->hdrRenderTexture.getMipImageView(i) };
 
 		// Extents
-		this->extents[i].setWidth(currentWidth);
-		this->extents[i].setHeight(currentHeight);
+		this->mipExtents[i].setWidth(currentWidth);
+		this->mipExtents[i].setHeight(currentHeight);
 		if (currentWidth > 1) currentWidth >>= 1;
 		if (currentHeight > 1) currentHeight >>= 1;
 	}
@@ -88,7 +90,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	this->renderFramebuffer.create(
 		*this->device,
 		*this->renderPassBase,
-		this->extents[0],
+		this->mipExtents[0],
 		{
 			{
 				this->hdrRenderTexture.getImageView(),
@@ -98,26 +100,33 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	);
 
 	// Framebuffers for downsampling
-	this->framebuffers.create(
+	this->downFramebuffers.create(
 		*this->device,
-		this->renderPass,
-		this->extents,
+		this->downRenderPass,
+		this->mipExtents,
 		framebufferImageViews
 	);
 
 	// Command buffers
-	this->commandBuffers.createCommandBuffers(
-		*this->device,
-		*this->commandPool,
-		NUM_MIP_LEVELS
-	);
+	this->downCommandBuffers.resize(this->framesInFlight);
+	for (uint32_t i = 0; i < this->framesInFlight; ++i)
+	{
+		this->downCommandBuffers[i].createCommandBuffers(
+			*this->device,
+			*this->commandPool,
+			NUM_MIP_LEVELS
+		);
+	}
 }
 
 void PostProcessHandler::cleanup()
 {
 	this->renderFramebuffer.cleanup();
-	this->framebuffers.cleanup();
-	this->renderPass.cleanup();
+
+	this->downCommandBuffers.clear();
+	this->downFramebuffers.cleanup();
+	this->downRenderPass.cleanup();
+
 	this->depthTexture.cleanup();
 	this->hdrRenderTexture.cleanup();
 }

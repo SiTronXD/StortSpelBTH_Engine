@@ -155,12 +155,21 @@ private:
     void endShadowMapRenderPass();
 
     // Render pass for screen rendering
-    void beginRenderpass();
+    void beginRenderPass();
     void renderDefaultMeshes(Scene* scene);
     void renderSkeletalAnimations(Scene* scene);
     void renderUI();
     void renderDebugElements();
-    void endRenderpass();
+    void endRenderPass();
+
+    // Render pass for bloom downsampling
+    void beginBloomDownsampleRenderPass(
+        CommandBuffer& commandBuffer,
+        const uint32_t& writeMipIndex);
+    void renderBloomDownsample(
+        CommandBuffer& commandBuffer);
+    void endBloomDownsampleRenderPass(
+        CommandBuffer& commandBuffer);
 
     // Render pass for swapchain image rendering
     void beginSwapchainRenderPass(

@@ -225,7 +225,7 @@ void VulkanRenderer::endShadowMapRenderPass()
     this->currentShadowMapCommandBuffer->endRenderPass2(subpassEndInfo);
 }
 
-void VulkanRenderer::beginRenderpass()
+void VulkanRenderer::beginRenderPass()
 {
     static const vk::ClearColorValue clearColor(
         // Sky color
@@ -626,34 +626,96 @@ void VulkanRenderer::renderDebugElements()
     this->debugRenderer->resetRender();
 }
 
-void VulkanRenderer::endRenderpass()
+void VulkanRenderer::endRenderPass()
 {
     // End Render Pass!
     vk::SubpassEndInfo subpassEndInfo;
     this->currentCommandBuffer->endRenderPass2(subpassEndInfo);
 }
 
-void VulkanRenderer::beginSwapchainRenderPass(
-    const uint32_t& imageIndex)
+void VulkanRenderer::beginBloomDownsampleRenderPass(
+    CommandBuffer& commandBuffer,
+    const uint32_t& writeMipIndex)
 {
     static const vk::ClearColorValue clearColor(
-        // Sky color
-        /*std::array<float, 4>
-        {
-            119.0f / 256.0f,
-            172.0f / 256.0f,
-            222.0f / 256.0f,
-            1.0f
-        }*/
-
         // Fog color
         std::array<float, 4>
     {
         0.8f,
-        0.8f,
-        0.8f,
-        1.0f
+            0.8f,
+            0.8f,
+            1.0f
     }
+    );
+
+    const std::array<vk::ClearValue, 1> clearValues =
+    {
+            vk::ClearValue(
+                vk::ClearColorValue{ clearColor }
+            )
+    };
+
+    const vk::Extent2D& hdrTextureExtent =
+        this->postProcessHandler.getMipExtent(writeMipIndex);
+
+    // Information about how to begin a render pass
+    vk::RenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.setRenderPass(this->postProcessHandler.getDownsampleRenderPass().getVkRenderPass());                      // Render pass to begin
+    renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
+    renderPassBeginInfo.renderArea.setExtent(hdrTextureExtent);      // Size of region to run render pass on (starting at offset)
+    renderPassBeginInfo.setPClearValues(clearValues.data());
+    renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
+    renderPassBeginInfo.setFramebuffer(this->postProcessHandler.getDownsampleVkFramebuffer(writeMipIndex));
+
+    // Begin Render Pass!    
+    // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
+    vk::SubpassBeginInfoKHR subpassBeginInfo;
+    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
+    commandBuffer.beginRenderPass2(
+        renderPassBeginInfo,
+        subpassBeginInfo
+    );
+
+    // Viewport
+    vk::Viewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = (float) hdrTextureExtent.height;
+    viewport.width = (float) hdrTextureExtent.width;
+    viewport.height = -((float) hdrTextureExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    commandBuffer.setViewport(viewport);
+
+    // Scissor
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D{ 0, 0 };
+    scissor.extent = hdrTextureExtent;
+    commandBuffer.setScissor(scissor);
+}
+
+void VulkanRenderer::renderBloomDownsample(CommandBuffer& commandBuffer)
+{
+}
+
+void VulkanRenderer::endBloomDownsampleRenderPass(CommandBuffer& commandBuffer)
+{
+    // End Render Pass!
+    vk::SubpassEndInfo subpassEndInfo;
+    commandBuffer.endRenderPass2(subpassEndInfo);
+}
+
+void VulkanRenderer::beginSwapchainRenderPass(
+    const uint32_t& imageIndex)
+{
+    static const vk::ClearColorValue clearColor(
+        // Fog color
+        std::array<float, 4>
+        {
+            0.8f,
+            0.8f,
+            0.8f,
+            1.0f
+        }
     );
 
     const std::array<vk::ClearValue, 2> clearValues =
