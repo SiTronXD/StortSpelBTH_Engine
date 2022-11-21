@@ -262,14 +262,18 @@ void VulkanRenderer::beginRenderpass(
             )
     };
 
+    const Texture& hdrRenderTexture = 
+        this->postProcessHandler.getHdrRenderTexture();
+    const vk::Extent2D extent(hdrRenderTexture.getWidth(), hdrRenderTexture.getHeight());
+
     // Information about how to begin a render pass
     vk::RenderPassBeginInfo renderPassBeginInfo{};
     renderPassBeginInfo.setRenderPass(this->renderPassBase.getVkRenderPass());                      // Render pass to begin
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
-    renderPassBeginInfo.renderArea.setExtent(this->swapchain.getVkExtent());      // Size of region to run render pass on (starting at offset)
+    renderPassBeginInfo.renderArea.setExtent(extent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
-    renderPassBeginInfo.setFramebuffer(this->swapchain.getVkFramebuffer(imageIndex));
+    renderPassBeginInfo.setFramebuffer(this->postProcessHandler.getVkFramebuffer(0));
 
     // Begin Render Pass!    
     // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -283,9 +287,9 @@ void VulkanRenderer::beginRenderpass(
     // Viewport
     vk::Viewport viewport{};
     viewport.x = 0.0f;
-    viewport.y = (float)swapchain.getHeight();
-    viewport.width = (float)this->swapchain.getWidth();
-    viewport.height = -((float)swapchain.getHeight());
+    viewport.y = (float) extent.width;
+    viewport.width = (float) extent.width;
+    viewport.height = -((float) extent.height);
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     this->currentCommandBuffer->setViewport(viewport);
@@ -293,7 +297,7 @@ void VulkanRenderer::beginRenderpass(
     // Scissor
     vk::Rect2D scissor{};
     scissor.offset = vk::Offset2D{ 0, 0 };
-    scissor.extent = this->swapchain.getVkExtent();
+    scissor.extent = extent;
     this->currentCommandBuffer->setScissor(scissor);
 }
 

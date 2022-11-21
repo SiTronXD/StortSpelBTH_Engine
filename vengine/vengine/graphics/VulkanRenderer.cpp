@@ -198,6 +198,9 @@ int VulkanRenderer::init(
         this->commandPool,
         *this->resourceManager
     );
+    this->postProcessHandler.create(
+        this->swapchain.getVkExtent()
+    );
     
     return EXIT_SUCCESS;
 }

@@ -1,8 +1,11 @@
 #include "pch.h"
 #include "RenderPass.hpp"
 #include "Swapchain.hpp"
+#include "../PostProcessHandler.hpp"
 
-void RenderPass::createRenderPassBase(Device& device, Swapchain& swapchain)
+void RenderPass::createRenderPassBase(
+    Device& device, 
+    PostProcessHandler& postProcessHandler)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT

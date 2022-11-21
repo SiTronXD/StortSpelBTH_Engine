@@ -287,15 +287,6 @@ void Swapchain::createSwapchain(
             this->device->getVkDevice().destroySwapchainKHR(oldSwapchain);
         }
 
-        // Create depth texture
-        this->depthTexture.createAsDepthTexture(
-            *this->physicalDevice,
-            *this->device,
-            *this->vma,
-            this->getWidth(),
-            this->getHeight()
-        );
-
         // Update resolution translator
         ResTranslator::updateWindowSize(
             static_cast<uint32_t>(imageExtent.width),
@@ -314,7 +305,6 @@ void Swapchain::createFramebuffers(RenderPass& renderPass)
     for (size_t i = 0; i < framebufferAttachments.size(); ++i)
     {
         framebufferAttachments[i].push_back(this->getImageView(i));
-        framebufferAttachments[i].push_back(this->depthTexture.getImageView());
     }
     this->framebuffers.create(
         *this->device,
@@ -373,9 +363,6 @@ void Swapchain::getDetails(
 
 void Swapchain::cleanup(bool destroySwapchain)
 {
-    // Depth buffer
-    this->depthTexture.cleanup();
-
     // Swapchain image views
     for (auto view : this->imageViews)
     {

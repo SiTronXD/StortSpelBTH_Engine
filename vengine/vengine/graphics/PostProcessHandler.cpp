@@ -7,7 +7,15 @@
 #include "vulkan/CommandBufferArray.hpp"
 #include "Texture.hpp"
 
-#include "stb_image.h"
+PostProcessHandler::PostProcessHandler()
+	: physicalDevice(nullptr),
+	device(nullptr),
+	vma(nullptr),
+	transferQueue(nullptr),
+	commandPool(nullptr),
+	resourceManager(nullptr)
+{}
+
 void PostProcessHandler::init(
 	PhysicalDevice& physicalDevice,
 	Device& device,
@@ -16,34 +24,40 @@ void PostProcessHandler::init(
 	vk::CommandPool& commandPool,
 	ResourceManager& resourceManager)
 {
-	
-	uint32_t width = 1280;
-	uint32_t height = 720;
+	this->physicalDevice = &physicalDevice;
+	this->device = &device;
+	this->vma = &vma;
+	this->transferQueue = &transferQueue;
+	this->commandPool = &commandPool;
+	this->resourceManager = &resourceManager;
+}
 
+void PostProcessHandler::create(const vk::Extent2D& windowExtent)
+{
 	TextureSettings textureSettings{};
 
 	// Emission texture
 	this->hdrRenderTexture.createRenderableTexture(
-		physicalDevice,
-		device,
-		vma,
-		transferQueue,
-		commandPool,
+		*this->physicalDevice,
+		*this->device,
+		*this->vma,
+		*this->transferQueue,
+		*this->commandPool,
 		vk::Format::eR8G8B8A8Unorm,
-		uint32_t(width),
-		uint32_t(height),
+		windowExtent.width,
+		windowExtent.height,
 		NUM_MIP_LEVELS
 	);
 
 	// Render pass
 	this->renderPass.createRenderPassBloom(
-		device, 
+		*this->device,
 		this->hdrRenderTexture
 	);
 
 	// Framebuffers
-	uint32_t currentWidth = width;
-	uint32_t currentHeight = height;
+	uint32_t currentWidth = windowExtent.width;
+	uint32_t currentHeight = windowExtent.height;
 	this->extents.resize(NUM_MIP_LEVELS);
 	std::vector<std::vector<vk::ImageView>> framebufferImageViews(NUM_MIP_LEVELS);
 	for (uint32_t i = 0; i < NUM_MIP_LEVELS; ++i)
@@ -57,7 +71,7 @@ void PostProcessHandler::init(
 		if (currentHeight > 1) currentHeight >>= 1;
 	}
 	this->framebuffers.create(
-		device, 
+		*this->device,
 		this->renderPass,
 		this->extents,
 		framebufferImageViews
@@ -65,20 +79,25 @@ void PostProcessHandler::init(
 
 	// Command buffers
 	this->commandBuffers.createCommandBuffers(
-		device,
-		commandPool,
+		*this->device,
+		*this->commandPool,
 		NUM_MIP_LEVELS
 	);
-}
 
-void PostProcessHandler::initForScene()
-{
-
+	// Create depth texture
+	this->depthTexture.createAsDepthTexture(
+		*this->physicalDevice,
+		*this->device,
+		*this->vma,
+		this->extents[0].width,
+		this->extents[0].height
+	);
 }
 
 void PostProcessHandler::cleanup()
 {
 	this->framebuffers.cleanup();
 	this->renderPass.cleanup();
+	this->depthTexture.cleanup();
 	this->hdrRenderTexture.cleanup();
 }
