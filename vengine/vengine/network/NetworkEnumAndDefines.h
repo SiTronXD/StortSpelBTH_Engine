@@ -42,7 +42,6 @@ enum GameEvents
 	GAMEDATA,				
 	ROOM_CLEAR,
 	MONSTER_HIT,  //a monster hit you
-	SpawnPerk,
 
 	//TCP to Server
 	HitMonster,  //Call to Scene
