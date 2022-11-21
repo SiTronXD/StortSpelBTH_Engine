@@ -36,20 +36,20 @@ enum GameEvents
 	SpawnEnemy = 1,			// : Type(int), Position(float x,y,z);
 	SpawnEnemies = 2,		// : Type(int), NrOfEnemies(int), Position(list/array)(float x,y,z)   (can only spawn one type of enemy in spawnEnemies)
     SpawnPerk = 3,			// : Type(int), Position(float x,y,z)
-	MonsterDied = 4,        // : Monster_id
-	ID = 5,
+	MonsterDied = 4,        // : Monster_id(int)
+	ID = 5,					// : ID(int)
 	PlayerJoined,			//: name(sfml fix size of string), serverID(int)
-	GAMEDATA,				
-	ROOM_CLEAR,
-	MONSTER_HIT,  //a monster hit you
+	GAMEDATA,				//:?
+	ROOM_CLEAR,             //: (nothing)
+	MONSTER_HIT,			//: monsterID(int), Damage(int), PlayerID(int)   (a monster hit you)
 
 	//TCP to Server
-	HitMonster,  //Call to Scene
-	CHANGESCEENE,
-	POLYGON_DATA,
-	REMOVE_POLYGON_DATA,
-	WentInToNewRoom,
-	HealPlayer,
+	HitMonster,				//: Monster_id(int), PlayerID(int), Damage(int), knockbackarr(float), Call to Scene
+	CHANGESCEENE,			//:?
+	POLYGON_DATA,			//: 
+	REMOVE_POLYGON_DATA,    //: nothing
+	WentInToNewRoom,		//:?
+	HealPlayer,				//
 
 	//TCP to Client and Server
 	START,  //Call to Scene
