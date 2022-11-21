@@ -123,6 +123,9 @@ public:
 		const vk::FormatFeatureFlagBits& featureFlags
 	);
 
+	static vk::Format getDepthBufferFormat(
+		PhysicalDevice& physicalDevice);
+
 	static vk::Image createImage(
 		VmaAllocator& vma,
 		ImageCreateData&& imageData

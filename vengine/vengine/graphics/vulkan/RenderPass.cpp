@@ -5,7 +5,8 @@
 
 void RenderPass::createRenderPassBase(
     Device& device, 
-    PostProcessHandler& postProcessHandler)
+    const vk::Format& colorBufferFormat,
+    const vk::Format& depthBufferFormat)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -15,7 +16,7 @@ void RenderPass::createRenderPassBase(
 
     // Color attachment
     vk::AttachmentDescription2 colorAttachment{};
-    colorAttachment.setFormat(swapchain.getVkFormat());
+    colorAttachment.setFormat(colorBufferFormat);
     colorAttachment.setSamples(vk::SampleCountFlagBits::e1);
     colorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);        // When we start the renderpass, first thing to do is to clear since there is no values in it yet
     colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);      // How to store it after the RenderPass
@@ -26,7 +27,7 @@ void RenderPass::createRenderPassBase(
 
     // Depth attachment
     vk::AttachmentDescription2 depthAttachment{};
-    depthAttachment.setFormat(swapchain.getDepthTexture().getVkFormat());
+    depthAttachment.setFormat(depthBufferFormat);
     depthAttachment.setSamples(vk::SampleCountFlagBits::e1);
     depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);                         // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
     depthAttachment.setStoreOp(vk::AttachmentStoreOp::eDontCare);                    // Whenever it's used, we dont care what happens with the data... (we dont present it or anything)
@@ -130,12 +131,12 @@ void RenderPass::createRenderPassShadowMap(
 
 void RenderPass::createRenderPassBloom(
     Device& device, 
-    Texture& emissionTexture)
+    Texture& hdrRenderTexture)
 {
     this->device = &device;
 
     vk::AttachmentDescription2 attachment{};
-    attachment.setFormat(emissionTexture.getVkFormat());
+    attachment.setFormat(hdrRenderTexture.getVkFormat());
     attachment.setSamples(vk::SampleCountFlagBits::e1);
     attachment.setLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
@@ -188,7 +189,7 @@ void RenderPass::createRenderPassImgui(
     attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
-    attachment.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal);
+    attachment.setInitialLayout(vk::ImageLayout::eUndefined);
     attachment.setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
 
     vk::AttachmentReference2 attachment_reference{};

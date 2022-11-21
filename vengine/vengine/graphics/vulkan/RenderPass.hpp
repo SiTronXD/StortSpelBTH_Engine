@@ -5,6 +5,7 @@
 class Device;
 class Swapchain;
 class Texture;
+class PostProcessHandler;
 
 class RenderPass
 {
@@ -14,9 +15,12 @@ private:
 	Device* device;
 
 public:
-	void createRenderPassBase(Device& device, PostProcessHandler& postProcessHandler);
+	void createRenderPassBase(
+		Device& device, 
+		const vk::Format& colorBufferFormat,
+		const vk::Format& depthBufferFormat);
 	void createRenderPassShadowMap(Device& device, Texture& shadowMapTexture);
-	void createRenderPassBloom(Device& device, PostProcessHandler& postProcessHandler);
+	void createRenderPassBloom(Device& device, Texture& hdrRenderTexture);
 	void createRenderPassImgui(Device& device, Swapchain& swapchain);
 
 	void cleanup();

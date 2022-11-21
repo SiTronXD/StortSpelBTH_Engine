@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include "Texture.hpp"
 #include "vulkan/RenderPass.hpp"
 #include "vulkan/FramebufferArray.hpp"
 #include "vulkan/CommandBufferArray.hpp"
@@ -17,6 +18,8 @@ private:
 	Texture hdrRenderTexture;
 	Texture depthTexture;
 
+	FramebufferArray renderFramebuffer;
+
 	RenderPass renderPass;
 	FramebufferArray framebuffers;
 	CommandBufferArray commandBuffers;
@@ -25,12 +28,14 @@ private:
 	PhysicalDevice* physicalDevice;
 	Device* device;
 	VmaAllocator* vma;
+	RenderPass* renderPassBase;
 	vk::Queue* transferQueue;
 	vk::CommandPool* commandPool;
 	ResourceManager* resourceManager;
 
 public:
 	static const uint32_t NUM_MIP_LEVELS = 8;
+	static const vk::Format HDR_FORMAT = vk::Format::eR8G8B8A8Unorm;
 
 	PostProcessHandler();
 
@@ -38,6 +43,7 @@ public:
 		PhysicalDevice& physicalDevice,
 		Device& device,
 		VmaAllocator& vma,
+		RenderPass& baseRenderPass,
 		vk::Queue& transferQueue,
 		vk::CommandPool& commandPool,
 		ResourceManager& resourceManager);
@@ -47,5 +53,5 @@ public:
 
 	inline const Texture& getHdrRenderTexture() const { return this->hdrRenderTexture; }
 	inline const Texture& getDepthTexture() const { return this->depthTexture; }
-	inline const vk::Framebuffer& getVkFramebuffer(const uint32_t& index) const { return this->framebuffers[index]; }
+	inline const vk::Framebuffer& getRenderVkFramebuffer() const { return this->renderFramebuffer[0]; }
 };

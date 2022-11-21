@@ -301,7 +301,7 @@ void Swapchain::createFramebuffers(RenderPass& renderPass)
     ZoneScoped; //:NOLINT
 #endif
     
-    std::vector<std::vector<vk::ImageView>> framebufferAttachments(this->getNumImages());
+    /*std::vector<std::vector<vk::ImageView>> framebufferAttachments(this->getNumImages());
     for (size_t i = 0; i < framebufferAttachments.size(); ++i)
     {
         framebufferAttachments[i].push_back(this->getImageView(i));
@@ -311,7 +311,7 @@ void Swapchain::createFramebuffers(RenderPass& renderPass)
         renderPass,
         this->getVkExtent(),
         framebufferAttachments
-    );
+    );*/
 }
 
 void Swapchain::recreateSwapchain(RenderPass& renderPass)

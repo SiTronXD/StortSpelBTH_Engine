@@ -273,7 +273,7 @@ void VulkanRenderer::beginRenderpass(
     renderPassBeginInfo.renderArea.setExtent(extent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
-    renderPassBeginInfo.setFramebuffer(this->postProcessHandler.getVkFramebuffer(0));
+    renderPassBeginInfo.setFramebuffer(this->postProcessHandler.getRenderVkFramebuffer());
 
     // Begin Render Pass!    
     // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -287,7 +287,7 @@ void VulkanRenderer::beginRenderpass(
     // Viewport
     vk::Viewport viewport{};
     viewport.x = 0.0f;
-    viewport.y = (float) extent.width;
+    viewport.y = (float) extent.height;
     viewport.width = (float) extent.width;
     viewport.height = -((float) extent.height);
     viewport.minDepth = 0.0f;

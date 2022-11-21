@@ -124,15 +124,27 @@ int VulkanRenderer::init(
             this->vma
         );
 
-        this->renderPassBase.createRenderPassBase(this->device, this->swapchain);
-        this->renderPassImgui.createRenderPassImgui(this->device, this->swapchain);
-        this->swapchain.createFramebuffers(this->renderPassBase);
+        // Command pool/buffers
         this->createCommandPool();
         this->commandBuffers.createCommandBuffers(
-            this->device, 
-            this->commandPool, 
+            this->device,
+            this->commandPool,
             MAX_FRAMES_IN_FLIGHT
         );
+
+        // Render passes
+        this->renderPassBase.createRenderPassBase(
+            this->device, 
+            PostProcessHandler::HDR_FORMAT,
+            Texture::getDepthBufferFormat(this->physicalDevice)
+        );
+        this->renderPassImgui.createRenderPassImgui(
+            this->device, 
+            this->swapchain
+        );
+
+        // Framebuffers
+        this->swapchain.createFramebuffers(this->renderPassBase);
 
         this->createSynchronisation();        
 
@@ -182,6 +194,7 @@ int VulkanRenderer::init(
         return EXIT_FAILURE;
     }
 
+    // Light handler
     this->lightHandler.init(
         this->physicalDevice,
         this->device,
@@ -190,10 +203,13 @@ int VulkanRenderer::init(
         *this->resourceManager,
         MAX_FRAMES_IN_FLIGHT
     );
+
+    // Post process handler
     this->postProcessHandler.init(
-        this->physicalDevice, 
-        this->device, 
-        this->vma, 
+        this->physicalDevice,
+        this->device,
+        this->vma,
+        this->renderPassBase,
         this->queueFamilies.getGraphicsQueue(),
         this->commandPool,
         *this->resourceManager

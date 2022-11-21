@@ -36,16 +36,7 @@ void Texture::createAsDepthTexture(
     this->textureSamplerIndex = textureSamplerIndex;
 
     // Get supported VkFormat for the depth buffer
-    this->format = Texture::chooseSupportedFormat(
-        *this->physicalDevice,
-        {
-            // Atleast one of these should be available...
-            vk::Format::eD32Sfloat,
-            vk::Format::eD24UnormS8Uint
-        },
-        vk::ImageTiling::eOptimal,
-        vk::FormatFeatureFlagBits::eDepthStencilAttachment // Make sure the format supports the depth stencil attachment bit
-    );
+    this->format = Texture::getDepthBufferFormat(physicalDevice);
 
     // Image
     this->image = Texture::createImage(
@@ -367,6 +358,20 @@ vk::Format Texture::chooseSupportedFormat(
         }
     }
     throw std::runtime_error("Failed to find a matching format!");
+}
+
+vk::Format Texture::getDepthBufferFormat(PhysicalDevice& physicalDevice)
+{
+    return Texture::chooseSupportedFormat(
+        physicalDevice,
+        {
+            // Atleast one of these should be available...
+            vk::Format::eD32Sfloat,
+            vk::Format::eD24UnormS8Uint
+        },
+        vk::ImageTiling::eOptimal,
+        vk::FormatFeatureFlagBits::eDepthStencilAttachment // Make sure the format supports the depth stencil attachment bit
+    );
 }
 
 vk::Image Texture::createImage(

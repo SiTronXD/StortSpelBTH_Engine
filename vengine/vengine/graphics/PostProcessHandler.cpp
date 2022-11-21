@@ -20,6 +20,7 @@ void PostProcessHandler::init(
 	PhysicalDevice& physicalDevice,
 	Device& device,
 	VmaAllocator& vma,
+	RenderPass& renderPassBase,
 	vk::Queue& transferQueue,
 	vk::CommandPool& commandPool,
 	ResourceManager& resourceManager)
@@ -27,6 +28,7 @@ void PostProcessHandler::init(
 	this->physicalDevice = &physicalDevice;
 	this->device = &device;
 	this->vma = &vma;
+	this->renderPassBase = &renderPassBase;
 	this->transferQueue = &transferQueue;
 	this->commandPool = &commandPool;
 	this->resourceManager = &resourceManager;
@@ -36,17 +38,26 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 {
 	TextureSettings textureSettings{};
 
-	// Emission texture
+	// HDR render texture
 	this->hdrRenderTexture.createRenderableTexture(
 		*this->physicalDevice,
 		*this->device,
 		*this->vma,
 		*this->transferQueue,
 		*this->commandPool,
-		vk::Format::eR8G8B8A8Unorm,
+		PostProcessHandler::HDR_FORMAT,
 		windowExtent.width,
 		windowExtent.height,
 		NUM_MIP_LEVELS
+	);
+
+	// Create depth texture
+	this->depthTexture.createAsDepthTexture(
+		*this->physicalDevice,
+		*this->device,
+		*this->vma,
+		windowExtent.width,
+		windowExtent.height
 	);
 
 	// Render pass
@@ -55,7 +66,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		this->hdrRenderTexture
 	);
 
-	// Framebuffers
+	// Downsampling image views and extents
 	uint32_t currentWidth = windowExtent.width;
 	uint32_t currentHeight = windowExtent.height;
 	this->extents.resize(NUM_MIP_LEVELS);
@@ -70,6 +81,21 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		if (currentWidth > 1) currentWidth >>= 1;
 		if (currentHeight > 1) currentHeight >>= 1;
 	}
+
+	// Framebuffer for rendering
+	this->renderFramebuffer.create(
+		*this->device,
+		*this->renderPassBase,
+		this->extents[0],
+		{
+			{
+				this->hdrRenderTexture.getImageView(),
+				this->depthTexture.getImageView()
+			}
+		}
+	);
+
+	// Framebuffers for downsampling
 	this->framebuffers.create(
 		*this->device,
 		this->renderPass,
@@ -83,19 +109,11 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		*this->commandPool,
 		NUM_MIP_LEVELS
 	);
-
-	// Create depth texture
-	this->depthTexture.createAsDepthTexture(
-		*this->physicalDevice,
-		*this->device,
-		*this->vma,
-		this->extents[0].width,
-		this->extents[0].height
-	);
 }
 
 void PostProcessHandler::cleanup()
 {
+	this->renderFramebuffer.cleanup();
 	this->framebuffers.cleanup();
 	this->renderPass.cleanup();
 	this->depthTexture.cleanup();
