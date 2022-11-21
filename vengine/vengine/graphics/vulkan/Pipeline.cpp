@@ -283,5 +283,7 @@ void Pipeline::cleanup()
     // Only cleanup if a pipeline has been created
     if (!this->hasBeenCreated) return;
 
+    this->hasBeenCreated = false;
+
 	this->device->getVkDevice().destroyPipeline(this->pipeline);
 }

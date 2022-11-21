@@ -15,6 +15,8 @@
 
 class Engine;
 struct ImageData;   //Defined in MeshLoader
+struct Transform;
+struct AnimationComponent;
 
 class ResourceManager
 {
@@ -79,6 +81,13 @@ public:
     size_t getNumMeshes();
     size_t getNumTextures();
     size_t getNumMaterials();
+
+
+    glm::mat4 getJointTransform(
+        Transform& animatedMeshTransform,
+        MeshComponent& meshComp,
+        AnimationComponent& animationComp, 
+        const std::string& boneName);
 };
 
 inline Mesh& ResourceManager::getMesh(uint32_t id)

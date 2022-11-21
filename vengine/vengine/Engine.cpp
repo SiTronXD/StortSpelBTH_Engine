@@ -37,6 +37,9 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     using namespace vengine_helper::config;
     loadConfIntoMemory(); // load config data into memory
 
+    //Filter Log Output 
+    Log::addFilter("bt");
+
     // Window
     Window window;
     window.initWindow(appName);

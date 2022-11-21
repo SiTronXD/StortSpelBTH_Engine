@@ -262,7 +262,7 @@ void VulkanRenderer::cleanup()
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
 
-    this->lightHandler.cleanup();
+    this->lightHandler.cleanup(this->hasAnimations);
 
     this->renderPassBase.cleanup();
     this->swapchain.cleanup();

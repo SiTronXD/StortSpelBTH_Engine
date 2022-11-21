@@ -35,11 +35,6 @@ private:
         const std::vector<std::pair<float, glm::quat>>& stamps,
         const float& timer,
         glm::quat& outputValue);
-    void getLocalBoneTransform(
-        const BonePoses& bone,
-        const float& timer,
-        const int& animationIndex,
-        glm::mat4& outputMatrix);
 
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
@@ -48,6 +43,12 @@ public:
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
+    void getLocalBoneTransform(
+        const BonePoses& bone,
+        const float& timer,
+        const int& animationIndex,
+        glm::mat4& outputMatrix);
+
     void getBoneTransforms(
         AnimationComponent& animationComponentOutput);
 

@@ -3,6 +3,10 @@
 #include "../application/Scene.hpp"
 #include "Texture.hpp"
 
+const uint32_t LightHandler::MAX_NUM_LIGHTS   = 16;
+const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 4;
+const uint32_t LightHandler::NUM_CASCADES     = 3;
+
 void LightHandler::getWorldSpaceFrustumCorners(
     const glm::mat4& invViewProj,
     glm::vec4 outputCorners[])
@@ -449,7 +453,7 @@ void LightHandler::updateLightBuffers(
             // Cascade settings
             for (size_t i = 0; i < this->cascadeSizes.size(); ++i)
             {
-                this->cascadeSizes[i] = dirLightComp.cascadeSizes[i];
+                this->cascadeSizes[i] = dirLightComp.cascadeSizes[i] / camData.aspectRatio * (16.0f / 9.0f);
             }
             this->cascadeDepthScale = dirLightComp.cascadeDepthScale;
             this->shadowMapData.cascadeSettings.y = dirLightComp.cascadeVisualization ? 1.0f : 0.0f;
@@ -485,8 +489,8 @@ void LightHandler::updateLightBuffers(
     {
         this->setLightFrustum(
             glm::perspective(
-                glm::radians(90.0f), 
-                16.0f / 9.0f, 
+                glm::radians(camData.fov),
+                camData.aspectRatio, 
                 this->cascadeNearPlanes[i],
                 this->shadowMapData.cascadeFarPlanes[i]
             ),
@@ -531,7 +535,7 @@ void LightHandler::updateShadowPushConstant(
 
 }
 
-void LightHandler::cleanup()
+void LightHandler::cleanup(const bool& hasAnimations)
 {
     this->shadowMapTexture.cleanup();
     this->shadowMapRenderPass.cleanup();
@@ -540,6 +544,9 @@ void LightHandler::cleanup()
     this->shadowMapShaderInput.cleanup();
     this->shadowMapPipeline.cleanup();
 
-    this->animShadowMapShaderInput.cleanup();
-    this->animShadowMapPipeline.cleanup();
+    if (hasAnimations)
+    {
+        this->animShadowMapShaderInput.cleanup();
+        this->animShadowMapPipeline.cleanup();
+    }
 }

@@ -14,6 +14,8 @@ class SMath
      static glm::mat4 rotateTowards(const glm::vec3& dir, const glm::vec3& up);
      static glm::mat4 rotateEuler(const glm::vec3& angles);
 	 static glm::vec3 rotateVector(const glm::vec3& angles, const glm::vec3 vector);
+
+     static void normalizeScale(glm::mat4& matrix);
 };
 
 inline glm::vec3 SMath::getRandomVector(float scalar) 
@@ -78,4 +80,15 @@ inline glm::vec3 SMath::rotateVector(const glm::vec3& angles, glm::vec3 vector) 
 	vector = glm::mat3(cos(glm::radians(angles.y)), 0.f, sin(glm::radians(angles.y)), 0.f, 1.f, 0.f, -sin(glm::radians(angles.y)), 0.f, cos(glm::radians(angles.y))) * vector;
 
     return vector;
+}
+
+inline void SMath::normalizeScale(glm::mat4& matrix)
+{
+    glm::vec3 tempVec;
+    for (uint32_t i = 0; i < 3; ++i)
+    {
+        tempVec = matrix[i];
+        tempVec = glm::normalize(tempVec);
+        matrix[i] = glm::vec4(tempVec, 0.0f);
+    }
 }
