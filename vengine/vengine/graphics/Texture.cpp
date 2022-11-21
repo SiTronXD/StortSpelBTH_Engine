@@ -54,6 +54,7 @@ void Texture::createAsDepthTexture(
             .width = this->getWidth(),
             .height = this->getHeight(),
             .arrayLayers = arrayLayers,
+            .mipLevels = 1,
             .format = this->format,
             .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
             .useFlags = vk::ImageUsageFlagBits::eDepthStencilAttachment
@@ -62,7 +63,7 @@ void Texture::createAsDepthTexture(
         }
     );
 
-    // Image views
+    // Array layer image views
     for (uint32_t i = 0; i < arrayLayers; ++i)
     {
         this->layerImageViews.push_back(
@@ -77,6 +78,8 @@ void Texture::createAsDepthTexture(
             )
         );
     }
+
+    // Regular image view
     this->entireImageView =
         Texture::createImageView(
             *this->device,
@@ -108,6 +111,8 @@ void Texture::create(
     this->width = width;
     this->height = height;
     this->textureSamplerIndex = textureSamplerIndex;
+
+    this->format = vk::Format::eR8G8B8A8Unorm;
 
     // Save the pixels only if it should keep the info
     if (textureSettings.keepCpuPixelInfo)
@@ -172,7 +177,8 @@ void Texture::create(
             .width = static_cast<uint32_t>(width),
             .height = static_cast<uint32_t>(height),
             .arrayLayers = 1,
-            .format = vk::Format::eR8G8B8A8Unorm, 
+            .mipLevels = 1,
+            .format = this->format, 
             .tiling = vk::ImageTiling::eOptimal,
             .useFlags = vk::ImageUsageFlagBits::eTransferDst
                 // TODO: remove this
@@ -222,7 +228,76 @@ void Texture::create(
         Texture::createImageView(
             *this->device,
             this->image,
-            vk::Format::eR8G8B8A8Unorm, // Format for rgba
+            this->format,
+            vk::ImageAspectFlagBits::eColor,
+            vk::ImageViewType::e2D,
+            1,
+            0,
+            true
+        );
+}
+
+void Texture::createRenderableTexture(
+    PhysicalDevice& physicalDevice,
+    Device& device,
+    VmaAllocator& vma,
+    vk::Queue& transferQueue,
+    vk::CommandPool& transferCommandPool,
+    const vk::Format& format,
+    const uint32_t& width,
+    const uint32_t& height,
+    const uint32_t& mipLevels)
+{
+    this->physicalDevice = &physicalDevice;
+    this->device = &device;
+    this->vma = &vma;
+    this->width = width;
+    this->height = height;
+    this->textureSamplerIndex = textureSamplerIndex;
+
+    // Get supported VkFormat for the depth buffer
+    this->format = format;
+
+    // Image
+    this->image = Texture::createImage(
+        *this->vma,
+        {
+            .width = this->getWidth(),
+            .height = this->getHeight(),
+            .arrayLayers = 1,
+            .mipLevels = mipLevels,
+            .format = this->format,
+            .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
+            .useFlags = vk::ImageUsageFlagBits::eColorAttachment,
+            .imageMemory = &this->imageMemory
+        }
+    );
+
+    // Mip image views
+    for (uint32_t i = 0; i < mipLevels; ++i)
+    {
+        this->mipImageViews.push_back(
+            Texture::createImageView(
+                *this->device,
+                this->image,
+                this->format,
+                vk::ImageAspectFlagBits::eColor,
+                vk::ImageViewType::e2D,
+                1,
+                0,
+                true,
+                mipLevels,
+                i
+            )
+        );
+    }
+
+    // Image view
+    this->entireImageView =
+        Texture::createImageView(
+            *this->device,
+            this->image,
+            this->format,
             vk::ImageAspectFlagBits::eColor,
             vk::ImageViewType::e2D,
             1,
@@ -238,13 +313,24 @@ void Texture::setDescriptorIndex(const uint32_t& descriptorIndex)
 
 void Texture::cleanup() 
 {
+    // Regular image view
     this->device->getVkDevice().destroyImageView(this->entireImageView);
+
+    // Layer image views
     for (auto& imageView : this->layerImageViews)
     {
         this->device->getVkDevice().destroyImageView(imageView);
     }
     this->layerImageViews.clear();
 
+    // Mip image views
+    for (auto& imageView : this->mipImageViews)
+    {
+        this->device->getVkDevice().destroyImageView(imageView);
+    }
+    this->mipImageViews.clear();
+
+    // Image
     this->device->getVkDevice().destroyImage(this->image);
     vmaFreeMemory(*this->vma, this->imageMemory);
 }
@@ -302,7 +388,7 @@ vk::Image Texture::createImage(
             1
         )
     );
-    imageCreateInfo.setMipLevels(uint32_t(1));                        // number of mipmap levels 
+    imageCreateInfo.setMipLevels(imageData.mipLevels);                        // number of mipmap levels 
     imageCreateInfo.setArrayLayers(imageData.arrayLayers);                        // number of Levels in image array
     imageCreateInfo.setFormat(imageData.format);                   // Format of the image
     imageCreateInfo.setTiling(imageData.tiling);                   // How image data should be "tiled" (arranged for optimal reading speed)
@@ -339,7 +425,9 @@ vk::ImageView Texture::createImageView(
     const vk::ImageViewType& imageViewType,
     const uint32_t& arrayLayers,
     const uint32_t& arrayLayerSlice,
-    const bool& useEntireArray
+    const bool& useEntireArray,
+    const uint32_t& mipLevels,
+    const uint32_t& mipSlice
 )
 {
 #ifndef VENGINE_NO_PROFILING
@@ -364,7 +452,7 @@ vk::ImageView Texture::createImageView(
     /*! Possible aspectMask values are defined with: is vk::ImageAspectFlagBits ...
      * - The 'regular' one is vk::ImageAspectFlagBits::eColor, used for images...
      * */
-    viewCreateInfo.subresourceRange.baseMipLevel = 0;                // Which part of the image to view start view from, (a Image can have multiple Mip and Array Layers)...
+    viewCreateInfo.subresourceRange.baseMipLevel = mipSlice;                // Which part of the image to view start view from, (a Image can have multiple Mip and Array Layers)...
     viewCreateInfo.subresourceRange.levelCount = 1;                // How many MipMap levels to view, we only view 1 and that will be the "0" referred to by baseMipLevel
     viewCreateInfo.subresourceRange.baseArrayLayer = arrayLayerSlice;                // Which BaseArrayLayer to start from, we pick the first: 0
     viewCreateInfo.subresourceRange.layerCount = !useEntireArray ? 1 : arrayLayers;                // How many layers to check from the baseArrayLayer.

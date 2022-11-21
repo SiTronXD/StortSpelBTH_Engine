@@ -190,6 +190,14 @@ int VulkanRenderer::init(
         *this->resourceManager,
         MAX_FRAMES_IN_FLIGHT
     );
+    this->postProcessHandler.init(
+        this->physicalDevice, 
+        this->device, 
+        this->vma, 
+        this->queueFamilies.getGraphicsQueue(),
+        this->commandPool,
+        *this->resourceManager
+    );
     
     return EXIT_SUCCESS;
 }
@@ -262,6 +270,7 @@ void VulkanRenderer::cleanup()
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
 
+    this->postProcessHandler.cleanup();
     this->lightHandler.cleanup(this->hasAnimations);
 
     this->renderPassBase.cleanup();

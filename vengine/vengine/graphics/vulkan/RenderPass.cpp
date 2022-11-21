@@ -15,11 +15,11 @@ void RenderPass::createRenderPassBase(Device& device, Swapchain& swapchain)
     colorAttachment.setFormat(swapchain.getVkFormat());
     colorAttachment.setSamples(vk::SampleCountFlagBits::e1);
     colorAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);        // When we start the renderpass, first thing to do is to clear since there is no values in it yet
-    colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);      // How to store it after the RenderPass; We dont care! But we do care what happens after the first SubPass! (not handled here)
+    colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);      // How to store it after the RenderPass
     colorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     colorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
     colorAttachment.setInitialLayout(vk::ImageLayout::eUndefined);            // We dont care what the image layout is when we start. But we do care about what layout it is when it enter the first SubPass! (not handled here)
-    colorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); //(!!) Should be the same value as it was after the subpass finishes (??)
+    colorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // Should be the same value as it was after the subpass finishes
 
     // Depth attachment
     vk::AttachmentDescription2 depthAttachment{};
@@ -125,7 +125,56 @@ void RenderPass::createRenderPassShadowMap(
     VulkanDbg::registerVkObjectDbgInfo("ShadowMapRenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
 }
 
-void RenderPass::createRenderPassImgui(Device& device, Swapchain& swapchain)
+void RenderPass::createRenderPassBloom(
+    Device& device, 
+    Texture& emissionTexture)
+{
+    this->device = &device;
+
+    vk::AttachmentDescription2 attachment{};
+    attachment.setFormat(emissionTexture.getVkFormat());
+    attachment.setSamples(vk::SampleCountFlagBits::e1);
+    attachment.setLoadOp(vk::AttachmentLoadOp::eDontCare);
+    attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
+    attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
+    attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
+    attachment.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal);
+    attachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+    vk::AttachmentReference2 attachmentReference{};
+    attachmentReference.setAttachment(uint32_t(0));
+    attachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+    vk::SubpassDescription2 subpass{};
+    subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+    subpass.setColorAttachmentCount(uint32_t(1));
+    subpass.setPColorAttachments(&attachmentReference);
+
+    vk::SubpassDependency2 subpassDependecy{};
+    subpassDependecy.setSrcSubpass(VK_SUBPASS_EXTERNAL);
+    subpassDependecy.setDstSubpass(uint32_t(0));
+    subpassDependecy.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput); // Wait until all other graphics have been rendered
+    subpassDependecy.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+    subpassDependecy.setSrcAccessMask(vk::AccessFlags());
+    subpassDependecy.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+
+    vk::RenderPassCreateInfo2 renderpassCreateinfo{};
+    renderpassCreateinfo.setAttachmentCount(uint32_t(1));
+    renderpassCreateinfo.setPAttachments(&attachment);
+    renderpassCreateinfo.setSubpassCount(uint32_t(1));
+    renderpassCreateinfo.setPSubpasses(&subpass);
+    renderpassCreateinfo.setDependencyCount(uint32_t(1));
+    renderpassCreateinfo.setPDependencies(&subpassDependecy);
+
+    this->renderPass =
+        this->device->getVkDevice().createRenderPass2(renderpassCreateinfo);
+
+    VulkanDbg::registerVkObjectDbgInfo("BloomRenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
+}
+
+void RenderPass::createRenderPassImgui(
+    Device& device, 
+    Swapchain& swapchain)
 {
     this->device = &device;
 

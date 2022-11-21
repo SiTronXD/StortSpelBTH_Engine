@@ -19,6 +19,7 @@
 
 #include "../resource_management/ResourceManager.hpp"
 #include "LightHandler.hpp"
+#include "PostProcessHandler.hpp"
 #include "UIRenderer.hpp"
 #include "DebugRenderer.hpp"
 
@@ -88,6 +89,7 @@ class VulkanRenderer
     Pipeline animPipeline;
 
     LightHandler lightHandler;
+    PostProcessHandler postProcessHandler;
 
     // Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};

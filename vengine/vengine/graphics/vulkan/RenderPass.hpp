@@ -16,6 +16,7 @@ private:
 public:
 	void createRenderPassBase(Device& device, Swapchain& swapchain);
 	void createRenderPassShadowMap(Device& device, Texture& shadowMapTexture);
+	void createRenderPassBloom(Device& device, Texture& emissionTexture);
 	void createRenderPassImgui(Device& device, Swapchain& swapchain);
 
 	void cleanup();

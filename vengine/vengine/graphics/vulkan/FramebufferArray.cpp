@@ -12,6 +12,20 @@ void FramebufferArray::create(
     const vk::Extent2D& extent,
     const std::vector<std::vector<vk::ImageView>>& attachments)
 {
+    this->create(
+        device,
+        renderPass,
+        std::vector<vk::Extent2D>(attachments.size(), extent),
+        attachments
+    );
+}
+
+void FramebufferArray::create(
+    Device& device,
+    RenderPass& renderPass,
+    const std::vector<vk::Extent2D>& extents,
+    const std::vector<std::vector<vk::ImageView>>& attachments)
+{
     this->device = &device;
 
     // Create one framebuffer per attachment
@@ -22,8 +36,8 @@ void FramebufferArray::create(
         framebufferCreateInfo.setRenderPass(renderPass.getVkRenderPass());
         framebufferCreateInfo.setAttachmentCount(uint32_t(attachments[i].size()));
         framebufferCreateInfo.setPAttachments(attachments[i].data());
-        framebufferCreateInfo.setWidth(extent.width);
-        framebufferCreateInfo.setHeight(extent.height);
+        framebufferCreateInfo.setWidth(extents[i].width);
+        framebufferCreateInfo.setHeight(extents[i].height);
         framebufferCreateInfo.setLayers(uint32_t(1));
 
         this->framebuffers[i] =
