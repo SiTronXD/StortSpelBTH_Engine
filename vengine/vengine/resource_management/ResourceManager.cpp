@@ -353,6 +353,7 @@ glm::mat4 ResourceManager::getJointTransform(
         return glm::mat4(1.0f);
     }
 
+    animatedMeshTransform.updateMatrix();
     const glm::mat4& modelMat = animatedMeshTransform.getMatrix();
 
     // boneTransform = jointMatrix * inverseBindPoseMatrix
