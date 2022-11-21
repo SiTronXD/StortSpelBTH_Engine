@@ -29,13 +29,5 @@ public:
 		boneTransforms{}
 	{ }
 
-	/*inline glm::mat4 getJointTransform(
-		Transform& animatedMeshTransform, 
-		const uint32_t& index)
-	{
-		// Update matrix
-		animatedMeshTransform.updateMatrix();
-		return this->boneTransforms[index];
-	}*/
 	inline const glm::mat4* getBoneTransformsData() const { return &this->boneTransforms[0]; }
 };
