@@ -285,12 +285,6 @@ public:
 
     BTStatus execute(uint32_t entityID)
     {
-		if (this->children.size() > 1 || this->children.size() < 1)
-		{
-            Log::error("Decorators can only have one child!");		
-			return BTStatus::INVALID;
-		}
-        // TODO: Might be unncessary with a decorate function, but might also help readability...
         return decorate(entityID);
     }
     virtual BTStatus decorate(uint32_t entityID) = 0;
