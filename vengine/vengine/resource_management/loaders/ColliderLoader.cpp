@@ -190,7 +190,7 @@ std::vector<int> addCollisionToScene(
         glm::vec3 colliderPos = SMath::rotateVector(rotationOffset2, colliders[i].position);
 
         entities[i] = currentScene.createEntity();
-        Transform& t = currentScene.getComponent<Transform>(e);
+        Transform& t = currentScene.getComponent<Transform>(entities[i]);
         t.position = offset + (colliderPos * scaleOffset);
         glm::vec3 rot = colliders[i].rotation;
         t.rotation = glm::vec3(rot.x, rot.z, rot.y);
@@ -198,7 +198,7 @@ std::vector<int> addCollisionToScene(
         colliderCopy.extents *= scaleOffset;
         colliderCopy.radius *= scaleOffset;
         colliderCopy.height *= scaleOffset;
-        currentScene.setComponent<Collider>(e, colliderCopy);
+        currentScene.setComponent<Collider>(entities[i], colliderCopy);
     }
     return entities;
 }
