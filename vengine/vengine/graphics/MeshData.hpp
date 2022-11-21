@@ -40,9 +40,7 @@ struct Animation
 
 struct Bone 
 {
-#if defined(_DEBUG) || defined(DEBUG)
     std::string boneName;
-#endif
 
     int parentIndex;
     glm::mat4 inverseBindPoseMatrix;

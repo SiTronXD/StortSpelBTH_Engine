@@ -8,6 +8,8 @@ struct Transform
 private:
 	glm::mat4 matrix;
 
+	bool setManualMatrix;
+
 public:
 	glm::vec3 position;
 	glm::vec3 rotation;
@@ -15,7 +17,8 @@ public:
 
 
 	Transform():
-		position(0.0f), rotation(0.0f), scale(1.0f), matrix(1.0f)
+		position(0.0f), rotation(0.0f), scale(1.0f), matrix(1.0f),
+		setManualMatrix(false)
 	{ }
 
 	glm::vec3 right() { return glm::normalize(glm::vec3(this->matrix[0])); }
@@ -25,13 +28,22 @@ public:
 
 	void updateMatrix() // Only useful before right, up, forward or rendering the object
 	{
-		this->matrix = glm::translate(glm::mat4(1.0f), this->position) *
-			glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
-			glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
-			glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f)) *
-			glm::scale(glm::mat4(1.0f), this->scale);
+		if (!this->setManualMatrix)
+		{
+			this->matrix = glm::translate(glm::mat4(1.0f), this->position) *
+				glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.z), glm::vec3(0.0f, 0.0f, 1.0f)) *
+				glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.y), glm::vec3(0.0f, 1.0f, 0.0f)) *
+				glm::rotate(glm::mat4(1.0f), glm::radians(this->rotation.x), glm::vec3(1.0f, 0.0f, 0.0f)) *
+				glm::scale(glm::mat4(1.0f), this->scale);
+		}
 	}
 	
+	void setMatrix(const glm::mat4& newMatrix)
+	{
+		this->setManualMatrix = true;
+		this->matrix = newMatrix;
+	}
+
 	inline const glm::mat4& getMatrix() const
 	{
 		return this->matrix;

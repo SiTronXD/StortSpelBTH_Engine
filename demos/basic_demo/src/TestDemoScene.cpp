@@ -8,7 +8,7 @@
 #include "vengine/VengineMath.hpp"
 
 TestDemoScene::TestDemoScene()
-	: camEntity(-1), testEntity(-1)//, testEntity2(-1)
+	: camEntity(-1), testEntity(-1), testEntity2(-1)
 	, aniIDs{ -1, -1, -1, -1 }
 	, aniActive{ true, true, true, true }
 {
@@ -45,18 +45,18 @@ void TestDemoScene::init()
 	this->getComponent<Spotlight>(this->testEntity).color = glm::vec3(0.02f, 0.95f, 0.02f) * 10.0f;
 
 	// Create entity (already has transform)
-	Entity ghostEntity2 = this->createEntity();
+	this->testEntity2 = this->createEntity();
 
 	// Transform component
-	Transform& transform2 = this->getComponent<Transform>(ghostEntity2);
+	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
 	transform2.position = glm::vec3(15.f, 0.f, 30.f);
 	//transform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
-	this->setComponent<MeshComponent>(ghostEntity2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
-	this->setComponent<Collider>(ghostEntity2, Collider::createCapsule(2.0f, 5.0f));
-	this->setComponent<Rigidbody>(ghostEntity2);
-	this->getComponent<Rigidbody>(ghostEntity2).rotFactor = glm::vec3(0.0f);
-	this->setComponent<PointLight>(ghostEntity2);
-	this->getComponent<PointLight>(ghostEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 2.0f;
+	this->setComponent<MeshComponent>(this->testEntity2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
+	this->setComponent<Collider>(this->testEntity2, Collider::createCapsule(2.0f, 5.0f));
+	this->setComponent<Rigidbody>(this->testEntity2);
+	this->getComponent<Rigidbody>(this->testEntity2).rotFactor = glm::vec3(0.0f);
+	this->setComponent<PointLight>(this->testEntity2);
+	this->getComponent<PointLight>(this->testEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 2.0f;
 
 	// Ambient light
 	Entity ambientLightEntity = this->createEntity();
@@ -277,6 +277,24 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	// Make ghosts follow skeletal animation
+	this->getComponent<Transform>(this->testEntity).setMatrix(
+		this->getResourceManager()->getJointTransform(
+			this->getComponent<Transform>(this->aniIDs[1]),
+			this->getComponent<MeshComponent>(this->aniIDs[1]),
+			this->getComponent<AnimationComponent>(this->aniIDs[1]),
+			"Left_leg"
+		) * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f))
+	);
+	this->getComponent<Transform>(this->testEntity2).setMatrix(
+		this->getResourceManager()->getJointTransform(
+			this->getComponent<Transform>(this->aniIDs[1]),
+			this->getComponent<MeshComponent>(this->aniIDs[1]),
+			this->getComponent<AnimationComponent>(this->aniIDs[1]),
+			"Right_leg"
+		) * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f))
+	);
+
 	if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->setAnimation(multiAni2, "first");
