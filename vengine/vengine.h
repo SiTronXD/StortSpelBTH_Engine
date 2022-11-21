@@ -4,7 +4,6 @@
 #include "vengine/application/Time.hpp"
 #include "vengine/resource_management/ResourceManager.hpp"
 #include "vengine/components/MeshComponent.hpp"
-#include "vengine/components/MaterialComponent.hpp"
 #include "vengine/components/AnimationComponent.hpp"
 #include "vengine/components/AmbientLight.hpp"
 #include "vengine/components/DirectionalLight.hpp"

@@ -361,7 +361,6 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\windows\StatisticsCollector.hpp" />
     <ClInclude Include="vengine\graphics\StringAlignment.h" />
     <ClInclude Include="vengine\pch\pch.h" />
-    <ClInclude Include="vengine\components\MaterialComponent.hpp" />
     <ClInclude Include="vengine\physics\CallbackType.h" />
     <ClInclude Include="vengine\physics\CollisionDispatcher.h" />
     <ClInclude Include="vengine\ai\AgentStatus.hpp" />
