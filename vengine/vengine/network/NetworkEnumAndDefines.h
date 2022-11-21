@@ -33,14 +33,16 @@ enum GameEvents
 {
 	EMPTY = 0,
 	//TCP To Client
-	SpawnEnemy = 1,
-	SpawnEnemies = 2,
-	MonsterDied = 3,
-	ID = 4,
-	PlayerJoined,
-	GAMEDATA,
+	SpawnEnemy = 1,			// : Type(int), Position(float x,y,z);
+	SpawnEnemies = 2,		// : Type(int), NrOfEnemies(int), Position(list/array)(float x,y,z)   (can only spawn one type of enemy in spawnEnemies)
+    SpawnPerk = 3,			// : Type(int), Position(float x,y,z)
+	MonsterDied = 4,        // : Monster_id
+	ID = 5,
+	PlayerJoined,			//: name(sfml fix size of string), serverID(int)
+	GAMEDATA,				
 	ROOM_CLEAR,
 	MONSTER_HIT,  //a monster hit you
+	SpawnPerk,
 
 	//TCP to Server
 	HitMonster,  //Call to Scene
@@ -48,15 +50,18 @@ enum GameEvents
 	POLYGON_DATA,
 	REMOVE_POLYGON_DATA,
 	WentInToNewRoom,
+	HealPlayer,
 
 	//TCP to Client and Server
 	START,  //Call to Scene
 	PlayerDied,
 	DISCONNECT,
+	PickUpPerk,
 
 	//UDP
 	UpdatePlayerPos,
 	UpdateMonsterPos,
+	UpdateParkPos,
 
 	//Get from server
 	GetPlayerNames,
@@ -76,7 +81,7 @@ enum GameEvents
 SpawnEnemy			: Type(int), Position(float x,y,z);
 SpawnEnemies		: Type(int), NrOfEnemies(int), Position(list/array)(float x,y,z)   (can only spawn one type of enemy in spawnEnemies)
 Explosion			: Radious(float), Position(float x,y,z)
-MonsterDied			: Monster_id, hpback(int player, int howmuch hp), perk/abilityType(int), multiplier
+MonsterDied			: Monster_id, hpback(int player, int howmuch hp), perk/abilityType(int), multiplier, position, spawnDir, 
 SendSeed			: int
 PlayerDied			: PlayerID
 Disconnected		: PlayerID
