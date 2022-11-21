@@ -172,18 +172,13 @@ void TestDemoScene::init()
 		newAnimComp.timer += 24.0f * 0.6f * i;
 		newAnimComp.timeScale += i % 2;
 		newAnimComp.animationIndex = 0;
-
-		// Make separate material
-		if (i == 2)
-		{
-			this->getResourceManager()->makeUniqueMaterials(
-				this->getComponent<MeshComponent>(aniIDs[i])
-			);
-
-			this->getComponent<MeshComponent>(aniIDs[i]).overrideMaterials[0].specularTextureIndex =
-				this->getResourceManager()->addTexture("vengine_assets/textures/NoSpecular.png");
-		}
 	}
+
+	// Change material emission
+	this->getResourceManager()->getMaterial(
+		this->getComponent<MeshComponent>(this->aniIDs[2]),
+		0
+	).emissionColor = glm::vec3(1.0f, 0.0f, 0.0f);
 	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);

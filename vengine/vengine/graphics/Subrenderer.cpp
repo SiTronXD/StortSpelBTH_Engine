@@ -323,11 +323,15 @@ void VulkanRenderer::renderDefaultMeshes(
                 this->resourceManager->getMesh(meshComponent.meshID);
             const std::vector<SubmeshData>& submeshes =
                 currentMesh.getSubmeshData();
+            const Material& firstSubmeshMaterial =
+                this->getAppropriateMaterial(meshComponent, submeshes, 0);
 
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
-            this->pushConstantData.tintColor =
-                this->getAppropriateMaterial(meshComponent, submeshes, 0).tintColor;
+            this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
+            this->pushConstantData.emissionColor.r = firstSubmeshMaterial.emissionColor.r;
+            this->pushConstantData.emissionColor.g = firstSubmeshMaterial.emissionColor.g;
+            this->pushConstantData.emissionColor.b = firstSubmeshMaterial.emissionColor.b;
             this->currentCommandBuffer->pushConstant(
                 this->shaderInput,
                 (void*)&this->pushConstantData
@@ -436,6 +440,8 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
                 currentMesh.getMeshData();
             const std::vector<SubmeshData>& submeshes =
                 currentMesh.getSubmeshData();
+            const Material& firstSubmeshMaterial =
+                this->getAppropriateMaterial(meshComponent, submeshes, 0);
 
             // Update transformations in storage buffer
             this->animShaderInput.updateStorageBuffer(
@@ -448,8 +454,10 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
 
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
-            this->pushConstantData.tintColor =
-                this->getAppropriateMaterial(meshComponent, submeshes, 0).tintColor;
+            this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
+            this->pushConstantData.emissionColor.r = firstSubmeshMaterial.emissionColor.r;
+            this->pushConstantData.emissionColor.g = firstSubmeshMaterial.emissionColor.g;
+            this->pushConstantData.emissionColor.b = firstSubmeshMaterial.emissionColor.b;
             this->currentCommandBuffer->pushConstant(
                 this->animShaderInput,
                 (void*)&this->pushConstantData

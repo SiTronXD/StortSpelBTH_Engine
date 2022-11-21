@@ -10,6 +10,7 @@ layout(location = 2) in vec3 fragNor;
 layout(location = 3) in vec2 fragTex;
 layout(location = 4) in vec3 fragCamWorldPos;
 layout(location = 5) in vec4 fragTintCol;
+layout(location = 6) in vec4 fragEmissionCol;
 
 // Uniform buffer for light indices
 // Ambient: [0, ambientLightsEndIndex)
@@ -318,6 +319,9 @@ void main()
 		1.0f
 	);
 	distAlpha = distAlpha * distAlpha;
+
+	// Emission
+	finalColor += fragEmissionCol.rgb;
 
 	// Composite fog
 	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);

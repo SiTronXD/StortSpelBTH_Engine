@@ -34,6 +34,7 @@ layout(push_constant) uniform PushConstantData
 {
     mat4 model;
     vec4 tintColor;
+    vec4 emissionColor;
 } pushConstantData;
 
 // Vertex shader outputs
@@ -43,6 +44,7 @@ layout(location = 2) out vec3 fragNor;
 layout(location = 3) out vec2 fragTex;
 layout(location = 4) out vec3 fragCamWorldPos;
 layout(location = 5) out vec4 fragTintCol;
+layout(location = 6) out vec4 fragEmissionCol;
 
 void main()
 {
@@ -75,4 +77,5 @@ void main()
     fragTex = tex;
     fragCamWorldPos = cameraBuffer.worldPos.xyz;
     fragTintCol = pushConstantData.tintColor;
+    fragEmissionCol = pushConstantData.emissionColor;
 }

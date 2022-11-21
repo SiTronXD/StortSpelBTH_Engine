@@ -13,6 +13,7 @@ struct PushConstantData
 {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
     glm::vec4 tintColor = glm::vec4(0.0f); // vec4(R, G, B, lerp alpha)
+    glm::vec4 emissionColor = glm::vec4(0.0f);
 };
 
 // View/projection matrices and position
