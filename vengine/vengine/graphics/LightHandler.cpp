@@ -151,8 +151,8 @@ void LightHandler::init(
         this->shadowMapExtent.width,
         this->shadowMapExtent.height,
         LightHandler::NUM_CASCADES,
-        vk::ImageUsageFlagBits::eSampled,
-        resourceManager.addSampler(depthTextureSettings)
+        resourceManager.addSampler(depthTextureSettings),
+        vk::ImageUsageFlagBits::eSampled
     );
 
     // Render pass

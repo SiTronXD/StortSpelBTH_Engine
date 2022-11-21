@@ -48,7 +48,9 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		PostProcessHandler::HDR_FORMAT,
 		windowExtent.width,
 		windowExtent.height,
-		NUM_MIP_LEVELS
+		NUM_MIP_LEVELS,
+		this->resourceManager->addSampler(textureSettings),
+		vk::ImageUsageFlagBits::eSampled
 	);
 
 	// Create depth texture

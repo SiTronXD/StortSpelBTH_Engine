@@ -2,7 +2,6 @@
 #include "VulkanRenderer.hpp"
 
 void VulkanRenderer::beginShadowMapRenderPass(
-    const uint32_t& imageIndex,
     LightHandler& lightHandler,
     const uint32_t& shadowMapArraySlice)
 {
@@ -226,8 +225,7 @@ void VulkanRenderer::endShadowMapRenderPass()
     this->currentShadowMapCommandBuffer->endRenderPass2(subpassEndInfo);
 }
 
-void VulkanRenderer::beginRenderpass(
-    const uint32_t& imageIndex)
+void VulkanRenderer::beginRenderpass()
 {
     static const vk::ClearColorValue clearColor(
         // Sky color
@@ -627,6 +625,107 @@ void VulkanRenderer::endRenderpass()
     this->currentCommandBuffer->endRenderPass2(subpassEndInfo);
 }
 
+void VulkanRenderer::beginSwapchainRenderPass(
+    const uint32_t& imageIndex)
+{
+    static const vk::ClearColorValue clearColor(
+        // Sky color
+        /*std::array<float, 4>
+        {
+            119.0f / 256.0f,
+            172.0f / 256.0f,
+            222.0f / 256.0f,
+            1.0f
+        }*/
+
+        // Fog color
+        std::array<float, 4>
+    {
+        0.8f,
+        0.8f,
+        0.8f,
+        1.0f
+    }
+    );
+
+    const std::array<vk::ClearValue, 2> clearValues =
+    {
+            vk::ClearValue(
+                vk::ClearColorValue{ clearColor }     // Clear Value for Attachment 0
+            ),
+            vk::ClearValue(                         // Clear Value for Attachment 1
+                vk::ClearDepthStencilValue(
+                    1.F,    // depth
+                    0       // stencil
+                )
+            )
+    };
+
+    const vk::Extent2D& swapchainExtent =
+        this->swapchain.getVkExtent();
+
+    // Information about how to begin a render pass
+    vk::RenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.setRenderPass(this->renderPassSwapchain.getVkRenderPass());                      // Render pass to begin
+    renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
+    renderPassBeginInfo.renderArea.setExtent(swapchainExtent);      // Size of region to run render pass on (starting at offset)
+    renderPassBeginInfo.setPClearValues(clearValues.data());
+    renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
+    renderPassBeginInfo.setFramebuffer(this->swapchain.getVkFramebuffer(imageIndex));
+
+    // Begin Render Pass!    
+    // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
+    vk::SubpassBeginInfoKHR subpassBeginInfo;
+    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
+    this->currentSwapchainCommandBuffer->beginRenderPass2(
+        renderPassBeginInfo,
+        subpassBeginInfo
+    );
+
+    // Viewport
+    vk::Viewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = (float) swapchainExtent.height;
+    viewport.width = (float) swapchainExtent.width;
+    viewport.height = -((float) swapchainExtent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    this->currentSwapchainCommandBuffer->setViewport(viewport);
+
+    // Scissor
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D{ 0, 0 };
+    scissor.extent = swapchainExtent;
+    this->currentSwapchainCommandBuffer->setScissor(scissor);
+}
+
+void VulkanRenderer::renderToSwapchainImage()
+{
+    // Bind Pipeline to be used in render pass
+    this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
+        this->swapchainPipeline
+    );
+
+    // Bind HDR texture for descriptors
+    this->swapchainShaderInput.setFrequencyInput(
+        this->hdrRenderTextureDescriptorIndex
+    );
+    this->currentSwapchainCommandBuffer->bindShaderInputFrequency(
+        this->swapchainShaderInput,
+        DescriptorFrequency::PER_DRAW_CALL
+    );
+
+    // Draw fullscreen quad
+    this->currentSwapchainCommandBuffer->draw(6);
+}
+
+void VulkanRenderer::endSwapchainRenderPass()
+{
+    // End Render Pass!
+    vk::SubpassEndInfo subpassEndInfo;
+    this->currentSwapchainCommandBuffer->endRenderPass2(subpassEndInfo);
+}
+
 void VulkanRenderer::beginRenderpassImgui(
     const uint32_t& imageIndex)
 {
@@ -640,7 +739,7 @@ void VulkanRenderer::beginRenderpassImgui(
 
     vk::SubpassBeginInfo subpassBeginInfo{};
     subpassBeginInfo.setContents(vk::SubpassContents::eInline);
-    this->currentCommandBuffer->beginRenderPass2(
+    this->currentSwapchainCommandBuffer->beginRenderPass2(
         renderPassBeginInfo,
         subpassBeginInfo
     );
@@ -653,25 +752,25 @@ void VulkanRenderer::beginRenderpassImgui(
     viewport.height = (float)swapchain.getHeight();
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
-    this->currentCommandBuffer->setViewport(viewport);
+    this->currentSwapchainCommandBuffer->setViewport(viewport);
 
     // Scissor
     vk::Rect2D scissor{};
     scissor.offset = vk::Offset2D{ 0, 0 };
     scissor.extent = this->swapchain.getVkExtent();
-    this->currentCommandBuffer->setScissor(scissor);
+    this->currentSwapchainCommandBuffer->setScissor(scissor);
 }
 
 void VulkanRenderer::renderImgui()
 {
     ImGui_ImplVulkan_RenderDrawData(
         ImGui::GetDrawData(),
-        this->currentCommandBuffer->getVkCommandBuffer()
+        this->currentSwapchainCommandBuffer->getVkCommandBuffer()
     );
 }
 
 void VulkanRenderer::endRenderpassImgui()
 {
     vk::SubpassEndInfo imguiSubpassEndInfo;
-    this->currentCommandBuffer->endRenderPass2(imguiSubpassEndInfo);
+    this->currentSwapchainCommandBuffer->endRenderPass2(imguiSubpassEndInfo);
 }

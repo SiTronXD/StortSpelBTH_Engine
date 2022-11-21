@@ -25,8 +25,8 @@ void Texture::createAsDepthTexture(
     const uint32_t& width,
     const uint32_t& height,
     const uint32_t& arrayLayers,
-    const vk::ImageUsageFlagBits& extraUsageFlags,
-    const uint32_t& textureSamplerIndex)
+    const uint32_t& textureSamplerIndex,
+    const vk::ImageUsageFlagBits& extraUsageFlags)
 {
     this->physicalDevice = &physicalDevice;
     this->device = &device;
@@ -172,7 +172,6 @@ void Texture::create(
             .format = this->format, 
             .tiling = vk::ImageTiling::eOptimal,
             .useFlags = vk::ImageUsageFlagBits::eTransferDst
-                // TODO: remove this
                 | vk::ImageUsageFlagBits::eSampled,
             .imageMemory = &this->imageMemory
         }
@@ -237,7 +236,9 @@ void Texture::createRenderableTexture(
     const vk::Format& format,
     const uint32_t& width,
     const uint32_t& height,
-    const uint32_t& mipLevels)
+    const uint32_t& mipLevels,
+    const uint32_t& textureSamplerIndex,
+    const vk::ImageUsageFlagBits& extraUsageFlags)
 {
     this->physicalDevice = &physicalDevice;
     this->device = &device;
@@ -259,7 +260,8 @@ void Texture::createRenderableTexture(
             .mipLevels = mipLevels,
             .format = this->format,
             .tiling = vk::ImageTiling::eOptimal,                        // We want to use Optimal Tiling
-            .useFlags = vk::ImageUsageFlagBits::eColorAttachment,
+            .useFlags = vk::ImageUsageFlagBits::eColorAttachment
+                | extraUsageFlags,
             .imageMemory = &this->imageMemory
         }
     );

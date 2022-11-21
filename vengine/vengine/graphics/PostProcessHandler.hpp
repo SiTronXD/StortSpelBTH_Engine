@@ -18,8 +18,10 @@ private:
 	Texture hdrRenderTexture;
 	Texture depthTexture;
 
+	// Render to HDR texture
 	FramebufferArray renderFramebuffer;
 
+	// Downsample
 	RenderPass renderPass;
 	FramebufferArray framebuffers;
 	CommandBufferArray commandBuffers;
@@ -35,7 +37,7 @@ private:
 
 public:
 	static const uint32_t NUM_MIP_LEVELS = 8;
-	static const vk::Format HDR_FORMAT = vk::Format::eR8G8B8A8Unorm;
+	static const vk::Format HDR_FORMAT = vk::Format::eR16G16B16A16Sfloat;
 
 	PostProcessHandler();
 
@@ -51,7 +53,7 @@ public:
 
 	void cleanup();
 
-	inline const Texture& getHdrRenderTexture() const { return this->hdrRenderTexture; }
+	inline Texture& getHdrRenderTexture() { return this->hdrRenderTexture; }
 	inline const Texture& getDepthTexture() const { return this->depthTexture; }
 	inline const vk::Framebuffer& getRenderVkFramebuffer() const { return this->renderFramebuffer[0]; }
 };

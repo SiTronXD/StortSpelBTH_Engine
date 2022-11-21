@@ -78,8 +78,8 @@ public:
 		const uint32_t& width,
 		const uint32_t& height,
 		const uint32_t& arrayLayers = 1,
-		const vk::ImageUsageFlagBits& extraUsageFlags = (vk::ImageUsageFlagBits) 0,
-		const uint32_t& textureSamplerIndex = 0);
+		const uint32_t& textureSamplerIndex = 0,
+		const vk::ImageUsageFlagBits& extraUsageFlags = (vk::ImageUsageFlagBits) 0);
 	void create(
 		PhysicalDevice& physicalDevice,
 		Device& device,
@@ -100,7 +100,9 @@ public:
 		const vk::Format& format,
 		const uint32_t& width,
 		const uint32_t& height,
-		const uint32_t& mipLevels);
+		const uint32_t& mipLevels,
+		const uint32_t& textureSamplerIndex,
+		const vk::ImageUsageFlagBits& extraUsageFlags = (vk::ImageUsageFlagBits) 0);
 
 	void setDescriptorIndex(const uint32_t& descriptorIndex);
 

@@ -393,5 +393,7 @@
     <CustomBuild Include="vengine_assets\shaders\dbg.frag" />
     <CustomBuild Include="vengine_assets\shaders\shadowMap.vert" />
     <CustomBuild Include="vengine_assets\shaders\shadowMapAnim.vert" />
+    <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.vert" />
+    <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.frag" />
   </ItemGroup>
 </Project>
