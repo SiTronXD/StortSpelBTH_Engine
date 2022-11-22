@@ -40,6 +40,8 @@ void PostProcessHandler::init(
 void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 {
 	TextureSettings textureSettings{};
+	textureSettings.samplerSettings.addressMode = 
+		vk::SamplerAddressMode::eClampToBorder;
 
 	// HDR render texture
 	this->hdrRenderTexture.createRenderableTexture(
@@ -141,6 +143,11 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		this->framesInFlight
 	);
 
+	this->downShaderInput.addPushConstant(
+		sizeof(ResolutionPushConstantData),
+		vk::ShaderStageFlagBits::eFragment
+	);
+
 	// Input
 	this->downShaderInput.makeFrequencyInputLayout(texInputLayout);
 
@@ -164,6 +171,11 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		*this->vma,
 		*this->resourceManager,
 		this->framesInFlight
+	);
+
+	this->upShaderInput.addPushConstant(
+		sizeof(ResolutionPushConstantData),
+		vk::ShaderStageFlagBits::eFragment
 	);
 
 	// Input

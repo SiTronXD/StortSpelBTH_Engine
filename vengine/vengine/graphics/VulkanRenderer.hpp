@@ -93,6 +93,8 @@ class VulkanRenderer
     Pipeline animPipeline;
 
     // Render-to-Swapchain pipeline
+    BloomSettingsBufferData bloomSettingsData{};
+    UniformBufferID bloomSettingsUB;
     uint32_t hdrRenderTextureDescriptorIndex;
     ShaderInput swapchainShaderInput;
     Pipeline swapchainPipeline;

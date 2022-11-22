@@ -237,6 +237,12 @@ int VulkanRenderer::init(
         MAX_FRAMES_IN_FLIGHT
     );
 
+    this->bloomSettingsUB = this->swapchainShaderInput.addUniformBuffer(
+        sizeof(BloomSettingsBufferData),
+        vk::ShaderStageFlagBits::eFragment,
+        DescriptorFrequency::PER_FRAME
+    );
+
     // Layout
     FrequencyInputLayout freqInputLayout{};
     freqInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
@@ -401,6 +407,14 @@ void VulkanRenderer::updateAnimationTransforms(Scene* scene)
 
 void VulkanRenderer::draw(Scene* scene)
 {
+    ImGui::Begin("Bloom settings");
+    ImGui::SliderFloat("Bloom frag", &this->bloomSettingsData.strength.x, 0.01f, 1.0f);
+    ImGui::End();
+
+
+
+
+
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped;
     const char* const draw_frame = "Draw Frame";
@@ -1197,6 +1211,7 @@ void VulkanRenderer::recordCommandBuffers(
     this->debugRenderer->getMeshShaderInput().setCurrentFrame(
         this->currentFrame
     );
+    this->swapchainShaderInput.setCurrentFrame(this->currentFrame);
 
     // Update light buffers
     this->lightHandler.updateLightBuffers(
@@ -1248,6 +1263,11 @@ void VulkanRenderer::recordCommandBuffers(
     this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
         this->viewProjectionUB,
         (void*)&this->cameraDataUBO
+    );
+
+    this->swapchainShaderInput.updateUniformBuffer(
+        this->bloomSettingsUB,
+        (void*) &this->bloomSettingsData
     );
 
 

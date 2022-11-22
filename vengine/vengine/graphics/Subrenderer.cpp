@@ -240,9 +240,9 @@ void VulkanRenderer::beginRenderPass()
         // Fog color
         std::array<float, 4>
         {
-            0.8f,
-            0.8f,
-            0.8f,
+            0.0f,
+            0.0f,
+            0.0f,
             1.0f
         }
     );
@@ -642,9 +642,9 @@ void VulkanRenderer::beginBloomDownUpsampleRenderPass(
         // Fog color
         std::array<float, 4>
         {
-            0.8f,
-            0.8f,
-            0.8f,
+            0.0f,
+            0.0f,
+            0.0f,
             1.0f
         }
     );
@@ -705,6 +705,17 @@ void VulkanRenderer::renderBloomDownUpsample(
         pipeline
     );
 
+    // Update resolution
+    const vk::Extent2D& mipExtent = this->postProcessHandler.getMipExtent(readMipIndex);
+    ResolutionPushConstantData& pushConstantData =
+        this->postProcessHandler.getResolutionData();
+    pushConstantData.resolution.x = (float) mipExtent.width;
+    pushConstantData.resolution.y = (float) mipExtent.height;
+    commandBuffer.pushConstant(
+        shaderInput,
+        (void*) &pushConstantData
+    );
+
     // Bind texture for descriptors
     shaderInput.setFrequencyInput(
         this->postProcessHandler.getMipDescriptorIndex(readMipIndex)
@@ -732,9 +743,9 @@ void VulkanRenderer::beginSwapchainRenderPass(
         // Fog color
         std::array<float, 4>
         {
-            0.8f,
-            0.8f,
-            0.8f,
+            0.0f,
+            0.0f,
+            0.0f,
             1.0f
         }
     );
@@ -795,6 +806,12 @@ void VulkanRenderer::renderToSwapchainImage()
     // Bind Pipeline to be used in render pass
     this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
         this->swapchainPipeline
+    );
+
+    // Update for descriptors
+    this->currentSwapchainCommandBuffer->bindShaderInputFrequency(
+        this->swapchainShaderInput,
+        DescriptorFrequency::PER_FRAME
     );
 
     // Bind HDR texture for descriptors

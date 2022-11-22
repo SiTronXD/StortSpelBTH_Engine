@@ -175,10 +175,11 @@ void TestDemoScene::init()
 	}
 
 	// Change material emission
+	this->bloomStrength = 200.0f;
 	this->getResourceManager()->getMaterial(
 		this->getComponent<MeshComponent>(this->aniIDs[2]),
 		0
-	).emissionColor = glm::vec3(1.0f, 0.0f, 0.0f) * 300.0f;
+	).emissionColor = glm::vec3(1.0f) * this->bloomStrength;
 	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
@@ -303,6 +304,16 @@ void TestDemoScene::update()
 		this->setAnimation(multiAni2, "third", false);
 	}
 
+	// Imgui bloom
+	ImGui::Begin("Bloom");
+	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 200.0f);
+	ImGui::End();
+	this->getResourceManager()->getMaterial(
+		this->getComponent<MeshComponent>(this->aniIDs[2]),
+		0
+	).emissionColor = glm::vec3(1.0f) * this->bloomStrength;
+
+	// Imgui directional light
 	DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
 	ImGui::Begin("Cascades");

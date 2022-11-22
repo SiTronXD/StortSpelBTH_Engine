@@ -1,5 +1,6 @@
 #version 450
 
+#define FREQ_PER_FRAME 0
 #define FREQ_PER_DRAW 2
 
 // Input data from vertex shader
@@ -7,6 +8,11 @@ layout(location = 0) in vec2 fragUV;
 
 // Output color
 layout(location = 0) out vec4 outColor; 
+
+layout(set = FREQ_PER_FRAME, binding = 0) uniform BloomSettingsBufferData
+{
+    vec4 strength;
+} bloomSettingsData;
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D hdrTexture;
 layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D bloomTexture;
@@ -54,7 +60,7 @@ void main()
 	vec3 hdrColor = texture(hdrTexture, fragUV).rgb;
 	vec3 bloomColor = texture(bloomTexture, fragUV).rgb;
 
-	vec3 color = mix(hdrColor, bloomColor, 0.04f);
+	vec3 color = mix(hdrColor, bloomColor, bloomSettingsData.strength.x);
 	color = tonemapACES(color);
 
 	outColor = vec4(color, 1.0f);

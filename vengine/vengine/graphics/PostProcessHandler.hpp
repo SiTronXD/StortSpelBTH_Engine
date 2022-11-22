@@ -6,6 +6,7 @@
 #include "vulkan/FramebufferArray.hpp"
 #include "vulkan/CommandBufferArray.hpp"
 #include "vulkan/Pipeline.hpp"
+#include "vulkan/ShaderStructs.hpp"
 
 class Texture;
 class RenderPass;
@@ -38,6 +39,8 @@ private:
 	ShaderInput upShaderInput;
 	Pipeline upPipeline;
 
+	ResolutionPushConstantData resolutionData{};
+
 	std::vector<vk::Extent2D> mipExtents;
 
 	PhysicalDevice* physicalDevice;
@@ -51,7 +54,7 @@ private:
 	uint32_t framesInFlight;
 
 public:
-	inline static const uint32_t NUM_MIP_LEVELS = 8;
+	inline static const uint32_t NUM_MIP_LEVELS = 5;
 	inline static const vk::Format HDR_FORMAT =
 		vk::Format::eR16G16B16A16Sfloat;
 
@@ -75,6 +78,7 @@ public:
 	inline CommandBuffer& getUpsampleCommandBuffer(const uint32_t& currentFrame, const uint32_t& mipLevel) { return this->upCommandBuffers[currentFrame][mipLevel]; }
 	inline ShaderInput& getDownsampleShaderInput() { return this->downShaderInput; }
 	inline ShaderInput& getUpsampleShaderInput() { return this->upShaderInput; }
+	inline ResolutionPushConstantData& getResolutionData() { return this->resolutionData; }
 	inline const Texture& getDepthTexture() const { return this->depthTexture; }
 	inline const RenderPass& getDownsampleRenderPass() const { return this->downRenderPass; }
 	inline const RenderPass& getUpsampleRenderPass() const { return this->upRenderPass; }

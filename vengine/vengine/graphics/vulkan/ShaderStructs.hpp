@@ -16,6 +16,16 @@ struct PushConstantData
     glm::vec4 emissionColor = glm::vec4(0.0f);
 };
 
+struct ResolutionPushConstantData
+{
+    glm::vec4 resolution = glm::vec4(0.0f);
+};
+
+struct BloomSettingsBufferData
+{
+    glm::vec4 strength = glm::vec4(0.04f);
+};
+
 // View/projection matrices and position
 struct CameraBufferData
 {

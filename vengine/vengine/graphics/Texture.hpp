@@ -9,16 +9,13 @@ struct TextureSamplerSettings
 {
 	// Settings for sampler
 	vk::Filter filterMode = vk::Filter::eLinear;
+	vk::SamplerAddressMode addressMode = vk::SamplerAddressMode::eRepeat;
 	vk::Bool32 unnormalizedCoordinates = VK_FALSE;
 };
 
 struct TextureSettings
 {
-	TextureSamplerSettings samplerSettings
-	{
-		vk::Filter::eLinear,
-		VK_FALSE
-	};
+	TextureSamplerSettings samplerSettings{};
 
 	// Settings for texture
 	bool keepCpuPixelInfo = false;
