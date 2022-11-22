@@ -435,6 +435,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					this->sceneHandler.sendCallFromClient({packetHelper1});
 					break;
 				case GameEvents::GetPlayerNames:
+				{
 					//send player names
 					sf::Packet playerNamesPacket;
 					playerNamesPacket << (int)clients.size();
