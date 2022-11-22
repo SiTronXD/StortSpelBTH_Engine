@@ -185,7 +185,11 @@ void ScriptHandler::setScriptComponent(Entity entity, std::string& path)
 		scene->setComponent<Script>(entity, path.c_str(), luaRef);
 
 		lua_getfield(L, -1, "init");
-		if (lua_type(L, -1) == LUA_TNIL) { lua_pop(L, 2); }
+		if (lua_type(L, -1) == LUA_TNIL) 
+		{ 
+			lua_pop(L, 2);
+			return;
+		}
 
 		lua_pushvalue(L, -2);
 		if (lua_pcall(L, 1, 0, 0) != LUA_OK) { LuaH::dumpError(L); }
