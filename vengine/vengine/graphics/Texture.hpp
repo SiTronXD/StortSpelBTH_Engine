@@ -108,9 +108,9 @@ public:
 
 	void cleanup();
 
+	inline vk::ImageView& getMipImageView(const uint32_t& index) { return this->mipImageViews[index]; }
 	inline const vk::ImageView& getImageView() const { return this->entireImageView; }
 	inline const vk::ImageView& getLayerImageView(const uint32_t& index) const { return this->layerImageViews[index]; }
-	inline const vk::ImageView& getMipImageView(const uint32_t& index) const { return this->mipImageViews[index]; }
 	inline const vk::Format& getVkFormat() const { return this->format; }
 	inline const uint32_t& getWidth() const { return this->width; }
 	inline const uint32_t& getHeight() const { return this->height; }

@@ -744,7 +744,9 @@ uint32_t ShaderInput::addFrequencyInput(
         // Texture image info
         descriptorImageInfos[i].setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);     // The Image Layout when it is in use
         descriptorImageInfos[i].setImageView(
-            bindings[i].texture->getImageView()); // Image to be bind to set
+            bindings[i].imageView == nullptr ? 
+            bindings[i].texture->getImageView() :
+            *bindings[i].imageView); // Image to be bind to set
         descriptorImageInfos[i].setSampler(
             this->resourceManager->getTextureSampler(
                 bindings[i].texture->getSamplerIndex()

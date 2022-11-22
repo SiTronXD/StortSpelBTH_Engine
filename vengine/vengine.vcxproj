@@ -352,6 +352,7 @@ SET ERRORLEVEL = 0</Command>
     </CustomBuild>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="vengine\graphics\vulkan\SubmitArray.hpp" />
     <ClInclude Include="vengine\graphics\PostProcessHandler.hpp" />
     <ClInclude Include="vengine\graphics\LightHandler.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\FramebufferArray.hpp" />
@@ -485,6 +486,7 @@ SET ERRORLEVEL = 0</Command>
     <ClCompile Include="vengine\graphics\LightHandler.cpp" />
     <ClCompile Include="vengine\graphics\PostProcessHandler.cpp" />
     <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\SubmitArray.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
     <ClCompile Include="vengine\windows\StatisticsCollector.cpp" />
@@ -663,6 +665,12 @@ SET ERRORLEVEL = 0</Command>
       <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.vert">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\bloomDownsample.frag">
+      <FileType>Document</FileType>
+    </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\bloomDownsample.vert">
       <FileType>Document</FileType>
     </CustomBuild>
   </ItemGroup>

@@ -640,12 +640,12 @@ void VulkanRenderer::beginBloomDownsampleRenderPass(
     static const vk::ClearColorValue clearColor(
         // Fog color
         std::array<float, 4>
-    {
-        0.8f,
+        {
+            0.8f,
             0.8f,
             0.8f,
             1.0f
-    }
+        }
     );
 
     const std::array<vk::ClearValue, 1> clearValues =
@@ -693,8 +693,29 @@ void VulkanRenderer::beginBloomDownsampleRenderPass(
     commandBuffer.setScissor(scissor);
 }
 
-void VulkanRenderer::renderBloomDownsample(CommandBuffer& commandBuffer)
+void VulkanRenderer::renderBloomDownsample(
+    CommandBuffer& commandBuffer,
+    const uint32_t& writeMipIndex)
 {
+    ShaderInput& downShaderInput =
+        this->postProcessHandler.getDownsampleShaderInput();
+
+    // Bind Pipeline to be used in render pass
+    commandBuffer.bindGraphicsPipeline(
+        this->postProcessHandler.getDownsamplePipeline()
+    );
+
+    // Bind texture for descriptors
+    downShaderInput.setFrequencyInput(
+        this->postProcessHandler.getMipDescriptorIndex(writeMipIndex)
+    );
+    commandBuffer.bindShaderInputFrequency(
+        downShaderInput,
+        DescriptorFrequency::PER_DRAW_CALL
+    );
+
+    // Draw fullscreen quad
+    commandBuffer.draw(6);
 }
 
 void VulkanRenderer::endBloomDownsampleRenderPass(CommandBuffer& commandBuffer)

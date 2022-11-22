@@ -493,113 +493,49 @@ void VulkanRenderer::draw(Scene* scene)
         ZoneNamedN(draw_zone3, "Wait for Semaphore", true); //:NOLINT   
         #endif 
 
-        // -- Submit command buffer to Render -- 
-        //2. Submit command buffer to queue for execution, making sure it waits for the image to be signalled as 
-        //   available before drawing and signals when it has finished renedering. 
-        
+        // Shadow map
+        std::array<vk::SemaphoreSubmitInfo, 4> shadowMapWaitSemaphores;
+        this->submitArray.setSubmitInfo(
+            *this->currentShadowMapCommandBuffer,
+            shadowMapWaitSemaphores,
+            0,
+            this->shadowMapRenderFinished[this->currentFrame],
+            0
+        );
 
-        vk::SemaphoreSubmitInfo shadowMapSignalSemaphore;
-        shadowMapSignalSemaphore.setSemaphore(this->shadowMapRenderFinished[this->currentFrame]);
-        shadowMapSignalSemaphore.setStageMask(vk::PipelineStageFlags2());
+        // Render to screen
+        std::array<vk::SemaphoreSubmitInfo, 4> renderToScreenWaitSemaphores;
+        renderToScreenWaitSemaphores[0].setSemaphore(this->shadowMapRenderFinished[this->currentFrame]);
+        renderToScreenWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
+        this->submitArray.setSubmitInfo(
+            *this->currentCommandBuffer,
+            renderToScreenWaitSemaphores,
+            1,
+            this->sceneRenderFinished[this->currentFrame],
+            1
+        );
 
-        std::array<vk::CommandBufferSubmitInfo, 1> shadowMapCommandBufferSubmit
-        {
-            vk::CommandBufferSubmitInfo
-            {
-                this->currentShadowMapCommandBuffer->
-                    getVkCommandBuffer()
-            }
-        };
+        // Render to swapchain
+        std::array<vk::SemaphoreSubmitInfo, 4> renderToSwapchainWaitSemaphores;
+        renderToSwapchainWaitSemaphores[0].setSemaphore(this->sceneRenderFinished[this->currentFrame]);
+        renderToSwapchainWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
+        renderToSwapchainWaitSemaphores[1].setSemaphore(this->imageAvailable[this->currentFrame]);
+        renderToSwapchainWaitSemaphores[1].setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
+        this->submitArray.setSubmitInfo(
+            *this->currentSwapchainCommandBuffer,
+            renderToSwapchainWaitSemaphores,
+            2,
+            this->swapchainRenderFinished[this->currentFrame],
+            2
+        );
 
-        vk::SubmitInfo2 renderToShadowMapSubmit{};
-        renderToShadowMapSubmit.setWaitSemaphoreInfoCount(uint32_t(0));
-        renderToShadowMapSubmit.setCommandBufferInfoCount(uint32_t(shadowMapCommandBufferSubmit.size()));
-        renderToShadowMapSubmit.setPCommandBufferInfos(shadowMapCommandBufferSubmit.data()); // Pointer to the CommandBuffer to execute
-        renderToShadowMapSubmit.setSignalSemaphoreInfoCount(uint32_t(1));
-        renderToShadowMapSubmit.setPSignalSemaphoreInfos(&shadowMapSignalSemaphore);   // Semaphore that will be signaled when CommandBuffer is finished
-
-        vk::SemaphoreSubmitInfo waitSemaphoreShadowMap;
-        waitSemaphoreShadowMap.setSemaphore(this->shadowMapRenderFinished[this->currentFrame]);
-        waitSemaphoreShadowMap.setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
-
-        std::array<vk::SemaphoreSubmitInfo, 1> waitSemaphores
-        {
-            waitSemaphoreShadowMap
-        };
-
-        vk::SemaphoreSubmitInfo signalSemaphoreSubmitInfo;
-        signalSemaphoreSubmitInfo.setSemaphore(this->sceneRenderFinished[this->currentFrame]);
-        signalSemaphoreSubmitInfo.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
-
-        std::array<vk::CommandBufferSubmitInfo, 1> commandBufferSubmitInfos
-        {
-            vk::CommandBufferSubmitInfo
-            {
-                this->currentCommandBuffer->
-                    getVkCommandBuffer()
-            }
-        };
-        
-        vk::SubmitInfo2 renderToScreenSubmit{};
-        renderToScreenSubmit.setWaitSemaphoreInfoCount(uint32_t(waitSemaphores.size()));
-        renderToScreenSubmit.setPWaitSemaphoreInfos(waitSemaphores.data());       // Pointer to the semaphore to wait on.
-        renderToScreenSubmit.setCommandBufferInfoCount(commandBufferSubmitInfos.size()); 
-        renderToScreenSubmit.setPCommandBufferInfos(commandBufferSubmitInfos.data()); // Pointer to the CommandBuffer to execute
-        renderToScreenSubmit.setSignalSemaphoreInfoCount(uint32_t(1));
-        renderToScreenSubmit.setPSignalSemaphoreInfos(&signalSemaphoreSubmitInfo);   // Semaphore that will be signaled when CommandBuffer is finished
-
-
-
-        vk::SemaphoreSubmitInfo sceneRenderWaitSemaphoreImageAvailable;
-        sceneRenderWaitSemaphoreImageAvailable.setSemaphore(this->sceneRenderFinished[this->currentFrame]);
-        sceneRenderWaitSemaphoreImageAvailable.setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
-
-        vk::SemaphoreSubmitInfo waitSemaphoreImageAvailable;
-        waitSemaphoreImageAvailable.setSemaphore(this->imageAvailable[this->currentFrame]);
-        waitSemaphoreImageAvailable.setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
-        // waitSemaphoreSubmitInfo.setDeviceIndex(uint32_t(1));                    // 0: sets all devices in group 1 to valid... bad or good?
-
-        std::array<vk::SemaphoreSubmitInfo, 2> swapchainWaitSemaphores
-        {
-            sceneRenderWaitSemaphoreImageAvailable,
-            waitSemaphoreImageAvailable
-        };
-
-        std::array<vk::CommandBufferSubmitInfo, 1> swapchainCommandBufferSubmitInfos
-        {
-            vk::CommandBufferSubmitInfo
-            {
-                this->currentSwapchainCommandBuffer->
-                    getVkCommandBuffer()
-            }
-        };
-
-        vk::SemaphoreSubmitInfo swapchainSignalSemaphore;
-        swapchainSignalSemaphore.setSemaphore(this->swapchainRenderFinished[this->currentFrame]);
-        swapchainSignalSemaphore.setStageMask(vk::PipelineStageFlags2());      // Stages to check semaphores at    
-
-        vk::SubmitInfo2 renderToSwapchainSubmit{};
-        renderToSwapchainSubmit.setWaitSemaphoreInfoCount(uint32_t(swapchainWaitSemaphores.size()));
-        renderToSwapchainSubmit.setPWaitSemaphoreInfos(swapchainWaitSemaphores.data());       // Pointer to the semaphore to wait on.
-        renderToSwapchainSubmit.setCommandBufferInfoCount(uint32_t(swapchainCommandBufferSubmitInfos.size()));
-        renderToSwapchainSubmit.setPCommandBufferInfos(swapchainCommandBufferSubmitInfos.data()); // Pointer to the CommandBuffer to execute
-        renderToSwapchainSubmit.setSignalSemaphoreInfoCount(uint32_t(1));
-        renderToSwapchainSubmit.setPSignalSemaphoreInfos(&swapchainSignalSemaphore);   // Semaphore that will be signaled when CommandBuffer is finished
-
-        std::array<vk::SubmitInfo2, 3> submitInfos
-        {
-            renderToShadowMapSubmit,
-            renderToScreenSubmit,
-            renderToSwapchainSubmit
-        };
-
-        // Submit The CommandBuffers to the Queue to begin drawing to the framebuffers
+        // Submit the command buffers
         vk::Result graphicsQueueResult = 
             this->queueFamilies.getGraphicsQueue().submit2(
-                uint32_t(submitInfos.size()),
-                submitInfos.data(),
+                this->submitArray.getNumSubmits(),
+                this->submitArray.getSubmitInfos().data(),
                 this->drawFences[this->currentFrame]
-        ); // drawing, signal this Fence to open!
+        );
         if (graphicsQueueResult != vk::Result::eSuccess)
         {
             Log::error("Failed to submit graphics commands.");
@@ -1088,6 +1024,8 @@ void VulkanRenderer::createSynchronisation()
         this->drawFences[i] = this->getVkDevice().createFence(fenceCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Fence drawFences["+std::to_string(i)+"]", vk::ObjectType::eFence, reinterpret_cast<uint64_t>(vk::Fence::CType(this->drawFences[i])));
     }
+
+    this->submitArray.setNumSubmits(3);
 }
 
 void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")
@@ -1247,6 +1185,25 @@ void VulkanRenderer::recordCommandBuffers(
     this->endRenderPass();
 
     this->currentCommandBuffer->end();
+
+
+    // Downsample HDR texture
+    /*for (uint32_t i = 1; i < PostProcessHandler::NUM_MIP_LEVELS; ++i)
+    {
+        CommandBuffer& downsampleCommandBuffer =
+            this->postProcessHandler.getDownsampleCommandBuffer(
+                this->currentFrame,
+                i
+            );
+
+        downsampleCommandBuffer.beginOneTimeSubmit();
+
+        this->beginBloomDownsampleRenderPass(downsampleCommandBuffer, i);
+            this->renderBloomDownsample(downsampleCommandBuffer, i);
+        this->endBloomDownsampleRenderPass(downsampleCommandBuffer);
+
+        downsampleCommandBuffer.end();
+    }*/
 
 
     // Begin swapchain command buffer

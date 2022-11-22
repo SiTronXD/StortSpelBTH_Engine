@@ -59,6 +59,7 @@ struct FrequencyInputLayout
 struct FrequencyInputBindings
 {
 	Texture* texture = nullptr;
+	vk::ImageView* imageView = nullptr;
 };
 
 class ShaderInput

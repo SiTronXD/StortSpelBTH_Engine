@@ -2,7 +2,6 @@
 #include "PostProcessHandler.hpp"
 #include "../resource_management/ResourceManager.hpp"
 #include "vulkan/Device.hpp"
-#include "vulkan/RenderPass.hpp"
 #include "vulkan/FramebufferArray.hpp"
 #include "vulkan/CommandBufferArray.hpp"
 #include "Texture.hpp"
@@ -13,7 +12,9 @@ PostProcessHandler::PostProcessHandler()
 	vma(nullptr),
 	transferQueue(nullptr),
 	commandPool(nullptr),
-	resourceManager(nullptr)
+	resourceManager(nullptr),
+	renderPassBase(nullptr),
+	framesInFlight(0)
 {}
 
 void PostProcessHandler::init(
@@ -99,7 +100,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		}
 	);
 
-	// Framebuffers for downsampling
+	// Downsample framebuffers
 	this->downFramebuffers.create(
 		*this->device,
 		this->downRenderPass,
@@ -107,7 +108,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		framebufferImageViews
 	);
 
-	// Command buffers
+	// Downsample command buffers
 	this->downCommandBuffers.resize(this->framesInFlight);
 	for (uint32_t i = 0; i < this->framesInFlight; ++i)
 	{
@@ -117,12 +118,54 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 			NUM_MIP_LEVELS
 		);
 	}
+
+	// Downsample shader input
+	this->downShaderInput.beginForInput(
+		*this->physicalDevice,
+		*this->device,
+		*this->vma,
+		*this->resourceManager,
+		this->framesInFlight
+	);
+
+	// Input
+	FrequencyInputLayout downInputLayout{};
+	downInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+	this->downShaderInput.makeFrequencyInputLayout(downInputLayout);
+
+	this->downShaderInput.endForInput();
+
+	// Downsample pipeline
+	this->downPipeline.createPipeline(
+		*this->device, 
+		this->downShaderInput, 
+		this->downRenderPass,
+		VertexStreams{},
+		"bloomDownsample.vert.spv",
+		"bloomDownsample.frag.spv",
+		false
+	);
+
+	// Descriptor indices
+	this->mipDescriptorIndices.resize(PostProcessHandler::NUM_MIP_LEVELS);
+	for (uint32_t i = 0; i < PostProcessHandler::NUM_MIP_LEVELS; ++i)
+	{
+		FrequencyInputBindings inputBinding{};
+		inputBinding.texture = &this->hdrRenderTexture;
+		inputBinding.imageView = &this->hdrRenderTexture.getMipImageView(i);
+		this->mipDescriptorIndices[i] = 
+			this->downShaderInput.addFrequencyInput({ inputBinding });
+	}
 }
 
 void PostProcessHandler::cleanup()
 {
 	this->renderFramebuffer.cleanup();
 
+	this->mipDescriptorIndices.clear();
+
+	this->downPipeline.cleanup();
+	this->downShaderInput.cleanup();
 	this->downCommandBuffers.clear();
 	this->downFramebuffers.cleanup();
 	this->downRenderPass.cleanup();

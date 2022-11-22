@@ -13,6 +13,7 @@
 #include "vulkan/UniformBuffer.hpp"
 #include "vulkan/CommandBufferArray.hpp"
 #include "vulkan/FramebufferArray.hpp"
+#include "vulkan/SubmitArray.hpp"
 
 #include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
@@ -109,6 +110,8 @@ class VulkanRenderer
     std::vector<vk::Semaphore> swapchainRenderFinished;
     std::vector<vk::Fence> drawFences;
     
+    SubmitArray submitArray;
+
     char* tracyImage{};
 
     // ImGui
@@ -167,7 +170,8 @@ private:
         CommandBuffer& commandBuffer,
         const uint32_t& writeMipIndex);
     void renderBloomDownsample(
-        CommandBuffer& commandBuffer);
+        CommandBuffer& commandBuffer,
+        const uint32_t& writeMipIndex);
     void endBloomDownsampleRenderPass(
         CommandBuffer& commandBuffer);
 
@@ -183,7 +187,7 @@ private:
     void renderImgui();
     void endRenderpassImgui();
 
-    // Record Functions
+    
     void recordCommandBuffers(
         Scene* scene, 
         Camera* camera,
