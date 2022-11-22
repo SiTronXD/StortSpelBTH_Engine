@@ -95,6 +95,10 @@ void NetworkHandler::handleUDPEventServer(Server* server, int clientID, sf::Pack
 {
 }
 
+void NetworkHandler::onDisconnect(int index)
+{
+}
+
 void NetworkHandler::createServer(NetworkScene* serverGame)
 {
 	if (this->hasServer())
@@ -200,7 +204,7 @@ void NetworkHandler::update()
 			std::string playerName;
 			packet >> playerName;
 			packet >> h1;
-			otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
+			otherPlayers.push_back(std::pair<int, std::string>(-1, playerName));
 			otherPlayersServerId.push_back(h1);
 		}
 		else if (event == (int)NetworkEvent::JUSTJOINED)
@@ -212,9 +216,10 @@ void NetworkHandler::update()
 			{
 				packet >> playerName;
 				packet >> h2; // Other client ID
-				otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), playerName));
+				otherPlayers.push_back(std::pair<int, std::string>(-1, playerName));
 				otherPlayersServerId.push_back(h2);
 			}
+			this->serverStatus = ServerStatus::WAITING;
 		}
 		else if (event == (int)NetworkEvent::DISCONNECT)
 		{
@@ -242,6 +247,7 @@ void NetworkHandler::update()
 							return;
 						}
 						sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
+						this->onDisconnect(i);
 						this->otherPlayers.erase(otherPlayers.begin() + i);
 						this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
 					}
@@ -304,6 +310,7 @@ void NetworkHandler::update()
 							return;
 						}
 						sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
+						this->onDisconnect(i);
 						this->otherPlayers.erase(otherPlayers.begin() + i);
 						this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
 					}
@@ -402,6 +409,7 @@ void NetworkHandler::disconnectClient()
 			client->disconnect();
 			this->otherPlayers.clear();
 			this->otherPlayersServerId.clear();
+			this->serverStatus = ServerStatus::DISCONNECTED;
 		}
 	}
 }

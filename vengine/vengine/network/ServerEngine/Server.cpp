@@ -24,8 +24,6 @@ bool Server::duplicateUser()
 
 void Server::ConnectUsers()
 {
-	static int id = 0;
-
 	// If we got a connection
 	if (listener.accept(tempClient->clientTcpSocket) == sf::Socket::Done)
 	{
@@ -90,7 +88,7 @@ void Server::ConnectUsers()
 }
 
 Server::Server(NetworkHandler* networkHandler, NetworkScene* serverGame)
-	: status(ServerStatus::WAITING), networkHandler(networkHandler), tempClient(new ClientInfo(""))
+	: status(ServerStatus::WAITING), networkHandler(networkHandler), tempClient(new ClientInfo("")), id(0)
 {
 	this->tempClient->clientTcpSocket.setBlocking(false);
 	this->udpSocket.setBlocking(false);
@@ -263,8 +261,8 @@ void Server::handleDisconnects(int clientID)
 
 	delete clients[clientID];
 
+	this->sceneHandler.getScene()->onDisconnect(clientID);
 	this->clients.erase(clients.begin() + clientID);
-
 	this->clientToServerPacketTcp.erase(clientToServerPacketTcp.begin() + clientID);
 	this->serverToClientPacketTcp.erase(serverToClientPacketTcp.begin() + clientID);
 	this->clientToServerPacketUdp.erase(clientToServerPacketUdp.begin() + clientID);

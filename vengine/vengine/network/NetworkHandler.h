@@ -45,6 +45,7 @@ public:
     virtual void handleUDPEventClient(sf::Packet& udpPacket, int event);
     virtual void handleTCPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event);
     virtual void handleUDPEventServer(Server* server, int clientID, sf::Packet& udpPacket, int event);
+    virtual void onDisconnect(int index);
 
     // SERVER
     void createServer(NetworkScene* serverGame = nullptr); // Create new server on a new thread

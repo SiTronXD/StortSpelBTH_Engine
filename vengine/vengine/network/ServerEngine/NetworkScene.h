@@ -50,6 +50,7 @@ public:
 	virtual void init();
 	virtual void update();
 	virtual void update(float dt);
+	virtual void onDisconnect(int index);
 
 	void givePacketInfo(std::vector<sf::Packet>* serverToClient);
 

@@ -77,6 +77,10 @@ void NetworkScene::update(float dt)
 	view.each(func);
 }
 
+void NetworkScene::onDisconnect(int index)
+{
+}
+
 int NetworkScene::getPlayer(const int& whatPlayer)
 {
 	return this->players[whatPlayer];

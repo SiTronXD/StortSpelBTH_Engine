@@ -19,7 +19,7 @@ struct TCPPacketEvent
 	std::vector<float> floats;
 };
 
-enum class ServerStatus { WAITING, START, RUNNING };
+enum class ServerStatus { WAITING, START, RUNNING, DISCONNECTED };
 
 enum class NetworkEvent
 {

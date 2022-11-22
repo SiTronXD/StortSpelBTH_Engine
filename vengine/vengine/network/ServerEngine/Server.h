@@ -60,6 +60,7 @@ private:
 	ServerStatus status;
 	float        currentTimeToSend;
 	float        timeToSend;
+	int			 id; // Current ID for new users
 
 	std::vector<ClientInfo*> clients;
 	ClientInfo*				 tempClient;
