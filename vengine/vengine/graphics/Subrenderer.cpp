@@ -633,7 +633,8 @@ void VulkanRenderer::endRenderPass()
     this->currentCommandBuffer->endRenderPass2(subpassEndInfo);
 }
 
-void VulkanRenderer::beginBloomDownsampleRenderPass(
+void VulkanRenderer::beginBloomDownUpsampleRenderPass(
+    const RenderPass& renderPass,
     CommandBuffer& commandBuffer,
     const uint32_t& writeMipIndex)
 {
@@ -660,7 +661,7 @@ void VulkanRenderer::beginBloomDownsampleRenderPass(
 
     // Information about how to begin a render pass
     vk::RenderPassBeginInfo renderPassBeginInfo{};
-    renderPassBeginInfo.setRenderPass(this->postProcessHandler.getDownsampleRenderPass().getVkRenderPass());                      // Render pass to begin
+    renderPassBeginInfo.setRenderPass(renderPass.getVkRenderPass());                      // Render pass to begin
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
     renderPassBeginInfo.renderArea.setExtent(hdrTextureExtent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
@@ -693,24 +694,23 @@ void VulkanRenderer::beginBloomDownsampleRenderPass(
     commandBuffer.setScissor(scissor);
 }
 
-void VulkanRenderer::renderBloomDownsample(
+void VulkanRenderer::renderBloomDownUpsample(
     CommandBuffer& commandBuffer,
-    const uint32_t& writeMipIndex)
+    ShaderInput& shaderInput,
+    const Pipeline& pipeline,
+    const uint32_t& readMipIndex)
 {
-    ShaderInput& downShaderInput =
-        this->postProcessHandler.getDownsampleShaderInput();
-
     // Bind Pipeline to be used in render pass
     commandBuffer.bindGraphicsPipeline(
-        this->postProcessHandler.getDownsamplePipeline()
+        pipeline
     );
 
     // Bind texture for descriptors
-    downShaderInput.setFrequencyInput(
-        this->postProcessHandler.getMipDescriptorIndex(writeMipIndex - 1)
+    shaderInput.setFrequencyInput(
+        this->postProcessHandler.getMipDescriptorIndex(readMipIndex)
     );
     commandBuffer.bindShaderInputFrequency(
-        downShaderInput,
+        shaderInput,
         DescriptorFrequency::PER_DRAW_CALL
     );
 
@@ -718,7 +718,7 @@ void VulkanRenderer::renderBloomDownsample(
     commandBuffer.draw(6);
 }
 
-void VulkanRenderer::endBloomDownsampleRenderPass(CommandBuffer& commandBuffer)
+void VulkanRenderer::endBloomDownUpsampleRenderPass(CommandBuffer& commandBuffer)
 {
     // End Render Pass!
     vk::SubpassEndInfo subpassEndInfo;

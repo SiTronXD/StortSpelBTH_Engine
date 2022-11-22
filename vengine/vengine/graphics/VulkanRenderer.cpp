@@ -318,6 +318,12 @@ void VulkanRenderer::cleanup()
         }
         this->downsampleFinished[i].clear();
 
+        for (size_t j = 0; j < this->upsampleFinished[i].size(); ++j)
+        {
+            this->getVkDevice().destroySemaphore(this->upsampleFinished[i][j]);
+        }
+        this->upsampleFinished[i].clear();
+
         this->getVkDevice().destroySemaphore(this->sceneRenderFinished[i]);
         this->getVkDevice().destroySemaphore(this->shadowMapRenderFinished[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
@@ -500,14 +506,15 @@ void VulkanRenderer::draw(Scene* scene)
         ZoneNamedN(draw_zone3, "Wait for Semaphore", true); //:NOLINT   
         #endif 
 
+        this->submitArray.reset();
+
         // Shadow map
         std::array<vk::SemaphoreSubmitInfo, 4> shadowMapWaitSemaphores;
         this->submitArray.setSubmitInfo(
             *this->currentShadowMapCommandBuffer,
             shadowMapWaitSemaphores,
             0,
-            this->shadowMapRenderFinished[this->currentFrame],
-            0
+            this->shadowMapRenderFinished[this->currentFrame]
         );
 
         // Render to screen
@@ -518,8 +525,7 @@ void VulkanRenderer::draw(Scene* scene)
             *this->currentCommandBuffer,
             renderToScreenWaitSemaphores,
             1,
-            this->sceneRenderFinished[this->currentFrame],
-            1
+            this->sceneRenderFinished[this->currentFrame]
         );
 
         // Bloom downsampling
@@ -538,14 +544,33 @@ void VulkanRenderer::draw(Scene* scene)
                 this->postProcessHandler.getDownsampleCommandBuffer(this->currentFrame, i),
                 bloomDownsampleWaitSemaphores[i],
                 1,
-                this->downsampleFinished[this->currentFrame][i],
-                1 + i
+                this->downsampleFinished[this->currentFrame][i]
+            );
+        }
+
+        // Bloom upsampling
+        std::array<std::array<vk::SemaphoreSubmitInfo, 4>, PostProcessHandler::NUM_MIP_LEVELS> bloomUpsampleWaitSemaphores;
+        bloomUpsampleWaitSemaphores[PostProcessHandler::NUM_MIP_LEVELS - 2][0].setSemaphore(this->downsampleFinished[this->currentFrame][PostProcessHandler::NUM_MIP_LEVELS - 1]);
+        bloomUpsampleWaitSemaphores[PostProcessHandler::NUM_MIP_LEVELS - 2][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
+        for (uint32_t i = PostProcessHandler::NUM_MIP_LEVELS - 2; i >= 1; --i)
+        {
+            if (i < PostProcessHandler::NUM_MIP_LEVELS - 2)
+            {
+                bloomUpsampleWaitSemaphores[i][0].setSemaphore(this->upsampleFinished[this->currentFrame][i + 1]);
+                bloomUpsampleWaitSemaphores[i][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
+            }
+
+            this->submitArray.setSubmitInfo(
+                this->postProcessHandler.getUpsampleCommandBuffer(this->currentFrame, i),
+                bloomUpsampleWaitSemaphores[i],
+                1,
+                this->upsampleFinished[this->currentFrame][i]
             );
         }
 
         // Render to swapchain
         std::array<vk::SemaphoreSubmitInfo, 4> renderToSwapchainWaitSemaphores;
-        renderToSwapchainWaitSemaphores[0].setSemaphore(this->downsampleFinished[this->currentFrame][PostProcessHandler::NUM_MIP_LEVELS - 1]);
+        renderToSwapchainWaitSemaphores[0].setSemaphore(this->upsampleFinished[this->currentFrame][1]);
         renderToSwapchainWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
         renderToSwapchainWaitSemaphores[1].setSemaphore(this->imageAvailable[this->currentFrame]);
         renderToSwapchainWaitSemaphores[1].setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
@@ -553,8 +578,7 @@ void VulkanRenderer::draw(Scene* scene)
             *this->currentSwapchainCommandBuffer,
             renderToSwapchainWaitSemaphores,
             2,
-            this->swapchainRenderFinished[this->currentFrame],
-            1 + (PostProcessHandler::NUM_MIP_LEVELS - 1) + 1
+            this->swapchainRenderFinished[this->currentFrame]
         );
 
         // Submit the command buffers
@@ -1022,10 +1046,20 @@ void VulkanRenderer::createSynchronisation()
     this->imageAvailable.resize(MAX_FRAMES_IN_FLIGHT);
     this->shadowMapRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->sceneRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
+    this->swapchainRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
+
     this->downsampleFinished.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < this->downsampleFinished.size(); ++i)
+    {
         this->downsampleFinished[i].resize(PostProcessHandler::NUM_MIP_LEVELS);
-    this->swapchainRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
+    }
+
+    this->upsampleFinished.resize(MAX_FRAMES_IN_FLIGHT);
+    for (size_t i = 0; i < this->upsampleFinished.size(); ++i)
+    {
+        this->upsampleFinished[i].resize(PostProcessHandler::NUM_MIP_LEVELS);
+    }
+
     this->drawFences.resize(MAX_FRAMES_IN_FLIGHT);
 
     // Semaphore creation information
@@ -1054,6 +1088,12 @@ void VulkanRenderer::createSynchronisation()
             VulkanDbg::registerVkObjectDbgInfo("Semaphore bloomDownsampleFinished[" + std::to_string(i) + "][" + std::to_string(j) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->downsampleFinished[i][j])));
         }
 
+        for (size_t j = 0; j < this->upsampleFinished[i].size(); ++j)
+        {
+            this->upsampleFinished[i][j] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
+            VulkanDbg::registerVkObjectDbgInfo("Semaphore bloomUpsampleFinished[" + std::to_string(i) + "][" + std::to_string(j) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->upsampleFinished[i][j])));
+        }
+
         this->swapchainRenderFinished[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore swapchainRenderFinished["+std::to_string(i)+"]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->swapchainRenderFinished[i])));
         
@@ -1062,9 +1102,16 @@ void VulkanRenderer::createSynchronisation()
         VulkanDbg::registerVkObjectDbgInfo("Fence drawFences["+std::to_string(i)+"]", vk::ObjectType::eFence, reinterpret_cast<uint64_t>(vk::Fence::CType(this->drawFences[i])));
     }
 
-    // shadow map + scene + HDR to swapchain + 
-    // num bloom downsamples
-    this->submitArray.setNumSubmits(3 + (PostProcessHandler::NUM_MIP_LEVELS - 1));
+    // shadow map + scene + 
+    // num bloom downsamples +
+    // num bloom upsamples +
+    // HDR to swapchain
+    this->submitArray.setNumSubmits(
+        2 + 
+        (PostProcessHandler::NUM_MIP_LEVELS - 1) +
+        (PostProcessHandler::NUM_MIP_LEVELS - 2) +
+        1
+    );
 }
 
 void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")
@@ -1237,11 +1284,47 @@ void VulkanRenderer::recordCommandBuffers(
 
         downsampleCommandBuffer.beginOneTimeSubmit();
 
-        this->beginBloomDownsampleRenderPass(downsampleCommandBuffer, i);
-            this->renderBloomDownsample(downsampleCommandBuffer, i);
-        this->endBloomDownsampleRenderPass(downsampleCommandBuffer);
+        this->beginBloomDownUpsampleRenderPass(
+            this->postProcessHandler.getDownsampleRenderPass(), 
+            downsampleCommandBuffer, 
+            i
+        );
+            this->renderBloomDownUpsample(
+                downsampleCommandBuffer, 
+                this->postProcessHandler.getDownsampleShaderInput(),
+                this->postProcessHandler.getDownsamplePipeline(),
+                i - 1
+            );
+        this->endBloomDownUpsampleRenderPass(downsampleCommandBuffer);
 
         downsampleCommandBuffer.end();
+    }
+
+    // Upsample HDR texture
+    for (uint32_t i = PostProcessHandler::NUM_MIP_LEVELS - 2; i >= 1; --i)
+    {
+        CommandBuffer& upsampleCommandBuffer =
+            this->postProcessHandler.getUpsampleCommandBuffer(
+                this->currentFrame,
+                i
+            );
+
+        upsampleCommandBuffer.beginOneTimeSubmit();
+
+        this->beginBloomDownUpsampleRenderPass(
+            this->postProcessHandler.getUpsampleRenderPass(),
+            upsampleCommandBuffer,
+            i
+        );
+        this->renderBloomDownUpsample(
+            upsampleCommandBuffer,
+            this->postProcessHandler.getUpsampleShaderInput(),
+            this->postProcessHandler.getUpsamplePipeline(),
+            i + 1
+        );
+        this->endBloomDownUpsampleRenderPass(upsampleCommandBuffer);
+
+        upsampleCommandBuffer.end();
     }
 
 

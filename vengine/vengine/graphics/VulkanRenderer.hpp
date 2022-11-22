@@ -108,6 +108,7 @@ class VulkanRenderer
     std::vector<vk::Semaphore> shadowMapRenderFinished;
     std::vector<vk::Semaphore> sceneRenderFinished;
     std::vector<std::vector<vk::Semaphore>> downsampleFinished;
+    std::vector<std::vector<vk::Semaphore>> upsampleFinished;
     std::vector<vk::Semaphore> swapchainRenderFinished;
     std::vector<vk::Fence> drawFences;
     
@@ -167,13 +168,16 @@ private:
     void endRenderPass();
 
     // Render pass for bloom downsampling
-    void beginBloomDownsampleRenderPass(
+    void beginBloomDownUpsampleRenderPass(
+        const RenderPass& renderPass,
         CommandBuffer& commandBuffer,
         const uint32_t& writeMipIndex);
-    void renderBloomDownsample(
+    void renderBloomDownUpsample(
         CommandBuffer& commandBuffer,
-        const uint32_t& writeMipIndex);
-    void endBloomDownsampleRenderPass(
+        ShaderInput& shaderInput,
+        const Pipeline& pipeline,
+        const uint32_t& readMipIndex);
+    void endBloomDownUpsampleRenderPass(
         CommandBuffer& commandBuffer);
 
     // Render pass for swapchain image rendering

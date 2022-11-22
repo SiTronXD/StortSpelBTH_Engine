@@ -72,10 +72,14 @@ public:
 
 	inline Texture& getHdrRenderTexture() { return this->hdrRenderTexture; }
 	inline CommandBuffer& getDownsampleCommandBuffer(const uint32_t& currentFrame, const uint32_t& mipLevel) { return this->downCommandBuffers[currentFrame][mipLevel]; }
+	inline CommandBuffer& getUpsampleCommandBuffer(const uint32_t& currentFrame, const uint32_t& mipLevel) { return this->upCommandBuffers[currentFrame][mipLevel]; }
 	inline ShaderInput& getDownsampleShaderInput() { return this->downShaderInput; }
+	inline ShaderInput& getUpsampleShaderInput() { return this->upShaderInput; }
 	inline const Texture& getDepthTexture() const { return this->depthTexture; }
 	inline const RenderPass& getDownsampleRenderPass() const { return this->downRenderPass; }
+	inline const RenderPass& getUpsampleRenderPass() const { return this->upRenderPass; }
 	inline const Pipeline& getDownsamplePipeline() const { return this->downPipeline; }
+	inline const Pipeline& getUpsamplePipeline() const { return this->upPipeline; }
 	inline const vk::Framebuffer& getRenderVkFramebuffer() const { return this->renderFramebuffer[0]; }
 	inline const vk::Framebuffer& getMipVkFramebuffer(const uint32_t& mipLevel) const { return this->mipFramebuffers[mipLevel]; }
 	inline const vk::Extent2D& getMipExtent(const uint32_t& mipLevel) const { return this->mipExtents[mipLevel]; }

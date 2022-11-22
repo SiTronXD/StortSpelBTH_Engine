@@ -112,11 +112,17 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		framebufferImageViews
 	);
 
-	// Downsample command buffers
+	// Command buffers
 	this->downCommandBuffers.resize(this->framesInFlight);
+	this->upCommandBuffers.resize(this->framesInFlight);
 	for (uint32_t i = 0; i < this->framesInFlight; ++i)
 	{
 		this->downCommandBuffers[i].createCommandBuffers(
+			*this->device,
+			*this->commandPool,
+			NUM_MIP_LEVELS
+		);
+		this->upCommandBuffers[i].createCommandBuffers(
 			*this->device,
 			*this->commandPool,
 			NUM_MIP_LEVELS
