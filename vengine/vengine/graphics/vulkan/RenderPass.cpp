@@ -129,7 +129,7 @@ void RenderPass::createRenderPassShadowMap(
     VulkanDbg::registerVkObjectDbgInfo("ShadowMapRenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
 }
 
-void RenderPass::createRenderPassBloom(
+void RenderPass::createRenderPassBloomDownsample(
     Device& device, 
     Texture& hdrRenderTexture)
 {
@@ -143,6 +143,53 @@ void RenderPass::createRenderPassBloom(
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setInitialLayout(vk::ImageLayout::eUndefined);
+    attachment.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+
+    vk::AttachmentReference2 attachmentReference{};
+    attachmentReference.setAttachment(uint32_t(0));
+    attachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal);
+
+    vk::SubpassDescription2 subpass{};
+    subpass.setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+    subpass.setColorAttachmentCount(uint32_t(1));
+    subpass.setPColorAttachments(&attachmentReference);
+
+    vk::SubpassDependency2 subpassDependecy{};
+    subpassDependecy.setSrcSubpass(VK_SUBPASS_EXTERNAL);
+    subpassDependecy.setDstSubpass(uint32_t(0));
+    subpassDependecy.setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput); // Wait until all other graphics have been rendered
+    subpassDependecy.setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+    subpassDependecy.setSrcAccessMask(vk::AccessFlags());
+    subpassDependecy.setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+
+    vk::RenderPassCreateInfo2 renderpassCreateinfo{};
+    renderpassCreateinfo.setAttachmentCount(uint32_t(1));
+    renderpassCreateinfo.setPAttachments(&attachment);
+    renderpassCreateinfo.setSubpassCount(uint32_t(1));
+    renderpassCreateinfo.setPSubpasses(&subpass);
+    renderpassCreateinfo.setDependencyCount(uint32_t(1));
+    renderpassCreateinfo.setPDependencies(&subpassDependecy);
+
+    this->renderPass =
+        this->device->getVkDevice().createRenderPass2(renderpassCreateinfo);
+
+    VulkanDbg::registerVkObjectDbgInfo("BloomRenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
+}
+
+void RenderPass::createRenderPassBloomUpsample(
+    Device& device,
+    Texture& hdrRenderTexture)
+{
+    this->device = &device;
+
+    vk::AttachmentDescription2 attachment{};
+    attachment.setFormat(hdrRenderTexture.getVkFormat());
+    attachment.setSamples(vk::SampleCountFlagBits::e1);
+    attachment.setLoadOp(vk::AttachmentLoadOp::eClear);
+    attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
+    attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
+    attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
+    attachment.setInitialLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
     attachment.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
     vk::AttachmentReference2 attachmentReference{};

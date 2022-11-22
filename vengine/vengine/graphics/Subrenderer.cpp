@@ -665,7 +665,7 @@ void VulkanRenderer::beginBloomDownsampleRenderPass(
     renderPassBeginInfo.renderArea.setExtent(hdrTextureExtent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
-    renderPassBeginInfo.setFramebuffer(this->postProcessHandler.getDownsampleVkFramebuffer(writeMipIndex));
+    renderPassBeginInfo.setFramebuffer(this->postProcessHandler.getMipVkFramebuffer(writeMipIndex));
 
     // Begin Render Pass!    
     // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)

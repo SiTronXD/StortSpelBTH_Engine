@@ -20,7 +20,8 @@ public:
 		const vk::Format& colorBufferFormat,
 		const vk::Format& depthBufferFormat);
 	void createRenderPassShadowMap(Device& device, Texture& shadowMapTexture);
-	void createRenderPassBloom(Device& device, Texture& hdrRenderTexture);
+	void createRenderPassBloomDownsample(Device& device, Texture& hdrRenderTexture);
+	void createRenderPassBloomUpsample(Device& device, Texture& hdrRenderTexture);
 	void createRenderPassSwapchain(Device& device, Swapchain& swapchain);
 	void createRenderPassImgui(Device& device, Swapchain& swapchain);
 

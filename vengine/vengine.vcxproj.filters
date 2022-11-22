@@ -399,5 +399,7 @@
     <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.frag" />
     <CustomBuild Include="vengine_assets\shaders\bloomDownsample.vert" />
     <CustomBuild Include="vengine_assets\shaders\bloomDownsample.frag" />
+    <CustomBuild Include="vengine_assets\shaders\bloomUpsample.frag" />
+    <CustomBuild Include="vengine_assets\shaders\bloomUpsample.vert" />
   </ItemGroup>
 </Project>

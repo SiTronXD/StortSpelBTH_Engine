@@ -21,16 +21,22 @@ private:
 	Texture hdrRenderTexture;
 	Texture depthTexture;
 	std::vector<uint32_t> mipDescriptorIndices;
+	FramebufferArray mipFramebuffers;
 
 	// Render to HDR texture
 	FramebufferArray renderFramebuffer;
 
 	// Downsample
 	RenderPass downRenderPass;
-	FramebufferArray downFramebuffers;
 	std::vector<CommandBufferArray> downCommandBuffers; // downCommandBuffers[currentFrame][mipLevel]
 	ShaderInput downShaderInput;
 	Pipeline downPipeline;
+
+	// Upsample
+	RenderPass upRenderPass;
+	std::vector<CommandBufferArray> upCommandBuffers; // upCommandBuffers[currentFrame][mipLevel]
+	ShaderInput upShaderInput;
+	Pipeline upPipeline;
 
 	std::vector<vk::Extent2D> mipExtents;
 
@@ -71,7 +77,7 @@ public:
 	inline const RenderPass& getDownsampleRenderPass() const { return this->downRenderPass; }
 	inline const Pipeline& getDownsamplePipeline() const { return this->downPipeline; }
 	inline const vk::Framebuffer& getRenderVkFramebuffer() const { return this->renderFramebuffer[0]; }
-	inline const vk::Framebuffer& getDownsampleVkFramebuffer(const uint32_t& mipLevel) const { return this->downFramebuffers[mipLevel]; }
+	inline const vk::Framebuffer& getMipVkFramebuffer(const uint32_t& mipLevel) const { return this->mipFramebuffers[mipLevel]; }
 	inline const vk::Extent2D& getMipExtent(const uint32_t& mipLevel) const { return this->mipExtents[mipLevel]; }
 	inline const uint32_t& getMipDescriptorIndex(const uint32_t& mipLevel) const { return this->mipDescriptorIndices[mipLevel]; }
 };

@@ -65,8 +65,12 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		windowExtent.height
 	);
 
-	// Render pass
-	this->downRenderPass.createRenderPassBloom(
+	// Render passes
+	this->downRenderPass.createRenderPassBloomDownsample(
+		*this->device,
+		this->hdrRenderTexture
+	);
+	this->upRenderPass.createRenderPassBloomUpsample(
 		*this->device,
 		this->hdrRenderTexture
 	);
@@ -100,8 +104,8 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		}
 	);
 
-	// Downsample framebuffers
-	this->downFramebuffers.create(
+	// Mip framebuffers
+	this->mipFramebuffers.create(
 		*this->device,
 		this->downRenderPass,
 		this->mipExtents,
@@ -119,6 +123,9 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		);
 	}
 
+	FrequencyInputLayout texInputLayout{};
+	texInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+
 	// Downsample shader input
 	this->downShaderInput.beginForInput(
 		*this->physicalDevice,
@@ -129,9 +136,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	);
 
 	// Input
-	FrequencyInputLayout downInputLayout{};
-	downInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
-	this->downShaderInput.makeFrequencyInputLayout(downInputLayout);
+	this->downShaderInput.makeFrequencyInputLayout(texInputLayout);
 
 	this->downShaderInput.endForInput();
 
@@ -146,6 +151,31 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		false
 	);
 
+	// Upsample shader input
+	this->upShaderInput.beginForInput(
+		*this->physicalDevice,
+		*this->device,
+		*this->vma,
+		*this->resourceManager,
+		this->framesInFlight
+	);
+
+	// Input
+	this->upShaderInput.makeFrequencyInputLayout(texInputLayout);
+
+	this->upShaderInput.endForInput();
+
+	// Upsample pipeline
+	this->upPipeline.createPipeline(
+		*this->device,
+		this->upShaderInput,
+		this->upRenderPass,
+		VertexStreams{},
+		"bloomUpsample.vert.spv",
+		"bloomUpsample.frag.spv",
+		false
+	);
+
 	// Descriptor indices
 	this->mipDescriptorIndices.resize(PostProcessHandler::NUM_MIP_LEVELS);
 	for (uint32_t i = 0; i < PostProcessHandler::NUM_MIP_LEVELS; ++i)
@@ -155,6 +185,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		inputBinding.imageView = &this->hdrRenderTexture.getMipImageView(i);
 		this->mipDescriptorIndices[i] = 
 			this->downShaderInput.addFrequencyInput({ inputBinding });
+		this->upShaderInput.addFrequencyInput({ inputBinding });
 	}
 }
 
@@ -163,11 +194,16 @@ void PostProcessHandler::cleanup()
 	this->renderFramebuffer.cleanup();
 
 	this->mipDescriptorIndices.clear();
+	this->mipFramebuffers.cleanup();
+
+	this->upPipeline.cleanup();
+	this->upShaderInput.cleanup();
+	this->upCommandBuffers.clear();
+	this->upRenderPass.cleanup();
 
 	this->downPipeline.cleanup();
 	this->downShaderInput.cleanup();
 	this->downCommandBuffers.clear();
-	this->downFramebuffers.cleanup();
 	this->downRenderPass.cleanup();
 
 	this->depthTexture.cleanup();
