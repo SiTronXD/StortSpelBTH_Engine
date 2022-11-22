@@ -9,6 +9,7 @@ layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor; 
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D hdrTexture;
+layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D bloomTexture;
 
 void getConvolutionColor(inout vec3 outputColor)
 {
@@ -38,11 +39,23 @@ void getConvolutionColor(inout vec3 outputColor)
 	}
 }
 
+vec3 tonemapACES(in vec3 x)
+{
+	const float a = 2.51f;
+    const float b = 0.03f;
+    const float c = 2.43f;
+    const float d = 0.59f;
+    const float e = 0.14f;
+    return (x * (a * x + b)) / (x * (c * x + d) + e);
+}
+
 void main()
 {
 	vec3 hdrColor = texture(hdrTexture, fragUV).rgb;
+	vec3 bloomColor = texture(bloomTexture, fragUV).rgb;
 
-	// getConvolutionColor(hdrColor);
+	vec3 color = mix(hdrColor, bloomColor, 0.04f);
+	color = tonemapACES(color);
 
-	outColor = vec4(hdrColor, 1.0f);
+	outColor = vec4(color, 1.0f);
 }

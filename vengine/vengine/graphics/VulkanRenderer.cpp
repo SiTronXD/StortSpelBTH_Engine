@@ -240,6 +240,7 @@ int VulkanRenderer::init(
     // Layout
     FrequencyInputLayout freqInputLayout{};
     freqInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+    freqInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
     this->swapchainShaderInput.makeFrequencyInputLayout(freqInputLayout);
 
     this->swapchainShaderInput.endForInput();
@@ -254,10 +255,18 @@ int VulkanRenderer::init(
     );
 
     // Input
-    FrequencyInputBindings freqInputBindings{};
-    freqInputBindings.texture = &this->postProcessHandler.getHdrRenderTexture();
+    FrequencyInputBindings freqInputBinding0{};
+    freqInputBinding0.texture = &this->postProcessHandler.getHdrRenderTexture();
+    FrequencyInputBindings freqInputBinding1{};
+    freqInputBinding1.texture = &this->postProcessHandler.getHdrRenderTexture();
+    freqInputBinding1.imageView = &this->postProcessHandler.getHdrRenderTexture().getMipImageView(1);
     this->hdrRenderTextureDescriptorIndex =
-        this->swapchainShaderInput.addFrequencyInput({ freqInputBindings });
+        this->swapchainShaderInput.addFrequencyInput(
+            { 
+                freqInputBinding0,
+                freqInputBinding1
+            }
+        );
     
     return EXIT_SUCCESS;
 }

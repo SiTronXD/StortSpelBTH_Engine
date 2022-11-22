@@ -178,7 +178,7 @@ void TestDemoScene::init()
 	this->getResourceManager()->getMaterial(
 		this->getComponent<MeshComponent>(this->aniIDs[2]),
 		0
-	).emissionColor = glm::vec3(1.0f, 0.0f, 0.0f);
+	).emissionColor = glm::vec3(1.0f, 0.0f, 0.0f) * 300.0f;
 	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
