@@ -506,7 +506,7 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
 void VulkanRenderer::renderUI()
 {
     // UI pipeline
-    this->currentCommandBuffer->bindGraphicsPipeline(
+    this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
         this->uiRenderer->getPipeline()
     );
 
@@ -514,7 +514,7 @@ void VulkanRenderer::renderUI()
     this->uiRenderer->getShaderInput().setStorageBuffer(
         this->uiRenderer->getStorageBufferID()
     );
-    this->currentCommandBuffer->bindShaderInputFrequency(
+    this->currentSwapchainCommandBuffer->bindShaderInputFrequency(
         this->uiRenderer->getShaderInput(),
         DescriptorFrequency::PER_MESH
     );
@@ -535,13 +535,13 @@ void VulkanRenderer::renderUI()
             this->resourceManager->getTexture(drawCallData[i].textureIndex)
             .getDescriptorIndex()
         );
-        this->currentCommandBuffer->bindShaderInputFrequency(
+        this->currentSwapchainCommandBuffer->bindShaderInputFrequency(
             this->uiRenderer->getShaderInput(),
             DescriptorFrequency::PER_DRAW_CALL
         );
 
         // UI draw
-        this->currentCommandBuffer->draw(
+        this->currentSwapchainCommandBuffer->draw(
             drawCallData[i].numVertices,
             1,
             drawCallData[i].startVertex
@@ -556,34 +556,34 @@ void VulkanRenderer::renderDebugElements()
     // ---------- Lines ----------
 
     // Pipeline
-    this->currentCommandBuffer->bindGraphicsPipeline(
+    this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
         this->debugRenderer->getLinePipeline()
     );
 
     // Bind shader input per frame
-    this->currentCommandBuffer->bindShaderInputFrequency(
+    this->currentSwapchainCommandBuffer->bindShaderInputFrequency(
         this->debugRenderer->getLineShaderInput(),
         DescriptorFrequency::PER_FRAME
     );
 
     // Bind vertex buffer
-    this->currentCommandBuffer->bindVertexBuffers2(
+    this->currentSwapchainCommandBuffer->bindVertexBuffers2(
         this->debugRenderer->getLineVertexBufferArray(),
         this->currentFrame
     );
 
     // Draw
-    this->currentCommandBuffer->draw(this->debugRenderer->getNumVertices());
+    this->currentSwapchainCommandBuffer->draw(this->debugRenderer->getNumVertices());
 
     // ---------- Meshes ----------
 
     // Pipeline
-    this->currentCommandBuffer->bindGraphicsPipeline(
+    this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
         this->debugRenderer->getMeshPipeline()
     );
 
     // Bind shader input per frame
-    this->currentCommandBuffer->bindShaderInputFrequency(
+    this->currentSwapchainCommandBuffer->bindShaderInputFrequency(
         this->debugRenderer->getMeshShaderInput(),
         DescriptorFrequency::PER_FRAME
     );
@@ -599,24 +599,24 @@ void VulkanRenderer::renderDebugElements()
             currentMesh.getSubmeshData()[0];
 
         // Push constant
-        this->currentCommandBuffer->pushConstant(
+        this->currentSwapchainCommandBuffer->pushConstant(
             this->debugRenderer->getMeshShaderInput(),
             (void*)&debugDrawCallData[i].pushConstantData
         );
 
         // Bind vertex buffer
-        this->currentCommandBuffer->bindVertexBuffers2(
+        this->currentSwapchainCommandBuffer->bindVertexBuffers2(
             currentMesh.getVertexBufferArray(),
             this->currentFrame
         );
 
         // Bind index buffer
-        this->currentCommandBuffer->bindIndexBuffer(
+        this->currentSwapchainCommandBuffer->bindIndexBuffer(
             currentMesh.getIndexBuffer()
         );
 
         // Draw
-        this->currentCommandBuffer->drawIndexed(
+        this->currentSwapchainCommandBuffer->drawIndexed(
             currentSubmesh.numIndicies,
             1,
             currentSubmesh.startIndex

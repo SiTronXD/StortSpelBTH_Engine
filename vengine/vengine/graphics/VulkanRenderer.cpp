@@ -181,7 +181,7 @@ int VulkanRenderer::init(
             this->device,
             this->vma,
             *this->resourceManager,
-            this->renderPassBase,
+            this->renderPassSwapchain,
             MAX_FRAMES_IN_FLIGHT
         );
 
@@ -191,7 +191,7 @@ int VulkanRenderer::init(
             this->device,
             this->vma,
             *this->resourceManager,
-            this->renderPassBase,
+            this->renderPassSwapchain,
             this->queueFamilies.getGraphicsQueue(),
             this->commandPool,
             MAX_FRAMES_IN_FLIGHT
@@ -1295,8 +1295,6 @@ void VulkanRenderer::recordCommandBuffers(
     this->beginRenderPass();
         this->renderDefaultMeshes(scene);
         this->renderSkeletalAnimations(scene);
-        this->renderUI();
-        this->renderDebugElements();
     this->endRenderPass();
 
     this->currentCommandBuffer->end();
@@ -1360,9 +1358,11 @@ void VulkanRenderer::recordCommandBuffers(
     // Begin swapchain command buffer
     this->currentSwapchainCommandBuffer->beginOneTimeSubmit();
 
-    // Render to HDR texture to swapchain image
+    // Render to HDR texture to swapchain image, and UI/debug
     this->beginSwapchainRenderPass(imageIndex);
         this->renderToSwapchainImage();
+        this->renderUI();
+        this->renderDebugElements();
     this->endSwapchainRenderPass();
 
     // Imgui
