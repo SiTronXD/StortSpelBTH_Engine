@@ -707,7 +707,7 @@ void VulkanRenderer::renderBloomDownsample(
 
     // Bind texture for descriptors
     downShaderInput.setFrequencyInput(
-        this->postProcessHandler.getMipDescriptorIndex(writeMipIndex)
+        this->postProcessHandler.getMipDescriptorIndex(writeMipIndex - 1)
     );
     commandBuffer.bindShaderInputFrequency(
         downShaderInput,

@@ -107,6 +107,7 @@ class VulkanRenderer
     std::vector<vk::Semaphore> imageAvailable;
     std::vector<vk::Semaphore> shadowMapRenderFinished;
     std::vector<vk::Semaphore> sceneRenderFinished;
+    std::vector<std::vector<vk::Semaphore>> downsampleFinished;
     std::vector<vk::Semaphore> swapchainRenderFinished;
     std::vector<vk::Fence> drawFences;
     

@@ -138,12 +138,12 @@ void RenderPass::createRenderPassBloom(
     vk::AttachmentDescription2 attachment{};
     attachment.setFormat(hdrRenderTexture.getVkFormat());
     attachment.setSamples(vk::SampleCountFlagBits::e1);
-    attachment.setLoadOp(vk::AttachmentLoadOp::eDontCare);
+    attachment.setLoadOp(vk::AttachmentLoadOp::eClear);
     attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
-    attachment.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal);
-    attachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal);
+    attachment.setInitialLayout(vk::ImageLayout::eUndefined);
+    attachment.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
 
     vk::AttachmentReference2 attachmentReference{};
     attachmentReference.setAttachment(uint32_t(0));
