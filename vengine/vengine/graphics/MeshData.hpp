@@ -25,6 +25,14 @@ struct VertexStreams
     std::vector<glm::uvec4> boneIndices;
 };
 
+#define NUM_MAX_ANIMATION_SLOTS 5u // Defined here temp maybe we'll see
+struct AnimationPlayer // find better name
+{
+    float timer = 0.f;
+    float timeScale = 1.f;
+    uint32_t animationIndex = 0u;
+};
+
 struct BonePoses
 {
     std::vector<std::pair<float, glm::vec3>> translationStamps;
@@ -41,7 +49,7 @@ struct Animation
 struct Bone 
 {
     std::string boneName;
-
+    uint32_t slotIndex = 0u;
     int parentIndex;
     glm::mat4 inverseBindPoseMatrix;
     glm::mat4 boneMatrix;

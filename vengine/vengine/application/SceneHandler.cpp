@@ -27,6 +27,19 @@ void SceneHandler::initSubsystems()
 		this->vulkanRenderer->initForScene(this->scene);
 	}
 	
+	this->scene->getSceneReg().view<MeshComponent, AnimationComponent>().each(
+		[&](MeshComponent& mesh, AnimationComponent& aniComp)
+		{
+			MeshData& meshData = this->resourceManager->getMesh(mesh.meshID).getMeshData();
+
+			// test
+			aniComp.aniSlots[0].animationIndex = 0;
+			/*
+				
+			*/
+		});
+
+
 	// Reset delta time counter
 	Time::reset();
 }
@@ -82,15 +95,29 @@ void SceneHandler::prepareForRendering()
 	animView.each([&]
 	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
 		{
-			const float endTime = 
-				this->resourceManager->getMesh(meshComponent.meshID)
-				.getMeshData().animations[animationComponent.animationIndex].endTime;
+			// for each slot
+			//		update timer 
+
+			const MeshData& meshData = this->resourceManager->getMesh(meshComponent.meshID).getMeshData();
+
+			for (uint32_t i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			{
+				AnimationPlayer& aniPlayer = animationComponent.aniSlots[i];
+				aniPlayer.timer += Time::getDT() * 24.0f * aniPlayer.timeScale;
+				if (aniPlayer.timer >= meshData.animations[aniPlayer.animationIndex].endTime)
+				{
+					aniPlayer.timer -= meshData.animations[aniPlayer.animationIndex].endTime;
+				}
+			}
+
+			/*const float endTime = this->resourceManager->getMesh(meshComponent.meshID).getMeshData()
+				.animations[animationComponent.animationIndex].endTime;
 
 			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
 			if (animationComponent.timer >= endTime)
 			{
 				animationComponent.timer -= endTime;
-			}
+			}*/
 		}
 	);
 

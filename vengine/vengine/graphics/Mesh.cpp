@@ -243,27 +243,29 @@ void Mesh::getBoneTransforms(
 #endif
 
     // Preallocate
-    float timer = animationCompOut.timer;
-    uint32_t animationIndex = animationCompOut.animationIndex;
+    //uint32_t animationIndex = animationCompOut.animationIndex;
     size_t numBones = std::min(
         static_cast<size_t>(NUM_MAX_BONE_TRANSFORMS), 
         this->meshData.bones.size()
     );
     glm::mat4 boneTransform;
 
-    const Animation& animation = 
-        this->meshData.animations[animationIndex];
-
     // Loop through bones, from parents to children
     for (size_t i = 0; i < numBones; ++i)
     {
         Bone& currentBone = this->meshData.bones[i];
 
+        // change to animComp.aniSlots[currentBone.slotIndex]
+        const AnimationPlayer& aniPlayer = animationCompOut.aniSlots[animationCompOut.boneAniIndex[i]]; 
+        0
+
+        const Animation& curAnim = this->meshData.animations[aniPlayer.animationIndex];
+
         // Start from this local bone transformation
         this->getLocalBoneTransform(
-            animation.boneStamps[i],
-            timer,
-            animationIndex,
+            curAnim.boneStamps[i],
+            aniPlayer.timer,
+            aniPlayer.animationIndex, // TODO: Remove this argument
             boneTransform
         );
 
@@ -288,6 +290,46 @@ void Mesh::getBoneTransforms(
         static_cast<uint32_t>(numBones);
 }
 
+void Mesh::createAnimationSlot(const std::string& slotName, const std::string& boneName)
+{
+    if (this->aniSlots.size() >= NUM_MAX_ANIMATION_SLOTS)
+    {
+        Log::warning("Mesh::createAnimationSlot | Max animation slots reached");
+        return;
+    }
+    if (this->aniSlots.count(slotName))
+    {
+        Log::warning("Mesh::createAnimationSlot | Animation slot \"" + slotName + "\" already exists!");
+        return;
+    }
+
+
+    // Rework this
+    /*const uint32_t numBones = (uint32_t)this->meshData.bones.size();
+    for (uint32_t i = 0; i < numBones; i++)
+    {
+        if (this->meshData.bones[i].boneName == boneName)
+        {
+            aniSlots[slotName] = (uint32_t)this->aniSlots.size();
+            return;
+        }
+    }*/
+
+    // To something like:
+    /* 
+    
+        find the bone called boneName
+        {
+            set Bone::slotIndex to (uint32_t)this->aniSlots.size();
+            for all children
+                set Bone::slotIndex to (uint32_t)this->aniSlots.size();
+        }
+
+    */
+    0
+    Log::warning("Mesh::createAnimationSlot | Could not find bone with name \"" + boneName + "\"!");
+}
+
 void Mesh::mapAnimations(const std::vector<std::string>& names)
 {
     this->aniNames.clear();
@@ -306,6 +348,17 @@ uint32_t Mesh::getAnimationIndex(const std::string& name) const
         Log::error("Could not find animation with name \"" + name + "\"");
     }
 
+    return it->second;
+}
+
+uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
+{
+    const auto it = this->aniSlots.find(slotName);
+    if (it == this->aniSlots.end())
+    {
+        Log::error("Could not find animation with name \"" + slotName + "\"");
+    }
+    
     return it->second;
 }
 

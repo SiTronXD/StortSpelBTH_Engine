@@ -356,17 +356,17 @@ static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBuffer
 		return anim;
 	}
 
-	lua_getfield(L, index, "animationIndex");
-	anim.animationIndex = (int)lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, index, "timer");
-	anim.timer = (float)lua_tonumber(L, -1);
-	lua_pop(L, 1);
-
-	lua_getfield(L, index, "timeScale");
-	anim.timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
-	lua_pop(L, 1);
+	//lua_getfield(L, index, "animationIndex");
+	//anim.animationIndex = (int)lua_tonumber(L, -1);
+	//lua_pop(L, 1);
+	//
+	//lua_getfield(L, index, "timer");
+	//anim.timer = (float)lua_tonumber(L, -1);
+	//lua_pop(L, 1);
+	//
+	//lua_getfield(L, index, "timeScale");
+	//anim.timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	//lua_pop(L, 1);
 
 	return anim;
 }
@@ -375,14 +375,14 @@ static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
 {
 	lua_newtable(L);
 
-	lua_pushinteger(L, anim.animationIndex);
-	lua_setfield(L, -2, "animationIndex");
-
-	lua_pushnumber(L, anim.timer);
-	lua_setfield(L, -2, "timer");
-
-	lua_pushnumber(L, anim.timeScale);
-	lua_setfield(L, -2, "timeScale");
+	//lua_pushinteger(L, anim.animationIndex);
+	//lua_setfield(L, -2, "animationIndex");
+	//
+	//lua_pushnumber(L, anim.timer);
+	//lua_setfield(L, -2, "timer");
+	//
+	//lua_pushnumber(L, anim.timeScale);
+	//lua_setfield(L, -2, "timeScale");
 }
 
 static UIArea lua_touiarea(lua_State* L, int index)

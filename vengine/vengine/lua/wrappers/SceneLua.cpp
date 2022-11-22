@@ -478,12 +478,12 @@ int SceneLua::lua_isActive(lua_State* L)
 
 int SceneLua::lua_setAnimation(lua_State* L)
 {
-	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
-	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2)) { return 0; }
-
-	Entity entity = (Entity)lua_tointeger(L, 1);
-	bool reset = lua_isboolean(L, 3) ? lua_toboolean(L, 3) : true;
-	scene->setAnimation(entity, lua_tostring(L, 2), reset);
+	//Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	//if (!lua_isnumber(L, 1) || !lua_isstring(L, 2)) { return 0; }
+	//
+	//Entity entity = (Entity)lua_tointeger(L, 1);
+	//bool reset = lua_isboolean(L, 3) ? lua_toboolean(L, 3) : true;
+	//scene->setAnimation(entity, lua_tostring(L, 2), reset);
 
 	return 0;
 }

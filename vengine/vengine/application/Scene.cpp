@@ -174,15 +174,28 @@ bool Scene::isActive(Entity entity)
 	return !this->hasComponents<Inactive>(entity);
 }
 
-void Scene::setAnimation(Entity entity, const std::string& animationName, bool resetTimer)
+//void Scene::setAnimation(Entity entity, const std::string& animationName, bool resetTimer)
+//{
+//	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
+//	{
+//		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
+//		aniComp.timer *= !resetTimer;
+//	}
+//}
+
+void Scene::setAnimation(Entity entity, const std::string& animationName, const std::string& slotName)
 {
 	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
 	{
-		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
-		aniComp.timer *= !resetTimer;
-		aniComp.animationIndex = this->sceneHandler->getResourceManager()->
-			getMesh(this->getComponent<MeshComponent>(entity).meshID)
-			.getAnimationIndex(animationName);
+		const Mesh& mesh = this->sceneHandler->getResourceManager()->
+				getMesh(this->getComponent<MeshComponent>(entity).meshID);
+
+		const uint32_t aniIndex = mesh.getAnimationIndex(animationName);
+		const uint32_t slotIndex = mesh.getAnimationSlotIndex(slotName);
+
+		this->getComponent<AnimationComponent>(entity)
+			.aniSlots[slotIndex].animationIndex = aniIndex;
+
 	}
 }
 

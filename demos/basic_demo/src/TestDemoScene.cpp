@@ -107,6 +107,8 @@ void TestDemoScene::init()
 
 	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack.fbx" });
 	Scene::getResourceManager()->mapAnimations(playerMesh, {"first", "second", "third"});
+	getResourceManager()->getMesh(playerMesh).createAnimationSlot("mySlot", "mixamorig:Spine");
+	getResourceManager()->getMesh(playerMesh).createAnimationSlot("mySlot2", "mixamorig:LeftUpLeg");
 
 	multiAni2 = createEntity();
 	setComponent<MeshComponent>(multiAni2, playerMesh);
@@ -169,9 +171,9 @@ void TestDemoScene::init()
 		// Animation component
 		this->setComponent<AnimationComponent>(aniIDs[i]);
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
-		newAnimComp.timer += 24.0f * 0.6f * i;
-		newAnimComp.timeScale += i % 2;
-		newAnimComp.animationIndex = 0;
+		newAnimComp.aniSlots[0].timer += 24.0f * 0.6f * i;
+		newAnimComp.aniSlots[0].timeScale += i % 2;
+		newAnimComp.aniSlots[0].animationIndex = 0;
 
 		// Make separate material
 		if (i == 2)
@@ -295,7 +297,7 @@ void TestDemoScene::update()
 		) * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f))
 	);
 
-	if (Input::isKeyReleased(Keys::ONE))
+	/*if (Input::isKeyReleased(Keys::ONE))
 	{
 		this->setAnimation(multiAni2, "first");
 	}
@@ -306,7 +308,7 @@ void TestDemoScene::update()
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
 		this->setAnimation(multiAni2, "third", false);
-	}
+	}*/
 
 	DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
