@@ -179,7 +179,7 @@ void TestDemoScene::init()
 	this->getResourceManager()->getMaterial(
 		this->getComponent<MeshComponent>(this->aniIDs[2]),
 		0
-	).emissionColor = glm::vec3(1.0f) * this->bloomStrength;
+	).emissionColor = glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
 	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
@@ -311,7 +311,7 @@ void TestDemoScene::update()
 	this->getResourceManager()->getMaterial(
 		this->getComponent<MeshComponent>(this->aniIDs[2]),
 		0
-	).emissionColor = glm::vec3(1.0f) * this->bloomStrength;
+	).emissionColor = glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
 
 	// Imgui directional light
 	DirectionalLight& dirLight = 

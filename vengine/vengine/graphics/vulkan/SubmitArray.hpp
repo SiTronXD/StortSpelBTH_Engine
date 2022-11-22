@@ -13,11 +13,11 @@ private:
 	std::vector<vk::SemaphoreSubmitInfo> signalSemaphores;
 	std::vector<vk::SubmitInfo2> submitInfos;
 
-	uint32_t numSubmits;
+	uint32_t maxNumSubmits;
 	uint32_t currentSubmitIndex;
 
 public:
-	void setNumSubmits(const uint32_t& numSubmits);
+	void setMaxNumSubmits(const uint32_t& maxNumSubmits);
 	void reset();
 	void setSubmitInfo(
 		CommandBuffer& commandBuffer,
@@ -25,6 +25,6 @@ public:
 		const uint32_t& numWaitSemaphores,
 		vk::Semaphore& signalSemaphore);
 
-	inline const uint32_t& getNumSubmits() const { return this->numSubmits; }
+	inline const uint32_t& getNumSubmits() const { return this->currentSubmitIndex; }
 	inline const std::vector<vk::SubmitInfo2>& getSubmitInfos() const { return this->submitInfos; }
 };

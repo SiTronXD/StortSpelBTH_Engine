@@ -324,8 +324,8 @@ void main()
 	finalColor += fragEmissionCol.rgb;
 
 	// Composite fog
-	// outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
-	outColor = vec4(finalColor, 1.0f); // (No fog)
+	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
+	// outColor = vec4(finalColor, 1.0f); // (No fog)
 
 	// Debug cascades
 	if(shadowMapInfoBuffer.cascadeSettings.y > 0u)

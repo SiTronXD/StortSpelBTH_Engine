@@ -407,13 +407,12 @@ void VulkanRenderer::updateAnimationTransforms(Scene* scene)
 
 void VulkanRenderer::draw(Scene* scene)
 {
+    int mipLevels = this->postProcessHandler.getCurrentNumMipLevels();
     ImGui::Begin("Bloom settings");
-    ImGui::SliderFloat("Bloom frag", &this->bloomSettingsData.strength.x, 0.01f, 1.0f);
+    ImGui::SliderFloat("Bloom frag", &this->bloomSettingsData.strength.x, 0.0f, 1.0f);
+    ImGui::SliderInt("Bloom mip levels", &mipLevels, 3, PostProcessHandler::MAX_NUM_MIP_LEVELS);
     ImGui::End();
-
-
-
-
+    this->postProcessHandler.setCurrentNumMipLevels(uint32_t(mipLevels));
 
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped;
@@ -552,10 +551,10 @@ void VulkanRenderer::draw(Scene* scene)
         );
 
         // Bloom downsampling
-        std::array<std::array<vk::SemaphoreSubmitInfo, 4>, PostProcessHandler::NUM_MIP_LEVELS> bloomDownsampleWaitSemaphores;
+        std::array<std::array<vk::SemaphoreSubmitInfo, 4>, PostProcessHandler::MAX_NUM_MIP_LEVELS> bloomDownsampleWaitSemaphores;
         bloomDownsampleWaitSemaphores[1][0].setSemaphore(this->sceneRenderFinished[this->currentFrame]);
         bloomDownsampleWaitSemaphores[1][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
-        for (uint32_t i = 1; i < PostProcessHandler::NUM_MIP_LEVELS; ++i)
+        for (uint32_t i = 1; i < this->postProcessHandler.getCurrentNumMipLevels(); ++i)
         {
             if (i > 1)
             {
@@ -572,12 +571,12 @@ void VulkanRenderer::draw(Scene* scene)
         }
 
         // Bloom upsampling
-        std::array<std::array<vk::SemaphoreSubmitInfo, 4>, PostProcessHandler::NUM_MIP_LEVELS> bloomUpsampleWaitSemaphores;
-        bloomUpsampleWaitSemaphores[PostProcessHandler::NUM_MIP_LEVELS - 2][0].setSemaphore(this->downsampleFinished[this->currentFrame][PostProcessHandler::NUM_MIP_LEVELS - 1]);
-        bloomUpsampleWaitSemaphores[PostProcessHandler::NUM_MIP_LEVELS - 2][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
-        for (uint32_t i = PostProcessHandler::NUM_MIP_LEVELS - 2; i >= 1; --i)
+        std::array<std::array<vk::SemaphoreSubmitInfo, 4>, PostProcessHandler::MAX_NUM_MIP_LEVELS> bloomUpsampleWaitSemaphores;
+        bloomUpsampleWaitSemaphores[this->postProcessHandler.getCurrentNumMipLevels() - 2][0].setSemaphore(this->downsampleFinished[this->currentFrame][this->postProcessHandler.getCurrentNumMipLevels() - 1]);
+        bloomUpsampleWaitSemaphores[this->postProcessHandler.getCurrentNumMipLevels() - 2][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
+        for (uint32_t i = this->postProcessHandler.getCurrentNumMipLevels() - 2; i >= 1; --i)
         {
-            if (i < PostProcessHandler::NUM_MIP_LEVELS - 2)
+            if (i < this->postProcessHandler.getCurrentNumMipLevels() - 2)
             {
                 bloomUpsampleWaitSemaphores[i][0].setSemaphore(this->upsampleFinished[this->currentFrame][i + 1]);
                 bloomUpsampleWaitSemaphores[i][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
@@ -1074,13 +1073,13 @@ void VulkanRenderer::createSynchronisation()
     this->downsampleFinished.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < this->downsampleFinished.size(); ++i)
     {
-        this->downsampleFinished[i].resize(PostProcessHandler::NUM_MIP_LEVELS);
+        this->downsampleFinished[i].resize(PostProcessHandler::MAX_NUM_MIP_LEVELS);
     }
 
     this->upsampleFinished.resize(MAX_FRAMES_IN_FLIGHT);
     for (size_t i = 0; i < this->upsampleFinished.size(); ++i)
     {
-        this->upsampleFinished[i].resize(PostProcessHandler::NUM_MIP_LEVELS);
+        this->upsampleFinished[i].resize(PostProcessHandler::MAX_NUM_MIP_LEVELS);
     }
 
     this->drawFences.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1129,10 +1128,10 @@ void VulkanRenderer::createSynchronisation()
     // num bloom downsamples +
     // num bloom upsamples +
     // HDR to swapchain
-    this->submitArray.setNumSubmits(
+    this->submitArray.setMaxNumSubmits(
         2 + 
-        (PostProcessHandler::NUM_MIP_LEVELS - 1) +
-        (PostProcessHandler::NUM_MIP_LEVELS - 2) +
+        (PostProcessHandler::MAX_NUM_MIP_LEVELS - 1) +
+        (PostProcessHandler::MAX_NUM_MIP_LEVELS - 2) +
         1
     );
 }
@@ -1301,7 +1300,7 @@ void VulkanRenderer::recordCommandBuffers(
 
 
     // Downsample HDR texture
-    for (uint32_t i = 1; i < PostProcessHandler::NUM_MIP_LEVELS; ++i)
+    for (uint32_t i = 1; i < this->postProcessHandler.getCurrentNumMipLevels(); ++i)
     {
         CommandBuffer& downsampleCommandBuffer =
             this->postProcessHandler.getDownsampleCommandBuffer(
@@ -1328,7 +1327,7 @@ void VulkanRenderer::recordCommandBuffers(
     }
 
     // Upsample HDR texture
-    for (uint32_t i = PostProcessHandler::NUM_MIP_LEVELS - 2; i >= 1; --i)
+    for (uint32_t i = this->postProcessHandler.getCurrentNumMipLevels() - 2; i >= 1; --i)
     {
         CommandBuffer& upsampleCommandBuffer =
             this->postProcessHandler.getUpsampleCommandBuffer(

@@ -14,7 +14,8 @@ PostProcessHandler::PostProcessHandler()
 	commandPool(nullptr),
 	resourceManager(nullptr),
 	renderPassBase(nullptr),
-	framesInFlight(0)
+	framesInFlight(0),
+	currentNumMipLevels(PostProcessHandler::MAX_NUM_MIP_LEVELS)
 {}
 
 void PostProcessHandler::init(
@@ -53,7 +54,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		PostProcessHandler::HDR_FORMAT,
 		windowExtent.width,
 		windowExtent.height,
-		NUM_MIP_LEVELS,
+		MAX_NUM_MIP_LEVELS,
 		this->resourceManager->addSampler(textureSettings),
 		vk::ImageUsageFlagBits::eSampled
 	);
@@ -80,9 +81,9 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	// Downsampling image views and extents
 	uint32_t currentWidth = windowExtent.width;
 	uint32_t currentHeight = windowExtent.height;
-	this->mipExtents.resize(NUM_MIP_LEVELS);
-	std::vector<std::vector<vk::ImageView>> framebufferImageViews(NUM_MIP_LEVELS);
-	for (uint32_t i = 0; i < NUM_MIP_LEVELS; ++i)
+	this->mipExtents.resize(MAX_NUM_MIP_LEVELS);
+	std::vector<std::vector<vk::ImageView>> framebufferImageViews(MAX_NUM_MIP_LEVELS);
+	for (uint32_t i = 0; i < MAX_NUM_MIP_LEVELS; ++i)
 	{
 		framebufferImageViews[i] = { this->hdrRenderTexture.getMipImageView(i) };
 
@@ -122,12 +123,12 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		this->downCommandBuffers[i].createCommandBuffers(
 			*this->device,
 			*this->commandPool,
-			NUM_MIP_LEVELS
+			MAX_NUM_MIP_LEVELS
 		);
 		this->upCommandBuffers[i].createCommandBuffers(
 			*this->device,
 			*this->commandPool,
-			NUM_MIP_LEVELS
+			MAX_NUM_MIP_LEVELS
 		);
 	}
 
@@ -195,8 +196,8 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	);
 
 	// Descriptor indices
-	this->mipDescriptorIndices.resize(PostProcessHandler::NUM_MIP_LEVELS);
-	for (uint32_t i = 0; i < PostProcessHandler::NUM_MIP_LEVELS; ++i)
+	this->mipDescriptorIndices.resize(PostProcessHandler::MAX_NUM_MIP_LEVELS);
+	for (uint32_t i = 0; i < PostProcessHandler::MAX_NUM_MIP_LEVELS; ++i)
 	{
 		FrequencyInputBindings inputBinding{};
 		inputBinding.texture = &this->hdrRenderTexture;
@@ -226,4 +227,14 @@ void PostProcessHandler::cleanup()
 
 	this->depthTexture.cleanup();
 	this->hdrRenderTexture.cleanup();
+}
+
+void PostProcessHandler::setCurrentNumMipLevels(const uint32_t& numMipLevels)
+{
+	this->currentNumMipLevels = std::max(
+		std::min(
+			numMipLevels, 
+			PostProcessHandler::MAX_NUM_MIP_LEVELS), 
+		3u
+	);
 }

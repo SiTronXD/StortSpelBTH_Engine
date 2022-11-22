@@ -1,14 +1,14 @@
 #include "pch.h"
 #include "SubmitArray.hpp"
 
-void SubmitArray::setNumSubmits(const uint32_t& numSubmits)
+void SubmitArray::setMaxNumSubmits(const uint32_t& maxNumSubmits)
 {
-    this->numSubmits = numSubmits;
+    this->maxNumSubmits = maxNumSubmits;
 
-    this->commandBufferInfos.resize(this->numSubmits);
-    this->waitSemaphores.resize(this->numSubmits);
-    this->signalSemaphores.resize(this->numSubmits);
-    this->submitInfos.resize(this->numSubmits);
+    this->commandBufferInfos.resize(this->maxNumSubmits);
+    this->waitSemaphores.resize(this->maxNumSubmits);
+    this->signalSemaphores.resize(this->maxNumSubmits);
+    this->submitInfos.resize(this->maxNumSubmits);
 }
 
 void SubmitArray::reset()
