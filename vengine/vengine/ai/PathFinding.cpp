@@ -41,6 +41,11 @@ void PathFindingManager::addPolygon(NavMesh::Polygon polygon)
 	polygons.push_back(polygon);
 }
 
+void PathFindingManager::addPolygons(std::vector<NavMesh::Polygon> polygons) 
+{
+    this->polygons = polygons;
+}
+
 void PathFindingManager::removePolygon(int id)
 {
 	polygons.erase(polygons.begin() + id);

@@ -25,6 +25,11 @@ void NetworkScene::addPolygon(const std::vector<float>& polygon)
 	pf.addPolygon(p);
 }
 
+void NetworkScene::setPolygons(const std::vector<NavMesh::Polygon> polygons) 
+{
+    pf.addPolygons(polygons);
+}
+
 void NetworkScene::removeAllPolygons()
 {
 	pf.removeAllPolygons();

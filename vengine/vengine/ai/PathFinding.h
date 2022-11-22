@@ -17,6 +17,7 @@ class PathFindingManager
 
   glm::vec3 getDirTo(glm::vec3 &from, glm::vec3 &to);
   void addPolygon(NavMesh::Polygon polygon);
+  void addPolygons(std::vector<NavMesh::Polygon> polygons);
 
   //don't use this all to often very heavy tasks
   void removePolygon(int id);

@@ -23,6 +23,7 @@ protected:
 	PathFindingManager& getPathFinder();
 	void addPolygon(NavMesh::Polygon& polygon);
 	void addPolygon(const std::vector<float>& polygon);
+    void setPolygons(const std::vector<NavMesh::Polygon> polygons);
 	void removeAllPolygons();
 
 	/////////////custom function for server only/////////////

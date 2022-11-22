@@ -244,6 +244,31 @@ uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
 	return collisionsData.size() - 1;
 }
 
+uint32_t ResourceManager::addPathfindingPointsFromMesh(const uint32_t &collisionID)
+{
+    using namespace vengine_helper::config;
+
+    if (this->pathFindingPaths.count(collisionID) != 0)
+    {
+        //TODO: should be able to log what mesh
+        Log::warning("pathfinding points \"" + std::to_string(collisionID) + "\" was already added!");
+        return this->pathFindingPaths[collisionID];
+    }
+    std::vector<std::vector<NavMesh::Point>> polygons = 
+        getPolygonsFromTile(
+            this->getCollisionShapeFromMesh(collisionID)
+        );
+    // 
+    //NOTE: prevSize as key only works if we never remove resources the map...
+    this->pathFindingPaths.insert({collisionID, this->pathFindingPaths.size()});
+
+    //NOTE: meshes.size as key only works if we never remove resources the map...
+    // Create mesh, insert into map of meshes
+    pathFindingData.insert({pathFindingData.size(), polygons});
+
+    return pathFindingData.size() - 1;
+}
+
 uint32_t ResourceManager::addMaterial(
     uint32_t diffuseTextureIndex,
     uint32_t specularTextureIndex)

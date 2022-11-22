@@ -4,8 +4,10 @@
 #include <assimp/scene.h>
 #include <iostream>
 #include <vector>
+#include "../../ai/lib/path_finder.h"
 
 class Scene;
+class NetworkScene;
 
 struct ColliderDataRes
 {
@@ -37,6 +39,16 @@ std::vector<int> addCollisionToScene(
     const glm::vec3& rotationOffset = glm::vec3(0, 0, 0), const float& scaleOffset = 1
 );
 
-void addCollisionToNetworkScene(
-    std::vector<ColliderDataRes> colliders, const glm::vec3& offset = glm::vec3(0, 0, 0), const glm::vec3& rotationOffset = glm::vec3(0, 0, 0)
+std::vector<std::vector<NavMesh::Point>> getPolygonsFromTile(
+    std::vector<ColliderDataRes> colliders, 
+    const glm::vec3& offset = glm::vec3(0, 0, 0), 
+    const glm::vec3& rotationOffset = glm::vec3(0, 0, 0)
+);
+
+//probably don't need this
+void addPolygonRoomToNetworkScene(
+    NetworkScene* scene, 
+    std::vector<std::vector<NavMesh::Point>> polygons,
+    const glm::vec3& posOffset,
+    const glm::vec3& rotationOffset
 );

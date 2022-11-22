@@ -203,9 +203,10 @@ std::vector<int> addCollisionToScene(
     return entities;
 }
 
-void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, const glm::vec3& offset, const glm::vec3& rotationOffset)
+std::vector<std::vector<NavMesh::Point>> getPolygonsFromTile(std::vector<ColliderDataRes> colliders, const glm::vec3& offset, const glm::vec3& rotationOffset)
 {
-    std::vector<NavMesh::Polygon> polygons;
+    std::vector<std::vector<NavMesh::Point>> polygons;
+    polygons.resize(colliders.size());
     for (int i = 0; i < colliders.size(); i++)
     {
         NavMesh::Polygon newPolygon;
@@ -223,22 +224,40 @@ void addCollisionToNetworkScene(std::vector<ColliderDataRes> colliders, const gl
             point[1] = NavMesh::Point(fromVec3ToPoint(-plus + colliderPos));
             point[2] = NavMesh::Point(fromVec3ToPoint(minus + colliderPos));
             point[3] = NavMesh::Point(fromVec3ToPoint(-minus + colliderPos));
-            for (int i = 0; i < 4; i++)
+            for (int c = 0; c < 4; c++)
             {
-                newPolygon.AddPoint(point[i]);
+                //newPolygon.AddPoint(point[i]);
+                polygons[i].push_back(point[c]);
             }
         }
         else if (colliders[i].col.type == ColType::SPHERE || colliders[i].col.type == ColType::CAPSULE)
         {
             glm::vec3 line(colliders[i].col.radius, 0, 0);
             NavMesh::Point point[8];
-            for (int i = 0; i < 8; i++)
+            for (int c = 0; c < 8; c++)
             {
                 line = SMath::rotateVector(glm::vec3(0, 45, 0), line);
-                point[i] = NavMesh::Point(fromVec3ToPoint(line + colliderPos));
-                newPolygon.AddPoint(point[i]);
+                point[c] = NavMesh::Point(fromVec3ToPoint(line + colliderPos));
+                //newPolygon.AddPoint(point[i]);
+                polygons[i].push_back(point[c]);
             }
         }
-        polygons.push_back(newPolygon);
     }
+    return polygons;
+}
+
+void addPolygonRoomToNetworkScene(NetworkScene* scene, std::vector<std::vector<NavMesh::Point>> polygons, glm::vec3 posOffset, const glm::vec3& rotationOffset)
+{
+    std::vector<NavMesh::Polygon> thePolygons;
+    thePolygons.resize(polygons.size());
+
+    for (int i = 0; i < polygons.size(); i++)
+    {
+        for (int p = 0; p < polygons[i].size(); p++)
+        {
+            polygons[i][p] = fromVec3ToPoint(SMath::rotateVector(rotationOffset,glm::vec3(polygons[i][p].x,0,polygons[i][p].y)));
+            thePolygons[i].AddPoint(polygons[i][p] + fromVec3ToPoint(posOffset));
+        }
+    }
+    scene->setPolygons(thePolygons);
 }

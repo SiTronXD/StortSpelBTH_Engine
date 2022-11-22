@@ -27,10 +27,12 @@ private:
     std::unordered_map<std::string, uint32_t> texturePaths;
     std::unordered_map<std::string, uint32_t> samplerSettings;
 	std::unordered_map<std::string, uint32_t> collisionPaths;
+	std::unordered_map<uint32_t, uint32_t> pathFindingPaths;//path is based on collisionpaths
     std::unordered_map<std::string, uint32_t> soundPaths;
 
     std::unordered_map<uint32_t, Mesh>  meshes;
 	std::unordered_map<uint32_t, std::vector<ColliderDataRes>> collisionsData;
+    std::unordered_map<uint32_t, std::vector<std::vector<NavMesh::Point>>> pathFindingData;
     std::unordered_map<uint32_t, Texture> textures;
     std::unordered_map<uint32_t, TextureSampler> textureSamplers;
     std::unordered_map<uint32_t, Material> materials;
@@ -61,6 +63,7 @@ public:
         const TextureSettings& textureSettings = {});
     uint32_t addSampler(const TextureSettings& textureSettings);
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
+    uint32_t addPathfindingPointsFromMesh(const uint32_t& collisionID);
     uint32_t addMaterial(
         uint32_t diffuseTextureIndex,
         uint32_t specularTextureIndex);
