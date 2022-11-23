@@ -29,4 +29,5 @@ void DefaultServerGame::update(float dt)
 	{
 		this->getComponent<Transform>(this->getEnemies(i)).rotation.y += dt * 50 * (i + 1);
 	}
+    this->addEvent({(int)NetworkEvent::DEBUG_DRAW_BOX}, {0.f, 0.f, 10.f, 0.f, 0.f, 0.f, 10.f, 10.f, 10.f});
 }

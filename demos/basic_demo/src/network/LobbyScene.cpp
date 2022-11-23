@@ -37,6 +37,7 @@ void LobbyScene::start()
 
 void LobbyScene::update()
 {
+	this->getPhysicsEngine()->renderDebugShapes(true);
 	if (Input::isKeyPressed(Keys::B)) {
 		this->getNetworkHandler()->createServer(new DefaultServerGame());
 		if (this->getNetworkHandler()->connectClientToThis())

@@ -2,6 +2,7 @@
 #include "NetworkHandler.h"
 #include "ServerEngine/Timer.h"
 #include <iostream>
+#include "../graphics/DebugRenderer.hpp"
 
 void serverMain(bool& shutDownServer, bool& created, NetworkHandler* networkHandler, NetworkScene* game)
 {
@@ -257,6 +258,32 @@ void NetworkHandler::update()
 		{
 			this->serverStatus = ServerStatus::RUNNING;
 		}
+        else if (event == (int)NetworkEvent::DEBUG_DRAW_BOX)
+        {
+            glm::vec3 pos;
+            glm::vec3 rot;
+            glm::vec3 extends;
+            packet >> 
+				pos.x >> pos.y >> pos.z >> 
+				rot.x >> rot.y >> rot.z >> 
+				extends.x >> extends.y >> extends.z; 
+            this->sceneHandler->getDebugRenderer()->renderBox(pos, rot, extends, glm::vec3(1,0,0));
+        }
+        else if (event == (int)NetworkEvent::DEBUG_DRAW_SPHERE)
+        {
+            glm::vec3 pos;
+            float radius;
+            packet >> pos.x >> pos.y >> pos.z >> radius;
+            this->sceneHandler->getDebugRenderer()->renderSphere(pos, radius, glm::vec3(1, 0, 0));
+        }
+        else if (event == (int)NetworkEvent::DEBUG_DRAW_CYLINDER)
+        {
+            glm::vec3 pos;
+            glm::vec3 rot;
+            float height, radius;
+            packet >> pos.x >> pos.y >> pos.z >> rot.x >> rot.y >> rot.z >> height >> radius;
+            this->sceneHandler->getDebugRenderer()->renderCapsule(pos, rot, height, radius, glm::vec3(1, 0, 0));
+        }
 		// Custom event
 		else if (event >= (int)NetworkEvent::END)
 		{
