@@ -61,6 +61,11 @@ void ResourceManager::cleanUp()
     alDeleteBuffers((int)this->audioBuffers.size(), this->audioBuffers.data());
 }
 
+std::vector<std::vector<NavMesh::Point>> ResourceManager::getPathFindingPoints(uint32_t id)
+{
+    return pathFindingData.find(id)->second;
+}
+
 uint32_t ResourceManager::addMesh(
     std::string&& meshPath,
     std::string&& texturesPath)

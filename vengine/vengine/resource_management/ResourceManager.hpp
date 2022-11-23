@@ -74,6 +74,7 @@ public:
     Mesh& getMesh(uint32_t id);
     Texture& getTexture(uint32_t id);
     TextureSampler& getTextureSampler(uint32_t id);
+    std::vector<std::vector<NavMesh::Point>> getPathFindingPoints(uint32_t id);
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(std::string&& collisionPath);
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(uint32_t id);
     Material& getMaterial(uint32_t id);
