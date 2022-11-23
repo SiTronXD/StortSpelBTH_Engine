@@ -37,6 +37,8 @@ private:
         const float& timer,
         glm::quat& outputValue);
 
+    bool isChildOf(const Bone& bone, uint32_t searchIndex);
+
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);

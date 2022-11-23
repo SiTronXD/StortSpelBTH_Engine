@@ -174,15 +174,6 @@ bool Scene::isActive(Entity entity)
 	return !this->hasComponents<Inactive>(entity);
 }
 
-//void Scene::setAnimation(Entity entity, const std::string& animationName, bool resetTimer)
-//{
-//	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
-//	{
-//		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
-//		aniComp.timer *= !resetTimer;
-//	}
-//}
-
 void Scene::setAnimation(Entity entity, const std::string& animationName, const std::string& slotName)
 {
 	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
@@ -207,7 +198,6 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 			aniComp.aniSlots[slotIndex].animationIndex = aniIndex;
 			aniComp.aniSlots[slotIndex].timer = 0.f;
 		}
-
 	}
 }
 

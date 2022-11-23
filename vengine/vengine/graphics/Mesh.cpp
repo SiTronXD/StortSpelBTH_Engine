@@ -255,8 +255,7 @@ void Mesh::getBoneTransforms(
     {
         Bone& currentBone = this->meshData.bones[i];
 
-        // change to animComp.aniSlots[currentBone.slotIndex]
-        const AnimationPlayer& aniPlayer = animationCompOut.aniSlots[currentBone.slotIndex]; 
+        const AnimationSlot& aniPlayer = animationCompOut.aniSlots[currentBone.slotIndex]; 
         const Animation& curAnim = this->meshData.animations[aniPlayer.animationIndex];
 
         // Start from this local bone transformation
@@ -288,16 +287,16 @@ void Mesh::getBoneTransforms(
         static_cast<uint32_t>(numBones);
 }
 
-bool hasParent(const Bone& bone, const std::vector<Bone>& skeleton, int searchIdx)
+bool Mesh::isChildOf(const Bone& bone, uint32_t searchIndex)
 {
-    if (bone.parentIndex == searchIdx)
+    if (bone.parentIndex == searchIndex)
     {
         return true;
     }
 
     if (bone.parentIndex != -1)
     {
-        return hasParent(skeleton[bone.parentIndex], skeleton, searchIdx);
+        return this->isChildOf(this->meshData.bones[bone.parentIndex], searchIndex);
     }
 
     return false;
@@ -316,50 +315,23 @@ void Mesh::createAnimationSlot(const std::string& slotName, const std::string& b
         return;
     }
 
-
-    // Rework this
-    /*const uint32_t numBones = (uint32_t)this->meshData.bones.size();
+    // Search through the bones for "boneName"
+    const uint32_t numBones = (uint32_t)this->meshData.bones.size();
     for (uint32_t i = 0; i < numBones; i++)
     {
         if (this->meshData.bones[i].boneName == boneName)
         {
-            aniSlots[slotName] = (uint32_t)this->aniSlots.size();
-            return;
-        }
-    }*/
-
-    // To something like:
-    /* 
-    
-        find the bone called boneName
-        {
-            set Bone::slotIndex to (uint32_t)this->aniSlots.size();
-            for all children
-                set Bone::slotIndex to (uint32_t)this->aniSlots.size();
-        }
-
-    */
-
-    // Temp
-    /*const uint32_t slotIdx = (uint32_t)this->aniSlots.size();
-    this->aniSlots[slotName] = slotIdx;
-    return;*/
-
-    const int numBones = (int)this->meshData.bones.size();
-    for (int i = 0; i < numBones; i++)
-    {
-        if (this->meshData.bones[i].boneName == boneName)
-        {
-            const uint32_t slotIdx = (uint32_t)this->aniSlots.size() + 1u;
+            const uint32_t slotIdx = (uint32_t)this->aniSlots.size();
             this->aniSlots[slotName] = slotIdx;
 
             this->meshData.bones[i].slotIndex = slotIdx;
             
-            const int startIndex = i;
-            for (size_t j = startIndex + 1ull; j < numBones; j++)
+            // Loop through the remaining bones to see if they're a child/grand child
+            const uint32_t startIndex = i;
+            for (uint32_t j = startIndex + 1u; j < numBones; j++)
             {
                 Bone& curBone = this->meshData.bones[j];
-                if (hasParent(curBone, this->meshData.bones, startIndex))
+                if (this->isChildOf(curBone, startIndex))
                 {
                     curBone.slotIndex = slotIdx;
                 }
@@ -369,7 +341,7 @@ void Mesh::createAnimationSlot(const std::string& slotName, const std::string& b
         }
     }
 
-    Log::warning("Mesh::createAnimationSlot | Could not find bone with name \"" + boneName + "\"!");
+    Log::error("Mesh::createAnimationSlot | Could not find bone with name \"" + boneName + "\"!");
 }
 
 void Mesh::mapAnimations(const std::vector<std::string>& names)
@@ -398,7 +370,7 @@ uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
     const auto it = this->aniSlots.find(slotName);
     if (it == this->aniSlots.end())
     {
-        Log::error("Could not find animation with name \"" + slotName + "\"");
+        Log::error("Could not find animation slot with name \"" + slotName + "\"");
     }
     
     return it->second;

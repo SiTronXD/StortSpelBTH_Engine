@@ -25,8 +25,8 @@ struct VertexStreams
     std::vector<glm::uvec4> boneIndices;
 };
 
-#define NUM_MAX_ANIMATION_SLOTS 5u // Defined here temp maybe we'll see
-struct AnimationPlayer // find better name
+#define NUM_MAX_ANIMATION_SLOTS 5u // Defined here so AnimationComponent & Mesh has access to it
+struct AnimationSlot
 {
     float timer = 0.f;
     float timeScale = 1.f;
