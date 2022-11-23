@@ -253,7 +253,7 @@ int VulkanRenderer::init(
         this->swapchainShaderInput, 
         this->renderPassSwapchain,
         VertexStreams{},
-        "hdrToSwapchain.vert.spv",
+        "fullscreenQuad.vert.spv",
         "hdrToSwapchain.frag.spv",
         false
     );

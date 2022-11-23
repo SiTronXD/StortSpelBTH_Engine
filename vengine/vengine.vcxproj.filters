@@ -395,11 +395,9 @@
     <CustomBuild Include="vengine_assets\shaders\dbg.frag" />
     <CustomBuild Include="vengine_assets\shaders\shadowMap.vert" />
     <CustomBuild Include="vengine_assets\shaders\shadowMapAnim.vert" />
-    <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.vert" />
     <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.frag" />
-    <CustomBuild Include="vengine_assets\shaders\bloomDownsample.vert" />
     <CustomBuild Include="vengine_assets\shaders\bloomDownsample.frag" />
     <CustomBuild Include="vengine_assets\shaders\bloomUpsample.frag" />
-    <CustomBuild Include="vengine_assets\shaders\bloomUpsample.vert" />
+    <CustomBuild Include="vengine_assets\shaders\fullscreenQuad.vert" />
   </ItemGroup>
 </Project>

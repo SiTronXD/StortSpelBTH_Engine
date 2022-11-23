@@ -664,19 +664,13 @@ SET ERRORLEVEL = 0</Command>
     <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.frag">
       <FileType>Document</FileType>
     </CustomBuild>
-    <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.vert">
-      <FileType>Document</FileType>
-    </CustomBuild>
     <CustomBuild Include="vengine_assets\shaders\bloomDownsample.frag">
-      <FileType>Document</FileType>
-    </CustomBuild>
-    <CustomBuild Include="vengine_assets\shaders\bloomDownsample.vert">
       <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Include="vengine_assets\shaders\bloomUpsample.frag">
       <FileType>Document</FileType>
     </CustomBuild>
-    <CustomBuild Include="vengine_assets\shaders\bloomUpsample.vert">
+    <CustomBuild Include="vengine_assets\shaders\fullscreenQuad.vert">
       <FileType>Document</FileType>
     </CustomBuild>
   </ItemGroup>

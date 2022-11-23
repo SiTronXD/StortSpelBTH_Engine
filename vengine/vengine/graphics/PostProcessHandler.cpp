@@ -196,7 +196,7 @@ void PostProcessHandler::init(
 		this->downShaderInput,
 		this->downRenderPass,
 		VertexStreams{},
-		"bloomDownsample.vert.spv",
+		"fullscreenQuad.vert.spv",
 		"bloomDownsample.frag.spv",
 		false
 	);
@@ -226,7 +226,7 @@ void PostProcessHandler::init(
 		this->upShaderInput,
 		this->upRenderPass,
 		VertexStreams{},
-		"bloomUpsample.vert.spv",
+		"fullscreenQuad.vert.spv",
 		"bloomUpsample.frag.spv",
 		false
 	);
