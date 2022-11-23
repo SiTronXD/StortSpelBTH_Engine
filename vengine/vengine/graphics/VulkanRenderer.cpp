@@ -1022,6 +1022,9 @@ void VulkanRenderer::windowResize(Camera* camera)
 
     ImGui_ImplVulkan_SetMinImageCount(this->swapchain.getNumMinimumImages());
 
+    // Recalculate HDR render texture and depth buffer
+    this->postProcessHandler.recreate(this->swapchain.getVkExtent());
+
     // Take new aspect ratio into account for the camera
     camera->calculateProjectionMatrix(
         (float) this->swapchain.getWidth() / swapchain.getHeight()

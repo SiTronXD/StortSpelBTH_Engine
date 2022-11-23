@@ -6,6 +6,80 @@
 #include "vulkan/CommandBufferArray.hpp"
 #include "Texture.hpp"
 
+void PostProcessHandler::create(const vk::Extent2D& windowExtent)
+{
+	// Clamp to border sampler
+	TextureSettings textureSettings{};
+	textureSettings.samplerSettings.addressMode =
+		vk::SamplerAddressMode::eClampToBorder;
+
+	// HDR render texture
+	this->hdrRenderTexture.createRenderableTexture(
+		*this->physicalDevice,
+		*this->device,
+		*this->vma,
+		*this->transferQueue,
+		*this->commandPool,
+		PostProcessHandler::HDR_FORMAT,
+		windowExtent.width,
+		windowExtent.height,
+		MAX_NUM_MIP_LEVELS,
+		this->resourceManager->addSampler(textureSettings),
+		vk::ImageUsageFlagBits::eSampled
+	);
+
+	// Create depth texture
+	this->depthTexture.createAsDepthTexture(
+		*this->physicalDevice,
+		*this->device,
+		*this->vma,
+		windowExtent.width,
+		windowExtent.height
+	);
+
+	// Downsampling image views and extents
+	uint32_t currentWidth = windowExtent.width;
+	uint32_t currentHeight = windowExtent.height;
+	this->mipExtents.resize(MAX_NUM_MIP_LEVELS);
+	std::vector<std::vector<vk::ImageView>> framebufferImageViews(MAX_NUM_MIP_LEVELS);
+	std::string str;
+	for (uint32_t i = 0; i < MAX_NUM_MIP_LEVELS; ++i)
+	{
+		framebufferImageViews[i] = { this->hdrRenderTexture.getMipImageView(i) };
+
+		// Extents
+		this->mipExtents[i].setWidth(currentWidth);
+		this->mipExtents[i].setHeight(currentHeight);
+		if (currentWidth > 1) currentWidth >>= 1;
+		if (currentHeight > 1) currentHeight >>= 1;
+
+		str += "(" + std::to_string(this->mipExtents[i].width) +
+			", " + std::to_string(this->mipExtents[i].height) + ") ";
+	}
+	Log::write(str);
+
+	// Framebuffer for rendering
+	this->renderFramebuffer.create(
+		*this->device,
+		*this->renderPassBase,
+		this->mipExtents[0],
+		{
+			{
+				this->hdrRenderTexture.getImageView(),
+				this->depthTexture.getImageView()
+			}
+		}
+	);
+
+	// Mip framebuffers
+	this->mipFramebuffers.create(
+		*this->device,
+		this->downRenderPass,
+		this->mipExtents,
+		framebufferImageViews
+	);
+}
+
 PostProcessHandler::PostProcessHandler()
 	: physicalDevice(nullptr),
 	device(nullptr),
@@ -38,84 +112,12 @@ void PostProcessHandler::init(
 	this->resourceManager = &resourceManager;
 	this->framesInFlight = framesInFlight;
 
-	this->recreate(windowExtent);
-}
-
-void PostProcessHandler::recreate(const vk::Extent2D& windowExtent)
-{
-	TextureSettings textureSettings{};
-	textureSettings.samplerSettings.addressMode = 
-		vk::SamplerAddressMode::eClampToBorder;
-
-	// HDR render texture
-	this->hdrRenderTexture.createRenderableTexture(
-		*this->physicalDevice,
-		*this->device,
-		*this->vma,
-		*this->transferQueue,
-		*this->commandPool,
-		PostProcessHandler::HDR_FORMAT,
-		windowExtent.width,
-		windowExtent.height,
-		MAX_NUM_MIP_LEVELS,
-		this->resourceManager->addSampler(textureSettings),
-		vk::ImageUsageFlagBits::eSampled
-	);
-
-	// Create depth texture
-	this->depthTexture.createAsDepthTexture(
-		*this->physicalDevice,
-		*this->device,
-		*this->vma,
-		windowExtent.width,
-		windowExtent.height
-	);
-
 	// Render passes
 	this->downRenderPass.createRenderPassBloomDownsample(
-		*this->device,
-		this->hdrRenderTexture
+		*this->device
 	);
 	this->upRenderPass.createRenderPassBloomUpsample(
-		*this->device,
-		this->hdrRenderTexture
-	);
-
-	// Downsampling image views and extents
-	uint32_t currentWidth = windowExtent.width;
-	uint32_t currentHeight = windowExtent.height;
-	this->mipExtents.resize(MAX_NUM_MIP_LEVELS);
-	std::vector<std::vector<vk::ImageView>> framebufferImageViews(MAX_NUM_MIP_LEVELS);
-	for (uint32_t i = 0; i < MAX_NUM_MIP_LEVELS; ++i)
-	{
-		framebufferImageViews[i] = { this->hdrRenderTexture.getMipImageView(i) };
-
-		// Extents
-		this->mipExtents[i].setWidth(currentWidth);
-		this->mipExtents[i].setHeight(currentHeight);
-		if (currentWidth > 1) currentWidth >>= 1;
-		if (currentHeight > 1) currentHeight >>= 1;
-	}
-
-	// Framebuffer for rendering
-	this->renderFramebuffer.create(
-		*this->device,
-		*this->renderPassBase,
-		this->mipExtents[0],
-		{
-			{
-				this->hdrRenderTexture.getImageView(),
-				this->depthTexture.getImageView()
-			}
-		}
-	);
-
-	// Mip framebuffers
-	this->mipFramebuffers.create(
-		*this->device,
-		this->downRenderPass,
-		this->mipExtents,
-		framebufferImageViews
+		*this->device
 	);
 
 	// Command buffers
@@ -134,6 +136,9 @@ void PostProcessHandler::recreate(const vk::Extent2D& windowExtent)
 			MAX_NUM_MIP_LEVELS
 		);
 	}
+
+	// Create resources dependent on the window
+	this->create(windowExtent);
 
 	FrequencyInputLayout texInputLayout{};
 	texInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
@@ -159,8 +164,8 @@ void PostProcessHandler::recreate(const vk::Extent2D& windowExtent)
 
 	// Downsample pipeline
 	this->downPipeline.createPipeline(
-		*this->device, 
-		this->downShaderInput, 
+		*this->device,
+		this->downShaderInput,
 		this->downRenderPass,
 		VertexStreams{},
 		"bloomDownsample.vert.spv",
@@ -205,18 +210,29 @@ void PostProcessHandler::recreate(const vk::Extent2D& windowExtent)
 		FrequencyInputBindings inputBinding{};
 		inputBinding.texture = &this->hdrRenderTexture;
 		inputBinding.imageView = &this->hdrRenderTexture.getMipImageView(i);
-		this->mipDescriptorIndices[i] = 
+		this->mipDescriptorIndices[i] =
 			this->downShaderInput.addFrequencyInput({ inputBinding });
 		this->upShaderInput.addFrequencyInput({ inputBinding });
 	}
 }
 
+void PostProcessHandler::recreate(const vk::Extent2D& windowExtent)
+{
+	// Cleanup old resources
+	this->hdrRenderTexture.cleanup();
+	this->depthTexture.cleanup();
+	this->renderFramebuffer.cleanup();
+	this->mipFramebuffers.cleanup();
+
+	this->create(windowExtent);
+}
+
 void PostProcessHandler::cleanup()
 {
 	this->renderFramebuffer.cleanup();
+	this->mipFramebuffers.cleanup();
 
 	this->mipDescriptorIndices.clear();
-	this->mipFramebuffers.cleanup();
 
 	this->upPipeline.cleanup();
 	this->upShaderInput.cleanup();

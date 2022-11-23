@@ -59,6 +59,8 @@ private:
 	uint32_t framesInFlight;
 	uint32_t currentNumMipLevels;
 
+	void create(const vk::Extent2D& windowExtent);
+
 public:
 	PostProcessHandler();
 

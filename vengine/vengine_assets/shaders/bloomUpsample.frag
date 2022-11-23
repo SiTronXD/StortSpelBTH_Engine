@@ -43,7 +43,7 @@ void main()
 	vec3 h = sampleTex(oneOverSize, vec2( 0.0f, -1.0f));
 	vec3 i = sampleTex(oneOverSize, vec2( 1.0f, -1.0f));
 
-	// Weighted sum of samples
+	// Approximated 3x3 gaussian kernel
 	vec3 color = e * 4.0f;
 	color += (b + d + f + h) * 2.0f;
 	color += (a + c + g + i);

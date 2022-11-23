@@ -15,13 +15,13 @@ private:
 	Device* device;
 
 public:
+	void createRenderPassShadowMap(Device& device, Texture& shadowMapTexture);
 	void createRenderPassBase(
 		Device& device, 
 		const vk::Format& colorBufferFormat,
 		const vk::Format& depthBufferFormat);
-	void createRenderPassShadowMap(Device& device, Texture& shadowMapTexture);
-	void createRenderPassBloomDownsample(Device& device, Texture& hdrRenderTexture);
-	void createRenderPassBloomUpsample(Device& device, Texture& hdrRenderTexture);
+	void createRenderPassBloomDownsample(Device& device);
+	void createRenderPassBloomUpsample(Device& device);
 	void createRenderPassSwapchain(Device& device, Swapchain& swapchain);
 	void createRenderPassImgui(Device& device, Swapchain& swapchain);
 
