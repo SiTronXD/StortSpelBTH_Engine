@@ -143,8 +143,6 @@ private:
     // initializations of subsystems
     void initResourceManager();
 
-    void updateAnimationTransforms(Scene* scene);
-
     // ------- Render functions within render passes -------
 
     // Render pass for shadow map rendering
