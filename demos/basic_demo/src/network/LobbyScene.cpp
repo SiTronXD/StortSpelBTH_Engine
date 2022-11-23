@@ -60,8 +60,8 @@ void LobbyScene::update()
 	}
 
 	if (this->getNetworkHandler()->getStatus() == ServerStatus::RUNNING) {
-		std::cout << "Server is active" << std::endl;
-		this->getSceneHandler()->setScene(new NetworkTestScene());
+		//std::cout << "Server is active" << std::endl;
+		//this->getSceneHandler()->setScene(new NetworkTestScene());
 	}
 
 	if (Input::isKeyPressed(Keys::M)) {
