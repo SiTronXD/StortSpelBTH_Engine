@@ -19,6 +19,7 @@ class Pipeline;
 class PostProcessHandler
 {
 public:
+	inline static const uint32_t MIN_NUM_MIP_LEVELS = 3;
 	inline static const uint32_t MAX_NUM_MIP_LEVELS = 8;
 	inline static const vk::Format HDR_FORMAT =
 		vk::Format::eR16G16B16A16Sfloat;
@@ -57,8 +58,10 @@ private:
 	ResourceManager* resourceManager;
 
 	uint32_t framesInFlight;
-	uint32_t currentNumMipLevels;
+	uint32_t desiredNumMipLevels;
+	uint32_t numMipLevelsInUse;
 
+	void updateNumMipLevelsInUse();
 	void create(const vk::Extent2D& windowExtent);
 
 public:
@@ -78,7 +81,7 @@ public:
 
 	void cleanup();
 
-	void setCurrentNumMipLevels(const uint32_t& numMipLevels);
+	void setDesiredNumMipLevels(const uint32_t& numMipLevels);
 
 	inline Texture& getHdrRenderTexture() { return this->hdrRenderTexture; }
 	inline CommandBuffer& getDownsampleCommandBuffer(const uint32_t& currentFrame, const uint32_t& mipLevel) { return this->downCommandBuffers[currentFrame][mipLevel]; }
@@ -95,5 +98,6 @@ public:
 	inline const vk::Framebuffer& getMipVkFramebuffer(const uint32_t& mipLevel) const { return this->mipFramebuffers[mipLevel]; }
 	inline const vk::Extent2D& getMipExtent(const uint32_t& mipLevel) const { return this->mipExtents[mipLevel]; }
 	inline const uint32_t& getMipDescriptorIndex(const uint32_t& mipLevel) const { return this->mipDescriptorIndices[mipLevel]; }
-	inline const uint32_t& getCurrentNumMipLevels() const { return this->currentNumMipLevels; }
+	inline const uint32_t& getDesiredNumMipLevels() const { return this->desiredNumMipLevels; }
+	inline const uint32_t& getNumMipLevelsInUse() const { return this->numMipLevelsInUse; }
 };

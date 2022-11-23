@@ -6,6 +6,42 @@
 #include "vulkan/CommandBufferArray.hpp"
 #include "Texture.hpp"
 
+void PostProcessHandler::updateNumMipLevelsInUse()
+{
+	float i = std::max((float) this->mipExtents[0].height, 1.0f);
+
+	// What we want:
+	//  2k - 1080p - 0 extra mips
+	//   ; - 1619p - 0 extra mips
+	//   ; - 1620p - 1 extra mips
+	//  4k - 2160p - 1 extra mips
+	//   ; - 3239p - 1 extra mips
+	//   ; - 3240p - 2 extra mips
+	//  8k - 4320p - 2 extra mips
+	//   ; - 6479p - 2 extra mips
+	//   ; - 6480p - 3 extra mips
+	// 16k - 8640p - 3 extra mips
+
+	// TEST, REMOVE LATER
+	i = 0.0f; // 2160;
+
+	i = std::max(i, 1080.0f); // Avoid negative unsigned int
+	uint32_t extraMipLevels = uint32_t(
+		std::log((i * 2.0f / 3.0f) * 2.0f / 1080.0f) / std::log(2.0f)
+	);
+
+	// TEST, REMOVE LATER
+	Log::write("extraMipLevels: " + std::to_string(extraMipLevels));
+	extraMipLevels = 0;
+
+	// Calculate actual number of mip levels in use
+	this->numMipLevelsInUse = std::clamp(
+		this->desiredNumMipLevels + extraMipLevels,
+		PostProcessHandler::MIN_NUM_MIP_LEVELS,
+		PostProcessHandler::MAX_NUM_MIP_LEVELS
+	);
+}
+
 void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 {
 	// Clamp to border sampler
@@ -42,7 +78,6 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	uint32_t currentHeight = windowExtent.height;
 	this->mipExtents.resize(MAX_NUM_MIP_LEVELS);
 	std::vector<std::vector<vk::ImageView>> framebufferImageViews(MAX_NUM_MIP_LEVELS);
-	std::string str;
 	for (uint32_t i = 0; i < MAX_NUM_MIP_LEVELS; ++i)
 	{
 		framebufferImageViews[i] = { this->hdrRenderTexture.getMipImageView(i) };
@@ -52,11 +87,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		this->mipExtents[i].setHeight(currentHeight);
 		if (currentWidth > 1) currentWidth >>= 1;
 		if (currentHeight > 1) currentHeight >>= 1;
-
-		str += "(" + std::to_string(this->mipExtents[i].width) +
-			", " + std::to_string(this->mipExtents[i].height) + ") ";
 	}
-	Log::write(str);
 
 	// Framebuffer for rendering
 	this->renderFramebuffer.create(
@@ -78,6 +109,8 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		this->mipExtents,
 		framebufferImageViews
 	);
+
+	this->updateNumMipLevelsInUse();
 }
 
 PostProcessHandler::PostProcessHandler()
@@ -89,7 +122,8 @@ PostProcessHandler::PostProcessHandler()
 	resourceManager(nullptr),
 	renderPassBase(nullptr),
 	framesInFlight(0),
-	currentNumMipLevels(PostProcessHandler::MAX_NUM_MIP_LEVELS)
+	desiredNumMipLevels(PostProcessHandler::MAX_NUM_MIP_LEVELS / 2),
+	numMipLevelsInUse(PostProcessHandler::MAX_NUM_MIP_LEVELS / 2)
 {}
 
 void PostProcessHandler::init(
@@ -260,12 +294,13 @@ void PostProcessHandler::cleanup()
 	this->hdrRenderTexture.cleanup();
 }
 
-void PostProcessHandler::setCurrentNumMipLevels(const uint32_t& numMipLevels)
+void PostProcessHandler::setDesiredNumMipLevels(const uint32_t& numMipLevels)
 {
-	this->currentNumMipLevels = std::max(
-		std::min(
-			numMipLevels, 
-			PostProcessHandler::MAX_NUM_MIP_LEVELS), 
-		3u
+	this->desiredNumMipLevels = std::clamp(
+		this->desiredNumMipLevels,
+		PostProcessHandler::MIN_NUM_MIP_LEVELS,
+		PostProcessHandler::MAX_NUM_MIP_LEVELS
 	);
+
+	this->updateNumMipLevelsInUse();
 }
