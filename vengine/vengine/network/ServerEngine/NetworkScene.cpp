@@ -1,9 +1,15 @@
 #include "pch.h"
 #include "NetworkScene.h"
+#include "Server.h"
 
-NetworkScene::NetworkScene() : serverToClient(nullptr) {}
+NetworkScene::NetworkScene() : serverToClient(nullptr), server(nullptr) {}
 
 NetworkScene::~NetworkScene() {}
+
+void NetworkScene::setServer(Server* server)
+{
+	this->server = server;
+}
 
 PathFindingManager& NetworkScene::getPathFinder()
 {
@@ -71,6 +77,10 @@ void NetworkScene::update(float dt)
 	view.each(func);
 }
 
+void NetworkScene::onDisconnect(int index)
+{
+}
+
 int NetworkScene::getPlayer(const int& whatPlayer)
 {
 	return this->players[whatPlayer];
@@ -130,7 +140,7 @@ int NetworkScene::createEnemy(int type, const std::string& script, glm::vec3 pos
 		this->setScriptComponent(e, script);
 	}
 	this->enemies.push_back(std::pair<int, int>(e, type));
-	this->addEvent({(int)GameEvents::SpawnEnemy, type, e}, {pos.x, pos.y, pos.z, rot.x, rot.y, rot.z});
+	//this->addEvent({(int)GameEvents::SpawnEnemy, type}, {pos.x, pos.y, pos.z, rot.x, rot.y, rot.z});
 	return e;
 }
 

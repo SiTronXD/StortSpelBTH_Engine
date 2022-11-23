@@ -96,7 +96,9 @@ void NetworkTestScene::update()
         //no visulation that we connected
     }
     if (Input::isKeyPressed(Keys::N)) {
-        this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent { GameEvents::START });
+		sf::Packet packet;
+		packet << (int)NetworkEvent::START;
+		this->getNetworkHandler()->sendDataToServerTCP(packet);
     }
     if (Input::isKeyPressed(Keys::M)) {
         this->getNetworkHandler()->createClient("Cli");
@@ -108,10 +110,10 @@ void NetworkTestScene::update()
         }
         this->getNetworkHandler()->connectClient(ip);
     }
-    this->getNetworkHandler()->sendUDPDataToClient(
+    /*this->getNetworkHandler()->sendUDPDataToClient(
         this->getComponent<Transform>(this->Player).position,
         this->getComponent<Transform>(this->Player).rotation
-    );
+    );*/
     this->getComponent<Transform>(this->getMainCameraID()).position = this->getComponent<Transform>(this->Player).position;
     if (Input::isKeyDown(Keys::W)) {
         this->getComponent<Transform>(this->Player).position.z += Time::getDT() * 50;

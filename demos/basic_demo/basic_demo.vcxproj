@@ -264,18 +264,20 @@ SET ERRORLEVEL = 0</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="src\LobbyScene.cpp" />
-    <ClCompile Include="src\NetworkTestScene.cpp" />
+    <ClCompile Include="src\network\NetworkHandlerTest.cpp" />
+    <ClCompile Include="src\network\LobbyScene.cpp" />
+    <ClCompile Include="src\network\NetworkTestScene.cpp" />
     <ClCompile Include="src\NewTestScene.cpp" />
     <ClCompile Include="src\TestDemoScene.cpp" />
-    <ClCompile Include="src\TheServerGame.cpp" />
+    <ClCompile Include="src\network\TheServerGame.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\LobbyScene.h" />
-    <ClInclude Include="src\NetworkTestScene.h" />
+    <ClInclude Include="src\network\NetworkHandlerTest.h" />
+    <ClInclude Include="src\network\LobbyScene.h" />
+    <ClInclude Include="src\network\NetworkTestScene.h" />
     <ClInclude Include="src\NewTestScene.h" />
     <ClInclude Include="src\TestDemoScene.h" />
-    <ClInclude Include="src\TheServerGame.h" />
+    <ClInclude Include="src\network\TheServerGame.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\vengine\vengine.vcxproj">

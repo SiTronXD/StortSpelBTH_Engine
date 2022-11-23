@@ -25,11 +25,18 @@
 
 
 Engine::Engine()
+    : networkHandler(nullptr)
 {
 }
 
 Engine::~Engine()
 {
+    delete this->networkHandler;
+}
+
+void Engine::setCustomNetworkHandler(NetworkHandler* networkHandler)
+{
+    this->networkHandler = networkHandler;
 }
 
 void Engine::run(std::string appName, std::string startScenePath, Scene* startScene)
@@ -61,8 +68,11 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     // Get Imgui IO, used by fps counter
     ImGuiIO&  io = ImGui::GetIO();
 
+    // No custom network handler was set
+    if (this->networkHandler == nullptr) { this->networkHandler = new NetworkHandler(); }
+
     //  Set references to other systems
-    this->sceneHandler.setNetworkHandler(&networkHandler);
+    this->sceneHandler.setNetworkHandler(networkHandler);
     this->sceneHandler.setScriptHandler(&scriptHandler);
     this->sceneHandler.setResourceManager(&resourceManager);
     this->sceneHandler.setPhysicsEngine(&physicsEngine);
@@ -72,8 +82,8 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->sceneHandler.setAIHandler(&aiHandler);
     this->sceneHandler.setWindow(&window);
     this->sceneHandler.setAudioHandler(&audioHandler);
-    this->networkHandler.setSceneHandler(&sceneHandler);
-	this->networkHandler.setResourceManager(&resourceManager);
+    this->networkHandler->setSceneHandler(&sceneHandler);
+	this->networkHandler->setResourceManager(&resourceManager);
 	this->physicsEngine.setSceneHandler(&sceneHandler);
     this->scriptHandler.setSceneHandler(&sceneHandler);
     this->scriptHandler.setResourceManager(&resourceManager);
@@ -82,7 +92,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->scriptHandler.setDebugRenderer(&debugRenderer);
     this->uiRenderer.setSceneHandler(&sceneHandler);
     this->debugRenderer.setSceneHandler(&sceneHandler);
-    this->scriptHandler.setNetworkHandler(&networkHandler);
+    this->scriptHandler.setNetworkHandler(networkHandler);
     this->audioHandler.setSceneHandler(&sceneHandler);
 
     // Initialize the start scene
@@ -110,7 +120,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         this->sceneHandler.update();
         this->scriptHandler.update();
         this->audioHandler.update();
-		this->networkHandler.updateNetwork();
+		this->networkHandler->update();
 
 #if defined(_CONSOLE) // Debug/Release, but not distribution        
         static bool debugInfo = true;
@@ -137,7 +147,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         FrameMark;
 #endif
     }
-    this->networkHandler.deleteServer();
+    this->networkHandler->deleteServer();
     this->scriptHandler.cleanup();
     this->aiHandler.clean();
     this->audioHandler.cleanUp();

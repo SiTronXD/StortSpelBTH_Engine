@@ -22,11 +22,12 @@ public:
 	Engine();
 	virtual ~Engine();
 
+	void setCustomNetworkHandler(NetworkHandler* networkHandler);
 	void run(std::string appName, std::string startScenePath, Scene* startScene = nullptr);
 
 	SceneHandler sceneHandler;
     ResourceManager resourceManager;
-	NetworkHandler networkHandler;
+	NetworkHandler* networkHandler;
 	PhysicsEngine physicsEngine;
 	ScriptHandler scriptHandler;
 	AudioHandler audioHandler;

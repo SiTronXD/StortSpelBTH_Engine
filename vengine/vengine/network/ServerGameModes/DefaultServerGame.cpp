@@ -4,7 +4,7 @@
 DefaultServerGame::DefaultServerGame() {}
 
 void DefaultServerGame::init() {
-	((NetworkSceneHandler*)this->getSceneHandler())->clientGetFunc();
+	//((NetworkSceneHandler*)this->getSceneHandler())->clientGetFunc();
 }
 
 void DefaultServerGame::start()
