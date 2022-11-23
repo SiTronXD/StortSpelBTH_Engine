@@ -70,8 +70,9 @@ public:
 		vk::Queue& transferQueue,
 		vk::CommandPool& commandPool,
 		ResourceManager& resourceManager,
-		const uint32_t& framesInFlight);
-	void create(const vk::Extent2D& windowExtent);
+		const uint32_t& framesInFlight,
+		const vk::Extent2D& windowExtent);
+	void recreate(const vk::Extent2D& windowExtent);
 
 	void cleanup();
 

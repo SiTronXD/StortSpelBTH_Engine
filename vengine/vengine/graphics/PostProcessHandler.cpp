@@ -26,7 +26,8 @@ void PostProcessHandler::init(
 	vk::Queue& transferQueue,
 	vk::CommandPool& commandPool,
 	ResourceManager& resourceManager,
-	const uint32_t& framesInFlight)
+	const uint32_t& framesInFlight,
+	const vk::Extent2D& windowExtent)
 {
 	this->physicalDevice = &physicalDevice;
 	this->device = &device;
@@ -36,9 +37,11 @@ void PostProcessHandler::init(
 	this->commandPool = &commandPool;
 	this->resourceManager = &resourceManager;
 	this->framesInFlight = framesInFlight;
+
+	this->recreate(windowExtent);
 }
 
-void PostProcessHandler::create(const vk::Extent2D& windowExtent)
+void PostProcessHandler::recreate(const vk::Extent2D& windowExtent)
 {
 	TextureSettings textureSettings{};
 	textureSettings.samplerSettings.addressMode = 

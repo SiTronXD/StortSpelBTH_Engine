@@ -222,9 +222,7 @@ int VulkanRenderer::init(
         this->queueFamilies.getGraphicsQueue(),
         this->commandPool,
         *this->resourceManager,
-        MAX_FRAMES_IN_FLIGHT
-    );
-    this->postProcessHandler.create(
+        MAX_FRAMES_IN_FLIGHT,
         this->swapchain.getVkExtent()
     );
 
