@@ -356,14 +356,7 @@ void NetworkHandler::readTCPPacket(sf::Packet& cTCPP)
 					createAPlayer(iy, playerName);
 				}
 			}
-		}
-		else if (gameEvent == GameEvents::GetPlayerHP){
-			cTCPP >> ix;
-			if(this->ID == ix)
-			{
-				scenePacket << (int)GameEvents::GetPlayerHP;
-			}
-		}
+		}		
 		else if (gameEvent == GameEvents::Draw_Debug_Line)
 		{
 			cTCPP >> fx >> fy >> fz >> fa >> fb >> fc;

@@ -446,13 +446,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					}
 					clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
 					break;
-				}
-				case GameEvents::GetPlayerHP:
-					//recive the data
-					clientToServerPacketTcp[ClientID] >> packetHelper2;
-					this->sceneHandler.sendCallFromClient({packetHelper2});
-
-					break;
+				}				
 			}
 		}
 	}
