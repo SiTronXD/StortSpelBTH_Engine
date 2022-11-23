@@ -273,7 +273,7 @@ void main()
 		vec3 fragToViewDir = 
 			normalize(fragCamWorldPos - fragWorldPos);
 		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
-		float atten = 1.0f / (1.0f + length(fragToLight));
+		float atten = 1.0f / (1.0f + dot(fragToLight, fragToLight));
 
 		// Regular diffuse light
 		vec3 diffuseLight = calcDiffuse(diffuseTextureCol, normal, fragToLightDir);

@@ -51,7 +51,7 @@ void TestDemoScene::init()
 	this->setComponent<Rigidbody>(this->testEntity2);
 	this->getComponent<Rigidbody>(this->testEntity2).rotFactor = glm::vec3(0.0f);
 	this->setComponent<PointLight>(this->testEntity2);
-	this->getComponent<PointLight>(this->testEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 2.0f;
+	this->getComponent<PointLight>(this->testEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 20.0f;
 
 	// Ambient light
 	Entity ambientLightEntity = this->createEntity();
