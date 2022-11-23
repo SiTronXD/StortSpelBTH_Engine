@@ -22,17 +22,11 @@ void PostProcessHandler::updateNumMipLevelsInUse()
 	//   ; - 6480p - 3 extra mips
 	// 16k - 8640p - 3 extra mips
 
-	// TEST, REMOVE LATER
-	i = 0.0f; // 2160;
-
-	i = std::max(i, 1080.0f); // Avoid negative unsigned int
+	// Avoid negative unsigned int cast
+	i = std::max(i, 1080.0f);
 	uint32_t extraMipLevels = uint32_t(
 		std::log((i * 2.0f / 3.0f) * 2.0f / 1080.0f) / std::log(2.0f)
 	);
-
-	// TEST, REMOVE LATER
-	Log::write("extraMipLevels: " + std::to_string(extraMipLevels));
-	extraMipLevels = 0;
 
 	// Calculate actual number of mip levels in use
 	this->numMipLevelsInUse = std::clamp(
@@ -297,7 +291,7 @@ void PostProcessHandler::cleanup()
 void PostProcessHandler::setDesiredNumMipLevels(const uint32_t& numMipLevels)
 {
 	this->desiredNumMipLevels = std::clamp(
-		this->desiredNumMipLevels,
+		numMipLevels,
 		PostProcessHandler::MIN_NUM_MIP_LEVELS,
 		PostProcessHandler::MAX_NUM_MIP_LEVELS
 	);

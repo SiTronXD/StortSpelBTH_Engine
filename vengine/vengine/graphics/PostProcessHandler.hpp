@@ -20,7 +20,7 @@ class PostProcessHandler
 {
 public:
 	inline static const uint32_t MIN_NUM_MIP_LEVELS = 3;
-	inline static const uint32_t MAX_NUM_MIP_LEVELS = 8;
+	inline static const uint32_t MAX_NUM_MIP_LEVELS = 10;
 	inline static const vk::Format HDR_FORMAT =
 		vk::Format::eR16G16B16A16Sfloat;
 

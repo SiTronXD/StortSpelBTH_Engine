@@ -407,8 +407,8 @@ void VulkanRenderer::draw(Scene* scene)
 {
     int mipLevels = this->postProcessHandler.getDesiredNumMipLevels();
     ImGui::Begin("Bloom settings");
-    ImGui::SliderFloat("Bloom frag", &this->bloomSettingsData.strength.x, 0.0f, 1.0f);
-    ImGui::SliderInt("Bloom mip levels", &mipLevels, 3, PostProcessHandler::MAX_NUM_MIP_LEVELS);
+    ImGui::SliderFloat("Bloom lerp alpha", &this->bloomSettingsData.strength.x, 0.0f, 1.0f);
+    ImGui::SliderInt("Bloom mip levels", &mipLevels, PostProcessHandler::MIN_NUM_MIP_LEVELS, PostProcessHandler::MAX_NUM_MIP_LEVELS);
     ImGui::End();
     this->postProcessHandler.setDesiredNumMipLevels(uint32_t(mipLevels));
 
