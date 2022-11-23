@@ -292,11 +292,25 @@ void NetworkHandler::readTCPPacket(sf::Packet& cTCPP)
 		else if (gameEvent == GameEvents::HitMonster)
 		{
 			//don't know how this should be implemented right now
+            //cTCPP >> ix >> iy >> iz >> fx;
+            //scenePacket << ix << iy << iz << fx;
 			//or if should be
 		}
 		else if (gameEvent == GameEvents::MonsterDied)
 		{
-			//don't know how this should be implemented right now
+			//player that killed the monster, hp that the player shall get, perk/ability, multiplier
+            float multiplier = 0;
+            cTCPP >> ix >> iy >> iz >> multiplier >> fx >> fy >> fz >> fa >> fb >> fc;
+            if (ix == this->ID)
+            {
+                scenePacket << GameEvents::HealPlayer << iy;
+			}
+            if (iz != -1)
+            {
+             //shall be implemented soon   
+			}
+            scenePacket << gameEvent << ix << iy << iz << fx;
+            
 		}
 		else if (gameEvent == GameEvents::GAMEDATA)
 		{

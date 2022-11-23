@@ -45,7 +45,6 @@ class Scene
 
   protected:
 	void switchScene(Scene* scene, std::string path = "");
-	NetworkHandler* getNetworkHandler();
 	ScriptHandler* getScriptHandler();
 	ResourceManager* getResourceManager();
 	PhysicsEngine* getPhysicsEngine();
@@ -122,6 +121,7 @@ class Scene
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }
 
 	void setSceneHandler(SceneHandler& sceneHandler);
+    NetworkHandler* getNetworkHandler();
 };
 
 template <typename T, typename... Args>

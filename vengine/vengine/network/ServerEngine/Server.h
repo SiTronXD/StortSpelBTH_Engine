@@ -42,6 +42,7 @@ private:
 	NetworkSceneHandler sceneHandler;
 	PhysicsEngine physicsEngine;
 	NetworkScriptHandler scriptHandler;
+    ResourceManager resourceManager;
 
 	//print all users
 	void printAllUsers();

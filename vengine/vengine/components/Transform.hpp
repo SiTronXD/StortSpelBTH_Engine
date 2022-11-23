@@ -2,6 +2,7 @@
 
 #include "glm/glm.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "glm/gtx/matrix_decompose.hpp"
 
 struct Transform
 {
@@ -42,6 +43,20 @@ public:
 	{
 		this->setManualMatrix = true;
 		this->matrix = newMatrix;
+
+		// Update position, rotation and scale
+		glm::quat rotationQuat;
+		glm::vec3 skew;
+		glm::vec4 perspective;
+		glm::decompose(
+			this->matrix,
+			this->scale,
+			rotationQuat,
+			this->position,
+			skew,
+			perspective
+		);
+		this->rotation = glm::degrees(glm::eulerAngles(rotationQuat));
 	}
 
 	inline const glm::mat4& getMatrix() const
