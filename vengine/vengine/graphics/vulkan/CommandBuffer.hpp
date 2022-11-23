@@ -16,6 +16,7 @@ private:
 
 public:
     void begin(const vk::CommandBufferBeginInfo& beginInfo);
+    void beginOneTimeSubmit();
     void end();
     void beginRenderPass2(
         const vk::RenderPassBeginInfo& renderPassBeginInfo,

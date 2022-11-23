@@ -14,8 +14,8 @@ private:
 	uint32_t uiTextureIndex1;
 	uint32_t fontTextureIndex;
 
-
 	float timer;
+	float bloomStrength;
 
 	Entity aniIDs[4];
 	bool aniActive[4];
