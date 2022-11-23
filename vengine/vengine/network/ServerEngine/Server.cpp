@@ -155,10 +155,10 @@ void Server::start()
 	clientToServerPacketUdp.resize(clients.size());
 	serverToClientPacketUdp.resize(clients.size());*/
 
-	/*for (int i = 0; i < this->clients.size(); i++)
+	for (int i = 0; i < this->clients.size(); i++)
 	{
 		sceneHandler.getScene()->createPlayer();
-	}*/
+	}
 
 	this->udpSocket.setBlocking(false);
 	this->listener.setBlocking(false);
