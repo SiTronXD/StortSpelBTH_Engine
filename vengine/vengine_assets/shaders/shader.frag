@@ -210,11 +210,18 @@ void debugCascades(inout vec4 outColor)
 	}
 }
 
+#define GAMMA 2.2f
+vec3 invGammaCorrection(in vec3 x)
+{
+	return pow(clamp(x, 0.0f, 1.0f), vec3(GAMMA));
+}
+
 void main() 
 {
 	vec3 normal = normalize(fragNor);
 
 	vec3 diffuseTextureCol = mix(texture(textureSampler0, fragTex).rgb, fragTintCol.rgb, fragTintCol.a);
+	diffuseTextureCol = invGammaCorrection(diffuseTextureCol);
 	vec4 specularTextureCol = texture(textureSampler1, fragTex);
 	
 	// Color from lights
@@ -225,7 +232,9 @@ void main()
 		i < allLightsInfo.ambientLightsEndIndex; 
 		++i)
 	{
-		finalColor += lightBuffer.lights[i].color.xyz;
+		finalColor += 
+			lightBuffer.lights[i].color.xyz *
+			diffuseTextureCol;
 	}
 
 	// Directional lights
@@ -318,14 +327,14 @@ void main()
 		0.0f, 
 		1.0f
 	);
-	distAlpha = distAlpha * distAlpha;
+	distAlpha = pow(distAlpha, 5.0f);
 
 	// Emission
 	finalColor += fragEmissionCol.rgb;
 
 	// Composite fog
 	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
-	// outColor = vec4(finalColor, 1.0f); // (No fog)
+	//outColor = vec4(finalColor, 1.0f); // (No fog)
 
 	// Debug cascades
 	if(shadowMapInfoBuffer.cascadeSettings.y > 0u)

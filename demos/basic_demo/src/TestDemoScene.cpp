@@ -38,11 +38,6 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
-	this->setComponent<Spotlight>(this->testEntity);
-	this->getComponent<Spotlight>(this->testEntity).positionOffset = glm::vec3(0.0f, 5.0f, 0.0f);
-	this->getComponent<Spotlight>(this->testEntity).direction = glm::vec3(0.0f, -1.0f, 0.0f); 
-	this->getComponent<Spotlight>(this->testEntity).angle = 90.0f;
-	this->getComponent<Spotlight>(this->testEntity).color = glm::vec3(0.02f, 0.95f, 0.02f) * 10.0f;
 
 	// Create entity (already has transform)
 	this->testEntity2 = this->createEntity();
@@ -62,13 +57,13 @@ void TestDemoScene::init()
 	Entity ambientLightEntity = this->createEntity();
 	this->setComponent<AmbientLight>(ambientLightEntity);
 	this->getComponent<AmbientLight>(ambientLightEntity).color = 
-		glm::vec3(0.1f);
+		glm::vec3(0.05f);
 
 	// Directional light
 	this->directionalLightEntity = this->createEntity();
 	this->setComponent<DirectionalLight>(this->directionalLightEntity);
 	this->getComponent<DirectionalLight>(this->directionalLightEntity).color =
-		glm::vec3(0.7);
+		glm::vec3(0.5);
 	this->getComponent<DirectionalLight>(this->directionalLightEntity).direction =
 		glm::vec3(-1.0f, -1.0f, 1.0f);
 
@@ -314,7 +309,7 @@ void TestDemoScene::update()
 	).emissionColor = glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
 
 	// Imgui directional light
-	DirectionalLight& dirLight = 
+	/*DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
 	ImGui::Begin("Cascades");
 	ImGui::SliderFloat("Size 0", &dirLight.cascadeSizes[0], 0.0f, 1.0f);
@@ -322,15 +317,11 @@ void TestDemoScene::update()
 	ImGui::SliderFloat("Size 2", &dirLight.cascadeSizes[2], 0.0f, 1.0f);
 	ImGui::SliderFloat("Depth", &dirLight.cascadeDepthScale, 1.0f, 50.0f);
 	ImGui::Checkbox("Visualize cascades", &dirLight.cascadeVisualization);
-	ImGui::End();
+	ImGui::End();*/
 
 	// Rotate testEntity
 	/*this->getComponent<Transform>(this->testEntity).rotation.x +=
 		180.0f * Time::getDT(); */
-	static float tim = 0.0f;
-	tim += Time::getDT();
-	this->getComponent<Spotlight>(this->testEntity).direction.x = std::sin(tim);
-	this->getDebugRenderer()->renderSpotlight(this->testEntity);
 
 	if (Input::isKeyPressed(Keys::R))
 	{

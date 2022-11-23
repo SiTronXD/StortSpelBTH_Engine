@@ -55,6 +55,12 @@ vec3 tonemapACES(in vec3 x)
     return (x * (a * x + b)) / (x * (c * x + d) + e);
 }
 
+#define GAMMA 2.2f
+vec3 gammaCorrection(in vec3 x)
+{
+	return pow(clamp(x, 0.0f, 1.0f), vec3(1.0f / GAMMA));
+}
+
 void main()
 {
 	vec3 hdrColor = texture(hdrTexture, fragUV).rgb;
@@ -62,6 +68,7 @@ void main()
 
 	vec3 color = mix(hdrColor, bloomColor, bloomSettingsData.strength.x);
 	color = tonemapACES(color);
+	color = gammaCorrection(color);
 
 	outColor = vec4(color, 1.0f);
 }

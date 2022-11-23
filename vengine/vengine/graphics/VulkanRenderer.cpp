@@ -1305,7 +1305,7 @@ void VulkanRenderer::recordCommandBuffers(
     // Begin regular command buffer
     this->currentCommandBuffer->beginOneTimeSubmit();
 
-    // Render to screen
+    // Render to HDR texture
     this->beginRenderPass();
         this->renderDefaultMeshes(scene);
         this->renderSkeletalAnimations(scene);
