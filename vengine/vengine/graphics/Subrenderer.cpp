@@ -75,7 +75,7 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(
     );
 
     // For every non-animating mesh we have
-    auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent, Inactive>);
+    auto meshView = scene->getSceneReg().view<Transform, MeshComponent>(entt::exclude<AnimationComponent, NoShadowCasting, Inactive>);
     meshView.each([&](
         const Transform& transform,
         const MeshComponent& meshComponent)
@@ -145,7 +145,7 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(
     }
 
     // For every animating mesh we have
-    auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<Inactive>);
+    auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<NoShadowCasting, Inactive>);
     animView.each(
         [&](const Transform& transform,
             const MeshComponent& meshComponent,

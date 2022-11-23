@@ -38,6 +38,7 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
+	this->setComponent<NoShadowCasting>(this->testEntity);
 
 	// Create entity (already has transform)
 	this->testEntity2 = this->createEntity();
@@ -92,7 +93,7 @@ void TestDemoScene::init()
 		{
 			Entity e = this->createEntity();
 			Transform& t = this->getComponent<Transform>(e);
-			t.position = glm::vec3(x, 7.5f, z) * 10.0f;
+			t.position = glm::vec3(x, 2.5f, z) * 10.0f;
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
 			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
 

@@ -195,6 +195,7 @@
     <ClInclude Include="vengine\graphics\LightHandler.hpp" />
     <ClInclude Include="vengine\graphics\PostProcessHandler.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\SubmitArray.hpp" />
+    <ClInclude Include="vengine\components\NoShadowCasting.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
