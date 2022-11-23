@@ -405,12 +405,15 @@ void VulkanRenderer::updateAnimationTransforms(Scene* scene)
 
 void VulkanRenderer::draw(Scene* scene)
 {
-    int mipLevels = this->postProcessHandler.getDesiredNumMipLevels();
-    ImGui::Begin("Bloom settings");
-    ImGui::SliderFloat("Bloom lerp alpha", &this->bloomSettingsData.strength.x, 0.0f, 1.0f);
-    ImGui::SliderInt("Bloom mip levels", &mipLevels, PostProcessHandler::MIN_NUM_MIP_LEVELS, PostProcessHandler::MAX_NUM_MIP_LEVELS);
-    ImGui::End();
-    this->postProcessHandler.setDesiredNumMipLevels(uint32_t(mipLevels));
+    // Apply bloom settings from the scene
+    const BloomSettings& sceneBloomSettings = 
+        scene->getBloomSettings();
+
+    this->bloomSettingsData.strength.x = 
+        std::clamp(sceneBloomSettings.bloomBufferLerpAlpha, 0.0f, 1.0f);
+    this->postProcessHandler.setDesiredNumMipLevels(
+        sceneBloomSettings.numBloomMipLevels
+    );
 
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped;

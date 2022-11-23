@@ -32,18 +32,28 @@ struct LuaSystem
 	int luaRef;
 };
 
+struct BloomSettings
+{
+	float bloomBufferLerpAlpha = 0.04f;
+	uint32_t numBloomMipLevels = 4;
+};
+
 class Scene
 {
-  private:
+private:
 	SceneHandler* sceneHandler;
 	entt::registry reg;
 	Entity mainCamera;
+	BloomSettings bloomSettings{};
 
-  protected:
+protected:
 	std::vector<System*> systems;
 	std::vector<LuaSystem> luaSystems;
 
-  protected:
+	void setBloomBufferLerpAlpha(const float& alpha);
+	void setBloomNumMipLevels(const uint32_t& numBloomMipLevels);
+
+protected:
 	void switchScene(Scene* scene, std::string path = "");
 	NetworkHandler* getNetworkHandler();
 	ScriptHandler* getScriptHandler();
@@ -61,7 +71,7 @@ class Scene
 		return vengine_helper::config::DEF<T>(name);
 	}
 
-  public:
+public:
 	Scene();
 	virtual ~Scene();
 
@@ -120,6 +130,7 @@ class Scene
 
 	inline entt::registry& getSceneReg() { return this->reg; }
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }
+	inline const BloomSettings& getBloomSettings() const { return this->bloomSettings; }
 
 	void setSceneHandler(SceneHandler& sceneHandler);
 };

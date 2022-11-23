@@ -62,10 +62,12 @@ void TestDemoScene::init()
 	// Directional light
 	this->directionalLightEntity = this->createEntity();
 	this->setComponent<DirectionalLight>(this->directionalLightEntity);
-	this->getComponent<DirectionalLight>(this->directionalLightEntity).color =
-		glm::vec3(0.5);
-	this->getComponent<DirectionalLight>(this->directionalLightEntity).direction =
-		glm::vec3(-1.0f, -1.0f, 1.0f);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.color = glm::vec3(0.5);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.direction = glm::vec3(-1.0f, -1.0f, 1.0f);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.cascadeDepthScale = 5.0f;
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
@@ -231,8 +233,6 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
-
-	
 }
 
 void TestDemoScene::start()
@@ -300,6 +300,15 @@ void TestDemoScene::update()
 	}
 
 	// Imgui bloom
+	static float bloomBufferLerpVal = 0.04f;
+	static int numMips = 6;
+	ImGui::Begin("Bloom settings");
+	ImGui::SliderFloat("Bloom lerp alpha", &bloomBufferLerpVal, 0.0f, 1.0f);
+	ImGui::SliderInt("Bloom mip levels", &numMips, 0, 10);
+	ImGui::End();
+	Scene::setBloomBufferLerpAlpha(bloomBufferLerpVal);
+	Scene::setBloomNumMipLevels(numMips);
+
 	ImGui::Begin("Bloom");
 	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 200.0f);
 	ImGui::End();
@@ -309,7 +318,7 @@ void TestDemoScene::update()
 	).emissionColor = glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
 
 	// Imgui directional light
-	/*DirectionalLight& dirLight = 
+	DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
 	ImGui::Begin("Cascades");
 	ImGui::SliderFloat("Size 0", &dirLight.cascadeSizes[0], 0.0f, 1.0f);
@@ -317,7 +326,7 @@ void TestDemoScene::update()
 	ImGui::SliderFloat("Size 2", &dirLight.cascadeSizes[2], 0.0f, 1.0f);
 	ImGui::SliderFloat("Depth", &dirLight.cascadeDepthScale, 1.0f, 50.0f);
 	ImGui::Checkbox("Visualize cascades", &dirLight.cascadeVisualization);
-	ImGui::End();*/
+	ImGui::End();
 
 	// Rotate testEntity
 	/*this->getComponent<Transform>(this->testEntity).rotation.x +=
