@@ -18,8 +18,7 @@ layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D prevMipTexture;
 
 vec3 sampleTex(in vec2 oneOverSize, in vec2 offset)
 {
-	return 
-		texture(prevMipTexture, fragUV + offset * oneOverSize).rgb;
+	return texture(prevMipTexture, fragUV + offset * oneOverSize).rgb;
 }
 
 void main()
