@@ -224,7 +224,19 @@ void PostProcessHandler::recreate(const vk::Extent2D& windowExtent)
 	this->renderFramebuffer.cleanup();
 	this->mipFramebuffers.cleanup();
 
+	// Create texture resources
 	this->create(windowExtent);
+
+	// Update descriptor sets
+	for (uint32_t i = 0; i < this->mipDescriptorIndices.size(); ++i)
+	{
+		FrequencyInputBindings inputBinding{};
+		inputBinding.texture = &this->hdrRenderTexture;
+		inputBinding.imageView = &this->hdrRenderTexture.getMipImageView(i);
+
+		this->downShaderInput.updateFrequencyInput({ inputBinding }, this->mipDescriptorIndices[i]);
+		this->upShaderInput.updateFrequencyInput({ inputBinding }, this->mipDescriptorIndices[i]);
+	}
 }
 
 void PostProcessHandler::cleanup()

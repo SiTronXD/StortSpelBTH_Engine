@@ -1025,6 +1025,20 @@ void VulkanRenderer::windowResize(Camera* camera)
     // Recalculate HDR render texture and depth buffer
     this->postProcessHandler.recreate(this->swapchain.getVkExtent());
 
+    // Update descriptor set for HDR to swapchain image rendering
+    FrequencyInputBindings freqInputBinding0{};
+    freqInputBinding0.texture = &this->postProcessHandler.getHdrRenderTexture();
+    FrequencyInputBindings freqInputBinding1{};
+    freqInputBinding1.texture = &this->postProcessHandler.getHdrRenderTexture();
+    freqInputBinding1.imageView = &this->postProcessHandler.getHdrRenderTexture().getMipImageView(1);
+    this->swapchainShaderInput.updateFrequencyInput(
+        {
+            freqInputBinding0,
+            freqInputBinding1
+        },
+        this->hdrRenderTextureDescriptorIndex
+    );
+
     // Take new aspect ratio into account for the camera
     camera->calculateProjectionMatrix(
         (float) this->swapchain.getWidth() / swapchain.getHeight()

@@ -163,6 +163,9 @@ public:
 		const FrequencyInputLayout& bindingsLayout);
 	uint32_t addFrequencyInput(
 		const std::vector<FrequencyInputBindings>& bindings);
+	void updateFrequencyInput(
+		const std::vector<FrequencyInputBindings>& bindings,
+		const uint32_t& descriptorIndex);
 	void setFrequencyInput(uint32_t descriptorIndex);
 
 	inline const vk::ShaderStageFlagBits& getPushConstantShaderStage() const { return this->pushConstantShaderStage; }

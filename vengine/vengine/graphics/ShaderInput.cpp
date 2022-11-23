@@ -775,6 +775,56 @@ uint32_t ShaderInput::addFrequencyInput(
     return static_cast<int>(this->perDrawDescriptorSets.size() - 1);
 }
 
+void ShaderInput::updateFrequencyInput(
+    const std::vector<FrequencyInputBindings>& bindings,
+    const uint32_t& descriptorIndex)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
+    if (bindings.size() != this->perDrawInputLayout.numBindings)
+    {
+        Log::error("The number of bindings (" + std::to_string(this->perDrawInputLayout.numBindings) + ") does not match the provided layout (" + std::to_string(bindings.size()) + ").");
+        return;
+    }
+
+    // Get descriptor set from list
+    vk::DescriptorSet& descriptorSet = 
+        this->perDrawDescriptorSets[descriptorIndex];
+
+    std::vector<vk::DescriptorImageInfo> descriptorImageInfos(bindings.size());
+    std::vector<vk::WriteDescriptorSet> writeDescriptorSets(bindings.size());
+    for (size_t i = 0; i < writeDescriptorSets.size(); ++i)
+    {
+        // Texture image info
+        descriptorImageInfos[i].setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);     // The Image Layout when it is in use
+        descriptorImageInfos[i].setImageView(
+            bindings[i].imageView == nullptr ?
+            bindings[i].texture->getImageView() :
+            *bindings[i].imageView); // Image to be bind to set
+        descriptorImageInfos[i].setSampler(
+            this->resourceManager->getTextureSampler(
+                bindings[i].texture->getSamplerIndex()
+            ).getVkSampler()
+        );                         // The sampler to use for this descriptor set
+
+        // Descriptor write info
+        writeDescriptorSets[i].setDstSet(descriptorSet);
+        writeDescriptorSets[i].setDstBinding(uint32_t(i));
+        writeDescriptorSets[i].setDstArrayElement(uint32_t(0));
+        writeDescriptorSets[i].setDescriptorType(this->perDrawInputLayout.descriptorBindingsTypes[i]);
+        writeDescriptorSets[i].setDescriptorCount(uint32_t(1)); // (Num pImageInfos)
+        writeDescriptorSets[i].setPImageInfo(&descriptorImageInfos[i]);
+    }
+
+    // Update descriptor sets
+    this->device->getVkDevice().updateDescriptorSets(
+        writeDescriptorSets,
+        nullptr
+    );
+}
+
 void ShaderInput::setFrequencyInput(uint32_t descriptorIndex)
 {
     this->bindDescriptorSets[(uint32_t)DescriptorFrequency::PER_DRAW_CALL] =
