@@ -23,13 +23,12 @@ bool Client::connect(const std::string& serverIP, int tries)
 		this->isConnectedToServer = false;
 		this->tcpSocket.setBlocking(false);
 		this->udpSocket.setBlocking(false);
-		getchar();
 		return false;
 	}
 	// Bind udp socket
 	if (this->udpSocket.bind(UDP_PORT_CLIENT + tries) != sf::Socket::Done)
 	{
-		Log::write("Client: error with client udpSocket (press something to return)");
+		Log::write("Client: error with client udpSocket");
 		return connect(serverIP, tries);  // Try again
 	}
 	// Connect the tcp socket to server
@@ -47,11 +46,10 @@ bool Client::connect(const std::string& serverIP, int tries)
 		}
 		else
 		{
-			Log::write("Client: error with client tcpSocket (press something to return)");
+			Log::write("Client: error with client tcpSocket");
 			this->isConnectedToServer = false;
 			this->tcpSocket.setBlocking(false);
 			this->udpSocket.setBlocking(false);
-			getchar();
 			return false;
 		}
 	}
