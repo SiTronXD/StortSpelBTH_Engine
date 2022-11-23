@@ -339,11 +339,6 @@ const std::string& NetworkHandler::getClientName()
 	return this->playerName;
 }
 
-const bool NetworkHandler::hasServer()
-{
-	return serverThread != nullptr;
-}
-
 const bool NetworkHandler::isConnected()
 {
 	if (this->client != nullptr)
@@ -353,16 +348,10 @@ const bool NetworkHandler::isConnected()
 	return false;
 }
 
-const std::vector<std::pair<int, std::string>> NetworkHandler::getPlayers()
-const std::string& NetworkHandler::getClientName()
-{
-	return this->playerName;
-}
-
 void NetworkHandler::getLuaData(std::vector<int>& ints, std::vector<float>& floats)
 {
-	ints = this->lua_ints;
-	floats = this->lua_floats;
+	//ints = this->lua_ints;
+	//floats = this->lua_floats;
 }
 
 const bool NetworkHandler::hasServer()
