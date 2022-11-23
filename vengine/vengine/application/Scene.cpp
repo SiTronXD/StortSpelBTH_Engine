@@ -188,13 +188,25 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
 	{
 		const Mesh& mesh = this->sceneHandler->getResourceManager()->
-				getMesh(this->getComponent<MeshComponent>(entity).meshID);
-
+			getMesh(this->getComponent<MeshComponent>(entity).meshID);
 		const uint32_t aniIndex = mesh.getAnimationIndex(animationName);
-		const uint32_t slotIndex = mesh.getAnimationSlotIndex(slotName);
 
-		this->getComponent<AnimationComponent>(entity)
-			.aniSlots[slotIndex].animationIndex = aniIndex;
+		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
+		if (slotName == "")
+		{
+			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			{
+				aniComp.aniSlots[i].animationIndex = aniIndex;
+				aniComp.aniSlots[i].timer = 0.f;
+				aniComp.aniSlots[i].timeScale = 1.f;
+			}
+		}
+		else
+		{
+			const uint32_t slotIndex = mesh.getAnimationSlotIndex(slotName);
+			aniComp.aniSlots[slotIndex].animationIndex = aniIndex;
+			aniComp.aniSlots[slotIndex].timer = 0.f;
+		}
 
 	}
 }

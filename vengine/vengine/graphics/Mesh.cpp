@@ -256,9 +256,7 @@ void Mesh::getBoneTransforms(
         Bone& currentBone = this->meshData.bones[i];
 
         // change to animComp.aniSlots[currentBone.slotIndex]
-        const AnimationPlayer& aniPlayer = animationCompOut.aniSlots[animationCompOut.boneAniIndex[i]]; 
-        0
-
+        const AnimationPlayer& aniPlayer = animationCompOut.aniSlots[currentBone.slotIndex]; 
         const Animation& curAnim = this->meshData.animations[aniPlayer.animationIndex];
 
         // Start from this local bone transformation
@@ -288,6 +286,21 @@ void Mesh::getBoneTransforms(
     // Return transformed array
     animationCompOut.numTransforms =
         static_cast<uint32_t>(numBones);
+}
+
+bool hasParent(const Bone& bone, const std::vector<Bone>& skeleton, int searchIdx)
+{
+    if (bone.parentIndex == searchIdx)
+    {
+        return true;
+    }
+
+    if (bone.parentIndex != -1)
+    {
+        return hasParent(skeleton[bone.parentIndex], skeleton, searchIdx);
+    }
+
+    return false;
 }
 
 void Mesh::createAnimationSlot(const std::string& slotName, const std::string& boneName)
@@ -326,7 +339,36 @@ void Mesh::createAnimationSlot(const std::string& slotName, const std::string& b
         }
 
     */
-    0
+
+    // Temp
+    /*const uint32_t slotIdx = (uint32_t)this->aniSlots.size();
+    this->aniSlots[slotName] = slotIdx;
+    return;*/
+
+    const int numBones = (int)this->meshData.bones.size();
+    for (int i = 0; i < numBones; i++)
+    {
+        if (this->meshData.bones[i].boneName == boneName)
+        {
+            const uint32_t slotIdx = (uint32_t)this->aniSlots.size() + 1u;
+            this->aniSlots[slotName] = slotIdx;
+
+            this->meshData.bones[i].slotIndex = slotIdx;
+            
+            const int startIndex = i;
+            for (size_t j = startIndex + 1ull; j < numBones; j++)
+            {
+                Bone& curBone = this->meshData.bones[j];
+                if (hasParent(curBone, this->meshData.bones, startIndex))
+                {
+                    curBone.slotIndex = slotIdx;
+                }
+            }
+
+            return;
+        }
+    }
+
     Log::warning("Mesh::createAnimationSlot | Could not find bone with name \"" + boneName + "\"!");
 }
 

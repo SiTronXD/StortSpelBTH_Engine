@@ -27,17 +27,17 @@ void SceneHandler::initSubsystems()
 		this->vulkanRenderer->initForScene(this->scene);
 	}
 	
-	this->scene->getSceneReg().view<MeshComponent, AnimationComponent>().each(
-		[&](MeshComponent& mesh, AnimationComponent& aniComp)
-		{
-			MeshData& meshData = this->resourceManager->getMesh(mesh.meshID).getMeshData();
+	//this->scene->getSceneReg().view<MeshComponent, AnimationComponent>().each(
+	//	[&](MeshComponent& mesh, AnimationComponent& aniComp)
+	//	{
+	//		MeshData& meshData = this->resourceManager->getMesh(mesh.meshID).getMeshData();
 
-			// test
-			aniComp.aniSlots[0].animationIndex = 0;
-			/*
-				
-			*/
-		});
+	//		// test
+	//		aniComp.aniSlots[0].animationIndex = 0;
+	//		/*
+	//			
+	//		*/
+	//	});
 
 
 	// Reset delta time counter

@@ -9,7 +9,6 @@
 
 TestDemoScene::TestDemoScene()
 	: camEntity(-1), testEntity(-1), testEntity2(-1)
-	, aniIDs{ -1, -1, -1, -1 }
 	, aniActive{ true, true, true, true }
 {
 }
@@ -105,15 +104,18 @@ void TestDemoScene::init()
 		}
 	}
 
-	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack.fbx" });
+	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
 	Scene::getResourceManager()->mapAnimations(playerMesh, {"first", "second", "third"});
-	getResourceManager()->getMesh(playerMesh).createAnimationSlot("mySlot", "mixamorig:Spine");
-	getResourceManager()->getMesh(playerMesh).createAnimationSlot("mySlot2", "mixamorig:LeftUpLeg");
+	getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
+	getResourceManager()->getMesh(playerMesh).createAnimationSlot("UpperBody", "mixamorig:Spine1");
 
 	multiAni2 = createEntity();
 	setComponent<MeshComponent>(multiAni2, playerMesh);
 	setComponent<AnimationComponent>(multiAni2);
+	getComponent<AnimationComponent>(multiAni2).aniSlots[1].timeScale = 0.1f;
+
 	getComponent<Transform>(multiAni2).position.x = 30.f;
+	getComponent<Transform>(multiAni2).rotation.y = 180.f;
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
@@ -134,8 +136,12 @@ void TestDemoScene::init()
 	}*/
 
 	// Create other test entities
-	uint32_t audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
-	uint32_t amogusMeshID = ~0u;
+#if 1
+	uint32_t amogusMeshID= Scene::getResourceManager()->addAnimations(
+			{ "assets/models/Amogus/source/1.fbx","assets/models/Amogus/source/2.fbx" }, 
+			"assets/models/Stormtrooper/textures");
+	getResourceManager()->mapAnimations(amogusMeshID, {"Run", "Idk"});
+
 	for (uint32_t i = 0; i < 4; ++i)
 	{
 		aniIDs[i] = this->createEntity();
@@ -144,17 +150,21 @@ void TestDemoScene::init()
 
 		this->setComponent<MeshComponent>(aniIDs[i]);
 		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(aniIDs[i]);
+
 		if (i <= 1)
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
+			newMeshComp.meshID = amogusMeshID;
 
-			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
-				{ "assets/models/Amogus/source/1.fbx" }, 
-				"assets/models/Stormtrooper/textures"
-			);
-			amogusMeshID = newMeshComp.meshID;
+			if (i == 0)
+			{
+				Mesh& amogMesh = getResourceManager()->getMesh(newMeshComp.meshID);
+				amogMesh.createAnimationSlot("mainSlot", "Tors");
+				amogMesh.createAnimationSlot("LeftLegSlot", "Left_leg");
+				amogMesh.createAnimationSlot("RightLegSlot", "Right_leg");
+			}
 		}
 		else
 		{
@@ -186,6 +196,31 @@ void TestDemoScene::init()
 				this->getResourceManager()->addTexture("vengine_assets/textures/NoSpecular.png");
 		}
 	}
+#else
+	aniIDs[0] = createEntity();
+	Transform& newTransform = this->getComponent<Transform>(aniIDs[0]);
+	this->setComponent<MeshComponent>(aniIDs[0]);
+	MeshComponent& newMeshComp = this->getComponent<MeshComponent>(aniIDs[0]);
+	newTransform.position = glm::vec3(0.f, 20.f, 0.f);
+	newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
+	newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
+	newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
+		{ "assets/models/Amogus/source/1.fbx","assets/models/Amogus/source/2.fbx" }, 
+		"assets/models/Stormtrooper/textures");
+	getResourceManager()->mapAnimations(newMeshComp.meshID, {"first", "second"});
+
+	setComponent<AnimationComponent>(aniIDs[0]);
+	AnimationComponent& aniComp = getComponent<AnimationComponent>(aniIDs[0]);
+	aniComp.aniSlots[0].animationIndex = 0;
+	aniComp.aniSlots[1].animationIndex = 0;
+
+	Mesh& amogMesh = getResourceManager()->getMesh(newMeshComp.meshID);
+	MeshData& amogMeshData = amogMesh.getMeshData();
+
+	amogMesh.createAnimationSlot("amogSlot", "Left_leg");
+	amogMesh.createAnimationSlot("amogSlot2", "Right_leg");
+	
+#endif
 	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
@@ -297,18 +332,26 @@ void TestDemoScene::update()
 		) * glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -2.0f))
 	);
 
-	/*if (Input::isKeyReleased(Keys::ONE))
+	if (Input::isKeyReleased(Keys::ONE))
 	{
-		this->setAnimation(multiAni2, "first");
+		setAnimation(multiAni2, "first", "UpperBody");
+		setAnimation(aniIDs[0], "Idk", "mainSlot");
 	}
 	else if (Input::isKeyReleased(Keys::TWO))
 	{
-		this->setAnimation(multiAni2, "second");
+		setAnimation(multiAni2, "second", "UpperBody");
+		setAnimation(aniIDs[0], "Run", "LeftLegSlot");
 	}
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
-		this->setAnimation(multiAni2, "third", false);
-	}*/
+		setAnimation(multiAni2, "third", "UpperBody");
+		setAnimation(aniIDs[0], "Idk", "RightLegSlot");
+	}
+	else if (Input::isKeyReleased(Keys::FOUR))
+	{
+		setAnimation(aniIDs[0], "Run", "");
+		setAnimation(multiAni2, "first", "");
+	}
 
 	DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
@@ -465,10 +508,10 @@ void TestDemoScene::update()
 	);
 
 	// Skeleton
-	Scene::getDebugRenderer()->renderSkeleton(
-		this->aniIDs[2],
-		glm::vec3(1.0f, 1.0f, 0.0f)
-	);
+	//Scene::getDebugRenderer()->renderSkeleton(
+	//	this->aniIDs[2],
+	//	glm::vec3(1.0f, 1.0f, 0.0f)
+	//);
 
 
 	this->timer += Time::getDT();
