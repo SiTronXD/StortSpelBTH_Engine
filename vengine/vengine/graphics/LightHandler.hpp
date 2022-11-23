@@ -103,7 +103,10 @@ public:
 
 	void updateCamera(
 		const uint32_t& arraySliceCameraIndex);
-	void updateShadowPushConstant(
+	void updateDefaultShadowPushConstant(
+		CommandBuffer& currentShadowMapCommandBuffer,
+		const glm::mat4& modelMatrix);
+	void updateAnimatedShadowPushConstant(
 		CommandBuffer& currentShadowMapCommandBuffer,
 		const glm::mat4& modelMatrix);
 
