@@ -88,6 +88,10 @@ public:
 		createAIEntity(entityID, this->FSMs[fsmName]);
 	}
 
+    void resetEventSystemLastReturn()
+    {
+        this->eventSystem.resetEntityLastReturn();
+    }
 
     void drawImgui();
     Scene* currentScene = nullptr; //TODO make const...
