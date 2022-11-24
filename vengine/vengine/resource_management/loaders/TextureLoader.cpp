@@ -30,8 +30,8 @@ void TextureLoader::init(
 
 void TextureLoader::assimpGetTextures(const aiScene *scene, std::vector<std::string> &diffuseTextures, std::vector<std::string> &emissiveTextures) 
 {
-    diffuseTextures = std::vector<std::string>(scene->mNumMaterials);
-    emissiveTextures = std::vector<std::string>(scene->mNumMaterials);
+    diffuseTextures.resize(scene->mNumMaterials);
+    emissiveTextures.resize(scene->mNumMaterials);
     int textureIndex =
         0; // index of the texture that corresponds to the Diffuse material
 
@@ -67,22 +67,22 @@ void TextureLoader::assimpTextureImport(
     std::vector<uint32_t>& materialToTexture)
 {
     // Get vector of all materials
-    std::vector<std::string> textureNames;
+    std::vector<std::string> diffuseNames;
     std::vector<std::string> emissiveNames;
-    this->assimpGetTextures(scene, textureNames, emissiveNames);
+    this->assimpGetTextures(scene, diffuseNames, emissiveNames);
 
     // Handle empty texture
-    materialToTexture.resize(textureNames.size());
-    for (size_t i = 0; i < textureNames.size(); i++) {
+    materialToTexture.resize(diffuseNames.size());
+    for (size_t i = 0; i < diffuseNames.size(); i++) {
 
-        if (textureNames[i].empty()) {
+        if (diffuseNames[i].empty()) {
             // Use default textures for models if textures are missing
             materialToTexture[i] = 0;
         }
         else 
         {
             // Extract the name from texture path, and add custom folder path
-            this->processTextureName(textureNames[i], texturesFolderPath);
+            this->processTextureName(diffuseNames[i], texturesFolderPath);
             if (emissiveNames[i].empty())
                 emissiveNames[i] = "vengine_assets/textures/White.png";
             else
@@ -93,7 +93,7 @@ void TextureLoader::assimpTextureImport(
             // Add material
             uint32_t addedMaterialIndex =
                 this->resourceMan->addMaterial(
-                    this->resourceMan->addTexture(textureNames[i].c_str()),
+                    this->resourceMan->addTexture(diffuseNames[i].c_str()),
                     this->resourceMan->addTexture("vengine_assets/textures/NoSpecular.png"),
                 this->resourceMan->addTexture(emissiveNames[i].c_str())
                 );
