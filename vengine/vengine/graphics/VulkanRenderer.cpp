@@ -1320,7 +1320,8 @@ void VulkanRenderer::recordCommandBuffers(
         this->beginBloomDownUpsampleRenderPass(
             this->postProcessHandler.getDownsampleRenderPass(), 
             downsampleCommandBuffer, 
-            i
+            i,
+            false
         );
             this->renderBloomDownUpsample(
                 downsampleCommandBuffer, 
@@ -1347,7 +1348,8 @@ void VulkanRenderer::recordCommandBuffers(
         this->beginBloomDownUpsampleRenderPass(
             this->postProcessHandler.getUpsampleRenderPass(),
             upsampleCommandBuffer,
-            i
+            i,
+            true
         );
         this->renderBloomDownUpsample(
             upsampleCommandBuffer,

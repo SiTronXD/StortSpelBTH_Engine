@@ -638,7 +638,8 @@ void VulkanRenderer::endRenderPass()
 void VulkanRenderer::beginBloomDownUpsampleRenderPass(
     const RenderPass& renderPass,
     CommandBuffer& commandBuffer,
-    const uint32_t& writeMipIndex)
+    const uint32_t& writeMipIndex,
+    bool isUpsampling)
 {
     static const vk::ClearColorValue clearColor(
         // Fog color
@@ -667,7 +668,11 @@ void VulkanRenderer::beginBloomDownUpsampleRenderPass(
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
     renderPassBeginInfo.renderArea.setExtent(hdrTextureExtent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
-    renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
+    renderPassBeginInfo.setClearValueCount(
+        !isUpsampling ? 
+        static_cast<uint32_t>(clearValues.size()) :
+        0u
+    );
     renderPassBeginInfo.setFramebuffer(this->postProcessHandler.getMipVkFramebuffer(writeMipIndex));
 
     // Begin Render Pass!    

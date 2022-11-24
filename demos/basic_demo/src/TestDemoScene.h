@@ -15,6 +15,8 @@ private:
 	uint32_t fontTextureIndex;
 
 	float timer;
+
+	glm::vec3 bloomColor = glm::vec3(1.0f, 0.0f, 1.0f);
 	float bloomStrength;
 
 	Entity aniIDs[4];

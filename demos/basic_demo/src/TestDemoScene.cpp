@@ -322,7 +322,8 @@ void TestDemoScene::update()
 	Scene::setBloomNumMipLevels(numMips);
 
 	ImGui::Begin("Bloom");
-	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 200.0f);
+	ImGui::SliderFloat3("Bloom color", &this->bloomColor[0], 0.0f, 100.0f);
+	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 100.0f);
 	ImGui::End();
 
 	for (uint32_t i = 2; i < 4; ++i)
@@ -333,12 +334,12 @@ void TestDemoScene::update()
 		if (i == 2)
 		{
 			meshC.overrideMaterials[0].emissionColor =
-				glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
+				this->bloomColor * this->bloomStrength;
 		}
 		else if (i == 3)
 		{
 			this->getResourceManager()->getMaterial(meshC, 0).emissionColor =
-				glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
+				this->bloomColor * this->bloomStrength;
 		}
 	}
 
@@ -430,11 +431,6 @@ void TestDemoScene::update()
 	}
 
 	// UI
-	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
-	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, 540.0f), glm::vec2(200.0f));
-	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, -540.0f), glm::vec2(200.0f));
-	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
-	Scene::getUIRenderer()->renderTexture(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->renderString(
 		"fps: " + std::to_string(1.0 / Time::getDT()),
 		glm::vec3(0.0f),
@@ -445,53 +441,6 @@ void TestDemoScene::update()
 	);
 
 	// Debug rendering
-
-	// Lines
-	Scene::getDebugRenderer()->renderLine(
-		glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
-		glm::vec3(10.0f, 10.0f, 25.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
-	Scene::getDebugRenderer()->renderLine(
-		glm::vec3(0.0f, -10.0f, 35.0f),
-		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
-
-	// Spheres
-	Scene::getDebugRenderer()->renderSphere(
-		glm::vec3(0.0f, 0.0f, 30.0f),
-		1.0f,
-		glm::vec3(1.0f, 1.0f, 0.0f)
-	);
-	Scene::getDebugRenderer()->renderSphere(
-		glm::vec3(3.0f, 0.0f, 30.0f),
-		2.0f,
-		glm::vec3(0.0f, 1.0f, 0.0f)
-	);
-
-	// Boxes
-	Scene::getDebugRenderer()->renderBox(
-		glm::vec3(5.5f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 2.541f, 0.0f),
-		glm::vec3(1.0f, 1.0f, 1.0f),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
-	Scene::getDebugRenderer()->renderBox(
-		glm::vec3(6.25f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
-		glm::vec3(0.5f, 2.0f, 1.0f),
-		glm::vec3(0.0f, 1.0f, 1.0f)
-	);
-
-	// Capsules
-	Scene::getDebugRenderer()->renderCapsule(
-		glm::vec3(8.0f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
-		2.0f + sin(timer),
-		0.5f,
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
 
 	// Skeleton
 	Scene::getDebugRenderer()->renderSkeleton(

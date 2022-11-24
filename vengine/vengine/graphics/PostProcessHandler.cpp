@@ -228,7 +228,11 @@ void PostProcessHandler::init(
 		VertexStreams{},
 		"fullscreenQuad.vert.spv",
 		"bloomUpsample.frag.spv",
-		false
+		false,
+		false,
+		true,
+		vk::PrimitiveTopology::eTriangleList,
+		BlendOption::ADD
 	);
 
 	// Descriptor indices
