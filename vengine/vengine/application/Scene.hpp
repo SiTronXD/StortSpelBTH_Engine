@@ -111,8 +111,9 @@ public:
 	void setInactive(Entity entity);
 	bool isActive(Entity entity);
 
-	// Default slotName forces animation on the whole skeleton
+	// Default slotName sets the animation on the whole skeleton
 	void setAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "");
+	AnimationSlot& getAnimationSlot(Entity entity, const std::string& slotName);
 
 	// When created
 	virtual void init();

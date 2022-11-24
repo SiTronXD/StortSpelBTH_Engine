@@ -357,10 +357,12 @@ void Mesh::mapAnimations(const std::vector<std::string>& names)
 uint32_t Mesh::getAnimationIndex(const std::string& name) const
 {
     const auto it = this->aniNames.find(name);
+#ifdef  _CONSOLE
     if (it == this->aniNames.end())
     {
         Log::error("Could not find animation with name \"" + name + "\"");
     }
+#endif //  _CONSOLE
 
     return it->second;
 }
@@ -368,11 +370,13 @@ uint32_t Mesh::getAnimationIndex(const std::string& name) const
 uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
 {
     const auto it = this->aniSlots.find(slotName);
+#ifdef _CONSOLE
     if (it == this->aniSlots.end())
     {
-        Log::error("Could not find animation slot with name \"" + slotName + "\"");
+        Log::error("Mesh::getAnimationSlotIndex | Could not find animation slot with name \"" + slotName + "\"");
     }
-    
+#endif
+
     return it->second;
 }
 

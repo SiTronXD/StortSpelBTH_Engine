@@ -211,6 +211,22 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 	}
 }
 
+AnimationSlot& Scene::getAnimationSlot(Entity entity, const std::string& slotName)
+{
+#ifdef _CONSOLE
+	if (!this->hasComponents<MeshComponent, AnimationComponent>(entity))
+	{
+		Log::error("Scene::getAnimationSlotIndex |"
+		" The entity doesn't have the required components: MeshComponent, AnimationComponent");
+	}
+#endif
+
+	const uint32_t aniSlotIdx = this->getResourceManager()
+		->getMesh(this->getComponent<MeshComponent>(entity).meshID).getAnimationSlotIndex(slotName);
+
+	return this->getComponent<AnimationComponent>(entity).aniSlots[aniSlotIdx];
+}
+
 void Scene::init()
 {
 
