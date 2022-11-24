@@ -6,6 +6,7 @@ struct Material
 	uint32_t diffuseTextureIndex;
 	uint32_t specularTextureIndex;
 
+	glm::vec3 emissionColor = glm::vec3(0.0f);
 	glm::vec4 tintColor = glm::vec4(0.0f);
 
 	// Vulkan

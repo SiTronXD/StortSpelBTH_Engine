@@ -37,11 +37,7 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
-	this->setComponent<Spotlight>(this->testEntity);
-	this->getComponent<Spotlight>(this->testEntity).positionOffset = glm::vec3(0.0f, 5.0f, 0.0f);
-	this->getComponent<Spotlight>(this->testEntity).direction = glm::vec3(0.0f, -1.0f, 0.0f); 
-	this->getComponent<Spotlight>(this->testEntity).angle = 90.0f;
-	this->getComponent<Spotlight>(this->testEntity).color = glm::vec3(0.02f, 0.95f, 0.02f) * 10.0f;
+	this->setComponent<NoShadowCasting>(this->testEntity);
 
 	// Create entity (already has transform)
 	this->testEntity2 = this->createEntity();
@@ -55,21 +51,23 @@ void TestDemoScene::init()
 	this->setComponent<Rigidbody>(this->testEntity2);
 	this->getComponent<Rigidbody>(this->testEntity2).rotFactor = glm::vec3(0.0f);
 	this->setComponent<PointLight>(this->testEntity2);
-	this->getComponent<PointLight>(this->testEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 2.0f;
+	this->getComponent<PointLight>(this->testEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 20.0f;
 
 	// Ambient light
 	Entity ambientLightEntity = this->createEntity();
 	this->setComponent<AmbientLight>(ambientLightEntity);
 	this->getComponent<AmbientLight>(ambientLightEntity).color = 
-		glm::vec3(0.1f);
+		glm::vec3(0.05f);
 
 	// Directional light
 	this->directionalLightEntity = this->createEntity();
 	this->setComponent<DirectionalLight>(this->directionalLightEntity);
-	this->getComponent<DirectionalLight>(this->directionalLightEntity).color =
-		glm::vec3(0.7);
-	this->getComponent<DirectionalLight>(this->directionalLightEntity).direction =
-		glm::vec3(-1.0f, -1.0f, 1.0f);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.color = glm::vec3(0.5);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.direction = glm::vec3(-1.0f, -1.0f, 1.0f);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.cascadeDepthScale = 5.0f;
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
@@ -94,7 +92,7 @@ void TestDemoScene::init()
 		{
 			Entity e = this->createEntity();
 			Transform& t = this->getComponent<Transform>(e);
-			t.position = glm::vec3(x, 7.5f, z) * 10.0f;
+			t.position = glm::vec3(x, 2.5f, z) * 10.0f;
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
 			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
 
@@ -174,21 +172,17 @@ void TestDemoScene::init()
 		// Animation component
 		this->setComponent<AnimationComponent>(aniIDs[i]);
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
-		newAnimComp.aniSlots[0].timer += 24.0f * 0.6f * i;
-		newAnimComp.aniSlots[0].timeScale += i % 2;
-		newAnimComp.aniSlots[0].animationIndex = 0;
-
-		// Make separate material
-		if (i == 2)
-		{
-			this->getResourceManager()->makeUniqueMaterials(
-				this->getComponent<MeshComponent>(aniIDs[i])
-			);
-
-			this->getComponent<MeshComponent>(aniIDs[i]).overrideMaterials[0].specularTextureIndex =
-				this->getResourceManager()->addTexture("vengine_assets/textures/NoSpecular.png");
-		}
+		newAnimComp.timer += 24.0f * 0.6f * i;
+		newAnimComp.timeScale += i % 2;
+		newAnimComp.animationIndex = 0;
 	}
+
+	// Change material emission
+	this->bloomStrength = 200.0f;
+	this->getResourceManager()->getMaterial(
+		this->getComponent<MeshComponent>(this->aniIDs[2]),
+		0
+	).emissionColor = glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
 	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
@@ -245,8 +239,6 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
-
-	
 }
 
 void TestDemoScene::start()
@@ -324,6 +316,25 @@ void TestDemoScene::update()
 	}
 
 
+	// Imgui bloom
+	static float bloomBufferLerpVal = 0.04f;
+	static int numMips = 6;
+	ImGui::Begin("Bloom settings");
+	ImGui::SliderFloat("Bloom lerp alpha", &bloomBufferLerpVal, 0.0f, 1.0f);
+	ImGui::SliderInt("Bloom mip levels", &numMips, 0, 10);
+	ImGui::End();
+	Scene::setBloomBufferLerpAlpha(bloomBufferLerpVal);
+	Scene::setBloomNumMipLevels(numMips);
+
+	ImGui::Begin("Bloom");
+	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 200.0f);
+	ImGui::End();
+	this->getResourceManager()->getMaterial(
+		this->getComponent<MeshComponent>(this->aniIDs[2]),
+		0
+	).emissionColor = glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
+
+	// Imgui directional light
 	DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
 	ImGui::Begin("Cascades");
@@ -337,10 +348,6 @@ void TestDemoScene::update()
 	// Rotate testEntity
 	/*this->getComponent<Transform>(this->testEntity).rotation.x +=
 		180.0f * Time::getDT(); */
-	static float tim = 0.0f;
-	tim += Time::getDT();
-	this->getComponent<Spotlight>(this->testEntity).direction.x = std::sin(tim);
-	this->getDebugRenderer()->renderSpotlight(this->testEntity);
 
 	if (Input::isKeyPressed(Keys::R))
 	{

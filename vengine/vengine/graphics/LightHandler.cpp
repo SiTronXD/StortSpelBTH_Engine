@@ -151,8 +151,8 @@ void LightHandler::init(
         this->shadowMapExtent.width,
         this->shadowMapExtent.height,
         LightHandler::NUM_CASCADES,
-        vk::ImageUsageFlagBits::eSampled,
-        resourceManager.addSampler(depthTextureSettings)
+        resourceManager.addSampler(depthTextureSettings),
+        vk::ImageUsageFlagBits::eSampled
     );
 
     // Render pass
@@ -167,7 +167,7 @@ void LightHandler::init(
     {
         shadowMapImageViews[i] =
         {
-            this->shadowMapTexture.getImageView(i)
+            this->shadowMapTexture.getLayerImageView(i)
         };
     }
     this->shadowMapFramebuffer.create(
@@ -519,7 +519,7 @@ void LightHandler::updateCamera(
         this->shadowMapData.viewProjection[arraySliceCameraIndex];
 }
 
-void LightHandler::updateShadowPushConstant(
+void LightHandler::updateDefaultShadowPushConstant(
     CommandBuffer& currentShadowMapCommandBuffer,
     const glm::mat4& modelMatrix)
 {
@@ -529,10 +529,24 @@ void LightHandler::updateShadowPushConstant(
 
     // Update push constant data
     currentShadowMapCommandBuffer.pushConstant(
-        animShadowMapShaderInput,
-        (void*) &this->shadowPushConstantData
+        this->shadowMapShaderInput,
+        (void*)&this->shadowPushConstantData
     );
+}
 
+void LightHandler::updateAnimatedShadowPushConstant(
+    CommandBuffer& currentShadowMapCommandBuffer,
+    const glm::mat4& modelMatrix)
+{
+    // Update model matrix
+    this->shadowPushConstantData.modelMatrix =
+        modelMatrix;
+
+    // Update push constant data
+    currentShadowMapCommandBuffer.pushConstant(
+        this->animShadowMapShaderInput,
+        (void*)&this->shadowPushConstantData
+    );
 }
 
 void LightHandler::cleanup(const bool& hasAnimations)

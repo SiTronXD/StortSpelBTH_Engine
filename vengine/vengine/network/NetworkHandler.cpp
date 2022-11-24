@@ -292,6 +292,8 @@ void NetworkHandler::readTCPPacket(sf::Packet& cTCPP)
 		else if (gameEvent == GameEvents::HitMonster)
 		{
 			//don't know how this should be implemented right now
+            //cTCPP >> ix >> iy >> iz >> fx;
+            //scenePacket << ix << iy << iz << fx;
 			//or if should be
 		}
 		else if (gameEvent == GameEvents::MonsterDied)

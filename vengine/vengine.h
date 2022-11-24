@@ -10,6 +10,7 @@
 #include "vengine/components/PointLight.hpp"
 #include "vengine/components/Spotlight.hpp"
 #include "vengine/components/UIArea.hpp"
+#include "vengine/components/NoShadowCasting.hpp"
 #include "vengine/dev/Log.hpp"
 #include "vengine/test/TestScene.hpp"
 #include "vengine/Engine.hpp"

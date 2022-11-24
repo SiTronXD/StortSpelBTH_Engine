@@ -95,6 +95,8 @@
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
     <ClCompile Include="vengine\graphics\LightHandler.cpp" />
     <ClCompile Include="vengine\dev\Random.cpp" />
+    <ClCompile Include="vengine\graphics\PostProcessHandler.cpp" />
+    <ClCompile Include="vengine\graphics\vulkan\SubmitArray.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -191,6 +193,9 @@
     <ClInclude Include="vengine\graphics\vulkan\RenderPass.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\FramebufferArray.hpp" />
     <ClInclude Include="vengine\graphics\LightHandler.hpp" />
+    <ClInclude Include="vengine\graphics\PostProcessHandler.hpp" />
+    <ClInclude Include="vengine\graphics\vulkan\SubmitArray.hpp" />
+    <ClInclude Include="vengine\components\NoShadowCasting.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -391,5 +396,9 @@
     <CustomBuild Include="vengine_assets\shaders\dbg.frag" />
     <CustomBuild Include="vengine_assets\shaders\shadowMap.vert" />
     <CustomBuild Include="vengine_assets\shaders\shadowMapAnim.vert" />
+    <CustomBuild Include="vengine_assets\shaders\hdrToSwapchain.frag" />
+    <CustomBuild Include="vengine_assets\shaders\bloomDownsample.frag" />
+    <CustomBuild Include="vengine_assets\shaders\bloomUpsample.frag" />
+    <CustomBuild Include="vengine_assets\shaders\fullscreenQuad.vert" />
   </ItemGroup>
 </Project>

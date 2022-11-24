@@ -49,6 +49,7 @@
 #include "../components/DirectionalLight.hpp"
 #include "../components/PointLight.hpp"
 #include "../components/Spotlight.hpp"
+#include "../components/NoShadowCasting.hpp"
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"

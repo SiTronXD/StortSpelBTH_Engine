@@ -8,6 +8,16 @@
 #include "Time.hpp"
 #include "../components/AnimationComponent.hpp"
 
+void Scene::setBloomBufferLerpAlpha(const float& alpha)
+{
+	this->bloomSettings.bloomBufferLerpAlpha = alpha;
+}
+
+void Scene::setBloomNumMipLevels(const uint32_t& numBloomMipLevels)
+{
+	this->bloomSettings.numBloomMipLevels = numBloomMipLevels;
+}
+
 void Scene::switchScene(Scene* scene, std::string path)
 {
 	this->sceneHandler->setScene(scene, path);

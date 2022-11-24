@@ -22,6 +22,11 @@ public:
 		RenderPass& renderPass,
 		const vk::Extent2D& extent,
 		const std::vector<std::vector<vk::ImageView>>& attachments);
+	void create(
+		Device& device,
+		RenderPass& renderPass,
+		const std::vector<vk::Extent2D>& extents,
+		const std::vector<std::vector<vk::ImageView>>& attachments);
 
 	void cleanup();
 

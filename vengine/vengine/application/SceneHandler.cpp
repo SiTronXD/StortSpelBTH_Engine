@@ -31,6 +31,28 @@ void SceneHandler::initSubsystems()
 	Time::reset();
 }
 
+void SceneHandler::updatePreScene()
+{
+	// Update animation timers
+	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
+	animView.each([&]
+	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
+		{
+			const MeshData& meshData = this->resourceManager->getMesh(meshComponent.meshID).getMeshData();
+
+			for (uint32_t i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			{
+				AnimationSlot& aniSlot = animationComponent.aniSlots[i];
+				aniSlot.timer += Time::getDT() * 24.0f * aniSlot.timeScale;
+				if (aniSlot.timer >= meshData.animations[aniSlot.animationIndex].endTime)
+				{
+					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
+				}
+			}
+		}
+	);
+}
+
 SceneHandler::SceneHandler()
 	: scene(nullptr), 
 	nextScene(nullptr), 
@@ -41,7 +63,9 @@ SceneHandler::SceneHandler()
     physicsEngine(nullptr),
 	vulkanRenderer(nullptr),
 	uiRenderer(nullptr), 
-	debugRenderer(nullptr)
+	debugRenderer(nullptr),
+	window(nullptr),
+	audioHandler(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -51,6 +75,8 @@ SceneHandler::~SceneHandler()
 
 void SceneHandler::update()
 {
+	this->updatePreScene();
+
 	this->scene->updateSystems();
 	this->scriptHandler->updateSystems(this->scene->getLuaSystems());
 	this->scene->update();
@@ -77,25 +103,7 @@ void SceneHandler::updateToNextScene()
 
 void SceneHandler::prepareForRendering()
 {
-	// Update animation timer
-	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
-	animView.each([&]
-	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
-		{
-			const MeshData& meshData = this->resourceManager->getMesh(meshComponent.meshID).getMeshData();
-
-			for (uint32_t i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
-			{
-				AnimationSlot& aniSlot = animationComponent.aniSlots[i];
-				aniSlot.timer += Time::getDT() * 24.0f * aniSlot.timeScale;
-				if (aniSlot.timer >= meshData.animations[aniSlot.animationIndex].endTime)
-				{
-					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
-				}
-			}
-		}
-	);
-
+	// Update transform matrices
 	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
 	auto func = [](Transform& transform)
 	{

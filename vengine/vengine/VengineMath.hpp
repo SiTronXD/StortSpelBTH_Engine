@@ -88,7 +88,12 @@ inline void SMath::normalizeScale(glm::mat4& matrix)
     for (uint32_t i = 0; i < 3; ++i)
     {
         tempVec = matrix[i];
-        tempVec = glm::normalize(tempVec);
-        matrix[i] = glm::vec4(tempVec, 0.0f);
+
+        // Normalize vectors that are not zero vectors
+        if (glm::dot(tempVec, tempVec) > 0.0f)
+        {
+            tempVec = glm::normalize(tempVec);
+            matrix[i] = glm::vec4(tempVec, 0.0f);
+        }
     }
 }

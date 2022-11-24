@@ -13,12 +13,14 @@
 #include "vulkan/UniformBuffer.hpp"
 #include "vulkan/CommandBufferArray.hpp"
 #include "vulkan/FramebufferArray.hpp"
+#include "vulkan/SubmitArray.hpp"
 
 #include "../application/Window.hpp"
 #include "imgui.h"              // Need to be included in header
 
 #include "../resource_management/ResourceManager.hpp"
 #include "LightHandler.hpp"
+#include "PostProcessHandler.hpp"
 #include "UIRenderer.hpp"
 #include "DebugRenderer.hpp"
 
@@ -64,11 +66,14 @@ class VulkanRenderer
     Swapchain swapchain;
     
     RenderPass renderPassBase{};
+    RenderPass renderPassSwapchain{};
     RenderPass renderPassImgui{};
     vk::CommandPool commandPool{};
     CommandBufferArray commandBuffers;
+    CommandBufferArray swapchainCommandBuffers;
     CommandBuffer* currentShadowMapCommandBuffer;
     CommandBuffer* currentCommandBuffer;
+    CommandBuffer* currentSwapchainCommandBuffer;
 
     // Default pipeline
     UniformBufferID viewProjectionUB;
@@ -87,7 +92,15 @@ class VulkanRenderer
     ShaderInput animShaderInput;
     Pipeline animPipeline;
 
+    // Render-to-Swapchain pipeline
+    BloomSettingsBufferData bloomSettingsData{};
+    UniformBufferID bloomSettingsUB;
+    uint32_t hdrRenderTextureDescriptorIndex;
+    ShaderInput swapchainShaderInput;
+    Pipeline swapchainPipeline;
+
     LightHandler lightHandler;
+    PostProcessHandler postProcessHandler;
 
     // Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
@@ -95,9 +108,14 @@ class VulkanRenderer
     // Synchronisation 
     std::vector<vk::Semaphore> imageAvailable;
     std::vector<vk::Semaphore> shadowMapRenderFinished;
-    std::vector<vk::Semaphore> renderFinished;
+    std::vector<vk::Semaphore> sceneRenderFinished;
+    std::vector<std::vector<vk::Semaphore>> downsampleFinished;
+    std::vector<std::vector<vk::Semaphore>> upsampleFinished;
+    std::vector<vk::Semaphore> swapchainRenderFinished;
     std::vector<vk::Fence> drawFences;
     
+    SubmitArray submitArray;
+
     char* tracyImage{};
 
     // ImGui
@@ -125,15 +143,12 @@ private:
     // initializations of subsystems
     void initResourceManager();
 
-    void updateAnimationTransforms(Scene* scene);
-
     // ------- Render functions within render passes -------
 
     // Render pass for shadow map rendering
     std::vector<vk::DeviceSize> bindVertexBufferOffsets;
     std::vector<vk::Buffer> bindVertexBuffers;
     void beginShadowMapRenderPass(
-        const uint32_t& imageIndex,
         LightHandler& lightHandler,
         const uint32_t& shadowMapArraySlice);
     void renderShadowMapDefaultMeshes(
@@ -145,13 +160,31 @@ private:
     void endShadowMapRenderPass();
 
     // Render pass for screen rendering
-    void beginRenderpass(
-        const uint32_t& imageIndex);
+    void beginRenderPass();
     void renderDefaultMeshes(Scene* scene);
     void renderSkeletalAnimations(Scene* scene);
     void renderUI();
     void renderDebugElements();
-    void endRenderpass();
+    void endRenderPass();
+
+    // Render pass for bloom downsampling
+    void beginBloomDownUpsampleRenderPass(
+        const RenderPass& renderPass,
+        CommandBuffer& commandBuffer,
+        const uint32_t& writeMipIndex);
+    void renderBloomDownUpsample(
+        CommandBuffer& commandBuffer,
+        ShaderInput& shaderInput,
+        const Pipeline& pipeline,
+        const uint32_t& readMipIndex);
+    void endBloomDownUpsampleRenderPass(
+        CommandBuffer& commandBuffer);
+
+    // Render pass for swapchain image rendering
+    void beginSwapchainRenderPass(
+        const uint32_t& imageIndex);
+    void renderToSwapchainImage();
+    void endSwapchainRenderPass();
 
     // Render pass for imgui rendering
     void beginRenderpassImgui(
@@ -159,7 +192,7 @@ private:
     void renderImgui();
     void endRenderpassImgui();
 
-    // Record Functions
+    
     void recordCommandBuffers(
         Scene* scene, 
         Camera* camera,
