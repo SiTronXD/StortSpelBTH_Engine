@@ -331,16 +331,20 @@ void TestDemoScene::update()
 		MeshComponent& meshC =
 			this->getComponent<MeshComponent>(this->aniIDs[i]);
 
+		Material* mat = nullptr;
+
 		if (i == 2)
 		{
-			meshC.overrideMaterials[0].emissionColor =
-				this->bloomColor * this->bloomStrength;
+			mat = &meshC.overrideMaterials[0];
+
 		}
 		else if (i == 3)
 		{
-			this->getResourceManager()->getMaterial(meshC, 0).emissionColor =
-				this->bloomColor * this->bloomStrength;
+			mat = &this->getResourceManager()->getMaterial(meshC, 0);
 		}
+
+		mat->emissionColor = this->bloomColor;
+		mat->emissionIntensity = this->bloomStrength;
 	}
 
 	// Imgui directional light

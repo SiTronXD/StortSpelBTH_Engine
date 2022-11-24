@@ -329,9 +329,7 @@ void VulkanRenderer::renderDefaultMeshes(
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
             this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
-            this->pushConstantData.emissionColor.r = firstSubmeshMaterial.emissionColor.r;
-            this->pushConstantData.emissionColor.g = firstSubmeshMaterial.emissionColor.g;
-            this->pushConstantData.emissionColor.b = firstSubmeshMaterial.emissionColor.b;
+            firstSubmeshMaterial.getFinalEmissionColor(this->pushConstantData.emissionColor);
             this->pushConstantData.emissionColor.a = meshComponent.receiveShadows ? 1.0f : 0.0f;
             this->currentCommandBuffer->pushConstant(
                 this->shaderInput,
@@ -456,9 +454,7 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
             this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
-            this->pushConstantData.emissionColor.r = firstSubmeshMaterial.emissionColor.r;
-            this->pushConstantData.emissionColor.g = firstSubmeshMaterial.emissionColor.g;
-            this->pushConstantData.emissionColor.b = firstSubmeshMaterial.emissionColor.b;
+            firstSubmeshMaterial.getFinalEmissionColor(this->pushConstantData.emissionColor);
             this->pushConstantData.emissionColor.a = meshComponent.receiveShadows ? 1.0f : 0.0f;
             this->currentCommandBuffer->pushConstant(
                 this->animShaderInput,
