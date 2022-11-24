@@ -9,4 +9,6 @@ struct MeshComponent
 
 	Material overrideMaterials[MAX_NUM_MESH_MATERIALS]{};
 	uint32_t numOverrideMaterials = 0;
+
+	bool receiveShadows = true;
 };
