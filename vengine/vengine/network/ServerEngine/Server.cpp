@@ -97,6 +97,7 @@ Server::Server(NetworkHandler* networkHandler, NetworkScene* serverGame)
 	// Give info to all 
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
+    this->sceneHandler.givePacketInfo(this->serverToClientPacketUdp);
 	this->sceneHandler.setPhysicsEngine(&this->physicsEngine);
     this->sceneHandler.setResourceManager(&this->resourceManager);
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);

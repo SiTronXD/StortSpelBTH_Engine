@@ -9,13 +9,13 @@ class Server;
 class NetworkScene : public Scene
 {
 private:
-	std::vector<sf::Packet>* serverToClient;
+	std::vector<sf::Packet>* serverToClientTCP;
+	std::vector<sf::Packet>* serverToClientUDP;
 
 protected:
 	Server* server;
 
 	//id, type
-	std::vector<std::pair<int, int>> enemies;
 	std::vector<int> players;
 	PathFindingManager pf;
 public:
@@ -38,9 +38,6 @@ public:
 	const int getPlayerSize();
 	void removePlayer(int playerID);
 
-	int getEnemies(const int& whatEnemy);
-	const int getEnemySize();
-	int createEnemy(int type = -1, const std::string& script = "", glm::vec3 pos = glm::vec3(0, 0, 0), glm::vec3 rot = glm::vec3(0, 0, 0));
 	/////////////////////////////////////////////////////////
 	
 	//Time::getDT() doesn't exist so must do extra here
@@ -52,7 +49,8 @@ public:
 	virtual void update(float dt);
 	virtual void onDisconnect(int index);
 
-	void givePacketInfo(std::vector<sf::Packet>* serverToClient);
+	void givePacketInfo(std::vector<sf::Packet>* serverToClientTCP);
+	void givePacketInfoUdp(std::vector<sf::Packet>* serverToClientUdp);
 
 	template <typename I, typename F>
 	void addEvent(std::initializer_list<I> ints, std::initializer_list<F> floats)
@@ -60,15 +58,15 @@ public:
 		//always 0 in "this->serverToClient[0][i]"
 		//beacuse it points to the first object in array that doesn't exist
 		//so it points at start
-		for (int i = 0; i < serverToClient->size(); i++)
+		for (int i = 0; i < serverToClientTCP->size(); i++)
 		{
 			for (auto iel : ints)
 			{
-				(*this->serverToClient)[i] << (I)iel;
+				(*this->serverToClientTCP)[i] << (I)iel;
 			}
 			for (auto fel : floats)
 			{
-				(*this->serverToClient)[i] << (F)fel;
+				(*this->serverToClientTCP)[i] << (F)fel;
 			}
 		}
 	}
@@ -78,11 +76,11 @@ public:
 		//always 0 in "this->serverToClient[0][i]"
 		//beacuse it points to the first object in array that doesn't exist
 		//so it points at start
-		for (int i = 0; i < serverToClient->size(); i++)
+		for (int i = 0; i < serverToClientTCP->size(); i++)
 		{
 			for (auto el : ints)
 			{
-				(*this->serverToClient)[i] << el;
+				(*this->serverToClientTCP)[i] << el;
 			}
 		}
 	}
@@ -92,16 +90,67 @@ public:
 		//always 0 in "this->serverToClient[0][i]"
 		//beacuse it points to the first object in array that doesn't exist
 		//so it points at start
-		for (int i = 0; i < serverToClient->size(); i++)
+		for (int i = 0; i < serverToClientTCP->size(); i++)
 		{
 			for (auto el : ints)
 			{
-				(*this->serverToClient)[i] << el;
+				(*this->serverToClientTCP)[i] << el;
 			}
 			for (auto el : floats)
 			{
-				(*this->serverToClient)[i] << el;
+				(*this->serverToClientTCP)[i] << el;
 			}
 		}
 	}
+	//UDP
+    template <typename I, typename F>
+    void addEventUdp(std::initializer_list<I> ints, std::initializer_list<F> floats)
+    {
+        //always 0 in "this->serverToClient[0][i]"
+        //beacuse it points to the first object in array that doesn't exist
+        //so it points at start
+        for (int i = 0; i < serverToClientUDP->size(); i++)
+        {
+            for (auto iel : ints)
+            {
+                (*this->serverToClientUDP)[i] << (I)iel;
+            }
+            for (auto fel : floats)
+            {
+                (*this->serverToClientUDP)[i] << (F)fel;
+            }
+        }
+    }
+    template <typename I>
+    void addEventUdp(std::initializer_list<I> ints)
+    {
+        //always 0 in "this->serverToClient[0][i]"
+        //beacuse it points to the first object in array that doesn't exist
+        //so it points at start
+        for (int i = 0; i < serverToClientUDP->size(); i++)
+        {
+            for (auto el : ints)
+            {
+                (*this->serverToClientUDP)[i] << el;
+            }
+        }
+    }
+    template <typename I, typename F>
+    void addEventUdp(std::vector<I> ints, std::vector<F> floats)
+    {
+        //always 0 in "this->serverToClient[0][i]"
+        //beacuse it points to the first object in array that doesn't exist
+        //so it points at start
+        for (int i = 0; i < serverToClientUDP->size(); i++)
+        {
+            for (auto el : ints)
+            {
+                (*this->serverToClientUDP)[i] << el;
+            }
+            for (auto el : floats)
+            {
+                (*this->serverToClientUDP)[i] << el;
+            }
+        }
+    }
 };

@@ -2,7 +2,7 @@
 #include "NetworkScene.h"
 #include "Server.h"
 
-NetworkScene::NetworkScene() : serverToClient(nullptr), server(nullptr) {}
+NetworkScene::NetworkScene() : serverToClientTCP(nullptr), serverToClientUDP(nullptr), server(nullptr) {}
 
 NetworkScene::~NetworkScene() {}
 
@@ -41,7 +41,6 @@ void NetworkScene::removeAllEntitys()
 
 	this->getSceneReg().clear();
 	players.clear();
-	enemies.clear();
 }
 
 void NetworkScene::updateSystems(float dt)
@@ -119,31 +118,6 @@ const int NetworkScene::getPlayerSize()
 	return (int)this->players.size();
 }
 
-int NetworkScene::getEnemies(const int& whatPlayer)
-{
-	return this->enemies[whatPlayer].first;
-}
-
-const int NetworkScene::getEnemySize()
-{
-	return (int)this->enemies.size();
-}
-
-int NetworkScene::createEnemy(int type, const std::string& script, glm::vec3 pos, glm::vec3 rot)
-{
-	int e = this->createEntity();
-	this->setComponent<Transform>(e);
-	this->getComponent<Transform>(e).position = pos;
-	this->getComponent<Transform>(e).rotation = rot;
-	if (script != "")
-	{
-		this->setScriptComponent(e, script);
-	}
-	this->enemies.push_back(std::pair<int, int>(e, type));
-	//this->addEvent({(int)GameEvents::SpawnEnemy, type}, {pos.x, pos.y, pos.z, rot.x, rot.y, rot.z});
-	return e;
-}
-
 int NetworkScene::createPlayer()
 {
 	int e = this->createEntity();
@@ -158,7 +132,12 @@ void NetworkScene::removePlayer(int playerID)
 	players.erase(players.begin() + playerID);
 }
 
-void NetworkScene::givePacketInfo(std::vector<sf::Packet>* serverToClient)
+void NetworkScene::givePacketInfo(std::vector<sf::Packet>* serverToClientTCP)
 {
-	this->serverToClient = serverToClient;
+	this->serverToClientTCP = serverToClientTCP;
+}
+
+void NetworkScene::givePacketInfoUdp(std::vector<sf::Packet>* serverToClientUDP)
+{
+    this->serverToClientUDP = serverToClientUDP;
 }
