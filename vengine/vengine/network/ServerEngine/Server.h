@@ -31,6 +31,7 @@ struct ClientInfo {
 
 class Server {
 private:
+    static const int MAXTIMETRYINGTORECV = 4;
 	// Functions
 	bool duplicateUser();
 	// See if user is still connected by seeing if user has been to the sending messages the last 3 seconds or so

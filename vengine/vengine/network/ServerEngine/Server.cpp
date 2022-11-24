@@ -325,23 +325,29 @@ void Server::sendDataToAllUsers()
 
 void Server::getDataFromUsers()
 {
+
+	int timesTryingToRecv = 0;
 	// See if we recv something from
 	for (int i = 0; i < clientToServerPacketTcp.size(); i++)
 	{
-		if (clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done)
+		while (clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done && timesTryingToRecv < MAXTIMETRYINGTORECV)
 		{
+            ++timesTryingToRecv;
 			clients[i]->TimeToDisconnect = 0;
 			// Need to handle packet direct
 			handlePacketFromUser(i, true);
 		}
 	}
 	
+	timesTryingToRecv = 0;
+
 	// Do I need to change sender and port and the see if they match?
 	sf::IpAddress tempIPAddress;
 	unsigned short tempPort;
 	sf::Packet tempPacket;
-	while (udpSocket.receive(tempPacket, tempIPAddress, tempPort) == sf::Socket::Done)  // Shall I really have a while loop?
+	while (udpSocket.receive(tempPacket, tempIPAddress, tempPort) == sf::Socket::Done && timesTryingToRecv < MAXTIMETRYINGTORECV)
 	{
+        ++timesTryingToRecv;
 		// Check who it's from
 		for (int i = 0; i < clientToServerPacketUdp.size(); i++)
 		{
