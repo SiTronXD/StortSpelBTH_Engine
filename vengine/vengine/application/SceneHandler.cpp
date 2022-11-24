@@ -62,11 +62,11 @@ void SceneHandler::updateToNextScene()
 	// Make sure a scene can be switched to
 	if (this->nextScene != nullptr)
 	{
-        NetworkScene* nScene = dynamic_cast<NetworkScene*>(nextScene);
+        NetworkScene* nScene = dynamic_cast<NetworkScene*>(scene);
         if (nScene != nullptr)
         {
-            nScene->setServer(((NetworkScene*)scene)->getServer());
-		}
+            ((NetworkScene*)nextScene)->setServer((nScene)->getServer());
+        }
 		// Delete old scene
 		delete this->scene;
 		this->scene = nullptr;
