@@ -34,7 +34,7 @@ layout(push_constant) uniform PushConstantData
 {
     mat4 model;
     vec4 tintColor;
-    vec4 emissionColor;
+    vec4 emissionColor; // vec4(emission.rgb, receiveShadows)
 } pushConstantData;
 
 // Vertex shader outputs

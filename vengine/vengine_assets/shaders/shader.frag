@@ -108,6 +108,12 @@ vec3 sampleCascade(in uint i)
 
 float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
+	// Don't receive shadows
+	if(fragEmissionCol.w < 0.5f)
+	{
+		return 1.0f;
+	}
+
 	uint numCascades = shadowMapInfoBuffer.cascadeSettings.x;
 
 	// Brute force search through each cascade frustum

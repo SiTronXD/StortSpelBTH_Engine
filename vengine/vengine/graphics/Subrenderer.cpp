@@ -332,6 +332,7 @@ void VulkanRenderer::renderDefaultMeshes(
             this->pushConstantData.emissionColor.r = firstSubmeshMaterial.emissionColor.r;
             this->pushConstantData.emissionColor.g = firstSubmeshMaterial.emissionColor.g;
             this->pushConstantData.emissionColor.b = firstSubmeshMaterial.emissionColor.b;
+            this->pushConstantData.emissionColor.a = meshComponent.receiveShadows ? 1.0f : 0.0f;
             this->currentCommandBuffer->pushConstant(
                 this->shaderInput,
                 (void*)&this->pushConstantData
@@ -458,6 +459,7 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
             this->pushConstantData.emissionColor.r = firstSubmeshMaterial.emissionColor.r;
             this->pushConstantData.emissionColor.g = firstSubmeshMaterial.emissionColor.g;
             this->pushConstantData.emissionColor.b = firstSubmeshMaterial.emissionColor.b;
+            this->pushConstantData.emissionColor.a = meshComponent.receiveShadows ? 1.0f : 0.0f;
             this->currentCommandBuffer->pushConstant(
                 this->animShaderInput,
                 (void*)&this->pushConstantData
