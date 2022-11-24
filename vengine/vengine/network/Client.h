@@ -7,6 +7,7 @@
 class Client 
 {
 private:
+    static const int MAXTIMETRYINGTORECV = 4;
     // Data
     std::string clientName;
     std::string serverIP;
