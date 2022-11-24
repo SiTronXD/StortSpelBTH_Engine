@@ -24,6 +24,9 @@ private:
     sf::TcpListener tcpListener;
     sf::UdpSocket   udpSocket;
 
+    uint32_t sendPacketID = 0;
+    uint32_t recvPacketID = 0;
+
     // Functions
     void sendDataToServer();
     void cleanPackageAndGameEvents();

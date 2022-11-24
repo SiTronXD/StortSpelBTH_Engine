@@ -116,6 +116,7 @@ void Client::cleanPackageAndGameEvents()
     // Clear packages so same data doesn't get sent twice
     this->clientTcpPacketSend.clear();
     this->clientUdpPacketSend.clear();
+    this->clientUdpPacketSend << sendPacketID++;
 }
 
 sf::Packet Client::getTCPDataFromServer()
@@ -135,6 +136,14 @@ sf::Packet Client::getUDPDataFromServer()
     {
         if (sender == this->serverIP) // If we get something that is not from server
         {
+            //check if packet is to old
+            uint32_t packetID;
+            udpPacketRecv >> packetID;
+            if (packetID < this->recvPacketID)
+            {
+                return sf::Packet();
+            }
+            this->recvPacketID = packetID;
             return udpPacketRecv;
         }
     }

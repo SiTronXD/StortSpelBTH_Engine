@@ -17,6 +17,7 @@ struct ClientInfo {
 	sf::TcpSocket  clientTcpSocket;
 	float          TimeToDisconnect = 0;
 	int			   id;
+    uint32_t recvUdpPacketID = 0;
 
 	void clean()
 	{
@@ -53,6 +54,7 @@ private:
 
 	// Reference used for custom events
 	NetworkHandler* networkHandler;
+    uint32_t sendUdpPacketID = 0;
 
 	// Print all users
 	void printAllUsers();

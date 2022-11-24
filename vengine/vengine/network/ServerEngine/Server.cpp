@@ -286,7 +286,10 @@ void Server::cleanSendPackages()
 	{
 		serverToClientPacketTcp[i].clear();
 		serverToClientPacketUdp[i].clear();
+		//give udp packet new id after its clear
+        serverToClientPacketUdp[i] << sendUdpPacketID;
 	}
+    ++sendUdpPacketID;
 }
 
 void Server::seeIfUsersExist()
@@ -346,6 +349,19 @@ void Server::getDataFromUsers()
 			{
 				clients[i]->TimeToDisconnect = 0;
 				clientToServerPacketUdp[i] = tempPacket;
+
+				//check if the packet is older than another one
+                uint32_t udpIdPacket;
+                clientToServerPacketUdp[i] >> udpIdPacket;
+				//if its older than another one we got, clean and break
+                if (udpIdPacket < clients[i]->recvUdpPacketID)
+                {
+                    clientToServerPacketUdp[i].clear();
+                    break;
+				}
+				//else new id packet
+                clients[i]->recvUdpPacketID = udpIdPacket;
+
 				handlePacketFromUser(i, false);
 				break;
 			}
