@@ -730,9 +730,6 @@ void VulkanRenderer::initForScene(Scene* scene)
 	        AnimationComponent& animationComponent) 
         { 
             numAnimMeshes++;
-
-            
-
 	    }
 	);
 	this->hasAnimations = numAnimMeshes > 0;

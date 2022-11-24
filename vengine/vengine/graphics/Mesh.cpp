@@ -74,7 +74,6 @@ void Mesh::getAnimSlerp(
 void Mesh::getLocalBoneTransform(
     const BonePoses& poses,
     const float& timer,
-    const int& animationIndex,
     glm::mat4& outputMatrix)
 {
     glm::mat4 identityMat(1.0f);
@@ -262,7 +261,6 @@ void Mesh::getBoneTransforms(
         this->getLocalBoneTransform(
             curAnim.boneStamps[i],
             aniPlayer.timer,
-            aniPlayer.animationIndex, // TODO: Remove this argument
             boneTransform
         );
 
@@ -287,16 +285,16 @@ void Mesh::getBoneTransforms(
         static_cast<uint32_t>(numBones);
 }
 
-bool Mesh::isChildOf(const Bone& bone, uint32_t searchIndex)
+bool Mesh::isChildOf(const Bone& bone, uint32_t grandpaIndex)
 {
-    if (bone.parentIndex == searchIndex)
+    if (bone.parentIndex == grandpaIndex)
     {
         return true;
     }
 
     if (bone.parentIndex != -1)
     {
-        return this->isChildOf(this->meshData.bones[bone.parentIndex], searchIndex);
+        return this->isChildOf(this->meshData.bones[bone.parentIndex], grandpaIndex);
     }
 
     return false;

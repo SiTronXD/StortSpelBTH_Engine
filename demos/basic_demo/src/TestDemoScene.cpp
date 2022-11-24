@@ -319,7 +319,7 @@ void TestDemoScene::update()
 		int idx = upperSlot.animationIndex;
 		ImGui::InputInt("1 Ani idx", &idx, 1, 1);
 		upperSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
-		ImGui::DragFloat(" 1Time scale", &upperSlot.timeScale, 0.01f, -10.f, 10.f);
+		ImGui::DragFloat(" 1Time scale", &upperSlot.timeScale, 0.01f, 0.f, 10.f);
 		
 		AnimationSlot& lowerSlot = getAnimationSlot(multiAni2, "LowerBody");
 		ImGui::Separator();
@@ -327,8 +327,9 @@ void TestDemoScene::update()
 		idx = lowerSlot.animationIndex;
 		ImGui::InputInt("2 Ani idx", &idx, 1, 1);
 		lowerSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
-		ImGui::DragFloat("2 Time scale", &lowerSlot.timeScale, 0.01f, -10.f, 10.f);
+		ImGui::DragFloat("2 Time scale", &lowerSlot.timeScale, 0.01f, 0.f, 10.f);
 
+		ImGui::Separator();
 		if (ImGui::Button("Reset timers"))
 		{
 			upperSlot.timer = 0.f;
@@ -510,10 +511,10 @@ void TestDemoScene::update()
 	);
 
 	// Skeleton
-	//Scene::getDebugRenderer()->renderSkeleton(
-	//	this->aniIDs[2],
-	//	glm::vec3(1.0f, 1.0f, 0.0f)
-	//);
+	Scene::getDebugRenderer()->renderSkeleton(
+		this->aniIDs[2],
+		glm::vec3(1.0f, 1.0f, 0.0f)
+	);
 
 
 	this->timer += Time::getDT();

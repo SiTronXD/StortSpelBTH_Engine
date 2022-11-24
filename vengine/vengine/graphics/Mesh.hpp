@@ -37,7 +37,7 @@ private:
         const float& timer,
         glm::quat& outputValue);
 
-    bool isChildOf(const Bone& bone, uint32_t searchIndex);
+    bool isChildOf(const Bone& bone, uint32_t grandpaIndex);
 
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
@@ -49,7 +49,6 @@ public:
     void getLocalBoneTransform(
         const BonePoses& bone,
         const float& timer,
-        const int& animationIndex,
         glm::mat4& outputMatrix);
 
     void getBoneTransforms(

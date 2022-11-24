@@ -221,8 +221,8 @@ AnimationSlot& Scene::getAnimationSlot(Entity entity, const std::string& slotNam
 	}
 #endif
 
-	const uint32_t aniSlotIdx = this->getResourceManager()
-		->getMesh(this->getComponent<MeshComponent>(entity).meshID).getAnimationSlotIndex(slotName);
+	const uint32_t aniSlotIdx = this->getResourceManager()->getMesh(
+		this->getComponent<MeshComponent>(entity).meshID).getAnimationSlotIndex(slotName);
 
 	return this->getComponent<AnimationComponent>(entity).aniSlots[aniSlotIdx];
 }
