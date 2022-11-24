@@ -306,6 +306,20 @@ uint32_t ResourceManager::addSound(std::string&& soundPath)
     return this->audioBuffers.back();
 }
 
+bool ResourceManager::createAnimationSlot(uint32_t meshId, const std::string& slotName, const std::string& boneName)
+{
+    auto it = this->meshes.find(meshId);
+#ifdef _CONSOLE
+    if (it == this->meshes.end())
+    {
+        Log::error("ResourceManager::createAnimationSlot | Could not find mesh with id: " + std::to_string(meshId));
+        return false;
+    }
+#endif
+
+    return it->second.createAnimationSlot(slotName, boneName);
+}
+
 void ResourceManager::cleanup()
 {
     // Meshes

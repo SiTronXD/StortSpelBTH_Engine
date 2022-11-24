@@ -74,9 +74,8 @@ public:
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(std::string&& collisionPath);
 	std::vector<ColliderDataRes> getCollisionShapeFromMesh(uint32_t id);
     Material& getMaterial(uint32_t id);
-    Material& getMaterial(
-        const MeshComponent& meshComponent,
-        const uint32_t& submeshIndex);
+    Material& getMaterial(const MeshComponent& meshComponent, const uint32_t& submeshIndex);
+    bool createAnimationSlot(uint32_t meshId, const std::string& slotName, const std::string& boneName);
 
     size_t getNumMeshes();
     size_t getNumTextures();

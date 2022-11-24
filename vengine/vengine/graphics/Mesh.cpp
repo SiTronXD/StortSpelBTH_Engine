@@ -300,17 +300,17 @@ bool Mesh::isChildOf(const Bone& bone, uint32_t grandpaIndex)
     return false;
 }
 
-void Mesh::createAnimationSlot(const std::string& slotName, const std::string& boneName)
+bool Mesh::createAnimationSlot(const std::string& slotName, const std::string& boneName)
 {
     if (this->aniSlots.size() >= NUM_MAX_ANIMATION_SLOTS)
     {
         Log::warning("Mesh::createAnimationSlot | Max animation slots reached");
-        return;
+        return false;
     }
     if (this->aniSlots.count(slotName))
     {
         Log::warning("Mesh::createAnimationSlot | Animation slot \"" + slotName + "\" already exists!");
-        return;
+        return false;
     }
 
     // Search through the bones for "boneName"
@@ -335,11 +335,12 @@ void Mesh::createAnimationSlot(const std::string& slotName, const std::string& b
                 }
             }
 
-            return;
+            return true;
         }
     }
 
     Log::error("Mesh::createAnimationSlot | Could not find bone with name \"" + boneName + "\"!");
+    return false;
 }
 
 void Mesh::mapAnimations(const std::vector<std::string>& names)

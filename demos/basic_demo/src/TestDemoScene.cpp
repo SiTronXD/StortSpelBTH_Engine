@@ -102,17 +102,17 @@ void TestDemoScene::init()
 		}
 	}
 
-	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
-	Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
-	getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
-	getResourceManager()->getMesh(playerMesh).createAnimationSlot("UpperBody", "mixamorig:Spine1");
-	
-	multiAni2 = createEntity();
-	setComponent<MeshComponent>(multiAni2, playerMesh);
-	setComponent<AnimationComponent>(multiAni2);
-
-	getComponent<Transform>(multiAni2).position.x = 30.f;
-	getComponent<Transform>(multiAni2).rotation.y = 180.f;
+	//int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
+	//Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
+	//getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
+	//getResourceManager()->getMesh(playerMesh).createAnimationSlot("UpperBody", "mixamorig:Spine1");
+	//
+	//multiAni2 = createEntity();
+	//setComponent<MeshComponent>(multiAni2, playerMesh);
+	//setComponent<AnimationComponent>(multiAni2);
+	//
+	//getComponent<Transform>(multiAni2).position.x = 30.f;
+	//getComponent<Transform>(multiAni2).rotation.y = 180.f;
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
@@ -311,7 +311,7 @@ void TestDemoScene::update()
 		setAnimation(aniIDs[0], "Run");
 	}
 
-	if (ImGui::Begin("Char animation"))
+	if (ImGui::Begin("Char animation") && false)
 	{
 		ImGui::PushItemWidth(-100.f);
 		AnimationSlot& upperSlot = getAnimationSlot(multiAni2, "UpperBody");

@@ -482,7 +482,49 @@ int SceneLua::lua_setAnimation(lua_State* L)
 	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2)) { return 0; }
 	
 	Entity entity = (Entity)lua_tointeger(L, 1);
-	scene->setAnimation(entity, lua_tostring(L, 2), lua_tostring(L, 2)); // L, 2
+	scene->setAnimation(entity, lua_tostring(L, 2), lua_tostring(L, 3));
+
+	return 0;
+}
+
+int SceneLua::lua_getAnimationSlot(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	Entity entity = (Entity)lua_tointeger(L, 1);
+	const char* slotName = lua_tostring(L, 2);
+
+	lua_pushanimationslot(L, scene->getAnimationSlot(entity, slotName));
+
+	// Dump stack
+	// Dump stack
+	// Dump stack
+
+	// STOPS HERE ?
+	// STOPS HERE ?
+	// STOPS HERE ?
+
+	return 1;
+}
+
+int SceneLua::lua_setAnimationSlot(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	Entity entity = (Entity)lua_tointeger(L, 1);
+	const char* slotName = lua_tostring(L, 2);
+
+	AnimationSlot& slot = scene->getAnimationSlot(entity, slotName);
+	slot.animationIndex = (uint32_t)lua_tointeger(L, 3);
+	slot.timer = (float)lua_tonumber(L, 4);
+	slot.timeScale = (float)lua_tonumber(L, 5);
+
+
+	// Dump stack
+	// Dump stack
+	// Dump stack
+
+	// STOPS HERE ?
+	// STOPS HERE ?
+	// STOPS HERE ?
 
 	return 0;
 }
@@ -510,6 +552,8 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "setInactive", lua_setInactive },
 		{ "isActive", lua_isActive },
 		{ "setAnimation", lua_setAnimation },
+		{ "getAnimationSlot", lua_getAnimationSlot },
+		{ "setAnimationSlot", lua_setAnimationSlot },
 		{ NULL , NULL }
 	};
 

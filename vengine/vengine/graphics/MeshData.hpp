@@ -28,9 +28,9 @@ struct VertexStreams
 #define NUM_MAX_ANIMATION_SLOTS 5u // Defined here so AnimationComponent & Mesh has access to it
 struct AnimationSlot
 {
+    uint32_t animationIndex = 0u;
     float timer = 0.f;
     float timeScale = 1.f;
-    uint32_t animationIndex = 0u;
 };
 
 struct BonePoses

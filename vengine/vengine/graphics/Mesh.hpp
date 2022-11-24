@@ -60,7 +60,7 @@ public:
     inline const std::vector<SubmeshData>& getSubmeshData() const;
     inline SubmeshData& getSubmesh(const uint32_t& index) { return this->submeshData[index]; }
 
-    void createAnimationSlot(const std::string& slotName, const std::string& boneName);
+    bool createAnimationSlot(const std::string& slotName, const std::string& boneName);
     void mapAnimations(const std::vector<std::string>& names);
     uint32_t getAnimationIndex(const std::string& name) const;
     uint32_t getAnimationSlotIndex(const std::string& slotName) const;
