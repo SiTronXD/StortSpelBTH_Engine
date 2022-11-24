@@ -49,6 +49,16 @@ void SceneHandler::updatePreScene()
 				{
 					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
 				}
+
+				if (aniSlot.nAnimationIndex != ~0u)
+				{
+					aniSlot.alpha += (1.f / aniSlot.transitionTime) * Time::getDT();
+					aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
+					// reset nAnimationIndex here or getBoneTransforms ?
+					// reset nAnimationIndex here or getBoneTransforms ?
+					// reset nAnimationIndex here or getBoneTransforms ?
+					0
+				}
 			}
 
 			// Store bone transformations

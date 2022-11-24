@@ -46,13 +46,11 @@ public:
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
-    void getLocalBoneTransform(
-        const BonePoses& bone,
-        const float& timer,
-        glm::mat4& outputMatrix);
+    void getLocalBoneTransform(const BonePoses& bone, const float& timer, glm::mat4& outputMatrix);
+    void getLocalBoneTransform(const AnimationSlot& aniSlot, const BonePoses& curAnimPose, 
+        const BonePoses& nextAnimPose, glm::mat4& outputMatrix);
 
-    void getBoneTransforms(
-        AnimationComponent& animationComponentOutput);
+    void getBoneTransforms(AnimationComponent& animationComponentOutput);
 
     inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;
