@@ -330,7 +330,12 @@ void Server::getDataFromUsers()
 	// See if we recv something from
 	for (int i = 0; i < clientToServerPacketTcp.size(); i++)
 	{
-		while (clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done && timesTryingToRecv < MAXTIMETRYINGTORECV)
+		//if we disconnect we need to double check
+		while (
+			clients.size() > i &&
+			clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done && 
+			timesTryingToRecv < MAXTIMETRYINGTORECV
+			)
 		{
             ++timesTryingToRecv;
 			clients[i]->TimeToDisconnect = 0;
