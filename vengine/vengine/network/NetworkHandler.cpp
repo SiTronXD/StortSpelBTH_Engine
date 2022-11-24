@@ -284,6 +284,14 @@ void NetworkHandler::update()
             packet >> pos.x >> pos.y >> pos.z >> rot.x >> rot.y >> rot.z >> height >> radius;
             this->sceneHandler->getDebugRenderer()->renderCapsule(pos, rot, height, radius, glm::vec3(1, 0, 0));
         }
+        else if (event == (int)NetworkEvent::DEBUG_DRAW_LINE)
+        {
+            glm::vec3 pos1;
+            glm::vec3 pos2;
+            pos1 = getVec(packet);
+            pos2 = getVec(packet);
+            this->sceneHandler->getDebugRenderer()->renderLine(pos1, pos2, glm::vec3(1, 0, 0));
+        }
 		// Custom event
 		else if (event >= (int)NetworkEvent::END)
 		{
