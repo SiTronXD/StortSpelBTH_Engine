@@ -55,8 +55,9 @@ layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
 
 // Combined image samplers
 layout(set = FREQ_PER_FRAME, binding = 3) uniform sampler2DArray shadowMapSampler;
-layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
-layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D textureSampler1;
+layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D diffuseTextureSampler;
+layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D specularTextureSampler;
+layout(set = FREQ_PER_DRAW, binding = 2) uniform sampler2D glowMapTextureSampler;
 
 layout(location = 0) out vec4 outColor; // final output color (must also have location)
 
@@ -226,9 +227,10 @@ void main()
 {
 	vec3 normal = normalize(fragNor);
 
-	vec3 diffuseTextureCol = mix(texture(textureSampler0, fragTex).rgb, fragTintCol.rgb, fragTintCol.a);
+	vec3 diffuseTextureCol = mix(texture(diffuseTextureSampler, fragTex).rgb, fragTintCol.rgb, fragTintCol.a);
 	diffuseTextureCol = invGammaCorrection(diffuseTextureCol);
-	vec4 specularTextureCol = texture(textureSampler1, fragTex);
+	vec4 specularTextureCol = texture(specularTextureSampler, fragTex);
+	float glowMapTextureCol = texture(glowMapTextureSampler, fragTex).r;
 	
 	// Color from lights
 	vec3 finalColor = vec3(0.0f);
@@ -336,7 +338,7 @@ void main()
 	distAlpha = pow(distAlpha, 5.0f);
 
 	// Emission
-	finalColor += fragEmissionCol.rgb;
+	finalColor += fragEmissionCol.rgb * glowMapTextureCol;
 
 	// Composite fog
 	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
