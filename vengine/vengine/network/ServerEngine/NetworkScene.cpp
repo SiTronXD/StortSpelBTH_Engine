@@ -11,6 +11,11 @@ void NetworkScene::setServer(Server* server)
 	this->server = server;
 }
 
+Server* NetworkScene::getServer()
+{
+    return this->server;
+}
+
 PathFindingManager& NetworkScene::getPathFinder()
 {
 	return this->pf;

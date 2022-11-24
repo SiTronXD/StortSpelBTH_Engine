@@ -23,6 +23,7 @@ public:
 	virtual ~NetworkScene();
 	
 	void setServer(Server* server);
+    Server* getServer();
 
 	//AI things
 	PathFindingManager& getPathFinder();
