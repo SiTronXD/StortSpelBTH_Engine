@@ -10,6 +10,7 @@ layout(location = 2) in vec3 fragNor;
 layout(location = 3) in vec2 fragTex;
 layout(location = 4) in vec3 fragCamWorldPos;
 layout(location = 5) in vec4 fragTintCol;
+layout(location = 6) in vec4 fragEmissionCol;
 
 // Uniform buffer for light indices
 // Ambient: [0, ambientLightsEndIndex)
@@ -107,6 +108,12 @@ vec3 sampleCascade(in uint i)
 
 float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
+	// Don't receive shadows
+	if(fragEmissionCol.w < 0.5f)
+	{
+		return 1.0f;
+	}
+
 	uint numCascades = shadowMapInfoBuffer.cascadeSettings.x;
 
 	// Brute force search through each cascade frustum
@@ -209,11 +216,18 @@ void debugCascades(inout vec4 outColor)
 	}
 }
 
+#define GAMMA 2.2f
+vec3 invGammaCorrection(in vec3 x)
+{
+	return pow(clamp(x, 0.0f, 1.0f), vec3(GAMMA));
+}
+
 void main() 
 {
 	vec3 normal = normalize(fragNor);
 
 	vec3 diffuseTextureCol = mix(texture(textureSampler0, fragTex).rgb, fragTintCol.rgb, fragTintCol.a);
+	diffuseTextureCol = invGammaCorrection(diffuseTextureCol);
 	vec4 specularTextureCol = texture(textureSampler1, fragTex);
 	
 	// Color from lights
@@ -224,7 +238,9 @@ void main()
 		i < allLightsInfo.ambientLightsEndIndex; 
 		++i)
 	{
-		finalColor += lightBuffer.lights[i].color.xyz;
+		finalColor += 
+			lightBuffer.lights[i].color.xyz *
+			diffuseTextureCol;
 	}
 
 	// Directional lights
@@ -263,7 +279,7 @@ void main()
 		vec3 fragToViewDir = 
 			normalize(fragCamWorldPos - fragWorldPos);
 		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
-		float atten = 1.0f / (1.0f + length(fragToLight));
+		float atten = 1.0f / (1.0f + dot(fragToLight, fragToLight));
 
 		// Regular diffuse light
 		vec3 diffuseLight = calcDiffuse(diffuseTextureCol, normal, fragToLightDir);
@@ -317,11 +333,14 @@ void main()
 		0.0f, 
 		1.0f
 	);
-	distAlpha = distAlpha * distAlpha;
+	distAlpha = pow(distAlpha, 5.0f);
+
+	// Emission
+	finalColor += fragEmissionCol.rgb;
 
 	// Composite fog
 	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
-	// outColor = vec4(finalColor, 1.0f); // (No fog)
+	//outColor = vec4(finalColor, 1.0f); // (No fog)
 
 	// Debug cascades
 	if(shadowMapInfoBuffer.cascadeSettings.y > 0u)

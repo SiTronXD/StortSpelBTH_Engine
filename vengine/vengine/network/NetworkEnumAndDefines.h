@@ -7,7 +7,12 @@
 #define TCP_PORT_SERVER 55020
 #define TCP_PORT_CLIENT 55030
 #define SERVER_IP "192.168.1.104"
+#ifndef NDEBUG
+#define ServerUpdateRate 1 / 15.f
+#else
 #define ServerUpdateRate 1 / 24.f
+#endif
+
 #define MAXNUMBEROFPLAYERS 4
 
 #pragma endregion
@@ -49,7 +54,7 @@ enum GameEvents
 	POLYGON_DATA,			//: 
 	REMOVE_POLYGON_DATA,    //: nothing
 	WentInToNewRoom,		//:?
-	HealPlayer,				//
+	HealPlayer,				//: 
 
 	//TCP to Client and Server
 	START,  //Call to Scene

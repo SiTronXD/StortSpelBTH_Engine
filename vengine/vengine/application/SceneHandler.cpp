@@ -31,6 +31,32 @@ void SceneHandler::initSubsystems()
 	Time::reset();
 }
 
+void SceneHandler::updatePreScene()
+{
+	// Update animation timers
+	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
+	animView.each([&]
+	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
+		{
+			Mesh& currentMesh = 
+				this->resourceManager->getMesh(meshComponent.meshID);
+			const float& endTime =
+				currentMesh
+				.getMeshData().animations[animationComponent.animationIndex].endTime;
+
+			// Loop timer
+			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
+			if (animationComponent.timer >= endTime)
+			{
+				animationComponent.timer -= endTime;
+			}
+
+			// Store bone transformations
+			currentMesh.getBoneTransforms(animationComponent);
+		}
+	);
+}
+
 SceneHandler::SceneHandler()
 	: scene(nullptr), 
 	nextScene(nullptr), 
@@ -41,7 +67,9 @@ SceneHandler::SceneHandler()
     physicsEngine(nullptr),
 	vulkanRenderer(nullptr),
 	uiRenderer(nullptr), 
-	debugRenderer(nullptr)
+	debugRenderer(nullptr),
+	window(nullptr),
+	audioHandler(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -51,6 +79,8 @@ SceneHandler::~SceneHandler()
 
 void SceneHandler::update()
 {
+	this->updatePreScene();
+
 	this->scene->updateSystems();
 	this->scriptHandler->updateSystems(this->scene->getLuaSystems());
 	this->scene->update();
@@ -77,23 +107,7 @@ void SceneHandler::updateToNextScene()
 
 void SceneHandler::prepareForRendering()
 {
-	// Update animation timer
-	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
-	animView.each([&]
-	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
-		{
-			const float endTime = 
-				this->resourceManager->getMesh(meshComponent.meshID)
-				.getMeshData().animations[animationComponent.animationIndex].endTime;
-
-			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
-			if (animationComponent.timer >= endTime)
-			{
-				animationComponent.timer -= endTime;
-			}
-		}
-	);
-
+	// Update transform matrices
 	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
 	auto func = [](Transform& transform)
 	{
