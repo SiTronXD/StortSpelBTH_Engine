@@ -7,7 +7,13 @@ end
 function script:update(dt)
 
 	if (input.isKeyReleased(Keys.ONE)) then
-		scene.setAnimation(self.ID, "run", "UpperBody")
+		local anim = scene.getComponent(self.ID, CompType.Animation)
+		anim[0].timeScale = 10
+		--anim[0].animationIndex = 0
+		--anim[1].animationIndex = 1
+		scene.setComponent(self.ID, CompType.Animation, anim)
+
+		--scene.setAnimation(self.ID, "run", "UpperBody")
 	elseif (input.isKeyReleased(Keys.TWO)) then
 		scene.setAnimation(self.ID, "idle", "UpperBody")
 	elseif (input.isKeyReleased(Keys.THREE)) then
