@@ -7,6 +7,7 @@
 class Client 
 {
 private:
+    static const int MAXTIMETRYINGTORECV = 4;
     // Data
     std::string clientName;
     std::string serverIP;
@@ -23,6 +24,9 @@ private:
     sf::TcpSocket   tcpSocket;
     sf::TcpListener tcpListener;
     sf::UdpSocket   udpSocket;
+
+    uint32_t sendPacketID = 0;
+    uint32_t recvPacketID = 0;
 
     // Functions
     void sendDataToServer();

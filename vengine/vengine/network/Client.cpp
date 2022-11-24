@@ -116,26 +116,41 @@ void Client::cleanPackageAndGameEvents()
     // Clear packages so same data doesn't get sent twice
     this->clientTcpPacketSend.clear();
     this->clientUdpPacketSend.clear();
+    this->clientUdpPacketSend << sendPacketID++;
 }
 
 sf::Packet Client::getTCPDataFromServer()
 {
-    sf::Packet tcpPacketRecv;
-    this->tcpSocket.receive(tcpPacketRecv);
-    return tcpPacketRecv;
+    sf::Packet tempPacketRecv, returnPacketRecv;
+    int timesTryingToRecv = 0;
+    while (this->tcpSocket.receive(tempPacketRecv) == sf::Socket::Done && timesTryingToRecv < MAXTIMETRYINGTORECV)
+    {
+        returnPacketRecv.append(tempPacketRecv.getData(), tempPacketRecv.getDataSize());
+        ++timesTryingToRecv;
+    }
+    return returnPacketRecv;
 }
 
 sf::Packet Client::getUDPDataFromServer()
 {
+    int timesTryingToRecv = 0;
     // Get all the data from udpSocket & handle it to some extent
-    sf::Packet     udpPacketRecv;
+    sf::Packet     udpPacketRecv, tempPacketRecv;
     sf::IpAddress  sender;
     unsigned short port;
-    if (this->udpSocket.receive(udpPacketRecv, sender, port) == sf::Socket::Done) 
+    while (this->udpSocket.receive(tempPacketRecv, sender, port) == sf::Socket::Done && timesTryingToRecv < MAXTIMETRYINGTORECV) 
     {
+        ++timesTryingToRecv;
         if (sender == this->serverIP) // If we get something that is not from server
         {
-            return udpPacketRecv;
+            //check if packet is to old
+            uint32_t packetID;
+            tempPacketRecv >> packetID;
+            if (packetID > this->recvPacketID)
+            {
+                this->recvPacketID = packetID;
+                udpPacketRecv = tempPacketRecv;
+            }
         }
     }
     // If we didn't get anything return packet with nothing in it

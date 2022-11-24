@@ -17,6 +17,7 @@ struct ClientInfo {
 	sf::TcpSocket  clientTcpSocket;
 	float          TimeToDisconnect = 0;
 	int			   id;
+    uint32_t recvUdpPacketID = 0;
 
 	void clean()
 	{
@@ -30,6 +31,7 @@ struct ClientInfo {
 
 class Server {
 private:
+    static const int MAXTIMETRYINGTORECV = 4;
 	// Functions
 	bool duplicateUser();
 	// See if user is still connected by seeing if user has been to the sending messages the last 3 seconds or so
@@ -53,6 +55,7 @@ private:
 
 	// Reference used for custom events
 	NetworkHandler* networkHandler;
+    uint32_t sendUdpPacketID = 0;
 
 	// Print all users
 	void printAllUsers();

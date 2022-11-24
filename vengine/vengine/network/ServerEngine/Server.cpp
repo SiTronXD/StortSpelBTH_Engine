@@ -286,7 +286,10 @@ void Server::cleanSendPackages()
 	{
 		serverToClientPacketTcp[i].clear();
 		serverToClientPacketUdp[i].clear();
+		//give udp packet new id after its clear
+        serverToClientPacketUdp[i] << sendUdpPacketID;
 	}
+    ++sendUdpPacketID;
 }
 
 void Server::seeIfUsersExist()
@@ -322,23 +325,34 @@ void Server::sendDataToAllUsers()
 
 void Server::getDataFromUsers()
 {
+
+	int timesTryingToRecv = 0;
 	// See if we recv something from
 	for (int i = 0; i < clientToServerPacketTcp.size(); i++)
 	{
-		if (clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done)
+		//if we disconnect we need to double check
+		while (
+			clients.size() > i &&
+			clients[i]->clientTcpSocket.receive(clientToServerPacketTcp[i]) == sf::Socket::Done && 
+			timesTryingToRecv < MAXTIMETRYINGTORECV
+			)
 		{
+            ++timesTryingToRecv;
 			clients[i]->TimeToDisconnect = 0;
 			// Need to handle packet direct
 			handlePacketFromUser(i, true);
 		}
 	}
 	
+	timesTryingToRecv = 0;
+
 	// Do I need to change sender and port and the see if they match?
 	sf::IpAddress tempIPAddress;
 	unsigned short tempPort;
 	sf::Packet tempPacket;
-	while (udpSocket.receive(tempPacket, tempIPAddress, tempPort) == sf::Socket::Done)  // Shall I really have a while loop?
+	while (udpSocket.receive(tempPacket, tempIPAddress, tempPort) == sf::Socket::Done && timesTryingToRecv < MAXTIMETRYINGTORECV)
 	{
+        ++timesTryingToRecv;
 		// Check who it's from
 		for (int i = 0; i < clientToServerPacketUdp.size(); i++)
 		{
@@ -346,6 +360,19 @@ void Server::getDataFromUsers()
 			{
 				clients[i]->TimeToDisconnect = 0;
 				clientToServerPacketUdp[i] = tempPacket;
+
+				//check if the packet is older than another one
+                uint32_t udpIdPacket;
+                clientToServerPacketUdp[i] >> udpIdPacket;
+				//if its older than another one we got, clean and break
+                if (udpIdPacket < clients[i]->recvUdpPacketID)
+                {
+                    clientToServerPacketUdp[i].clear();
+                    break;
+				}
+				//else new id packet
+                clients[i]->recvUdpPacketID = udpIdPacket;
+
 				handlePacketFromUser(i, false);
 				break;
 			}
