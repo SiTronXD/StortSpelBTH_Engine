@@ -2,6 +2,8 @@
 #include "AIHandler.hpp"
 #include "imgui.h"
 
+bool AIHandler::stop = false;
+
 void AIHandler::drawImgui(){
 
     // TODO: Improve this code... 

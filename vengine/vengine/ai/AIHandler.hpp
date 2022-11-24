@@ -88,10 +88,11 @@ public:
 		createAIEntity(entityID, this->FSMs[fsmName]);
 	}
 
-
+ public:
+    static bool stop; 
     void drawImgui();
     Scene* currentScene = nullptr; //TODO make const...
-    
+
     void update(float dt){
         this->dt = dt;
         if(currentScene != this->sh->getScene())
@@ -102,9 +103,12 @@ public:
         }
 
         eventSystem.update();
-        updateEntityFSMs();
+        if(AIHandler::stop == false){
+            updateEntityFSMs();
+        }
         drawImgui();
         switchedScene = false; 
     }
+   
 
 };
