@@ -38,7 +38,8 @@ void SceneHandler::updatePreScene()
 	animView.each([&]
 	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
 		{
-			const MeshData& meshData = this->resourceManager->getMesh(meshComponent.meshID).getMeshData();
+			Mesh& currentMesh = this->resourceManager->getMesh(meshComponent.meshID);
+			const MeshData& meshData = currentMesh.getMeshData();
 
 			for (uint32_t i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
 			{
@@ -49,6 +50,9 @@ void SceneHandler::updatePreScene()
 					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
 				}
 			}
+
+			// Store bone transformations
+			currentMesh.getBoneTransforms(animationComponent);
 		}
 	);
 }

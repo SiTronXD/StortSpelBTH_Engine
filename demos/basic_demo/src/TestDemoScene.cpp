@@ -294,27 +294,51 @@ void TestDemoScene::update()
 
 	if (Input::isKeyReleased(Keys::ONE))
 	{
-		setAnimation(multiAni2, "idle", "LowerBody");
 		setAnimation(aniIDs[0], "Idk", "mainSlot");
 		setAnimation(aniIDs[1], "Idk");
 	}
 	else if (Input::isKeyReleased(Keys::TWO))
 	{
-		setAnimation(multiAni2, "idle", "UpperBody");
 		setAnimation(aniIDs[0], "Run", "LeftLegSlot");
 		setAnimation(aniIDs[1], "Run");
 	}
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
-		setAnimation(multiAni2, "attack", "UpperBody");
 		setAnimation(aniIDs[0], "Idk", "RightLegSlot");
 	}
 	else if (Input::isKeyReleased(Keys::FOUR))
 	{
-		setAnimation(multiAni2, "run");
 		setAnimation(aniIDs[0], "Run");
 	}
 
+	if (ImGui::Begin("Char animation"))
+	{
+		ImGui::PushItemWidth(-100.f);
+		AnimationSlot& upperSlot = getAnimationSlot(multiAni2, "UpperBody");
+		ImGui::Text("Upper body");
+		int idx = upperSlot.animationIndex;
+		ImGui::InputInt("1 Ani idx", &idx, 1, 1);
+		upperSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
+		ImGui::DragFloat(" 1Time scale", &upperSlot.timeScale, 0.01f, -10.f, 10.f);
+		
+		AnimationSlot& lowerSlot = getAnimationSlot(multiAni2, "LowerBody");
+		ImGui::Separator();
+		ImGui::Text("Lower body");
+		idx = lowerSlot.animationIndex;
+		ImGui::InputInt("2 Ani idx", &idx, 1, 1);
+		lowerSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
+		ImGui::DragFloat("2 Time scale", &lowerSlot.timeScale, 0.01f, -10.f, 10.f);
+
+		if (ImGui::Button("Reset timers"))
+		{
+			upperSlot.timer = 0.f;
+			upperSlot.timeScale = 1.f;
+			lowerSlot.timer = 0.f;
+			lowerSlot.timeScale = 1.f;
+		}
+		ImGui::PopItemWidth();
+	}
+	ImGui::End();
 
 	// Imgui bloom
 	static float bloomBufferLerpVal = 0.04f;
