@@ -495,14 +495,6 @@ int SceneLua::lua_getAnimationSlot(lua_State* L)
 
 	lua_pushanimationslot(L, scene->getAnimationSlot(entity, slotName));
 
-	// Dump stack
-	// Dump stack
-	// Dump stack
-
-	// STOPS HERE ?
-	// STOPS HERE ?
-	// STOPS HERE ?
-
 	return 1;
 }
 
@@ -513,18 +505,7 @@ int SceneLua::lua_setAnimationSlot(lua_State* L)
 	const char* slotName = lua_tostring(L, 2);
 
 	AnimationSlot& slot = scene->getAnimationSlot(entity, slotName);
-	slot.animationIndex = (uint32_t)lua_tointeger(L, 3);
-	slot.timer = (float)lua_tonumber(L, 4);
-	slot.timeScale = (float)lua_tonumber(L, 5);
-
-
-	// Dump stack
-	// Dump stack
-	// Dump stack
-
-	// STOPS HERE ?
-	// STOPS HERE ?
-	// STOPS HERE ?
+	slot = lua_toanimationslot(L, 3);
 
 	return 0;
 }

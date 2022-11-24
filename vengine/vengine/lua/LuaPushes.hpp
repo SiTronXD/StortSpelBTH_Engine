@@ -345,6 +345,44 @@ static void lua_pushrigidbody(lua_State* L, const Rigidbody& rb)
 	lua_setfield(L, -2, "velocity");
 }
 
+static AnimationSlot lua_toanimationslot(lua_State* L, int index)
+{
+	AnimationSlot slot{};
+
+	// Sanity check
+	if (!lua_istable(L, index)) {
+		std::cout << "Error: not animationslot-table" << std::endl;
+		return slot;
+	}
+
+	lua_getfield(L, index, "animationIndex");
+	slot.animationIndex = (uint32_t)lua_tointeger(L, -1);
+	lua_pop(L, 1);
+
+	lua_getfield(L, index, "timer");
+	slot.timer = (float)lua_tonumber(L, -1);
+	lua_pop(L, 1);
+
+	slot.timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	lua_pop(L, 1);
+
+	return slot;
+}
+
+static void lua_pushanimationslot(lua_State* L, const AnimationSlot& animSlot)
+{
+	lua_newtable(L);
+
+	lua_pushinteger(L, animSlot.animationIndex);
+	lua_setfield(L, -2, "animationIndex");
+
+	lua_pushnumber(L, animSlot.timer);
+	lua_setfield(L, -2, "timer");
+
+	lua_pushnumber(L, animSlot.timeScale);
+	lua_setfield(L, -2, "timeScale");
+}
+
 static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBufferID boneID)
 {
 	AnimationComponent anim{};
@@ -362,31 +400,18 @@ static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBuffer
 
 		lua_getfield(L, -1, "animationIndex");
 		anim.aniSlots[i].animationIndex = (uint32_t)lua_tonumber(L, -1);
+		lua_pop(L, 1);
 
 		lua_getfield(L, -1, "timer");
 		anim.aniSlots[i].timer = (float)lua_tonumber(L, -1);
+		lua_pop(L, 1);
 
 		lua_getfield(L, -1, "timeScale");
 		anim.aniSlots[i].timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
-
-		lua_pop(L, 1);
+		lua_pop(L, 2);
 	}
 
 	return anim;
-}
-
-static void lua_pushanimationslot(lua_State* L, const AnimationSlot& animSlot)
-{
-	lua_newtable(L);
-
-	lua_pushinteger(L, animSlot.animationIndex);
-	lua_setfield(L, -2, "animationIndex");
-
-	lua_pushnumber(L, animSlot.timer);
-	lua_setfield(L, -2, "timer");
-
-	lua_pushnumber(L, animSlot.timeScale);
-	lua_setfield(L, -2, "timeScale");
 }
 
 static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
