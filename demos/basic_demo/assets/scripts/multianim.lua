@@ -46,7 +46,9 @@ function script:update(dt)
 		local slot1 = scene.getAnimationSlot(self.ID, "UpperBody")
 		local slot2 = scene.getAnimationSlot(self.ID, "LowerBody")
 		slot1.timeScale = 1.0
+		slot1.timer = 0.0
 		slot2.timeScale = 1.0
+		slot2.timer = 0.0
 		scene.setAnimationSlot(self.ID, "UpperBody", slot1)
 		scene.setAnimationSlot(self.ID, "LowerBody", slot2)
 
