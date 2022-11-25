@@ -394,11 +394,25 @@ int SceneLua::lua_setComponent(lua_State* L)
 		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, 3, assigned));
 		break;
 	case CompType::ANIMATION:
+	{
 		if (scene->hasComponents<AnimationComponent>(entity)) 
 		{ 
 			boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
 		}
-		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, boneID));
+		else
+		{
+			scene->setComponent<AnimationComponent>(entity);
+		}
+
+		const AnimationComponent newCompData = lua_toanimation(L, 3, boneID);
+		AnimationComponent& oldCompData = scene->getComponent<AnimationComponent>(entity);
+
+		oldCompData.boneTransformsID = boneID;
+		for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+		{
+			oldCompData.aniSlots[i] = newCompData.aniSlots[i];
+		}
+	}
 		break;
 	case CompType::UIAREA:
 		scene->setComponent<UIArea>(entity, lua_touiarea(L, 3));

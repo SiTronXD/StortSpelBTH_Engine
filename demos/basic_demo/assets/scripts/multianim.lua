@@ -10,7 +10,7 @@ function script:update(dt)
 	if (input.isKeyReleased(Keys.ONE)) then
 		-- Does the same thing as below
 		local anim = scene.getComponent(self.ID, CompType.Animation)
-		anim[1].animationIndex = 0
+		anim[1].animationIndex = 1
 		anim[0].timeScale = 0.5
 		scene.setComponent(self.ID, CompType.Animation, anim)
 
