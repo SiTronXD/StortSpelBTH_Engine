@@ -171,25 +171,25 @@ void TestDemoScene::init()
 		newAnimComp.timeScale += i % 2;
 		newAnimComp.animationIndex = 0;
 
+		MeshComponent& meshComp =
+			this->getComponent<MeshComponent>(this->aniIDs[i]);
 		if (i == 2)
 		{
-			MeshComponent& meshComp = 
-				this->getComponent<MeshComponent>(this->aniIDs[i]);
 			this->getResourceManager()->makeUniqueMaterials(meshComp);
 			meshComp.overrideMaterials[0].glowMapTextureIndex =
 				this->getResourceManager()->addTexture(
 					"vengine_assets/models/Stormtrooper/textures/Stormtrooper_D_Specular.png"
 				);
 		}
+		else if(i == 3)
+		{
+			this->getResourceManager()->getMaterial(meshComp, 0).glowMapTextureIndex = 
+				this->getResourceManager()->addTexture(
+					"vengine_assets/textures/White.png"
+				);
+		}
 	}
 
-	// Change material emission
-	this->bloomStrength = 200.0f;
-	this->getResourceManager()->getMaterial(
-		this->getComponent<MeshComponent>(this->aniIDs[2]),
-		0
-	).emissionColor = glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
-	
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
 	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);

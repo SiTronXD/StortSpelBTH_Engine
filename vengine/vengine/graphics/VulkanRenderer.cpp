@@ -173,7 +173,7 @@ int VulkanRenderer::init(
                 DEF<std::string>(P_TEXTURES) + "missing_texture.png"
             ),
             this->resourceManager->addTexture(
-                DEF<std::string>(P_TEXTURES) + "White.png"
+                DEF<std::string>(P_TEXTURES) + "Black.png"
             )
         );
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");

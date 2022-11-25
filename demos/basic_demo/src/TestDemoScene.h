@@ -17,7 +17,7 @@ private:
 	float timer;
 
 	glm::vec3 bloomColor = glm::vec3(1.0f, 0.0f, 1.0f);
-	float bloomStrength;
+	float bloomStrength = 1.0f;
 
 	Entity aniIDs[4];
 	bool aniActive[4];
