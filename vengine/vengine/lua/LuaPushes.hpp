@@ -398,6 +398,11 @@ static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBuffer
 	for(int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
 	{
 		lua_rawgeti(L, index, i);
+		if(lua_isnil(L, -1)) // Not valid
+		{
+			lua_pop(L, 1);
+			return anim;
+		}
 
 		lua_getfield(L, -1, "animationIndex");
 		anim.aniSlots[i].animationIndex = (uint32_t)lua_tonumber(L, -1);
