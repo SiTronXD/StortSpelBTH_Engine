@@ -115,7 +115,7 @@ void Mesh::getLocalBoneTransform(
     glm::quat rotation2;
     this->getAnimSlerp(curAnimPose.rotationStamps, aniSlot.timer, rotation1);
     this->getAnimSlerp(nextAnimPose.rotationStamps, aniSlot.nTimer, rotation2);
-    glm::quat rotation = glm::mix(rotation1, rotation2, aniSlot.alpha);
+    glm::quat rotation = glm::slerp(rotation1, rotation2, aniSlot.alpha);
 
     // Scale
     glm::vec3 scale1;
