@@ -9,10 +9,10 @@ layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor; 
 
 // Push constant
-layout(push_constant) uniform ResolutionPushConstantData
+layout(push_constant) uniform DownsamplePushConstantData
 {
-	vec4 resolution;
-} pushConstantData;
+	vec4 data; // vec4(resX, resY, 0, weight)
+} downsampleData;
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D prevMipTexture;
 
@@ -23,7 +23,7 @@ vec3 sampleTex(in vec2 oneOverSize, in vec2 offset)
 
 void main()
 {
-	vec2 oneOverSize = 1.0f / pushConstantData.resolution.xy;
+	vec2 oneOverSize = 1.0f / downsampleData.data.xy;
 
 	// 13 samples around current pixel
 	// a - b - c

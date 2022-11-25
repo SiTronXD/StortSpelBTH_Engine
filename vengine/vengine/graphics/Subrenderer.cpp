@@ -710,10 +710,11 @@ void VulkanRenderer::renderBloomDownUpsample(
 
     // Update resolution
     const vk::Extent2D& mipExtent = this->postProcessHandler.getMipExtent(readMipIndex);
-    ResolutionPushConstantData& pushConstantData =
-        this->postProcessHandler.getResolutionData();
-    pushConstantData.resolution.x = (float) mipExtent.width;
-    pushConstantData.resolution.y = (float) mipExtent.height;
+    BloomPushConstantData& pushConstantData =
+        this->postProcessHandler.getBloomPushData();
+    pushConstantData.data.x = (float) mipExtent.width;
+    pushConstantData.data.y = (float) mipExtent.height;
+    pushConstantData.data.w = (float) this->postProcessHandler.getUpsampleWeight(); // Only used during upsampling
     commandBuffer.pushConstant(
         shaderInput,
         (void*) &pushConstantData

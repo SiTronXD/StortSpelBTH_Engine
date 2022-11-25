@@ -45,7 +45,7 @@ private:
 	ShaderInput upShaderInput;
 	Pipeline upPipeline;
 
-	ResolutionPushConstantData resolutionData{};
+	BloomPushConstantData bloomData{};
 
 	std::vector<vk::Extent2D> mipExtents;
 
@@ -88,7 +88,7 @@ public:
 	inline CommandBuffer& getUpsampleCommandBuffer(const uint32_t& currentFrame, const uint32_t& mipLevel) { return this->upCommandBuffers[currentFrame][mipLevel]; }
 	inline ShaderInput& getDownsampleShaderInput() { return this->downShaderInput; }
 	inline ShaderInput& getUpsampleShaderInput() { return this->upShaderInput; }
-	inline ResolutionPushConstantData& getResolutionData() { return this->resolutionData; }
+	inline BloomPushConstantData& getBloomPushData() { return this->bloomData; }
 	inline const Texture& getDepthTexture() const { return this->depthTexture; }
 	inline const RenderPass& getDownsampleRenderPass() const { return this->downRenderPass; }
 	inline const RenderPass& getUpsampleRenderPass() const { return this->upRenderPass; }
@@ -100,4 +100,5 @@ public:
 	inline const uint32_t& getMipDescriptorIndex(const uint32_t& mipLevel) const { return this->mipDescriptorIndices[mipLevel]; }
 	inline const uint32_t& getDesiredNumMipLevels() const { return this->desiredNumMipLevels; }
 	inline const uint32_t& getNumMipLevelsInUse() const { return this->numMipLevelsInUse; }
+	inline float getUpsampleWeight() const { return (float) (this->desiredNumMipLevels - 1) / (this->numMipLevelsInUse - 1); }
 };

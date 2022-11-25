@@ -16,9 +16,10 @@ struct PushConstantData
     glm::vec4 emissionColor = glm::vec4(0.0f);
 };
 
-struct ResolutionPushConstantData
+struct BloomPushConstantData
 {
-    glm::vec4 resolution = glm::vec4(0.0f);
+    // vec4(resolutionX, resolutionY, 0, upsampleWeight)
+    glm::vec4 data = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 };
 
 struct BloomSettingsBufferData
