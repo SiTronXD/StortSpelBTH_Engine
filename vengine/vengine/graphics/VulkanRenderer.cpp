@@ -173,7 +173,7 @@ int VulkanRenderer::init(
                 DEF<std::string>(P_TEXTURES) + "missing_texture.png"
             ),
             this->resourceManager->addTexture(
-                DEF<std::string>(P_TEXTURES) + "White.png"
+                DEF<std::string>(P_TEXTURES) + "Black.png"
             )
         );
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
@@ -1320,7 +1320,8 @@ void VulkanRenderer::recordCommandBuffers(
         this->beginBloomDownUpsampleRenderPass(
             this->postProcessHandler.getDownsampleRenderPass(), 
             downsampleCommandBuffer, 
-            i
+            i,
+            false
         );
             this->renderBloomDownUpsample(
                 downsampleCommandBuffer, 
@@ -1347,7 +1348,8 @@ void VulkanRenderer::recordCommandBuffers(
         this->beginBloomDownUpsampleRenderPass(
             this->postProcessHandler.getUpsampleRenderPass(),
             upsampleCommandBuffer,
-            i
+            i,
+            true
         );
         this->renderBloomDownUpsample(
             upsampleCommandBuffer,

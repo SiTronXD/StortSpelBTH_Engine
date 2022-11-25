@@ -72,7 +72,7 @@ glm::vec2 ResTranslator::toInternalPos(
 	else
 	{
 		newX = (externalPos.x / windowWidth - 0.5f) * INTERNAL_WIDTH;
-		newY = -(externalPos.y / windowHeight - 0.5f) * INTERNAL_WIDTH * aspectRatio;
+		newY = -(externalPos.y / windowHeight - 0.5f) * INTERNAL_WIDTH / aspectRatio;
 	}
 
 	return glm::vec2(newX, newY);

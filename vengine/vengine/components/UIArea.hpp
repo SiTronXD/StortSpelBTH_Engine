@@ -9,7 +9,7 @@ struct UIArea // 2D only
 	const bool isHovering() const
 	{
 		glm::vec2 diff = glm::abs(Input::getMouseUITranslated() - this->position);
-		return diff.x <= this->dimension.x / 2 && diff.y <= this->dimension.y / 2;
+		return diff.x <= this->dimension.x * 0.5f && diff.y <= this->dimension.y * 0.5f;
 	}
 
 	const bool isClicking() const

@@ -171,7 +171,8 @@ private:
     void beginBloomDownUpsampleRenderPass(
         const RenderPass& renderPass,
         CommandBuffer& commandBuffer,
-        const uint32_t& writeMipIndex);
+        const uint32_t& writeMipIndex,
+        bool isUpsampling);
     void renderBloomDownUpsample(
         CommandBuffer& commandBuffer,
         ShaderInput& shaderInput,

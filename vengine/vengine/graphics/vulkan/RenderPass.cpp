@@ -183,7 +183,7 @@ void RenderPass::createRenderPassBloomUpsample(
     vk::AttachmentDescription2 attachment{};
     attachment.setFormat(PostProcessHandler::HDR_FORMAT);
     attachment.setSamples(vk::SampleCountFlagBits::e1);
-    attachment.setLoadOp(vk::AttachmentLoadOp::eClear);
+    attachment.setLoadOp(vk::AttachmentLoadOp::eLoad);
     attachment.setStoreOp(vk::AttachmentStoreOp::eStore);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     attachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
