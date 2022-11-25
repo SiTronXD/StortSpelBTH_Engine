@@ -17,7 +17,7 @@ resources.createAnimationSlot(multiAnim, "UpperBody", "mixamorig:Spine1");
 
 local a = scene.createEntity()
 scene.setComponent(a, CompType.Mesh, multiAnim)
-scene.setComponent(a, CompType.Animation)
+scene.setComponent(a, CompType.Animation, {})
 scene.setComponent(a, CompType.Script, "assets/scripts/multiAnim.lua")
 
 local e = scene.createEntity()

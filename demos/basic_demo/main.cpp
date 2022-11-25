@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
         Engine engine;
         // engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
         //engine.run("Demo Application", "", new LevelEditorTestScene());
-       engine.run("Demo Application", "", new TestDemoScene());
+       engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());
     }
 
 	return EXIT_SUCCESS;
