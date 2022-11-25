@@ -90,7 +90,7 @@ void Mesh::getLocalBoneTransform(
     glm::vec3 scale;
     this->getAnimLerp(poses.scaleStamps, timer, scale);
 
-    // Final transform
+    // Final transformAS
     outputMatrix =
         glm::translate(identityMat, translation) *
         glm::toMat4(rotation) *
@@ -108,27 +108,27 @@ void Mesh::getLocalBoneTransform(
     glm::vec3 translation2;
     this->getAnimLerp(curAnimPose.translationStamps, aniSlot.timer, translation1);
     this->getAnimLerp(nextAnimPose.translationStamps, aniSlot.nTimer, translation2);
-    glm::vec3 translation = glm::mix(translation1, translation2, aniSlot.alpha);
+    translation1 = glm::mix(translation1, translation2, aniSlot.alpha);
     
     // Rotation
     glm::quat rotation1;
     glm::quat rotation2;
     this->getAnimSlerp(curAnimPose.rotationStamps, aniSlot.timer, rotation1);
     this->getAnimSlerp(nextAnimPose.rotationStamps, aniSlot.nTimer, rotation2);
-    glm::quat rotation = glm::slerp(rotation1, rotation2, aniSlot.alpha);
+    rotation1 = glm::slerp(rotation1, rotation2, aniSlot.alpha);
 
     // Scale
     glm::vec3 scale1;
     glm::vec3 scale2;
     this->getAnimLerp(curAnimPose.scaleStamps, aniSlot.timer, scale1);
     this->getAnimLerp(nextAnimPose.scaleStamps, aniSlot.nTimer, scale2);
-    glm::vec3 scale = glm::mix(scale1, scale2, aniSlot.alpha);
+    scale1 = glm::mix(scale1, scale2, aniSlot.alpha);
 
     // Final transform
     outputMatrix =
-        glm::translate(identityMat, translation) *
-        glm::toMat4(rotation) *
-        glm::scale(identityMat, scale);
+        glm::translate(identityMat, translation1) *
+        glm::toMat4(rotation1) *
+        glm::scale(identityMat, scale1);
 }
 
 Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
@@ -292,7 +292,7 @@ void Mesh::getBoneTransforms(
         const Animation& curAnim = this->meshData.animations[aniSlot.animationIndex];
 
         // if no next animation
-        if (aniSlot.nAnimationIndex == ~0u)
+        if (aniSlot.nAnimationIndex == -1)
         {
             // Start from this local bone transformation
             this->getLocalBoneTransform(curAnim.boneStamps[i], aniSlot.timer, boneTransform);
@@ -301,8 +301,8 @@ void Mesh::getBoneTransforms(
         {
             const Animation& nextAnim = this->meshData.animations[aniSlot.nAnimationIndex];
             this->getLocalBoneTransform(aniSlot, 
-                curAnim.boneStamps[aniSlot.animationIndex], 
-                nextAnim.boneStamps[aniSlot.nAnimationIndex], boneTransform);
+                curAnim.boneStamps[i], 
+                nextAnim.boneStamps[i], boneTransform);
         }
 
 

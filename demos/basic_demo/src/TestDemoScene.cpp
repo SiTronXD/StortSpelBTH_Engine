@@ -315,17 +315,24 @@ void TestDemoScene::update()
 	{
 		ImGui::PushItemWidth(-100.f);
 
-		if (ImGui::Button("Begin transition"))
+		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(multiAni2);
+		
+		ImGui::InputInt("Cur Ani Idx", &aniComp.aniSlots[0].animationIndex, 1, 1);
+		aniComp.aniSlots[0].animationIndex = std::clamp(aniComp.aniSlots[0].animationIndex, 0, 2);
+		
+		ImGui::InputInt("Next Ani Idx", &aniComp.aniSlots[0].nAnimationIndex, 1, 1);
+		aniComp.aniSlots[0].nAnimationIndex = std::clamp(aniComp.aniSlots[0].nAnimationIndex, 0, 2);
+
+		ImGui::DragFloat("Alpha", &aniComp.aniSlots[0].alpha, 0.01f, 0.f, 1.f);
+		ImGui::DragFloat("Time Scale", &aniComp.aniSlots[0].timeScale, 0.01f, 0.f, 1.f);
+		aniComp.aniSlots[0].nTimeScale = aniComp.aniSlots[0].timeScale;
+		
+		ImGui::Text("Time: %.2f - nTime: %.2f", aniComp.aniSlots[0].timer, aniComp.aniSlots[0].nTimer);
+		static bool tryBlend = false;
+		ImGui::Checkbox("Blend", &tryBlend);
+		if (!tryBlend)
 		{
-			AnimationComponent& aniComp = this->getComponent<AnimationComponent>(multiAni2);
-			if (aniComp.aniSlots[0].animationIndex == 0)
-			{
-				aniComp.aniSlots[0].nAnimationIndex = 1;
-			}
-			else
-			{
-				aniComp.aniSlots[0].nAnimationIndex = 0;
-			}
+			aniComp.aniSlots[0].nAnimationIndex = -1;
 		}
 
 		/*AnimationSlot& upperSlot = getAnimationSlot(multiAni2, "UpperBody");

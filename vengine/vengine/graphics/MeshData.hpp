@@ -31,11 +31,11 @@ struct AnimationSlot
     float alpha = 0.f;
     float transitionTime = 1.f; // alpha += (1.f / transitionTime) * dt
 
-    uint32_t animationIndex = 0u;
+    int animationIndex = 0; // INT TEMP
     float timer = 0.f;
     float timeScale = 1.f;
 
-    uint32_t nAnimationIndex = ~0u;
+    int nAnimationIndex = -1; // INT TEMP
     float nTimer = 0.f;
     float nTimeScale = 1.f;
 };

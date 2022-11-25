@@ -50,6 +50,7 @@ void SceneHandler::updatePreScene()
 					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
 				}
 
+#if 0
 				if (aniSlot.nAnimationIndex != ~0u)
 				{
 					// Still in transition
@@ -71,6 +72,16 @@ void SceneHandler::updatePreScene()
 						aniSlot.alpha = 0.f;
 					}
 				}
+#else
+				if (aniSlot.nAnimationIndex != -1)
+				{
+					aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
+					if (aniSlot.nTimer >= meshData.animations[aniSlot.nAnimationIndex].endTime)
+					{
+						aniSlot.nTimer = 0.f;
+					}
+				}
+#endif
 			}
 
 			// Store bone transformations
