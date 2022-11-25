@@ -1,19 +1,20 @@
 local script = {}
 
 function script:init()
-	self.transform.position.x = -30
+	self.transform.position.x = -40
+	self.transform.rotation.y = 180
 end
 
 function script:update(dt)
 
 	if (input.isKeyReleased(Keys.ONE)) then
 		-- Does the same thing as below
-		local anim = scene.getComponent(self.ID, CompType.Animation)
-		anim[1].animationIndex = 0
-		anim[0].timeScale = 0.5
-		scene.setComponent(self.ID, CompType.Animation, anim)
+		--local anim = scene.getComponent(self.ID, CompType.Animation)
+		--anim[1].animationIndex = 0
+		--anim[0].timeScale = 0.5
+		--scene.setComponent(self.ID, CompType.Animation, anim)
 
-		--scene.setAnimation(self.ID, "run", "UpperBody")
+		scene.setAnimation(self.ID, "run", "UpperBody")
 	elseif (input.isKeyReleased(Keys.TWO)) then
 		scene.setAnimation(self.ID, "idle", "UpperBody")
 	elseif (input.isKeyReleased(Keys.THREE)) then
@@ -34,12 +35,22 @@ function script:update(dt)
 		local slot = scene.getAnimationSlot(self.ID, "UpperBody")
 		slot.timeScale = 3.0
 		scene.setAnimationSlot(self.ID, "UpperBody", slot)
+		scene.setAnimationSlot(self.ID, "LowerBody", slot)
 	elseif (input.isKeyReleased(Keys.NINE)) then
 		local slot = scene.getAnimationSlot(self.ID, "UpperBody")
 		slot.timer = 0.0
-		slot.timeScale = 1.0
+		slot.timeScale = 0.1
 		scene.setAnimationSlot(self.ID, "UpperBody", slot)
 		scene.setAnimationSlot(self.ID, "LowerBody", slot)
+	elseif (input.isKeyReleased(Keys.ZERO)) then
+		local slot1 = scene.getAnimationSlot(self.ID, "UpperBody")
+		local slot2 = scene.getAnimationSlot(self.ID, "LowerBody")
+		slot1.timeScale = 1.0
+		slot2.timeScale = 1.0
+		scene.setAnimationSlot(self.ID, "UpperBody", slot1)
+		scene.setAnimationSlot(self.ID, "LowerBody", slot2)
+
+
 	end
 
 end

@@ -363,6 +363,7 @@ static AnimationSlot lua_toanimationslot(lua_State* L, int index)
 	slot.timer = (float)lua_tonumber(L, -1);
 	lua_pop(L, 1);
 
+	lua_getfield(L, index, "timeScale");
 	slot.timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
 	lua_pop(L, 1);
 
