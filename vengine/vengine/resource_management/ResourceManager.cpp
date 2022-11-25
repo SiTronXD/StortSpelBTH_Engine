@@ -125,8 +125,7 @@ uint32_t ResourceManager::addMesh(std::string meshPath, MeshData meshData)
 	{
 		uint32_t meshID = map_iterator->second;
         auto mesh_iterator = this->meshes.find(meshID);
-        dev->waitIdle();
-        mesh_iterator->second.cleanup();
+        mesh_iterator->second.safeCleanup();
         //deallocate memory, remove reference and create new mesh
 		meshes.erase(meshID);
 		meshes.insert({meshID, meshLoader.createMesh(meshData)});

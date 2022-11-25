@@ -61,6 +61,7 @@ public:
     void mapAnimations(const std::vector<std::string>& names);
     uint32_t getAnimationIndex(const std::string& name) const;
 
+    void safeCleanup();
     void cleanup();
 
     // Debug

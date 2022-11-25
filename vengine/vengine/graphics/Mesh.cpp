@@ -308,7 +308,13 @@ uint32_t Mesh::getAnimationIndex(const std::string& name) const
     return it->second;
 }
 
-void Mesh::cleanup()
+void Mesh::safeCleanup() 
+{
+    device.waitIdle();
+    cleanup();
+}
+
+    void Mesh::cleanup()
 {
     this->vertexBuffers.cleanup();
 
