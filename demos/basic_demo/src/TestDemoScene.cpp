@@ -175,6 +175,16 @@ void TestDemoScene::init()
 		newAnimComp.aniSlots[0].timer += 24.0f * 0.6f * i;
 		newAnimComp.aniSlots[0].timeScale += i % 2;
 		newAnimComp.aniSlots[0].animationIndex = 0;
+		if (i == 2)
+		{
+			MeshComponent& meshComp = 
+				this->getComponent<MeshComponent>(this->aniIDs[i]);
+			this->getResourceManager()->makeUniqueMaterials(meshComp);
+			meshComp.overrideMaterials[0].glowMapTextureIndex =
+				this->getResourceManager()->addTexture(
+					"vengine_assets/models/Stormtrooper/textures/Stormtrooper_D_Specular.png"
+				);
+		}
 	}
 
 	// Change material emission
@@ -354,10 +364,23 @@ void TestDemoScene::update()
 	ImGui::Begin("Bloom");
 	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 200.0f);
 	ImGui::End();
-	this->getResourceManager()->getMaterial(
-		this->getComponent<MeshComponent>(this->aniIDs[2]),
-		0
-	).emissionColor = glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
+
+	for (uint32_t i = 2; i < 4; ++i)
+	{
+		MeshComponent& meshC =
+			this->getComponent<MeshComponent>(this->aniIDs[i]);
+
+		if (i == 2)
+		{
+			meshC.overrideMaterials[0].emissionColor =
+				glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
+		}
+		else if (i == 3)
+		{
+			this->getResourceManager()->getMaterial(meshC, 0).emissionColor =
+				glm::vec3(1.0f, 0.0f, 1.0f) * this->bloomStrength;
+		}
+	}
 
 	// Imgui directional light
 	DirectionalLight& dirLight = 

@@ -93,6 +93,9 @@
     <ClCompile Include="vengine\graphics\Subrenderer.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
+    <ClCompile Include="vengine\shared_memory\Comlib.cpp" />
+    <ClCompile Include="vengine\shared_memory\Memory.cpp" />
+    <ClCompile Include="vengine\shared_memory\Mutex.cpp" />
     <ClCompile Include="vengine\graphics\LightHandler.cpp" />
     <ClCompile Include="vengine\dev\Random.cpp" />
     <ClCompile Include="vengine\graphics\PostProcessHandler.cpp" />
@@ -193,6 +196,10 @@
     <ClInclude Include="vengine\graphics\vulkan\RenderPass.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\FramebufferArray.hpp" />
     <ClInclude Include="vengine\graphics\LightHandler.hpp" />
+    <ClInclude Include="vengine\shared_memory\Comlib.h" />
+    <ClInclude Include="vengine\shared_memory\Memory.h" />
+    <ClInclude Include="vengine\shared_memory\Mutex.h" />
+    <ClInclude Include="vengine\shared_memory\MayaStructures.h" />
     <ClInclude Include="vengine\graphics\PostProcessHandler.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\SubmitArray.hpp" />
     <ClInclude Include="vengine\components\NoShadowCasting.hpp" />

@@ -33,7 +33,6 @@ NetworkHandler::NetworkHandler() : sceneHandler(nullptr)
 	this->client = nullptr;
 	this->serverThread = nullptr;
 	this->player = -1;
-	this->seed = -1;
 }
 
 NetworkHandler::~NetworkHandler()
@@ -327,11 +326,6 @@ void NetworkHandler::readTCPPacket(sf::Packet& cTCPP)
 
 			cTCPP >> this->seed;  //seed nr;
 		}
-		else if (gameEvent == GameEvents::GetLevelSeed)
-		{
-			cTCPP >> ix;
-			this->seed = ix;
-		}
 		else if (gameEvent == GameEvents::PlayerDied)
 		{
 			//don't know how this should be implemented right now
@@ -510,7 +504,6 @@ int NetworkHandler::getServerSeed()
 	readTCPPacket(overFlow);
 	return seed;
 }
-
 void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
 {
 	TCPPacketEvent polygonEvent;

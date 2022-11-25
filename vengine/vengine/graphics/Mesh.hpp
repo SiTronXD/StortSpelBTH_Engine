@@ -42,7 +42,7 @@ private:
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
-    
+
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
@@ -65,6 +65,7 @@ public:
     uint32_t getAnimationIndex(const std::string& name) const;
     uint32_t getAnimationSlotIndex(const std::string& slotName) const;
 
+    void safeCleanup();
     void cleanup();
 
     // Debug

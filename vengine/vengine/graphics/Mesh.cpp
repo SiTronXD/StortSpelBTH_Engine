@@ -124,8 +124,7 @@ void Mesh::createVertexBuffers(
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
-#endif    
-    
+#endif        
     // Ready array for vertex buffers
     this->vertexBuffers.create(
         *importStructs.device, 
@@ -379,7 +378,13 @@ uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
     return it->second;
 }
 
-void Mesh::cleanup()
+void Mesh::safeCleanup() 
+{
+    device.waitIdle();
+    cleanup();
+}
+
+    void Mesh::cleanup()
 {
     this->vertexBuffers.cleanup();
 
