@@ -74,7 +74,6 @@ void Mesh::getAnimSlerp(
 void Mesh::getLocalBoneTransform(
     const BonePoses& poses,
     const float& timer,
-    const int& animationIndex,
     glm::mat4& outputMatrix)
 {
     glm::mat4 identityMat(1.0f);
@@ -125,8 +124,7 @@ void Mesh::createVertexBuffers(
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
-#endif    
-    
+#endif        
     // Ready array for vertex buffers
     this->vertexBuffers.create(
         *importStructs.device, 
@@ -243,27 +241,25 @@ void Mesh::getBoneTransforms(
 #endif
 
     // Preallocate
-    float timer = animationCompOut.timer;
-    uint32_t animationIndex = animationCompOut.animationIndex;
+    //uint32_t animationIndex = animationCompOut.animationIndex;
     size_t numBones = std::min(
         static_cast<size_t>(NUM_MAX_BONE_TRANSFORMS), 
         this->meshData.bones.size()
     );
     glm::mat4 boneTransform;
 
-    const Animation& animation = 
-        this->meshData.animations[animationIndex];
-
     // Loop through bones, from parents to children
     for (size_t i = 0; i < numBones; ++i)
     {
         Bone& currentBone = this->meshData.bones[i];
 
+        const AnimationSlot& aniPlayer = animationCompOut.aniSlots[currentBone.slotIndex]; 
+        const Animation& curAnim = this->meshData.animations[aniPlayer.animationIndex];
+
         // Start from this local bone transformation
         this->getLocalBoneTransform(
-            animation.boneStamps[i],
-            timer,
-            animationIndex,
+            curAnim.boneStamps[i],
+            aniPlayer.timer,
             boneTransform
         );
 
@@ -288,6 +284,64 @@ void Mesh::getBoneTransforms(
         static_cast<uint32_t>(numBones);
 }
 
+bool Mesh::isChildOf(const Bone& bone, uint32_t grandpaIndex)
+{
+    if (bone.parentIndex == grandpaIndex)
+    {
+        return true;
+    }
+
+    if (bone.parentIndex != -1)
+    {
+        return this->isChildOf(this->meshData.bones[bone.parentIndex], grandpaIndex);
+    }
+
+    return false;
+}
+
+bool Mesh::createAnimationSlot(const std::string& slotName, const std::string& boneName)
+{
+    if (this->aniSlots.size() >= NUM_MAX_ANIMATION_SLOTS)
+    {
+        Log::warning("Mesh::createAnimationSlot | Max animation slots reached");
+        return false;
+    }
+    if (this->aniSlots.count(slotName))
+    {
+        Log::warning("Mesh::createAnimationSlot | Animation slot \"" + slotName + "\" already exists!");
+        return false;
+    }
+
+    // Search through the bones for "boneName"
+    const uint32_t numBones = (uint32_t)this->meshData.bones.size();
+    for (uint32_t i = 0; i < numBones; i++)
+    {
+        if (this->meshData.bones[i].boneName == boneName)
+        {
+            const uint32_t slotIdx = (uint32_t)this->aniSlots.size();
+            this->aniSlots[slotName] = slotIdx;
+
+            this->meshData.bones[i].slotIndex = slotIdx;
+            
+            // Loop through the remaining bones to see if they're a child/grand child
+            const uint32_t startIndex = i;
+            for (uint32_t j = startIndex + 1u; j < numBones; j++)
+            {
+                Bone& curBone = this->meshData.bones[j];
+                if (this->isChildOf(curBone, startIndex))
+                {
+                    curBone.slotIndex = slotIdx;
+                }
+            }
+
+            return true;
+        }
+    }
+
+    Log::error("Mesh::createAnimationSlot | Could not find bone with name \"" + boneName + "\"!");
+    return false;
+}
+
 void Mesh::mapAnimations(const std::vector<std::string>& names)
 {
     this->aniNames.clear();
@@ -301,15 +355,36 @@ void Mesh::mapAnimations(const std::vector<std::string>& names)
 uint32_t Mesh::getAnimationIndex(const std::string& name) const
 {
     const auto it = this->aniNames.find(name);
+#ifdef  _CONSOLE
     if (it == this->aniNames.end())
     {
         Log::error("Could not find animation with name \"" + name + "\"");
     }
+#endif //  _CONSOLE
 
     return it->second;
 }
 
-void Mesh::cleanup()
+uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
+{
+    const auto it = this->aniSlots.find(slotName);
+#ifdef _CONSOLE
+    if (it == this->aniSlots.end())
+    {
+        Log::error("Mesh::getAnimationSlotIndex | Could not find animation slot with name \"" + slotName + "\"");
+    }
+#endif
+
+    return it->second;
+}
+
+void Mesh::safeCleanup() 
+{
+    device.waitIdle();
+    cleanup();
+}
+
+    void Mesh::cleanup()
 {
     this->vertexBuffers.cleanup();
 

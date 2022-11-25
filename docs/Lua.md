@@ -242,13 +242,27 @@ scene.isActive(int : entity) -- Returns bool
 ~~~
 
 ### setAnimation
-Sets an animation clip to an entity with a string if it has an [animation component](#Animation) and [mesh component](#MeshComponent). This is used in combination with the [mapAnimations](#mapAnimations) function. This exists to be used instead of integer id's since it's more intuitive to work with.
+Sets an animation clip to an entity with a string if it has an [animation component](#Animation) and [mesh component](#MeshComponent). This is used in combination with the [mapAnimations](#mapAnimations) and [createAnimationSlot](#createAnimationSlot) function. This exists to be used instead of integer id's since it's more intuitive to work with.
 ~~~ Lua
-scene.setAnimation(int : entity, string : animation_name)
+-- Slot name is optional
+scene.setAnimation(int : entity, string : animation_name, string : slot_name)
+~~~
+
+### getAnimationSlot
+Get a particular animation slot in an [animation component](#Animation) for a particular entity. This is used in combination with the [createAnimationSlot](#createAnimationSlot) function. This exists to be used instead of integer id's since it's more intuitive to work with.
+~~~ Lua
+scene.getAnimatioSlot(int : entity, string : slot_name)
+~~~
+
+### setAnimationSlot
+Set a particular animation slot in an [animation component](#Animation) for a particular entity. This is used in combination with the [getAnimationSlot](#getAnimationSlot) function. This exists to be used instead of integer id's since it's more intuitive to work with.
+~~~ Lua
+-- Animation slot table is optional
+scene.setAnimatioSlot(int : entity, string : slot_name, table : animation_slot_table)
 ~~~
 
 ### Components
-The amount of components supported grows with the engine. This section goes over the member variables that the components have and how to use them in combination with the [scene](#Scene) global and [prefabs](#Prefabs) These are the ones currently supported in lua:
+The amount of components supported grows with the engine. This section goes over the member variables that the components have and how to use them in combination with the [scene](#Scene) global and [prefabs](#Prefabs). These are the ones currently supported in lua:
 * [Transform](#Transform)
 * [MeshComponent](#MeshComponent)
 * [Script](#Script)
@@ -373,18 +387,19 @@ scene.setComponent(e, CompType.Rigidbody, rb)
 ~~~
 
 #### Animation
-The animation component is used to apply an animation on an enity with a [mesh](#MeshComponent). The current timer, playback speed and selected animation can be decided in the component.
+The animation component is used to apply an animation on an enity with a [mesh](#MeshComponent). The current timer, playback speed and selected animation can be decided in the component. This is done via the animation slot array the component consists of. More information is found in [createAnimationSlot](#createAnimationSlot), [getAnimationSlot](#getAnimationSlot) and [setAnimationSlot](#setAnimationSlot).
 ~~~ Lua
 -- Members (also how it's defined in prefabs)
-local Animation = {
+local AnimationSlot = {
 	float : animation_index,
 	float : timer,
 	float : timeScale
 }
+local Animation = AnimationSlot[5] -- List of animationslots (maximum 5)
 
 --Example of use
 local anim = scene.getComponent(e, CompType.Animation)
-anim.timeScale = -2 -- Backwards at double speed
+anim[0].timeScale = -2 -- Backwards at double speed
 scene.setComponent(e, CompType.Animation, anim)
 ~~~
 
@@ -591,7 +606,14 @@ local animMesh = resources.addAnimations({ "walk.fbx", "run.fbx", "jump.fbx" })
 resources.mapAnimations(animMesh, { "walk", "run", "jump" })
 ~~~
 
-#### addAudio
+### createAnimationSlot
+This function is used to divide an animation skeleton to a certain slot based on a bone's children. This is used for multiple animations and useful with the [setAnimation](#setAnimation) function.
+~~~ Lua
+-- returns true if succeded
+resources.createAnimationSlot(int: meshID, string : slot_name, string : bone_name) 
+~~~
+
+### addAudio
 Loads audio file that can be used in the engine. Returns ID if the path sent is successfully loaded the audiofile. Otherwise the return is nil.
 ~~~ Lua
 resources.addAudio(string : audio_path) -- Returns the audio ID (nil if not found)

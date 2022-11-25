@@ -26,7 +26,7 @@ void SceneHandler::initSubsystems()
 	{
 		this->vulkanRenderer->initForScene(this->scene);
 	}
-	
+
 	// Reset delta time counter
 	Time::reset();
 }
@@ -38,17 +38,17 @@ void SceneHandler::updatePreScene()
 	animView.each([&]
 	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
 		{
-			Mesh& currentMesh = 
-				this->resourceManager->getMesh(meshComponent.meshID);
-			const float& endTime =
-				currentMesh
-				.getMeshData().animations[animationComponent.animationIndex].endTime;
+			Mesh& currentMesh = this->resourceManager->getMesh(meshComponent.meshID);
+			const MeshData& meshData = currentMesh.getMeshData();
 
-			// Loop timer
-			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
-			if (animationComponent.timer >= endTime)
+			for (uint32_t i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
 			{
-				animationComponent.timer -= endTime;
+				AnimationSlot& aniSlot = animationComponent.aniSlots[i];
+				aniSlot.timer += Time::getDT() * 24.0f * aniSlot.timeScale;
+				if (aniSlot.timer >= meshData.animations[aniSlot.animationIndex].endTime)
+				{
+					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
+				}
 			}
 
 			// Store bone transformations

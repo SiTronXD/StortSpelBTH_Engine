@@ -371,15 +371,18 @@ void VulkanRenderer::renderDefaultMeshes(
 
                     FrequencyInputBindings diffuseTextureInputBinding{};
                     FrequencyInputBindings specularTextureInputBinding{};
+                    FrequencyInputBindings glowMapTextureInputBinding{};
                     diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
                     specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+                    glowMapTextureInputBinding.texture = &this->resourceManager->getTexture(material.glowMapTextureIndex);
 
                     // Add descriptor set
                     material.descriptorIndex =
                         this->shaderInput.addFrequencyInput(
                             {
                                 diffuseTextureInputBinding,
-                                specularTextureInputBinding
+                                specularTextureInputBinding,
+                                glowMapTextureInputBinding
                             }
                     );
 
@@ -389,8 +392,9 @@ void VulkanRenderer::renderDefaultMeshes(
                         // each added descriptor in shaderInput
                         this->animShaderInput.addFrequencyInput(
                             {
-                                diffuseTextureInputBinding,
-                                specularTextureInputBinding
+                                diffuseTextureInputBinding, 
+                                specularTextureInputBinding,
+                                glowMapTextureInputBinding
                             }
                         );
                     }

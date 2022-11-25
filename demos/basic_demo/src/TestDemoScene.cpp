@@ -9,7 +9,6 @@
 
 TestDemoScene::TestDemoScene()
 	: camEntity(-1), testEntity(-1), testEntity2(-1)
-	, aniIDs{ -1, -1, -1, -1 }
 	, aniActive{ true, true, true, true }
 {
 }
@@ -103,13 +102,17 @@ void TestDemoScene::init()
 		}
 	}
 
-	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack.fbx" });
-	Scene::getResourceManager()->mapAnimations(playerMesh, {"first", "second", "third"});
-
-	multiAni2 = createEntity();
-	setComponent<MeshComponent>(multiAni2, playerMesh);
-	setComponent<AnimationComponent>(multiAni2);
-	getComponent<Transform>(multiAni2).position.x = 30.f;
+	//int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
+	//Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
+	//getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
+	//getResourceManager()->getMesh(playerMesh).createAnimationSlot("UpperBody", "mixamorig:Spine1");
+	//
+	//multiAni2 = createEntity();
+	//setComponent<MeshComponent>(multiAni2, playerMesh);
+	//setComponent<AnimationComponent>(multiAni2);
+	//
+	//getComponent<Transform>(multiAni2).position.x = 30.f;
+	//getComponent<Transform>(multiAni2).rotation.y = 180.f;
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
@@ -130,8 +133,15 @@ void TestDemoScene::init()
 	}*/
 
 	// Create other test entities
-	uint32_t audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
-	uint32_t amogusMeshID = ~0u;
+	uint32_t amogusMeshID= Scene::getResourceManager()->addAnimations(
+			{ "assets/models/Amogus/source/1.fbx","assets/models/Amogus/source/2.fbx" }, 
+			"assets/models/Stormtrooper/textures");
+	getResourceManager()->mapAnimations(amogusMeshID, {"Run", "Idk"});
+	Mesh& amogMesh = getResourceManager()->getMesh(amogusMeshID);
+	amogMesh.createAnimationSlot("mainSlot", "Tors");
+	amogMesh.createAnimationSlot("LeftLegSlot", "Left_leg");
+	amogMesh.createAnimationSlot("RightLegSlot", "Right_leg");
+
 	for (uint32_t i = 0; i < 4; ++i)
 	{
 		aniIDs[i] = this->createEntity();
@@ -140,17 +150,13 @@ void TestDemoScene::init()
 
 		this->setComponent<MeshComponent>(aniIDs[i]);
 		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(aniIDs[i]);
+
 		if (i <= 1)
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
-
-			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
-				{ "assets/models/Amogus/source/1.fbx" }, 
-				"assets/models/Stormtrooper/textures"
-			);
-			amogusMeshID = newMeshComp.meshID;
+			newMeshComp.meshID = amogusMeshID;
 		}
 		else
 		{
@@ -160,17 +166,16 @@ void TestDemoScene::init()
 
 			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
 				{ "assets/models/Stormtrooper/source/silly_dancing.fbx" },
-				"assets/models/Stormtrooper/textures"
-			);
+				"assets/models/Stormtrooper/textures");
 		}
 
 		// Animation component
 		this->setComponent<AnimationComponent>(aniIDs[i]);
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
-		newAnimComp.timer += 24.0f * 0.6f * i;
-		newAnimComp.timeScale += i % 2;
-		newAnimComp.animationIndex = 0;
-
+		newAnimComp.aniSlots[0].timer += 24.0f * 0.6f * i;
+		newAnimComp.aniSlots[0].timeScale += i % 2;
+		newAnimComp.aniSlots[0].animationIndex = 0;
+    
 		MeshComponent& meshComp =
 			this->getComponent<MeshComponent>(this->aniIDs[i]);
 		if (i == 2)
@@ -300,16 +305,52 @@ void TestDemoScene::update()
 
 	if (Input::isKeyReleased(Keys::ONE))
 	{
-		this->setAnimation(multiAni2, "first");
+		setAnimation(aniIDs[0], "Idk", "mainSlot");
+		setAnimation(aniIDs[1], "Idk");
 	}
 	else if (Input::isKeyReleased(Keys::TWO))
 	{
-		this->setAnimation(multiAni2, "second");
+		setAnimation(aniIDs[0], "Run", "LeftLegSlot");
+		setAnimation(aniIDs[1], "Run");
 	}
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
-		this->setAnimation(multiAni2, "third", false);
+		setAnimation(aniIDs[0], "Idk", "RightLegSlot");
 	}
+	else if (Input::isKeyReleased(Keys::FOUR))
+	{
+		setAnimation(aniIDs[0], "Run");
+	}
+
+	if (ImGui::Begin("Char animation") && false)
+	{
+		ImGui::PushItemWidth(-100.f);
+		AnimationSlot& upperSlot = getAnimationSlot(multiAni2, "UpperBody");
+		ImGui::Text("Upper body");
+		int idx = upperSlot.animationIndex;
+		ImGui::InputInt("1 Ani idx", &idx, 1, 1);
+		upperSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
+		ImGui::DragFloat(" 1Time scale", &upperSlot.timeScale, 0.01f, 0.f, 10.f);
+		
+		AnimationSlot& lowerSlot = getAnimationSlot(multiAni2, "LowerBody");
+		ImGui::Separator();
+		ImGui::Text("Lower body");
+		idx = lowerSlot.animationIndex;
+		ImGui::InputInt("2 Ani idx", &idx, 1, 1);
+		lowerSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
+		ImGui::DragFloat("2 Time scale", &lowerSlot.timeScale, 0.01f, 0.f, 10.f);
+
+		ImGui::Separator();
+		if (ImGui::Button("Reset timers"))
+		{
+			upperSlot.timer = 0.f;
+			upperSlot.timeScale = 1.f;
+			lowerSlot.timer = 0.f;
+			lowerSlot.timeScale = 1.f;
+		}
+		ImGui::PopItemWidth();
+	}
+	ImGui::End();
 
 	// Imgui bloom
 	static float bloomBufferLerpVal = 0.04f;

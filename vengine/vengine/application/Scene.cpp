@@ -184,16 +184,47 @@ bool Scene::isActive(Entity entity)
 	return !this->hasComponents<Inactive>(entity);
 }
 
-void Scene::setAnimation(Entity entity, const std::string& animationName, bool resetTimer)
+void Scene::setAnimation(Entity entity, const std::string& animationName, const std::string& slotName)
 {
 	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
 	{
+		const Mesh& mesh = this->sceneHandler->getResourceManager()->
+			getMesh(this->getComponent<MeshComponent>(entity).meshID);
+		const uint32_t aniIndex = mesh.getAnimationIndex(animationName);
+
 		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
-		aniComp.timer *= !resetTimer;
-		aniComp.animationIndex = this->sceneHandler->getResourceManager()->
-			getMesh(this->getComponent<MeshComponent>(entity).meshID)
-			.getAnimationIndex(animationName);
+		if (slotName == "")
+		{
+			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			{
+				aniComp.aniSlots[i].animationIndex = aniIndex;
+				aniComp.aniSlots[i].timer = 0.f;
+				aniComp.aniSlots[i].timeScale = 1.f;
+			}
+		}
+		else
+		{
+			const uint32_t slotIndex = mesh.getAnimationSlotIndex(slotName);
+			aniComp.aniSlots[slotIndex].animationIndex = aniIndex;
+			aniComp.aniSlots[slotIndex].timer = 0.f;
+		}
 	}
+}
+
+AnimationSlot& Scene::getAnimationSlot(Entity entity, const std::string& slotName)
+{
+#ifdef _CONSOLE
+	if (!this->hasComponents<MeshComponent, AnimationComponent>(entity))
+	{
+		Log::error("Scene::getAnimationSlotIndex |"
+		" The entity doesn't have the required components: MeshComponent, AnimationComponent");
+	}
+#endif
+
+	const uint32_t aniSlotIdx = this->getResourceManager()->getMesh(
+		this->getComponent<MeshComponent>(entity).meshID).getAnimationSlotIndex(slotName);
+
+	return this->getComponent<AnimationComponent>(entity).aniSlots[aniSlotIdx];
 }
 
 void Scene::init()
