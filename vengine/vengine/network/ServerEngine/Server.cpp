@@ -60,6 +60,7 @@ void Server::ConnectUsers()
 		Log::write("Server: " + tempClient->name + " joined the lobby");
 
 		clients.push_back(tempClient);
+        clients.back()->clientTcpSocket.setBlocking(false);
 		clientToServerPacketTcp.resize(clients.size());
 		serverToClientPacketTcp.resize(clients.size());
 		clientToServerPacketUdp.resize(clients.size());
@@ -340,7 +341,10 @@ void Server::getDataFromUsers()
             ++timesTryingToRecv;
 			clients[i]->TimeToDisconnect = 0;
 			// Need to handle packet direct
-			handlePacketFromUser(i, true);
+            if (!clientToServerPacketTcp[i].endOfPacket())
+            {
+                handlePacketFromUser(i, true);
+			}
 		}
 	}
 	
@@ -353,30 +357,33 @@ void Server::getDataFromUsers()
 	while (udpSocket.receive(tempPacket, tempIPAddress, tempPort) == sf::Socket::Done && timesTryingToRecv < MAXTIMETRYINGTORECV)
 	{
         ++timesTryingToRecv;
-		// Check who it's from
-		for (int i = 0; i < clientToServerPacketUdp.size(); i++)
-		{
-			if (clients[i]->sender == tempIPAddress && clients[i]->port == tempPort)
-			{
-				clients[i]->TimeToDisconnect = 0;
-				clientToServerPacketUdp[i] = tempPacket;
-
-				//check if the packet is older than another one
-                uint32_t udpIdPacket;
-                clientToServerPacketUdp[i] >> udpIdPacket;
-				//if its older than another one we got, clean and break
-                if (udpIdPacket < clients[i]->recvUdpPacketID)
+        if (!tempPacket.endOfPacket())
+        {
+            // Check who it's from
+            for (int i = 0; i < clientToServerPacketUdp.size(); i++)
+            {
+                if (clients[i]->sender == tempIPAddress && clients[i]->port == tempPort)
                 {
-                    clientToServerPacketUdp[i].clear();
-                    break;
-				}
-				//else new id packet
-                clients[i]->recvUdpPacketID = udpIdPacket;
+                    clients[i]->TimeToDisconnect = 0;
+                    clientToServerPacketUdp[i] = tempPacket;
 
-				handlePacketFromUser(i, false);
-				break;
-			}
-		}
+                    //check if the packet is older than another one
+                    uint32_t udpIdPacket;
+                    clientToServerPacketUdp[i] >> udpIdPacket;
+                    //if its older than another one we got, clean and break
+                    if (udpIdPacket < clients[i]->recvUdpPacketID)
+                    {
+                        clientToServerPacketUdp[i].clear();
+                        break;
+                    }
+                    //else new id packet
+                    clients[i]->recvUdpPacketID = udpIdPacket;
+
+                    handlePacketFromUser(i, false);
+                    break;
+                }
+            }
+        }
 	}
 }
 

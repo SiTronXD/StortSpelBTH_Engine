@@ -102,10 +102,13 @@ void Client::disconnect()
 
 void Client::sendDataToServer()
 {
-    this->tcpSocket.send(clientTcpPacketSend);
+    if (clientTcpPacketSend.getDataSize() > 0)
+    {
+        this->tcpSocket.send(clientTcpPacketSend);
+    }
 
     // If we have started we send our position to the server
-    if (this->clientUdpPacketSend.getDataSize() && isConnected()) 
+    if (this->clientUdpPacketSend.getDataSize() > sizeof(uint32_t) && isConnected()) 
     {
         this->udpSocket.send(clientUdpPacketSend, this->serverIP, UDP_PORT_SERVER);
     }
@@ -125,7 +128,10 @@ sf::Packet Client::getTCPDataFromServer()
     int timesTryingToRecv = 0;
     while (this->tcpSocket.receive(tempPacketRecv) == sf::Socket::Done && timesTryingToRecv < MAXTIMETRYINGTORECV)
     {
-        returnPacketRecv.append(tempPacketRecv.getData(), tempPacketRecv.getDataSize());
+        if (!tempPacketRecv.endOfPacket())
+        {
+            returnPacketRecv.append(tempPacketRecv.getData(), tempPacketRecv.getDataSize());
+        }
         ++timesTryingToRecv;
     }
     return returnPacketRecv;
