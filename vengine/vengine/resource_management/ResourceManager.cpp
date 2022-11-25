@@ -100,6 +100,80 @@ uint32_t ResourceManager::addMesh(
     return meshes.size() - 1;
 }
 
+uint32_t ResourceManager::addMesh(std::string meshPath, MeshData meshData)
+{
+	// No mesh imported, send default mesh back
+	if (meshData.vertexStreams.positions.size() == 0)
+	{
+		return 0;
+	}
+
+	// Smooth normals in mesh data
+	// MeshDataModifier::smoothNormals(meshData);
+
+	auto map_iterator = this->meshPaths.find(meshPath);
+	if (this->meshPaths.end() == map_iterator)
+	{
+        //No mesh exists, create new
+		this->meshPaths.insert({meshPath, this->meshes.size()});
+
+		// NOTE: meshes.size as key only works if we never remove resources the map...
+		// Create mesh, insert into map of meshes
+		meshes.insert({meshes.size(), meshLoader.createMesh(meshData)});
+	}
+	else
+	{
+		uint32_t meshID = map_iterator->second;
+        auto mesh_iterator = this->meshes.find(meshID);
+        mesh_iterator->second.safeCleanup();
+        //deallocate memory, remove reference and create new mesh
+		meshes.erase(meshID);
+		meshes.insert({meshID, meshLoader.createMesh(meshData)});
+    }
+	
+
+	return meshes.size() - 1;
+}
+
+uint32_t ResourceManager::addMaterial(std::string&& materialPath)
+{
+	using namespace vengine_helper::config;
+
+	if (this->materialPaths.count(materialPath) != 0)
+	{
+		// Log::warning("Mesh \""+meshPath+"\" was already added!");
+
+		return this->materialPaths[materialPath];
+	} 
+
+    Material mat = Material();
+
+    this->materialPaths.insert({materialPath, this->materialPaths.size()}); 
+
+    materials.insert({
+        materials.size(), 
+        mat}
+    );
+
+	return materials.size() -1;
+}
+
+uint32_t ResourceManager::addMaterial(std::string&& materialName, Material materialData)
+{
+	if (this->materialPaths.count(materialName) != 0)
+	{
+        //if already added, update data
+        materials[materialPaths[materialName]] = materialData;
+		return this->materialPaths[materialName];
+	}
+
+	this->materialPaths.insert({materialName, this->materials.size()});
+
+	materials.insert({materials.size(), materialData});
+
+	return materials.size() - 1;
+}
+
 uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, std::string&& texturesPath)
 {
     if (!paths.size())

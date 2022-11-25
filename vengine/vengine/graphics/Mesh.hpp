@@ -39,7 +39,7 @@ private:
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
-    
+
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
@@ -61,6 +61,7 @@ public:
     void mapAnimations(const std::vector<std::string>& names);
     uint32_t getAnimationIndex(const std::string& name) const;
 
+    void safeCleanup();
     void cleanup();
 
     // Debug
