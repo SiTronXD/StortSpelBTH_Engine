@@ -67,7 +67,8 @@ public:
 	uint32_t addCollisionShapeFromMesh(std::string&& collisionPath);
     uint32_t addMaterial(
         uint32_t diffuseTextureIndex,
-        uint32_t specularTextureIndex);
+        uint32_t specularTextureIndex,
+        uint32_t glowMapTextureIndex);
 	uint32_t addAnimations(const std::vector<std::string>& paths, std::string&& texturesPath = "");
     bool mapAnimations(uint32_t meshid, const std::vector<std::string>& names);
     uint32_t addSound(std::string&& soundPath);
