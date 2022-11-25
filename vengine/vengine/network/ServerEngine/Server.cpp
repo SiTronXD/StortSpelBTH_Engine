@@ -60,7 +60,7 @@ void Server::ConnectUsers()
 		Log::write("Server: " + tempClient->name + " joined the lobby");
 
 		clients.push_back(tempClient);
-        clients.back()->clientTcpSocket.setBlocking(false);
+		clients.back()->clientTcpSocket.setBlocking(false);
 		clientToServerPacketTcp.resize(clients.size());
 		serverToClientPacketTcp.resize(clients.size());
 		clientToServerPacketUdp.resize(clients.size());

@@ -13,6 +13,7 @@
 #include "vengine/dev/Log.hpp"
 #include "vengine/test/TestScene.hpp"
 #include "vengine/Engine.hpp"
+#include "vengine/VengineMath.hpp"
 #include "vengine/ai/BehaviorTree.hpp"
 #include "vengine/ai/FSM.hpp"
 #include "imgui.h"
