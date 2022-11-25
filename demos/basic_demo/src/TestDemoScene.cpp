@@ -102,17 +102,17 @@ void TestDemoScene::init()
 		}
 	}
 
-	//int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
-	//Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
+	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
+	Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
 	//getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
 	//getResourceManager()->getMesh(playerMesh).createAnimationSlot("UpperBody", "mixamorig:Spine1");
-	//
-	//multiAni2 = createEntity();
-	//setComponent<MeshComponent>(multiAni2, playerMesh);
-	//setComponent<AnimationComponent>(multiAni2);
-	//
-	//getComponent<Transform>(multiAni2).position.x = 30.f;
-	//getComponent<Transform>(multiAni2).rotation.y = 180.f;
+	
+	multiAni2 = createEntity();
+	setComponent<MeshComponent>(multiAni2, playerMesh);
+	setComponent<AnimationComponent>(multiAni2);
+	
+	getComponent<Transform>(multiAni2).position.x = 30.f;
+	getComponent<Transform>(multiAni2).rotation.y = 180.f;
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
@@ -311,15 +311,29 @@ void TestDemoScene::update()
 		setAnimation(aniIDs[0], "Run");
 	}
 
-	if (ImGui::Begin("Char animation") && false)
+	if (ImGui::Begin("Char animation"))
 	{
 		ImGui::PushItemWidth(-100.f);
-		AnimationSlot& upperSlot = getAnimationSlot(multiAni2, "UpperBody");
+
+		if (ImGui::Button("Begin transition"))
+		{
+			AnimationComponent& aniComp = this->getComponent<AnimationComponent>(multiAni2);
+			if (aniComp.aniSlots[0].animationIndex == 0)
+			{
+				aniComp.aniSlots[0].nAnimationIndex = 1;
+			}
+			else
+			{
+				aniComp.aniSlots[0].nAnimationIndex = 0;
+			}
+		}
+
+		/*AnimationSlot& upperSlot = getAnimationSlot(multiAni2, "UpperBody");
 		ImGui::Text("Upper body");
 		int idx = upperSlot.animationIndex;
 		ImGui::InputInt("1 Ani idx", &idx, 1, 1);
 		upperSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
-		ImGui::DragFloat(" 1Time scale", &upperSlot.timeScale, 0.01f, 0.f, 10.f);
+		ImGui::DragFloat("1 Time scale", &upperSlot.timeScale, 0.01f, 0.f, 10.f);
 		
 		AnimationSlot& lowerSlot = getAnimationSlot(multiAni2, "LowerBody");
 		ImGui::Separator();
@@ -336,7 +350,8 @@ void TestDemoScene::update()
 			upperSlot.timeScale = 1.f;
 			lowerSlot.timer = 0.f;
 			lowerSlot.timeScale = 1.f;
-		}
+		}*/
+
 		ImGui::PopItemWidth();
 	}
 	ImGui::End();

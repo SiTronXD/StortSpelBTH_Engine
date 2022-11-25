@@ -52,12 +52,24 @@ void SceneHandler::updatePreScene()
 
 				if (aniSlot.nAnimationIndex != ~0u)
 				{
-					aniSlot.alpha += (1.f / aniSlot.transitionTime) * Time::getDT();
-					aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
-					// reset nAnimationIndex here or getBoneTransforms ?
-					// reset nAnimationIndex here or getBoneTransforms ?
-					// reset nAnimationIndex here or getBoneTransforms ?
-					0
+					// Still in transition
+					if (aniSlot.alpha < 1.f)
+					{
+						aniSlot.alpha += (1.f / aniSlot.transitionTime) * Time::getDT();
+						aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
+					}
+					else // Switch and reset 
+					{
+						aniSlot.animationIndex = aniSlot.nAnimationIndex;
+						aniSlot.timer = aniSlot.nTimer;
+						aniSlot.timeScale = aniSlot.nTimeScale;
+
+						aniSlot.nAnimationIndex = ~0u;
+						aniSlot.nTimer = 0.f;
+						// Reset nTimeScale? Hmm
+
+						aniSlot.alpha = 0.f;
+					}
 				}
 			}
 
