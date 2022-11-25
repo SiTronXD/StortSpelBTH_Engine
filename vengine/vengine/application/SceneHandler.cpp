@@ -50,7 +50,7 @@ void SceneHandler::updatePreScene()
 					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
 				}
 
-#if 0
+#if 1
 				if (aniSlot.nAnimationIndex != ~0u)
 				{
 					// Still in transition
@@ -58,6 +58,10 @@ void SceneHandler::updatePreScene()
 					{
 						aniSlot.alpha += (1.f / aniSlot.transitionTime) * Time::getDT();
 						aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
+						if (aniSlot.nTimer >= meshData.animations[aniSlot.nAnimationIndex].endTime)
+						{
+							aniSlot.nTimer -= meshData.animations[aniSlot.nAnimationIndex].endTime;
+						}
 					}
 					else // Switch and reset 
 					{
