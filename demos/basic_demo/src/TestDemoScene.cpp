@@ -111,7 +111,7 @@ void TestDemoScene::init()
 	setComponent<MeshComponent>(multiAni2, playerMesh);
 	setComponent<AnimationComponent>(multiAni2);
 	
-	getComponent<Transform>(multiAni2).position.x = 30.f;
+	getComponent<Transform>(multiAni2).position.x = 40.f;
 	getComponent<Transform>(multiAni2).rotation.y = 180.f;
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
@@ -312,65 +312,89 @@ void TestDemoScene::update()
 	}
 
 	AnimationComponent& aniComp = this->getComponent<AnimationComponent>(multiAni2);
+	MeshComponent& meshComp = this->getComponent<MeshComponent>(multiAni2);
 	static int nIdx[2] = {0,0};
-	if (ImGui::Begin("Slot: 0"))
+	if (ImGui::Begin("Animation Blending"))
 	{
-		if (ImGui::Button("Reset"))
-		{
-			aniComp.aniSlots[0].nTimer = aniComp.aniSlots[0].timer = 0;
-			//aniComp.aniSlots[0].nTimeScale = aniComp.aniSlots[0].timeScale = 1.f;
-			aniComp.aniSlots[1].nTimer = aniComp.aniSlots[1].timer = 0;
-			//aniComp.aniSlots[1].nTimeScale = aniComp.aniSlots[1].timeScale = 1.f;
-
-		}
-
 		ImGui::PushItemWidth(-110.f);
 
-		ImGui::Text("Slot: %d", 0);
-		ImGui::Text("Time: %.2f - nTime: %.2f", aniComp.aniSlots[0].timer, aniComp.aniSlots[0].nTimer);
 
-		ImGui::DragFloat("Transition Time", &aniComp.aniSlots[0].transitionTime, 0.01f, 0.f, 10.f);
+		static int slotIdx = 0;
+		ImGui::Text("Slot:");
+		ImGui::RadioButton("Lower body", &slotIdx, 0); ImGui::SameLine();
+		ImGui::RadioButton("Upper body", &slotIdx, 1); ImGui::SameLine();
+		ImGui::RadioButton("Full body", &slotIdx, -1);
+		int usedIdx = slotIdx != -1 ? slotIdx : 0;
 
-		ImGui::InputInt("Cur Ani Idx", &aniComp.aniSlots[0].animationIndex, 1, 1);
-		aniComp.aniSlots[0].animationIndex = std::clamp(aniComp.aniSlots[0].animationIndex, 0, 2);
+
+		ImGui::DragFloat("Tranition Time", &aniComp.aniSlots[usedIdx].transitionTime, 0.01f, 0.f, 5.f);
+		ImGui::Text("Alpha: %.2f", aniComp.aniSlots[usedIdx].alpha); 
+		ImGui::SameLine();
+		if (ImGui::Button("Sync slots"))
+		{
+			aniComp.aniSlots[1] = aniComp.aniSlots[0];
+		}
+
+		ImGui::Separator();
+
+		//ImGui::DragFloat("Transition Time", &aniComp.aniSlots[0].transitionTime, 0.01f, 0.f, 3.f);
+
+
+		ImGui::Text("Current Animation");
+		ImGui::Text("Timer: %.2f ", aniComp.aniSlots[usedIdx].timer);
+		ImGui::DragFloat("Time Scale", &aniComp.aniSlots[usedIdx].timeScale, 0.01f, 0.f, 10.f);
+		ImGui::InputInt("Ani Idx", &aniComp.aniSlots[usedIdx].animationIndex, 1, 1);
+		aniComp.aniSlots[usedIdx].animationIndex = std::clamp(aniComp.aniSlots[usedIdx].animationIndex, 0, 2);
 		
-		if (ImGui::InputInt("Next Ani Idx", &nIdx[0], 1, 1))
+		if (slotIdx == -1)
+		{
+			aniComp.aniSlots[1] = aniComp.aniSlots[0];
+		}
+
+		ImGui::Separator();
+
+		ImGui::Text("Next Animation");
+		ImGui::Text("Timer: %.2f", aniComp.aniSlots[usedIdx].nTimer);
+		ImGui::DragFloat("Time Scale ##0", &aniComp.aniSlots[usedIdx].nTimeScale, 0.01f, 0.f, 10.f);
+		static int nextIdx = -1;
+		ImGui::InputInt("Ani Idx ##0", &nextIdx, 1, 1);
+		nextIdx = std::clamp(nextIdx, 0, 2);
+
+		//if (ImGui::Button("Reset"))
+		//{
+		//	aniComp.aniSlots[0].nTimer = aniComp.aniSlots[0].timer = 0;
+		//	//aniComp.aniSlots[0].nTimeScale = aniComp.aniSlots[0].timeScale = 1.f;
+		//	aniComp.aniSlots[1].nTimer = aniComp.aniSlots[1].timer = 0;
+		//	//aniComp.aniSlots[1].nTimeScale = aniComp.aniSlots[1].timeScale = 1.f;
+		//}
+
+		if (ImGui::Button("Start Transition"))
+		{
+			const std::string& aniName = getResourceManager()->getMesh(meshComp.meshID).getAnimationName(nextIdx);
+			std::string slotName = slotIdx == 0 ? "LowerBody" : slotIdx == 1 ? "UpperBody" : "";
+			transitionToAnimation(multiAni2, aniName, aniComp.aniSlots[usedIdx].transitionTime, slotName, aniComp.aniSlots[usedIdx].nTimeScale);
+
+			if (slotIdx == -1)
+			{
+				aniComp.aniSlots[1].nTimeScale = aniComp.aniSlots[0].nTimeScale;
+				aniComp.aniSlots[1].transitionTime = aniComp.aniSlots[0].transitionTime;
+			}
+		}
+
+
+
+		
+		/*if (ImGui::InputInt("Next Ani Idx", &nIdx[0], 1, 1))
 		nIdx[0] = std::clamp(nIdx[0], 0, 2);
 
 		ImGui::DragFloat("Alpha", &aniComp.aniSlots[0].alpha, 0.01f, 0.f, 1.f);
-		ImGui::DragFloat("Time Scale", &aniComp.aniSlots[0].timeScale, 0.01f, 0.f, 10.f);
 		aniComp.aniSlots[0].nTimeScale = aniComp.aniSlots[0].timeScale;
 
 		if (ImGui::Button("Begin Transition"))
 		{
 			aniComp.aniSlots[0].nAnimationIndex = nIdx[0];
-		}
+		}*/
 
-		ImGui::PopItemWidth();
-	}
-	ImGui::End();
-
-	if (ImGui::Begin("Slot: 1"))
-	{
-		ImGui::PushItemWidth(-110.f);
-		ImGui::Text("Time: %.2f - nTime: %.2f", aniComp.aniSlots[1].timer, aniComp.aniSlots[1].nTimer);
-
-		ImGui::DragFloat("Transition Time", &aniComp.aniSlots[1].transitionTime, 0.01f, 0.f, 10.f);
-
-		ImGui::InputInt("Cur Ani Idx", &aniComp.aniSlots[1].animationIndex, 1, 1);
-		aniComp.aniSlots[1].animationIndex = std::clamp(aniComp.aniSlots[1].animationIndex, 0, 2);
-		
-		if (ImGui::InputInt("Next Ani Idx", &nIdx[1], 1, 1))
-		nIdx[1] = std::clamp(nIdx[1], 0, 2);
-
-		ImGui::DragFloat("Alpha", &aniComp.aniSlots[1].alpha, 0.01f, 0.f, 1.f);
-		ImGui::DragFloat("Time Scale", &aniComp.aniSlots[1].timeScale, 0.01f, 0.f, 10.f);
-		aniComp.aniSlots[1].nTimeScale = aniComp.aniSlots[1].timeScale;
-
-		if (ImGui::Button("Begin Transition"))
-		{
-			aniComp.aniSlots[1].nAnimationIndex = nIdx[1];
-		}
 		ImGui::PopItemWidth();
 	}
 	ImGui::End();

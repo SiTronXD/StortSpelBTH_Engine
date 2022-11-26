@@ -56,24 +56,31 @@ void SceneHandler::updatePreScene()
 					// Still in transition
 					if (aniSlot.alpha < 1.f)
 					{
-						aniSlot.alpha += (1.f / aniSlot.transitionTime) * Time::getDT();
 						aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
 						if (aniSlot.nTimer >= meshData.animations[aniSlot.nAnimationIndex].endTime)
 						{
 							aniSlot.nTimer -= meshData.animations[aniSlot.nAnimationIndex].endTime;
 						}
+
+						// Clamping alpha makes sure mesh doesn't "blink" when transitionTime == 0.f
+						// glm::mix is defined beyond [0, 1] causing incorret results when alpha > 1.f || alpha < 0.f
+						aniSlot.alpha += (1.f / aniSlot.transitionTime) * Time::getDT();
+						if (aniSlot.alpha > 1.f)
+						{
+							aniSlot.alpha = 1.f;
+						}
 					}
 					else // Switch and reset 
 					{
+						aniSlot.alpha = 0.f;
+
 						aniSlot.animationIndex = aniSlot.nAnimationIndex;
 						aniSlot.timer = aniSlot.nTimer;
 						aniSlot.timeScale = aniSlot.nTimeScale;
 
 						aniSlot.nAnimationIndex = ~0u;
 						aniSlot.nTimer = 0.f;
-						// Reset nTimeScale? Hmm
-
-						aniSlot.alpha = 0.f;
+						// No need to reset nTimeScale since Scene::transitionToAnimation takes it in as a parameter
 					}
 				}
 #else

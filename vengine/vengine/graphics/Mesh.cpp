@@ -421,6 +421,15 @@ uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
     return it->second;
 }
 
+#ifdef _CONSOLE
+const std::string& Mesh::getAnimationName(uint32_t index) const
+{
+    auto it = this->aniNames.begin();
+    std::advance(it, index);
+    return it->first;
+}
+#endif // _CONSOLE
+
 void Mesh::cleanup()
 {
     this->vertexBuffers.cleanup();

@@ -63,6 +63,10 @@ public:
     uint32_t getAnimationIndex(const std::string& name) const;
     uint32_t getAnimationSlotIndex(const std::string& slotName) const;
 
+#ifdef _CONSOLE
+    const std::string& getAnimationName(uint32_t index) const; // Used only for ImGui atm
+#endif
+
     void cleanup();
 
     // Debug

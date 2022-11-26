@@ -112,7 +112,9 @@ public:
 	bool isActive(Entity entity);
 
 	// Default slotName sets the animation on the whole skeleton
-	void setAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "");
+	void setAnimation(Entity entity, const std::string& animationName, const std::string& slotName = ""); // TODO: Add timeScale parameter
+	// TODO: setAnimationTimeScale()
+	void transitionToAnimation(Entity entity, const std::string& animationName, float transitionTime, const std::string& slotName = "", float nextAniTimeScale = 1.f);
 	AnimationSlot& getAnimationSlot(Entity entity, const std::string& slotName);
 
 	// When created

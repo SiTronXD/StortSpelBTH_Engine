@@ -186,6 +186,9 @@ bool Scene::isActive(Entity entity)
 
 void Scene::setAnimation(Entity entity, const std::string& animationName, const std::string& slotName)
 {
+	/*
+		TODO: Add timeScale parameter
+	*/
 	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
 	{
 		const Mesh& mesh = this->sceneHandler->getResourceManager()->
@@ -208,6 +211,44 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 			aniComp.aniSlots[slotIndex].animationIndex = aniIndex;
 			aniComp.aniSlots[slotIndex].timer = 0.f;
 		}
+	}
+	else
+	{
+		Log::error("Scene::setAnimation |"
+			" The entity doesn't have the required components: MeshComponent, AnimationComponent");
+	}
+}
+
+void Scene::transitionToAnimation(Entity entity, const std::string& animationName, float transitionTime, const std::string& slotName, float nextAniTimeScale)
+{
+	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
+	{
+		const Mesh& mesh = this->sceneHandler->getResourceManager()->
+			getMesh(this->getComponent<MeshComponent>(entity).meshID);
+		const uint32_t aniIndex = mesh.getAnimationIndex(animationName);
+
+		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
+		if (slotName == "")
+		{
+			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			{
+				aniComp.aniSlots[i].nAnimationIndex = aniIndex;
+				aniComp.aniSlots[i].nTimer = 0.f;
+				aniComp.aniSlots[i].nTimeScale = nextAniTimeScale;
+			}
+		}
+		else
+		{
+			const uint32_t slotIndex = mesh.getAnimationSlotIndex(slotName);
+			aniComp.aniSlots[slotIndex].nAnimationIndex = aniIndex;
+			aniComp.aniSlots[slotIndex].nTimer = 0.f;
+			aniComp.aniSlots[slotIndex].nTimeScale = nextAniTimeScale;
+		}
+	}
+	else
+	{
+		Log::error("Scene::transitionToAnimation |"
+			" The entity doesn't have the required components: MeshComponent, AnimationComponent");
 	}
 }
 
