@@ -80,7 +80,7 @@ void SceneHandler::updatePreScene()
 
 						aniSlot.nAnimationIndex = ~0u;
 						aniSlot.nTimer = 0.f;
-						// No need to reset nTimeScale since Scene::transitionToAnimation takes it in as a parameter
+						// No need to reset nTimeScale since Scene::blendToAnimation takes it in as a parameter
 					}
 				}
 #else

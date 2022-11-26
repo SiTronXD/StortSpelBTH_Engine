@@ -10,15 +10,15 @@ scene.setMainCamera(cam)
 scene.setComponent(cam, CompType.Script, "assets/scripts/script2.lua")
 scene.getComponent(cam, CompType.Script).playerID = p
 
---local multiAnim = resources.addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" })
---resources.mapAnimations(multiAnim, {"run", "idle", "attack"})
---resources.createAnimationSlot(multiAnim, "LowerBody", "mixamorig:Hips");
---resources.createAnimationSlot(multiAnim, "UpperBody", "mixamorig:Spine1");
---
---local a = scene.createEntity()
---scene.setComponent(a, CompType.Mesh, multiAnim)
---scene.setComponent(a, CompType.Animation)
---scene.setComponent(a, CompType.Script, "assets/scripts/multiAnim.lua")
+local multiAnim = resources.addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" })
+resources.mapAnimations(multiAnim, {"run", "idle", "attack"})
+resources.createAnimationSlot(multiAnim, "LowerBody", "mixamorig:Hips");
+resources.createAnimationSlot(multiAnim, "UpperBody", "mixamorig:Spine1");
+
+local a = scene.createEntity()
+scene.setComponent(a, CompType.Mesh, multiAnim)
+scene.setComponent(a, CompType.Animation)
+scene.setComponent(a, CompType.Script, "assets/scripts/multiAnim.lua")
 
 local e = scene.createEntity()
 scene.setComponent(e, CompType.Script, "assets/scripts/collisionchecks.lua")

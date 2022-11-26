@@ -114,7 +114,8 @@ public:
 	// Default slotName sets the animation on the whole skeleton
 	void setAnimation(Entity entity, const std::string& animationName, const std::string& slotName = ""); // TODO: Add timeScale parameter
 	// TODO: setAnimationTimeScale()
-	void transitionToAnimation(Entity entity, const std::string& animationName, float transitionTime, const std::string& slotName = "", float nextAniTimeScale = 1.f);
+	void blendToAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "", float transitionTime = 0.18f, float nextAniTimeScale = 1.f);
+	void syncedBlendToAnimation(Entity entity, const std::string& referenceSlot, const std::string& slotToSync = "", float transitionTime = 0.18);
 	AnimationSlot& getAnimationSlot(Entity entity, const std::string& slotName);
 
 	// When created

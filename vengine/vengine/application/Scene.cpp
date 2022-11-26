@@ -219,7 +219,7 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 	}
 }
 
-void Scene::transitionToAnimation(Entity entity, const std::string& animationName, float transitionTime, const std::string& slotName, float nextAniTimeScale)
+void Scene::blendToAnimation(Entity entity, const std::string& animationName, const std::string& slotName, float transitionTime, float nextAniTimeScale)
 {
 	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
 	{
@@ -232,6 +232,7 @@ void Scene::transitionToAnimation(Entity entity, const std::string& animationNam
 		{
 			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
 			{
+				aniComp.aniSlots[i].transitionTime = transitionTime;
 				aniComp.aniSlots[i].nAnimationIndex = aniIndex;
 				aniComp.aniSlots[i].nTimer = 0.f;
 				aniComp.aniSlots[i].nTimeScale = nextAniTimeScale;
@@ -240,6 +241,7 @@ void Scene::transitionToAnimation(Entity entity, const std::string& animationNam
 		else
 		{
 			const uint32_t slotIndex = mesh.getAnimationSlotIndex(slotName);
+			aniComp.aniSlots[slotIndex].transitionTime = transitionTime;
 			aniComp.aniSlots[slotIndex].nAnimationIndex = aniIndex;
 			aniComp.aniSlots[slotIndex].nTimer = 0.f;
 			aniComp.aniSlots[slotIndex].nTimeScale = nextAniTimeScale;
@@ -247,8 +249,41 @@ void Scene::transitionToAnimation(Entity entity, const std::string& animationNam
 	}
 	else
 	{
-		Log::error("Scene::transitionToAnimation |"
+		Log::error("Scene::blendToAnimation |"
 			" The entity doesn't have the required components: MeshComponent, AnimationComponent");
+	}
+}
+
+void Scene::syncedBlendToAnimation(Entity entity, const std::string& referenceSlot, const std::string& slotToSync, float transitionTime)
+{
+	if (this->hasComponents<AnimationComponent>(entity))
+	{
+		const AnimationSlot& refSlot = this->getAnimationSlot(entity, referenceSlot);
+
+		if (slotToSync == "")
+		{
+			AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
+			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			{
+				aniComp.aniSlots[i].nTimer = refSlot.timer;
+				aniComp.aniSlots[i].nTimeScale = refSlot.timeScale;
+				aniComp.aniSlots[i].nAnimationIndex = refSlot.animationIndex;
+				aniComp.aniSlots[i].transitionTime = transitionTime;
+			}
+		}
+		else
+		{
+			AnimationSlot& syncSlot = this->getAnimationSlot(entity, slotToSync);
+			syncSlot.nTimer = refSlot.timer;
+			syncSlot.nTimeScale = refSlot.timeScale;
+			syncSlot.nAnimationIndex = refSlot.animationIndex;
+			syncSlot.transitionTime = transitionTime;
+		}
+	}
+	else
+	{
+		Log::error("Scene::syncedBlendToAnimation |"
+			" The entity doesn't have the required components: AnimationComponent");
 	}
 }
 

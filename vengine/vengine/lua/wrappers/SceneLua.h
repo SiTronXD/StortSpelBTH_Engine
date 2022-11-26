@@ -51,6 +51,8 @@ private:
 	static int lua_setInactive(lua_State* L);
 	static int lua_isActive(lua_State* L);
 	static int lua_setAnimation(lua_State* L);
+	static int lua_blendToAnimation(lua_State* L);
+	static int lua_syncedBlendToAnimation(lua_State* L);
 	static int lua_getAnimationSlot(lua_State* L);
 	static int lua_setAnimationSlot(lua_State* L);
 
