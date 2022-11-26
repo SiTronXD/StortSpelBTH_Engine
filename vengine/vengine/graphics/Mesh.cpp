@@ -90,45 +90,11 @@ void Mesh::getLocalBoneTransform(
     glm::vec3 scale;
     this->getAnimLerp(poses.scaleStamps, timer, scale);
 
-    // Final transformAS
+    // Final transform
     outputMatrix =
         glm::translate(identityMat, translation) *
         glm::toMat4(rotation) *
         glm::scale(identityMat, scale);
-}
-
-void Mesh::getLocalBoneTransform(
-    const AnimationSlot& aniSlot, const BonePoses& curAnimPose, 
-        const BonePoses& nextAnimPose, glm::mat4& outputMatrix)
-{
-    glm::mat4 identityMat(1.0f);
-
-    // Translation
-    glm::vec3 translation1;
-    glm::vec3 translation2;
-    this->getAnimLerp(curAnimPose.translationStamps, aniSlot.timer, translation1);
-    this->getAnimLerp(nextAnimPose.translationStamps, aniSlot.nTimer, translation2);
-    translation1 = glm::mix(translation1, translation2, aniSlot.alpha);
-    
-    // Rotation
-    glm::quat rotation1;
-    glm::quat rotation2;
-    this->getAnimSlerp(curAnimPose.rotationStamps, aniSlot.timer, rotation1);
-    this->getAnimSlerp(nextAnimPose.rotationStamps, aniSlot.nTimer, rotation2);
-    rotation1 = glm::slerp(rotation1, rotation2, aniSlot.alpha);
-
-    // Scale
-    glm::vec3 scale1;
-    glm::vec3 scale2;
-    this->getAnimLerp(curAnimPose.scaleStamps, aniSlot.timer, scale1);
-    this->getAnimLerp(nextAnimPose.scaleStamps, aniSlot.nTimer, scale2);
-    scale1 = glm::mix(scale1, scale2, aniSlot.alpha);
-
-    // Final transform
-    outputMatrix =
-        glm::translate(identityMat, translation1) *
-        glm::toMat4(rotation1) *
-        glm::scale(identityMat, scale1);
 }
 
 Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
@@ -158,8 +124,7 @@ void Mesh::createVertexBuffers(
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
-#endif    
-    
+#endif        
     // Ready array for vertex buffers
     this->vertexBuffers.create(
         *importStructs.device, 
@@ -288,23 +253,15 @@ void Mesh::getBoneTransforms(
     {
         Bone& currentBone = this->meshData.bones[i];
 
-        const AnimationSlot& aniSlot = animationCompOut.aniSlots[currentBone.slotIndex]; 
-        const Animation& curAnim = this->meshData.animations[aniSlot.animationIndex];
+        const AnimationSlot& aniPlayer = animationCompOut.aniSlots[currentBone.slotIndex]; 
+        const Animation& curAnim = this->meshData.animations[aniPlayer.animationIndex];
 
-        // if no next animation
-        if (aniSlot.nAnimationIndex == -1)
-        {
-            // Start from this local bone transformation
-            this->getLocalBoneTransform(curAnim.boneStamps[i], aniSlot.timer, boneTransform);
-        }
-        else // else blend the two animations
-        {
-            const Animation& nextAnim = this->meshData.animations[aniSlot.nAnimationIndex];
-            this->getLocalBoneTransform(aniSlot, 
-                curAnim.boneStamps[i], 
-                nextAnim.boneStamps[i], boneTransform);
-        }
-
+        // Start from this local bone transformation
+        this->getLocalBoneTransform(
+            curAnim.boneStamps[i],
+            aniPlayer.timer,
+            boneTransform
+        );
 
         // Apply parent transform if it exists
         if (currentBone.parentIndex >= 0)
@@ -421,16 +378,13 @@ uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
     return it->second;
 }
 
-#ifdef _CONSOLE
-const std::string& Mesh::getAnimationName(uint32_t index) const
+void Mesh::safeCleanup() 
 {
-    auto it = this->aniNames.begin();
-    std::advance(it, index);
-    return it->first;
+    device.waitIdle();
+    cleanup();
 }
-#endif // _CONSOLE
 
-void Mesh::cleanup()
+    void Mesh::cleanup()
 {
     this->vertexBuffers.cleanup();
 

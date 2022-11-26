@@ -24,4 +24,5 @@ public:
 	static void warning(const std::string& message, const std::string& filter = "");
 	static void error(const std::string& errorMessage, const std::string& filter = "");
 	static std::string vecToStr(const glm::vec3& vec);
+	static std::string vecToStr(const glm::vec2& vec);
 };

@@ -15,7 +15,7 @@ private:
     VulkanImportStructs  importStructs;
     ResourceManager*     resourceMan    = nullptr;
 
-    std::vector<std::string> assimpGetTextures(const aiScene* scene);
+    void assimpGetTextures(const aiScene* scene, std::vector<std::string> &diffuseTextures, std::vector<std::string> &emissiveTextures);
 
     void processTextureName(std::string& filePathFromModel, const std::string& texturesFolderPath);
     stbi_uc* loadTextureFile(const std::string &filename, int* width, int* height);

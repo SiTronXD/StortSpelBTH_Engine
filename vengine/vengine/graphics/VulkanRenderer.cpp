@@ -171,6 +171,9 @@ int VulkanRenderer::init(
             ),
             this->resourceManager->addTexture(
                 DEF<std::string>(P_TEXTURES) + "missing_texture.png"
+            ),
+            this->resourceManager->addTexture(
+                DEF<std::string>(P_TEXTURES) + "Black.png"
             )
         );
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
@@ -667,6 +670,7 @@ void VulkanRenderer::initForScene(Scene* scene)
     FrequencyInputLayout perDrawInputLayout{};
     perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
     perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+    perDrawInputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
     
 	this->shaderInput.beginForInput(
 	    this->physicalDevice,
@@ -838,15 +842,18 @@ void VulkanRenderer::initForScene(Scene* scene)
 
         FrequencyInputBindings diffuseTextureInputBinding{};
         FrequencyInputBindings specularTextureInputBinding{};
+        FrequencyInputBindings glowMapTextureInputBinding{};
         diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
         specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+        glowMapTextureInputBinding.texture = &this->resourceManager->getTexture(material.glowMapTextureIndex);
 
         // Update material's descriptor index
         material.descriptorIndex =
             this->shaderInput.addFrequencyInput(
                 {
                     diffuseTextureInputBinding,
-                    specularTextureInputBinding
+                    specularTextureInputBinding,
+                    glowMapTextureInputBinding
                 }
         );
 
@@ -857,7 +864,8 @@ void VulkanRenderer::initForScene(Scene* scene)
             this->animShaderInput.addFrequencyInput(
                 {
                     diffuseTextureInputBinding,
-                    specularTextureInputBinding
+                    specularTextureInputBinding,
+                    glowMapTextureInputBinding
                 }
             );
         }
@@ -877,15 +885,18 @@ void VulkanRenderer::initForScene(Scene* scene)
                 // Make binding recognize material parameters
                 FrequencyInputBindings diffuseTextureInputBinding{};
                 FrequencyInputBindings specularTextureInputBinding{};
+                FrequencyInputBindings glowMapTextureInputBinding{};
                 diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
                 specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+                glowMapTextureInputBinding.texture = &this->resourceManager->getTexture(material.glowMapTextureIndex);
 
                 // Update material's descriptor index
                 material.descriptorIndex =
                     this->shaderInput.addFrequencyInput(
                         {
                             diffuseTextureInputBinding,
-                            specularTextureInputBinding
+                            specularTextureInputBinding,
+                            glowMapTextureInputBinding
                         }
                 );
 
@@ -896,7 +907,8 @@ void VulkanRenderer::initForScene(Scene* scene)
                     this->animShaderInput.addFrequencyInput(
                         {
                             diffuseTextureInputBinding,
-                            specularTextureInputBinding
+                            specularTextureInputBinding,
+                            glowMapTextureInputBinding
                         }
                     );
                 }
@@ -1308,7 +1320,8 @@ void VulkanRenderer::recordCommandBuffers(
         this->beginBloomDownUpsampleRenderPass(
             this->postProcessHandler.getDownsampleRenderPass(), 
             downsampleCommandBuffer, 
-            i
+            i,
+            false
         );
             this->renderBloomDownUpsample(
                 downsampleCommandBuffer, 
@@ -1335,7 +1348,8 @@ void VulkanRenderer::recordCommandBuffers(
         this->beginBloomDownUpsampleRenderPass(
             this->postProcessHandler.getUpsampleRenderPass(),
             upsampleCommandBuffer,
-            i
+            i,
+            true
         );
         this->renderBloomDownUpsample(
             upsampleCommandBuffer,

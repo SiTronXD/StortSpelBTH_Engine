@@ -9,10 +9,10 @@ layout(location = 0) in vec2 fragUV;
 layout(location = 0) out vec4 outColor; 
 
 // Push constant
-layout(push_constant) uniform ResolutionPushConstantData
+layout(push_constant) uniform UpsamplePushConstantData
 {
-	vec4 resolution;
-} pushConstantData;
+	vec4 data; // vec4(resX, resY, 0, weight)
+} upsampleData;
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D prevMipTexture;
 
@@ -23,7 +23,9 @@ vec3 sampleTex(in vec2 oneOverSize, in vec2 offset)
 
 void main()
 {
-	vec2 oneOverSize = 1.0f / pushConstantData.resolution.xy;
+	vec4 upData = upsampleData.data;
+
+	vec2 oneOverSize = 1.0f / upData.xy;
 
 	// 9 samples around current pixel
 	// a - b - c
@@ -47,6 +49,8 @@ void main()
 	color += (b + d + f + h) * 2.0f;
 	color += (a + c + g + i);
 	color *= 1.0f / 16.0f;
+
+	color *= upData.w;
 
 	outColor = vec4(color, 1.0f);
 }

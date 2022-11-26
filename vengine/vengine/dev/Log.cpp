@@ -63,6 +63,12 @@ std::string Log::vecToStr(const glm::vec3& vec)
 		std::to_string(vec.z) + ")";
 }
 
+std::string Log::vecToStr(const glm::vec2& vec)
+{
+	return "(" + std::to_string(vec.x) + ", " +
+		std::to_string(vec.y) + ")";
+}
+
 void Log::addFilter(const std::string& filterName)
 {
     Log::filters.insert({filterName, {false}});

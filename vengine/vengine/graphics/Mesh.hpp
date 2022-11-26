@@ -42,15 +42,17 @@ private:
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
-    
+
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
-    void getLocalBoneTransform(const BonePoses& bone, const float& timer, glm::mat4& outputMatrix);
-    void getLocalBoneTransform(const AnimationSlot& aniSlot, const BonePoses& curAnimPose, 
-        const BonePoses& nextAnimPose, glm::mat4& outputMatrix);
+    void getLocalBoneTransform(
+        const BonePoses& bone,
+        const float& timer,
+        glm::mat4& outputMatrix);
 
-    void getBoneTransforms(AnimationComponent& animationComponentOutput);
+    void getBoneTransforms(
+        AnimationComponent& animationComponentOutput);
 
     inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;
@@ -63,10 +65,7 @@ public:
     uint32_t getAnimationIndex(const std::string& name) const;
     uint32_t getAnimationSlotIndex(const std::string& slotName) const;
 
-#ifdef _CONSOLE
-    const std::string& getAnimationName(uint32_t index) const; // Used only for ImGui atm
-#endif
-
+    void safeCleanup();
     void cleanup();
 
     // Debug

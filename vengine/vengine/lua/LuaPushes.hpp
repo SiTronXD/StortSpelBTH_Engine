@@ -345,58 +345,29 @@ static void lua_pushrigidbody(lua_State* L, const Rigidbody& rb)
 	lua_setfield(L, -2, "velocity");
 }
 
-// lua -> c++
-static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBufferID boneID)
+static AnimationSlot lua_toanimationslot(lua_State* L, int index)
 {
-	AnimationComponent anim{};
-	anim.boneTransformsID = boneID;
+	AnimationSlot slot{};
 
-#if 0 // Not used atm, returns default component to avoid errors
 	// Sanity check
 	if (!lua_istable(L, index)) {
-		std::cout << "Error: not animation-table" << std::endl;
-		return anim;
+		std::cout << "Error: not animationslot-table" << std::endl;
+		return slot;
 	}
 
-	for(int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
-	{
-		lua_getfield(L, index, std::to_string(i + 1).c_str());
+	lua_getfield(L, index, "animationIndex");
+	slot.animationIndex = (uint32_t)lua_tointeger(L, -1);
+	lua_pop(L, 1);
 
-		lua_getfield(L, -1, "animationIndex");
-		anim.aniSlots[i].animationIndex = (uint32_t)lua_tonumber(L, -1);
+	lua_getfield(L, index, "timer");
+	slot.timer = (float)lua_tonumber(L, -1);
+	lua_pop(L, 1);
 
-		lua_getfield(L, -1, "timer");
-		anim.aniSlots[i].timer = (float)lua_tonumber(L, -1);
+	lua_getfield(L, index, "timeScale");
+	slot.timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+	lua_pop(L, 1);
 
-		lua_getfield(L, -1, "timeScale");
-		anim.aniSlots[i].timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
-
-		lua_pop(L, 1);
-	}
-#endif
-
-	return anim;
-}
-
-// c++ -> lua
-static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
-{
-	lua_newtable(L);
-	for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
-	{
-		lua_newtable(L);
-
-		lua_pushinteger(L, anim.aniSlots[i].animationIndex);
-		lua_setfield(L, -2, "animationIndex");
-		
-		lua_pushnumber(L, anim.aniSlots[i].timer);
-		lua_setfield(L, -2, "timer");
-		
-		lua_pushnumber(L, anim.aniSlots[i].timeScale);
-		lua_setfield(L, -2, "timeScale");
-
-		lua_setfield(L, -2, std::to_string(i + 1).c_str());
-	}
+	return slot;
 }
 
 static void lua_pushanimationslot(lua_State* L, const AnimationSlot& animSlot)
@@ -405,12 +376,58 @@ static void lua_pushanimationslot(lua_State* L, const AnimationSlot& animSlot)
 
 	lua_pushinteger(L, animSlot.animationIndex);
 	lua_setfield(L, -2, "animationIndex");
-	
+
 	lua_pushnumber(L, animSlot.timer);
 	lua_setfield(L, -2, "timer");
-	
+
 	lua_pushnumber(L, animSlot.timeScale);
 	lua_setfield(L, -2, "timeScale");
+}
+
+static AnimationComponent lua_toanimation(lua_State* L, int index, StorageBufferID boneID)
+{
+	AnimationComponent anim{};
+	anim.boneTransformsID = boneID;
+
+	// Sanity check
+	if (!lua_istable(L, index)) {
+		std::cout << "Error: not animation-table" << std::endl;
+		return anim;
+	}
+
+	for(int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+	{
+		lua_rawgeti(L, index, i);
+		if(lua_isnil(L, -1)) // Not valid
+		{
+			lua_pop(L, 1);
+			return anim;
+		}
+
+		lua_getfield(L, -1, "animationIndex");
+		anim.aniSlots[i].animationIndex = (uint32_t)lua_tonumber(L, -1);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "timer");
+		anim.aniSlots[i].timer = (float)lua_tonumber(L, -1);
+		lua_pop(L, 1);
+
+		lua_getfield(L, -1, "timeScale");
+		anim.aniSlots[i].timeScale = !lua_isnil(L, -1) ? (float)lua_tonumber(L, -1) : 1.0f;
+		lua_pop(L, 2);
+	}
+
+	return anim;
+}
+
+static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
+{
+	lua_newtable(L);
+	for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+	{
+		lua_pushanimationslot(L, anim.aniSlots[i]);
+		lua_rawseti(L, -2, i);
+	}
 }
 
 static UIArea lua_touiarea(lua_State* L, int index)

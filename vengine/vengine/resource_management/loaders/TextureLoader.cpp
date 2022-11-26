@@ -28,9 +28,10 @@ void TextureLoader::init(
     this->resourceMan = resourceMan;
 }
 
-std::vector<std::string> TextureLoader::assimpGetTextures(const aiScene *scene) 
+void TextureLoader::assimpGetTextures(const aiScene *scene, std::vector<std::string> &diffuseTextures, std::vector<std::string> &emissiveTextures) 
 {
-    std::vector<std::string> textureList(scene->mNumMaterials);
+    diffuseTextures.resize(scene->mNumMaterials);
+    emissiveTextures.resize(scene->mNumMaterials);
     int textureIndex =
         0; // index of the texture that corresponds to the Diffuse material
 
@@ -38,21 +39,26 @@ std::vector<std::string> TextureLoader::assimpGetTextures(const aiScene *scene)
     for (auto *material :
         std::span<aiMaterial *>(scene->mMaterials, scene->mNumMaterials)) 
     {
+        // Get the path of the texture file
+        aiString path;
         // Check for a diffuse texture
         if (material->GetTextureCount(aiTextureType_DIFFUSE) != 0) 
         {
-            // Get the path of the texture file
-            aiString path;
             if (material->GetTexture(aiTextureType_DIFFUSE, 0, &path) == AI_SUCCESS) 
             {
-                textureList[textureIndex] = std::string(path.C_Str());
+                diffuseTextures[textureIndex] = std::string(path.C_Str());
+            }
+        }
+        if (material->GetTextureCount(aiTextureType_EMISSIVE) != 0)
+        {
+            if (material->GetTexture(aiTextureType_EMISSIVE, 0, &path) == AI_SUCCESS)
+            {
+                emissiveTextures[textureIndex] = std::string(path.C_Str());
             }
         }
 
         textureIndex++;
     }
-
-    return textureList;
 }
 
 void TextureLoader::assimpTextureImport(
@@ -61,27 +67,35 @@ void TextureLoader::assimpTextureImport(
     std::vector<uint32_t>& materialToTexture)
 {
     // Get vector of all materials
-    std::vector<std::string> textureNames =
-        this->assimpGetTextures(scene);
+    std::vector<std::string> diffuseNames;
+    std::vector<std::string> emissiveNames;
+    this->assimpGetTextures(scene, diffuseNames, emissiveNames);
 
     // Handle empty texture
-    materialToTexture.resize(textureNames.size());
-    for (size_t i = 0; i < textureNames.size(); i++) {
+    materialToTexture.resize(diffuseNames.size());
+    for (size_t i = 0; i < diffuseNames.size(); i++) {
 
-        if (textureNames[i].empty()) {
+        if (diffuseNames[i].empty()) {
             // Use default textures for models if textures are missing
             materialToTexture[i] = 0;
         }
         else 
         {
             // Extract the name from texture path, and add custom folder path
-            this->processTextureName(textureNames[i], texturesFolderPath);
+            this->processTextureName(diffuseNames[i], texturesFolderPath);
+            if (emissiveNames[i].empty())
+                emissiveNames[i] = "vengine_assets/textures/Black.png";
+            else
+                this->processTextureName(emissiveNames[i], texturesFolderPath);
+
+            
 
             // Add material
             uint32_t addedMaterialIndex =
                 this->resourceMan->addMaterial(
-                    this->resourceMan->addTexture(textureNames[i].c_str()),
-                    this->resourceMan->addTexture("vengine_assets/textures/NoSpecular.png")
+                    this->resourceMan->addTexture(diffuseNames[i].c_str()),
+                    this->resourceMan->addTexture("vengine_assets/textures/NoSpecular.png"),
+                    this->resourceMan->addTexture(emissiveNames[i].c_str())
                 );
 
             // Create texture, use the index returned by our createTexture function

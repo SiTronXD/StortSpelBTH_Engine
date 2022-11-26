@@ -22,6 +22,10 @@ void PostProcessHandler::updateNumMipLevelsInUse()
 	//   ; - 6480p - 3 extra mips
 	// 16k - 8640p - 3 extra mips
 
+	// Each added upsample is then multiplied by an upsampleWeight
+	// to preserve brightness despite the increased number
+	// of mips.
+
 	// Avoid negative unsigned int cast
 	i = std::max(i, 1080.0f);
 	uint32_t extraMipLevels = uint32_t(
@@ -181,7 +185,7 @@ void PostProcessHandler::init(
 	);
 
 	this->downShaderInput.addPushConstant(
-		sizeof(ResolutionPushConstantData),
+		sizeof(BloomPushConstantData),
 		vk::ShaderStageFlagBits::eFragment
 	);
 
@@ -211,7 +215,7 @@ void PostProcessHandler::init(
 	);
 
 	this->upShaderInput.addPushConstant(
-		sizeof(ResolutionPushConstantData),
+		sizeof(BloomPushConstantData),
 		vk::ShaderStageFlagBits::eFragment
 	);
 
@@ -228,7 +232,11 @@ void PostProcessHandler::init(
 		VertexStreams{},
 		"fullscreenQuad.vert.spv",
 		"bloomUpsample.frag.spv",
-		false
+		false,
+		false,
+		true,
+		vk::PrimitiveTopology::eTriangleList,
+		BlendOption::ADD
 	);
 
 	// Descriptor indices

@@ -9,6 +9,12 @@
 class Device;
 class RenderPass;
 
+enum class BlendOption
+{
+	DEFAULT,
+	ADD
+};
+
 class Pipeline
 {
 private:
@@ -49,7 +55,8 @@ public:
 		const bool& wireframe = false,
 		const bool& backfaceCulling = true,
 		const vk::PrimitiveTopology& topology = 
-			vk::PrimitiveTopology::eTriangleList);
+			vk::PrimitiveTopology::eTriangleList,
+		const BlendOption& blendOption = BlendOption::DEFAULT);
 
 	void cleanup();
 

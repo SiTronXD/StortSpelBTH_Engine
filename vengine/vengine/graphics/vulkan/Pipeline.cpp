@@ -86,7 +86,8 @@ void Pipeline::createPipeline(
     const bool& depthTestingEnabled,
     const bool& wireframe,
     const bool& backfaceCulling,
-    const vk::PrimitiveTopology& topology)
+    const vk::PrimitiveTopology& topology,
+    const BlendOption& blendOption)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -212,18 +213,52 @@ void Pipeline::createPipeline(
 
     // Blend attachment State (how blending is handled)
     vk::PipelineColorBlendAttachmentState  colorState;
-    colorState.setColorWriteMask(vk::ColorComponentFlagBits::eA | vk::ColorComponentFlagBits::eB // Colours to apply blending to
-        | vk::ColorComponentFlagBits::eG | vk::ColorComponentFlagBits::eR);
+    colorState.setColorWriteMask(
+        vk::ColorComponentFlagBits::eR |
+        vk::ColorComponentFlagBits::eG |
+        vk::ColorComponentFlagBits::eB |
+        vk::ColorComponentFlagBits::eA
+    );
     colorState.setBlendEnable(VK_TRUE);                                                       // enable blending
 
-    // Blending uses Equation: (srcColorBlendFactor * new Colour) colorBlendOp (dstColorBlendFactor * old Colour)
-    colorState.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha);
-    colorState.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
-    colorState.setColorBlendOp(vk::BlendOp::eAdd);
+    switch (blendOption)
+    {
+    case BlendOption::DEFAULT:
 
-    colorState.setSrcAlphaBlendFactor(vk::BlendFactor::eOne);
-    colorState.setDstAlphaBlendFactor(vk::BlendFactor::eZero);
-    colorState.setAlphaBlendOp(vk::BlendOp::eAdd);
+        colorState.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha);
+        colorState.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
+        colorState.setColorBlendOp(vk::BlendOp::eAdd);
+
+        colorState.setSrcAlphaBlendFactor(vk::BlendFactor::eOne);
+        colorState.setDstAlphaBlendFactor(vk::BlendFactor::eZero);
+        colorState.setAlphaBlendOp(vk::BlendOp::eAdd);
+
+        break;
+
+    case BlendOption::ADD:
+
+        colorState.setSrcColorBlendFactor(vk::BlendFactor::eOne);
+        colorState.setDstColorBlendFactor(vk::BlendFactor::eOne);
+        colorState.setColorBlendOp(vk::BlendOp::eAdd);
+
+        colorState.setSrcAlphaBlendFactor(vk::BlendFactor::eOne);
+        colorState.setDstAlphaBlendFactor(vk::BlendFactor::eZero);
+        colorState.setAlphaBlendOp(vk::BlendOp::eAdd);
+
+        break;
+
+    default:
+
+        colorState.setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha);
+        colorState.setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha);
+        colorState.setColorBlendOp(vk::BlendOp::eAdd);
+
+        colorState.setSrcAlphaBlendFactor(vk::BlendFactor::eOne);
+        colorState.setDstAlphaBlendFactor(vk::BlendFactor::eZero);
+        colorState.setAlphaBlendOp(vk::BlendOp::eAdd);
+
+        break;
+    }
 
     vk::PipelineColorBlendStateCreateInfo colorBlendingCreateInfo;
     colorBlendingCreateInfo.setLogicOpEnable(VK_FALSE);               // Alternative to calculations is to use logical Operations

@@ -329,10 +329,12 @@ void VulkanRenderer::renderDefaultMeshes(
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
             this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
-            this->pushConstantData.emissionColor.r = firstSubmeshMaterial.emissionColor.r;
-            this->pushConstantData.emissionColor.g = firstSubmeshMaterial.emissionColor.g;
-            this->pushConstantData.emissionColor.b = firstSubmeshMaterial.emissionColor.b;
-            this->pushConstantData.emissionColor.a = meshComponent.receiveShadows ? 1.0f : 0.0f;
+            this->pushConstantData.emissionColor = 
+                glm::vec4(
+                    firstSubmeshMaterial.emissionColor, 
+                    firstSubmeshMaterial.emissionIntensity
+                );
+            this->pushConstantData.settings.x = meshComponent.receiveShadows ? 1.0f : 0.0f;
             this->currentCommandBuffer->pushConstant(
                 this->shaderInput,
                 (void*)&this->pushConstantData
@@ -369,15 +371,18 @@ void VulkanRenderer::renderDefaultMeshes(
 
                     FrequencyInputBindings diffuseTextureInputBinding{};
                     FrequencyInputBindings specularTextureInputBinding{};
+                    FrequencyInputBindings glowMapTextureInputBinding{};
                     diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
                     specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+                    glowMapTextureInputBinding.texture = &this->resourceManager->getTexture(material.glowMapTextureIndex);
 
                     // Add descriptor set
                     material.descriptorIndex =
                         this->shaderInput.addFrequencyInput(
                             {
                                 diffuseTextureInputBinding,
-                                specularTextureInputBinding
+                                specularTextureInputBinding,
+                                glowMapTextureInputBinding
                             }
                     );
 
@@ -387,8 +392,9 @@ void VulkanRenderer::renderDefaultMeshes(
                         // each added descriptor in shaderInput
                         this->animShaderInput.addFrequencyInput(
                             {
-                                diffuseTextureInputBinding,
-                                specularTextureInputBinding
+                                diffuseTextureInputBinding, 
+                                specularTextureInputBinding,
+                                glowMapTextureInputBinding
                             }
                         );
                     }
@@ -456,10 +462,12 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
             this->pushConstantData.modelMatrix = transform.getMatrix();
             this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
-            this->pushConstantData.emissionColor.r = firstSubmeshMaterial.emissionColor.r;
-            this->pushConstantData.emissionColor.g = firstSubmeshMaterial.emissionColor.g;
-            this->pushConstantData.emissionColor.b = firstSubmeshMaterial.emissionColor.b;
-            this->pushConstantData.emissionColor.a = meshComponent.receiveShadows ? 1.0f : 0.0f;
+            this->pushConstantData.emissionColor =
+                glm::vec4(
+                    firstSubmeshMaterial.emissionColor,
+                    firstSubmeshMaterial.emissionIntensity
+                );
+            this->pushConstantData.settings.x = meshComponent.receiveShadows ? 1.0f : 0.0f;
             this->currentCommandBuffer->pushConstant(
                 this->animShaderInput,
                 (void*)&this->pushConstantData
@@ -638,7 +646,8 @@ void VulkanRenderer::endRenderPass()
 void VulkanRenderer::beginBloomDownUpsampleRenderPass(
     const RenderPass& renderPass,
     CommandBuffer& commandBuffer,
-    const uint32_t& writeMipIndex)
+    const uint32_t& writeMipIndex,
+    bool isUpsampling)
 {
     static const vk::ClearColorValue clearColor(
         // Fog color
@@ -667,7 +676,11 @@ void VulkanRenderer::beginBloomDownUpsampleRenderPass(
     renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
     renderPassBeginInfo.renderArea.setExtent(hdrTextureExtent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
-    renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
+    renderPassBeginInfo.setClearValueCount(
+        !isUpsampling ? 
+        static_cast<uint32_t>(clearValues.size()) :
+        0u
+    );
     renderPassBeginInfo.setFramebuffer(this->postProcessHandler.getMipVkFramebuffer(writeMipIndex));
 
     // Begin Render Pass!    
@@ -709,10 +722,11 @@ void VulkanRenderer::renderBloomDownUpsample(
 
     // Update resolution
     const vk::Extent2D& mipExtent = this->postProcessHandler.getMipExtent(readMipIndex);
-    ResolutionPushConstantData& pushConstantData =
-        this->postProcessHandler.getResolutionData();
-    pushConstantData.resolution.x = (float) mipExtent.width;
-    pushConstantData.resolution.y = (float) mipExtent.height;
+    BloomPushConstantData& pushConstantData =
+        this->postProcessHandler.getBloomPushData();
+    pushConstantData.data.x = (float) mipExtent.width;
+    pushConstantData.data.y = (float) mipExtent.height;
+    pushConstantData.data.w = (float) this->postProcessHandler.getUpsampleWeight(); // Only used during upsampling
     commandBuffer.pushConstant(
         shaderInput,
         (void*) &pushConstantData

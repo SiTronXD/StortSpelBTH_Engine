@@ -4,7 +4,7 @@
 #include "Texture.hpp"
 
 const uint32_t LightHandler::MAX_NUM_LIGHTS   = 16;
-const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 4;
+const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 3;
 const uint32_t LightHandler::NUM_CASCADES     = 3;
 
 void LightHandler::getWorldSpaceFrustumCorners(

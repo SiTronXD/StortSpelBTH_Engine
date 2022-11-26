@@ -394,11 +394,25 @@ int SceneLua::lua_setComponent(lua_State* L)
 		scene->setComponent<Rigidbody>(entity, lua_torigidbody(L, 3, assigned));
 		break;
 	case CompType::ANIMATION:
+	{
 		if (scene->hasComponents<AnimationComponent>(entity)) 
 		{ 
 			boneID = scene->getComponent<AnimationComponent>(entity).boneTransformsID;
 		}
-		scene->setComponent<AnimationComponent>(entity, lua_toanimation(L, 3, boneID));
+		else
+		{
+			scene->setComponent<AnimationComponent>(entity);
+		}
+
+		const AnimationComponent newCompData = lua_toanimation(L, 3, boneID);
+		AnimationComponent& oldCompData = scene->getComponent<AnimationComponent>(entity);
+
+		oldCompData.boneTransformsID = boneID;
+		for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+		{
+			oldCompData.aniSlots[i] = newCompData.aniSlots[i];
+		}
+	}
 		break;
 	case CompType::UIAREA:
 		scene->setComponent<UIArea>(entity, lua_touiarea(L, 3));
@@ -487,26 +501,6 @@ int SceneLua::lua_setAnimation(lua_State* L)
 	return 0;
 }
 
-int SceneLua::lua_blendToAnimation(lua_State* L)
-{
-	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
-	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2) || !lua_isstring(L, 3) || !lua_isnumber(L, 4) || !lua_isnumber(L, 5)) { return 0; }
-	
-	scene->blendToAnimation((Entity)lua_tointeger(L, 1), lua_tostring(L, 2), lua_tostring(L, 3), (float)lua_tonumber(L, 4), (float)lua_tonumber(L, 5));
-
-	return 0;
-}
-
-int SceneLua::lua_syncedBlendToAnimation(lua_State* L)
-{
-	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
-	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2) || !lua_isstring(L, 3) || !lua_isnumber(L, 4)) { return 0; }
-
-	scene->syncedBlendToAnimation((Entity)lua_tointeger(L, 1), lua_tostring(L, 2), lua_tostring(L, 3), (float)lua_tonumber(L, 4));
-
-	return 0;
-}
-
 int SceneLua::lua_getAnimationSlot(lua_State* L)
 {
 	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
@@ -525,9 +519,7 @@ int SceneLua::lua_setAnimationSlot(lua_State* L)
 	const char* slotName = lua_tostring(L, 2);
 
 	AnimationSlot& slot = scene->getAnimationSlot(entity, slotName);
-	slot.animationIndex = (uint32_t)lua_tointeger(L, 3);
-	slot.timer = (float)lua_tonumber(L, 4);
-	slot.timeScale = (float)lua_tonumber(L, 5);
+	slot = lua_toanimationslot(L, 3);
 
 	return 0;
 }
@@ -557,8 +549,6 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "setAnimation", lua_setAnimation },
 		{ "getAnimationSlot", lua_getAnimationSlot },
 		{ "setAnimationSlot", lua_setAnimationSlot },
-		{ "blendToAnimation", lua_blendToAnimation },
-		{ "syncedBlendToAnimation", lua_syncedBlendToAnimation },
 		{ NULL , NULL }
 	};
 
