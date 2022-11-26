@@ -102,7 +102,7 @@ void TestDemoScene::init()
 		}
 	}
 
-#ifdef notDoingItInLua
+#if 0
 	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
 	Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
 	getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
@@ -324,7 +324,7 @@ void TestDemoScene::update()
 		setAnimation(aniIDs[0], "Run");
 	}
 
-#ifdef notDoingItInLua
+#if 0
 	if (ImGui::Begin("Animation Blending"))
 	{
 		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(multiAni2);
@@ -366,15 +366,15 @@ void TestDemoScene::update()
 		ImGui::Text("Next Animation");
 		ImGui::Text("Timer: %.2f", aniComp.aniSlots[usedIdx].nTimer);
 		ImGui::DragFloat("Time Scale ##0", &aniComp.aniSlots[usedIdx].nTimeScale, 0.01f, 0.f, 10.f);
-		static int nextIdx = -1;
+		static int nextIdx = 0;
 		ImGui::InputInt("Ani Idx ##0", &nextIdx, 1, 1);
 		nextIdx = std::clamp(nextIdx, 0, 2);
 
 		if (ImGui::Button("Start Transition"))
 		{
-			const std::string& aniName = getResourceManager()->getMesh(meshComp.meshID).getAnimationName(nextIdx);
+			std::string aniName = nextIdx == 0 ? "run" : nextIdx == 1 ? "idle" : "attack";
 			std::string slotName = slotIdx == 0 ? "LowerBody" : slotIdx == 1 ? "UpperBody" : "";
-			transitionToAnimation(multiAni2, aniName, slotName, aniComp.aniSlots[usedIdx].transitionTime, aniComp.aniSlots[usedIdx].nTimeScale);
+			blendToAnimation(multiAni2, aniName, slotName, aniComp.aniSlots[usedIdx].transitionTime, aniComp.aniSlots[usedIdx].nTimeScale);
 
 			if (slotIdx == -1)
 			{

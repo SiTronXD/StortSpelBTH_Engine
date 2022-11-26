@@ -51,8 +51,9 @@ public:
         const float& timer,
         glm::mat4& outputMatrix);
 
-    void getBoneTransforms(
-        AnimationComponent& animationComponentOutput);
+    void getBoneTransforms(AnimationComponent& animationComponentOutput);
+    void getLocalBoneTransform(const AnimationSlot& aniSlot, const BonePoses& curAnimPose,
+        const BonePoses& nextAnimPose, glm::mat4& outputMatrix);
 
     inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;

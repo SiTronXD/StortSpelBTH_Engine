@@ -16,7 +16,7 @@ function script:update(dt)
 	-- Normal slot blend
 	elseif (input.isKeyReleased(Keys.ONE) and input.isKeyDown(Keys.SHIFT)) then
 		scene.blendToAnimation(self.ID, "run", "UpperBody", 0.17, 1.0)
-	elseif (input.isKeyReleased(Keys.TW) and input.isKeyDown(Keys.SHIFT)) then
+	elseif (input.isKeyReleased(Keys.TWO) and input.isKeyDown(Keys.SHIFT)) then
 		scene.blendToAnimation(self.ID, "idle", "UpperBody", 0.17, 1.0)
 	elseif (input.isKeyReleased(Keys.THREE) and input.isKeyDown(Keys.SHIFT)) then
 		scene.blendToAnimation(self.ID, "attack", "UpperBody", 0.17, 1.0)
