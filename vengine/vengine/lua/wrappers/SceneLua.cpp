@@ -544,6 +544,14 @@ int SceneLua::lua_setAnimationSlot(lua_State* L)
 	return 0;
 }
 
+int SceneLua::lua_setAnimationTimeScale(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	scene->setAnimationTimeScale((Entity)lua_tointeger(L, 1), (float)lua_tonumber(L, 2), lua_tostring(L, 3));
+
+	return 0;
+}
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -571,6 +579,7 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "setAnimationSlot", lua_setAnimationSlot },
 		{ "blendToAnimation", lua_blendToAnimation },
 		{ "syncedBlendToAnimation", lua_syncedBlendToAnimation },
+		{ "setAnimationTimeScale", lua_setAnimationTimeScale },
 		{ NULL , NULL }
 	};
 

@@ -30,11 +30,20 @@ function script:update(dt)
 	
 
 	-- Synced skeleton blend
-	elseif (input.isKeyReleased(Keys.ONE) and input.isKeyDown(Keys.ALT)) then
+	elseif (input.isKeyReleased(Keys.ONE) and input.isKeyDown(Keys.SPACE)) then
 		scene.syncedBlendToAnimation(self.ID, "LowerBody", "", 0.17)
-	elseif (input.isKeyReleased(Keys.TWO) and input.isKeyDown(Keys.ALT)) then
+	elseif (input.isKeyReleased(Keys.TWO) and input.isKeyDown(Keys.SPACE)) then
 		scene.syncedBlendToAnimation(self.ID, "UpperBody", "", 0.17)
 	
+	-- Set timeScale
+	elseif (input.isKeyReleased(Keys.FOUR) and input.isKeyDown(Keys.SPACE)) then
+		scene.setAnimationTimeScale(self.ID, 0.3, "UpperBody")
+	elseif (input.isKeyReleased(Keys.FIVE) and input.isKeyDown(Keys.SPACE)) then
+		scene.setAnimationTimeScale(self.ID, 3.0, "UpperBody")
+	elseif (input.isKeyReleased(Keys.SIX) and input.isKeyDown(Keys.SPACE)) then
+		scene.setAnimationTimeScale(self.ID, 1.0, "UpperBody")
+
+
 	-- Normal skeleton blend
 	elseif (input.isKeyReleased(Keys.ONE)) then
 		scene.blendToAnimation(self.ID, "run", "", 0.17, 1.0)

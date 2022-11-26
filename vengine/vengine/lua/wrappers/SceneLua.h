@@ -55,6 +55,7 @@ private:
 	static int lua_syncedBlendToAnimation(lua_State* L);
 	static int lua_getAnimationSlot(lua_State* L);
 	static int lua_setAnimationSlot(lua_State* L);
+	static int lua_setAnimationTimeScale(lua_State* L);
 
    public:
 	static void lua_openscene(lua_State* L, SceneHandler* sceneHandler);

@@ -184,7 +184,7 @@ bool Scene::isActive(Entity entity)
 	return !this->hasComponents<Inactive>(entity);
 }
 
-void Scene::setAnimation(Entity entity, const std::string& animationName, const std::string& slotName)
+void Scene::setAnimation(Entity entity, const std::string& animationName, const std::string& slotName, float timeScale)
 {
 	/*
 		TODO: Add timeScale parameter
@@ -195,27 +195,52 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 			getMesh(this->getComponent<MeshComponent>(entity).meshID);
 		const uint32_t aniIndex = mesh.getAnimationIndex(animationName);
 
-		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
 		if (slotName == "")
 		{
+			AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
 			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
 			{
 				aniComp.aniSlots[i].animationIndex = aniIndex;
 				aniComp.aniSlots[i].timer = 0.f;
-				aniComp.aniSlots[i].timeScale = 1.f;
+				aniComp.aniSlots[i].timeScale = timeScale;
 			}
 		}
 		else
 		{
-			const uint32_t slotIndex = mesh.getAnimationSlotIndex(slotName);
-			aniComp.aniSlots[slotIndex].animationIndex = aniIndex;
-			aniComp.aniSlots[slotIndex].timer = 0.f;
+			AnimationSlot& aniSlot = this->getAnimationSlot(entity, slotName);
+			aniSlot.animationIndex = aniIndex;
+			aniSlot.timer = 0.f;
+			aniSlot.timeScale = timeScale;
 		}
 	}
 	else
 	{
 		Log::error("Scene::setAnimation |"
 			" The entity doesn't have the required components: MeshComponent, AnimationComponent");
+	}
+}
+
+void Scene::setAnimationTimeScale(Entity entity, float timeScale, const std::string& slotName)
+{
+	if (this->hasComponents<AnimationComponent>(entity))
+	{
+		if (slotName == "")
+		{
+			AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
+			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			{
+				aniComp.aniSlots[i].timeScale = timeScale;
+			}
+		}
+		else
+		{
+			this->getAnimationSlot(entity, slotName).timeScale = timeScale;
+		}
+	}
+	else
+	{
+		Log::error("Scene::setAnimationtimeScale |"
+			" The entity doesn't have the required components: AnimationComponent");
 	}
 }
 
