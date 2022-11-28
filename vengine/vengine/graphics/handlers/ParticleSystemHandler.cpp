@@ -39,6 +39,12 @@ void ParticleSystemHandler::initForScene(
 			vk::ShaderStageFlagBits::eVertex,
 			DescriptorFrequency::PER_FRAME
 		);
+	this->particleInfoSBO =
+		this->shaderInput.addStorageBuffer(
+			sizeof(ParticleInfo) * MAX_NUM_PARTICLES_PER_SYSTEM,
+			vk::ShaderStageFlagBits::eVertex, 
+			DescriptorFrequency::PER_FRAME
+		);
 	FrequencyInputLayout inputLayout{};
 	inputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
 	this->shaderInput.makeFrequencyInputLayout(inputLayout);
@@ -62,6 +68,15 @@ void ParticleSystemHandler::initForScene(
 			{ FrequencyInputBindings{ &texture } }
 		);
 	}
+
+	// TODO: remove this
+	this->particleInfos.resize(MAX_NUM_PARTICLES_PER_SYSTEM);
+	for (uint32_t i = 0; i < 64; ++i)
+	{
+		this->particleInfos[i].transformMatrix =
+			glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / (i*0.5f+1.0f))) *
+			glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.1f, 0.0f, 0.0f));
+	}
 }
 
 void ParticleSystemHandler::update(
@@ -72,6 +87,11 @@ void ParticleSystemHandler::update(
 	this->shaderInput.updateUniformBuffer(
 		this->cameraUBO,
 		(void*) &cameraDataUBO
+	);
+
+	this->shaderInput.updateStorageBuffer(
+		this->particleInfoSBO,
+		this->particleInfos.data()
 	);
 }
 

@@ -9,11 +9,21 @@ class RenderPass;
 class ParticleSystemHandler
 {
 private:
+	struct ParticleInfo
+	{
+		glm::mat4 transformMatrix = glm::mat4(1.0f);
+	};
+
+	std::vector<ParticleInfo> particleInfos;
+
 	UniformBufferID cameraUBO;
+	StorageBufferID particleInfoSBO;
 	ShaderInput shaderInput;
 	Pipeline pipeline;
 
 public:
+	inline static const uint32_t MAX_NUM_PARTICLES_PER_SYSTEM = 1024;
+
 	void init(
 		PhysicalDevice& physicalDevice,
 		Device& device,

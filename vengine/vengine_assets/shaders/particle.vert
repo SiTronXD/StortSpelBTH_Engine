@@ -1,7 +1,6 @@
 #version 460
 
 #define FREQ_PER_FRAME 0
-#define FREQ_PER_MESH 1
 
 // Uniform buffer
 layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
@@ -10,6 +9,16 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
     mat4 view;
     vec4 worldPos;
 } cameraBuffer;
+
+// Storage buffer
+struct ParticleInfoData
+{
+    mat4 transform;
+};
+layout(std140, set = FREQ_PER_FRAME, binding = 1) readonly buffer ParticleInfosBuffer
+{
+    ParticleInfoData infos[];
+} particles;
 
 // Output data
 layout(location = 0) out vec2 fragUV;
@@ -48,14 +57,18 @@ void main()
 
     
     // Position
-    gl_Position = 
+    /*gl_Position = 
         cameraBuffer.projection * 
         cameraBuffer.view * 
         vec4(
             position + vec2(gl_InstanceIndex * 2.10f, 0.0f), 
             0.75f, 
             1.0f
-        );
+        );*/
+    gl_Position = 
+        cameraBuffer.projection * 
+        cameraBuffer.view * 
+        vec4(position, 0.0f, 1.0f);
 
     // UV coordinates
     fragUV = vec2(position.x, -position.y) * 0.5f + vec2(0.5f);
