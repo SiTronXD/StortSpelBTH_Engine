@@ -44,7 +44,6 @@ struct ShadowMapData
     glm::vec2 shadowMapSize = glm::vec2(0.0f);
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;
-    glm::vec4 cascadeFarPlanes = glm::vec4(0.0f);
     glm::uvec4 cascadeSettings = glm::uvec4(0.0f);
 };
 

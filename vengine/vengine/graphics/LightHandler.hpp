@@ -53,20 +53,15 @@ private:
 
 	uint32_t framesInFlight;
 
+	glm::mat4 lightViewMat;
 	glm::vec3 lightDir;
 	glm::vec3 lightUpDir;
 
-	std::vector<float> cascadeNearPlanes;
 	std::vector<float> cascadeSizes;
 	float cascadeDepthScale;
 
-	void getWorldSpaceFrustumCorners(
-		const glm::mat4& invViewProj,
-		glm::vec4 outputCorners[]);
-
 	void setLightFrustum(
-		const glm::mat4& camProj,
-		const glm::mat4& camView,
+		const float& cascadeSize,
 		glm::mat4& outputLightVP);
 
 public:

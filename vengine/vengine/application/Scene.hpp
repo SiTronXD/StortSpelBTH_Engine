@@ -35,7 +35,7 @@ struct LuaSystem
 struct BloomSettings
 {
 	float bloomBufferLerpAlpha = 0.04f;
-	uint32_t numBloomMipLevels = 4;
+	uint32_t numBloomMipLevels = 7;
 };
 
 class Scene
