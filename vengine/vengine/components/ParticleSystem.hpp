@@ -30,6 +30,7 @@ struct AABB
 struct ParticleSystem
 {
 	uint32_t numParticles = 10;
+	uint32_t textureIndex = 0;
 	float lifeTime = 1.0f;
 	glm::vec2 startSize = glm::vec2(1.0f);
 	glm::vec2 endSize = glm::vec2(1.0f);

@@ -21,11 +21,18 @@ public:
 		ResourceManager& resourceManager,
 		RenderPass& renderPass,
 		const uint32_t& framesInFlight);
+	void initForScene(
+		PhysicalDevice& physicalDevice,
+		Device& device,
+		VmaAllocator& vma,
+		ResourceManager& resourceManager,
+		RenderPass& renderPass,
+		const uint32_t& framesInFlight);
 	void update(
 		const CameraBufferData& cameraDataUBO,
 		const uint32_t& currentFrame);
 	void cleanup();
 
-	inline const ShaderInput& getShaderInput() const { return this->shaderInput; }
+	inline ShaderInput& getShaderInput() { return this->shaderInput; }
 	inline const Pipeline& getPipeline() const { return this->pipeline; }
 };

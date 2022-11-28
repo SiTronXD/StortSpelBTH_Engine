@@ -74,6 +74,7 @@ void TestDemoScene::init()
 	this->setComponent<ParticleSystem>(particleEntity);
 	ParticleSystem& partSys = this->getComponent<ParticleSystem>(particleEntity);
 	partSys.numParticles = 5;
+	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();

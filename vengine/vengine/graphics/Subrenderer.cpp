@@ -517,7 +517,7 @@ void VulkanRenderer::renderParticles(Scene* scene)
 {
     const Pipeline& particlePipeline = 
         this->particleHandler.getPipeline();
-    const ShaderInput& particleShaderInput =
+    ShaderInput& particleShaderInput =
         this->particleHandler.getShaderInput();
 
     // Bind pipeline to be used in render pass
@@ -543,6 +543,11 @@ void VulkanRenderer::renderParticles(Scene* scene)
             );
 
             // Update for descriptors
+            particleShaderInput.setFrequencyInput(
+                this->resourceManager->getTexture(
+                    particleComponent.textureIndex
+                ).getDescriptorIndex()
+            );
             this->currentCommandBuffer->bindShaderInputFrequency(
                 particleShaderInput,
                 DescriptorFrequency::PER_DRAW_CALL

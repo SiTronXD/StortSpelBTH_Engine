@@ -165,16 +165,18 @@ int VulkanRenderer::init(
         this->initResourceManager();
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
-        this->resourceManager->addMaterial(
+        uint32_t missingTextureIndex = 
             this->resourceManager->addTexture(
                 DEF<std::string>(P_TEXTURES) + "missing_texture.png"
-            ),
-            this->resourceManager->addTexture(
-                DEF<std::string>(P_TEXTURES) + "missing_texture.png"
-            ),
+            );
+        uint32_t blackTextureIndex =
             this->resourceManager->addTexture(
                 DEF<std::string>(P_TEXTURES) + "Black.png"
-            )
+            );
+        this->resourceManager->addMaterial(
+            missingTextureIndex,
+            missingTextureIndex,
+            blackTextureIndex
         );
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
 
@@ -954,6 +956,14 @@ void VulkanRenderer::initForScene(Scene* scene)
         scene,
         oldHasAnimations,
         this->hasAnimations
+    );
+    this->particleHandler.initForScene(
+        this->physicalDevice,
+        this->device,
+        this->vma,
+        *this->resourceManager,
+        this->renderPassBase,
+        MAX_FRAMES_IN_FLIGHT
     );
 }
 
