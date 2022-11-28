@@ -74,8 +74,8 @@ void ParticleSystemHandler::initForScene(
 	for (uint32_t i = 0; i < 64; ++i)
 	{
 		this->particleInfos[i].transformMatrix =
-			glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / (i*0.5f+1.0f))) *
-			glm::translate(glm::mat4(1.0f), glm::vec3(i * 1.1f, 0.0f, 0.0f));
+			glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f)) *
+			glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / (i*0.5f+1.0f)));
 	}
 }
 

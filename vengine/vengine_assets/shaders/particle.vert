@@ -68,6 +68,7 @@ void main()
     gl_Position = 
         cameraBuffer.projection * 
         cameraBuffer.view * 
+        particles.infos[gl_InstanceIndex].transform *
         vec4(position, 0.0f, 1.0f);
 
     // UV coordinates
