@@ -25,6 +25,20 @@ struct VertexStreams
     std::vector<glm::uvec4> boneIndices;
 };
 
+struct AnimationStatus
+{
+    AnimationStatus(const std::string& animationName, float timer, float timeScale, float endTime)
+        :animationName(animationName), timer(timer), timeScale(timeScale), endTime(endTime)
+    {
+    }
+
+    const std::string& animationName;
+    float timer;
+    float timeScale;
+    float endTime;
+    // blending?
+};
+
 #define NUM_MAX_ANIMATION_SLOTS 5u // Defined here so AnimationComponent & Mesh has access to it
 struct AnimationSlot
 {

@@ -117,6 +117,8 @@ public:
 	void blendToAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "", float transitionTime = 0.18f, float nextAniTimeScale = 1.f);
 	void syncedBlendToAnimation(Entity entity, const std::string& referenceSlot, const std::string& slotToSync = "", float transitionTime = 0.18);
 	AnimationSlot& getAnimationSlot(Entity entity, const std::string& slotName);
+	// Assumes the whole skeleton is playing an animation, takes slot 0
+	AnimationStatus getAnimationStatus(Entity entity, const std::string& slotName = ""); 
 
 	// When created
 	virtual void init();

@@ -186,9 +186,6 @@ bool Scene::isActive(Entity entity)
 
 void Scene::setAnimation(Entity entity, const std::string& animationName, const std::string& slotName, float timeScale)
 {
-	/*
-		TODO: Add timeScale parameter
-	*/
 	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
 	{
 		const Mesh& mesh = this->sceneHandler->getResourceManager()->
@@ -213,11 +210,13 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 			aniSlot.timeScale = timeScale;
 		}
 	}
+#ifdef _CONSOLE
 	else
 	{
 		Log::error("Scene::setAnimation |"
 			" The entity doesn't have the required components: MeshComponent, AnimationComponent");
 	}
+#endif
 }
 
 void Scene::setAnimationTimeScale(Entity entity, float timeScale, const std::string& slotName)
@@ -237,11 +236,13 @@ void Scene::setAnimationTimeScale(Entity entity, float timeScale, const std::str
 			this->getAnimationSlot(entity, slotName).timeScale = timeScale;
 		}
 	}
+#ifdef _CONSOLE
 	else
 	{
 		Log::error("Scene::setAnimationtimeScale |"
 			" The entity doesn't have the required components: AnimationComponent");
 	}
+#endif
 }
 
 void Scene::blendToAnimation(Entity entity, const std::string& animationName, const std::string& slotName, float transitionTime, float nextAniTimeScale)
@@ -272,11 +273,13 @@ void Scene::blendToAnimation(Entity entity, const std::string& animationName, co
 			aniComp.aniSlots[slotIndex].nTimeScale = nextAniTimeScale;
 		}
 	}
+#ifdef _CONSOLE
 	else
 	{
 		Log::error("Scene::blendToAnimation |"
 			" The entity doesn't have the required components: MeshComponent, AnimationComponent");
 	}
+#endif
 }
 
 void Scene::syncedBlendToAnimation(Entity entity, const std::string& referenceSlot, const std::string& slotToSync, float transitionTime)
@@ -305,11 +308,13 @@ void Scene::syncedBlendToAnimation(Entity entity, const std::string& referenceSl
 			syncSlot.transitionTime = transitionTime;
 		}
 	}
+#ifdef _CONSOLE
 	else
 	{
 		Log::error("Scene::syncedBlendToAnimation |"
 			" The entity doesn't have the required components: AnimationComponent");
 	}
+#endif
 }
 
 AnimationSlot& Scene::getAnimationSlot(Entity entity, const std::string& slotName)
@@ -326,6 +331,32 @@ AnimationSlot& Scene::getAnimationSlot(Entity entity, const std::string& slotNam
 		this->getComponent<MeshComponent>(entity).meshID).getAnimationSlotIndex(slotName);
 
 	return this->getComponent<AnimationComponent>(entity).aniSlots[aniSlotIdx];
+}
+
+AnimationStatus Scene::getAnimationStatus(Entity entity, const std::string& slotName)
+{
+	if (this->hasComponents<MeshComponent, AnimationComponent>(entity))
+	{
+		const AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
+		const MeshComponent& meshComp = this->getComponent<MeshComponent>(entity);
+		const AnimationSlot& aniSlot = slotName == "" ? 
+			aniComp.aniSlots[0] : this->getAnimationSlot(entity, slotName);
+
+		const Mesh& mesh = this->getResourceManager()->getMesh(meshComp.meshID);
+		const float endTime = mesh.getAnimationEndTime(aniSlot.animationIndex);
+
+		return AnimationStatus(
+			mesh.getAnimationName(aniSlot.animationIndex), aniSlot.timer / 24.f, aniSlot.timeScale, endTime / 24.f);
+	}
+#ifdef _CONSOLE
+	else
+	{
+		Log::error("Scene::getAnimationStatus |"
+			" The entity doesn't have the required components: MeshComponent, AnimationComponent");
+	}
+#endif
+
+	return AnimationStatus("", 0.f, 0.f, 0.f);
 }
 
 void Scene::init()

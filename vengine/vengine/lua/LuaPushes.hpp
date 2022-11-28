@@ -430,6 +430,23 @@ static void lua_pushanimation(lua_State* L, const AnimationComponent& anim)
 	}
 }
 
+static void lua_pushAnimationStatus(lua_State* L, const AnimationStatus& status)
+{
+	lua_newtable(L);
+
+	lua_pushstring(L, status.animationName.c_str());
+	lua_setfield(L, -2, "animationName");
+
+	lua_pushnumber(L, status.timer);
+	lua_setfield(L, -2, "timer");
+
+	lua_pushnumber(L, status.timeScale);
+	lua_setfield(L, -2, "timeScale");
+
+	lua_pushnumber(L, status.endTime);
+	lua_setfield(L, -2, "endTime");
+}
+
 static UIArea lua_touiarea(lua_State* L, int index)
 {
 	UIArea area{};

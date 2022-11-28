@@ -51,6 +51,13 @@ function script:update(dt)
 		scene.blendToAnimation(self.ID, "idle", "", 0.17, 1.0)
 	elseif (input.isKeyReleased(Keys.THREE)) then
 		scene.blendToAnimation(self.ID, "attack", "", 0.17, 1.0)
+
+	elseif (input.isKeyReleased(Keys.G)) then
+		local status = scene.getAnimationStatus(self.ID, "")
+		print(status.animationName)
+		print(status.timer)
+		print(status.timeScale)
+		print(status.endTime)
 	end
 
 

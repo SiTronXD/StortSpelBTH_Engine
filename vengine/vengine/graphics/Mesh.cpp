@@ -419,6 +419,39 @@ uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
     return it->second;
 }
 
+const std::string& Mesh::getAnimationName(uint32_t index) const
+{
+    auto it = this->aniNames.begin();
+    std::advance(it, index);
+    return it->first;
+}
+
+float Mesh::getAnimationEndTime(const std::string& aniName) const
+{
+    const auto it = this->aniNames.find(aniName);
+#ifdef _CONSOLE
+    if (it == this->aniSlots.end())
+    {
+        Log::error("Mesh::getAnimationEndTime | Could not find animation with name \"" + aniName + "\"");
+    }
+#endif
+
+    return this->meshData.animations[it->second].endTime;
+}
+
+float Mesh::getAnimationEndTime(uint32_t index) const
+{
+#ifdef _CONSOLE
+    if (index >= (uint32_t)this->meshData.animations.size())
+    {
+        Log::error("Mesh::getAnimationEndTime | Invalid index: " + std::to_string(index) +
+            ". Num animations: " + std::to_string(this->meshData.animations.size()));
+    }
+#endif
+
+    return this->meshData.animations[index].endTime;
+}
+
 void Mesh::safeCleanup() 
 {
     device.waitIdle();

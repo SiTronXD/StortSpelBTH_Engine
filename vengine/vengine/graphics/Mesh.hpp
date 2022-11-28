@@ -65,6 +65,9 @@ public:
     void mapAnimations(const std::vector<std::string>& names);
     uint32_t getAnimationIndex(const std::string& name) const;
     uint32_t getAnimationSlotIndex(const std::string& slotName) const;
+    const std::string& getAnimationName(uint32_t index) const;
+    float getAnimationEndTime(const std::string& aniName) const;
+    float getAnimationEndTime(uint32_t index) const;
 
     void safeCleanup();
     void cleanup();
