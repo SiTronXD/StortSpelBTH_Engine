@@ -1246,7 +1246,10 @@ void VulkanRenderer::recordCommandBuffers(
     );
 
     // Update particles info
-    this->particleHandler.update(this->currentFrame);
+    this->particleHandler.update(
+        this->cameraDataUBO,
+        this->currentFrame
+    );
 
     // Default shader input
     this->shaderInput.updateUniformBuffer(

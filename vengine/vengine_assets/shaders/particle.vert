@@ -1,7 +1,15 @@
 #version 460
 
-#define FREQ_PER_FRAME 1
+#define FREQ_PER_FRAME 0
 #define FREQ_PER_MESH 1
+
+// Uniform buffer
+layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
+{
+    mat4 projection;
+    mat4 view;
+    vec4 worldPos;
+} cameraBuffer;
 
 // Output data
 layout(location = 0) out vec2 fragUV;
@@ -38,12 +46,16 @@ void main()
         vec2(1.0f, 1.0f)
     );*/
 
+    
     // Position
-    gl_Position = vec4(
-        position * 0.05f + vec2(gl_InstanceIndex * 0.11f, 0.0f), 
-        0.75f, 
-        1.0f
-    );
+    gl_Position = 
+        cameraBuffer.projection * 
+        cameraBuffer.view * 
+        vec4(
+            position + vec2(gl_InstanceIndex * 2.10f, 0.0f), 
+            0.75f, 
+            1.0f
+        );
 
     // UV coordinates
     fragUV = vec2(position.x, -position.y) * 0.5f + vec2(0.5f);

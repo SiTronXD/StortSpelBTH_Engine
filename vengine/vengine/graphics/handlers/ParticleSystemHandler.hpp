@@ -1,6 +1,7 @@
 #pragma once
 
 #include "../vulkan/Pipeline.hpp"
+#include "../vulkan/ShaderStructs.hpp"
 
 class Device;
 class RenderPass;
@@ -8,6 +9,7 @@ class RenderPass;
 class ParticleSystemHandler
 {
 private:
+	UniformBufferID cameraUBO;
 	ShaderInput shaderInput;
 	Pipeline pipeline;
 
@@ -19,7 +21,9 @@ public:
 		ResourceManager& resourceManager,
 		RenderPass& renderPass,
 		const uint32_t& framesInFlight);
-	void update(const uint32_t& currentFrame);
+	void update(
+		const CameraBufferData& cameraDataUBO,
+		const uint32_t& currentFrame);
 	void cleanup();
 
 	inline const ShaderInput& getShaderInput() const { return this->shaderInput; }

@@ -359,8 +359,8 @@ void TestDemoScene::update()
 	ImGui::End();
 
 	// Imgui bloom
-	/*static float bloomBufferLerpVal = 0.04f;
-	static int numMips = 6;
+	static float bloomBufferLerpVal = 0.04f;
+	static int numMips = 7;
 	ImGui::Begin("Bloom settings");
 	ImGui::SliderFloat("Bloom lerp alpha", &bloomBufferLerpVal, 0.0f, 1.0f);
 	ImGui::SliderInt("Bloom mip levels", &numMips, 0, 10);
@@ -371,7 +371,7 @@ void TestDemoScene::update()
 	ImGui::Begin("Bloom");
 	ImGui::SliderFloat3("Bloom color", &this->bloomColor[0], 0.0f, 100.0f);
 	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 100.0f);
-	ImGui::End();*/
+	ImGui::End();
 
 	for (uint32_t i = 2; i < 4; ++i)
 	{

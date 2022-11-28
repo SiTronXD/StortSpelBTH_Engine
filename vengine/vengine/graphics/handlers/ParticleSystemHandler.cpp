@@ -19,6 +19,12 @@ void ParticleSystemHandler::init(
 		resourceManager,
 		framesInFlight
 	);
+	this->cameraUBO =
+		this->shaderInput.addUniformBuffer(
+			sizeof(CameraBufferData),
+			vk::ShaderStageFlagBits::eVertex,
+			DescriptorFrequency::PER_FRAME
+		);
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
 		device, 
@@ -30,9 +36,15 @@ void ParticleSystemHandler::init(
 	);
 }
 
-void ParticleSystemHandler::update(const uint32_t& currentFrame)
+void ParticleSystemHandler::update(
+	const CameraBufferData& cameraDataUBO, 
+	const uint32_t& currentFrame)
 {
 	this->shaderInput.setCurrentFrame(currentFrame);
+	this->shaderInput.updateUniformBuffer(
+		this->cameraUBO,
+		(void*) &cameraDataUBO
+	);
 }
 
 void ParticleSystemHandler::cleanup()
