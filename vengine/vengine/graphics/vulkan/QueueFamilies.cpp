@@ -16,3 +16,8 @@ void QueueFamilies::setPresentQueue(const vk::Queue& queue)
 {
 	this->presentationQueue = queue;
 }
+
+void QueueFamilies::setComputeQueue(const vk::Queue& queue)
+{
+	this->computeQueue = queue;
+}

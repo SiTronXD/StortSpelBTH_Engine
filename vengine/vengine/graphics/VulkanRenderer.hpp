@@ -70,8 +70,10 @@ class VulkanRenderer
     RenderPass renderPassSwapchain{};
     RenderPass renderPassImgui{};
     vk::CommandPool commandPool{};
+    vk::CommandPool computeCommandPool{};
     CommandBufferArray commandBuffers;
     CommandBufferArray swapchainCommandBuffers;
+    CommandBuffer* currentComputeCommandBuffer;
     CommandBuffer* currentShadowMapCommandBuffer;
     CommandBuffer* currentCommandBuffer;
     CommandBuffer* currentSwapchainCommandBuffer;
@@ -136,17 +138,18 @@ private:
     void setupDebugMessenger();
     void createSurface();
     void windowResize(Camera* camera);
-    void createCommandPool();   //TODO: Deprecate! 
-    void createSynchronisation();
     void createCommandPool(
-        vk::CommandPool& commandPool,
-        vk::CommandPoolCreateFlags flags,
-        std::string&& name);
+        const uint32_t& queueFamilyIndex,
+        vk::CommandPool& outputCommandPool);
+    void createSynchronisation();
 
     // initializations of subsystems
     void initResourceManager();
 
     // ------- Render functions within render passes -------
+
+    // Compute pass for particles
+    void computeParticles();
 
     // Render pass for shadow map rendering
     std::vector<vk::DeviceSize> bindVertexBufferOffsets;

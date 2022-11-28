@@ -2,9 +2,11 @@
 
 #include "../vulkan/Pipeline.hpp"
 #include "../vulkan/ShaderStructs.hpp"
+#include "../vulkan/CommandBufferArray.hpp"
 
 class Device;
 class RenderPass;
+class CommandBufferArray;
 
 class ParticleSystemHandler
 {
@@ -21,6 +23,7 @@ private:
 	StorageBufferID particleInfoWriteSBO;
 	//ShaderInput computeShaderInput;
 	Pipeline computePipeline;
+	CommandBufferArray computeCommandBuffers;
 
 	// Graphics
 	UniformBufferID cameraUBO;
@@ -37,6 +40,7 @@ public:
 		VmaAllocator& vma,
 		ResourceManager& resourceManager,
 		RenderPass& renderPass,
+		vk::CommandPool& computeCommandPool,
 		const uint32_t& framesInFlight);
 	void initForScene(
 		PhysicalDevice& physicalDevice,
@@ -52,4 +56,5 @@ public:
 
 	inline ShaderInput& getShaderInput() { return this->shaderInput; }
 	inline const Pipeline& getPipeline() const { return this->pipeline; }
+	inline CommandBuffer& getComputeCommandBuffer(const uint32_t& index) { return this->computeCommandBuffers[index]; }
 };

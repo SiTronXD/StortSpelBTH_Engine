@@ -124,8 +124,15 @@ int VulkanRenderer::init(
             this->vma
         );
 
-        // Command pool/buffers
-        this->createCommandPool();
+        // Command pools/buffers
+        this->createCommandPool(
+            this->queueFamilies.getGraphicsIndex(),
+            this->commandPool
+        );
+        this->createCommandPool(
+            this->queueFamilies.getComputeIndex(),
+            this->computeCommandPool
+        );
         this->commandBuffers.createCommandBuffers(
             this->device,
             this->commandPool,
@@ -238,6 +245,7 @@ int VulkanRenderer::init(
         this->vma,
         *this->resourceManager,
         this->renderPassBase,
+        this->computeCommandPool,
         MAX_FRAMES_IN_FLIGHT
     );
 
@@ -358,6 +366,7 @@ void VulkanRenderer::cleanup()
         this->getVkDevice().destroyFence(this->drawFences[i]);
     }
 
+    this->getVkDevice().destroyCommandPool(this->computeCommandPool);
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
     this->debugRenderer->cleanup();
@@ -1068,22 +1077,21 @@ VulkanRenderer::VulkanRenderer()
     loadConfIntoMemory();
 }
 
-void VulkanRenderer::createCommandPool()
+void VulkanRenderer::createCommandPool(
+    const uint32_t& queueFamilyIndex,
+    vk::CommandPool& outputCommandPool)
  {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
 
-    vk::CommandPoolCreateInfo poolInfo = {};
-    poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);  // Enables us to reset our CommandBuffers 
-                                                                            // if they were allocated from this CommandPool!
-                                                                            // To make use of this feature you also have to activate in during Recording! (??)
-    poolInfo.queueFamilyIndex = 
-        this->queueFamilies.getGraphicsIndex();      // Queue family type that buffers from this command pool will use
+    vk::CommandPoolCreateInfo poolInfo{};
+    poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+    poolInfo.setQueueFamilyIndex(queueFamilyIndex);
 
-    // Create a graphics Queue Family Command Pool
-    this->commandPool = this->getVkDevice().createCommandPool(poolInfo);
-    VulkanDbg::registerVkObjectDbgInfo("CommandPool Presentation/Graphics", vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(this->commandPool)));
+    // Create a command pool
+    outputCommandPool = this->getVkDevice().createCommandPool(poolInfo);
+    VulkanDbg::registerVkObjectDbgInfo("CommandPool for queue family index " + std::to_string(queueFamilyIndex), vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(outputCommandPool)));
 
 }
 
@@ -1164,16 +1172,6 @@ void VulkanRenderer::createSynchronisation()
     );
 }
 
-void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")
-{
-    vk::CommandPoolCreateInfo commandPoolCreateInfo; 
-    commandPoolCreateInfo.setFlags(flags);
-    commandPoolCreateInfo.setQueueFamilyIndex(this->queueFamilies.getGraphicsIndex());
-    commandPool = this->getVkDevice().createCommandPool(commandPoolCreateInfo);
-
-    VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(commandPool)));
-}
-
 const Material& VulkanRenderer::getAppropriateMaterial(
     const MeshComponent& meshComponent,
     const std::vector<SubmeshData>& submeshes,
@@ -1214,6 +1212,9 @@ void VulkanRenderer::recordCommandBuffers(
     ZoneTransient(recordRenderPassCommands_zone1,  true); //:NOLINT   
 #endif
 
+    this->currentComputeCommandBuffer =
+        &this->particleHandler
+            .getComputeCommandBuffer(this->currentFrame);
     this->currentShadowMapCommandBuffer =
         &this->lightHandler
         .getShadowMapCommandBuffer(this->currentFrame);

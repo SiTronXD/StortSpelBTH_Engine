@@ -1,6 +1,11 @@
 #include "pch.h"
 #include "VulkanRenderer.hpp"
 
+void VulkanRenderer::computeParticles()
+{
+
+}
+
 void VulkanRenderer::beginShadowMapRenderPass(
     LightHandler& lightHandler,
     const uint32_t& shadowMapArraySlice)

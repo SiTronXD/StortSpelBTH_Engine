@@ -2,6 +2,7 @@
 #include "ParticleSystemHandler.hpp"
 #include "../vulkan/Device.hpp"
 #include "../vulkan/RenderPass.hpp"
+#include "../vulkan/CommandBufferArray.hpp"
 #include "../../resource_management/ResourceManager.hpp"
 
 void ParticleSystemHandler::init(
@@ -10,6 +11,7 @@ void ParticleSystemHandler::init(
 	VmaAllocator& vma,
 	ResourceManager& resourceManager,
 	RenderPass& renderPass,
+	vk::CommandPool& computeCommandPool,
 	const uint32_t& framesInFlight)
 {
 	/*this->computeShaderInput.beginForInput(
@@ -31,6 +33,12 @@ void ParticleSystemHandler::init(
 		this->computeShaderInput, 
 		"particle.comp.spv"
 	);*/
+
+	this->computeCommandBuffers.createCommandBuffers(
+		device,
+		computeCommandPool,
+		framesInFlight
+	);
 }
 
 void ParticleSystemHandler::initForScene(
@@ -60,7 +68,7 @@ void ParticleSystemHandler::initForScene(
 	this->particleInfoSBO =
 		this->shaderInput.addStorageBuffer(
 			sizeof(ParticleInfo) * MAX_NUM_PARTICLES_PER_SYSTEM,
-			vk::ShaderStageFlagBits::eVertex, 
+			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
 			DescriptorFrequency::PER_FRAME
 		);
 	FrequencyInputLayout inputLayout{};
