@@ -31,9 +31,12 @@ struct ParticleSystem
 {
 	uint32_t numParticles = 10;
 	uint32_t textureIndex = 0;
-	float lifeTime = 1.0f;
+	float currentlifeTime = 0.0f;
+	float maxlifeTime = 1.0f;
 	glm::vec2 startSize = glm::vec2(1.0f);
 	glm::vec2 endSize = glm::vec2(1.0f);
+	glm::vec3 startColor = glm::vec3(1.0f);
+	glm::vec3 endColor = glm::vec3(1.0f);
 	glm::vec3 velocity = glm::vec3(0.0f);
 	glm::vec3 acceleration = glm::vec3(0.0f);
 
