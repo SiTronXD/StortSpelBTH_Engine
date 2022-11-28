@@ -12,10 +12,17 @@ private:
 	struct ParticleInfo
 	{
 		glm::mat4 transformMatrix = glm::mat4(1.0f);
+		glm::vec4 position = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
 	};
 
 	std::vector<ParticleInfo> particleInfos;
 
+	// Compute
+	StorageBufferID particleInfoWriteSBO;
+	//ShaderInput computeShaderInput;
+	Pipeline computePipeline;
+
+	// Graphics
 	UniformBufferID cameraUBO;
 	StorageBufferID particleInfoSBO;
 	ShaderInput shaderInput;

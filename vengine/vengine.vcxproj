@@ -690,6 +690,9 @@ SET ERRORLEVEL = 0</Command>
     <CustomBuild Include="vengine_assets\shaders\particle.vert">
       <FileType>Document</FileType>
     </CustomBuild>
+    <CustomBuild Include="vengine_assets\shaders\particle.comp">
+      <FileType>Document</FileType>
+    </CustomBuild>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

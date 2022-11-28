@@ -12,7 +12,25 @@ void ParticleSystemHandler::init(
 	RenderPass& renderPass,
 	const uint32_t& framesInFlight)
 {
-	
+	/*this->computeShaderInput.beginForInput(
+		physicalDevice, 
+		device, 
+		vma,
+		resourceManager,
+		framesInFlight
+	);
+	this->particleInfoWriteSBO = 
+		this->computeShaderInput.addStorageBuffer(
+			sizeof(ParticleInfo) * MAX_NUM_PARTICLES_PER_SYSTEM,
+			vk::ShaderStageFlagBits::eCompute,
+			DescriptorFrequency::PER_FRAME
+		);
+	this->computeShaderInput.endForInput();
+	this->computePipeline.createComputePipeline(
+		device, 
+		this->computeShaderInput, 
+		"particle.comp.spv"
+	);*/
 }
 
 void ParticleSystemHandler::initForScene(
@@ -77,6 +95,21 @@ void ParticleSystemHandler::initForScene(
 			glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f)) *
 			glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / (i*0.5f+1.0f)));
 	}
+
+	// TODO: definitely remove this...
+	for (uint32_t i = 0; i < framesInFlight; ++i)
+	{
+		this->shaderInput.setCurrentFrame(i);
+		this->shaderInput.updateStorageBuffer(
+			this->particleInfoSBO,
+			this->particleInfos.data()
+		);
+	}
+	this->computePipeline.createComputePipeline(
+		device,
+		this->shaderInput, //this->computeShaderInput, 
+		"particle.comp.spv"
+	);
 }
 
 void ParticleSystemHandler::update(
@@ -89,14 +122,20 @@ void ParticleSystemHandler::update(
 		(void*) &cameraDataUBO
 	);
 
-	this->shaderInput.updateStorageBuffer(
+	/*this->shaderInput.updateStorageBuffer(
 		this->particleInfoSBO,
 		this->particleInfos.data()
-	);
+	);*/
+
+
+	//this->computeShaderInput.setCurrentFrame(currentFrame);
 }
 
 void ParticleSystemHandler::cleanup()
 {
 	this->pipeline.cleanup();
 	this->shaderInput.cleanup();
+
+	this->computePipeline.cleanup();
+	//this->computeShaderInput.cleanup();
 }

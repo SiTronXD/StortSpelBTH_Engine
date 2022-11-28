@@ -14,6 +14,7 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 struct ParticleInfoData
 {
     mat4 transform;
+    vec4 position;
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 1) readonly buffer ParticleInfosBuffer
 {

@@ -57,6 +57,11 @@ public:
 		const vk::PrimitiveTopology& topology = 
 			vk::PrimitiveTopology::eTriangleList,
 		const BlendOption& blendOption = BlendOption::DEFAULT);
+	void createComputePipeline(
+		Device& device,
+		ShaderInput& shaderInput,
+		const std::string& computeShaderName
+	);
 
 	void cleanup();
 

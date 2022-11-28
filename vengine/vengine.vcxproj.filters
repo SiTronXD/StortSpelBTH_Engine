@@ -412,5 +412,6 @@
     <CustomBuild Include="vengine_assets\shaders\fullscreenQuad.vert" />
     <CustomBuild Include="vengine_assets\shaders\particle.vert" />
     <CustomBuild Include="vengine_assets\shaders\particle.frag" />
+    <CustomBuild Include="vengine_assets\shaders\particle.comp" />
   </ItemGroup>
 </Project>

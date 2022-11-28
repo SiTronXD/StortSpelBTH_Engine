@@ -1,0 +1,27 @@
+#version 460
+
+#define FREQ_PER_FRAME 0
+
+// Uniform buffer
+layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
+{
+    mat4 projection;
+    mat4 view;
+    vec4 worldPos;
+} cameraBuffer;
+
+// Storage buffer
+struct ParticleInfoData
+{
+    mat4 transform;
+    vec4 position;
+};
+layout(std140, set = FREQ_PER_FRAME, binding = 1) buffer ParticleInfosBuffer
+{
+    ParticleInfoData infos[];
+} particles;
+
+void main()
+{
+    particles.infos[gl_GlobalInvocationID.x].position = vec4(1.0f, 2.0f, 3.0f, 666.0f);
+}

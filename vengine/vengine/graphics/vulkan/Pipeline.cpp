@@ -302,13 +302,57 @@ void Pipeline::createPipeline(
         );
     if (result != vk::Result::eSuccess)
     {
-        Log::error("Could not create pipeline");
+        Log::error("Could not create graphics pipeline.");
     }
-    VulkanDbg::registerVkObjectDbgInfo("VkPipeline", vk::ObjectType::ePipeline, reinterpret_cast<uint64_t>(vk::Pipeline::CType(this->pipeline)));
+    VulkanDbg::registerVkObjectDbgInfo("VkPipeline (graphics)", vk::ObjectType::ePipeline, reinterpret_cast<uint64_t>(vk::Pipeline::CType(this->pipeline)));
 
     //Destroy Shader Moduels, no longer needed after pipeline created
     this->device->getVkDevice().destroyShaderModule(vertexShaderModule);
     this->device->getVkDevice().destroyShaderModule(fragmentShaderModule);
+
+    this->hasBeenCreated = true;
+}
+
+void Pipeline::createComputePipeline(
+    Device& device, 
+    ShaderInput& shaderInput, 
+    const std::string& computeShaderName)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
+    this->device = &device;
+
+    // Compute shader module
+    auto computeShaderCode = vengine_helper::readShaderFile(computeShaderName);
+    vk::ShaderModule computeShaderModule = this->createShaderModule(computeShaderCode);
+    VulkanDbg::registerVkObjectDbgInfo("ShaderModule ComputeShader", vk::ObjectType::eShaderModule, reinterpret_cast<uint64_t>(vk::ShaderModule::CType(computeShaderModule)));
+
+    // Compute shader stage
+    vk::PipelineShaderStageCreateInfo computeShaderStageCreateInfo{};
+    computeShaderStageCreateInfo.setStage(vk::ShaderStageFlagBits::eCompute);
+    computeShaderStageCreateInfo.setModule(computeShaderModule);
+    computeShaderStageCreateInfo.setPName("main");
+
+    // Create compute shader
+    vk::ComputePipelineCreateInfo createInfo{};
+    createInfo.setStage(computeShaderStageCreateInfo);
+    createInfo.setLayout(shaderInput.getPipelineLayout().getVkPipelineLayout());
+    vk::Result result{};
+    std::tie(result, this->pipeline) =
+        device.getVkDevice().createComputePipeline(
+            nullptr, 
+            createInfo
+        );
+    if (result != vk::Result::eSuccess)
+    {
+        Log::error("Could not create compute pipeline.");
+    }
+    VulkanDbg::registerVkObjectDbgInfo("VkPipeline (compute)", vk::ObjectType::ePipeline, reinterpret_cast<uint64_t>(vk::Pipeline::CType(this->pipeline)));
+
+    // Deallocate shader module
+    this->device->getVkDevice().destroyShaderModule(computeShaderModule);
 
     this->hasBeenCreated = true;
 }
