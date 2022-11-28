@@ -496,7 +496,7 @@ int SceneLua::lua_setAnimation(lua_State* L)
 	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2)) { return 0; }
 	
 	Entity entity = (Entity)lua_tointeger(L, 1);
-	scene->setAnimation(entity, lua_tostring(L, 2), lua_tostring(L, 3));
+	scene->setAnimation(entity, lua_tostring(L, 2), lua_tostring(L, 3), lua_isnumber(L, 4) ? (float)lua_tonumber(L, 4) : 1.f);
 
 	return 0;
 }

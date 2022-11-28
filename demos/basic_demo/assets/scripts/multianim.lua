@@ -58,6 +58,9 @@ function script:update(dt)
 		print(status.timer)
 		print(status.timeScale)
 		print(status.endTime)
+
+	elseif (input.isKeyReleased(Keys.SEVEN)) then
+		scene.setAnimation(self.ID, "idle", "", 0.5);
 	end
 
 
