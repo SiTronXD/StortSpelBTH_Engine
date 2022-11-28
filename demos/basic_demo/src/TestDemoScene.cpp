@@ -389,7 +389,7 @@ void TestDemoScene::update()
 #endif
 
 	// Imgui bloom
-	static float bloomBufferLerpVal = 0.04f;
+	/*static float bloomBufferLerpVal = 0.04f;
 	static int numMips = 6;
 	ImGui::Begin("Bloom settings");
 	ImGui::SliderFloat("Bloom lerp alpha", &bloomBufferLerpVal, 0.0f, 1.0f);
@@ -401,7 +401,7 @@ void TestDemoScene::update()
 	ImGui::Begin("Bloom");
 	ImGui::SliderFloat3("Bloom color", &this->bloomColor[0], 0.0f, 100.0f);
 	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 100.0f);
-	ImGui::End();
+	ImGui::End();*/
 
 	for (uint32_t i = 2; i < 4; ++i)
 	{
@@ -428,9 +428,9 @@ void TestDemoScene::update()
 	DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
 	ImGui::Begin("Cascades");
-	ImGui::SliderFloat("Size 0", &dirLight.cascadeSizes[0], 0.0f, 1.0f);
-	ImGui::SliderFloat("Size 1", &dirLight.cascadeSizes[1], 0.0f, 1.0f);
-	ImGui::SliderFloat("Size 2", &dirLight.cascadeSizes[2], 0.0f, 1.0f);
+	ImGui::SliderFloat("Size 0", &dirLight.cascadeSizes[0], 0.0f, 1000.0f);
+	ImGui::SliderFloat("Size 1", &dirLight.cascadeSizes[1], 0.0f, 1000.0f);
+	ImGui::SliderFloat("Size 2", &dirLight.cascadeSizes[2], 0.0f, 1000.0f);
 	ImGui::SliderFloat("Depth", &dirLight.cascadeDepthScale, 1.0f, 50.0f);
 	ImGui::Checkbox("Visualize cascades", &dirLight.cascadeVisualization);
 	ImGui::End();

@@ -33,7 +33,6 @@ layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapInfoBuffer
     vec2 shadowMapSize;
 	float shadowMapMinBias;
 	float shadowMapAngleBias;
-	vec4 cascadeFarPlanes;
 	uvec4 cascadeSettings; // uvec4(numCascades, cascadeVisualization, 0, 0)
 } shadowMapInfoBuffer;
 
@@ -109,6 +108,14 @@ vec3 sampleCascade(in uint i)
 	}
 }
 
+bool isInsideLightFrustum(in vec4 ndcPos, in vec2 oneOverSmSize)
+{
+	// Avoid 3x3 sampling outside shadow map
+	return	abs(ndcPos.x) < 1.0f - oneOverSmSize.x * 3.0f &&
+			abs(ndcPos.y) < 1.0f - oneOverSmSize.y * 3.0f &&
+			ndcPos.z > 0.0f && ndcPos.z < 1.0f;
+}
+
 float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
 	// Don't receive shadows
@@ -118,6 +125,9 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 	}
 
 	uint numCascades = shadowMapInfoBuffer.cascadeSettings.x;
+	
+	vec2 shadowMapSize = shadowMapInfoBuffer.shadowMapSize;
+	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
 
 	// Brute force search through each cascade frustum
 	vec4 fragLightNDC = vec4(0.0f);
@@ -131,10 +141,8 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		fragLightNDC.xyz /= fragLightNDC.w;
 		fragLightNDC.y = -fragLightNDC.y;
 
-		// Fragment is outside light frustum
-		if( fragLightNDC.x >= -1.0f && fragLightNDC.x <= 1.0f &&
-			fragLightNDC.y >= -1.0f && fragLightNDC.y <= 1.0f &&
-			fragLightNDC.z >= 0.0f && fragLightNDC.z <= 1.0f)
+		// Fragment is inside light frustum
+		if(isInsideLightFrustum(fragLightNDC, oneOverSize))
 		{
 			cascadeIndex = i;
 			break;
@@ -142,9 +150,7 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 	}
 
 	// Fragment is outside light frustum
-	if( fragLightNDC.x < -1.0f || fragLightNDC.x > 1.0f ||
-		fragLightNDC.y < -1.0f || fragLightNDC.y > 1.0f ||
-		fragLightNDC.z < 0.0f || fragLightNDC.z > 1.0f)
+	if(!isInsideLightFrustum(fragLightNDC, oneOverSize))
 	{
 		return 0.0f;
 	}
@@ -158,8 +164,6 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		shadowMapInfoBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
 
 	// 3x3 PCF
-	vec2 shadowMapSize = shadowMapInfoBuffer.shadowMapSize;
-	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
 	float shadowFactor = 0.0f;
 	for(int y = -1; y <= 1; ++y)
 	{
