@@ -120,8 +120,8 @@ PostProcessHandler::PostProcessHandler()
 	resourceManager(nullptr),
 	renderPassBase(nullptr),
 	framesInFlight(0),
-	desiredNumMipLevels(PostProcessHandler::MAX_NUM_MIP_LEVELS / 2),
-	numMipLevelsInUse(PostProcessHandler::MAX_NUM_MIP_LEVELS / 2)
+	desiredNumMipLevels(std::min(7u, PostProcessHandler::MAX_NUM_MIP_LEVELS)),
+	numMipLevelsInUse(std::min(7u, PostProcessHandler::MAX_NUM_MIP_LEVELS))
 {}
 
 void PostProcessHandler::init(
