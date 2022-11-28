@@ -112,7 +112,7 @@ public:
 	bool isActive(Entity entity);
 
 	// Default slotName sets the animation on the whole skeleton
-	void setAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "", float timeScale = 1.f); // TODO: Add timeScale parameter
+	void setAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "", float timeScale = 1.f);
 	void setAnimationTimeScale(Entity entity, float timeScale, const std::string& slotName = "");
 	void blendToAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "", float transitionTime = 0.18f, float nextAniTimeScale = 1.f);
 	void syncedBlendToAnimation(Entity entity, const std::string& referenceSlot, const std::string& slotToSync = "", float transitionTime = 0.18);
