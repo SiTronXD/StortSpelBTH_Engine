@@ -48,18 +48,19 @@ void SceneHandler::updatePreScene()
 				if (aniSlot.timer >= meshData.animations[aniSlot.animationIndex].endTime)
 				{
 					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
+					aniSlot.finishedCycle = true;
 				}
 
-#if 1
 				if (aniSlot.nAnimationIndex != ~0u)
 				{
+					const Animation& nAnimation = meshData.animations[aniSlot.nAnimationIndex];
 					// Still in transition
 					if (aniSlot.alpha < 1.f)
 					{
 						aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
-						if (aniSlot.nTimer >= meshData.animations[aniSlot.nAnimationIndex].endTime)
+						if (aniSlot.nTimer >= nAnimation.endTime)
 						{
-							aniSlot.nTimer -= meshData.animations[aniSlot.nAnimationIndex].endTime;
+							aniSlot.nTimer -= nAnimation.endTime;
 						}
 
 						// Clamping alpha makes sure mesh doesn't "blink" when transitionTime == 0.f
@@ -82,16 +83,6 @@ void SceneHandler::updatePreScene()
 						aniSlot.nTimer = 0.f;
 					}
 				}
-#else
-				if (aniSlot.nAnimationIndex != -1)
-				{
-					aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
-					if (aniSlot.nTimer >= meshData.animations[aniSlot.nAnimationIndex].endTime)
-					{
-						aniSlot.nTimer = 0.f;
-					}
-				}
-#endif
 			}
 
 			// Store bone transformations

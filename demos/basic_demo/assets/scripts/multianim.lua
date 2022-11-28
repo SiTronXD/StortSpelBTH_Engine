@@ -22,11 +22,11 @@ function script:update(dt)
 		scene.blendToAnimation(self.ID, "attack", "UpperBody", 0.17, 1.0)
 
 	elseif (input.isKeyReleased(Keys.ONE) and input.isKeyDown(Keys.CTRL)) then
-		scene.blendToAnimation(self.ID, "run", "LowerBody", 0.17, 1.0)
+		scene.blendToAnimation(self.ID, "run", "LowerBody", 0.17, 0.3)
 	elseif (input.isKeyReleased(Keys.TWO) and input.isKeyDown(Keys.CTRL)) then
-		scene.blendToAnimation(self.ID, "idle", "LowerBody", 0.17, 1.0)
+		scene.blendToAnimation(self.ID, "idle", "LowerBody", 0.17, 0.3)
 	elseif (input.isKeyReleased(Keys.THREE) and input.isKeyDown(Keys.CTRL)) then
-		scene.blendToAnimation(self.ID, "attack", "LowerBody", 0.17, 1.0)
+		scene.blendToAnimation(self.ID, "attack", "LowerBody", 0.17, 0.3)
 	
 
 	-- Synced skeleton blend
@@ -46,19 +46,20 @@ function script:update(dt)
 
 	-- Normal skeleton blend
 	elseif (input.isKeyReleased(Keys.ONE)) then
-		scene.blendToAnimation(self.ID, "run", "", 0.17, 1.0)
+		scene.blendToAnimation(self.ID, "run", "", 0.17, 0.3)
 	elseif (input.isKeyReleased(Keys.TWO)) then
-		scene.blendToAnimation(self.ID, "idle", "", 0.17, 1.0)
+		scene.blendToAnimation(self.ID, "idle", "", 0.17, 0.3)
 	elseif (input.isKeyReleased(Keys.THREE)) then
-		scene.blendToAnimation(self.ID, "attack", "", 0.17, 1.0)
+		scene.blendToAnimation(self.ID, "attack", "", 0.17, 0.3)
 
 	elseif (input.isKeyReleased(Keys.G)) then
-		local status = scene.getAnimationStatus(self.ID, "")
+		local status = scene.getAnimationStatus(self.ID, "UpperBody")
 		print(status.animationName)
 		print(status.timer)
 		print(status.timeScale)
 		print(status.endTime)
-
+		print(status.finishedCycle)
+	
 	elseif (input.isKeyReleased(Keys.SEVEN)) then
 		scene.setAnimation(self.ID, "idle", "", 0.5);
 	end

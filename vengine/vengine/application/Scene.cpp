@@ -200,6 +200,7 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 				aniComp.aniSlots[i].animationIndex = aniIndex;
 				aniComp.aniSlots[i].timer = 0.f;
 				aniComp.aniSlots[i].timeScale = timeScale;
+				aniComp.aniSlots[i].finishedCycle = false;
 			}
 		}
 		else
@@ -208,6 +209,7 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 			aniSlot.animationIndex = aniIndex;
 			aniSlot.timer = 0.f;
 			aniSlot.timeScale = timeScale;
+			aniSlot.finishedCycle = false;
 		}
 	}
 #ifdef _CONSOLE
@@ -262,15 +264,18 @@ void Scene::blendToAnimation(Entity entity, const std::string& animationName, co
 				aniComp.aniSlots[i].nAnimationIndex = aniIndex;
 				aniComp.aniSlots[i].nTimer = 0.f;
 				aniComp.aniSlots[i].nTimeScale = nextAniTimeScale;
+				aniComp.aniSlots[i].finishedCycle = false;
+
 			}
 		}
 		else
 		{
-			const uint32_t slotIndex = mesh.getAnimationSlotIndex(slotName);
-			aniComp.aniSlots[slotIndex].transitionTime = transitionTime;
-			aniComp.aniSlots[slotIndex].nAnimationIndex = aniIndex;
-			aniComp.aniSlots[slotIndex].nTimer = 0.f;
-			aniComp.aniSlots[slotIndex].nTimeScale = nextAniTimeScale;
+			AnimationSlot& slot = this->getAnimationSlot(entity, slotName);
+			slot.transitionTime = transitionTime;
+			slot.nAnimationIndex = aniIndex;
+			slot.nTimer = 0.f;
+			slot.nTimeScale = nextAniTimeScale;
+			slot.finishedCycle = false;
 		}
 	}
 #ifdef _CONSOLE
@@ -297,6 +302,7 @@ void Scene::syncedBlendToAnimation(Entity entity, const std::string& referenceSl
 				aniComp.aniSlots[i].nTimeScale = refSlot.timeScale;
 				aniComp.aniSlots[i].nAnimationIndex = refSlot.animationIndex;
 				aniComp.aniSlots[i].transitionTime = transitionTime;
+				aniComp.aniSlots[i].finishedCycle = false;
 			}
 		}
 		else
@@ -305,6 +311,7 @@ void Scene::syncedBlendToAnimation(Entity entity, const std::string& referenceSl
 			syncSlot.nTimer = refSlot.timer;
 			syncSlot.nTimeScale = refSlot.timeScale;
 			syncSlot.nAnimationIndex = refSlot.animationIndex;
+			syncSlot.finishedCycle = refSlot.finishedCycle;
 			syncSlot.transitionTime = transitionTime;
 		}
 	}
@@ -346,7 +353,8 @@ AnimationStatus Scene::getAnimationStatus(Entity entity, const std::string& slot
 		const float endTime = mesh.getAnimationEndTime(aniSlot.animationIndex);
 
 		return AnimationStatus(
-			mesh.getAnimationName(aniSlot.animationIndex), aniSlot.timer / 24.f, aniSlot.timeScale, endTime / 24.f);
+			mesh.getAnimationName(aniSlot.animationIndex), 
+			aniSlot.timer / 24.f, aniSlot.timeScale, endTime / 24.f, aniSlot.finishedCycle);
 	}
 #ifdef _CONSOLE
 	else
@@ -356,7 +364,7 @@ AnimationStatus Scene::getAnimationStatus(Entity entity, const std::string& slot
 	}
 #endif
 
-	return AnimationStatus("", 0.f, 0.f, 0.f);
+	return AnimationStatus("", 0.f, 0.f, 0.f, false);
 }
 
 void Scene::init()

@@ -27,28 +27,33 @@ struct VertexStreams
 
 struct AnimationStatus
 {
-    AnimationStatus(const std::string& animationName, float timer, float timeScale, float endTime)
-        :animationName(animationName), timer(timer), timeScale(timeScale), endTime(endTime)
+    AnimationStatus(const std::string& animationName, float timer, float timeScale, float endTime, bool finishedCycle)
+        :animationName(animationName), timer(timer), timeScale(timeScale), endTime(endTime), finishedCycle(finishedCycle)
     {
     }
 
     const std::string& animationName;
+    bool finishedCycle;
+
+    // In seconds
     float timer;
     float timeScale;
     float endTime;
-    // blending?
 };
 
 #define NUM_MAX_ANIMATION_SLOTS 5u // Defined here so AnimationComponent & Mesh has access to it
 struct AnimationSlot
 {
+    // true if animation has played fully atleast once
+    bool finishedCycle = false;
     float alpha = 0.f;
-    float transitionTime = 1.f; // alpha += (1.f / transitionTime) * dt
+    float transitionTime = 0.2f;
 
     uint32_t animationIndex = 0;
     float timer = 0.f;
     float timeScale = 1.f;
 
+    // Next animation data (only used during transition)
     uint32_t nAnimationIndex = ~0u;
     float nTimer = 0.f;
     float nTimeScale = 1.f;
