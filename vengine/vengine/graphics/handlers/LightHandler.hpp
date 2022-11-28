@@ -1,13 +1,13 @@
 #pragma once
 
 #include <vulkan/vulkan.hpp>
-#include "vulkan/ShaderStructs.hpp"
-#include "vulkan/RenderPass.hpp"
-#include "vulkan/FramebufferArray.hpp"
-#include "vulkan/CommandBufferArray.hpp"
-#include "vulkan/Pipeline.hpp"
-#include "ShaderInput.hpp"
-#include "vulkan/CommandBufferArray.hpp"
+#include "../vulkan/ShaderStructs.hpp"
+#include "../vulkan/RenderPass.hpp"
+#include "../vulkan/FramebufferArray.hpp"
+#include "../vulkan/CommandBufferArray.hpp"
+#include "../vulkan/Pipeline.hpp"
+#include "../ShaderInput.hpp"
+#include "../vulkan/CommandBufferArray.hpp"
 
 class Scene;
 class RenderPass;

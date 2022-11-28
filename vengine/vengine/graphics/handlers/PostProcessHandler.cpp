@@ -1,10 +1,10 @@
 #include "pch.h"
 #include "PostProcessHandler.hpp"
-#include "../resource_management/ResourceManager.hpp"
-#include "vulkan/Device.hpp"
-#include "vulkan/FramebufferArray.hpp"
-#include "vulkan/CommandBufferArray.hpp"
-#include "Texture.hpp"
+#include "../../resource_management/ResourceManager.hpp"
+#include "../vulkan/Device.hpp"
+#include "../vulkan/FramebufferArray.hpp"
+#include "../vulkan/CommandBufferArray.hpp"
+#include "../Texture.hpp"
 
 void PostProcessHandler::updateNumMipLevelsInUse()
 {

@@ -19,8 +19,9 @@
 #include "imgui.h"              // Need to be included in header
 
 #include "../resource_management/ResourceManager.hpp"
-#include "LightHandler.hpp"
-#include "PostProcessHandler.hpp"
+#include "handlers/LightHandler.hpp"
+#include "handlers/PostProcessHandler.hpp"
+#include "handlers/ParticleSystemHandler.hpp"
 #include "UIRenderer.hpp"
 #include "DebugRenderer.hpp"
 
@@ -84,7 +85,6 @@ class VulkanRenderer
     Pipeline pipeline;
 
     // Animations pipeline
-	bool hasAnimations;
     UniformBufferID animViewProjectionUB;
     UniformBufferID animAllLightsInfoUB;
     UniformBufferID animShadowMapDataUB;
@@ -101,6 +101,9 @@ class VulkanRenderer
 
     LightHandler lightHandler;
     PostProcessHandler postProcessHandler;
+    ParticleSystemHandler particleHandler;
+
+    bool hasAnimations;
 
     // Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
@@ -163,8 +166,7 @@ private:
     void beginRenderPass();
     void renderDefaultMeshes(Scene* scene);
     void renderSkeletalAnimations(Scene* scene);
-    void renderUI();
-    void renderDebugElements();
+    void renderParticles(Scene* scene);
     void endRenderPass();
 
     // Render pass for bloom downsampling
@@ -185,6 +187,8 @@ private:
     void beginSwapchainRenderPass(
         const uint32_t& imageIndex);
     void renderToSwapchainImage();
+    void renderUI();
+    void renderDebugElements();
     void endSwapchainRenderPass();
 
     // Render pass for imgui rendering

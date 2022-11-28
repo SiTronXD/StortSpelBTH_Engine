@@ -229,6 +229,16 @@ int VulkanRenderer::init(
         this->swapchain.getVkExtent()
     );
 
+    // Particle system handler
+    this->particleHandler.init(
+        this->physicalDevice,
+        this->device,
+        this->vma,
+        *this->resourceManager,
+        this->renderPassBase,
+        MAX_FRAMES_IN_FLIGHT
+    );
+
     // Render-to-Swapchain shader input and pipeline
     this->swapchainShaderInput.beginForInput(
         this->physicalDevice,
@@ -363,6 +373,7 @@ void VulkanRenderer::cleanup()
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
 
+    this->particleHandler.cleanup();
     this->postProcessHandler.cleanup();
     this->lightHandler.cleanup(this->hasAnimations);
 
@@ -1234,6 +1245,9 @@ void VulkanRenderer::recordCommandBuffers(
         this->currentFrame
     );
 
+    // Update particles info
+    this->particleHandler.update(this->currentFrame);
+
     // Default shader input
     this->shaderInput.updateUniformBuffer(
         this->viewProjectionUB,
@@ -1301,6 +1315,7 @@ void VulkanRenderer::recordCommandBuffers(
     this->beginRenderPass();
         this->renderDefaultMeshes(scene);
         this->renderSkeletalAnimations(scene);
+        this->renderParticles(scene);
     this->endRenderPass();
 
     this->currentCommandBuffer->end();

@@ -69,6 +69,12 @@ void TestDemoScene::init()
 	this->getComponent<DirectionalLight>(this->directionalLightEntity)
 		.cascadeDepthScale = 5.0f;
 
+	// Particle system
+	Entity particleEntity = this->createEntity();
+	this->setComponent<ParticleSystem>(particleEntity);
+	ParticleSystem& partSys = this->getComponent<ParticleSystem>(particleEntity);
+	partSys.numParticles = 5;
+
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
 	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_5.fbx"));
