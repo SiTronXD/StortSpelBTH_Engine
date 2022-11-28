@@ -102,17 +102,19 @@ void TestDemoScene::init()
 		}
 	}
 
-	//int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
-	//Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
-	//getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
-	//getResourceManager()->getMesh(playerMesh).createAnimationSlot("UpperBody", "mixamorig:Spine1");
-	//
-	//multiAni2 = createEntity();
-	//setComponent<MeshComponent>(multiAni2, playerMesh);
-	//setComponent<AnimationComponent>(multiAni2);
-	//
-	//getComponent<Transform>(multiAni2).position.x = 30.f;
-	//getComponent<Transform>(multiAni2).rotation.y = 180.f;
+#if 0
+	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
+	Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
+	getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
+	getResourceManager()->getMesh(playerMesh).createAnimationSlot("UpperBody", "mixamorig:Spine1");
+	
+	multiAni2 = createEntity();
+	setComponent<MeshComponent>(multiAni2, playerMesh);
+	setComponent<AnimationComponent>(multiAni2);
+	
+	getComponent<Transform>(multiAni2).position.x = 40.f;
+	getComponent<Transform>(multiAni2).rotation.y = 180.f;
+#endif
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
@@ -322,35 +324,69 @@ void TestDemoScene::update()
 		setAnimation(aniIDs[0], "Run");
 	}
 
-	if (ImGui::Begin("Char animation") && false)
+#if 0
+	if (ImGui::Begin("Animation Blending"))
 	{
-		ImGui::PushItemWidth(-100.f);
-		AnimationSlot& upperSlot = getAnimationSlot(multiAni2, "UpperBody");
-		ImGui::Text("Upper body");
-		int idx = upperSlot.animationIndex;
-		ImGui::InputInt("1 Ani idx", &idx, 1, 1);
-		upperSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
-		ImGui::DragFloat(" 1Time scale", &upperSlot.timeScale, 0.01f, 0.f, 10.f);
-		
-		AnimationSlot& lowerSlot = getAnimationSlot(multiAni2, "LowerBody");
-		ImGui::Separator();
-		ImGui::Text("Lower body");
-		idx = lowerSlot.animationIndex;
-		ImGui::InputInt("2 Ani idx", &idx, 1, 1);
-		lowerSlot.animationIndex = idx < 3 ? (idx >= 0 ? idx : 0) : 2;
-		ImGui::DragFloat("2 Time scale", &lowerSlot.timeScale, 0.01f, 0.f, 10.f);
+		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(multiAni2);
+		MeshComponent& meshComp = this->getComponent<MeshComponent>(multiAni2);
+
+		ImGui::PushItemWidth(-110.f);
+
+		static int slotIdx = 0;
+		ImGui::Text("Slot:");
+		ImGui::RadioButton("Lower body", &slotIdx, 0); ImGui::SameLine();
+		ImGui::RadioButton("Upper body", &slotIdx, 1); ImGui::SameLine();
+		ImGui::RadioButton("Full body", &slotIdx, -1);
+		int usedIdx = slotIdx != -1 ? slotIdx : 0;
+
+		if (slotIdx == -1)
+		{
+			aniComp.aniSlots[1] = aniComp.aniSlots[0];
+		}
+
+		ImGui::DragFloat("Tranition Time", &aniComp.aniSlots[usedIdx].transitionTime, 0.01f, 0.f, 5.f);
+		ImGui::Text("Alpha: %.2f", aniComp.aniSlots[usedIdx].alpha); 
+		ImGui::SameLine();
+		if (ImGui::Button("Sync slots"))
+		{
+			aniComp.aniSlots[1] = aniComp.aniSlots[0];
+		}
 
 		ImGui::Separator();
-		if (ImGui::Button("Reset timers"))
+
+		ImGui::Text("Current Animation");
+		ImGui::Text("Timer: %.2f ", aniComp.aniSlots[usedIdx].timer);
+		ImGui::DragFloat("Time Scale", &aniComp.aniSlots[usedIdx].timeScale, 0.01f, 0.f, 10.f);
+		ImGui::InputInt("Ani Idx", &aniComp.aniSlots[usedIdx].animationIndex, 1, 1);
+		aniComp.aniSlots[usedIdx].animationIndex = std::clamp(aniComp.aniSlots[usedIdx].animationIndex, 0, 2);
+		
+
+		ImGui::Separator();
+
+		ImGui::Text("Next Animation");
+		ImGui::Text("Timer: %.2f", aniComp.aniSlots[usedIdx].nTimer);
+		ImGui::DragFloat("Time Scale ##0", &aniComp.aniSlots[usedIdx].nTimeScale, 0.01f, 0.f, 10.f);
+		static int nextIdx = 0;
+		ImGui::InputInt("Ani Idx ##0", &nextIdx, 1, 1);
+		nextIdx = std::clamp(nextIdx, 0, 2);
+
+		if (ImGui::Button("Start Transition"))
 		{
-			upperSlot.timer = 0.f;
-			upperSlot.timeScale = 1.f;
-			lowerSlot.timer = 0.f;
-			lowerSlot.timeScale = 1.f;
+			std::string aniName = nextIdx == 0 ? "run" : nextIdx == 1 ? "idle" : "attack";
+			std::string slotName = slotIdx == 0 ? "LowerBody" : slotIdx == 1 ? "UpperBody" : "";
+			blendToAnimation(multiAni2, aniName, slotName, aniComp.aniSlots[usedIdx].transitionTime, aniComp.aniSlots[usedIdx].nTimeScale);
+
+			if (slotIdx == -1)
+			{
+				aniComp.aniSlots[1].nTimeScale = aniComp.aniSlots[0].nTimeScale;
+				aniComp.aniSlots[1].transitionTime = aniComp.aniSlots[0].transitionTime;
+			}
 		}
+
 		ImGui::PopItemWidth();
 	}
 	ImGui::End();
+#endif
 
 	// Imgui bloom
 	/*static float bloomBufferLerpVal = 0.04f;

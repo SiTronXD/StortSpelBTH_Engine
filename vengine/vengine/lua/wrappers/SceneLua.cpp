@@ -496,7 +496,27 @@ int SceneLua::lua_setAnimation(lua_State* L)
 	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2)) { return 0; }
 	
 	Entity entity = (Entity)lua_tointeger(L, 1);
-	scene->setAnimation(entity, lua_tostring(L, 2), lua_tostring(L, 3));
+	scene->setAnimation(entity, lua_tostring(L, 2), lua_tostring(L, 3), lua_isnumber(L, 4) ? (float)lua_tonumber(L, 4) : 1.f);
+
+	return 0;
+}
+
+int SceneLua::lua_blendToAnimation(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2) || !lua_isstring(L, 3) || !lua_isnumber(L, 4) || !lua_isnumber(L, 5)) { return 0; }
+
+	scene->blendToAnimation((Entity)lua_tointeger(L, 1), lua_tostring(L, 2), lua_tostring(L, 3), (float)lua_tonumber(L, 4), (float)lua_tonumber(L, 5));
+
+	return 0;
+}
+
+int SceneLua::lua_syncedBlendToAnimation(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2) || !lua_isstring(L, 3) || !lua_isnumber(L, 4)) { return 0; }
+
+	scene->syncedBlendToAnimation((Entity)lua_tointeger(L, 1), lua_tostring(L, 2), lua_tostring(L, 3), (float)lua_tonumber(L, 4));
 
 	return 0;
 }
@@ -524,6 +544,23 @@ int SceneLua::lua_setAnimationSlot(lua_State* L)
 	return 0;
 }
 
+int SceneLua::lua_setAnimationTimeScale(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+	scene->setAnimationTimeScale((Entity)lua_tointeger(L, 1), (float)lua_tonumber(L, 2), lua_tostring(L, 3));
+
+	return 0;
+}
+
+int SceneLua::lua_getAnimationStatus(lua_State* L)
+{
+	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
+
+	lua_pushAnimationStatus(L, scene->getAnimationStatus((Entity)lua_tointeger(L, 1), lua_tostring(L, 2)));
+
+	return 1;
+}
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -549,6 +586,10 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "setAnimation", lua_setAnimation },
 		{ "getAnimationSlot", lua_getAnimationSlot },
 		{ "setAnimationSlot", lua_setAnimationSlot },
+		{ "blendToAnimation", lua_blendToAnimation },
+		{ "syncedBlendToAnimation", lua_syncedBlendToAnimation },
+		{ "setAnimationTimeScale", lua_setAnimationTimeScale },
+		{ "getAnimationStatus", lua_getAnimationStatus },
 		{ NULL , NULL }
 	};
 

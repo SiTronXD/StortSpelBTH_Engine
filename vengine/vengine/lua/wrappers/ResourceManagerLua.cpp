@@ -117,6 +117,8 @@ int ResourceManagerLua::lua_createAnimtionSlot(lua_State* L)
 	const char* boneName = lua_tostring(L, 3);
 
 	lua_pushboolean(L, resourceManager->createAnimationSlot(meshId, slotName, boneName));
+
+	return 1;
 }
 
 int ResourceManagerLua::lua_addAudio(lua_State* L)
