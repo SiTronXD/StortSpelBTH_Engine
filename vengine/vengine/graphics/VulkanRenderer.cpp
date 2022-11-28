@@ -1304,6 +1304,10 @@ void VulkanRenderer::recordCommandBuffers(
         (void*) &this->bloomSettingsData
     );
 
+    // Particle compute
+    this->currentComputeCommandBuffer->beginOneTimeSubmit();
+        this->computeParticles();
+    this->currentComputeCommandBuffer->end();
 
     // Begin shadow map command buffer
     this->currentShadowMapCommandBuffer->beginOneTimeSubmit();

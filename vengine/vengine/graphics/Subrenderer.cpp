@@ -3,7 +3,22 @@
 
 void VulkanRenderer::computeParticles()
 {
+    // Bind compute pipeline
+    this->currentComputeCommandBuffer
+        ->bindPipeline(
+            this->particleHandler.getComputePipeline()
+        );
 
+    // Bind frequency PER_FRAME
+    this->currentComputeCommandBuffer
+        ->bindShaderInputFrequency(
+            this->particleHandler.getShaderInput(),
+            DescriptorFrequency::PER_FRAME
+        );
+
+    // Dispatch compute shader
+    this->currentComputeCommandBuffer
+            ->getVkCommandBuffer().dispatch(1, 1, 1);
 }
 
 void VulkanRenderer::beginShadowMapRenderPass(
@@ -69,7 +84,7 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(
         lightHandler.getShadowMapShaderInput();
 
     // Bind Pipeline to be used in render pass
-    this->currentShadowMapCommandBuffer->bindGraphicsPipeline(
+    this->currentShadowMapCommandBuffer->bindPipeline(
         lightHandler.getShadowMapPipeline()
     );
 
@@ -138,7 +153,7 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(
     if (this->hasAnimations)
     {
         // Bind Pipeline to be used in render pass
-        this->currentShadowMapCommandBuffer->bindGraphicsPipeline(
+        this->currentShadowMapCommandBuffer->bindPipeline(
             lightHandler.getAnimShadowMapPipeline()
         );
 
@@ -308,7 +323,7 @@ void VulkanRenderer::renderDefaultMeshes(
     Scene* scene)
 {
     // Bind Pipeline to be used in render pass
-    this->currentCommandBuffer->bindGraphicsPipeline(
+    this->currentCommandBuffer->bindPipeline(
         this->pipeline
     );
 
@@ -429,13 +444,14 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
     if (this->hasAnimations)
     {
         // Bind pipeline to be used in render pass
-        this->currentCommandBuffer->bindGraphicsPipeline(
+        this->currentCommandBuffer->bindPipeline(
             this->animPipeline
         );
 
         // Update for descriptors
         this->currentCommandBuffer->bindShaderInputFrequency(
-            this->animShaderInput, DescriptorFrequency::PER_FRAME
+            this->animShaderInput, 
+            DescriptorFrequency::PER_FRAME
         );
     }
 
@@ -526,7 +542,7 @@ void VulkanRenderer::renderParticles(Scene* scene)
         this->particleHandler.getShaderInput();
 
     // Bind pipeline to be used in render pass
-    this->currentCommandBuffer->bindGraphicsPipeline(
+    this->currentCommandBuffer->bindPipeline(
         particlePipeline
     );
 
@@ -570,7 +586,7 @@ void VulkanRenderer::renderParticles(Scene* scene)
 void VulkanRenderer::renderUI()
 {
     // UI pipeline
-    this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
+    this->currentSwapchainCommandBuffer->bindPipeline(
         this->uiRenderer->getPipeline()
     );
 
@@ -620,7 +636,7 @@ void VulkanRenderer::renderDebugElements()
     // ---------- Lines ----------
 
     // Pipeline
-    this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
+    this->currentSwapchainCommandBuffer->bindPipeline(
         this->debugRenderer->getLinePipeline()
     );
 
@@ -642,7 +658,7 @@ void VulkanRenderer::renderDebugElements()
     // ---------- Meshes ----------
 
     // Pipeline
-    this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
+    this->currentSwapchainCommandBuffer->bindPipeline(
         this->debugRenderer->getMeshPipeline()
     );
 
@@ -770,7 +786,7 @@ void VulkanRenderer::renderBloomDownUpsample(
     const uint32_t& readMipIndex)
 {
     // Bind Pipeline to be used in render pass
-    commandBuffer.bindGraphicsPipeline(
+    commandBuffer.bindPipeline(
         pipeline
     );
 
@@ -874,7 +890,7 @@ void VulkanRenderer::beginSwapchainRenderPass(
 void VulkanRenderer::renderToSwapchainImage()
 {
     // Bind Pipeline to be used in render pass
-    this->currentSwapchainCommandBuffer->bindGraphicsPipeline(
+    this->currentSwapchainCommandBuffer->bindPipeline(
         this->swapchainPipeline
     );
 

@@ -18,6 +18,8 @@ enum class BlendOption
 class Pipeline
 {
 private:
+	vk::PipelineBindPoint bindPoint;
+
 	vk::Pipeline pipeline{};
 
 	Device* device;
@@ -65,6 +67,6 @@ public:
 
 	void cleanup();
 
-	inline const vk::Pipeline& getVkPipeline() const
-	{ return this->pipeline; }
+	inline const vk::Pipeline& getVkPipeline() const { return this->pipeline; }
+	inline const vk::PipelineBindPoint& getVkPipelineBindPoint() const { return this->bindPoint; }
 };

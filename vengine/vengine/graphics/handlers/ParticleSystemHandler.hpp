@@ -56,5 +56,6 @@ public:
 
 	inline ShaderInput& getShaderInput() { return this->shaderInput; }
 	inline const Pipeline& getPipeline() const { return this->pipeline; }
+	inline const Pipeline& getComputePipeline() const { return this->computePipeline; }
 	inline CommandBuffer& getComputeCommandBuffer(const uint32_t& index) { return this->computeCommandBuffers[index]; }
 };

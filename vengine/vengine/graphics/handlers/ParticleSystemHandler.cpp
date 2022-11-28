@@ -62,7 +62,7 @@ void ParticleSystemHandler::initForScene(
 	this->cameraUBO =
 		this->shaderInput.addUniformBuffer(
 			sizeof(CameraBufferData),
-			vk::ShaderStageFlagBits::eVertex,
+			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
 			DescriptorFrequency::PER_FRAME
 		);
 	this->particleInfoSBO =

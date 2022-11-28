@@ -93,6 +93,7 @@ void Pipeline::createPipeline(
     ZoneScoped; //:NOLINT
 #endif
 
+    this->bindPoint = vk::PipelineBindPoint::eGraphics;
 	this->device = &device;
 
     bool hasFragmentShader = fragmentShaderName != "";
@@ -322,6 +323,7 @@ void Pipeline::createComputePipeline(
     ZoneScoped; //:NOLINT
 #endif
 
+    this->bindPoint = vk::PipelineBindPoint::eCompute;
     this->device = &device;
 
     // Compute shader module

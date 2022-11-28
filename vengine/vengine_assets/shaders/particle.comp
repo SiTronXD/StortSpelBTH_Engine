@@ -2,6 +2,8 @@
 
 #define FREQ_PER_FRAME 0
 
+layout (local_size_x = 8) in;
+
 // Uniform buffer
 layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 {
