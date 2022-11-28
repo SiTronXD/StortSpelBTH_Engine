@@ -5,6 +5,7 @@
 #include "../graphics/VulkanRenderer.hpp"
 #include "../graphics/UIRenderer.hpp"
 #include "../lua/ScriptHandler.h"
+#include "../network/ServerEngine/NetworkScene.h"
 
 void SceneHandler::initSubsystems()
 {
@@ -91,6 +92,11 @@ void SceneHandler::updateToNextScene()
 	// Make sure a scene can be switched to
 	if (this->nextScene != nullptr)
 	{
+        NetworkScene* nScene = dynamic_cast<NetworkScene*>(scene);
+        if (nScene != nullptr)
+        {
+            ((NetworkScene*)nextScene)->setServer((nScene)->getServer());
+        }
 		// Delete old scene
 		delete this->scene;
 		this->scene = nullptr;

@@ -4,26 +4,31 @@
 #include "../application/SceneHandler.hpp"
 #include "glm/vec3.hpp"
 
-class Client {
+class Client 
+{
 private:
-    //data
+    static const int MAXTIMETRYINGTORECV = 4;
+    // Data
     std::string clientName;
     std::string serverIP;
     bool        isConnectedToServer;
 
-    StartingEnum startingEnum;
     float        currentTimeToSendDataToServer;
     float        timeToSendDataToServer;
 
+    // Packets
     sf::Packet clientTcpPacketSend;
     sf::Packet clientUdpPacketSend;
 
-    //sockets
+    // Sockets
     sf::TcpSocket   tcpSocket;
     sf::TcpListener tcpListener;
     sf::UdpSocket   udpSocket;
 
-    //functions
+    uint32_t sendPacketID = 0;
+    uint32_t recvPacketID = 0;
+
+    // Functions
     void sendDataToServer();
     void cleanPackageAndGameEvents();
 
@@ -34,17 +39,11 @@ public:
     void update(const float& dt);
 
     bool isConnected() const;
-    bool hasStarted() const;
-
-    void starting();
+    float getAccumulatedTime() const;
     void disconnect();
 
-    //send events
-    void sendTCPEvent(TCPPacketEvent& eventTCP);
-    //only exist one udp event from client to server
-    void sendUDPEvent(const GameEvents& gameEvent, const glm::vec3& pos, const glm::vec3& rot);
-
-    sf::Packet& getTcpPacket();
+    inline sf::Packet& getTCPPacket() { return this->clientTcpPacketSend; }
+    inline sf::Packet& getUDPPacket() { return this->clientUdpPacketSend; }
 
     sf::Packet getTCPDataFromServer();
     sf::Packet getUDPDataFromServer();

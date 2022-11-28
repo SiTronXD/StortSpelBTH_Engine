@@ -2,19 +2,22 @@
 #include "NetworkHandler.h"
 #include "ServerEngine/Timer.h"
 #include <iostream>
+#include "../graphics/DebugRenderer.hpp"
 
-void serverMain(bool& shutDownServer, bool& created, NetworkScene* game)
+void serverMain(bool& shutDownServer, bool& created, NetworkHandler* networkHandler, NetworkScene* game)
 {
 	Timer serverTime;
-	Server server(game);
+	Server server(networkHandler, game);
 	bool serverIsDone = false;
 	created = true;
+	game->setServer(&server);
 
 	while (!shutDownServer && !serverIsDone)
 	{
 		serverIsDone = server.update(serverTime.getDT());
 		serverTime.updateDeltaTime();
 	}
+	server.disconnect();
 
 	return;
 }
@@ -25,10 +28,9 @@ void NetworkHandler::createAPlayer(int serverId, const std::string& playerName)
 	otherPlayersServerId.push_back(serverId);
 }
 
-NetworkHandler::NetworkHandler() : sceneHandler(nullptr)
+NetworkHandler::NetworkHandler() 
+	: sceneHandler(nullptr)
 {
-	this->fx = fy = fz = fa = fb = fc = 0.f;
-	this->ix = iy = iz = ia = ib = ic = 0;
 	this->shutDownServer = false;
 	this->client = nullptr;
 	this->serverThread = nullptr;
@@ -66,47 +68,50 @@ void NetworkHandler::setMeshes(const std::string& meshName, const int meshID)
 	this->networkHandlerMeshes.insert(std::pair<std::string, int>(meshName, meshID));
 }
 
+void NetworkHandler::handleTCPEventClient(sf::Packet& tcpPacket, int event)
+{
+}
+
+void NetworkHandler::handleUDPEventClient(sf::Packet& udpPacket, int event)
+{
+}
+
+void NetworkHandler::handleTCPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event)
+{
+}
+
+void NetworkHandler::handleUDPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event)
+{
+}
+
+void NetworkHandler::onDisconnect(int index)
+{
+}
+
 void NetworkHandler::createServer(NetworkScene* serverGame)
 {
-	if (serverThread == nullptr)
+	if (this->hasServer())
 	{
-		this->shutDownServer = false;
-		this->createdServer = false;
-		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
-
-		Timer timer;
-		float timeSinceStartCreatingServer = 0;
-		while (!this->createdServer && timeSinceStartCreatingServer < waitTimeForServerCreation)
-		{
-			timeSinceStartCreatingServer += timer.getRealDT();
-			timer.updateDeltaTime();
-		}
-		if (!this->createdServer)
-		{
-			std::cout << "failed to create server" << std::endl;
-		}
-	}
-	else
-	{  //shut down server and create it again
 		this->shutDownServer = true;
 		serverThread->join();
 		delete serverThread;
 		serverThread = nullptr;
-		this->shutDownServer = false;
-		this->createdServer = false;
-		serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), serverGame);
+	}
 
-		Timer timer;
-		float timeSinceStartCreatingServer = 0;
-		while (!this->createdServer && timeSinceStartCreatingServer < waitTimeForServerCreation)
-		{
-			timeSinceStartCreatingServer += timer.getRealDT();
-			timer.updateDeltaTime();
-		}
-		if (!this->createdServer)
-		{
-			std::cout << "failed to create server" << std::endl;
-		}
+	this->shutDownServer = false;
+	this->createdServer = false;
+	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), this, serverGame);
+
+	Timer timer;
+	float timeSinceStartCreatingServer = 0;
+	while (!this->createdServer && timeSinceStartCreatingServer < waitTimeForServerCreation)
+	{
+		timeSinceStartCreatingServer += timer.getRealDT();
+		timer.updateDeltaTime();
+	}
+	if (!this->createdServer)
+	{
+		Log::write("Failed to create server");
 	}
 }
 
@@ -163,302 +168,199 @@ bool NetworkHandler::connectClient(const std::string& serverIP)
 	return true;
 }
 
-void NetworkHandler::updateNetwork()
+void NetworkHandler::update()
 {
 	if (client == nullptr)
 	{
 		return;
 	}
 
-	if (player != -1)
-	{
-		this->sendUDPDataToClient(
-		    this->sceneHandler->getScene()->getComponent<Transform>(this->player).position,
-		    this->sceneHandler->getScene()->getComponent<Transform>(this->player).rotation
-		);
-	}
-
 	client->update(Time::getDT());
-	//tcp
-	sf::Packet cTCPP = client->getTCPDataFromServer();
-	readTCPPacket(cTCPP);
 
-	sf::Packet cUDPP = client->getUDPDataFromServer();
-	readUDPPacket(cUDPP);
-}
-
-
-void NetworkHandler::readTCPPacket(sf::Packet& cTCPP)
-{
-	int gameEvent;
-	while (!cTCPP.endOfPacket())
+	int event;
+	int h1, h2;
+	sf::Packet packet = client->getTCPDataFromServer();
+	while (!packet.endOfPacket())
 	{
-		cTCPP >> gameEvent;
-		if (gameEvent == GameEvents::DISCONNECT)
+		if (!(packet >> event))
 		{
-			cTCPP >> ix;
-			if (ix == -1)
-			{  //we got kicked
-				this->disconnectClient();
-				//sceneHandler->setScene();
+			Log::write("Client: couldn't extract event TCP from server");
+			packet.clear();
+		}
+
+		if (event == (int)NetworkEvent::CLIENTJOINED)
+		{
+			std::string playerName;
+			packet >> playerName;
+			packet >> h1;
+			otherPlayers.push_back(std::pair<int, std::string>(-1, playerName));
+			otherPlayersServerId.push_back(h1);
+		}
+		else if (event == (int)NetworkEvent::JUSTJOINED)
+		{
+			std::string playerName;
+			packet >> this->ID; // Own ID in server
+			packet >> h1; // Other client amount
+			for (int i = 0; i < h1; i++)
+			{
+				packet >> playerName;
+				packet >> h2; // Other client ID
+				otherPlayers.push_back(std::pair<int, std::string>(-1, playerName));
+				otherPlayersServerId.push_back(h2);
 			}
+			this->serverStatus = ServerStatus::WAITING;
+		}
+		else if (event == (int)NetworkEvent::DISCONNECT)
+		{
+			packet >> h1;
+			// We got kicked
+			if (h1 == -1)
+			{
+				this->disconnectClient();
+			}
+			// Server shut down
+			else if (h1 == -2)
+			{
+				Log::write("Server shut down, disconnecting...");
+				this->disconnectClient();
+			}
+			// Other client got disconnected
 			else
 			{
 				for (int i = 0; i < otherPlayersServerId.size(); i++)
 				{
-					if (otherPlayersServerId[i] == ix)
+					if (otherPlayersServerId[i] == h1)
 					{
 						if (otherPlayers.size() < i)
 						{
 							return;
 						}
 						sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
+						this->onDisconnect(i);
 						this->otherPlayers.erase(otherPlayers.begin() + i);
 						this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
 					}
 				}
 			}
 		}
-		else if (gameEvent == GameEvents::START)
+		else if (event == (int)NetworkEvent::GETNAMES)
 		{
-			client->starting();
-		}
-		else if (gameEvent == GameEvents::PlayerJoined)
-		{
-			std::string playerName;
-			cTCPP >> playerName;
-			cTCPP >> ix;
-			this->createAPlayer(ix, playerName);
-		}
-		else if (gameEvent == GameEvents::SpawnEnemy)
-		{
-			//ix = what type of enemy
-			cTCPP >> ix;
-			cTCPP >> iz;
-			//should we really create a new entity everytime?
-			iy = sceneHandler->getScene()->createEntity();
-			std::cout << "spawn enemy" << iy << std::endl;
-			monsters.push_back(std::pair<int, int>(iy, iz));
-
-			if (ix == 0)  //blob
-			{
-				//sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
-				sceneHandler->getScene()->setScriptComponent(iy, "scripts/loadBlob.lua");
-			}
-			else if (ix == 1)  //range
-			{
-				sceneHandler->getScene()->setScriptComponent(iy, "scripts/loadBlob.lua");
-			}
-			else if (ix == 2)  //tank
-			{
-				sceneHandler->getScene()->setScriptComponent(iy, "scripts/loadBlob.lua");
-			}
-			else
-			{
-				std::cout << "error spawning enemy" << std::endl;
-				sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
-			}
-
-			cTCPP >> fx >> fy >> fz >> fa >> fb >> fc;
-			Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
-			transform.position = glm::vec3(fx, fy, fz);
-			transform.rotation = glm::vec3(fa, fb, fc);
-		}
-		else if (gameEvent == GameEvents::SpawnEnemies)
-		{
-			//TODO : dis doesn't really work NOW
-			//ix = what type of enemy, iy how many enemies
-			cTCPP >> ix >> iy;
-
-			for (int i = 0; i < iy; i++)
-			{
-				iz = sceneHandler->getScene()->createEntity();
-				if (ix == 0)
-				{
-					sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Swarm_model.obj"));
-				}
-				else
-				{
-					sceneHandler->getScene()->setComponent<MeshComponent>(iz, (int)this->resourceManger->addMesh("assets/models/Amogus/source/1.fbx"));
-				}
-
-				//ix = what type of enemy
-				cTCPP >> fx >> fy >> fz;
-				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(iy);
-				transform.position = glm::vec3(fx, fy, fz);
-			}
-		}
-		else if (gameEvent == GameEvents::HitMonster)
-		{
-			//don't know how this should be implemented right now
-            //cTCPP >> ix >> iy >> iz >> fx;
-            //scenePacket << ix << iy << iz << fx;
-			//or if should be
-		}
-		else if (gameEvent == GameEvents::MonsterDied)
-		{
-			//player that killed the monster, hp that the player shall get, perk/ability, multiplier
-            float multiplier = 0;
-            cTCPP >> ix >> iy >> iz >> multiplier >> fx >> fy >> fz >> fa >> fb >> fc;
-            if (ix == this->ID)
-            {
-                scenePacket << GameEvents::HealPlayer << iy;
-			}
-            if (iz != -1)
-            {
-             //shall be implemented soon   
-			}
-            scenePacket << gameEvent << ix << iy << iz << fx;
-            
-		}
-		else if (gameEvent == GameEvents::GAMEDATA)
-		{
-			cTCPP >> ix;  //nrOfPlayers;
-
-			for (int i = 0; i < ix; i++)
-			{
-				cTCPP >> iz;
-				if (iz != this->ID)
-				{
-					this->otherPlayersServerId.push_back(iz);
-				}
-			}
-
-			cTCPP >> this->seed;  //seed nr;
-		}
-		else if (gameEvent == GameEvents::PlayerDied)
-		{
-			//don't know how this should be implemented right now
-		}
-		else if (gameEvent == GameEvents::GetPlayerNames)
-		{
-			cTCPP >> ix;
-			for (int i = 0; i < ix; i++)
+			packet >> h1;
+			Log::write("Getting names from server:");
+			for (int i = 0; i < h1; i++)
 			{
 				std::string playerName;
-				cTCPP >> iy >> playerName;
-				bool alreadyHavePlayer = false;
-				for (int i = 0; i < otherPlayersServerId.size() && !alreadyHavePlayer; i++)
+				packet >> h2 >> playerName;
+				Log::write(playerName);
+			}
+		}
+		else if (event == (int)NetworkEvent::START)
+		{
+			this->serverStatus = ServerStatus::RUNNING;
+		}
+        else if (event == (int)NetworkEvent::DEBUG_DRAW_BOX)
+        {
+            glm::vec3 pos;
+            glm::vec3 rot;
+            glm::vec3 extends;
+            packet >> 
+				pos.x >> pos.y >> pos.z >> 
+				rot.x >> rot.y >> rot.z >> 
+				extends.x >> extends.y >> extends.z; 
+            this->sceneHandler->getDebugRenderer()->renderBox(pos, rot, extends, glm::vec3(1,0,0));
+        }
+        else if (event == (int)NetworkEvent::DEBUG_DRAW_SPHERE)
+        {
+            glm::vec3 pos;
+            float radius;
+            packet >> pos.x >> pos.y >> pos.z >> radius;
+            this->sceneHandler->getDebugRenderer()->renderSphere(pos, radius, glm::vec3(1, 0, 0));
+        }
+        else if (event == (int)NetworkEvent::DEBUG_DRAW_CYLINDER)
+        {
+            glm::vec3 pos;
+            glm::vec3 rot;
+            float height, radius;
+            packet >> pos.x >> pos.y >> pos.z >> rot.x >> rot.y >> rot.z >> height >> radius;
+            this->sceneHandler->getDebugRenderer()->renderCapsule(pos, rot, height, radius, glm::vec3(1, 0, 0));
+        }
+        else if (event == (int)NetworkEvent::DEBUG_DRAW_LINE)
+        {
+            glm::vec3 pos1;
+            glm::vec3 pos2;
+            pos1 = getVec(packet);
+            pos2 = getVec(packet);
+            this->sceneHandler->getDebugRenderer()->renderLine(pos1, pos2, glm::vec3(1, 0, 0));
+        }
+		// Custom event
+		else if (event >= (int)NetworkEvent::END)
+		{
+			this->handleTCPEventClient(packet, event);
+		}
+	}
+
+	packet = client->getUDPDataFromServer();
+	while (!packet.endOfPacket())
+	{
+		if (!(packet >> event))
+		{
+			Log::write("Client: couldn't extract UDP event from server");
+			packet.clear();
+		}
+		else if (event == (int)NetworkEvent::DISCONNECT)
+		{
+			packet >> h1;
+			// We got kicked
+			if (h1 == -1)
+			{
+				this->disconnectClient();
+			}
+			// Server shut down
+			else if (h1 == -2)
+			{
+				Log::write("Server shut down, disconnecting...");
+				this->disconnectClient();
+			}
+			// Other client got disconnected
+			else
+			{
+				for (int i = 0; i < otherPlayersServerId.size(); i++)
 				{
-					if (iy == otherPlayersServerId[i])
+					if (otherPlayersServerId[i] == h1)
 					{
-						alreadyHavePlayer = true;
+						if (otherPlayers.size() < i)
+						{
+							return;
+						}
+						sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
+						this->onDisconnect(i);
+						this->otherPlayers.erase(otherPlayers.begin() + i);
+						this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
 					}
 				}
-				if (!alreadyHavePlayer)
-				{
-					createAPlayer(iy, playerName);
-				}
 			}
 		}
-		else if (gameEvent == GameEvents::Draw_Debug_Line)
+		// Custom event
+		else if (event >= (int)NetworkEvent::END)
 		{
-			cTCPP >> fx >> fy >> fz >> fa >> fb >> fc;
-			scenePacket << gameEvent << fx << fy << fz << fa << fb << fc;
-		}
-		else if (gameEvent == GameEvents::Draw_Debug_CapsuleCollider)
-		{
-			cTCPP >> fx >> fy >> fz >> fa >> fb;
-			scenePacket << gameEvent << fx << fy << fz << fa << fb;
-		}
-		else if (gameEvent == GameEvents::Draw_Debug_BoxCollider)
-		{
-			cTCPP >> fx >> fy >> fz >> fa >> fb >> fc;
-			scenePacket << gameEvent << fx << fy << fz << fa << fb << fc;
-		}
-		else if (gameEvent == GameEvents::MONSTER_HIT)
-		{
-			cTCPP >> ix >> iy >> iz;
-			bool us = true;
-			for (int i = 0; i < this->otherPlayersServerId.size() && us; i++)
-			{
-				if (otherPlayersServerId[i] == iz)
-				{
-					us = false;
-				}
-			}
-			if (us)
-			{
-				scenePacket << gameEvent << ix << iy << iz;
-			}
-		}
-		else
-		{
-			scenePacket << gameEvent;
+			this->handleUDPEventClient(packet, event);
 		}
 	}
 }
 
-void NetworkHandler::readUDPPacket(sf::Packet& cUDPP)
-{
-	int gameEvent;
-	while (!cUDPP.endOfPacket())
-	{
-		cUDPP >> gameEvent;
-		if (gameEvent == GameEvents::UpdatePlayerPos)
-		{
-			//ix = amount of players
-			cUDPP >> ix;
-			for (int i = 0; i < ix; i++)
-			{
-				//fxyz position, fabc rotation
-				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
-
-				while (otherPlayers.size() < i)
-				{
-					otherPlayers.push_back(std::pair<int, std::string>(sceneHandler->getScene()->createEntity(), "unknown"));
-				}
-
-				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(otherPlayers[i].first);
-				transform.position = glm::vec3(fx, fy, fz);
-				transform.rotation = glm::vec3(fa, fb, fc);
-			}
-		}
-		else if (gameEvent == GameEvents::UpdateMonsterPos)
-		{
-			//ix number of monsters
-			cUDPP >> ix;
-			if (monsters.size() < ix)
-			{
-				std::cout << "updating size of monster" << std::endl;
-				monsters.reserve(ix);
-				for (int i = monsters.size(); i < ix; i++)
-				{
-					iy = sceneHandler->getScene()->createEntity();
-					monsters.push_back(std::pair<int, int>(iy, -1));
-
-					sceneHandler->getScene()->setComponent<MeshComponent>(iy, 0);
-				}
-			}
-
-			for (int i = 0; i < ix; i++)
-			{
-				//fxyz position, fabc rotation
-				cUDPP >> fx >> fy >> fz >> fa >> fb >> fc;
-				Transform& transform = sceneHandler->getScene()->getComponent<Transform>(monsters[i].first);
-				transform.position = glm::vec3(fx, fy, fz);
-				transform.rotation = glm::vec3(fa, fb, fc);
-			}
-		}
-		else
-		{
-			scenePacket << gameEvent;
-		}
-	}
-}
-
-
-sf::Packet& NetworkHandler::getScenePacket()
-{
-	return this->scenePacket;
-}
-
-
-void NetworkHandler::sendTCPDataToClient(TCPPacketEvent tcpP)
+void NetworkHandler::sendDataToServerTCP(sf::Packet packet)
 {
 	if (client != nullptr)
 	{
-		client->sendTCPEvent(tcpP);
+		client->getTCPPacket().append(packet.getData(), packet.getDataSize());
+	}
+}
+
+void NetworkHandler::sendDataToServerUDP(sf::Packet packet)
+{
+	if (client != nullptr)
+	{
+		client->getUDPPacket().append(packet.getData(), packet.getDataSize());
 	}
 }
 
@@ -467,70 +369,27 @@ void NetworkHandler::setPlayerNetworkHandler(int playerID)
 	this->player = playerID;
 }
 
-void NetworkHandler::sendUDPDataToClient(const glm::vec3& pos, const glm::vec3& rot)
-{
-	if (client != nullptr)
-	{
-		client->sendUDPEvent(GameEvents::UpdatePlayerPos, pos, rot);
-	}
-}
-
-int NetworkHandler::getServerSeed()
-{
-	Timer time;
-	float waitingTime = 0;
-	static const float maxWaitingTime = 10;
-	bool done = false;
-	sf::Packet overFlow;
-
-	while (!(waitingTime > maxWaitingTime) && !done)
-	{
-		int gameEvent;
-		sf::Packet cTCPP = client->getTCPDataFromServer();
-		overFlow.append(cTCPP.getData(), cTCPP.getDataSize());
-
-		waitingTime += time.getRealDT();
-		while (!cTCPP.endOfPacket() && !done)
-		{
-			cTCPP >> gameEvent;
-			if (gameEvent == GameEvents::GetLevelSeed)
-			{
-				cTCPP >> seed;
-				done = true;
-			}
-		}
-		time.updateDeltaTime();
-	}
-	readTCPPacket(overFlow);
-	return seed;
-}
-void NetworkHandler::sendAIPolygons(std::vector<glm::vec2> points)
-{
-	TCPPacketEvent polygonEvent;
-
-	polygonEvent.gameEvent = GameEvents::POLYGON_DATA;  //change this
-	polygonEvent.floats.reserve(points.size() * 2);
-	polygonEvent.ints[0] = (int)points.size();
-	for (int i = 0; i < points.size(); i++)
-	{
-		polygonEvent.floats.push_back((float)points[i].x);
-		polygonEvent.floats.push_back((float)points[i].y);
-	}
-
-	polygonEvent.nrOfInts = 1;
-
-	client->sendTCPEvent(polygonEvent);
-}
-
 const std::string& NetworkHandler::getClientName()
 {
 	return this->playerName;
 }
 
+const bool NetworkHandler::isConnected()
+{
+	if (this->client != nullptr)
+	{
+		return this->client->isConnected();
+	}
+	return false;
+}
+const std::string& NetworkHandler::getClientName()
+{
+	return this->playerName;
+}
 void NetworkHandler::getLuaData(std::vector<int>& ints, std::vector<float>& floats)
 {
-	ints = this->lua_ints;
-	floats = this->lua_floats;
+	//ints = this->lua_ints;
+	//floats = this->lua_floats;
 }
 
 const bool NetworkHandler::hasServer()
@@ -561,17 +420,28 @@ void NetworkHandler::createPlayers()
 	}
 }
 
-const std::vector<std::pair<int, int>>& NetworkHandler::getMonsters()
+glm::vec3 NetworkHandler::getVec(sf::Packet& packet)
 {
-	return this->monsters;
+	glm::vec3 vec;
+	packet >> vec.x >> vec.y >> vec.z;
+	return vec;
+}
+
+void NetworkHandler::sendVec(sf::Packet& packet, const glm::vec3& vec)
+{
+	packet << vec.x << vec.y << vec.z;
 }
 
 void NetworkHandler::disconnectClient()
 {
-	client->disconnect();
 	if (client != nullptr)
 	{
-		delete client;
-		client = nullptr;
+		if (client->isConnected())
+		{
+			client->disconnect();
+			this->otherPlayers.clear();
+			this->otherPlayersServerId.clear();
+			this->serverStatus = ServerStatus::DISCONNECTED;
+		}
 	}
 }

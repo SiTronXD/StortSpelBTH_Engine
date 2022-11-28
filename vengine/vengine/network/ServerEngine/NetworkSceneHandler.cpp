@@ -10,9 +10,14 @@ void NetworkSceneHandler::update(float dt)
 	((NetworkScene*)this->getScene())->update(dt);
 }
 
-void NetworkSceneHandler::givePacketInfo(std::vector<sf::Packet>& serverToClient)
+void NetworkSceneHandler::givePacketInfo(std::vector<sf::Packet>& serverToClientTCP)
 {
-	this->serverToClientPacketTcp = &serverToClient;
+	this->serverToClientPacketTcp = &serverToClientTCP;
+}
+
+void NetworkSceneHandler::givePacketInfoUdp(std::vector<sf::Packet>& serverToClientUdp)
+{
+    this->serverToClientPacketUdp = &serverToClientUdp;
 }
 
 void NetworkSceneHandler::updateToNextScene() 
@@ -23,6 +28,7 @@ void NetworkSceneHandler::updateToNextScene()
 void NetworkSceneHandler::setScene(Scene* scene, std::string path) {
 	SceneHandler::setScene(scene, path);
 	((NetworkScene*)scene)->givePacketInfo(serverToClientPacketTcp);
+    ((NetworkScene*)scene)->givePacketInfoUdp(serverToClientPacketUdp);
 
 	//give new scene players
 	if (this->getScene() != nullptr)
