@@ -382,10 +382,7 @@ const bool NetworkHandler::isConnected()
 	}
 	return false;
 }
-const std::string& NetworkHandler::getClientName()
-{
-	return this->playerName;
-}
+
 void NetworkHandler::getLuaData(std::vector<int>& ints, std::vector<float>& floats)
 {
 	//ints = this->lua_ints;

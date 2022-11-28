@@ -11,7 +11,6 @@
 #include "src/LevelEditorTestScene.h"
 #include "src/TestDemoScene.h"
 #include "src/NewTestScene.h"
-#include "src/network/NetworkTestScene.h"
 #include "src/network/LobbyScene.h"
 #include "src/network/NetworkHandlerTest.h"
 

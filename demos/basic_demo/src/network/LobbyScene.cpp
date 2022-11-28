@@ -4,7 +4,6 @@
 #include "glm/gtx/string_cast.hpp"
 #include "glm/glm.hpp"
 #include "glm/gtx/string_cast.hpp"
-#include "NetworkTestScene.h"
 #include "vengine/network/ServerGameModes/DefaultServerGame.h"
 #include "NetworkHandlerTest.h"
 
