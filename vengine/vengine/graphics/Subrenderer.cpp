@@ -19,7 +19,7 @@ void VulkanRenderer::computeParticles()
     // Dispatch compute shader
     this->currentComputeCommandBuffer
             ->getVkCommandBuffer().dispatch(
-                this->particleHandler.getNumParticles() / 32, 
+                (this->particleHandler.getNumParticles() + 32 - 1) / 32, 
                 1, 
                 1
             );
