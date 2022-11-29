@@ -16,12 +16,18 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 struct ParticleInfoData
 {
     mat4 transform;
-    vec4 position;
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 1) buffer ParticleInfosBuffer
 {
     ParticleInfoData infos[];
 } particles;
+
+// Uniform buffer
+layout(set = FREQ_PER_FRAME, binding = 2) uniform ParticleBufferData
+{
+    vec3 padding;
+    float deltaTime;
+} globalParticleBuffer;
 
 void main()
 {
@@ -31,10 +37,25 @@ void main()
     vec3 position = transform[3].xyz;
 
     // Apply change
-    position.y += 0.01f;
+    position.y += 1.0f * globalParticleBuffer.deltaTime;
 
-    // Update position
-    transform[3].xyz = position;
+
+    // Update direction
+    vec3 forward = normalize(cameraBuffer.worldPos.xyz - position);
+    vec3 right = -normalize(cross(forward, vec3(0.0f, 1.0f, 0.0f)));
+    vec3 up = -cross(right, forward);
+
+    /*forward = vec3(0.0f, 0.0f, 1.0f);
+    right = vec3(1.0f, 0.0f, 0.0f);
+    up = vec3(0.0f, 1.0f, 0.0f);*/
+
+    // Update transform
+    transform = mat4(
+        vec4(   right,  0.0f),
+        vec4(      up,  0.0f),
+        vec4( forward,  0.0f),
+        vec4(position,  1.0f)
+    );
 
     // Update new transform
     particles.infos[gl_GlobalInvocationID.x].transform = transform;

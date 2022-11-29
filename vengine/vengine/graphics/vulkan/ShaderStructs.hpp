@@ -36,6 +36,13 @@ struct CameraBufferData
     glm::vec4 worldPosition = glm::vec4(glm::vec3(0.0f), 1.0f);
 };
 
+// Data for all particles
+struct GlobalParticleBufferData
+{
+    glm::vec3 padding = glm::vec3(0.0f);
+    float deltaTime = 1.0f;
+};
+
 // Shadow map data
 #define MAX_NUM_CASCADES 4
 struct ShadowMapData

@@ -71,6 +71,12 @@ void ParticleSystemHandler::initForScene(
 			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
 			DescriptorFrequency::PER_FRAME
 		);
+	this->globalParticleBufferUBO = 
+		this->shaderInput.addUniformBuffer(
+			sizeof(GlobalParticleBufferData),
+			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
+			DescriptorFrequency::PER_FRAME
+		);
 	FrequencyInputLayout inputLayout{};
 	inputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
 	this->shaderInput.makeFrequencyInputLayout(inputLayout);
@@ -100,8 +106,7 @@ void ParticleSystemHandler::initForScene(
 	for (uint32_t i = 0; i < 64; ++i)
 	{
 		this->particleInfos[i].transformMatrix =
-			glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f)) *
-			glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / (i*0.5f+1.0f)));
+			glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f));
 	}
 
 	// TODO: definitely remove this...
@@ -130,13 +135,12 @@ void ParticleSystemHandler::update(
 		(void*) &cameraDataUBO
 	);
 
-	/*this->shaderInput.updateStorageBuffer(
-		this->particleInfoSBO,
-		this->particleInfos.data()
-	);*/
-
-
-	//this->computeShaderInput.setCurrentFrame(currentFrame);
+	// Global particle data
+	this->globalParticleData.deltaTime = Time::getDT();
+	this->shaderInput.updateUniformBuffer(
+		this->globalParticleBufferUBO,
+		(void*) &this->globalParticleData
+	);
 }
 
 void ParticleSystemHandler::cleanup()
