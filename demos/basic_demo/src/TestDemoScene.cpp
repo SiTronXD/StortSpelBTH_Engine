@@ -70,11 +70,11 @@ void TestDemoScene::init()
 		.cascadeDepthScale = 5.0f;
 
 	// Particle system
-	Entity particleEntity = this->createEntity();
-	this->setComponent<ParticleSystem>(particleEntity);
-	ParticleSystem& partSys = this->getComponent<ParticleSystem>(particleEntity);
+	this->particleSystemEntity = this->createEntity();
+	this->setComponent<ParticleSystem>(this->particleSystemEntity);
+	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntity);
 	partSys.maxlifeTime = 3.0f;
-	partSys.numParticles = 64;
+	partSys.numParticles = 512;
 	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
 	partSys.startSize = glm::vec2(1.0f);
 	partSys.endSize = glm::vec2(0.0f);
@@ -82,6 +82,10 @@ void TestDemoScene::init()
 	partSys.endColor = glm::vec3(1.0f, 0.0f, 0.0f);
 	partSys.startVelocity = glm::vec3(0.0f, 7.0f, 0.0f);
 	partSys.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
+
+	partSys.coneSpawnVolume.diskRadius = 5.0f;
+	partSys.coneSpawnVolume.coneAngle = 90.0f;
+	partSys.coneSpawnVolume.localDirection = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
@@ -299,6 +303,16 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	// Particle system
+	Transform& partSysTran = this->getComponent<Transform>(this->particleSystemEntity);
+	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntity);
+	ImGui::Begin("Particle System");
+	ImGui::SliderFloat3("Entity position: ", &partSysTran.position[0], -5.0f, 5.0f);
+	ImGui::SliderFloat3("Entity rotation: ", &partSysTran.rotation[0], -180.0f, 180.0f);
+	ImGui::SliderFloat("Disk radius: ", &partSys.coneSpawnVolume.diskRadius, 0.0f, 10.0f);
+	ImGui::SliderFloat("Cone angle: ", &partSys.coneSpawnVolume.coneAngle, 0.0f, 180.0f);
+	ImGui::End();
+
 	// Make ghosts follow skeletal animation
 	this->getComponent<Transform>(this->testEntity).setMatrix(
 		this->getResourceManager()->getJointTransform(

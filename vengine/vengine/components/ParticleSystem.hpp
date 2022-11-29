@@ -9,22 +9,12 @@ enum class SpawnShape
 	AABB
 };
 
-struct Point
+struct Cone
 {
-	glm::vec3 position = glm::vec3(0.0f);
-};
-
-struct Disk
-{
-	glm::vec3 position = glm::vec3(0.0f);
-	glm::vec3 direction = glm::vec3(0.0f, 1.0f, 0.0f);
-	float radius = 1.0f;
-};
-
-struct AABB
-{
-	glm::vec3 position = glm::vec3(0.0f);
-	glm::vec3 halfExtents = glm::vec3(0.5f);
+	glm::vec3 localPosition = glm::vec3(0.0f);
+	glm::vec3 localDirection = glm::vec3(0.0f, 1.0f, 0.0f);
+	float diskRadius = 0.0f;
+	float coneAngle = 90.0f;
 };
 
 struct ParticleSystem
@@ -40,12 +30,5 @@ struct ParticleSystem
 	glm::vec3 acceleration = glm::vec3(0.0f);
 
 	// Spawn volumes
-	struct Shapes
-	{
-		Point point{};
-		Disk disk{};
-		AABB asbb{};
-
-		SpawnShape currentSpawnShape = SpawnShape::POINT;
-	} spawnShape{};
+	Cone coneSpawnVolume;
 };

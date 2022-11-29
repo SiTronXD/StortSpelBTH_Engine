@@ -57,6 +57,7 @@ public:
 		const uint32_t& framesInFlight);
 	void initForScene(Scene* scene);
 	void update(
+		Scene* scene,
 		const CameraBufferData& cameraDataUBO,
 		const uint32_t& currentFrame);
 	void cleanup();

@@ -22,6 +22,7 @@ struct ParticleInfoData
     vec4 startVelocity;
     vec4 currentVelocity;
     vec4 acceleration;
+    uvec4 randomState;
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 1) readonly buffer ParticleInfosBuffer
 {

@@ -42,6 +42,14 @@ struct GlobalParticleBufferData
     glm::vec2 padding = glm::vec3(0.0f);
     float deltaTime = 1.0f;
     uint32_t numParticles = 0;
+
+    // Spawn volume
+    glm::vec3 conePos;
+    float coneDiskRadius;
+    glm::vec3 coneDir;
+    float tanTheta;
+    glm::vec3 coneNormal;
+    float padding1;
 };
 
 // Per particle info
@@ -56,6 +64,7 @@ struct ParticleInfo
     glm::vec4 startVelocity = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     glm::vec4 currentVelocity = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
+    glm::uvec4 randomState = glm::uvec4(0u);
 };
 
 // Shadow map data

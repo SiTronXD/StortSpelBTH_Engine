@@ -1282,6 +1282,7 @@ void VulkanRenderer::recordCommandBuffers(
 
     // Update particles info
     this->particleHandler.update(
+        scene,
         this->cameraDataUBO,
         this->currentFrame
     );

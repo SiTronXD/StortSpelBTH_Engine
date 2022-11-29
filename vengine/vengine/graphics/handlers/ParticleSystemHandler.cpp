@@ -14,7 +14,11 @@ ParticleSystemHandler::ParticleSystemHandler()
 	resourceManager(nullptr),
 	renderPass(nullptr),
 	computeCommandPool(nullptr),
-	framesInFlight(0)
+	framesInFlight(0),
+	numParticles(0),
+	cameraUBO(~0u),
+	globalParticleBufferUBO(~0u),
+	particleInfoSBO(~0u)
 { }
 
 void ParticleSystemHandler::init(
@@ -50,17 +54,12 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 {
 	this->cleanup();
 
-	this->numParticles = 0;
-
 	// Initial particle infos
 	auto particleSystemView =
 		scene->getSceneReg().view<ParticleSystem>();
 	particleSystemView.each(
 		[&](ParticleSystem& particleSystemComp)
 		{
-			// Set info per particle system
-			this->numParticles += particleSystemComp.numParticles;
-
 			// Set info per particle
 			this->initialParticleInfos.resize(MAX_NUM_PARTICLES_PER_SYSTEM);
 			for (uint32_t i = 0; i < MAX_NUM_PARTICLES_PER_SYSTEM; ++i)
@@ -71,6 +70,7 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				// TODO: remove this
 				particle.transformMatrix =
 					glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f));
+				particle.life.x = (rand() % 1000 / 1000.0f) * particleSystemComp.maxlifeTime;
 
 				// Life time
 				particle.life.y = particleSystemComp.maxlifeTime;
@@ -87,6 +87,9 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				particle.startVelocity = glm::vec4(particleSystemComp.startVelocity, 0.0f);
 				particle.currentVelocity = particle.startVelocity;
 				particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
+
+				// Random state
+				particle.randomState.x = i;
 			}
 		}
 	);
@@ -159,6 +162,7 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 }
 
 void ParticleSystemHandler::update(
+	Scene* scene,
 	const CameraBufferData& cameraDataUBO, 
 	const uint32_t& currentFrame)
 {
@@ -169,8 +173,61 @@ void ParticleSystemHandler::update(
 	);
 
 	// Global particle data
+	this->numParticles = 0;
+	auto particleSystemView =
+		scene->getSceneReg().view<Transform, ParticleSystem>(entt::exclude<Inactive>);
+	particleSystemView.each(
+		[&](Transform& transformComp,
+			ParticleSystem& particleSystemComp)
+		{
+			const glm::mat3& rotMat =
+				transformComp.getRotationMatrix();
+
+			// Set info per particle system
+			this->numParticles += particleSystemComp.numParticles;
+
+			// Position
+			this->globalParticleData.conePos =
+				transformComp.position +
+				rotMat *
+				particleSystemComp.coneSpawnVolume.localPosition;
+
+			// Cone disk radius
+			this->globalParticleData.coneDiskRadius = 
+				particleSystemComp.coneSpawnVolume.diskRadius;
+
+			// Cone direction
+			this->globalParticleData.coneDir =
+				glm::normalize(
+					rotMat * 
+					particleSystemComp.coneSpawnVolume.localDirection
+				);
+
+			// Cone normal
+			glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+			if (glm::abs(glm::dot(worldUp, this->globalParticleData.coneDir)) >= 0.95f)
+				worldUp = glm::vec3(1.0f, 0.0f, 0.0f);
+			this->globalParticleData.coneNormal = 
+				glm::normalize(
+					glm::cross(worldUp, this->globalParticleData.coneDir)
+				);
+
+			// Tan theta
+			this->globalParticleData.tanTheta = 
+				std::tan(
+					glm::radians(
+						std::clamp(
+							particleSystemComp.coneSpawnVolume.coneAngle * 0.5f,
+							0.0f, 
+							89.0f
+						)
+					)
+				);
+		}
+	);
 	this->globalParticleData.deltaTime = Time::getDT();
 	this->globalParticleData.numParticles = this->getNumParticles();
+
 	this->shaderInput.updateUniformBuffer(
 		this->globalParticleBufferUBO,
 		(void*) &this->globalParticleData
