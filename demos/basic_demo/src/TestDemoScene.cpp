@@ -515,6 +515,11 @@ void TestDemoScene::update()
 
 	// Debug rendering
 
+	// Particle system
+	Scene::getDebugRenderer()->renderParticleSystemCone(
+		this->particleSystemEntity
+	);
+
 	// Skeleton
 	Scene::getDebugRenderer()->renderSkeleton(
 		this->aniIDs[2],

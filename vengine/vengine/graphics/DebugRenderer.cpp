@@ -312,6 +312,51 @@ void DebugRenderer::renderSpotlight(const Entity& spotlightEntity)
     );
 }
 
+void DebugRenderer::renderParticleSystemCone(
+    const Entity& particleSystemEntity)
+{
+    Scene* scene = this->sceneHandler->getScene();
+    Transform& transform = scene->getComponent<Transform>(particleSystemEntity);
+    ParticleSystem& particleSystem = scene->getComponent<ParticleSystem>(particleSystemEntity);
+
+    const glm::mat3& transformRot =
+        transform.getRotationMatrix();
+    const glm::vec3 coneDir = glm::normalize(
+        transformRot *
+        particleSystem.coneSpawnVolume.localDirection
+    );
+    glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    if (glm::abs(glm::dot(worldUp, coneDir)) >= 0.95f)
+        worldUp = glm::vec3(1.0f, 0.0f, 0.0f);
+    const glm::vec3 coneNormal = 
+        glm::normalize(glm::cross(worldUp, coneDir));
+    const glm::mat3 coneRotMat =
+        glm::mat3(
+            coneNormal,
+            glm::cross(coneNormal, coneDir),
+            coneDir
+        );
+
+    // Render lines as cone tangents
+    for (uint32_t i = 0; i < 20; ++i)
+    {
+        glm::vec3 diskOffset =
+            glm::vec3(0.0f, 1.0f, 0.0f) * particleSystem.coneSpawnVolume.diskRadius;
+        diskOffset =
+            glm::rotate(glm::mat4(1.0f), i / 10.0f * 3.1415f * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(diskOffset, 0.0f);
+        glm::vec3 pos0 = 
+            transform.position +
+            transformRot *
+            particleSystem.coneSpawnVolume.localPosition + 
+            coneRotMat * diskOffset;
+
+        // TODO: fix this
+        glm::vec3 pos1 = pos0 + glm::vec3(0.0f, 5.0f, 0.0f);
+
+        this->renderLine(pos0, pos1, glm::vec3(0.0f, 1.0f, 0.0f));
+    }
+}
+
 void DebugRenderer::renderSphere(
     const glm::vec3& position,
     const float& radius,
