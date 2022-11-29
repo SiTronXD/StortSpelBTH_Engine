@@ -34,12 +34,14 @@ private:
 	Pipeline pipeline;
 
 public:
-	inline static const uint32_t MAX_NUM_PARTICLES_PER_SYSTEM = 1024;
+	inline static const uint32_t MAX_NUM_PARTICLES_PER_SYSTEM = 64;// 1024;
 
 	void init(
 		PhysicalDevice& physicalDevice,
 		Device& device,
 		VmaAllocator& vma,
+		vk::Queue& transferQueue,
+		vk::CommandPool& transferCommandPool,
 		ResourceManager& resourceManager,
 		RenderPass& renderPass,
 		vk::CommandPool& computeCommandPool,
@@ -48,6 +50,8 @@ public:
 		PhysicalDevice& physicalDevice,
 		Device& device,
 		VmaAllocator& vma,
+		vk::Queue& transferQueue,
+		vk::CommandPool& transferCommandPool,
 		ResourceManager& resourceManager,
 		RenderPass& renderPass,
 		const uint32_t& framesInFlight);

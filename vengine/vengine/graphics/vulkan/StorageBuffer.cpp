@@ -3,10 +3,13 @@
 
 void StorageBuffer::createStorageBuffer(
     Device& device, 
-    VmaAllocator& vma, 
+    VmaAllocator& vma,
     const size_t& bufferSize,
     uint32_t framesInFlight,
-    const bool& gpuOnly)
+    const bool& gpuOnly,
+    void* initialData,
+    vk::Queue* transferQueue,
+    vk::CommandPool* transferCommandPool)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
@@ -27,27 +30,90 @@ void StorageBuffer::createStorageBuffer(
     bufferMemories.resize(framesInFlight);
     std::vector<VmaAllocationInfo> bufferMemoriesInfo(framesInFlight);
 
-    // Create storage buffers
-    for (size_t i = 0; i < buffers.size(); ++i)
+    if (!gpuOnly)
     {
-        Buffer::createBuffer(
-            { 
-                .bufferSize       = (vk::DeviceSize) bufferSize,
-                .bufferUsageFlags = 
-                    vk::BufferUsageFlagBits::eStorageBuffer, 
-                // .bufferProperties = vk::MemoryPropertyFlagBits::eHostVisible         // So we can access the Data from the HOST (CPU)
-                //                     | vk::MemoryPropertyFlagBits::eHostCoherent,     // So we don't have to flush the data constantly...
-                .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
+        // Create storage buffers
+        for (size_t i = 0; i < buffers.size(); ++i)
+        {
+            Buffer::createBuffer(
+                {
+                    .bufferSize = (vk::DeviceSize)bufferSize,
+                    .bufferUsageFlags =
+                        vk::BufferUsageFlagBits::eStorageBuffer,
+                .bufferAllocationFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
                                     VMA_ALLOCATION_CREATE_MAPPED_BIT,
-                .buffer         = &buffers[i],
-                .bufferMemory   = &bufferMemories[i],
+                .buffer = &buffers[i],
+                .bufferMemory = &bufferMemories[i],
                 .allocationInfo = &bufferMemoriesInfo[i],
-                .vma            = &vma 
+                .vma = &vma
+                }
+            );
+
+            VulkanDbg::registerVkObjectDbgInfo(
+                "StorageBuffer[" + std::to_string(i) + "]", vk::ObjectType::eBuffer,
+                reinterpret_cast<uint64_t>(vk::Buffer::CType(buffers[i])));
+        }
+    }
+    else
+    {
+        if (transferQueue == nullptr || transferCommandPool == nullptr)
+        {
+            Log::error("StorageBuffer::createStorageBuffer: queue and/or command pool are nullptr.");
+            return;
+        }
+
+        vk::Buffer stagingBuffer{};
+        VmaAllocation stagingBufferMemory{};
+        VmaAllocationInfo allocInfoStaging;
+
+        // Create staging buffer
+        Buffer::createBuffer(
+            {
+                .bufferSize = (vk::DeviceSize)bufferSize,
+                .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,
+                .bufferAllocationFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+                .buffer = &stagingBuffer,
+                .bufferMemory = &stagingBufferMemory,
+                .allocationInfo = &allocInfoStaging,
+                .vma = &vma
             }
         );
 
-        VulkanDbg::registerVkObjectDbgInfo(
-            "StorageBuffer[" + std::to_string(i) + "]", vk::ObjectType::eBuffer,
-            reinterpret_cast<uint64_t>(vk::Buffer::CType(buffers[i])));
+        // Update staging buffer
+        Buffer::cpuUpdateBuffer(
+            vma, 
+            stagingBufferMemory, 
+            bufferSize, 
+            initialData
+        );
+
+        // Create gpu buffer
+        VmaAllocationInfo allocInfo;
+        Buffer::createBuffer(
+            {
+                .bufferSize = bufferSize,
+                .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst
+                                    | vk::BufferUsageFlagBits::eStorageBuffer,
+                .bufferAllocationFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+                .buffer = &buffers[0],
+                .bufferMemory = &bufferMemories[0],
+                .allocationInfo = &allocInfo,
+                .vma = &vma
+            }
+        );
+
+        Buffer::copyBuffer(
+            device.getVkDevice(),
+            *transferQueue,
+            *transferCommandPool,
+            stagingBuffer,
+            buffers[0],
+            bufferSize
+        );
+
+        // Destroy/free staging buffer resources
+        device.getVkDevice().destroyBuffer(stagingBuffer);
+        vmaFreeMemory(vma, stagingBufferMemory);
     }
 }

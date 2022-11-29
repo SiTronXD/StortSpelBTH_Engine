@@ -48,9 +48,16 @@ void Buffer::update(void* copyData, const uint32_t& currentFrame)
 
     void* data = nullptr;
 
-    this->map(data, currentFrame);
+    this->cpuUpdateBuffer(
+        *this->vma, 
+        this->bufferMemories[currentFrame],
+        this->getBufferSize(),
+        copyData
+    );
+
+    /*this->map(data, currentFrame);
     memcpy(data, copyData, this->getBufferSize());
-    this->unmap(currentFrame);
+    this->unmap(currentFrame);*/
 }
 
 void Buffer::cleanup()
@@ -75,7 +82,7 @@ void Buffer::createBuffer(BufferCreateData&& bufferData)
 
     VmaAllocationCreateInfo vmaAllocCreateInfo{};
     vmaAllocCreateInfo.usage = VMA_MEMORY_USAGE_AUTO;
-    vmaAllocCreateInfo.flags = bufferData.bufferProperties;
+    vmaAllocCreateInfo.flags = bufferData.bufferAllocationFlags;
 
     if (vmaCreateBuffer(
         *bufferData.vma, 
@@ -232,4 +239,34 @@ void Buffer::copyBufferToImage(
         transferCommandPool, 
         transferQueue,
         transferCommandBuffer);
+}
+
+void Buffer::cpuUpdateBuffer(
+    VmaAllocator& vma,
+    VmaAllocation& memory, 
+    const vk::DeviceSize& bufferSize, 
+    void* dataStream)
+{
+    // Map memory
+    void* data{};
+    if (vmaMapMemory(
+        vma,
+        memory,
+        &data) != VK_SUCCESS)
+    {
+        throw std::runtime_error("Failed to map memory using VMA.");
+    }
+
+    // Copy
+    memcpy(
+        data,
+        dataStream,
+        (size_t)bufferSize
+    );
+
+    // Unmap
+    vmaUnmapMemory(
+        vma,
+        memory
+    );
 }

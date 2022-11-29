@@ -8,7 +8,7 @@ struct BufferCreateData
 {
     vk::DeviceSize bufferSize;
     vk::BufferUsageFlags bufferUsageFlags;
-    VmaAllocationCreateFlags bufferProperties; //TODO: Replace this name... (!!)
+    VmaAllocationCreateFlags bufferAllocationFlags;
     vk::Buffer* buffer;
     VmaAllocation* bufferMemory;
     VmaAllocationInfo* allocationInfo = nullptr;
@@ -83,6 +83,12 @@ public:
         const vk::Image& dstImage,
         const uint32_t& width,
         const uint32_t& height);
+
+    static void cpuUpdateBuffer(
+        VmaAllocator& vma,
+        VmaAllocation& memory,
+        const vk::DeviceSize& bufferSize,
+        void* dataStream);
 
     inline vk::Buffer& getBuffer(const uint32_t& index) { return this->buffers[index % this->buffers.size()]; }
     inline size_t getNumBuffers() const { return this->buffers.size(); }    

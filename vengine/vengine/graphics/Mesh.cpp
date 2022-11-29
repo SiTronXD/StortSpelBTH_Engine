@@ -171,27 +171,28 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
-    /// Get size of buffer needed for indices
+    // Get size of buffer needed for indices
     vk::DeviceSize bufferSize = sizeof(uint32_t) * meshData.indicies.size();
 
-    /// Temporary buffer to "Stage" index data before transferring to GPU
+    // Temporary buffer to "stage" index data before transferring to GPU
     vk::Buffer stagingBuffer{};
     VmaAllocation stagingBufferMemory{};
-    VmaAllocationInfo allocInfo_staging;
+    VmaAllocationInfo allocInfoStaging;
 
     Buffer::createBuffer(
         {
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
-            .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+            .bufferAllocationFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
                                 | VMA_ALLOCATION_CREATE_MAPPED_BIT,
             .buffer         = &stagingBuffer, 
             .bufferMemory   = &stagingBufferMemory,
-            .allocationInfo = &allocInfo_staging,
+            .allocationInfo = &allocInfoStaging,
             .vma = importStructs.vma
-        });
+        }
+    );
 
-    /// Map Memory to Index Buffer! 
+    // Map Memory to Index Buffer! 
     void* data{}; 
     vmaMapMemory(*importStructs.vma, stagingBufferMemory, &data);
     memcpy(data, meshData.indicies.data(), sizeof(uint32_t) * meshData.indicies.size());
@@ -199,13 +200,13 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     
     VmaAllocationInfo allocInfo_device;
 
-    /// Create Buffers for INDEX data on GPU access only area
+    // Create Buffers for INDEX data on GPU access only area
     Buffer::createBuffer(
         {
             .bufferSize     = bufferSize, 
-            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        /// Destination Buffer to be transfered to
-                                | vk::BufferUsageFlagBits::eIndexBuffer,     /// This is a Index Buffer, will be used as a Index Buffer
-            .bufferProperties = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,  /// Buffer will be local to the device
+            .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        // Destination Buffer to be transfered to
+                                | vk::BufferUsageFlagBits::eIndexBuffer,     // This is a Index Buffer, will be used as a Index Buffer
+            .bufferAllocationFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,  // Buffer will be local to the device
             .buffer         = &this->indexBuffer, 
             .bufferMemory   = &this->indexBufferMemory,
             .allocationInfo = &allocInfo_device,
@@ -220,7 +221,7 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
         this->indexBuffer, 
         bufferSize);
 
-    /// Destroy + Release Staging Buffer resources
+    // Destroy/free staging buffer resources
     importStructs.device->getVkDevice().destroyBuffer(stagingBuffer);
     vmaFreeMemory(*importStructs.vma,stagingBufferMemory);
 }

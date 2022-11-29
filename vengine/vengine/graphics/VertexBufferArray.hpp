@@ -19,11 +19,6 @@ private:
 
     uint32_t framesInFlight;
 
-    void cpuUpdateBuffer(
-        VmaAllocation& memory,
-        const vk::DeviceSize& bufferSize,
-        void* dataStream);
-
 public:
 	VertexBufferArray();
 	VertexBufferArray(VertexBufferArray&& ref);
@@ -81,7 +76,7 @@ void VertexBufferArray::addVertexBuffer(
     this->vertexBufferMemories.push_back(VmaAllocation());
     this->vertexBufferOffsets.push_back(0);
 
-    // Temporary buffer to "Stage" vertex data before transferring to GPU
+    // Temporary buffer to "stage" vertex data before transferring to GPU
     vk::Buffer stagingBuffer;
     VmaAllocation stagingBufferMemory{};
     VmaAllocationInfo allocInfo_staging;
@@ -92,7 +87,7 @@ void VertexBufferArray::addVertexBuffer(
     {
         .bufferSize = bufferSize,
         .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       // This buffers vertex data will be transfered somewhere else!
-        .bufferProperties = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
+        .bufferAllocationFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
                             | VMA_ALLOCATION_CREATE_MAPPED_BIT,
         .buffer = &stagingBuffer,
         .bufferMemory = &stagingBufferMemory,
@@ -101,8 +96,9 @@ void VertexBufferArray::addVertexBuffer(
     };
     Buffer::createBuffer(std::move(stagingBufferCreateData));
 
-    // -- Map memory to our Temporary Staging Vertex Buffer -- 
-    this->cpuUpdateBuffer(
+    // Update memory in staging buffer
+    Buffer::cpuUpdateBuffer(
+        *this->vma,
         stagingBufferMemory, 
         bufferSize, 
         (void*) dataStream.data()
@@ -113,14 +109,14 @@ void VertexBufferArray::addVertexBuffer(
     // Buffer memory is to be DEVICVE_LOCAL_BIT meaning memory is on the GPU and only accesible by it and not the CPU (HOST)
     BufferCreateData bufferCreateData =
     {
-        bufferSize,
-        vk::BufferUsageFlagBits::eTransferDst        // Destination Buffer to be transfered to
+        .bufferSize = bufferSize,
+        .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        // Destination Buffer to be transfered to
                             | vk::BufferUsageFlagBits::eVertexBuffer,    // This is a Vertex Buffer
-        VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
-        &this->vertexBuffers[this->vertexBuffers.size() - 1],
-        &this->vertexBufferMemories[this->vertexBufferMemories.size() - 1],
-        &allocInfo_deviceOnly,
-        this->vma
+        .bufferAllocationFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+        .buffer = &this->vertexBuffers[this->vertexBuffers.size() - 1],
+        .bufferMemory = &this->vertexBufferMemories[this->vertexBufferMemories.size() - 1],
+        .allocationInfo = &allocInfo_deviceOnly,
+        .vma = this->vma
     };
     Buffer::createBuffer(std::move(bufferCreateData));
 
@@ -171,7 +167,8 @@ void VertexBufferArray::addCpuVertexBuffer(
         Buffer::createBuffer(std::move(bufferCreateData));
 
         // Copy memory to vertex buffer
-        this->cpuUpdateBuffer(
+        Buffer::cpuUpdateBuffer(
+            *this->vma,
             createdBufferMemories[i], 
             bufferSize, 
             (void*) dataStream.data()
@@ -213,5 +210,10 @@ void VertexBufferArray::cpuUpdate(
     vk::DeviceSize bufferSize = sizeof(dataStream[0]) * dataStream.size();
 
     // Copy data to vertex buffer
-    this->cpuUpdateBuffer(this->vertexBufferMemories[i], bufferSize, (void*) dataStream.data());
+    Buffer::cpuUpdateBuffer(
+        *this->vma, 
+        this->vertexBufferMemories[i], 
+        bufferSize, 
+        (void*) dataStream.data()
+    );
 }

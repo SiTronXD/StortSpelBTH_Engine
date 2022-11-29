@@ -9,6 +9,8 @@ void ParticleSystemHandler::init(
 	PhysicalDevice& physicalDevice,
 	Device& device, 
 	VmaAllocator& vma,
+	vk::Queue& transferQueue,
+	vk::CommandPool& transferCommandPool,
 	ResourceManager& resourceManager,
 	RenderPass& renderPass,
 	vk::CommandPool& computeCommandPool,
@@ -39,12 +41,23 @@ void ParticleSystemHandler::init(
 		computeCommandPool,
 		framesInFlight
 	);
+
+
+	// TODO: remove this
+	this->particleInfos.resize(MAX_NUM_PARTICLES_PER_SYSTEM);
+	for (uint32_t i = 0; i < 64; ++i)
+	{
+		this->particleInfos[i].transformMatrix =
+			glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f));
+	}
 }
 
 void ParticleSystemHandler::initForScene(
 	PhysicalDevice& physicalDevice,
 	Device& device,
 	VmaAllocator& vma,
+	vk::Queue& transferQueue,
+	vk::CommandPool& transferCommandPool,
 	ResourceManager& resourceManager,
 	RenderPass& renderPass,
 	const uint32_t& framesInFlight)
@@ -52,6 +65,10 @@ void ParticleSystemHandler::initForScene(
 	this->cleanup();
 
 	// Shader input
+	this->shaderInput.initForGpuOnlyResources(
+		transferQueue,
+		transferCommandPool
+	);
 	this->shaderInput.beginForInput(
 		physicalDevice,
 		device,
@@ -70,7 +87,8 @@ void ParticleSystemHandler::initForScene(
 			sizeof(ParticleInfo) * MAX_NUM_PARTICLES_PER_SYSTEM,
 			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
 			DescriptorFrequency::PER_FRAME,
-			true
+			true,
+			this->particleInfos.data()
 		);
 	this->globalParticleBufferUBO = 
 		this->shaderInput.addUniformBuffer(
@@ -102,23 +120,6 @@ void ParticleSystemHandler::initForScene(
 		);
 	}
 
-	// TODO: remove this
-	this->particleInfos.resize(MAX_NUM_PARTICLES_PER_SYSTEM);
-	for (uint32_t i = 0; i < 64; ++i)
-	{
-		this->particleInfos[i].transformMatrix =
-			glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f));
-	}
-
-	// TODO: definitely remove this...
-	for (uint32_t i = 0; i < 1; ++i)
-	{
-		this->shaderInput.setCurrentFrame(i);
-		this->shaderInput.updateStorageBuffer(
-			this->particleInfoSBO,
-			this->particleInfos.data()
-		);
-	}
 	this->computePipeline.createComputePipeline(
 		device,
 		this->shaderInput, //this->computeShaderInput, 

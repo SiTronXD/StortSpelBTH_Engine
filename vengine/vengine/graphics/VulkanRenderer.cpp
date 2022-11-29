@@ -243,6 +243,8 @@ int VulkanRenderer::init(
         this->physicalDevice,
         this->device,
         this->vma,
+        this->queueFamilies.getGraphicsQueue(),
+        this->commandPool,
         *this->resourceManager,
         this->renderPassBase,
         this->computeCommandPool,
@@ -993,6 +995,8 @@ void VulkanRenderer::initForScene(Scene* scene)
         this->physicalDevice,
         this->device,
         this->vma,
+        this->queueFamilies.getGraphicsQueue(),
+        this->commandPool,
         *this->resourceManager,
         this->renderPassBase,
         MAX_FRAMES_IN_FLIGHT

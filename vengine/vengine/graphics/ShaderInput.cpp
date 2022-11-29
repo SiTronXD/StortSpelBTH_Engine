@@ -431,6 +431,8 @@ ShaderInput::ShaderInput()
     : physicalDevice(nullptr),
     device(nullptr),
     vma(nullptr),
+    transferQueue(nullptr),
+    transferCommandPool(nullptr),
     resourceManager(nullptr),
     framesInFlight(0),
     currentFrame(~0u),
@@ -445,6 +447,14 @@ ShaderInput::ShaderInput()
 ShaderInput::~ShaderInput()
 {
     
+}
+
+void ShaderInput::initForGpuOnlyResources(
+    vk::Queue& transferQueue,
+    vk::CommandPool& transferCommandPool)
+{
+    this->transferQueue = &transferQueue;
+    this->transferCommandPool = &transferCommandPool;
 }
 
 void ShaderInput::beginForInput(
@@ -496,7 +506,8 @@ StorageBufferID ShaderInput::addStorageBuffer(
     const size_t& contentsSize,
     const vk::ShaderStageFlagBits& shaderStage,
     const DescriptorFrequency& descriptorFrequency,
-    const bool gpuOnly)
+    const bool& gpuOnly,
+    void* initialData)
 {
     StorageBufferID storageBufferID = 
         this->createResourceID(descriptorFrequency);
@@ -508,7 +519,10 @@ StorageBufferID ShaderInput::addStorageBuffer(
         *this->vma,
         contentsSize,
         this->framesInFlight,
-        gpuOnly
+        gpuOnly,
+        initialData,
+        this->transferQueue,
+        this->transferCommandPool
     );
 
     // Create resource handle and add it to the lists
