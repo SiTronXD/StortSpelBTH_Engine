@@ -38,6 +38,8 @@ private:
 	vk::CommandPool* computeCommandPool;
 	uint32_t framesInFlight;
 
+	uint32_t numParticles;
+
 public:
 	inline static const uint32_t MAX_NUM_PARTICLES_PER_SYSTEM = 1024;
 
@@ -63,4 +65,5 @@ public:
 	inline const Pipeline& getPipeline() const { return this->pipeline; }
 	inline const Pipeline& getComputePipeline() const { return this->computePipeline; }
 	inline CommandBuffer& getComputeCommandBuffer(const uint32_t& index) { return this->computeCommandBuffers[index]; }
+	inline const uint32_t& getNumParticles() const { return this->numParticles; }
 };

@@ -19,6 +19,9 @@ struct ParticleInfoData
     vec2 endSize;
     vec4 startColor;
     vec4 endColor;
+    vec4 startVelocity;
+    vec4 currentVelocity;
+    vec4 acceleration;
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 1) readonly buffer ParticleInfosBuffer
 {

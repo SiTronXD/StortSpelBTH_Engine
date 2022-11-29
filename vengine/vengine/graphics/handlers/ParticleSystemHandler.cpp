@@ -50,12 +50,18 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 {
 	this->cleanup();
 
+	this->numParticles = 0;
+
 	// Initial particle infos
 	auto particleSystemView =
 		scene->getSceneReg().view<ParticleSystem>();
 	particleSystemView.each(
 		[&](ParticleSystem& particleSystemComp)
 		{
+			// Set info per particle system
+			this->numParticles += particleSystemComp.numParticles;
+
+			// Set info per particle
 			this->initialParticleInfos.resize(MAX_NUM_PARTICLES_PER_SYSTEM);
 			for (uint32_t i = 0; i < MAX_NUM_PARTICLES_PER_SYSTEM; ++i)
 			{
@@ -66,6 +72,9 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				particle.transformMatrix =
 					glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f));
 
+				// Life time
+				particle.life.y = particleSystemComp.maxlifeTime;
+
 				// Size
 				particle.startSize = particleSystemComp.startSize;
 				particle.endSize = particleSystemComp.endSize;
@@ -73,6 +82,11 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				// Color
 				particle.startColor = glm::vec4(particleSystemComp.startColor, 1.0f);
 				particle.endColor = glm::vec4(particleSystemComp.endColor, 1.0f);
+
+				// Velocity/acceleration
+				particle.startVelocity = glm::vec4(particleSystemComp.startVelocity, 0.0f);
+				particle.currentVelocity = particle.startVelocity;
+				particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
 			}
 		}
 	);
@@ -156,6 +170,7 @@ void ParticleSystemHandler::update(
 
 	// Global particle data
 	this->globalParticleData.deltaTime = Time::getDT();
+	this->globalParticleData.numParticles = this->getNumParticles();
 	this->shaderInput.updateUniformBuffer(
 		this->globalParticleBufferUBO,
 		(void*) &this->globalParticleData

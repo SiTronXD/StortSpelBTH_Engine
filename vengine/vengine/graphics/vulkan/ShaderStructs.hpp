@@ -39,8 +39,9 @@ struct CameraBufferData
 // Data for all particles
 struct GlobalParticleBufferData
 {
-    glm::vec3 padding = glm::vec3(0.0f);
+    glm::vec2 padding = glm::vec3(0.0f);
     float deltaTime = 1.0f;
+    uint32_t numParticles = 0;
 };
 
 // Per particle info
@@ -52,6 +53,9 @@ struct ParticleInfo
     glm::vec2 endSize = glm::vec2(1.0f);
     glm::vec4 startColor = glm::vec4(1.0f);
     glm::vec4 endColor = glm::vec4(1.0f);
+    glm::vec4 startVelocity = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    glm::vec4 currentVelocity = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    glm::vec4 acceleration = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
 };
 
 // Shadow map data
