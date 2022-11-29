@@ -37,6 +37,7 @@ void main()
     vec3 position = transform[3].xyz;
 
     // Apply change
+    //position.y = 1.0f;
     position.y += 1.0f * globalParticleBuffer.deltaTime;
 
 

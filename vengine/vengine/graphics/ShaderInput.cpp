@@ -495,7 +495,8 @@ UniformBufferID ShaderInput::addUniformBuffer(
 StorageBufferID ShaderInput::addStorageBuffer(
     const size_t& contentsSize,
     const vk::ShaderStageFlagBits& shaderStage,
-    const DescriptorFrequency& descriptorFrequency)
+    const DescriptorFrequency& descriptorFrequency,
+    const bool gpuOnly)
 {
     StorageBufferID storageBufferID = 
         this->createResourceID(descriptorFrequency);
@@ -506,7 +507,8 @@ StorageBufferID ShaderInput::addStorageBuffer(
         *this->device,
         *this->vma,
         contentsSize,
-        this->framesInFlight
+        this->framesInFlight,
+        gpuOnly
     );
 
     // Create resource handle and add it to the lists

@@ -69,7 +69,8 @@ void ParticleSystemHandler::initForScene(
 		this->shaderInput.addStorageBuffer(
 			sizeof(ParticleInfo) * MAX_NUM_PARTICLES_PER_SYSTEM,
 			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
-			DescriptorFrequency::PER_FRAME
+			DescriptorFrequency::PER_FRAME,
+			true
 		);
 	this->globalParticleBufferUBO = 
 		this->shaderInput.addUniformBuffer(
@@ -110,7 +111,7 @@ void ParticleSystemHandler::initForScene(
 	}
 
 	// TODO: definitely remove this...
-	for (uint32_t i = 0; i < framesInFlight; ++i)
+	for (uint32_t i = 0; i < 1; ++i)
 	{
 		this->shaderInput.setCurrentFrame(i);
 		this->shaderInput.updateStorageBuffer(

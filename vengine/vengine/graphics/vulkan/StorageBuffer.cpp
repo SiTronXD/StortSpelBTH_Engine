@@ -5,12 +5,19 @@ void StorageBuffer::createStorageBuffer(
     Device& device, 
     VmaAllocator& vma, 
     const size_t& bufferSize,
-    const uint32_t& framesInFlight)
+    uint32_t framesInFlight,
+    const bool& gpuOnly)
 {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
     Buffer::init(device, vma, bufferSize);
+
+    // One single buffer if it is GPU only
+    if (gpuOnly)
+    {
+        framesInFlight = 1;
+    }
 
     std::vector<vk::Buffer>& buffers = Buffer::getBuffers();
     std::vector<VmaAllocation>& bufferMemories = Buffer::getBufferMemories();

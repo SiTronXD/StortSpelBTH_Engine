@@ -139,7 +139,8 @@ public:
     StorageBufferID addStorageBuffer(
 		const size_t& contentsSize,
 		const vk::ShaderStageFlagBits& shaderStage,
-		const DescriptorFrequency& descriptorFrequency);
+		const DescriptorFrequency& descriptorFrequency,
+		const bool gpuOnly = false);
 	void addCombinedImageSampler(
 		Texture& texture,
 		const vk::ShaderStageFlagBits& shaderStage,
