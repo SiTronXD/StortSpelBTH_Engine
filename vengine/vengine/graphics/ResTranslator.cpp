@@ -77,3 +77,25 @@ glm::vec2 ResTranslator::toInternalPos(
 
 	return glm::vec2(newX, newY);
 }
+
+glm::vec2 ResTranslator::getInternalDimensions()
+{
+	float aspectRatio = (float)windowWidth / windowHeight;
+	float newX = 0.0f;
+	float newY = 0.0f;
+
+	// 16:9 and wider
+	if (aspectRatio >= INTERNAL_ASPECT_RATIO)
+	{
+		newX = INTERNAL_HEIGHT * aspectRatio;
+		newY = INTERNAL_HEIGHT;
+	}
+	// Smaller than 16:9
+	else
+	{
+		newX = INTERNAL_WIDTH;
+		newY = INTERNAL_WIDTH / aspectRatio;
+	}
+
+	return glm::vec2(newX, newY) + glm::vec2(2.0f);
+}
