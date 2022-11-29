@@ -11,14 +11,9 @@ class CommandBufferArray;
 class ParticleSystemHandler
 {
 private:
-	struct ParticleInfo
-	{
-		glm::mat4 transformMatrix = glm::mat4(1.0f);
-	};
-
 	GlobalParticleBufferData globalParticleData;
 
-	std::vector<ParticleInfo> particleInfos;
+	std::vector<ParticleInfo> initialParticleInfos;
 
 	// Compute
 	//StorageBufferID particleInfoWriteSBO;
@@ -33,8 +28,20 @@ private:
 	ShaderInput shaderInput;
 	Pipeline pipeline;
 
+	PhysicalDevice* physicalDevice;
+	Device* device;
+	VmaAllocator* vma;
+	vk::Queue* transferQueue;
+	vk::CommandPool* transferCommandPool;
+	ResourceManager* resourceManager;
+	RenderPass* renderPass;
+	vk::CommandPool* computeCommandPool;
+	uint32_t framesInFlight;
+
 public:
-	inline static const uint32_t MAX_NUM_PARTICLES_PER_SYSTEM = 64;// 1024;
+	inline static const uint32_t MAX_NUM_PARTICLES_PER_SYSTEM = 1024;
+
+	ParticleSystemHandler();
 
 	void init(
 		PhysicalDevice& physicalDevice,
@@ -46,15 +53,7 @@ public:
 		RenderPass& renderPass,
 		vk::CommandPool& computeCommandPool,
 		const uint32_t& framesInFlight);
-	void initForScene(
-		PhysicalDevice& physicalDevice,
-		Device& device,
-		VmaAllocator& vma,
-		vk::Queue& transferQueue,
-		vk::CommandPool& transferCommandPool,
-		ResourceManager& resourceManager,
-		RenderPass& renderPass,
-		const uint32_t& framesInFlight);
+	void initForScene(Scene* scene);
 	void update(
 		const CameraBufferData& cameraDataUBO,
 		const uint32_t& currentFrame);

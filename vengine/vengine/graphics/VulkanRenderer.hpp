@@ -26,7 +26,7 @@
 #include "DebugRenderer.hpp"
 
 class Scene;
-class Camera;
+struct Camera;
 
 using stbi_uc = unsigned char;
 

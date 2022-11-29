@@ -6,6 +6,7 @@ layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler;
 
 // Input data from vertex shader
 layout(location = 0) in vec2 fragUV;
+layout(location = 1) in vec3 fragTintCol;
 
 // Output color
 layout(location = 0) out vec4 outColor; 
@@ -18,8 +19,12 @@ vec3 invGammaCorrection(in vec3 x)
 
 void main() 
 {
+	// Texture in linear color space
 	vec4 texCol = texture(textureSampler, fragUV);
 	texCol.rgb = invGammaCorrection(texCol.rgb);
 
-	outColor = texCol;
+	// Final color
+	vec4 finalCol = texCol * vec4(fragTintCol, 1.0f);
+
+	outColor = finalCol;
 }

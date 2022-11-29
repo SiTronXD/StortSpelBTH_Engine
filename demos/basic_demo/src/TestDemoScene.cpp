@@ -75,6 +75,10 @@ void TestDemoScene::init()
 	ParticleSystem& partSys = this->getComponent<ParticleSystem>(particleEntity);
 	partSys.numParticles = 8;
 	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
+	partSys.startSize = glm::vec2(0.5f, 2.0f);
+	partSys.endSize = glm::vec2(2.0f);
+	partSys.startColor = glm::vec3(0.0f, 1.0f, 0.0f);
+	partSys.endColor = glm::vec3(1.0f, 0.0f, 0.0f);
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();

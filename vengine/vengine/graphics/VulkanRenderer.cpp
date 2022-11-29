@@ -991,16 +991,7 @@ void VulkanRenderer::initForScene(Scene* scene)
         oldHasAnimations,
         this->hasAnimations
     );
-    this->particleHandler.initForScene(
-        this->physicalDevice,
-        this->device,
-        this->vma,
-        this->queueFamilies.getGraphicsQueue(),
-        this->commandPool,
-        *this->resourceManager,
-        this->renderPassBase,
-        MAX_FRAMES_IN_FLIGHT
-    );
+    this->particleHandler.initForScene(scene);
 }
 
 void VulkanRenderer::setupDebugMessenger() 

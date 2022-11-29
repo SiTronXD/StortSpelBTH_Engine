@@ -5,6 +5,18 @@
 #include "../vulkan/CommandBufferArray.hpp"
 #include "../../resource_management/ResourceManager.hpp"
 
+ParticleSystemHandler::ParticleSystemHandler()
+	: physicalDevice(nullptr),
+	device(nullptr),
+	vma(nullptr),
+	transferQueue(nullptr),
+	transferCommandPool(nullptr),
+	resourceManager(nullptr),
+	renderPass(nullptr),
+	computeCommandPool(nullptr),
+	framesInFlight(0)
+{ }
+
 void ParticleSystemHandler::init(
 	PhysicalDevice& physicalDevice,
 	Device& device, 
@@ -16,65 +28,66 @@ void ParticleSystemHandler::init(
 	vk::CommandPool& computeCommandPool,
 	const uint32_t& framesInFlight)
 {
-	/*this->computeShaderInput.beginForInput(
-		physicalDevice, 
-		device, 
-		vma,
-		resourceManager,
-		framesInFlight
-	);
-	this->particleInfoWriteSBO = 
-		this->computeShaderInput.addStorageBuffer(
-			sizeof(ParticleInfo) * MAX_NUM_PARTICLES_PER_SYSTEM,
-			vk::ShaderStageFlagBits::eCompute,
-			DescriptorFrequency::PER_FRAME
-		);
-	this->computeShaderInput.endForInput();
-	this->computePipeline.createComputePipeline(
-		device, 
-		this->computeShaderInput, 
-		"particle.comp.spv"
-	);*/
+	this->physicalDevice = &physicalDevice;
+	this->device = &device;
+	this->vma = &vma;
+	this->transferQueue = &transferQueue;
+	this->transferCommandPool = &transferCommandPool;
+	this->resourceManager = &resourceManager;
+	this->renderPass = &renderPass;
+	this->computeCommandPool = &computeCommandPool;
+	this->framesInFlight = framesInFlight;
 
+	// Command buffers
 	this->computeCommandBuffers.createCommandBuffers(
 		device,
 		computeCommandPool,
 		framesInFlight
 	);
-
-
-	// TODO: remove this
-	this->particleInfos.resize(MAX_NUM_PARTICLES_PER_SYSTEM);
-	for (uint32_t i = 0; i < 64; ++i)
-	{
-		this->particleInfos[i].transformMatrix =
-			glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f));
-	}
 }
 
-void ParticleSystemHandler::initForScene(
-	PhysicalDevice& physicalDevice,
-	Device& device,
-	VmaAllocator& vma,
-	vk::Queue& transferQueue,
-	vk::CommandPool& transferCommandPool,
-	ResourceManager& resourceManager,
-	RenderPass& renderPass,
-	const uint32_t& framesInFlight)
+void ParticleSystemHandler::initForScene(Scene* scene)
 {
 	this->cleanup();
 
+	// Initial particle infos
+	auto particleSystemView =
+		scene->getSceneReg().view<ParticleSystem>();
+	particleSystemView.each(
+		[&](ParticleSystem& particleSystemComp)
+		{
+			this->initialParticleInfos.resize(MAX_NUM_PARTICLES_PER_SYSTEM);
+			for (uint32_t i = 0; i < MAX_NUM_PARTICLES_PER_SYSTEM; ++i)
+			{
+				ParticleInfo& particle =
+					this->initialParticleInfos[i];
+
+				// TODO: remove this
+				particle.transformMatrix =
+					glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f));
+
+				// Size
+				particle.startSize = particleSystemComp.startSize;
+				particle.endSize = particleSystemComp.endSize;
+
+				// Color
+				particle.startColor = glm::vec4(particleSystemComp.startColor, 1.0f);
+				particle.endColor = glm::vec4(particleSystemComp.endColor, 1.0f);
+			}
+		}
+	);
+
 	// Shader input
 	this->shaderInput.initForGpuOnlyResources(
-		transferQueue,
-		transferCommandPool
+		*this->transferQueue,
+		*this->transferCommandPool
 	);
 	this->shaderInput.beginForInput(
-		physicalDevice,
-		device,
-		vma,
-		resourceManager,
-		framesInFlight
+		*this->physicalDevice,
+		*this->device,
+		*this->vma,
+		*this->resourceManager,
+		this->framesInFlight
 	);
 	this->cameraUBO =
 		this->shaderInput.addUniformBuffer(
@@ -88,7 +101,7 @@ void ParticleSystemHandler::initForScene(
 			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
 			DescriptorFrequency::PER_FRAME,
 			true,
-			this->particleInfos.data()
+			this->initialParticleInfos.data()
 		);
 	this->globalParticleBufferUBO = 
 		this->shaderInput.addUniformBuffer(
@@ -101,30 +114,34 @@ void ParticleSystemHandler::initForScene(
 	this->shaderInput.makeFrequencyInputLayout(inputLayout);
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
-		device,
+		*this->device,
 		this->shaderInput,
-		renderPass,
+		*this->renderPass,
 		VertexStreams{},
 		"particle.vert.spv",
 		"particle.frag.spv"
 	);
 
 	// Add all textures for possible use as the texture index
-	size_t numTextures = resourceManager.getNumTextures();
+	size_t numTextures = this->resourceManager->getNumTextures();
 	for (size_t i = 0; i < numTextures; ++i)
 	{
-		Texture& texture = resourceManager.getTexture(i);
+		Texture& texture = this->resourceManager->getTexture(i);
 
 		this->shaderInput.addFrequencyInput(
 			{ FrequencyInputBindings{ &texture } }
 		);
 	}
 
+	// Compute pipeline
 	this->computePipeline.createComputePipeline(
-		device,
-		this->shaderInput, //this->computeShaderInput, 
+		*this->device,
+		this->shaderInput,
 		"particle.comp.spv"
 	);
+
+	// No need to keep the initial information
+	this->initialParticleInfos.clear();
 }
 
 void ParticleSystemHandler::update(

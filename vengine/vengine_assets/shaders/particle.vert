@@ -14,6 +14,11 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 struct ParticleInfoData
 {
     mat4 transform;
+    vec4 life;  // vec4(currentLifeTime, maxLifeTime, 0.0f, 0.0f)
+    vec2 startSize;
+    vec2 endSize;
+    vec4 startColor;
+    vec4 endColor;
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 1) readonly buffer ParticleInfosBuffer
 {
@@ -22,6 +27,7 @@ layout(std140, set = FREQ_PER_FRAME, binding = 1) readonly buffer ParticleInfosB
 
 // Output data
 layout(location = 0) out vec2 fragUV;
+layout(location = 1) out vec3 fragTintCol;
 
 void main()
 {
@@ -56,21 +62,24 @@ void main()
     );*/
 
     
+    ParticleInfoData particle = 
+        particles.infos[gl_InstanceIndex];
+
     // Position
-    /*gl_Position = 
-        cameraBuffer.projection * 
-        cameraBuffer.view * 
-        vec4(
-            position + vec2(gl_InstanceIndex * 2.10f, 0.0f), 
-            0.75f, 
-            1.0f
-        );*/
     gl_Position = 
         cameraBuffer.projection * 
         cameraBuffer.view * 
-        particles.infos[gl_InstanceIndex].transform *
+        particle.transform *
         vec4(position, 0.0f, 1.0f);
 
     // UV coordinates
     fragUV = vec2(position.x, -position.y) * 0.5f + vec2(0.5f);
+
+    // Tint color
+    fragTintCol = 
+        mix(
+            particle.startColor.rgb,
+            particle.endColor.rgb,
+            clamp(particle.life.x / particle.life.y, 0.0f, 1.0f)
+        );
 }

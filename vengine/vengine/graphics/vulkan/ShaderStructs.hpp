@@ -43,6 +43,17 @@ struct GlobalParticleBufferData
     float deltaTime = 1.0f;
 };
 
+// Per particle info
+struct ParticleInfo
+{
+    glm::mat4 transformMatrix = glm::mat4(1.0f);
+    glm::vec4 life = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // vec4(currentLifeTime, maxLifeTime, 0.0f, 0.0f)
+    glm::vec2 startSize = glm::vec2(1.0f);
+    glm::vec2 endSize = glm::vec2(1.0f);
+    glm::vec4 startColor = glm::vec4(1.0f);
+    glm::vec4 endColor = glm::vec4(1.0f);
+};
+
 // Shadow map data
 #define MAX_NUM_CASCADES 4
 struct ShadowMapData

@@ -16,6 +16,11 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 struct ParticleInfoData
 {
     mat4 transform;
+    vec4 life;  // vec4(currentLifeTime, maxLifeTime, 0.0f, 0.0f)
+    vec2 startSize;
+    vec2 endSize;
+    vec4 startColor;
+    vec4 endColor;
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 1) buffer ParticleInfosBuffer
 {
@@ -32,31 +37,42 @@ layout(set = FREQ_PER_FRAME, binding = 2) uniform ParticleBufferData
 void main()
 {
     // Get info
-    mat4 transform = 
-        particles.infos[gl_GlobalInvocationID.x].transform;
-    vec3 position = transform[3].xyz;
+    ParticleInfoData particle = 
+        particles.infos[gl_GlobalInvocationID.x];
+    vec3 position = particle.transform[3].xyz;
+    float deltaTime = globalParticleBuffer.deltaTime;
 
     // Apply change
-    position.y += 1.0f * globalParticleBuffer.deltaTime;
+    position.y += 1.0f * deltaTime;
 
+    // Reset life
+    particle.life.x += deltaTime;
+    if(particle.life.x >= particle.life.y)
+    {
+        particle.life.x = mod(particle.life.x, particle.life.y);
+        position.y = 0.0f;
+    }
+
+    // Scale
+    vec2 currentScale = mix(
+        particle.startSize, 
+        particle.endSize,
+        clamp(particle.life.x / particle.life.y, 0.0f, 1.0f)
+    );
 
     // Update direction
     vec3 forward = normalize(cameraBuffer.worldPos.xyz - position);
     vec3 right = -normalize(cross(forward, vec3(0.0f, 1.0f, 0.0f)));
     vec3 up = -cross(right, forward);
 
-    /*forward = vec3(0.0f, 0.0f, 1.0f);
-    right = vec3(1.0f, 0.0f, 0.0f);
-    up = vec3(0.0f, 1.0f, 0.0f);*/
-
     // Update transform
-    transform = mat4(
-        vec4(   right,  0.0f),
-        vec4(      up,  0.0f),
+    particle.transform = mat4(
+        vec4(   right,  0.0f) * currentScale.x,
+        vec4(      up,  0.0f) * currentScale.y,
         vec4( forward,  0.0f),
         vec4(position,  1.0f)
     );
 
-    // Update new transform
-    particles.infos[gl_GlobalInvocationID.x].transform = transform;
+    // Update new data
+    particles.infos[gl_GlobalInvocationID.x] = particle;
 }
