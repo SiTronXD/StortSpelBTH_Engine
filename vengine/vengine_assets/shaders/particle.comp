@@ -25,6 +25,17 @@ layout(std140, set = FREQ_PER_FRAME, binding = 1) buffer ParticleInfosBuffer
 
 void main()
 {
-    //particles.infos[gl_GlobalInvocationID.x].position = vec4(1.0f, 2.0f, 3.0f, 666.0f);
-    particles.infos[gl_GlobalInvocationID.x].position.y += 0.01f;
+    // Get info
+    mat4 transform = 
+        particles.infos[gl_GlobalInvocationID.x].transform;
+    vec3 position = transform[3].xyz;
+
+    // Apply change
+    position.y += 0.01f;
+
+    // Update position
+    transform[3].xyz = position;
+
+    // Update new transform
+    particles.infos[gl_GlobalInvocationID.x].transform = transform;
 }

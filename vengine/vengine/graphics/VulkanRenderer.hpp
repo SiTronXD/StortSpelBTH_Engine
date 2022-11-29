@@ -112,14 +112,16 @@ class VulkanRenderer
 
     // Synchronisation 
     std::vector<vk::Semaphore> imageAvailable;
+    std::vector<vk::Semaphore> computeFinished;
     std::vector<vk::Semaphore> shadowMapRenderFinished;
     std::vector<vk::Semaphore> sceneRenderFinished;
     std::vector<std::vector<vk::Semaphore>> downsampleFinished;
     std::vector<std::vector<vk::Semaphore>> upsampleFinished;
     std::vector<vk::Semaphore> swapchainRenderFinished;
     std::vector<vk::Fence> drawFences;
-    
-    SubmitArray submitArray;
+
+    SubmitArray computeSubmitArray;
+    SubmitArray graphicsSubmitArray;
 
     char* tracyImage{};
 
