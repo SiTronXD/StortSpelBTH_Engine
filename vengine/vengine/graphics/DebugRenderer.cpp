@@ -313,7 +313,8 @@ void DebugRenderer::renderSpotlight(const Entity& spotlightEntity)
 }
 
 void DebugRenderer::renderParticleSystemCone(
-    const Entity& particleSystemEntity)
+    const Entity& particleSystemEntity,
+    const glm::vec3& color)
 {
     Scene* scene = this->sceneHandler->getScene();
     Transform& transform = scene->getComponent<Transform>(particleSystemEntity);
@@ -339,7 +340,9 @@ void DebugRenderer::renderParticleSystemCone(
         );
 
     // Render lines as cone tangents
-    const uint32_t numLines = 20;
+    const uint32_t numLines = 16;
+    glm::vec3 positions0[numLines];
+    glm::vec3 positions1[numLines];
     for (uint32_t i = 0; i < numLines; ++i)
     {
         const glm::mat4 tempRot = glm::rotate(
@@ -353,7 +356,7 @@ void DebugRenderer::renderParticleSystemCone(
             glm::vec3(0.0f, 1.0f, 0.0f) * particleSystem.coneSpawnVolume.diskRadius;
         diskOffset =
             tempRot * glm::vec4(diskOffset, 0.0f);
-        glm::vec3 pos0 = 
+        positions0[i] =
             transform.position + 
             transformRot *
             particleSystem.coneSpawnVolume.localPosition +
@@ -371,9 +374,23 @@ void DebugRenderer::renderParticleSystemCone(
                     )
                 )
             );
-        glm::vec3 pos1 = pos0 + (coneDir + tanTheta * coneRotMat * glm::vec3(tempRot * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))) * strength;
+        positions1[i] = 
+            positions0[i] + 
+            (coneDir + tanTheta * coneRotMat * glm::vec3(tempRot * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))) * strength;
 
-        this->renderLine(pos0, pos1, glm::vec3(0.0f, 1.0f, 0.0f));
+        // Render line
+        this->renderLine(positions0[i], positions1[i], color);
+    }
+
+    // Stitch together lines in disk
+    for (uint32_t i = 0; i < numLines/2; ++i)
+    {
+        this->renderLine(positions0[i], positions0[(i + numLines/2) % numLines], color);
+    }
+    for (uint32_t i = 0; i < numLines; ++i)
+    {
+        this->renderLine(positions0[i], positions0[(i + 1) % numLines], color);
+        this->renderLine(positions1[i], positions1[(i + 1) % numLines], color);
     }
 }
 
