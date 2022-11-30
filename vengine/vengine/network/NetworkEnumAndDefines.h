@@ -17,68 +17,74 @@
 
 #pragma endregion
 
-struct TCPPacketEvent
+struct TCPPacketEvent 
 {
-	int gameEvent;
-	int nrOfInts;
-	int ints[3];  //max nr of ints is 3
+	int                event;
+	int                nrOfInts;
+	int                ints[3]; // Max nr of ints is 3
 	std::vector<float> floats;
 };
 
-enum StartingEnum
+enum class ServerStatus { WAITING, START, RUNNING, DISCONNECTED };
+
+enum class NetworkEvent
 {
-	WaitingForUsers,
-	Start,
-	Running
+	ERR = -1,
+	EMPTY,
+	ECHO, // Repeat whatever is sent on server
+	CLIENTJOINED,
+	JUSTJOINED,
+	DISCONNECT,
+	GETNAMES,
+	START,
+	DEBUG_DRAW_BOX,
+	DEBUG_DRAW_SPHERE,
+	DEBUG_DRAW_CYLINDER,
+	DEBUG_DRAW_LINE,
+	END
 };
 
 #pragma region GAMEEVENTS_NETWORK
 
-enum GameEvents
-{
-	EMPTY = 0,
-	//TCP To Client
-	SpawnEnemy = 1,			// : Type(int), Position(float x,y,z);
-	SpawnEnemies = 2,		// : Type(int), NrOfEnemies(int), Position(list/array)(float x,y,z)   (can only spawn one type of enemy in spawnEnemies)
-    SpawnPerk = 3,			// : Type(int), Position(float x,y,z)
-	MonsterDied = 4,        // : Monster_id(int)
-	ID = 5,					// : ID(int)
-	PlayerJoined,			//: name(sfml fix size of string), serverID(int)
-	GAMEDATA,				//:?
-	ROOM_CLEAR,             //: (nothing)
-	MONSTER_HIT,			//: monsterID(int), Damage(int), PlayerID(int)   (a monster hit you)
+//enum GameEvents {
+//	EMPTY		 = 0,
+//	//TCP To Client
+//	SpawnEnemy = 1,
+//	SpawnEnemies = 2,
+//	MonsterDied = 3,
+//	ID = 4,
+//	PlayerJoined,
+//	GAMEDATA,
+//
+//	//TCP to Server
+//	HitMonster,				//Call to Scene
+//	START,					//Call to Scene
+//	CHANGESCEENE,
+//	POLYGON_DATA,
+//	REMOVE_POLYGON_DATA,
+//
+//	//TCP to Client and Server
+//	Explosion,
+//	PlayerShoot,
+//	PlayerDied,
+//	DISCONNECT,
+//
+//
+//	//UDP
+//	UpdatePlayerPos,
+//	UpdateMonsterPos,
+//
+//	//Get from server
+//	GetPlayerNames,
+//	GetLevelSeed,
+//
+//
+//	//DEBUG
+//	A_Button_Was_Pressed_On_Server,
+//	A_Button_Was_Pressed_On_Client,
+//	END
+//};
 
-	//TCP to Server
-	HitMonster,				//: Monster_id(int), PlayerID(int), Damage(int), knockbackarr(float), Call to Scene
-	CHANGESCEENE,			//:?
-	POLYGON_DATA,			//: 
-	REMOVE_POLYGON_DATA,    //: nothing
-	WentInToNewRoom,		//:?
-	HealPlayer,				//: 
-
-	//TCP to Client and Server
-	START,  //Call to Scene
-	PlayerDied,
-	DISCONNECT,
-	PickUpPerk,
-
-	//UDP
-	UpdatePlayerPos,
-	UpdateMonsterPos,
-	UpdateParkPos,
-
-	//Get from server
-	GetPlayerNames,
-	GetLevelSeed,
-
-	//DEBUG
-	A_Button_Was_Pressed_On_Server,
-	A_Button_Was_Pressed_On_Client,
-	Draw_Debug_Line,
-	Draw_Debug_CapsuleCollider,
-	Draw_Debug_BoxCollider,
-	END
-};
 /*
 /////////events tcp server -> client////////////////
 

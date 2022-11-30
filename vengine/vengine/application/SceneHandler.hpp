@@ -27,6 +27,7 @@ private:
 	AudioHandler* audioHandler;
 
 	void initSubsystems();
+	void updatePreScene();
 
 public:
 	SceneHandler();

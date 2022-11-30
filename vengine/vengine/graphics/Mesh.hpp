@@ -21,6 +21,7 @@ private:
     VmaAllocator&   vma;
 
     std::unordered_map<std::string, uint32_t> aniNames;
+    std::unordered_map<std::string, uint32_t> aniSlots; // slot name - slotIndex
 
     // One vertex buffer per data stream
     VertexBufferArray vertexBuffers;
@@ -36,21 +37,23 @@ private:
         const float& timer,
         glm::quat& outputValue);
 
+    bool isChildOf(const Bone& bone, uint32_t grandpaIndex);
+
 public:     
     Mesh(MeshData&& meshData, VulkanImportStructs& importStructs);
     Mesh(Mesh&& ref);
-    
+
     void createVertexBuffers(MeshData& meshData, VulkanImportStructs& importStructs);
     void createIndexBuffer( MeshData& meshData, VulkanImportStructs& importStructs);
     
     void getLocalBoneTransform(
         const BonePoses& bone,
         const float& timer,
-        const int& animationIndex,
         glm::mat4& outputMatrix);
 
-    void getBoneTransforms(
-        AnimationComponent& animationComponentOutput);
+    void getBoneTransforms(AnimationComponent& animationComponentOutput);
+    void getLocalBoneTransform(const AnimationSlot& aniSlot, const BonePoses& curAnimPose,
+        const BonePoses& nextAnimPose, glm::mat4& outputMatrix);
 
     inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;
@@ -58,9 +61,15 @@ public:
     inline const std::vector<SubmeshData>& getSubmeshData() const;
     inline SubmeshData& getSubmesh(const uint32_t& index) { return this->submeshData[index]; }
 
+    bool createAnimationSlot(const std::string& slotName, const std::string& boneName);
     void mapAnimations(const std::vector<std::string>& names);
     uint32_t getAnimationIndex(const std::string& name) const;
+    uint32_t getAnimationSlotIndex(const std::string& slotName) const;
+    const std::string& getAnimationName(uint32_t index) const;
+    float getAnimationEndTime(const std::string& aniName) const;
+    float getAnimationEndTime(uint32_t index) const;
 
+    void safeCleanup();
     void cleanup();
 
     // Debug

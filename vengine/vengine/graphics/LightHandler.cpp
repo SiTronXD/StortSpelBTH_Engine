@@ -4,103 +4,24 @@
 #include "Texture.hpp"
 
 const uint32_t LightHandler::MAX_NUM_LIGHTS   = 16;
-const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 4;
+const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 3;
 const uint32_t LightHandler::NUM_CASCADES     = 3;
 
-void LightHandler::getWorldSpaceFrustumCorners(
-    const glm::mat4& invViewProj,
-    glm::vec4 outputCorners[])
-{
-    // Find frustum corners in world space
-    for (uint32_t x = 0; x < 2; ++x)
-    {
-        for (uint32_t y = 0; y < 2; ++y)
-        {
-            for (uint32_t z = 0; z < 2; ++z)
-            {
-                uint32_t index = x * 2 * 2 + y * 2 + z;
-
-                outputCorners[index] =
-                    invViewProj * glm::vec4(
-                        2.0f * float(x) - 1.0f,
-                        2.0f * float(y) - 1.0f,
-                        float(z),
-                        1.0f
-                    );
-                outputCorners[index] /= outputCorners[index].w;
-            }
-        }
-    }
-}
-
 void LightHandler::setLightFrustum(
-    const glm::mat4& camProj,
-    const glm::mat4& camView,
+    const float& cascadeSize,
     glm::mat4& outputLightVP)
 {
-    // Find frustum corners in world space
-    glm::vec4 frustumCorners[8];
-    this->getWorldSpaceFrustumCorners(
-        glm::inverse(camProj * camView),
-        frustumCorners
-    );
+    float xSize = cascadeSize;
+    float ySize = cascadeSize;
+    float zSize = cascadeSize * this->cascadeDepthScale;
 
-    glm::vec3 center(0.0f);
-    for (uint32_t i = 0; i < 8; ++i)
-    {
-        center += glm::vec3(frustumCorners[i]);
-    }
-    center /= 8.0f;
-
-    // Temporarily set VP to V
-    glm::mat4 lightView =
-        glm::lookAt(
-            center,
-            center + this->lightDir,
-            this->lightUpDir
-        );
-
-    const auto firstViewSpaceCorner =
-        lightView * frustumCorners[0];
-    float minX = firstViewSpaceCorner.x;
-    float maxX = firstViewSpaceCorner.x;
-    float minY = firstViewSpaceCorner.y;
-    float maxY = firstViewSpaceCorner.y;
-    float minZ = firstViewSpaceCorner.z;
-    float maxZ = firstViewSpaceCorner.z;
-    for (uint32_t i = 1; i < 8; ++i)
-    {
-        const auto viewSpaceCorner = 
-            lightView * frustumCorners[i];
-        minX = std::min(minX, viewSpaceCorner.x);
-        maxX = std::max(maxX, viewSpaceCorner.x);
-        minY = std::min(minY, viewSpaceCorner.y);
-        maxY = std::max(maxY, viewSpaceCorner.y);
-        minZ = std::min(minZ, viewSpaceCorner.z);
-        maxZ = std::max(maxZ, viewSpaceCorner.z);
-    }
-
-    // Scale depth
-    if (minZ < 0.0f)
-    {
-        minZ *= this->cascadeDepthScale;
-    }
-    else
-    {
-        minZ /= this->cascadeDepthScale;
-    }
-    if (maxZ < 0.0f)
-    {
-        maxZ /= this->cascadeDepthScale;
-    }
-    else
-    {
-        maxZ *= this->cascadeDepthScale;
-    }
-
+    // Combine view and unique projection
     outputLightVP = 
-        glm::orthoRH(minX, maxX, minY, maxY, minZ, maxZ) * 
-        lightView;
+        glm::orthoRH(
+            -xSize, xSize, 
+            -ySize, ySize, 
+            -zSize, zSize
+        ) * this->lightViewMat;
 }
 
 LightHandler::LightHandler()
@@ -108,10 +29,10 @@ LightHandler::LightHandler()
     device(nullptr),
     vma(nullptr),
     resourceManager(nullptr),
-    framesInFlight(0)
+    framesInFlight(0),
+    lightViewMat(1.0f)
 { 
-    this->cascadeSizes.resize(LightHandler::NUM_CASCADES - 1);
-    this->cascadeNearPlanes.resize(LightHandler::NUM_CASCADES);
+    this->cascadeSizes.resize(LightHandler::NUM_CASCADES);
 
     this->shadowMapData.cascadeSettings.x = 
         LightHandler::NUM_CASCADES;
@@ -151,8 +72,8 @@ void LightHandler::init(
         this->shadowMapExtent.width,
         this->shadowMapExtent.height,
         LightHandler::NUM_CASCADES,
-        vk::ImageUsageFlagBits::eSampled,
-        resourceManager.addSampler(depthTextureSettings)
+        resourceManager.addSampler(depthTextureSettings),
+        vk::ImageUsageFlagBits::eSampled
     );
 
     // Render pass
@@ -167,7 +88,7 @@ void LightHandler::init(
     {
         shadowMapImageViews[i] =
         {
-            this->shadowMapTexture.getImageView(i)
+            this->shadowMapTexture.getLayerImageView(i)
         };
     }
     this->shadowMapFramebuffer.create(
@@ -453,7 +374,7 @@ void LightHandler::updateLightBuffers(
             // Cascade settings
             for (size_t i = 0; i < this->cascadeSizes.size(); ++i)
             {
-                this->cascadeSizes[i] = dirLightComp.cascadeSizes[i] / camData.aspectRatio * (16.0f / 9.0f);
+                this->cascadeSizes[i] = dirLightComp.cascadeSizes[i];// / camData.aspectRatio * (16.0f / 9.0f);
             }
             this->cascadeDepthScale = dirLightComp.cascadeDepthScale;
             this->shadowMapData.cascadeSettings.y = dirLightComp.cascadeVisualization ? 1.0f : 0.0f;
@@ -469,32 +390,19 @@ void LightHandler::updateLightBuffers(
     if (std::abs(glm::dot(this->lightUpDir, this->lightDir)) >= 0.95f)
         this->lightUpDir = glm::vec3(0.0f, 0.0f, 1.0f);
 
-    // Create tightly fit light frustums
-    for (uint32_t i = 0; i < LightHandler::NUM_CASCADES - 1; ++i)
-    {
-        this->shadowMapData.cascadeFarPlanes[i] =
-            camData.farPlane * this->cascadeSizes[i];
-    }
-    this->shadowMapData.cascadeFarPlanes[LightHandler::NUM_CASCADES - 1]
-        = camData.farPlane;
+    // Update view matrix
+    this->lightViewMat = 
+        glm::lookAt(
+            camPosition - this->lightDir,
+            camPosition,
+            this->lightUpDir
+        );
 
-    // Create light matrices
-    this->cascadeNearPlanes[0] = camData.nearPlane;
-    for (uint32_t i = 1; i < LightHandler::NUM_CASCADES; ++i)
-    {
-        this->cascadeNearPlanes[i] =
-            this->shadowMapData.cascadeFarPlanes[i - 1];
-    }
+    // Create light VP matrices
     for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
     {
         this->setLightFrustum(
-            glm::perspective(
-                glm::radians(camData.fov),
-                camData.aspectRatio, 
-                this->cascadeNearPlanes[i],
-                this->shadowMapData.cascadeFarPlanes[i]
-            ),
-            camData.view,
+            this->cascadeSizes[i],
             this->shadowMapData.viewProjection[i]
         );
     }

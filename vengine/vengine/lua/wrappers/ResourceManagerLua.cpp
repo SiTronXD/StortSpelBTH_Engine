@@ -107,7 +107,20 @@ int ResourceManagerLua::lua_mapAnimations(lua_State* L)
 	return 1;
 }
 
-// TODO change to resource manager later
+int ResourceManagerLua::lua_createAnimtionSlot(lua_State* L)
+{
+	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
+	if (!lua_isnumber(L, 1) || !lua_isstring(L, 2) || !lua_isstring(L, 3)) { return 0; }
+	
+	const uint32_t meshId = (uint32_t)lua_tonumber(L, 1);
+	const char* slotName = lua_tostring(L, 2);
+	const char* boneName = lua_tostring(L, 3);
+
+	lua_pushboolean(L, resourceManager->createAnimationSlot(meshId, slotName, boneName));
+
+	return 1;
+}
+
 int ResourceManagerLua::lua_addAudio(lua_State* L)
 {
 	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
@@ -130,6 +143,7 @@ void ResourceManagerLua::lua_openresources(lua_State* L, ResourceManager* resour
 		{ "addTexture", lua_addTexture },
 		{ "addAnimations", lua_addAnimations },
 		{ "mapAnimations", lua_mapAnimations },
+		{ "createAnimationSlot", lua_createAnimtionSlot},
 		{ NULL , NULL }
 	};
 

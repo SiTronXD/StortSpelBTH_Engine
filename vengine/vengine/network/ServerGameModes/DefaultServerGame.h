@@ -7,7 +7,6 @@ private:
     //AIHandler aiHandler;
 public:
     DefaultServerGame();
-    void init();
 	void start();
     void update(float dt);
 };

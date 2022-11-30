@@ -10,9 +10,9 @@ struct DirectionalLight
     // Cascade settings
     float cascadeSizes[3] =
     {
-        0.05f,
-        0.1f,
-        0.5f
+        20.0f,
+        100.0f,
+        500.0f
     };
     float cascadeDepthScale = 1.0f;
 

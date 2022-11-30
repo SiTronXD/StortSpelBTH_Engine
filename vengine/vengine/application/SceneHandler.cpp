@@ -5,6 +5,7 @@
 #include "../graphics/VulkanRenderer.hpp"
 #include "../graphics/UIRenderer.hpp"
 #include "../lua/ScriptHandler.h"
+#include "../network/ServerEngine/NetworkScene.h"
 
 void SceneHandler::initSubsystems()
 {
@@ -26,9 +27,69 @@ void SceneHandler::initSubsystems()
 	{
 		this->vulkanRenderer->initForScene(this->scene);
 	}
-	
+
 	// Reset delta time counter
 	Time::reset();
+}
+
+void SceneHandler::updatePreScene()
+{
+	// Update animation timers
+	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
+	animView.each([&]
+	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
+		{
+			Mesh& currentMesh = this->resourceManager->getMesh(meshComponent.meshID);
+			const MeshData& meshData = currentMesh.getMeshData();
+
+			for (uint32_t i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			{
+				AnimationSlot& aniSlot = animationComponent.aniSlots[i];
+				aniSlot.timer += Time::getDT() * 24.0f * aniSlot.timeScale;
+				if (aniSlot.timer >= meshData.animations[aniSlot.animationIndex].endTime)
+				{
+					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
+					aniSlot.finishedCycle = true;
+				}
+
+				if (aniSlot.nAnimationIndex != ~0u)
+				{
+					const Animation& nAnimation = meshData.animations[aniSlot.nAnimationIndex];
+					// Still in transition
+					if (aniSlot.alpha < 1.f)
+					{
+						aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
+						if (aniSlot.nTimer >= nAnimation.endTime)
+						{
+							aniSlot.nTimer -= nAnimation.endTime;
+						}
+
+						// Clamping alpha makes sure mesh doesn't "blink" when transitionTime == 0.f
+						// glm::mix is defined beyond [0, 1] causing incorret results when alpha > 1.f || alpha < 0.f
+						aniSlot.alpha += (1.f / aniSlot.transitionTime) * Time::getDT();
+						if (aniSlot.alpha > 1.f)
+						{
+							aniSlot.alpha = 1.f;
+						}
+					}
+					else // Switch and reset 
+					{
+						aniSlot.alpha = 0.f;
+
+						aniSlot.animationIndex = aniSlot.nAnimationIndex;
+						aniSlot.timer = aniSlot.nTimer;
+						aniSlot.timeScale = aniSlot.nTimeScale;
+
+						aniSlot.nAnimationIndex = ~0u;
+						aniSlot.nTimer = 0.f;
+					}
+				}
+			}
+
+			// Store bone transformations
+			currentMesh.getBoneTransforms(animationComponent);
+		}
+	);
 }
 
 SceneHandler::SceneHandler()
@@ -41,7 +102,9 @@ SceneHandler::SceneHandler()
     physicsEngine(nullptr),
 	vulkanRenderer(nullptr),
 	uiRenderer(nullptr), 
-	debugRenderer(nullptr)
+	debugRenderer(nullptr),
+	window(nullptr),
+	audioHandler(nullptr)
 { }
 
 SceneHandler::~SceneHandler()
@@ -51,6 +114,8 @@ SceneHandler::~SceneHandler()
 
 void SceneHandler::update()
 {
+	this->updatePreScene();
+
 	this->scene->updateSystems();
 	this->scriptHandler->updateSystems(this->scene->getLuaSystems());
 	this->scene->update();
@@ -61,6 +126,11 @@ void SceneHandler::updateToNextScene()
 	// Make sure a scene can be switched to
 	if (this->nextScene != nullptr)
 	{
+        NetworkScene* nScene = dynamic_cast<NetworkScene*>(scene);
+        if (nScene != nullptr)
+        {
+            ((NetworkScene*)nextScene)->setServer((nScene)->getServer());
+        }
 		// Delete old scene
 		delete this->scene;
 		this->scene = nullptr;
@@ -77,23 +147,7 @@ void SceneHandler::updateToNextScene()
 
 void SceneHandler::prepareForRendering()
 {
-	// Update animation timer
-	auto animView = this->scene->getSceneReg().view<AnimationComponent, MeshComponent>(entt::exclude<Inactive>);
-	animView.each([&]
-	(AnimationComponent& animationComponent, const MeshComponent& meshComponent)
-		{
-			const float endTime = 
-				this->resourceManager->getMesh(meshComponent.meshID)
-				.getMeshData().animations[animationComponent.animationIndex].endTime;
-
-			animationComponent.timer += Time::getDT() * 24.0f * animationComponent.timeScale;
-			if (animationComponent.timer >= endTime)
-			{
-				animationComponent.timer -= endTime;
-			}
-		}
-	);
-
+	// Update transform matrices
 	auto view = this->scene->getSceneReg().view<Transform>(entt::exclude<Inactive>);
 	auto func = [](Transform& transform)
 	{

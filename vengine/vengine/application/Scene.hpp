@@ -32,18 +32,28 @@ struct LuaSystem
 	int luaRef;
 };
 
+struct BloomSettings
+{
+	float bloomBufferLerpAlpha = 0.04f;
+	uint32_t numBloomMipLevels = 7;
+};
+
 class Scene
 {
-  private:
+private:
 	SceneHandler* sceneHandler;
 	entt::registry reg;
 	Entity mainCamera;
+	BloomSettings bloomSettings{};
 
-  protected:
+protected:
 	std::vector<System*> systems;
 	std::vector<LuaSystem> luaSystems;
 
-  protected:
+	void setBloomBufferLerpAlpha(const float& alpha);
+	void setBloomNumMipLevels(const uint32_t& numBloomMipLevels);
+
+protected:
 	void switchScene(Scene* scene, std::string path = "");
 	ScriptHandler* getScriptHandler();
 	ResourceManager* getResourceManager();
@@ -60,7 +70,7 @@ class Scene
 		return vengine_helper::config::DEF<T>(name);
 	}
 
-  public:
+public:
 	Scene();
 	virtual ~Scene();
 
@@ -101,7 +111,14 @@ class Scene
 	void setInactive(Entity entity);
 	bool isActive(Entity entity);
 
-	void setAnimation(Entity entity, const std::string& animationName, bool resetTimer = true);
+	// Default slotName sets the animation on the whole skeleton
+	void setAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "", float timeScale = 1.f);
+	void setAnimationTimeScale(Entity entity, float timeScale, const std::string& slotName = "");
+	void blendToAnimation(Entity entity, const std::string& animationName, const std::string& slotName = "", float transitionTime = 0.18f, float nextAniTimeScale = 1.f);
+	void syncedBlendToAnimation(Entity entity, const std::string& referenceSlot, const std::string& slotToSync = "", float transitionTime = 0.18);
+	AnimationSlot& getAnimationSlot(Entity entity, const std::string& slotName);
+	// Assumes the whole skeleton is playing an animation, uses slot 0
+	AnimationStatus getAnimationStatus(Entity entity, const std::string& slotName = ""); 
 
 	// When created
 	virtual void init();
@@ -119,6 +136,7 @@ class Scene
 
 	inline entt::registry& getSceneReg() { return this->reg; }
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }
+	inline const BloomSettings& getBloomSettings() const { return this->bloomSettings; }
 
 	void setSceneHandler(SceneHandler& sceneHandler);
     NetworkHandler* getNetworkHandler();

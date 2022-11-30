@@ -25,6 +25,40 @@ struct VertexStreams
     std::vector<glm::uvec4> boneIndices;
 };
 
+struct AnimationStatus
+{
+    AnimationStatus(const std::string& animationName, float timer, float timeScale, float endTime, bool finishedCycle)
+        :animationName(animationName), timer(timer), timeScale(timeScale), endTime(endTime), finishedCycle(finishedCycle)
+    {
+    }
+
+    const std::string& animationName;
+    bool finishedCycle;
+
+    // In seconds
+    float timer;
+    float timeScale;
+    float endTime;
+};
+
+#define NUM_MAX_ANIMATION_SLOTS 5u // Defined here so AnimationComponent & Mesh has access to it
+struct AnimationSlot
+{
+    // true if animation has played fully atleast once
+    bool finishedCycle = false;
+    float alpha = 0.f;
+    float transitionTime = 0.2f;
+
+    uint32_t animationIndex = 0;
+    float timer = 0.f;
+    float timeScale = 1.f;
+
+    // Next animation data (only used during transition)
+    uint32_t nAnimationIndex = ~0u;
+    float nTimer = 0.f;
+    float nTimeScale = 1.f;
+};
+
 struct BonePoses
 {
     std::vector<std::pair<float, glm::vec3>> translationStamps;
@@ -41,7 +75,7 @@ struct Animation
 struct Bone 
 {
     std::string boneName;
-
+    uint32_t slotIndex = 0u;
     int parentIndex;
     glm::mat4 inverseBindPoseMatrix;
     glm::mat4 boneMatrix;

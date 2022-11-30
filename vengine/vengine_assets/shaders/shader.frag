@@ -4,12 +4,15 @@
 #define FREQ_PER_MESH 1
 #define FREQ_PER_DRAW 2
 
+#define GLOW_MAP_SCALE 64.0f
+
 layout(location = 0) in vec3 fragWorldPos;
 layout(location = 1) in vec3 fragViewPos;
 layout(location = 2) in vec3 fragNor;
 layout(location = 3) in vec2 fragTex;
-layout(location = 4) in vec3 fragCamWorldPos;
-layout(location = 5) in vec4 fragTintCol;
+layout(location = 4) in vec4 fragCamWorldPos;	// vec4(fragCamWorldPos, receiveShadows)
+layout(location = 5) in vec4 fragTintCol;		// vec4(fragTintCol, fragTintColAlpha)
+layout(location = 6) in vec4 fragEmissionCol;	// vec4(fragEmissionCol, intensity)
 
 // Uniform buffer for light indices
 // Ambient: [0, ambientLightsEndIndex)
@@ -30,7 +33,6 @@ layout(set = FREQ_PER_FRAME, binding = 4) uniform ShadowMapInfoBuffer
     vec2 shadowMapSize;
 	float shadowMapMinBias;
 	float shadowMapAngleBias;
-	vec4 cascadeFarPlanes;
 	uvec4 cascadeSettings; // uvec4(numCascades, cascadeVisualization, 0, 0)
 } shadowMapInfoBuffer;
 
@@ -54,8 +56,9 @@ layout(std140, set = FREQ_PER_FRAME, binding = 2) readonly buffer LightBuffer
 
 // Combined image samplers
 layout(set = FREQ_PER_FRAME, binding = 3) uniform sampler2DArray shadowMapSampler;
-layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler0;
-layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D textureSampler1;
+layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D diffuseTextureSampler;
+layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D specularTextureSampler;
+layout(set = FREQ_PER_DRAW, binding = 2) uniform sampler2D glowMapTextureSampler;
 
 layout(location = 0) out vec4 outColor; // final output color (must also have location)
 
@@ -105,9 +108,26 @@ vec3 sampleCascade(in uint i)
 	}
 }
 
+bool isInsideLightFrustum(in vec4 ndcPos, in vec2 oneOverSmSize)
+{
+	// Avoid 3x3 sampling outside shadow map
+	return	abs(ndcPos.x) < 1.0f - oneOverSmSize.x * 3.0f &&
+			abs(ndcPos.y) < 1.0f - oneOverSmSize.y * 3.0f &&
+			ndcPos.z > 0.0f && ndcPos.z < 1.0f;
+}
+
 float getShadowFactor(in vec3 normal, in vec3 lightDir)
 {
+	// Don't receive shadows
+	if(fragCamWorldPos.w < 0.5f)
+	{
+		return 1.0f;
+	}
+
 	uint numCascades = shadowMapInfoBuffer.cascadeSettings.x;
+	
+	vec2 shadowMapSize = shadowMapInfoBuffer.shadowMapSize;
+	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
 
 	// Brute force search through each cascade frustum
 	vec4 fragLightNDC = vec4(0.0f);
@@ -121,10 +141,8 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		fragLightNDC.xyz /= fragLightNDC.w;
 		fragLightNDC.y = -fragLightNDC.y;
 
-		// Fragment is outside light frustum
-		if( fragLightNDC.x >= -1.0f && fragLightNDC.x <= 1.0f &&
-			fragLightNDC.y >= -1.0f && fragLightNDC.y <= 1.0f &&
-			fragLightNDC.z >= 0.0f && fragLightNDC.z <= 1.0f)
+		// Fragment is inside light frustum
+		if(isInsideLightFrustum(fragLightNDC, oneOverSize))
 		{
 			cascadeIndex = i;
 			break;
@@ -132,9 +150,7 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 	}
 
 	// Fragment is outside light frustum
-	if( fragLightNDC.x < -1.0f || fragLightNDC.x > 1.0f ||
-		fragLightNDC.y < -1.0f || fragLightNDC.y > 1.0f ||
-		fragLightNDC.z < 0.0f || fragLightNDC.z > 1.0f)
+	if(!isInsideLightFrustum(fragLightNDC, oneOverSize))
 	{
 		return 0.0f;
 	}
@@ -148,8 +164,6 @@ float getShadowFactor(in vec3 normal, in vec3 lightDir)
 		shadowMapInfoBuffer.shadowMapAngleBias * (1.0f - dot(normal, -lightDir));
 
 	// 3x3 PCF
-	vec2 shadowMapSize = shadowMapInfoBuffer.shadowMapSize;
-	vec2 oneOverSize = vec2(1.0f) / shadowMapSize;
 	float shadowFactor = 0.0f;
 	for(int y = -1; y <= 1; ++y)
 	{
@@ -209,12 +223,20 @@ void debugCascades(inout vec4 outColor)
 	}
 }
 
+#define GAMMA 2.2f
+vec3 invGammaCorrection(in vec3 x)
+{
+	return pow(clamp(x, 0.0f, 1.0f), vec3(GAMMA));
+}
+
 void main() 
 {
 	vec3 normal = normalize(fragNor);
 
-	vec3 diffuseTextureCol = mix(texture(textureSampler0, fragTex).rgb, fragTintCol.rgb, fragTintCol.a);
-	vec4 specularTextureCol = texture(textureSampler1, fragTex);
+	vec3 diffuseTextureCol = mix(texture(diffuseTextureSampler, fragTex).rgb, fragTintCol.rgb, fragTintCol.a);
+	diffuseTextureCol = invGammaCorrection(diffuseTextureCol);
+	vec4 specularTextureCol = texture(specularTextureSampler, fragTex);
+	vec3 glowMapTextureCol = texture(glowMapTextureSampler, fragTex).rgb;
 	
 	// Color from lights
 	vec3 finalColor = vec3(0.0f);
@@ -224,7 +246,9 @@ void main()
 		i < allLightsInfo.ambientLightsEndIndex; 
 		++i)
 	{
-		finalColor += lightBuffer.lights[i].color.xyz;
+		finalColor += 
+			lightBuffer.lights[i].color.xyz *
+			diffuseTextureCol;
 	}
 
 	// Directional lights
@@ -235,7 +259,7 @@ void main()
 		vec3 lightDir = lightBuffer.lights[i].direction.xyz;
 		vec3 fragToLightDir = -lightDir;
 		vec3 fragToViewDir = 
-			normalize(fragCamWorldPos - fragWorldPos);
+			normalize(fragCamWorldPos.xyz - fragWorldPos);
 		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
 
 		// Regular diffuse light
@@ -261,9 +285,9 @@ void main()
 		vec3 fragToLight = lightData.position.xyz - fragWorldPos;
 		vec3 fragToLightDir = normalize(fragToLight);
 		vec3 fragToViewDir = 
-			normalize(fragCamWorldPos - fragWorldPos);
+			normalize(fragCamWorldPos.xyz - fragWorldPos);
 		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
-		float atten = 1.0f / (1.0f + length(fragToLight));
+		float atten = 1.0f / (1.0f + dot(fragToLight, fragToLight));
 
 		// Regular diffuse light
 		vec3 diffuseLight = calcDiffuse(diffuseTextureCol, normal, fragToLightDir);
@@ -287,7 +311,7 @@ void main()
 		vec3 fragToLight = lightData.position.xyz - fragWorldPos;
 		vec3 fragToLightDir = normalize(fragToLight);
 		vec3 fragToViewDir = 
-			normalize(fragCamWorldPos - fragWorldPos);
+			normalize(fragCamWorldPos.xyz - fragWorldPos);
 		vec3 halfwayDir = normalize(fragToLightDir + fragToViewDir);
 		float atten = 1.0f / (1.0f + length(fragToLight));
 
@@ -317,11 +341,26 @@ void main()
 		0.0f, 
 		1.0f
 	);
-	distAlpha = distAlpha * distAlpha;
+	distAlpha = pow(distAlpha, 5.0f);
+
+	// Emission
+	// 0.5 / 255 = 0.00196078431372549019607843137255
+	glowMapTextureCol = max(
+		glowMapTextureCol, 
+		step(
+			0.00196078431372549019607843137255f, 
+			dot(glowMapTextureCol, glowMapTextureCol)
+		) * 0.02f
+	);
+	finalColor += 
+		max(
+			fragEmissionCol.rgb, 
+			vec3(0.02f)
+		) * (glowMapTextureCol * GLOW_MAP_SCALE) * fragEmissionCol.w;
 
 	// Composite fog
 	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
-	// outColor = vec4(finalColor, 1.0f); // (No fog)
+	//outColor = vec4(finalColor, 1.0f); // (No fog)
 
 	// Debug cascades
 	if(shadowMapInfoBuffer.cascadeSettings.y > 0u)

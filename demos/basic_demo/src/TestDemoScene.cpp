@@ -9,7 +9,6 @@
 
 TestDemoScene::TestDemoScene()
 	: camEntity(-1), testEntity(-1), testEntity2(-1)
-	, aniIDs{ -1, -1, -1, -1 }
 	, aniActive{ true, true, true, true }
 {
 }
@@ -38,11 +37,7 @@ void TestDemoScene::init()
 	this->setComponent<Collider>(this->testEntity, Collider::createCapsule(2.0f, 5.0f));
 	this->setComponent<Rigidbody>(this->testEntity);
 	this->getComponent<Rigidbody>(this->testEntity).rotFactor = glm::vec3(0.0f);
-	this->setComponent<Spotlight>(this->testEntity);
-	this->getComponent<Spotlight>(this->testEntity).positionOffset = glm::vec3(0.0f, 5.0f, 0.0f);
-	this->getComponent<Spotlight>(this->testEntity).direction = glm::vec3(0.0f, -1.0f, 0.0f); 
-	this->getComponent<Spotlight>(this->testEntity).angle = 90.0f;
-	this->getComponent<Spotlight>(this->testEntity).color = glm::vec3(0.02f, 0.95f, 0.02f) * 10.0f;
+	this->setComponent<NoShadowCasting>(this->testEntity);
 
 	// Create entity (already has transform)
 	this->testEntity2 = this->createEntity();
@@ -56,21 +51,23 @@ void TestDemoScene::init()
 	this->setComponent<Rigidbody>(this->testEntity2);
 	this->getComponent<Rigidbody>(this->testEntity2).rotFactor = glm::vec3(0.0f);
 	this->setComponent<PointLight>(this->testEntity2);
-	this->getComponent<PointLight>(this->testEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 2.0f;
+	this->getComponent<PointLight>(this->testEntity2).color = glm::vec3(0.95f, 0.05f, 0.05f) * 20.0f;
 
 	// Ambient light
 	Entity ambientLightEntity = this->createEntity();
 	this->setComponent<AmbientLight>(ambientLightEntity);
 	this->getComponent<AmbientLight>(ambientLightEntity).color = 
-		glm::vec3(0.1f);
+		glm::vec3(0.05f);
 
 	// Directional light
 	this->directionalLightEntity = this->createEntity();
 	this->setComponent<DirectionalLight>(this->directionalLightEntity);
-	this->getComponent<DirectionalLight>(this->directionalLightEntity).color =
-		glm::vec3(0.7);
-	this->getComponent<DirectionalLight>(this->directionalLightEntity).direction =
-		glm::vec3(-1.0f, -1.0f, 1.0f);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.color = glm::vec3(0.5);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.direction = glm::vec3(-1.0f, -1.0f, 1.0f);
+	this->getComponent<DirectionalLight>(this->directionalLightEntity)
+		.cascadeDepthScale = 5.0f;
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
@@ -95,7 +92,7 @@ void TestDemoScene::init()
 		{
 			Entity e = this->createEntity();
 			Transform& t = this->getComponent<Transform>(e);
-			t.position = glm::vec3(x, 7.5f, z) * 10.0f;
+			t.position = glm::vec3(x, 2.5f, z) * 10.0f;
 			t.rotation = glm::vec3(rand() % 361, rand() % 361, rand() % 361);
 			t.scale = glm::vec3((rand() % 101) * 0.01f + 1.5f);
 
@@ -105,13 +102,19 @@ void TestDemoScene::init()
 		}
 	}
 
-	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack.fbx" });
-	Scene::getResourceManager()->mapAnimations(playerMesh, {"first", "second", "third"});
-
+#if 0
+	int playerMesh = Scene::getResourceManager()->addAnimations({ "assets/models/char/cRun.fbx","assets/models/char/cIdle.fbx", "assets/models/char/cAttack2.fbx" });
+	Scene::getResourceManager()->mapAnimations(playerMesh, {"run", "idle", "attack"});
+	getResourceManager()->getMesh(playerMesh).createAnimationSlot("LowerBody", "mixamorig:Hips");
+	getResourceManager()->getMesh(playerMesh).createAnimationSlot("UpperBody", "mixamorig:Spine1");
+	
 	multiAni2 = createEntity();
 	setComponent<MeshComponent>(multiAni2, playerMesh);
 	setComponent<AnimationComponent>(multiAni2);
-	getComponent<Transform>(multiAni2).position.x = 30.f;
+	
+	getComponent<Transform>(multiAni2).position.x = 40.f;
+	getComponent<Transform>(multiAni2).rotation.y = 180.f;
+#endif
 
 	// transform.scale = glm::vec3(10.0f, 5.0f, 5.0f);
 	// transform.scale = glm::vec3(0.1f, .1f, .1f);
@@ -132,8 +135,15 @@ void TestDemoScene::init()
 	}*/
 
 	// Create other test entities
-	uint32_t audioId = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
-	uint32_t amogusMeshID = ~0u;
+	uint32_t amogusMeshID= Scene::getResourceManager()->addAnimations(
+			{ "assets/models/Amogus/source/1.fbx","assets/models/Amogus/source/2.fbx" }, 
+			"assets/models/Stormtrooper/textures");
+	getResourceManager()->mapAnimations(amogusMeshID, {"Run", "Idk"});
+	Mesh& amogMesh = getResourceManager()->getMesh(amogusMeshID);
+	amogMesh.createAnimationSlot("mainSlot", "Tors");
+	amogMesh.createAnimationSlot("LeftLegSlot", "Left_leg");
+	amogMesh.createAnimationSlot("RightLegSlot", "Right_leg");
+
 	for (uint32_t i = 0; i < 4; ++i)
 	{
 		aniIDs[i] = this->createEntity();
@@ -142,17 +152,13 @@ void TestDemoScene::init()
 
 		this->setComponent<MeshComponent>(aniIDs[i]);
 		MeshComponent& newMeshComp = this->getComponent<MeshComponent>(aniIDs[i]);
+
 		if (i <= 1)
 		{
 			newTransform.position = glm::vec3(-7.f - i * 3.5f, -2.0f, 30.f);
 			newTransform.rotation = glm::vec3(-90.0f, 0.0f, 0.0f);
 			newTransform.scale = glm::vec3(0.03f, 0.03f, 0.03f);
-
-			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
-				{ "assets/models/Amogus/source/1.fbx" }, 
-				"assets/models/Stormtrooper/textures"
-			);
-			amogusMeshID = newMeshComp.meshID;
+			newMeshComp.meshID = amogusMeshID;
 		}
 		else
 		{
@@ -162,29 +168,35 @@ void TestDemoScene::init()
 
 			newMeshComp.meshID = Scene::getResourceManager()->addAnimations(
 				{ "assets/models/Stormtrooper/source/silly_dancing.fbx" },
-				"assets/models/Stormtrooper/textures"
-			);
+				"assets/models/Stormtrooper/textures");
 		}
 
 		// Animation component
 		this->setComponent<AnimationComponent>(aniIDs[i]);
 		AnimationComponent& newAnimComp = this->getComponent<AnimationComponent>(aniIDs[i]);
-		newAnimComp.timer += 24.0f * 0.6f * i;
-		newAnimComp.timeScale += i % 2;
-		newAnimComp.animationIndex = 0;
-
-		// Make separate material
+		newAnimComp.aniSlots[0].timer += 24.0f * 0.6f * i;
+		newAnimComp.aniSlots[0].timeScale += i % 2;
+		newAnimComp.aniSlots[0].animationIndex = 0;
+    
+		MeshComponent& meshComp =
+			this->getComponent<MeshComponent>(this->aniIDs[i]);
 		if (i == 2)
 		{
-			this->getResourceManager()->makeUniqueMaterials(
-				this->getComponent<MeshComponent>(aniIDs[i])
-			);
-
-			this->getComponent<MeshComponent>(aniIDs[i]).overrideMaterials[0].specularTextureIndex =
-				this->getResourceManager()->addTexture("vengine_assets/textures/NoSpecular.png");
+			this->getResourceManager()->makeUniqueMaterials(meshComp);
+			meshComp.overrideMaterials[0].glowMapTextureIndex =
+				this->getResourceManager()->addTexture(
+					"vengine_assets/models/Stormtrooper/textures/Stormtrooper_D_Specular.png"
+				);
+		}
+		else if(i == 3)
+		{
+			this->getResourceManager()->getMaterial(meshComp, 0).glowMapTextureIndex = 
+				this->getResourceManager()->addTexture(
+					"vengine_assets/textures/White.png"
+				);
 		}
 	}
-	
+
 	Entity swarmEntity = this->createEntity();
 	this->setComponent<MeshComponent>(swarmEntity);
 	Transform& swarmTransform = this->getComponent<Transform>(swarmEntity);
@@ -240,8 +252,6 @@ void TestDemoScene::init()
 	// Mesh component
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
-
-	
 }
 
 void TestDemoScene::start()
@@ -297,23 +307,130 @@ void TestDemoScene::update()
 
 	if (Input::isKeyReleased(Keys::ONE))
 	{
-		this->setAnimation(multiAni2, "first");
+		setAnimation(aniIDs[0], "Idk", "mainSlot");
+		setAnimation(aniIDs[1], "Idk");
 	}
 	else if (Input::isKeyReleased(Keys::TWO))
 	{
-		this->setAnimation(multiAni2, "second");
+		setAnimation(aniIDs[0], "Run", "LeftLegSlot");
+		setAnimation(aniIDs[1], "Run");
 	}
 	else if (Input::isKeyReleased(Keys::THREE))
 	{
-		this->setAnimation(multiAni2, "third", false);
+		setAnimation(aniIDs[0], "Idk", "RightLegSlot");
+	}
+	else if (Input::isKeyReleased(Keys::FOUR))
+	{
+		setAnimation(aniIDs[0], "Run");
 	}
 
+#if 0
+	if (ImGui::Begin("Animation Blending"))
+	{
+		AnimationComponent& aniComp = this->getComponent<AnimationComponent>(multiAni2);
+		MeshComponent& meshComp = this->getComponent<MeshComponent>(multiAni2);
+
+		ImGui::PushItemWidth(-110.f);
+
+		static int slotIdx = 0;
+		ImGui::Text("Slot:");
+		ImGui::RadioButton("Lower body", &slotIdx, 0); ImGui::SameLine();
+		ImGui::RadioButton("Upper body", &slotIdx, 1); ImGui::SameLine();
+		ImGui::RadioButton("Full body", &slotIdx, -1);
+		int usedIdx = slotIdx != -1 ? slotIdx : 0;
+
+		if (slotIdx == -1)
+		{
+			aniComp.aniSlots[1] = aniComp.aniSlots[0];
+		}
+
+		ImGui::DragFloat("Tranition Time", &aniComp.aniSlots[usedIdx].transitionTime, 0.01f, 0.f, 5.f);
+		ImGui::Text("Alpha: %.2f", aniComp.aniSlots[usedIdx].alpha); 
+		ImGui::SameLine();
+		if (ImGui::Button("Sync slots"))
+		{
+			aniComp.aniSlots[1] = aniComp.aniSlots[0];
+		}
+
+		ImGui::Separator();
+
+		ImGui::Text("Current Animation");
+		ImGui::Text("Timer: %.2f ", aniComp.aniSlots[usedIdx].timer);
+		ImGui::DragFloat("Time Scale", &aniComp.aniSlots[usedIdx].timeScale, 0.01f, 0.f, 10.f);
+		ImGui::InputInt("Ani Idx", &aniComp.aniSlots[usedIdx].animationIndex, 1, 1);
+		aniComp.aniSlots[usedIdx].animationIndex = std::clamp(aniComp.aniSlots[usedIdx].animationIndex, 0, 2);
+		
+
+		ImGui::Separator();
+
+		ImGui::Text("Next Animation");
+		ImGui::Text("Timer: %.2f", aniComp.aniSlots[usedIdx].nTimer);
+		ImGui::DragFloat("Time Scale ##0", &aniComp.aniSlots[usedIdx].nTimeScale, 0.01f, 0.f, 10.f);
+		static int nextIdx = 0;
+		ImGui::InputInt("Ani Idx ##0", &nextIdx, 1, 1);
+		nextIdx = std::clamp(nextIdx, 0, 2);
+
+		if (ImGui::Button("Start Transition"))
+		{
+			std::string aniName = nextIdx == 0 ? "run" : nextIdx == 1 ? "idle" : "attack";
+			std::string slotName = slotIdx == 0 ? "LowerBody" : slotIdx == 1 ? "UpperBody" : "";
+			blendToAnimation(multiAni2, aniName, slotName, aniComp.aniSlots[usedIdx].transitionTime, aniComp.aniSlots[usedIdx].nTimeScale);
+
+			if (slotIdx == -1)
+			{
+				aniComp.aniSlots[1].nTimeScale = aniComp.aniSlots[0].nTimeScale;
+				aniComp.aniSlots[1].transitionTime = aniComp.aniSlots[0].transitionTime;
+			}
+		}
+
+		ImGui::PopItemWidth();
+	}
+	ImGui::End();
+#endif
+
+	// Imgui bloom
+	/*static float bloomBufferLerpVal = 0.04f;
+	static int numMips = 6;
+	ImGui::Begin("Bloom settings");
+	ImGui::SliderFloat("Bloom lerp alpha", &bloomBufferLerpVal, 0.0f, 1.0f);
+	ImGui::SliderInt("Bloom mip levels", &numMips, 0, 10);
+	ImGui::End();
+	Scene::setBloomBufferLerpAlpha(bloomBufferLerpVal);
+	Scene::setBloomNumMipLevels(numMips);
+
+	ImGui::Begin("Bloom");
+	ImGui::SliderFloat3("Bloom color", &this->bloomColor[0], 0.0f, 100.0f);
+	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 100.0f);
+	ImGui::End();*/
+
+	for (uint32_t i = 2; i < 4; ++i)
+	{
+		MeshComponent& meshC =
+			this->getComponent<MeshComponent>(this->aniIDs[i]);
+
+		Material* mat = nullptr;
+
+		if (i == 2)
+		{
+			mat = &meshC.overrideMaterials[0];
+
+		}
+		else if (i == 3)
+		{
+			mat = &this->getResourceManager()->getMaterial(meshC, 0);
+		}
+
+		mat->emissionColor = this->bloomColor;
+		mat->emissionIntensity = this->bloomStrength;
+	}
+
+	// Imgui directional light
 	DirectionalLight& dirLight = 
 		this->getComponent<DirectionalLight>(this->directionalLightEntity);
 	ImGui::Begin("Cascades");
-	ImGui::SliderFloat("Size 0", &dirLight.cascadeSizes[0], 0.0f, 1.0f);
-	ImGui::SliderFloat("Size 1", &dirLight.cascadeSizes[1], 0.0f, 1.0f);
-	ImGui::SliderFloat("Size 2", &dirLight.cascadeSizes[2], 0.0f, 1.0f);
+	ImGui::SliderFloat("Size 0", &dirLight.cascadeSizes[0], 0.0f, 1000.0f);
+	ImGui::SliderFloat("Size 1", &dirLight.cascadeSizes[1], 0.0f, 1000.0f);
+	ImGui::SliderFloat("Size 2", &dirLight.cascadeSizes[2], 0.0f, 1000.0f);
 	ImGui::SliderFloat("Depth", &dirLight.cascadeDepthScale, 1.0f, 50.0f);
 	ImGui::Checkbox("Visualize cascades", &dirLight.cascadeVisualization);
 	ImGui::End();
@@ -321,10 +438,6 @@ void TestDemoScene::update()
 	// Rotate testEntity
 	/*this->getComponent<Transform>(this->testEntity).rotation.x +=
 		180.0f * Time::getDT(); */
-	static float tim = 0.0f;
-	tim += Time::getDT();
-	this->getComponent<Spotlight>(this->testEntity).direction.x = std::sin(tim);
-	this->getDebugRenderer()->renderSpotlight(this->testEntity);
 
 	if (Input::isKeyPressed(Keys::R))
 	{
@@ -399,11 +512,6 @@ void TestDemoScene::update()
 	}
 
 	// UI
-	Scene::getUIRenderer()->setTexture(this->uiTextureIndex0);
-	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, 540.0f), glm::vec2(200.0f));
-	Scene::getUIRenderer()->renderTexture(glm::vec2(-960.0f, -540.0f), glm::vec2(200.0f));
-	Scene::getUIRenderer()->setTexture(this->uiTextureIndex1);
-	Scene::getUIRenderer()->renderTexture(glm::vec3(0.0f, -2.0f, 0.0f), glm::vec2(200.0f));
 	Scene::getUIRenderer()->renderString(
 		"fps: " + std::to_string(1.0 / Time::getDT()),
 		glm::vec3(0.0f),
@@ -414,53 +522,6 @@ void TestDemoScene::update()
 	);
 
 	// Debug rendering
-
-	// Lines
-	Scene::getDebugRenderer()->renderLine(
-		glm::vec3(-10.0f + 20.0f * std::sin(this->timer), -10.0f, 35.0f),
-		glm::vec3(10.0f, 10.0f, 25.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
-	Scene::getDebugRenderer()->renderLine(
-		glm::vec3(0.0f, -10.0f, 35.0f),
-		glm::vec3(0.0f + 20.0f * std::sin(this->timer + 5.15f), 10.0f, 25.0f),
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
-
-	// Spheres
-	Scene::getDebugRenderer()->renderSphere(
-		glm::vec3(0.0f, 0.0f, 30.0f),
-		1.0f,
-		glm::vec3(1.0f, 1.0f, 0.0f)
-	);
-	Scene::getDebugRenderer()->renderSphere(
-		glm::vec3(3.0f, 0.0f, 30.0f),
-		2.0f,
-		glm::vec3(0.0f, 1.0f, 0.0f)
-	);
-
-	// Boxes
-	Scene::getDebugRenderer()->renderBox(
-		glm::vec3(5.5f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 2.541f, 0.0f),
-		glm::vec3(1.0f, 1.0f, 1.0f),
-		glm::vec3(0.0f, 0.0f, 1.0f)
-	);
-	Scene::getDebugRenderer()->renderBox(
-		glm::vec3(6.25f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
-		glm::vec3(0.5f, 2.0f, 1.0f),
-		glm::vec3(0.0f, 1.0f, 1.0f)
-	);
-
-	// Capsules
-	Scene::getDebugRenderer()->renderCapsule(
-		glm::vec3(8.0f, 0.0f, 30.0f),
-		glm::vec3(timer * 30.0f, timer * 30.0f * 3.541f, 0.0f),
-		2.0f + sin(timer),
-		0.5f,
-		glm::vec3(1.0f, 0.0f, 0.0f)
-	);
 
 	// Skeleton
 	Scene::getDebugRenderer()->renderSkeleton(
@@ -561,7 +622,9 @@ void TestDemoScene::update()
 		this->getNetworkHandler()->connectClientToThis();
 	}
 	if (Input::isKeyPressed(Keys::I)) {
-		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
+		sf::Packet packet;
+		packet << (int)NetworkEvent::START;
+		this->getNetworkHandler()->sendDataToServerTCP(packet);
 	}
 
 	if (Input::isKeyReleased(Keys::V))

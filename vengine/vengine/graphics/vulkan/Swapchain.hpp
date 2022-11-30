@@ -48,8 +48,6 @@ private:
 	vk::Extent2D extent{};
 	uint32_t numMinimumImages;
 
-	Texture depthTexture;
-
 	Window* window;
 	PhysicalDevice* physicalDevice;
 	Device* device;
@@ -97,7 +95,6 @@ public:
 	inline vk::ImageView& getImageView(const uint32_t& index) { return this->imageViews[index]; }
 	inline vk::SwapchainKHR& getVkSwapchain() { return this->swapchain; }
 	inline vk::Format& getVkFormat() { return this->imageFormat; }
-	inline const Texture& getDepthTexture() const { return this->depthTexture; }
 	inline vk::Extent2D& getVkExtent() { return this->extent; }
 	inline const vk::Framebuffer& getVkFramebuffer(const uint32_t& index) const { return this->framebuffers[index]; }
 };

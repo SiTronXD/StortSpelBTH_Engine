@@ -9,6 +9,13 @@ void CommandBuffer::begin(const vk::CommandBufferBeginInfo& beginInfo)
     this->commandBuffer.begin(beginInfo);
 }
 
+void CommandBuffer::beginOneTimeSubmit()
+{
+    vk::CommandBufferBeginInfo beginInfo;
+    beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+    this->begin(beginInfo);
+}
+
 void CommandBuffer::end()
 {
     this->commandBuffer.end();

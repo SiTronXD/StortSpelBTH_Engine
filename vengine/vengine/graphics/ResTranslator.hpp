@@ -34,4 +34,6 @@ public:
 	static glm::vec2 toInternalPos(
 		const glm::vec2& externalPos
 	);
+
+	static glm::vec2 getInternalDimensions();
 };

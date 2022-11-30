@@ -12,7 +12,20 @@ struct ShadowPushConstantData
 struct PushConstantData
 {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
-    glm::vec4 tintColor = glm::vec4(0.0f); // vec4(R, G, B, lerp alpha)
+    glm::vec4 tintColor = glm::vec4(0.0f);      // vec4(RGB, lerp alpha)
+    glm::vec4 emissionColor = glm::vec4(0.0f);  // vec4(RGB, intensity)
+    glm::vec4 settings = glm::vec4(0.0f);       // vec4(receiveShadows, 0, 0, 0)
+};
+
+struct BloomPushConstantData
+{
+    // vec4(resolutionX, resolutionY, 0, upsampleWeight)
+    glm::vec4 data = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+};
+
+struct BloomSettingsBufferData
+{
+    glm::vec4 strength = glm::vec4(0.04f);
 };
 
 // View/projection matrices and position
@@ -31,7 +44,6 @@ struct ShadowMapData
     glm::vec2 shadowMapSize = glm::vec2(0.0f);
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;
-    glm::vec4 cascadeFarPlanes = glm::vec4(0.0f);
     glm::uvec4 cascadeSettings = glm::uvec4(0.0f);
 };
 

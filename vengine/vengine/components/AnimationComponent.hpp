@@ -2,6 +2,7 @@
 
 #include "../graphics/ShaderInput.hpp"
 #include "Transform.hpp"
+#include "../graphics/MeshData.hpp"
 
 class Mesh;
 
@@ -15,18 +16,14 @@ private:
 	uint32_t numTransforms;
 
 public:
-	float timer;
-	float timeScale;
+    AnimationSlot aniSlots[NUM_MAX_ANIMATION_SLOTS];
 	StorageBufferID boneTransformsID;
-	uint32_t animationIndex;
 
 	AnimationComponent() :
-		timer(0.0f),
-		timeScale(1.0f),
 		boneTransformsID(~0u),
-		animationIndex(0),
 		numTransforms(0),
-		boneTransforms{}
+		boneTransforms{},
+		aniSlots{}
 	{ }
 
 	inline const glm::mat4* getBoneTransformsData() const { return &this->boneTransforms[0]; }

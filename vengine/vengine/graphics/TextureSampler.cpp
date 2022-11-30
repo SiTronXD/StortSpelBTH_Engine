@@ -31,7 +31,7 @@ void TextureSampler::createSampler(
     // Address mode
     vk::SamplerAddressMode addressMode =
         !settings.unnormalizedCoordinates ?
-        vk::SamplerAddressMode::eRepeat :
+        settings.addressMode :
         vk::SamplerAddressMode::eClampToEdge;
 
     // Anisotropy enabled
@@ -74,5 +74,6 @@ void TextureSampler::settingsToString(
 {
     outputString = "";
     outputString += std::to_string((int)samplerSettings.filterMode) + ";";
+    outputString += std::to_string((int)samplerSettings.addressMode) + ";";
     outputString += std::to_string((int)samplerSettings.unnormalizedCoordinates) + ";";
 }
