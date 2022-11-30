@@ -36,6 +36,15 @@ void Device::createDevice(
         computeQueueIndex   // This could be the same queue family as the graphics queue family. Thus, we use a set.
     };
 
+    // Let the user know the number of unique queue families
+    if (queueFamilyIndices.size() != 1)
+    {
+        Log::error(
+            "The number of unique vulkan queue families (" + 
+            std::to_string(queueFamilyIndices.size()) + 
+            ") was not 1. Please consult a rendering engineer for advice...");
+    }
+
     // Create one vk::DeviceQueueCreateInfo per unique queue index
     float priority = 1.F;
     for (auto& queueIndex : queueFamilyIndices)
