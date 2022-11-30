@@ -77,6 +77,25 @@ FILE(GLOB_RECURSE VENGINE_HEADERS CONFIGURE_DEPENDS
     ${VENGINE_SOURCE_DIR}/*.hpp 
 )
 
+# FILTER AWAY some files
+list(FILTER VENGINE_SOURCES EXCLUDE REGEX
+    "${VENGINE_SOURCE_DIR}/shared_memory/.*\\.h$"
+)
+#  FILTER AWAY some files
+list(FILTER VENGINE_HEADERS EXCLUDE REGEX
+    "${VENGINE_SOURCE_DIR}/shared_memory/.*\\.h$"    
+)
+
+# FILTER AWAY some files
+list(FILTER VENGINE_SOURCES EXCLUDE REGEX
+    "${VENGINE_SOURCE_DIR}/shared_memory/.*\\.cpp$"
+)
+#  FILTER AWAY some files
+list(FILTER VENGINE_HEADERS EXCLUDE REGEX
+    "${VENGINE_SOURCE_DIR}/shared_memory/.*\\.cpp$"    
+)
+
+
 
 # Disable Fetching dependencies with conan and cmake FetchContent...
 set(VENGINE_USE_GIT_SUBMODULES TRUE)
