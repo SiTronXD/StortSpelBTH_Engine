@@ -77,10 +77,7 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 						this->initialParticleInfos[particleIndex];
 
 					// Current life timer
-					particle.life.x =
-						particleSystemComp.respawnSetting == RespawnSetting::CONTINUOUS ?
-						(rand() % 1000 / 1000.0f) * particleSystemComp.maxlifeTime : 
-						particleSystemComp.maxlifeTime;
+					particle.life.x = particleSystemComp.maxlifeTime;
 
 					// Max life timer
 					particle.life.y = particleSystemComp.maxlifeTime;
@@ -93,9 +90,7 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 					particle.startColor = glm::vec4(particleSystemComp.startColor, 1.0f);
 					particle.endColor = glm::vec4(particleSystemComp.endColor, 1.0f);
 
-					// Velocity/acceleration
-					particle.startVelocity = glm::vec4(particleSystemComp.startVelocity, 0.0f);
-					particle.currentVelocity = particle.startVelocity;
+					// Acceleration
 					particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
 
 					// Indices
@@ -265,8 +260,11 @@ void ParticleSystemHandler::update(
 			{
 				particleSystemComp.spawnRate = (particleSystemComp.spawn ? 1.0f : 0.0f);
 			}
-			emitterInfo.spawnTimers.x =
+			emitterInfo.settings.x =
 				std::clamp(particleSystemComp.spawnRate, 0.0f, 1.0f) * particleSystemComp.maxlifeTime;
+
+			// Velocity strength
+			emitterInfo.settings.y = particleSystemComp.velocityStrength;
 		}
 	);
 	this->shaderInput.updateStorageBuffer(

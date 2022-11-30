@@ -80,7 +80,6 @@ void TestDemoScene::init()
 	partSys.endSize = glm::vec2(0.1f);
 	partSys.startColor = glm::vec3(0.0f, 1.0f, 0.0f);
 	partSys.endColor = glm::vec3(1.0f, 0.0f, 0.0f);
-	partSys.startVelocity = glm::vec3(0.0f, 7.0f, 0.0f);
 	partSys.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
 
 	partSys.coneSpawnVolume.diskRadius = 5.0f;
@@ -97,7 +96,6 @@ void TestDemoScene::init()
 	partSys1.endSize = glm::vec2(0.1f);
 	partSys1.startColor = glm::vec3(1.0f, 0.0f, 1.0f);
 	partSys1.endColor = glm::vec3(0.0f, 0.0f, 0.0f);
-	partSys1.startVelocity = glm::vec3(0.0f, 7.0f, 0.0f);
 	partSys1.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
 	
 	partSys1.coneSpawnVolume.localPosition.x += 20.0f;
@@ -106,6 +104,7 @@ void TestDemoScene::init()
 	partSys1.coneSpawnVolume.localDirection = glm::vec3(0.0f, 0.0f, 1.0f);
 
 	partSys1.respawnSetting = RespawnSetting::EXPLOSION;
+	partSys1.spawn = false;
 
 
 	// Create entity (already has transform)
@@ -337,6 +336,7 @@ void TestDemoScene::update()
 		ImGui::SliderFloat3(("Cone dir " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.localDirection[0], -1.0f, 1.0f);
 		ImGui::SliderFloat(("Disk radius " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.diskRadius, 0.0f, 10.0f);
 		ImGui::SliderFloat(("Cone angle " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.coneAngle, 0.0f, 180.0f);
+		ImGui::SliderFloat(("Velocity strength: " + std::to_string(i) + ": ").c_str(), &partSys.velocityStrength, 0.0f, 20.0f);
 		ImGui::SliderFloat(("Spawn rate: " + std::to_string(i) + ": ").c_str(), &partSys.spawnRate, 0.0f, 1.0f);
 		ImGui::Checkbox(("Spawn: " + std::to_string(i) + ": ").c_str(), &partSys.spawn);
 	}

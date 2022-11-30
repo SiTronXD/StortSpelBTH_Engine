@@ -21,7 +21,6 @@ struct ParticleInfoData
     vec2 endSize;
     vec4 startColor;
     vec4 endColor;
-    vec4 startVelocity;
     vec4 currentVelocity;
     vec4 acceleration;
     uvec4 indices; // vec4(randomState, emitterIndex, 0, 0)
@@ -40,7 +39,7 @@ struct ParticleEmitterInfoData
     float tanTheta;
     vec3 coneNormal;
     uint shouldRespawn;
-    vec4 spawnTimers; // vec4(spawnRate, 0.0f, 0.0f, 0.0f)
+    vec4 settings; // vec4(spawnRate, velocityStrength, 0.0f, 0.0f)
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 2) buffer ParticleEmitterInfosBuffer
 {
@@ -93,6 +92,41 @@ mat2x2 rotate(float angleRad)
     );
 }
 
+void spawnParticle(
+    in ParticleEmitterInfoData emitter, 
+    in float velocityStrength,
+    inout ParticleInfoData particle, 
+    inout uint randomState,
+    inout vec3 position)
+{
+    // Rotation matrix for the cone
+    mat3x3 coneRotMat = mat3x3(
+        emitter.coneNormal,
+        cross(emitter.coneNormal, emitter.coneDir),
+        emitter.coneDir
+    );
+        
+    // Velocity
+    float randomRadiusScale = randomFloat(randomState);
+    float randomAngle = randomFloat(randomState) * PI * 2.0f;
+    mat2x2 randomRotMat = rotate(randomAngle);
+    vec3 velOffset = vec3(0.0f, 1.0f, 0.0f);
+    velOffset.xy *= randomRotMat;
+    vec3 newVelocity = 
+        normalize(
+            vec3(0.0f, 0.0f, 1.0f) + 
+            velOffset * emitter.tanTheta * randomRadiusScale
+        );
+    particle.currentVelocity.xyz = coneRotMat * newVelocity * velocityStrength;
+
+    // Position
+    vec3 randomDiskOffset = 
+        vec3(0.0f, 1.0f, 0.0f) * 
+        emitter.coneDiskRadius * randomRadiusScale;
+    randomDiskOffset.xy *= randomRotMat;
+    position = emitter.conePos + coneRotMat * randomDiskOffset;
+}
+
 void main()
 {
     // Avoid computing particles that are outside the range
@@ -109,53 +143,42 @@ void main()
     vec3 position = particle.transform[3].xyz;
     float deltaTime = globalParticleBuffer.deltaTime;
     uint randomState = particle.indices.x;
+    float spawnRate = emitter.settings.x;
 
-    // Apply position
+    // Update velocity and position
     particle.currentVelocity.xyz += particle.acceleration.xyz * deltaTime;
     position.xyz += particle.currentVelocity.xyz * deltaTime;
+
+    // Life time intervals:
+    // 1: [-infinity, 0) - About to spawn, NOT rendered
+    // 2: [0, max life timer) - Alive, rendered
+    // 3: [max life timer, infinity] - Dead and will be sent to interval #1
 
     // Reset life
     if(particle.life.x >= particle.life.y && emitter.shouldRespawn > 0)
     {
-        // Mod life
-        particle.life.x = -0.001f - emitter.spawnTimers.x * randomFloat(randomState);
+        particle.life.x = -0.001f - spawnRate * randomFloat(randomState);
     }
-    // Continue timer
     else
     {
+        // Spawn particle as it's life timer just reached 0
         if(particle.life.x < 0.0f && particle.life.x + deltaTime >= 0.0f)
         {
-            // Rotation matrix for the cone
-            mat3x3 coneRotMat = mat3x3(
-                emitter.coneNormal,
-                cross(emitter.coneNormal, emitter.coneDir),
-                emitter.coneDir
+            spawnParticle(
+                emitter, 
+                emitter.settings.y,
+                particle, 
+                randomState,
+                position
             );
-        
-            // Velocity
-            float randomRadiusScale = randomFloat(randomState);
-            float randomAngle = randomFloat(randomState) * PI * 2.0f;
-            mat2x2 randomRotMat = rotate(randomAngle);
-            vec3 velOffset = vec3(0.0f, 1.0f, 0.0f);
-            velOffset.xy *= randomRotMat;
-            vec3 newVelocity = 
-                normalize(
-                    vec3(0.0f, 0.0f, 1.0f) + 
-                    velOffset * emitter.tanTheta * randomRadiusScale
-                );
-            particle.currentVelocity.xyz = coneRotMat * newVelocity * 10.0f;
-
-            // Position
-            vec3 randomDiskOffset = 
-                vec3(0.0f, 1.0f, 0.0f) * 
-                emitter.coneDiskRadius * randomRadiusScale;
-            randomDiskOffset.xy *= randomRotMat;
-            position = emitter.conePos + coneRotMat * randomDiskOffset;
         }
-        else if(particle.life.x < 0.0f && -emitter.spawnTimers.x > particle.life.x)
+        // These particles have been sent to the shadow realm... :skull:
+        else if(particle.life.x < 0.0f && -spawnRate > particle.life.x)
         {
             particle.life.x = particle.life.y;
         }
+        
+        // Continue timer
         particle.life.x += deltaTime;
     }
 
@@ -166,13 +189,13 @@ void main()
         clamp(particle.life.x / particle.life.y, 0.0f, 1.0f)
     );
 
-    // Don't render the particle if it is outside it's life interval
+    // Don't render the particle if it's about to spawn soon
     if(particle.life.x < 0.0f)
     {
         currentScale = vec2(0.0f);
     }
 
-    // Update direction
+    // Update direction towards camera
     vec3 forward = normalize(cameraBuffer.worldPos.xyz - position);
     vec3 right = -normalize(cross(forward, vec3(0.0f, 1.0f, 0.0f)));
     vec3 up = -cross(right, forward);

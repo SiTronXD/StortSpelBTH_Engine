@@ -32,11 +32,11 @@ public:
 	uint32_t numParticles = 10;
 	uint32_t textureIndex = 0;
 	float maxlifeTime = 1.0f;
+	float velocityStrength = 10.0f;
 	glm::vec2 startSize = glm::vec2(1.0f);
 	glm::vec2 endSize = glm::vec2(1.0f);
 	glm::vec3 startColor = glm::vec3(1.0f);
 	glm::vec3 endColor = glm::vec3(1.0f);
-	glm::vec3 startVelocity = glm::vec3(0.0f);
 	glm::vec3 acceleration = glm::vec3(0.0f);
 
 	// Spawn
