@@ -69,8 +69,6 @@ uint32_t ResourceManager::addMesh(
 
     if (this->meshPaths.count(meshPath) != 0)
     {
-        // Log::warning("Mesh \""+meshPath+"\" was already added!");                
-
         return this->meshPaths[meshPath];        
     } 
     
@@ -141,8 +139,6 @@ uint32_t ResourceManager::addMaterial(std::string&& materialPath)
 
 	if (this->materialPaths.count(materialPath) != 0)
 	{
-		// Log::warning("Mesh \""+meshPath+"\" was already added!");
-
 		return this->materialPaths[materialPath];
 	} 
 
@@ -186,8 +182,6 @@ uint32_t ResourceManager::addAnimations(const std::vector<std::string>& paths, s
     {
         if (this->meshPaths.count(path) != 0)
         {
-            // Log::warning("Mesh \""+meshPath+"\" was already added!");                
-
             return this->meshPaths[path];
         }
     }
@@ -231,7 +225,6 @@ uint32_t ResourceManager::addTexture(
 
     if(this->texturePaths.count(texturePath) != 0)
     {
-        Log::warning("Texture ["+texturePath+"] was already added!");                          
         return this->texturePaths[texturePath];
     }
     
@@ -302,8 +295,8 @@ uint32_t ResourceManager::addCollisionShapeFromMesh(std::string&& collisionPath)
 
 	if (this->collisionPaths.count(collisionPath) != 0)
 	{
-		//TODO: should be able to log what mesh
-		Log::warning("Collision \"" + collisionPath + "\" was already added!");
+		// TODO: should be able to log what mesh
+		// Log::warning("Collision \"" + collisionPath + "\" was already added!");
 		return this->collisionPaths[collisionPath];
 	}
     
