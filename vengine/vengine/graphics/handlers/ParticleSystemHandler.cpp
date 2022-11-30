@@ -18,7 +18,8 @@ ParticleSystemHandler::ParticleSystemHandler()
 	numParticles(0),
 	cameraUBO(~0u),
 	globalParticleBufferUBO(~0u),
-	particleInfoSBO(~0u)
+	particleInfoSBO(~0u),
+	particleEmitterInfoSBO(~0u)
 { }
 
 void ParticleSystemHandler::init(
@@ -75,12 +76,13 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 					ParticleInfo& particle =
 						this->initialParticleInfos[particleIndex];
 
-					// TODO: remove this
-					particle.transformMatrix =
-						glm::translate(glm::mat4(1.0f), glm::vec3(particleIndex * 2.1f, 0.0f, 0.0f));
-					particle.life.x = (rand() % 1000 / 1000.0f) * particleSystemComp.maxlifeTime;
+					// Current life timer
+					particle.life.x =
+						particleSystemComp.respawnSetting == RespawnSetting::CONTINUOUS ?
+						(rand() % 1000 / 1000.0f) * particleSystemComp.maxlifeTime : 
+						particleSystemComp.maxlifeTime;
 
-					// Life time
+					// Max life timer
 					particle.life.y = particleSystemComp.maxlifeTime;
 
 					// Size
@@ -252,6 +254,19 @@ void ParticleSystemHandler::update(
 						)
 					)
 				);
+
+			// Respawning
+			emitterInfo.shouldRespawn = particleSystemComp.spawn ? 1u : 0u;
+			if (particleSystemComp.respawnSetting == RespawnSetting::EXPLOSION)
+			{
+				particleSystemComp.spawn = false;
+			}
+			else
+			{
+				particleSystemComp.spawnRate = (particleSystemComp.spawn ? 1.0f : 0.0f);
+			}
+			emitterInfo.spawnTimers.x =
+				std::clamp(particleSystemComp.spawnRate, 0.0f, 1.0f) * particleSystemComp.maxlifeTime;
 		}
 	);
 	this->shaderInput.updateStorageBuffer(

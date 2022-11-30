@@ -5,11 +5,10 @@
 class ParticleSystemHandler;
 class VulkanRenderer;
 
-enum class SpawnShape
+enum class RespawnSetting
 {
-	POINT,
-	DISK,
-	AABB
+	CONTINUOUS,
+	EXPLOSION
 };
 
 struct Cone
@@ -40,6 +39,9 @@ public:
 	glm::vec3 startVelocity = glm::vec3(0.0f);
 	glm::vec3 acceleration = glm::vec3(0.0f);
 
-	// Spawn volumes
+	// Spawn
 	Cone coneSpawnVolume;
+	RespawnSetting respawnSetting = RespawnSetting::CONTINUOUS;
+	bool spawn = true;
+	float spawnRate = 0.0f;
 };

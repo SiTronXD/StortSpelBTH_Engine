@@ -39,7 +39,8 @@ struct ParticleEmitterInfoData
     vec3 coneDir;
     float tanTheta;
     vec3 coneNormal;
-    float padding1;
+    uint shouldRespawn;
+    vec4 spawnTimers; // vec4(spawnRate, 0.0f, 0.0f, 0.0f)
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 2) buffer ParticleEmitterInfosBuffer
 {
@@ -114,38 +115,48 @@ void main()
     position.xyz += particle.currentVelocity.xyz * deltaTime;
 
     // Reset life
-    particle.life.x += deltaTime;
-    if(particle.life.x >= particle.life.y)
+    if(particle.life.x >= particle.life.y && emitter.shouldRespawn > 0)
     {
-        float life = particle.life.x;
-        particle.life.x = mod(particle.life.x, particle.life.y);
-        
-        // Rotation matrix for the cone
-        mat3x3 coneRotMat = mat3x3(
-            emitter.coneNormal,
-            cross(emitter.coneNormal, emitter.coneDir),
-            emitter.coneDir
-        );
-        
-        // Velocity
-        float randomRadiusScale = randomFloat(randomState);
-        float randomAngle = randomFloat(randomState) * PI * 2.0f;
-        mat2x2 randomRotMat = rotate(randomAngle);
-        vec3 velOffset = vec3(0.0f, 1.0f, 0.0f);
-        velOffset.xy *= randomRotMat;
-        vec3 newVelocity = 
-            normalize(
-                vec3(0.0f, 0.0f, 1.0f) + 
-                velOffset * emitter.tanTheta * randomRadiusScale
+        // Mod life
+        particle.life.x = -0.001f - emitter.spawnTimers.x * randomFloat(randomState);
+    }
+    // Continue timer
+    else
+    {
+        if(particle.life.x < 0.0f && particle.life.x + deltaTime >= 0.0f)
+        {
+            // Rotation matrix for the cone
+            mat3x3 coneRotMat = mat3x3(
+                emitter.coneNormal,
+                cross(emitter.coneNormal, emitter.coneDir),
+                emitter.coneDir
             );
-        particle.currentVelocity.xyz = coneRotMat * newVelocity * 10.0f;
+        
+            // Velocity
+            float randomRadiusScale = randomFloat(randomState);
+            float randomAngle = randomFloat(randomState) * PI * 2.0f;
+            mat2x2 randomRotMat = rotate(randomAngle);
+            vec3 velOffset = vec3(0.0f, 1.0f, 0.0f);
+            velOffset.xy *= randomRotMat;
+            vec3 newVelocity = 
+                normalize(
+                    vec3(0.0f, 0.0f, 1.0f) + 
+                    velOffset * emitter.tanTheta * randomRadiusScale
+                );
+            particle.currentVelocity.xyz = coneRotMat * newVelocity * 10.0f;
 
-        // Position
-        vec3 randomDiskOffset = 
-            vec3(0.0f, 1.0f, 0.0f) * 
-            emitter.coneDiskRadius * randomRadiusScale;
-        randomDiskOffset.xy *= randomRotMat;
-        position = emitter.conePos + coneRotMat * randomDiskOffset;
+            // Position
+            vec3 randomDiskOffset = 
+                vec3(0.0f, 1.0f, 0.0f) * 
+                emitter.coneDiskRadius * randomRadiusScale;
+            randomDiskOffset.xy *= randomRotMat;
+            position = emitter.conePos + coneRotMat * randomDiskOffset;
+        }
+        else if(particle.life.x < 0.0f && -emitter.spawnTimers.x > particle.life.x)
+        {
+            particle.life.x = particle.life.y;
+        }
+        particle.life.x += deltaTime;
     }
 
     // Scale
@@ -154,6 +165,12 @@ void main()
         particle.endSize,
         clamp(particle.life.x / particle.life.y, 0.0f, 1.0f)
     );
+
+    // Don't render the particle if it is outside it's life interval
+    if(particle.life.x < 0.0f)
+    {
+        currentScale = vec2(0.0f);
+    }
 
     // Update direction
     vec3 forward = normalize(cameraBuffer.worldPos.xyz - position);
@@ -167,6 +184,9 @@ void main()
         vec4( forward,  0.0f),
         vec4(position,  1.0f)
     );
+
+    // Update random state
+    particle.indices.x = randomState;
 
     // Update new data
     particles.infos[gl_GlobalInvocationID.x] = particle;

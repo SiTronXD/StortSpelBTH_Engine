@@ -68,7 +68,8 @@ struct ParticleEmitterInfo
     glm::vec3 coneDir;
     float tanTheta;
     glm::vec3 coneNormal;
-    float padding1;
+    uint32_t shouldRespawn;
+    glm::vec4 spawnTimers = glm::vec4(0.0f); // vec4(spawnRate, 0.0f, 0.0f, 0.0f)
 };
 
 // Shadow map data
