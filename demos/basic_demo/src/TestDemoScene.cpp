@@ -325,7 +325,6 @@ void TestDemoScene::update()
 {
 	// Particle system
 	ImGui::Begin("Particle System");
-
 	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)
 	{
 		Transform& partSysTran = this->getComponent<Transform>(this->particleSystemEntities[i]);
@@ -545,7 +544,7 @@ void TestDemoScene::update()
 	// Debug rendering
 
 	// Particle system
-	for (size_t i = 0; i < 2; ++i)
+	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)
 	{
 		Scene::getDebugRenderer()->renderParticleSystemCone(
 			this->particleSystemEntities[i]
