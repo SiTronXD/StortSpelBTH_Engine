@@ -92,11 +92,9 @@ list(FILTER VENGINE_SOURCES EXCLUDE REGEX
 )
 #  FILTER AWAY some files
 list(FILTER VENGINE_HEADERS EXCLUDE REGEX
-    "${VENGINE_SOURCE_DIR}/shared_memory/.*\\.cpp$"    
+    "${VENGINE_SOURCE_DIR}/shared_memory/.*\\.cpp$"
 )
-
-
-
+    
 # Disable Fetching dependencies with conan and cmake FetchContent...
 set(VENGINE_USE_GIT_SUBMODULES TRUE)
 if(NOT (VENGINE_USE_GIT_SUBMODULES))
@@ -343,6 +341,16 @@ FILE(GLOB VENGINE_DEMO_SOURCES CONFIGURE_DEPENDS
     demos/basic_demo/src/*.hpp
     demos/basic_demo/src/*.h
     demos/basic_demo/main.cpp
+)
+
+# FILTER AWAY some files
+list(FILTER VENGINE_DEMO_SOURCES EXCLUDE REGEX
+    ".*/LevelEditorTestScene\\.h$"    
+)
+
+# FILTER AWAY some files
+list(FILTER VENGINE_DEMO_SOURCES EXCLUDE REGEX
+    ".*/LevelEditorTestScene\\.cpp$"
 )
 
 # Build demo, for developers
