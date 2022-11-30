@@ -55,21 +55,22 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 	this->cleanup();
 
 	// Initial particle infos
+	this->initialParticleInfos.resize(MAX_NUM_PARTICLES);
+	this->particleEmitterInfos.resize(MAX_NUM_PARTICLE_SYSTEMS);
+	uint32_t particleIndex = 0;
 	auto particleSystemView =
 		scene->getSceneReg().view<ParticleSystem>();
 	particleSystemView.each(
 		[&](ParticleSystem& particleSystemComp)
 		{
-			// Set info per particle
-			this->initialParticleInfos.resize(MAX_NUM_PARTICLES_PER_SYSTEM);
-			for (uint32_t i = 0; i < MAX_NUM_PARTICLES_PER_SYSTEM; ++i)
+			for (size_t i = 0; i < particleSystemComp.numParticles; ++i)
 			{
 				ParticleInfo& particle =
-					this->initialParticleInfos[i];
+					this->initialParticleInfos[particleIndex];
 
 				// TODO: remove this
 				particle.transformMatrix =
-					glm::translate(glm::mat4(1.0f), glm::vec3(i * 2.1f, 0.0f, 0.0f));
+					glm::translate(glm::mat4(1.0f), glm::vec3(particleIndex * 2.1f, 0.0f, 0.0f));
 				particle.life.x = (rand() % 1000 / 1000.0f) * particleSystemComp.maxlifeTime;
 
 				// Life time
@@ -89,10 +90,14 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
 
 				// Random state
-				particle.randomState.x = i;
+				particle.randomState.x = particleIndex;
+
+				// Next particle index
+				particleIndex++;
 			}
 		}
 	);
+	this->numParticles = particleIndex;
 
 	// Shader input
 	this->shaderInput.initForGpuOnlyResources(
@@ -114,11 +119,17 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 		);
 	this->particleInfoSBO =
 		this->shaderInput.addStorageBuffer(
-			sizeof(ParticleInfo) * MAX_NUM_PARTICLES_PER_SYSTEM,
+			sizeof(ParticleInfo) * MAX_NUM_PARTICLES,
 			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
 			DescriptorFrequency::PER_FRAME,
 			true,
 			this->initialParticleInfos.data()
+		);
+	this->particleEmitterInfoSBO =
+		this->shaderInput.addStorageBuffer(
+			sizeof(ParticleEmitterInfo) * MAX_NUM_PARTICLE_SYSTEMS,
+			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
+			DescriptorFrequency::PER_FRAME
 		);
 	this->globalParticleBufferUBO = 
 		this->shaderInput.addUniformBuffer(
@@ -172,32 +183,31 @@ void ParticleSystemHandler::update(
 		(void*) &cameraDataUBO
 	);
 
-	// Global particle data
-	this->numParticles = 0;
+	// Particle emitters data
 	auto particleSystemView =
 		scene->getSceneReg().view<Transform, ParticleSystem>(entt::exclude<Inactive>);
 	particleSystemView.each(
 		[&](Transform& transformComp,
 			ParticleSystem& particleSystemComp)
 		{
+			ParticleEmitterInfo& emitterInfo =
+				this->particleEmitterInfos[0];
+
 			const glm::mat3& rotMat =
 				transformComp.getRotationMatrix();
 
-			// Set info per particle system
-			this->numParticles += particleSystemComp.numParticles;
-
-			// Position
-			this->globalParticleData.conePos =
+			// Cone position
+			emitterInfo.conePos =
 				transformComp.position +
 				rotMat *
 				particleSystemComp.coneSpawnVolume.localPosition;
 
 			// Cone disk radius
-			this->globalParticleData.coneDiskRadius = 
+			emitterInfo.coneDiskRadius =
 				particleSystemComp.coneSpawnVolume.diskRadius;
 
 			// Cone direction
-			this->globalParticleData.coneDir =
+			emitterInfo.coneDir =
 				glm::normalize(
 					rotMat * 
 					particleSystemComp.coneSpawnVolume.localDirection
@@ -205,15 +215,15 @@ void ParticleSystemHandler::update(
 
 			// Cone normal
 			glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-			if (glm::abs(glm::dot(worldUp, this->globalParticleData.coneDir)) >= 0.95f)
+			if (glm::abs(glm::dot(worldUp, emitterInfo.coneDir)) >= 0.95f)
 				worldUp = glm::vec3(1.0f, 0.0f, 0.0f);
-			this->globalParticleData.coneNormal = 
+			emitterInfo.coneNormal =
 				glm::normalize(
-					glm::cross(worldUp, this->globalParticleData.coneDir)
+					glm::cross(worldUp, emitterInfo.coneDir)
 				);
 
 			// Tan theta
-			this->globalParticleData.tanTheta = 
+			emitterInfo.tanTheta =
 				std::tan(
 					glm::radians(
 						std::clamp(
@@ -225,9 +235,14 @@ void ParticleSystemHandler::update(
 				);
 		}
 	);
+	this->shaderInput.updateStorageBuffer(
+		this->particleEmitterInfoSBO,
+		this->particleEmitterInfos.data()
+	);
+
+	// Global particle data
 	this->globalParticleData.deltaTime = Time::getDT();
 	this->globalParticleData.numParticles = this->getNumParticles();
-
 	this->shaderInput.updateUniformBuffer(
 		this->globalParticleBufferUBO,
 		(void*) &this->globalParticleData
@@ -241,4 +256,6 @@ void ParticleSystemHandler::cleanup()
 
 	this->computePipeline.cleanup();
 	//this->computeShaderInput.cleanup();
+
+	this->particleEmitterInfos.clear();
 }

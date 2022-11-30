@@ -88,7 +88,7 @@ void LightHandler::init(
     {
         shadowMapImageViews[i] =
         {
-            this->shadowMapTexture.getLayerImageView(i)
+            this->shadowMapTexture.getLayerImageView(uint32_t(i))
         };
     }
     this->shadowMapFramebuffer.create(

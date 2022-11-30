@@ -42,14 +42,6 @@ struct GlobalParticleBufferData
     glm::vec2 padding = glm::vec3(0.0f);
     float deltaTime = 1.0f;
     uint32_t numParticles = 0;
-
-    // Spawn volume
-    glm::vec3 conePos;
-    float coneDiskRadius;
-    glm::vec3 coneDir;
-    float tanTheta;
-    glm::vec3 coneNormal;
-    float padding1;
 };
 
 // Per particle info
@@ -67,6 +59,18 @@ struct ParticleInfo
     glm::uvec4 randomState = glm::uvec4(0u);
 };
 
+// Per particle system info
+struct ParticleEmitterInfo
+{
+    // Spawn volume
+    glm::vec3 conePos;
+    float coneDiskRadius;
+    glm::vec3 coneDir;
+    float tanTheta;
+    glm::vec3 coneNormal;
+    float padding1;
+};
+
 // Shadow map data
 #define MAX_NUM_CASCADES 4
 struct ShadowMapData
@@ -75,7 +79,7 @@ struct ShadowMapData
     glm::vec2 shadowMapSize = glm::vec2(0.0f);
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;
-    glm::uvec4 cascadeSettings = glm::uvec4(0.0f);
+    glm::uvec4 cascadeSettings = glm::uvec4(0u);
 };
 
 // Offset indicies into the light buffer

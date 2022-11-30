@@ -7,6 +7,7 @@
 class Device;
 class RenderPass;
 class CommandBufferArray;
+class Scene;
 
 class ParticleSystemHandler
 {
@@ -14,6 +15,7 @@ private:
 	GlobalParticleBufferData globalParticleData;
 
 	std::vector<ParticleInfo> initialParticleInfos;
+	std::vector<ParticleEmitterInfo> particleEmitterInfos;
 
 	// Compute
 	//StorageBufferID particleInfoWriteSBO;
@@ -24,6 +26,7 @@ private:
 	// Graphics
 	UniformBufferID cameraUBO;
 	StorageBufferID particleInfoSBO;
+	StorageBufferID particleEmitterInfoSBO;
 	UniformBufferID globalParticleBufferUBO;
 	ShaderInput shaderInput;
 	Pipeline pipeline;
@@ -41,7 +44,8 @@ private:
 	uint32_t numParticles;
 
 public:
-	inline static const uint32_t MAX_NUM_PARTICLES_PER_SYSTEM = 1024;
+	inline static const uint32_t MAX_NUM_PARTICLES = 128 * 1024;
+	inline static const uint32_t MAX_NUM_PARTICLE_SYSTEMS = 16;
 
 	ParticleSystemHandler();
 

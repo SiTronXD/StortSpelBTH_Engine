@@ -31,19 +31,27 @@ layout(std140, set = FREQ_PER_FRAME, binding = 1) buffer ParticleInfosBuffer
     ParticleInfoData infos[];
 } particles;
 
-// Uniform buffer
-layout(set = FREQ_PER_FRAME, binding = 2) uniform ParticleBufferData
+// Storage buffer
+struct ParticleEmitterInfoData
 {
-    vec2 padding;
-    float deltaTime;
-    uint numParticles;
-
     vec3 conePos;
     float coneDiskRadius;
     vec3 coneDir;
     float tanTheta;
     vec3 coneNormal;
     float padding1;
+};
+layout(std140, set = FREQ_PER_FRAME, binding = 2) buffer ParticleEmitterInfosBuffer
+{
+    ParticleEmitterInfoData emitterInfos[];
+} emitters;
+
+// Uniform buffer
+layout(set = FREQ_PER_FRAME, binding = 3) uniform ParticleBufferData
+{
+    vec2 padding;
+    float deltaTime;
+    uint numParticles;
 } globalParticleBuffer;
 
 
@@ -95,6 +103,8 @@ void main()
     // Get info
     ParticleInfoData particle = 
         particles.infos[gl_GlobalInvocationID.x];
+    ParticleEmitterInfoData emitter = 
+        emitters.emitterInfos[0];   // TODO: replace with particle system index later
     vec3 position = particle.transform[3].xyz;
     float deltaTime = globalParticleBuffer.deltaTime;
 
@@ -111,9 +121,9 @@ void main()
         
         // Rotation matrix for the cone
         mat3x3 coneRotMat = mat3x3(
-            globalParticleBuffer.coneNormal,
-            cross(globalParticleBuffer.coneNormal, globalParticleBuffer.coneDir),
-            globalParticleBuffer.coneDir
+            emitter.coneNormal,
+            cross(emitter.coneNormal, emitter.coneDir),
+            emitter.coneDir
         );
         
         // Velocity
@@ -125,16 +135,16 @@ void main()
         vec3 newVelocity = 
             normalize(
                 vec3(0.0f, 0.0f, 1.0f) + 
-                velOffset * globalParticleBuffer.tanTheta * randomRadiusScale
+                velOffset * emitter.tanTheta * randomRadiusScale
             );
         particle.currentVelocity.xyz = coneRotMat * newVelocity * 10.0f;
 
         // Position
         vec3 randomDiskOffset = 
             vec3(0.0f, 1.0f, 0.0f) * 
-            globalParticleBuffer.coneDiskRadius * randomRadiusScale;
+            emitter.coneDiskRadius * randomRadiusScale;
         randomDiskOffset.xy *= randomRotMat;
-        position = globalParticleBuffer.conePos + coneRotMat * randomDiskOffset;
+        position = emitter.conePos + coneRotMat * randomDiskOffset;
     }
 
     // Scale

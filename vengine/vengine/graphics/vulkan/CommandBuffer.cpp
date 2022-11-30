@@ -48,7 +48,7 @@ void CommandBuffer::setScissor(const vk::Rect2D& scissor)
 
 void CommandBuffer::bindPipeline(const Pipeline& pipeline)
 {
-    this->currentBindPoint = pipeline.getVkPipelineBindPoint();
+    this->currentBindPoint = vk::PipelineBindPoint(pipeline.getVkPipelineBindPoint());
     this->commandBuffer.bindPipeline(
         this->currentBindPoint,
         pipeline.getVkPipeline()

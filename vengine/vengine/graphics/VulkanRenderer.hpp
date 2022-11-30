@@ -219,13 +219,8 @@ private:
 
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
-private: 
-    // Clients Privates 
-    std::function<void()> gameLoopFunction;
-
 public:
     VulkanRenderer();
-    ~VulkanRenderer()   = default;    
     VulkanRenderer(const VulkanRenderer &ref)              = delete;
     VulkanRenderer(VulkanRenderer &&ref)                   = delete;
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;

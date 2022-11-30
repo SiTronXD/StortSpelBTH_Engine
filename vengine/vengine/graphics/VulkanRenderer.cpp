@@ -519,7 +519,7 @@ void VulkanRenderer::draw(Scene* scene)
     this->cameraDataUBO.view = camera->view;
     this->cameraDataUBO.worldPosition = glm::vec4(cameraTransform->position, 1.0f);
     
-    // Record the current commandBuffer
+    // Record command buffers
     this->recordCommandBuffers(scene, camera, imageIndex);
 
     if (deleteCamera)
