@@ -44,9 +44,6 @@ private:
 	uint32_t numParticles;
 
 public:
-	inline static const uint32_t MAX_NUM_PARTICLES = 128 * 1024;
-	inline static const uint32_t MAX_NUM_PARTICLE_SYSTEMS = 16;
-
 	ParticleSystemHandler();
 
 	void init(

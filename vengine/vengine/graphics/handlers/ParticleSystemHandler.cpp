@@ -56,64 +56,67 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 	this->cleanup();
 
 	// Initial particle infos
-	this->initialParticleInfos.resize(MAX_NUM_PARTICLES);
-	this->particleEmitterInfos.resize(MAX_NUM_PARTICLE_SYSTEMS);
+	this->initialParticleInfos.reserve(1024 * 1024);
+	this->particleEmitterInfos.reserve(16);
 	uint32_t particleIndex = 0;
-	uint32_t particleSystemIndex = 0;
+
 	auto particleSystemView =
 		scene->getSceneReg().view<ParticleSystem>();
 	particleSystemView.each(
 		[&](ParticleSystem& particleSystemComp)
 		{
-			// Make sure the limit of number of particle systems has not been reached
-			if (particleSystemIndex < MAX_NUM_PARTICLES)
+			uint32_t particleSystemIndex = uint32_t(this->particleEmitterInfos.size());
+
+			// Set base instance offset
+			particleSystemComp.baseInstanceOffset = particleIndex;
+
+			for (size_t i = 0; i < particleSystemComp.numParticles; ++i)
 			{
-				// Set base instance offset
-				particleSystemComp.baseInstanceOffset = particleIndex;
+				// Create particle info
+				this->initialParticleInfos.push_back(ParticleInfo());
+				ParticleInfo& particle =
+					this->initialParticleInfos[this->initialParticleInfos.size() - 1];
 
-				for (size_t i = 0; i < particleSystemComp.numParticles; ++i)
-				{
-					ParticleInfo& particle =
-						this->initialParticleInfos[particleIndex];
+				// Current life timer
+				particle.life.x = particleSystemComp.maxlifeTime;
 
-					// Current life timer
-					particle.life.x = particleSystemComp.maxlifeTime;
+				// Max life timer
+				particle.life.y = particleSystemComp.maxlifeTime;
 
-					// Max life timer
-					particle.life.y = particleSystemComp.maxlifeTime;
+				// Size
+				particle.startSize = particleSystemComp.startSize;
+				particle.endSize = particleSystemComp.endSize;
 
-					// Size
-					particle.startSize = particleSystemComp.startSize;
-					particle.endSize = particleSystemComp.endSize;
+				// Color
+				particle.startColor = glm::vec4(particleSystemComp.startColor, 1.0f);
+				particle.endColor = glm::vec4(particleSystemComp.endColor, 1.0f);
 
-					// Color
-					particle.startColor = glm::vec4(particleSystemComp.startColor, 1.0f);
-					particle.endColor = glm::vec4(particleSystemComp.endColor, 1.0f);
+				// Acceleration
+				particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
 
-					// Acceleration
-					particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
+				// Indices
+				particle.indices.x = particleIndex; // Random state
+				particle.indices.y = particleSystemIndex; // Particle system index
 
-					// Indices
-					particle.indices.x = particleIndex; // Random state
-					particle.indices.y = particleSystemIndex; // Particle system index
+				// Set particle system index
+				particleSystemComp.particleSystemIndex = particleSystemIndex;
 
-					// Set particle system index
-					particleSystemComp.particleSystemIndex = particleSystemIndex;
-
-					// Next particle index
-					particleIndex++;
-				}
-
-				// Next particle system index
-				particleSystemIndex++;
+				// Next particle index
+				particleIndex++;
 			}
-			else
-			{
-				Log::error("You are trying to use more than " + std::to_string(MAX_NUM_PARTICLE_SYSTEMS) + " particle systems in the scene, which is not allowed.");
-			}
+
+			// Add particle system emitter info
+			this->particleEmitterInfos.push_back(ParticleEmitterInfo());
 		}
 	);
 	this->numParticles = particleIndex;
+
+	// Add dummy emitter/particle if non are found in the scene
+	if (this->particleEmitterInfos.size() <= 0)
+	{
+		this->initialParticleInfos.push_back(ParticleInfo());
+		this->particleEmitterInfos.push_back(ParticleEmitterInfo());
+	}
 
 	// Shader input
 	this->shaderInput.initForGpuOnlyResources(
@@ -135,7 +138,7 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 		);
 	this->particleInfoSBO =
 		this->shaderInput.addStorageBuffer(
-			sizeof(ParticleInfo) * MAX_NUM_PARTICLES,
+			sizeof(ParticleInfo) * this->initialParticleInfos.size(),
 			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
 			DescriptorFrequency::PER_FRAME,
 			true,
@@ -143,7 +146,7 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 		);
 	this->particleEmitterInfoSBO =
 		this->shaderInput.addStorageBuffer(
-			sizeof(ParticleEmitterInfo) * MAX_NUM_PARTICLE_SYSTEMS,
+			sizeof(ParticleEmitterInfo) * this->particleEmitterInfos.size(),
 			(vk::ShaderStageFlagBits)(uint32_t(vk::ShaderStageFlagBits::eVertex) | uint32_t(vk::ShaderStageFlagBits::eCompute)),
 			DescriptorFrequency::PER_FRAME
 		);
