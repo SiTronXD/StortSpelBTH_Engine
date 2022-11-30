@@ -15,8 +15,10 @@ void AIHandler::drawImgui(){
     static bool blackboard_Entities_open = true; 
     ImGui::Begin("BlackBoard");
     float width = ImGui::GetWindowWidth();
+    ImGui::Checkbox("Disable all AI", &this->disableAI);
+    
     if(ImGui::BeginTabBar("BlackboardTabs", ImGuiTabBarFlags_None)){
-        
+                
         for(auto fsm : this->FSMs)
         {
             const std::string&  fsmName = fsm.first;

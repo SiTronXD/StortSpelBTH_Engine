@@ -88,9 +88,14 @@ public:
 		createAIEntity(entityID, this->FSMs[fsmName]);
 	}
 
+    void resetEventSystemLastReturn()
+    {
+        this->eventSystem.resetEntityLastReturn();
+    }
 
     void drawImgui();
     Scene* currentScene = nullptr; //TODO make const...
+    bool disableAI = false; 
     
     void update(float dt){
         this->dt = dt;
@@ -102,7 +107,10 @@ public:
         }
 
         eventSystem.update();
-        updateEntityFSMs();
+        if(!disableAI)
+        {
+            updateEntityFSMs();
+        }
         drawImgui();
         switchedScene = false; 
     }

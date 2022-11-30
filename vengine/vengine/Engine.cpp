@@ -112,7 +112,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         this->audioHandler.update();
 		this->networkHandler.updateNetwork();
 
-#if defined(_CONSOLE) // Debug/Release, but not distribution        
+#if defined(_CONSOLE) || defined(_STATISTICS) // Debug/Release, but not distribution        
         static bool debugInfo = true;
 
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);

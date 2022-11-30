@@ -87,7 +87,7 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(
                 currentMesh.getSubmeshData();
 
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-            lightHandler.updateShadowPushConstant(
+            lightHandler.updateDefaultShadowPushConstant(
                 *this->currentShadowMapCommandBuffer,
                 transform.getMatrix()
             );
@@ -169,7 +169,7 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(
             );
 
             // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-            lightHandler.updateShadowPushConstant(
+            lightHandler.updateAnimatedShadowPushConstant(
                 *this->currentShadowMapCommandBuffer,
                 transform.getMatrix()
             );

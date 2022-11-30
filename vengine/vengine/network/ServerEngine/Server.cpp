@@ -92,6 +92,7 @@ Server::Server(NetworkScene* serverGame)
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
 	this->sceneHandler.setPhysicsEngine(&this->physicsEngine);
+    this->sceneHandler.setResourceManager(&this->resourceManager);
 	this->scriptHandler.setSceneHandler(&this->sceneHandler);
 	this->scriptHandler.setPhysicsEngine(&this->physicsEngine);
 	this->physicsEngine.setSceneHandler(&this->sceneHandler);
@@ -445,6 +446,7 @@ void Server::handlePacketFromUser(const int& ClientID, bool tcp)
 					}
 					clients[ClientID]->clientTcpSocket.send(playerNamesPacket);
 					break;
+				}				
 			}
 		}
 	}
