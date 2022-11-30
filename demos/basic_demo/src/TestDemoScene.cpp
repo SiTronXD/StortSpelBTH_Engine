@@ -76,8 +76,8 @@ void TestDemoScene::init()
 	partSys.maxlifeTime = 3.0f;
 	partSys.numParticles = 512;
 	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
-	partSys.startSize = glm::vec2(1.0f);
-	partSys.endSize = glm::vec2(0.0f);
+	partSys.startSize = glm::vec2(0.1f);
+	partSys.endSize = glm::vec2(0.1f);
 	partSys.startColor = glm::vec3(0.0f, 1.0f, 0.0f);
 	partSys.endColor = glm::vec3(1.0f, 0.0f, 0.0f);
 	partSys.startVelocity = glm::vec3(0.0f, 7.0f, 0.0f);
@@ -85,7 +85,7 @@ void TestDemoScene::init()
 
 	partSys.coneSpawnVolume.diskRadius = 5.0f;
 	partSys.coneSpawnVolume.coneAngle = 90.0f;
-	partSys.coneSpawnVolume.localDirection = glm::vec3(0.0f, 1.0f, 0.0f);
+	partSys.coneSpawnVolume.localDirection = glm::vec3(0.0f, 0.0f, 1.0f);
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
@@ -309,6 +309,8 @@ void TestDemoScene::update()
 	ImGui::Begin("Particle System");
 	ImGui::SliderFloat3("Entity position: ", &partSysTran.position[0], -5.0f, 5.0f);
 	ImGui::SliderFloat3("Entity rotation: ", &partSysTran.rotation[0], -180.0f, 180.0f);
+	ImGui::SliderFloat3("Cone pos: ", &partSys.coneSpawnVolume.localPosition[0], -5.0f, 5.0f);
+	ImGui::SliderFloat3("Cone dir: ", &partSys.coneSpawnVolume.localDirection[0], -1.0f, 1.0f);
 	ImGui::SliderFloat("Disk radius: ", &partSys.coneSpawnVolume.diskRadius, 0.0f, 10.0f);
 	ImGui::SliderFloat("Cone angle: ", &partSys.coneSpawnVolume.coneAngle, 0.0f, 180.0f);
 	ImGui::End();

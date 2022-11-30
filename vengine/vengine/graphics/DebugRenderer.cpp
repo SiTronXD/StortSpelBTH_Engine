@@ -319,6 +319,7 @@ void DebugRenderer::renderParticleSystemCone(
     Transform& transform = scene->getComponent<Transform>(particleSystemEntity);
     ParticleSystem& particleSystem = scene->getComponent<ParticleSystem>(particleSystemEntity);
 
+    // Different transformations
     const glm::mat3& transformRot =
         transform.getRotationMatrix();
     const glm::vec3 coneDir = glm::normalize(
@@ -338,20 +339,39 @@ void DebugRenderer::renderParticleSystemCone(
         );
 
     // Render lines as cone tangents
-    for (uint32_t i = 0; i < 20; ++i)
+    const uint32_t numLines = 20;
+    for (uint32_t i = 0; i < numLines; ++i)
     {
+        const glm::mat4 tempRot = glm::rotate(
+            glm::mat4(1.0f),
+            float(i) / numLines * SMath::PI * 2.0f,
+            glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+
+        // Base position
         glm::vec3 diskOffset =
             glm::vec3(0.0f, 1.0f, 0.0f) * particleSystem.coneSpawnVolume.diskRadius;
         diskOffset =
-            glm::rotate(glm::mat4(1.0f), i / 10.0f * 3.1415f * 2.0f, glm::vec3(0.0f, 0.0f, 1.0f)) * glm::vec4(diskOffset, 0.0f);
+            tempRot * glm::vec4(diskOffset, 0.0f);
         glm::vec3 pos0 = 
-            transform.position +
+            transform.position + 
             transformRot *
-            particleSystem.coneSpawnVolume.localPosition + 
+            particleSystem.coneSpawnVolume.localPosition +
             coneRotMat * diskOffset;
 
-        // TODO: fix this
-        glm::vec3 pos1 = pos0 + glm::vec3(0.0f, 5.0f, 0.0f);
+        // Cone tangent direction
+        const float strength = 5.0f;
+        const float tanTheta =
+            std::tan(
+                glm::radians(
+                    std::clamp(
+                        particleSystem.coneSpawnVolume.coneAngle * 0.5f,
+                        0.0f,
+                        89.0f
+                    )
+                )
+            );
+        glm::vec3 pos1 = pos0 + (coneDir + tanTheta * coneRotMat * glm::vec3(tempRot * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))) * strength;
 
         this->renderLine(pos0, pos1, glm::vec3(0.0f, 1.0f, 0.0f));
     }

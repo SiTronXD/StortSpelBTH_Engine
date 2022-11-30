@@ -12,7 +12,7 @@ enum class SpawnShape
 struct Cone
 {
 	glm::vec3 localPosition = glm::vec3(0.0f);
-	glm::vec3 localDirection = glm::vec3(0.0f, 1.0f, 0.0f);
+	glm::vec3 localDirection = glm::vec3(0.0f, 0.0f, 1.0f);
 	float diskRadius = 0.0f;
 	float coneAngle = 90.0f;
 };
