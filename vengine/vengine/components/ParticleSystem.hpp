@@ -2,6 +2,9 @@
 
 #include "glm/glm.hpp"
 
+class ParticleSystemHandler;
+class VulkanRenderer;
+
 enum class SpawnShape
 {
 	POINT,
@@ -19,6 +22,14 @@ struct Cone
 
 struct ParticleSystem
 {
+private:
+	friend ParticleSystemHandler;
+	friend VulkanRenderer;
+
+	uint32_t particleSystemIndex = ~0u;
+	uint32_t baseInstanceOffset = 0;
+
+public:
 	uint32_t numParticles = 10;
 	uint32_t textureIndex = 0;
 	float maxlifeTime = 1.0f;

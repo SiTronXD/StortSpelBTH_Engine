@@ -58,42 +58,61 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 	this->initialParticleInfos.resize(MAX_NUM_PARTICLES);
 	this->particleEmitterInfos.resize(MAX_NUM_PARTICLE_SYSTEMS);
 	uint32_t particleIndex = 0;
+	uint32_t particleSystemIndex = 0;
 	auto particleSystemView =
 		scene->getSceneReg().view<ParticleSystem>();
 	particleSystemView.each(
 		[&](ParticleSystem& particleSystemComp)
 		{
-			for (size_t i = 0; i < particleSystemComp.numParticles; ++i)
+			// Make sure the limit of number of particle systems has not been reached
+			if (particleSystemIndex < MAX_NUM_PARTICLES)
 			{
-				ParticleInfo& particle =
-					this->initialParticleInfos[particleIndex];
+				// Set base instance offset
+				particleSystemComp.baseInstanceOffset = particleIndex;
 
-				// TODO: remove this
-				particle.transformMatrix =
-					glm::translate(glm::mat4(1.0f), glm::vec3(particleIndex * 2.1f, 0.0f, 0.0f));
-				particle.life.x = (rand() % 1000 / 1000.0f) * particleSystemComp.maxlifeTime;
+				for (size_t i = 0; i < particleSystemComp.numParticles; ++i)
+				{
+					ParticleInfo& particle =
+						this->initialParticleInfos[particleIndex];
 
-				// Life time
-				particle.life.y = particleSystemComp.maxlifeTime;
+					// TODO: remove this
+					particle.transformMatrix =
+						glm::translate(glm::mat4(1.0f), glm::vec3(particleIndex * 2.1f, 0.0f, 0.0f));
+					particle.life.x = (rand() % 1000 / 1000.0f) * particleSystemComp.maxlifeTime;
 
-				// Size
-				particle.startSize = particleSystemComp.startSize;
-				particle.endSize = particleSystemComp.endSize;
+					// Life time
+					particle.life.y = particleSystemComp.maxlifeTime;
 
-				// Color
-				particle.startColor = glm::vec4(particleSystemComp.startColor, 1.0f);
-				particle.endColor = glm::vec4(particleSystemComp.endColor, 1.0f);
+					// Size
+					particle.startSize = particleSystemComp.startSize;
+					particle.endSize = particleSystemComp.endSize;
 
-				// Velocity/acceleration
-				particle.startVelocity = glm::vec4(particleSystemComp.startVelocity, 0.0f);
-				particle.currentVelocity = particle.startVelocity;
-				particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
+					// Color
+					particle.startColor = glm::vec4(particleSystemComp.startColor, 1.0f);
+					particle.endColor = glm::vec4(particleSystemComp.endColor, 1.0f);
 
-				// Random state
-				particle.randomState.x = particleIndex;
+					// Velocity/acceleration
+					particle.startVelocity = glm::vec4(particleSystemComp.startVelocity, 0.0f);
+					particle.currentVelocity = particle.startVelocity;
+					particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
 
-				// Next particle index
-				particleIndex++;
+					// Indices
+					particle.indices.x = particleIndex; // Random state
+					particle.indices.y = particleSystemIndex; // Particle system index
+
+					// Set particle system index
+					particleSystemComp.particleSystemIndex = particleSystemIndex;
+
+					// Next particle index
+					particleIndex++;
+				}
+
+				// Next particle system index
+				particleSystemIndex++;
+			}
+			else
+			{
+				Log::error("You are trying to use more than " + std::to_string(MAX_NUM_PARTICLE_SYSTEMS) + " particle systems in the scene, which is not allowed.");
 			}
 		}
 	);
@@ -185,13 +204,13 @@ void ParticleSystemHandler::update(
 
 	// Particle emitters data
 	auto particleSystemView =
-		scene->getSceneReg().view<Transform, ParticleSystem>(entt::exclude<Inactive>);
+		scene->getSceneReg().view<Transform, ParticleSystem>();
 	particleSystemView.each(
 		[&](Transform& transformComp,
 			ParticleSystem& particleSystemComp)
 		{
 			ParticleEmitterInfo& emitterInfo =
-				this->particleEmitterInfos[0];
+				this->particleEmitterInfos[particleSystemComp.particleSystemIndex];
 
 			const glm::mat3& rotMat =
 				transformComp.getRotationMatrix();

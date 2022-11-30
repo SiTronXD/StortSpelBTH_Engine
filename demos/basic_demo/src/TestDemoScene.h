@@ -10,7 +10,7 @@ private:
 	Entity testEntity2;
 	Entity multiAnimation;
 	Entity directionalLightEntity;
-	Entity particleSystemEntity;
+	std::vector<Entity> particleSystemEntities;
 	uint32_t uiTextureIndex0;
 	uint32_t uiTextureIndex1;
 	uint32_t fontTextureIndex;

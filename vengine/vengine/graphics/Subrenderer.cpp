@@ -581,7 +581,9 @@ void VulkanRenderer::renderParticles(Scene* scene)
             // Draw
             this->currentCommandBuffer->draw(
                 6,
-                particleComponent.numParticles
+                particleComponent.numParticles,
+                0,
+                particleComponent.baseInstanceOffset
             );
         }
     );

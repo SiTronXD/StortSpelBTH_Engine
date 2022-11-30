@@ -24,7 +24,7 @@ struct ParticleInfoData
     vec4 startVelocity;
     vec4 currentVelocity;
     vec4 acceleration;
-    uvec4 randomState;
+    uvec4 indices; // vec4(randomState, emitterIndex, 0, 0)
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 1) buffer ParticleInfosBuffer
 {
@@ -104,9 +104,10 @@ void main()
     ParticleInfoData particle = 
         particles.infos[gl_GlobalInvocationID.x];
     ParticleEmitterInfoData emitter = 
-        emitters.emitterInfos[0];   // TODO: replace with particle system index later
+        emitters.emitterInfos[particle.indices.y];
     vec3 position = particle.transform[3].xyz;
     float deltaTime = globalParticleBuffer.deltaTime;
+    uint randomState = particle.indices.x;
 
     // Apply position
     particle.currentVelocity.xyz += particle.acceleration.xyz * deltaTime;
@@ -127,8 +128,8 @@ void main()
         );
         
         // Velocity
-        float randomRadiusScale = randomFloat(particle.randomState.x);
-        float randomAngle = randomFloat(particle.randomState.x) * PI * 2.0f;
+        float randomRadiusScale = randomFloat(randomState);
+        float randomAngle = randomFloat(randomState) * PI * 2.0f;
         mat2x2 randomRotMat = rotate(randomAngle);
         vec3 velOffset = vec3(0.0f, 1.0f, 0.0f);
         velOffset.xy *= randomRotMat;

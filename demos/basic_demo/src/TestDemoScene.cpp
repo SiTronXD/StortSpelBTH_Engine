@@ -70,13 +70,13 @@ void TestDemoScene::init()
 		.cascadeDepthScale = 5.0f;
 
 	// Particle system
-	this->particleSystemEntity = this->createEntity();
-	this->setComponent<ParticleSystem>(this->particleSystemEntity);
-	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntity);
+	this->particleSystemEntities.push_back(this->createEntity());
+	this->setComponent<ParticleSystem>(this->particleSystemEntities[0]);
+	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[0]);
 	partSys.maxlifeTime = 3.0f;
 	partSys.numParticles = 512;
 	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
-	partSys.startSize = glm::vec2(0.1f);
+	partSys.startSize = glm::vec2(1.0f);
 	partSys.endSize = glm::vec2(0.1f);
 	partSys.startColor = glm::vec3(0.0f, 1.0f, 0.0f);
 	partSys.endColor = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -86,6 +86,25 @@ void TestDemoScene::init()
 	partSys.coneSpawnVolume.diskRadius = 5.0f;
 	partSys.coneSpawnVolume.coneAngle = 90.0f;
 	partSys.coneSpawnVolume.localDirection = glm::vec3(0.0f, 0.0f, 1.0f);
+
+	this->particleSystemEntities.push_back(this->createEntity());
+	this->setComponent<ParticleSystem>(this->particleSystemEntities[1]);
+	ParticleSystem& partSys1 = this->getComponent<ParticleSystem>(this->particleSystemEntities[1]);
+	partSys1.maxlifeTime = 3.0f;
+	partSys1.numParticles = 512;
+	partSys1.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
+	partSys1.startSize = glm::vec2(1.0f);
+	partSys1.endSize = glm::vec2(0.1f);
+	partSys1.startColor = glm::vec3(1.0f, 0.0f, 1.0f);
+	partSys1.endColor = glm::vec3(0.0f, 0.0f, 0.0f);
+	partSys1.startVelocity = glm::vec3(0.0f, 7.0f, 0.0f);
+	partSys1.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
+	
+	partSys1.coneSpawnVolume.localPosition.x += 20.0f;
+	partSys1.coneSpawnVolume.diskRadius = 5.0f;
+	partSys1.coneSpawnVolume.coneAngle = 90.0f;
+	partSys1.coneSpawnVolume.localDirection = glm::vec3(0.0f, 0.0f, 1.0f);
+
 
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
@@ -304,15 +323,19 @@ void TestDemoScene::start()
 void TestDemoScene::update()
 {
 	// Particle system
-	Transform& partSysTran = this->getComponent<Transform>(this->particleSystemEntity);
-	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntity);
 	ImGui::Begin("Particle System");
-	ImGui::SliderFloat3("Entity position: ", &partSysTran.position[0], -5.0f, 5.0f);
-	ImGui::SliderFloat3("Entity rotation: ", &partSysTran.rotation[0], -180.0f, 180.0f);
-	ImGui::SliderFloat3("Cone pos: ", &partSys.coneSpawnVolume.localPosition[0], -5.0f, 5.0f);
-	ImGui::SliderFloat3("Cone dir: ", &partSys.coneSpawnVolume.localDirection[0], -1.0f, 1.0f);
-	ImGui::SliderFloat("Disk radius: ", &partSys.coneSpawnVolume.diskRadius, 0.0f, 10.0f);
-	ImGui::SliderFloat("Cone angle: ", &partSys.coneSpawnVolume.coneAngle, 0.0f, 180.0f);
+
+	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)
+	{
+		Transform& partSysTran = this->getComponent<Transform>(this->particleSystemEntities[i]);
+		ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[i]);
+		ImGui::SliderFloat3(("Entity position " + std::to_string(i) + ": ").c_str(), &partSysTran.position[0], -5.0f, 5.0f);
+		ImGui::SliderFloat3(("Entity rotation " + std::to_string(i) + ": ").c_str(), &partSysTran.rotation[0], -180.0f, 180.0f);
+		ImGui::SliderFloat3(("Cone pos " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.localPosition[0], -5.0f, 5.0f);
+		ImGui::SliderFloat3(("Cone dir " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.localDirection[0], -1.0f, 1.0f);
+		ImGui::SliderFloat(("Disk radius " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.diskRadius, 0.0f, 10.0f);
+		ImGui::SliderFloat(("Cone angle " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.coneAngle, 0.0f, 180.0f);
+	}
 	ImGui::End();
 
 	// Make ghosts follow skeletal animation
@@ -518,9 +541,12 @@ void TestDemoScene::update()
 	// Debug rendering
 
 	// Particle system
-	Scene::getDebugRenderer()->renderParticleSystemCone(
-		this->particleSystemEntity
-	);
+	for (size_t i = 0; i < 2; ++i)
+	{
+		Scene::getDebugRenderer()->renderParticleSystemCone(
+			this->particleSystemEntities[i]
+		);
+	}
 
 	// Skeleton
 	Scene::getDebugRenderer()->renderSkeleton(

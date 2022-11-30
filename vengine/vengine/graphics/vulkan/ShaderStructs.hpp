@@ -56,7 +56,7 @@ struct ParticleInfo
     glm::vec4 startVelocity = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     glm::vec4 currentVelocity = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
-    glm::uvec4 randomState = glm::uvec4(0u);
+    glm::uvec4 indices = glm::uvec4(0u);    // vec4(randomState, emitterIndex, 0, 0)
 };
 
 // Per particle system info
