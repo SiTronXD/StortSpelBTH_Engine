@@ -12,6 +12,8 @@ enum class DescriptorFrequency;
 class CommandBuffer
 {
 private:
+    vk::PipelineBindPoint currentBindPoint;
+
     vk::CommandBuffer commandBuffer;
 
 public:
@@ -25,7 +27,7 @@ public:
 
     void setViewport(const vk::Viewport& viewport);
     void setScissor(const vk::Rect2D& scissor);
-    void bindGraphicsPipeline(const Pipeline& pipeline);
+    void bindPipeline(const Pipeline& pipeline);
     void pushConstant(
         ShaderInput& shaderInput,
         void* data);

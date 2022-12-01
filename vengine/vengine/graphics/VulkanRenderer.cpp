@@ -124,8 +124,15 @@ int VulkanRenderer::init(
             this->vma
         );
 
-        // Command pool/buffers
-        this->createCommandPool();
+        // Command pools/buffers
+        this->createCommandPool(
+            this->queueFamilies.getGraphicsIndex(),
+            this->commandPool
+        );
+        this->createCommandPool(
+            this->queueFamilies.getComputeIndex(),
+            this->computeCommandPool
+        );
         this->commandBuffers.createCommandBuffers(
             this->device,
             this->commandPool,
@@ -165,16 +172,18 @@ int VulkanRenderer::init(
         this->initResourceManager();
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
-        this->resourceManager->addMaterial(
+        uint32_t missingTextureIndex = 
             this->resourceManager->addTexture(
                 DEF<std::string>(P_TEXTURES) + "missing_texture.png"
-            ),
-            this->resourceManager->addTexture(
-                DEF<std::string>(P_TEXTURES) + "missing_texture.png"
-            ),
+            );
+        uint32_t blackTextureIndex =
             this->resourceManager->addTexture(
                 DEF<std::string>(P_TEXTURES) + "Black.png"
-            )
+            );
+        this->resourceManager->addMaterial(
+            missingTextureIndex,
+            missingTextureIndex,
+            blackTextureIndex
         );
         this->resourceManager->addMesh(DEF<std::string>(P_MODELS) + "cube.obj");
 
@@ -227,6 +236,19 @@ int VulkanRenderer::init(
         *this->resourceManager,
         MAX_FRAMES_IN_FLIGHT,
         this->swapchain.getVkExtent()
+    );
+
+    // Particle system handler
+    this->particleHandler.init(
+        this->physicalDevice,
+        this->device,
+        this->vma,
+        this->queueFamilies.getGraphicsQueue(),
+        this->commandPool,
+        *this->resourceManager,
+        this->renderPassBase,
+        this->computeCommandPool,
+        MAX_FRAMES_IN_FLIGHT
     );
 
     // Render-to-Swapchain shader input and pipeline
@@ -342,10 +364,12 @@ void VulkanRenderer::cleanup()
 
         this->getVkDevice().destroySemaphore(this->sceneRenderFinished[i]);
         this->getVkDevice().destroySemaphore(this->shadowMapRenderFinished[i]);
+        this->getVkDevice().destroySemaphore(this->computeFinished[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
         this->getVkDevice().destroyFence(this->drawFences[i]);
     }
 
+    this->getVkDevice().destroyCommandPool(this->computeCommandPool);
     this->getVkDevice().destroyCommandPool(this->commandPool);
     
     this->debugRenderer->cleanup();
@@ -363,6 +387,7 @@ void VulkanRenderer::cleanup()
     this->pipeline.cleanup();
     this->shaderInput.cleanup();
 
+    this->particleHandler.cleanup();
     this->postProcessHandler.cleanup();
     this->lightHandler.cleanup(this->hasAnimations);
 
@@ -494,7 +519,7 @@ void VulkanRenderer::draw(Scene* scene)
     this->cameraDataUBO.view = camera->view;
     this->cameraDataUBO.worldPosition = glm::vec4(cameraTransform->position, 1.0f);
     
-    // Record the current commandBuffer
+    // Record command buffers
     this->recordCommandBuffers(scene, camera, imageIndex);
 
     if (deleteCamera)
@@ -503,17 +528,37 @@ void VulkanRenderer::draw(Scene* scene)
         delete cameraTransform;
     }
     
-    // Submit to graphics queue
+    // Submit to queues
     {
-        #ifndef VENGINE_NO_PROFILING
-        ZoneNamedN(draw_zone3, "Wait for Semaphore", true); //:NOLINT   
-        #endif 
+        // Reset submit arrays
+        this->computeSubmitArray.reset();
+        this->graphicsSubmitArray.reset();
 
-        this->submitArray.reset();
+        // ---------- Compute submit ----------
+        std::array<vk::SemaphoreSubmitInfo, 4> computeWaitSemaphores;
+        this->computeSubmitArray.setSubmitInfo(
+            *this->currentComputeCommandBuffer,
+            computeWaitSemaphores,
+            0,
+            this->computeFinished[this->currentFrame]
+        );
+
+        vk::Result computeQueueResult =
+            this->queueFamilies.getComputeQueue().submit2(
+                this->computeSubmitArray.getNumSubmits(),
+                this->computeSubmitArray.getSubmitInfos().data(),
+                VK_NULL_HANDLE
+            );
+        if (computeQueueResult != vk::Result::eSuccess)
+        {
+            Log::error("Failed to submit compute commands.");
+        }
+
+        // ---------- Graphics submit ----------
 
         // Shadow map
         std::array<vk::SemaphoreSubmitInfo, 4> shadowMapWaitSemaphores;
-        this->submitArray.setSubmitInfo(
+        this->graphicsSubmitArray.setSubmitInfo(
             *this->currentShadowMapCommandBuffer,
             shadowMapWaitSemaphores,
             0,
@@ -524,10 +569,12 @@ void VulkanRenderer::draw(Scene* scene)
         std::array<vk::SemaphoreSubmitInfo, 4> renderToScreenWaitSemaphores;
         renderToScreenWaitSemaphores[0].setSemaphore(this->shadowMapRenderFinished[this->currentFrame]);
         renderToScreenWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
-        this->submitArray.setSubmitInfo(
+        renderToScreenWaitSemaphores[1].setSemaphore(this->computeFinished[this->currentFrame]);
+        renderToScreenWaitSemaphores[1].setStageMask(vk::PipelineStageFlagBits2::eVertexShader);
+        this->graphicsSubmitArray.setSubmitInfo(
             *this->currentCommandBuffer,
             renderToScreenWaitSemaphores,
-            1,
+            2,
             this->sceneRenderFinished[this->currentFrame]
         );
 
@@ -543,7 +590,7 @@ void VulkanRenderer::draw(Scene* scene)
                 bloomDownsampleWaitSemaphores[i][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
             }
 
-            this->submitArray.setSubmitInfo(
+            this->graphicsSubmitArray.setSubmitInfo(
                 this->postProcessHandler.getDownsampleCommandBuffer(this->currentFrame, i),
                 bloomDownsampleWaitSemaphores[i],
                 1,
@@ -563,7 +610,7 @@ void VulkanRenderer::draw(Scene* scene)
                 bloomUpsampleWaitSemaphores[i][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
             }
 
-            this->submitArray.setSubmitInfo(
+            this->graphicsSubmitArray.setSubmitInfo(
                 this->postProcessHandler.getUpsampleCommandBuffer(this->currentFrame, i),
                 bloomUpsampleWaitSemaphores[i],
                 1,
@@ -577,20 +624,20 @@ void VulkanRenderer::draw(Scene* scene)
         renderToSwapchainWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
         renderToSwapchainWaitSemaphores[1].setSemaphore(this->imageAvailable[this->currentFrame]);
         renderToSwapchainWaitSemaphores[1].setStageMask(vk::PipelineStageFlagBits2::eColorAttachmentOutput);
-        this->submitArray.setSubmitInfo(
+        this->graphicsSubmitArray.setSubmitInfo(
             *this->currentSwapchainCommandBuffer,
             renderToSwapchainWaitSemaphores,
             2,
             this->swapchainRenderFinished[this->currentFrame]
         );
 
-        // Submit the command buffers
+        // Submit to graphics queue
         vk::Result graphicsQueueResult = 
             this->queueFamilies.getGraphicsQueue().submit2(
-                this->submitArray.getNumSubmits(),
-                this->submitArray.getSubmitInfos().data(),
+                this->graphicsSubmitArray.getNumSubmits(),
+                this->graphicsSubmitArray.getSubmitInfos().data(),
                 this->drawFences[this->currentFrame]
-        );
+            );
         if (graphicsQueueResult != vk::Result::eSuccess)
         {
             Log::error("Failed to submit graphics commands.");
@@ -944,6 +991,7 @@ void VulkanRenderer::initForScene(Scene* scene)
         oldHasAnimations,
         this->hasAnimations
     );
+    this->particleHandler.initForScene(scene);
 }
 
 void VulkanRenderer::setupDebugMessenger() 
@@ -1047,22 +1095,21 @@ VulkanRenderer::VulkanRenderer()
     loadConfIntoMemory();
 }
 
-void VulkanRenderer::createCommandPool()
+void VulkanRenderer::createCommandPool(
+    const uint32_t& queueFamilyIndex,
+    vk::CommandPool& outputCommandPool)
  {
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped; //:NOLINT
 #endif
 
-    vk::CommandPoolCreateInfo poolInfo = {};
-    poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);  // Enables us to reset our CommandBuffers 
-                                                                            // if they were allocated from this CommandPool!
-                                                                            // To make use of this feature you also have to activate in during Recording! (??)
-    poolInfo.queueFamilyIndex = 
-        this->queueFamilies.getGraphicsIndex();      // Queue family type that buffers from this command pool will use
+    vk::CommandPoolCreateInfo poolInfo{};
+    poolInfo.setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+    poolInfo.setQueueFamilyIndex(queueFamilyIndex);
 
-    // Create a graphics Queue Family Command Pool
-    this->commandPool = this->getVkDevice().createCommandPool(poolInfo);
-    VulkanDbg::registerVkObjectDbgInfo("CommandPool Presentation/Graphics", vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(this->commandPool)));
+    // Create a command pool
+    outputCommandPool = this->getVkDevice().createCommandPool(poolInfo);
+    VulkanDbg::registerVkObjectDbgInfo("CommandPool for queue family index " + std::to_string(queueFamilyIndex), vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(outputCommandPool)));
 
 }
 
@@ -1073,6 +1120,7 @@ void VulkanRenderer::createSynchronisation()
 #endif
     // One semaphore/fence per frame in flight
     this->imageAvailable.resize(MAX_FRAMES_IN_FLIGHT);
+    this->computeFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->shadowMapRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->sceneRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->swapchainRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1094,7 +1142,6 @@ void VulkanRenderer::createSynchronisation()
     // Semaphore creation information
     vk::SemaphoreCreateInfo semaphoreCreateInfo; 
     
-
     // Fence creation Information
     vk::FenceCreateInfo fenceCreateInfo;
     fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);           // Make sure the Fence is initially open!
@@ -1104,7 +1151,10 @@ void VulkanRenderer::createSynchronisation()
         // Semaphores
         this->imageAvailable[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore imageAvailable["+std::to_string(i)+"]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->imageAvailable[i])));
-        
+
+        this->computeFinished[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
+        VulkanDbg::registerVkObjectDbgInfo("Semaphore computeFinished[" + std::to_string(i) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->computeFinished[i])));
+
         this->shadowMapRenderFinished[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore shadowMapRenderFinished[" + std::to_string(i) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->shadowMapRenderFinished[i])));
 
@@ -1131,26 +1181,19 @@ void VulkanRenderer::createSynchronisation()
         VulkanDbg::registerVkObjectDbgInfo("Fence drawFences["+std::to_string(i)+"]", vk::ObjectType::eFence, reinterpret_cast<uint64_t>(vk::Fence::CType(this->drawFences[i])));
     }
 
-    // shadow map + scene + 
+    // Particles
+    this->computeSubmitArray.setMaxNumSubmits(1);
+
+    // Shadow map + scene + 
     // num bloom downsamples +
     // num bloom upsamples +
     // HDR to swapchain
-    this->submitArray.setMaxNumSubmits(
+    this->graphicsSubmitArray.setMaxNumSubmits(
         2 + 
         (PostProcessHandler::MAX_NUM_MIP_LEVELS - 1) +
         (PostProcessHandler::MAX_NUM_MIP_LEVELS - 2) +
         1
     );
-}
-
-void VulkanRenderer::createCommandPool(vk::CommandPool& commandPool, vk::CommandPoolCreateFlags flags, std::string&& name = "NoName")
-{
-    vk::CommandPoolCreateInfo commandPoolCreateInfo; 
-    commandPoolCreateInfo.setFlags(flags);
-    commandPoolCreateInfo.setQueueFamilyIndex(this->queueFamilies.getGraphicsIndex());
-    commandPool = this->getVkDevice().createCommandPool(commandPoolCreateInfo);
-
-    VulkanDbg::registerVkObjectDbgInfo(name, vk::ObjectType::eCommandPool, reinterpret_cast<uint64_t>(vk::CommandPool::CType(commandPool)));
 }
 
 const Material& VulkanRenderer::getAppropriateMaterial(
@@ -1193,6 +1236,9 @@ void VulkanRenderer::recordCommandBuffers(
     ZoneTransient(recordRenderPassCommands_zone1,  true); //:NOLINT   
 #endif
 
+    this->currentComputeCommandBuffer =
+        &this->particleHandler
+            .getComputeCommandBuffer(this->currentFrame);
     this->currentShadowMapCommandBuffer =
         &this->lightHandler
         .getShadowMapCommandBuffer(this->currentFrame);
@@ -1231,6 +1277,13 @@ void VulkanRenderer::recordCommandBuffers(
         this->hasAnimations,
         glm::vec3(this->cameraDataUBO.worldPosition),
         *camera,
+        this->currentFrame
+    );
+
+    // Update particles info
+    this->particleHandler.update(
+        scene,
+        this->cameraDataUBO,
         this->currentFrame
     );
 
@@ -1276,6 +1329,10 @@ void VulkanRenderer::recordCommandBuffers(
         (void*) &this->bloomSettingsData
     );
 
+    // Particle compute
+    this->currentComputeCommandBuffer->beginOneTimeSubmit();
+        this->computeParticles();
+    this->currentComputeCommandBuffer->end();
 
     // Begin shadow map command buffer
     this->currentShadowMapCommandBuffer->beginOneTimeSubmit();
@@ -1301,6 +1358,7 @@ void VulkanRenderer::recordCommandBuffers(
     this->beginRenderPass();
         this->renderDefaultMeshes(scene);
         this->renderSkeletalAnimations(scene);
+        this->renderParticles(scene);
     this->endRenderPass();
 
     this->currentCommandBuffer->end();

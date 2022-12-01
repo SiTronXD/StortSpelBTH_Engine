@@ -1,0 +1,216 @@
+#version 460
+
+#define FREQ_PER_FRAME 0
+
+layout (local_size_x = 32) in;
+
+// Uniform buffer
+layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
+{
+    mat4 projection;
+    mat4 view;
+    vec4 worldPos;
+} cameraBuffer;
+
+// Storage buffer
+struct ParticleInfoData
+{
+    mat4 transform;
+    vec4 life;  // vec4(currentLifeTime, maxLifeTime, 0.0f, 0.0f)
+    vec2 startSize;
+    vec2 endSize;
+    vec4 startColor;
+    vec4 endColor;
+    vec4 currentVelocity;
+    vec4 acceleration;
+    uvec4 indices; // vec4(randomState, emitterIndex, 0, 0)
+};
+layout(std140, set = FREQ_PER_FRAME, binding = 1) buffer ParticleInfosBuffer
+{
+    ParticleInfoData infos[];
+} particles;
+
+// Storage buffer
+struct ParticleEmitterInfoData
+{
+    vec3 conePos;
+    float coneDiskRadius;
+    vec3 coneDir;
+    float tanTheta;
+    vec3 coneNormal;
+    uint shouldRespawn;
+    vec4 settings; // vec4(spawnRate, velocityStrength, 0.0f, 0.0f)
+};
+layout(std140, set = FREQ_PER_FRAME, binding = 2) buffer ParticleEmitterInfosBuffer
+{
+    ParticleEmitterInfoData emitterInfos[];
+} emitters;
+
+// Uniform buffer
+layout(set = FREQ_PER_FRAME, binding = 3) uniform ParticleBufferData
+{
+    vec2 padding;
+    float deltaTime;
+    uint numParticles;
+} globalParticleBuffer;
+
+
+#define PI 3.1415926535897932384626433832795
+
+uint wangHash(inout uint seed)
+{
+    seed = uint(seed ^ uint(61)) ^ uint(seed >> uint(16));
+    seed *= uint(9);
+    seed = seed ^ (seed >> 4);
+    seed *= uint(0x27d4eb2d);
+    seed = seed ^ (seed >> 15);
+
+    return seed;
+}
+
+float randomFloat(inout uint state)
+{
+    return float(wangHash(state)) / 4294967296.0;
+}
+
+vec3 randomVec(inout uint state)
+{
+    return vec3(
+        randomFloat(state),
+        randomFloat(state),
+        randomFloat(state)
+    ) * 2.0f - vec3(1.0f);
+}
+
+mat2x2 rotate(float angleRad)
+{
+    return mat2x2(
+        cos(angleRad), 
+        sin(angleRad), 
+        -sin(angleRad), 
+        cos(angleRad)
+    );
+}
+
+void spawnParticle(
+    in ParticleEmitterInfoData emitter, 
+    in float velocityStrength,
+    inout ParticleInfoData particle, 
+    inout uint randomState,
+    inout vec3 position)
+{
+    // Rotation matrix for the cone
+    mat3x3 coneRotMat = mat3x3(
+        emitter.coneNormal,
+        cross(emitter.coneNormal, emitter.coneDir),
+        emitter.coneDir
+    );
+        
+    // Velocity
+    float randomRadiusScale = randomFloat(randomState);
+    float randomAngle = randomFloat(randomState) * PI * 2.0f;
+    mat2x2 randomRotMat = rotate(randomAngle);
+    vec3 velOffset = vec3(0.0f, 1.0f, 0.0f);
+    velOffset.xy *= randomRotMat;
+    vec3 newVelocity = 
+        normalize(
+            vec3(0.0f, 0.0f, 1.0f) + 
+            velOffset * emitter.tanTheta * randomRadiusScale
+        );
+    particle.currentVelocity.xyz = coneRotMat * newVelocity * velocityStrength;
+
+    // Position
+    vec3 randomDiskOffset = 
+        vec3(0.0f, 1.0f, 0.0f) * 
+        emitter.coneDiskRadius * randomRadiusScale;
+    randomDiskOffset.xy *= randomRotMat;
+    position = emitter.conePos + coneRotMat * randomDiskOffset;
+}
+
+void main()
+{
+    // Avoid computing particles that are outside the range
+    if(gl_GlobalInvocationID.x >= globalParticleBuffer.numParticles)
+    {
+        return;
+    }
+
+    // Get info
+    ParticleInfoData particle = 
+        particles.infos[gl_GlobalInvocationID.x];
+    ParticleEmitterInfoData emitter = 
+        emitters.emitterInfos[particle.indices.y];
+    vec3 position = particle.transform[3].xyz;
+    float deltaTime = globalParticleBuffer.deltaTime;
+    uint randomState = particle.indices.x;
+    float spawnRate = emitter.settings.x;
+
+    // Update velocity and position
+    particle.currentVelocity.xyz += particle.acceleration.xyz * deltaTime;
+    position.xyz += particle.currentVelocity.xyz * deltaTime;
+
+    // Life time intervals:
+    // 1: [-infinity, 0) - About to spawn, NOT rendered
+    // 2: [0, max life timer) - Alive, rendered
+    // 3: [max life timer, infinity] - Dead and will be sent to interval #1
+
+    // Reset life
+    if(particle.life.x >= particle.life.y && emitter.shouldRespawn > 0)
+    {
+        particle.life.x = -0.001f - spawnRate * randomFloat(randomState);
+    }
+    else
+    {
+        // Spawn particle as it's life timer just reached 0
+        if(particle.life.x < 0.0f && particle.life.x + deltaTime >= 0.0f)
+        {
+            spawnParticle(
+                emitter, 
+                emitter.settings.y,
+                particle, 
+                randomState,
+                position
+            );
+        }
+        // These particles have been sent to the shadow realm... :skull:
+        else if(particle.life.x < 0.0f && -spawnRate > particle.life.x)
+        {
+            particle.life.x = particle.life.y;
+        }
+        
+        // Continue timer
+        particle.life.x += deltaTime;
+    }
+
+    // Scale
+    vec2 currentScale = mix(
+        particle.startSize, 
+        particle.endSize,
+        clamp(particle.life.x / particle.life.y, 0.0f, 1.0f)
+    );
+
+    // Don't render the particle if it's about to spawn soon
+    if(particle.life.x < 0.0f)
+    {
+        currentScale = vec2(0.0f);
+    }
+
+    // Update direction towards camera
+    vec3 forward = normalize(cameraBuffer.worldPos.xyz - position);
+    vec3 right = -normalize(cross(forward, vec3(0.0f, 1.0f, 0.0f)));
+    vec3 up = -cross(right, forward);
+
+    // Update transform
+    particle.transform = mat4(
+        vec4(   right,  0.0f) * currentScale.x,
+        vec4(      up,  0.0f) * currentScale.y,
+        vec4( forward,  0.0f),
+        vec4(position,  1.0f)
+    );
+
+    // Update random state
+    particle.indices.x = randomState;
+
+    // Update new data
+    particles.infos[gl_GlobalInvocationID.x] = particle;
+}

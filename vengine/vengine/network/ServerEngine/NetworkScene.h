@@ -34,7 +34,7 @@ public:
 	/////////////custom function for server only/////////////
 	int createPlayer();
 	int getPlayer(const int& whatPlayer);
-	int getNearestPlayer(const int& ent);
+	virtual int getNearestPlayer(const int& ent);
 	bool isAPlayer(const int& entity);
 	const int getPlayerSize();
 	void removePlayer(int playerID);

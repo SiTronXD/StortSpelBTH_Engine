@@ -1,38 +1,12 @@
 #include "pch.h"
 #include "VertexBufferArray.hpp"
 
-void VertexBufferArray::cpuUpdateBuffer(
-    VmaAllocation& memory,
-    const vk::DeviceSize& bufferSize,
-    void* dataStream)
-{
-    // Map memory for transfer to vertex buffer
-    void* data{};
-    if (vmaMapMemory(
-        *this->vma,
-        memory,
-        &data) != VK_SUCCESS)
-    {
-        throw std::runtime_error("Failed to map memory using VMA.");
-    }
-
-    memcpy(
-        data,
-        dataStream,
-        (size_t)bufferSize
-    );
-
-    vmaUnmapMemory(
-        *this->vma,
-        memory
-    );
-}
-
 VertexBufferArray::VertexBufferArray()
     : device(nullptr), 
     vma(nullptr),
     transferQueue(nullptr),
-    transferCommandPool(nullptr)
+    transferCommandPool(nullptr),
+    framesInFlight(0)
 {
 
 }

@@ -36,6 +36,41 @@ struct CameraBufferData
     glm::vec4 worldPosition = glm::vec4(glm::vec3(0.0f), 1.0f);
 };
 
+// Data for all particles
+struct GlobalParticleBufferData
+{
+    glm::vec2 padding = glm::vec3(0.0f);
+    float deltaTime = 1.0f;
+    uint32_t numParticles = 0;
+};
+
+// Per particle info
+struct ParticleInfo
+{
+    glm::mat4 transformMatrix = glm::mat4(1.0f);
+    glm::vec4 life = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // vec4(currentLifeTime, maxLifeTime, 0.0f, 0.0f)
+    glm::vec2 startSize = glm::vec2(1.0f);
+    glm::vec2 endSize = glm::vec2(1.0f);
+    glm::vec4 startColor = glm::vec4(1.0f);
+    glm::vec4 endColor = glm::vec4(1.0f);
+    glm::vec4 currentVelocity = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+    glm::vec4 acceleration = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
+    glm::uvec4 indices = glm::uvec4(0u);    // vec4(randomState, emitterIndex, 0, 0)
+};
+
+// Per particle system info
+struct ParticleEmitterInfo
+{
+    // Spawn volume
+    glm::vec3 conePos;
+    float coneDiskRadius;
+    glm::vec3 coneDir;
+    float tanTheta;
+    glm::vec3 coneNormal;
+    uint32_t shouldRespawn;
+    glm::vec4 settings = glm::vec4(0.0f); // vec4(spawnRate, velocityStrength, 0.0f, 0.0f)
+};
+
 // Shadow map data
 #define MAX_NUM_CASCADES 4
 struct ShadowMapData
@@ -44,7 +79,7 @@ struct ShadowMapData
     glm::vec2 shadowMapSize = glm::vec2(0.0f);
     float shadowMapMinBias = 0.0001f;
     float shadowMapAngleBias = 0.0015f;
-    glm::uvec4 cascadeSettings = glm::uvec4(0.0f);
+    glm::uvec4 cascadeSettings = glm::uvec4(0u);
 };
 
 // Offset indicies into the light buffer

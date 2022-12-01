@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "LightHandler.hpp"
-#include "../application/Scene.hpp"
-#include "Texture.hpp"
+#include "../../application/Scene.hpp"
+#include "../Texture.hpp"
 
 const uint32_t LightHandler::MAX_NUM_LIGHTS   = 16;
 const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 3;
@@ -88,7 +88,7 @@ void LightHandler::init(
     {
         shadowMapImageViews[i] =
         {
-            this->shadowMapTexture.getLayerImageView(i)
+            this->shadowMapTexture.getLayerImageView(uint32_t(i))
         };
     }
     this->shadowMapFramebuffer.create(

@@ -18,6 +18,8 @@ enum class BlendOption
 class Pipeline
 {
 private:
+	vk::PipelineBindPoint bindPoint;
+
 	vk::Pipeline pipeline{};
 
 	Device* device;
@@ -57,9 +59,14 @@ public:
 		const vk::PrimitiveTopology& topology = 
 			vk::PrimitiveTopology::eTriangleList,
 		const BlendOption& blendOption = BlendOption::DEFAULT);
+	void createComputePipeline(
+		Device& device,
+		ShaderInput& shaderInput,
+		const std::string& computeShaderName
+	);
 
 	void cleanup();
 
-	inline const vk::Pipeline& getVkPipeline() const
-	{ return this->pipeline; }
+	inline const vk::Pipeline& getVkPipeline() const { return this->pipeline; }
+	inline const vk::PipelineBindPoint& getVkPipelineBindPoint() const { return this->bindPoint; }
 };

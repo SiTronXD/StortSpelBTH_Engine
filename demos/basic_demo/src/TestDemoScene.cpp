@@ -69,6 +69,47 @@ void TestDemoScene::init()
 	this->getComponent<DirectionalLight>(this->directionalLightEntity)
 		.cascadeDepthScale = 5.0f;
 
+	// Particle system
+	this->particleSystemEntities.push_back(this->createEntity());
+	this->setComponent<ParticleSystem>(this->particleSystemEntities[0]);
+	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[0]);
+	partSys.maxlifeTime = 1.0f;
+	partSys.numParticles = 512;
+	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
+	partSys.startSize = glm::vec2(0.5f);
+	partSys.endSize = glm::vec2(0.0f);
+	partSys.startColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
+	partSys.endColor = glm::vec4(0.2f, 0.2f, 0.2f, 0.0f);
+	partSys.velocityStrength = 17.0f;
+	partSys.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
+
+	partSys.coneSpawnVolume.diskRadius = 0.0f;
+	partSys.coneSpawnVolume.coneAngle = 30.0f;
+	partSys.coneSpawnVolume.localDirection = glm::vec3(0.0f, -1.0f, -1.0f);
+	partSys.coneSpawnVolume.localPosition.x -= 40.0f;
+
+	this->particleSystemEntities.push_back(this->createEntity());
+	this->setComponent<ParticleSystem>(this->particleSystemEntities[1]);
+	ParticleSystem& partSys1 = this->getComponent<ParticleSystem>(this->particleSystemEntities[1]);
+	partSys1.maxlifeTime = 3.0f;
+	partSys1.numParticles = 512;
+	partSys1.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
+	partSys1.startSize = glm::vec2(1.0f);
+	partSys1.endSize = glm::vec2(0.1f);
+	partSys1.startColor = glm::vec4(1.0f);
+	partSys1.endColor = glm::vec4(0.1f, 0.1f, 0.1f, 1.0f);
+	partSys1.velocityStrength = 10.0f;
+	partSys1.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
+	
+	partSys1.coneSpawnVolume.diskRadius = 0.0f;
+	partSys1.coneSpawnVolume.coneAngle = 60.0f;
+	partSys1.coneSpawnVolume.localDirection = glm::vec3(0.0f, -1.0f, -1.0f);
+	partSys1.coneSpawnVolume.localPosition.x -= 20.0f;
+
+	partSys1.respawnSetting = RespawnSetting::EXPLOSION;
+	partSys1.spawn = false;
+
+
 	// Create entity (already has transform)
 	int puzzleTest = this->createEntity();
 	this->setComponent<MeshComponent>(puzzleTest, (int)this->getResourceManager()->addMesh("assets/models/pussel1_5.fbx"));
@@ -315,6 +356,24 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	// Particle system
+	ImGui::Begin("Particle System");
+	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)
+	{
+		Transform& partSysTran = this->getComponent<Transform>(this->particleSystemEntities[i]);
+		ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[i]);
+		ImGui::SliderFloat3(("Entity position " + std::to_string(i) + ": ").c_str(), &partSysTran.position[0], -5.0f, 5.0f);
+		ImGui::SliderFloat3(("Entity rotation " + std::to_string(i) + ": ").c_str(), &partSysTran.rotation[0], -180.0f, 180.0f);
+		ImGui::SliderFloat3(("Cone pos " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.localPosition[0], -5.0f, 5.0f);
+		ImGui::SliderFloat3(("Cone dir " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.localDirection[0], -1.0f, 1.0f);
+		ImGui::SliderFloat(("Disk radius " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.diskRadius, 0.0f, 10.0f);
+		ImGui::SliderFloat(("Cone angle " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.coneAngle, 0.0f, 180.0f);
+		ImGui::SliderFloat(("Velocity strength: " + std::to_string(i) + ": ").c_str(), &partSys.velocityStrength, 0.0f, 20.0f);
+		ImGui::SliderFloat(("Spawn rate: " + std::to_string(i) + ": ").c_str(), &partSys.spawnRate, 0.0f, 1.0f);
+		ImGui::Checkbox(("Spawn: " + std::to_string(i) + ": ").c_str(), &partSys.spawn);
+	}
+	ImGui::End();
+
 	// Make ghosts follow skeletal animation
 	this->getComponent<Transform>(this->testEntity).setMatrix(
 		this->getResourceManager()->getJointTransform(
@@ -417,8 +476,8 @@ void TestDemoScene::update()
 #endif
 
 	// Imgui bloom
-	/*static float bloomBufferLerpVal = 0.04f;
-	static int numMips = 6;
+	static float bloomBufferLerpVal = 0.04f;
+	static int numMips = 7;
 	ImGui::Begin("Bloom settings");
 	ImGui::SliderFloat("Bloom lerp alpha", &bloomBufferLerpVal, 0.0f, 1.0f);
 	ImGui::SliderInt("Bloom mip levels", &numMips, 0, 10);
@@ -429,7 +488,7 @@ void TestDemoScene::update()
 	ImGui::Begin("Bloom");
 	ImGui::SliderFloat3("Bloom color", &this->bloomColor[0], 0.0f, 100.0f);
 	ImGui::SliderFloat("Bloom strength", &this->bloomStrength, 0.0f, 100.0f);
-	ImGui::End();*/
+	ImGui::End();
 
 	for (uint32_t i = 2; i < 4; ++i)
 	{
@@ -550,6 +609,14 @@ void TestDemoScene::update()
 	);
 
 	// Debug rendering
+
+	// Particle system
+	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)
+	{
+		Scene::getDebugRenderer()->renderParticleSystemCone(
+			this->particleSystemEntities[i]
+		);
+	}
 
 	// Skeleton
 	Scene::getDebugRenderer()->renderSkeleton(
