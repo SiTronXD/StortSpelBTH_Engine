@@ -29,6 +29,7 @@ private:
 	uint32_t baseInstanceOffset = 0;
 
 public:
+	char name[16];
 	uint32_t numParticles = 10;
 	uint32_t textureIndex = 0;
 	float maxlifeTime = 1.0f;
