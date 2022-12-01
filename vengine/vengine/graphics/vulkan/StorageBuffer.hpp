@@ -8,8 +8,12 @@ private:
 
 public:
 	void createStorageBuffer(
-        Device& device, 
-        VmaAllocator& vma, 
+        Device& device,
+        VmaAllocator& vma,
         const size_t& bufferSize,
-        const uint32_t& framesInFlight);
+        uint32_t framesInFlight,
+        const bool& gpuOnly,
+        void* initialData,
+        vk::Queue* transferQueue,
+        vk::CommandPool* transferCommandPool);
 };

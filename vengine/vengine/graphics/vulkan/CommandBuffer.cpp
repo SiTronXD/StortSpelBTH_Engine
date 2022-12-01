@@ -46,10 +46,11 @@ void CommandBuffer::setScissor(const vk::Rect2D& scissor)
     this->commandBuffer.setScissor(0, 1, &scissor);
 }
 
-void CommandBuffer::bindGraphicsPipeline(const Pipeline& pipeline)
+void CommandBuffer::bindPipeline(const Pipeline& pipeline)
 {
+    this->currentBindPoint = vk::PipelineBindPoint(pipeline.getVkPipelineBindPoint());
     this->commandBuffer.bindPipeline(
-        vk::PipelineBindPoint::eGraphics,
+        this->currentBindPoint,
         pipeline.getVkPipeline()
     );
 }
@@ -135,7 +136,7 @@ void CommandBuffer::bindShaderInputFrequency(
     if (descriptorSetGroup[frequencyIndex] != nullptr)
     {
         this->commandBuffer.bindDescriptorSets(
-            vk::PipelineBindPoint::eGraphics, // The descriptor set can be used at ANY stage of the Graphics Pipeline
+            this->currentBindPoint,
             shaderInput.getPipelineLayout().getVkPipelineLayout(),            // The Pipeline Layout that describes how the data will be accessed in our shaders
             frequencyIndex,                               // Which Set is the first we want to use? 
             1, // How many Descriptor Sets where going to go through?

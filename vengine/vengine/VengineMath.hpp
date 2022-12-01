@@ -3,19 +3,20 @@
 #include "glm/common.hpp"
 #include "glm/gtc/quaternion.hpp"
 
-
 class SMath
 {
- public:
-	 static glm::vec3 getRandomVector(float scalar);
-	 static glm::vec3 rotateVectorByQuaternion(const glm::quat& quaternion, const glm::vec3& vector);
-     static glm::vec3 extractTranslation(const glm::mat4& mat);
+public:
+    static inline const float PI = 3.141592f;
 
-     static glm::mat4 rotateTowards(const glm::vec3& dir, const glm::vec3& up);
-     static glm::mat4 rotateEuler(const glm::vec3& angles);
-	 static glm::vec3 rotateVector(const glm::vec3& angles, const glm::vec3 vector);
+	static glm::vec3 getRandomVector(float scalar);
+	static glm::vec3 rotateVectorByQuaternion(const glm::quat& quaternion, const glm::vec3& vector);
+    static glm::vec3 extractTranslation(const glm::mat4& mat);
 
-     static void normalizeScale(glm::mat4& matrix);
+    static glm::mat4 rotateTowards(const glm::vec3& dir, const glm::vec3& up);
+    static glm::mat4 rotateEuler(const glm::vec3& angles);
+	static glm::vec3 rotateVector(const glm::vec3& angles, const glm::vec3 vector);
+
+    static void normalizeScale(glm::mat4& matrix);
 };
 
 inline glm::vec3 SMath::getRandomVector(float scalar) 

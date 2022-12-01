@@ -50,6 +50,7 @@
 #include "../components/PointLight.hpp"
 #include "../components/Spotlight.hpp"
 #include "../components/NoShadowCasting.hpp"
+#include "../components/ParticleSystem.hpp"
 
 #include "assimp/Importer.hpp"
 #include "assimp/scene.h"

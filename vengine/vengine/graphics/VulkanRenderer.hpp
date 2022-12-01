@@ -19,13 +19,14 @@
 #include "imgui.h"              // Need to be included in header
 
 #include "../resource_management/ResourceManager.hpp"
-#include "LightHandler.hpp"
-#include "PostProcessHandler.hpp"
+#include "handlers/LightHandler.hpp"
+#include "handlers/PostProcessHandler.hpp"
+#include "handlers/ParticleSystemHandler.hpp"
 #include "UIRenderer.hpp"
 #include "DebugRenderer.hpp"
 
 class Scene;
-class Camera;
+struct Camera;
 
 using stbi_uc = unsigned char;
 
@@ -69,8 +70,10 @@ class VulkanRenderer
     RenderPass renderPassSwapchain{};
     RenderPass renderPassImgui{};
     vk::CommandPool commandPool{};
+    vk::CommandPool computeCommandPool{};
     CommandBufferArray commandBuffers;
     CommandBufferArray swapchainCommandBuffers;
+    CommandBuffer* currentComputeCommandBuffer;
     CommandBuffer* currentShadowMapCommandBuffer;
     CommandBuffer* currentCommandBuffer;
     CommandBuffer* currentSwapchainCommandBuffer;
@@ -84,7 +87,6 @@ class VulkanRenderer
     Pipeline pipeline;
 
     // Animations pipeline
-	bool hasAnimations;
     UniformBufferID animViewProjectionUB;
     UniformBufferID animAllLightsInfoUB;
     UniformBufferID animShadowMapDataUB;
@@ -101,20 +103,25 @@ class VulkanRenderer
 
     LightHandler lightHandler;
     PostProcessHandler postProcessHandler;
+    ParticleSystemHandler particleHandler;
+
+    bool hasAnimations;
 
     // Utilities
     vk::SurfaceFormatKHR  surfaceFormat{};
 
     // Synchronisation 
     std::vector<vk::Semaphore> imageAvailable;
+    std::vector<vk::Semaphore> computeFinished;
     std::vector<vk::Semaphore> shadowMapRenderFinished;
     std::vector<vk::Semaphore> sceneRenderFinished;
     std::vector<std::vector<vk::Semaphore>> downsampleFinished;
     std::vector<std::vector<vk::Semaphore>> upsampleFinished;
     std::vector<vk::Semaphore> swapchainRenderFinished;
     std::vector<vk::Fence> drawFences;
-    
-    SubmitArray submitArray;
+
+    SubmitArray computeSubmitArray;
+    SubmitArray graphicsSubmitArray;
 
     char* tracyImage{};
 
@@ -133,17 +140,18 @@ private:
     void setupDebugMessenger();
     void createSurface();
     void windowResize(Camera* camera);
-    void createCommandPool();   //TODO: Deprecate! 
-    void createSynchronisation();
     void createCommandPool(
-        vk::CommandPool& commandPool,
-        vk::CommandPoolCreateFlags flags,
-        std::string&& name);
+        const uint32_t& queueFamilyIndex,
+        vk::CommandPool& outputCommandPool);
+    void createSynchronisation();
 
     // initializations of subsystems
     void initResourceManager();
 
     // ------- Render functions within render passes -------
+
+    // Compute pass for particles
+    void computeParticles();
 
     // Render pass for shadow map rendering
     std::vector<vk::DeviceSize> bindVertexBufferOffsets;
@@ -163,8 +171,7 @@ private:
     void beginRenderPass();
     void renderDefaultMeshes(Scene* scene);
     void renderSkeletalAnimations(Scene* scene);
-    void renderUI();
-    void renderDebugElements();
+    void renderParticles(Scene* scene);
     void endRenderPass();
 
     // Render pass for bloom downsampling
@@ -185,6 +192,8 @@ private:
     void beginSwapchainRenderPass(
         const uint32_t& imageIndex);
     void renderToSwapchainImage();
+    void renderUI();
+    void renderDebugElements();
     void endSwapchainRenderPass();
 
     // Render pass for imgui rendering
@@ -210,13 +219,8 @@ private:
 
     inline vk::Device& getVkDevice() { return this->device.getVkDevice(); }
 
-private: 
-    // Clients Privates 
-    std::function<void()> gameLoopFunction;
-
 public:
     VulkanRenderer();
-    ~VulkanRenderer()   = default;    
     VulkanRenderer(const VulkanRenderer &ref)              = delete;
     VulkanRenderer(VulkanRenderer &&ref)                   = delete;
     VulkanRenderer& operator=(const VulkanRenderer &ref)   = delete;

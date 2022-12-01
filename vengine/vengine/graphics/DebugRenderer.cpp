@@ -312,6 +312,89 @@ void DebugRenderer::renderSpotlight(const Entity& spotlightEntity)
     );
 }
 
+void DebugRenderer::renderParticleSystemCone(
+    const Entity& particleSystemEntity,
+    const glm::vec3& color)
+{
+    Scene* scene = this->sceneHandler->getScene();
+    Transform& transform = scene->getComponent<Transform>(particleSystemEntity);
+    ParticleSystem& particleSystem = scene->getComponent<ParticleSystem>(particleSystemEntity);
+
+    // Different transformations
+    transform.updateMatrix();
+    const glm::mat3& transformRot =
+        transform.getRotationMatrix();
+    const glm::vec3 coneDir = glm::normalize(
+        transformRot *
+        particleSystem.coneSpawnVolume.localDirection
+    );
+    glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    if (glm::abs(glm::dot(worldUp, coneDir)) >= 0.95f)
+        worldUp = glm::vec3(1.0f, 0.0f, 0.0f);
+    const glm::vec3 coneNormal = 
+        glm::normalize(glm::cross(worldUp, coneDir));
+    const glm::mat3 coneRotMat =
+        glm::mat3(
+            coneNormal,
+            glm::cross(coneNormal, coneDir),
+            coneDir
+        );
+
+    // Render lines as cone tangents
+    const uint32_t numLines = 16;
+    glm::vec3 positions0[numLines];
+    glm::vec3 positions1[numLines];
+    for (uint32_t i = 0; i < numLines; ++i)
+    {
+        const glm::mat4 tempRot = glm::rotate(
+            glm::mat4(1.0f),
+            float(i) / numLines * SMath::PI * 2.0f,
+            glm::vec3(0.0f, 0.0f, 1.0f)
+        );
+
+        // Base position
+        glm::vec3 diskOffset =
+            glm::vec3(0.0f, 1.0f, 0.0f) * particleSystem.coneSpawnVolume.diskRadius;
+        diskOffset =
+            tempRot * glm::vec4(diskOffset, 0.0f);
+        positions0[i] =
+            transform.position + 
+            transformRot *
+            particleSystem.coneSpawnVolume.localPosition +
+            coneRotMat * diskOffset;
+
+        // Cone tangent direction
+        const float strength = 5.0f;
+        const float tanTheta =
+            std::tan(
+                glm::radians(
+                    std::clamp(
+                        particleSystem.coneSpawnVolume.coneAngle * 0.5f,
+                        0.0f,
+                        89.0f
+                    )
+                )
+            );
+        positions1[i] = 
+            positions0[i] + 
+            (coneDir + tanTheta * coneRotMat * glm::vec3(tempRot * glm::vec4(0.0f, 1.0f, 0.0f, 0.0f))) * strength;
+
+        // Render line
+        this->renderLine(positions0[i], positions1[i], color);
+    }
+
+    // Stitch together lines in disk
+    for (uint32_t i = 0; i < numLines/2; ++i)
+    {
+        this->renderLine(positions0[i], positions0[(i + numLines/2) % numLines], color);
+    }
+    for (uint32_t i = 0; i < numLines; ++i)
+    {
+        this->renderLine(positions0[i], positions0[(i + 1) % numLines], color);
+        this->renderLine(positions1[i], positions1[(i + 1) % numLines], color);
+    }
+}
+
 void DebugRenderer::renderSphere(
     const glm::vec3& position,
     const float& radius,

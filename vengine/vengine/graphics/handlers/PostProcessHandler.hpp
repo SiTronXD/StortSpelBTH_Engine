@@ -1,12 +1,12 @@
 #pragma once
 
 #include <stdint.h>
-#include "Texture.hpp"
-#include "vulkan/RenderPass.hpp"
-#include "vulkan/FramebufferArray.hpp"
-#include "vulkan/CommandBufferArray.hpp"
-#include "vulkan/Pipeline.hpp"
-#include "vulkan/ShaderStructs.hpp"
+#include "../Texture.hpp"
+#include "../vulkan/RenderPass.hpp"
+#include "../vulkan/FramebufferArray.hpp"
+#include "../vulkan/CommandBufferArray.hpp"
+#include "../vulkan/Pipeline.hpp"
+#include "../vulkan/ShaderStructs.hpp"
 
 class Texture;
 class RenderPass;
