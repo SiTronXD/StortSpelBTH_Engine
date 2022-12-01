@@ -30,7 +30,7 @@ layout(std140, set = FREQ_PER_FRAME, binding = 1) readonly buffer ParticleInfosB
 
 // Output data
 layout(location = 0) out vec2 fragUV;
-layout(location = 1) out vec3 fragTintCol;
+layout(location = 1) out vec4 fragTintCol;
 
 void main()
 {
@@ -81,8 +81,8 @@ void main()
     // Tint color
     fragTintCol = 
         mix(
-            particle.startColor.rgb,
-            particle.endColor.rgb,
+            particle.startColor,
+            particle.endColor,
             clamp(particle.life.x / particle.life.y, 0.0f, 1.0f)
         );
 }

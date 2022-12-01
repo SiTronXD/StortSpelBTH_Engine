@@ -88,8 +88,8 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				particle.endSize = particleSystemComp.endSize;
 
 				// Color
-				particle.startColor = glm::vec4(particleSystemComp.startColor, 1.0f);
-				particle.endColor = glm::vec4(particleSystemComp.endColor, 1.0f);
+				particle.startColor = particleSystemComp.startColor;
+				particle.endColor = particleSystemComp.endColor;
 
 				// Acceleration
 				particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
