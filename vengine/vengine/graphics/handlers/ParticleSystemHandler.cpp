@@ -212,6 +212,7 @@ void ParticleSystemHandler::update(
 			ParticleEmitterInfo& emitterInfo =
 				this->particleEmitterInfos[particleSystemComp.particleSystemIndex];
 
+			transformComp.updateMatrix();
 			const glm::mat3& rotMat =
 				transformComp.getRotationMatrix();
 

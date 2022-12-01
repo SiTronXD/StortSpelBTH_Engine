@@ -321,6 +321,7 @@ void DebugRenderer::renderParticleSystemCone(
     ParticleSystem& particleSystem = scene->getComponent<ParticleSystem>(particleSystemEntity);
 
     // Different transformations
+    transform.updateMatrix();
     const glm::mat3& transformRot =
         transform.getRotationMatrix();
     const glm::vec3 coneDir = glm::normalize(

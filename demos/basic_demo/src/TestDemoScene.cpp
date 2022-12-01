@@ -75,33 +75,36 @@ void TestDemoScene::init()
 	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[0]);
 	partSys.maxlifeTime = 3.0f;
 	partSys.numParticles = 512;
-	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
-	partSys.startSize = glm::vec2(1.0f);
-	partSys.endSize = glm::vec2(0.1f);
-	partSys.startColor = glm::vec3(0.0f, 1.0f, 0.0f);
-	partSys.endColor = glm::vec3(1.0f, 0.0f, 0.0f);
+	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/pogPoop.png");
+	partSys.startSize = glm::vec2(0.5f);
+	partSys.endSize = glm::vec2(0.0f);
+	partSys.startColor = glm::vec3(1.0f);
+	partSys.endColor = glm::vec3(0.2f, 0.2f, 0.2f);
+	partSys.velocityStrength = 17.0f;
 	partSys.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
 
-	partSys.coneSpawnVolume.diskRadius = 5.0f;
-	partSys.coneSpawnVolume.coneAngle = 90.0f;
-	partSys.coneSpawnVolume.localDirection = glm::vec3(0.0f, 0.0f, 1.0f);
+	partSys.coneSpawnVolume.diskRadius = 0.0f;
+	partSys.coneSpawnVolume.coneAngle = 30.0f;
+	partSys.coneSpawnVolume.localDirection = glm::vec3(0.0f, -1.0f, -1.0f);
+	partSys.coneSpawnVolume.localPosition.x -= 40.0f;
 
 	this->particleSystemEntities.push_back(this->createEntity());
 	this->setComponent<ParticleSystem>(this->particleSystemEntities[1]);
 	ParticleSystem& partSys1 = this->getComponent<ParticleSystem>(this->particleSystemEntities[1]);
 	partSys1.maxlifeTime = 3.0f;
 	partSys1.numParticles = 512;
-	partSys1.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
+	partSys1.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/pogPoop.png");
 	partSys1.startSize = glm::vec2(1.0f);
 	partSys1.endSize = glm::vec2(0.1f);
-	partSys1.startColor = glm::vec3(1.0f, 0.0f, 1.0f);
-	partSys1.endColor = glm::vec3(0.0f, 0.0f, 0.0f);
+	partSys1.startColor = glm::vec3(1.0f);
+	partSys1.endColor = glm::vec3(0.1f, 0.1f, 0.1f);
+	partSys1.velocityStrength = 10.0f;
 	partSys1.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
 	
-	partSys1.coneSpawnVolume.localPosition.x += 20.0f;
-	partSys1.coneSpawnVolume.diskRadius = 5.0f;
-	partSys1.coneSpawnVolume.coneAngle = 90.0f;
-	partSys1.coneSpawnVolume.localDirection = glm::vec3(0.0f, 0.0f, 1.0f);
+	partSys1.coneSpawnVolume.diskRadius = 0.0f;
+	partSys1.coneSpawnVolume.coneAngle = 60.0f;
+	partSys1.coneSpawnVolume.localDirection = glm::vec3(0.0f, -1.0f, -1.0f);
+	partSys1.coneSpawnVolume.localPosition.x -= 20.0f;
 
 	partSys1.respawnSetting = RespawnSetting::EXPLOSION;
 	partSys1.spawn = false;
@@ -644,14 +647,14 @@ void TestDemoScene::update()
 	}
 	ImGui::End();
 
-	if (Input::isKeyPressed(Keys::O)) {
+	/*if (Input::isKeyPressed(Keys::O)) {
 		this->getNetworkHandler()->createServer();
 		this->getNetworkHandler()->createClient();
 		this->getNetworkHandler()->connectClientToThis();
 	}
 	if (Input::isKeyPressed(Keys::I)) {
 		this->getNetworkHandler()->sendTCPDataToClient(TCPPacketEvent{ GameEvents::START });
-	}
+	}*/
 
 	if (Input::isKeyReleased(Keys::V))
 	{
