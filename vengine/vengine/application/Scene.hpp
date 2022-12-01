@@ -12,6 +12,7 @@
 #include "Window.hpp"
 #include "../systems/System.hpp"
 #include "../audio/AudioHandler.h"
+#include "../components/MultipleAudioSource.h"
 
 #include <entt.hpp>
 #include <vector>

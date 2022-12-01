@@ -203,6 +203,7 @@
     <ClInclude Include="vengine\graphics\PostProcessHandler.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\SubmitArray.hpp" />
     <ClInclude Include="vengine\components\NoShadowCasting.hpp" />
+    <ClInclude Include="vengine\components\MultipleAudioSource.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

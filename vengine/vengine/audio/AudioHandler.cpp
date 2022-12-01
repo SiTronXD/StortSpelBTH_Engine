@@ -63,6 +63,19 @@ void AudioHandler::update()
 		alSource3f(id, AL_POSITION, pos.x, pos.y, pos.z);
 	}
 
+	const auto& multiSourceView = scene->getSceneReg().view<MultipleAudioSources, Transform>(entt::exclude<Inactive>);
+	for (const entt::entity& entity : multiSourceView)
+	{
+		const MultipleAudioSources& multiaudio = multiSourceView.get<MultipleAudioSources>(entity);
+		const glm::vec3& pos = multiSourceView.get<Transform>(entity).position;
+		for (int i = 0; i < NUM_MAX_MULTI_AUDIOSOURCE; i++)
+		{
+			const uint32_t id = multiaudio.audioSource[i].sourceId;
+			alSource3f(id, AL_POSITION, pos.x, pos.y, pos.z);
+		}
+	}
+
+
 	const Entity camID = scene->getMainCameraID();
 	if (scene->isActive(camID))
 	{
@@ -125,34 +138,53 @@ float AudioHandler::getMasterVolume() const
 
 void AudioHandler::setMusic(const std::string& filePath)
 {
+	ALenum error = 0;
+	alGetError(); // Clears error code
+
 	if (!this->mrStreamer.openFromFile(filePath))
 	{
 		Log::warning("Failed loading music file");
 		return;
 	}
-	
+
 	alSourceStop(this->musicSourceId);
+	if ((error = alGetError()) != AL_NO_ERROR) 
+		{ Log::error("AudioHandler::setMusic | Failed stopping music. OpenAL error: " + std::to_string(error)); return; }
+
 	alSourcei(this->musicSourceId, AL_BUFFER, NULL);
+	if ((error = alGetError()) != AL_NO_ERROR) 
+		{ Log::error("AudioHandler::setMusic | Failed deattching buffers. OpenAL error: " + std::to_string(error)); return; }
+
 	alDeleteBuffers(NUM_BUFFERS, this->alBuffers);
+	if ((error = alGetError()) != AL_NO_ERROR) 
+		{ Log::error("AudioHandler::setMusic | Failed deleting old buffers. OpenAL error: " + std::to_string(error)); return; }
+
 	alGenBuffers(NUM_BUFFERS, this->alBuffers);
+	if ((error = alGetError()) != AL_NO_ERROR) 
+		{ Log::error("AudioHandler::setMusic | Failed generating new buffers. OpenAL error: " + std::to_string(error)); return; }
+
 
 	this->alSoundFormat = this->mrStreamer.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
 	memset(this->audioSamples, 0, BUFFER_SIZE);
 
+	alGetError(); // Clear error queue (just in case)
 	size_t numSamplesRead = 0;
 	for (int i = 0; i < NUM_BUFFERS; i++)
     {
         numSamplesRead = this->mrStreamer.read((short*)this->audioSamples, NUM_SAMPLES_PER_READ);
 
 	    alBufferData(this->alBuffers[i], this->alSoundFormat, this->audioSamples, numSamplesRead * sizeof(short), this->mrStreamer.getSampleRate());
-		ALenum error = alGetError();
-        if (error != AL_NO_ERROR)
+        if ((error = alGetError()) != AL_NO_ERROR)
 		{
-			Log::error("Failed filling music buffers. ALError: " + std::to_string(error));
+			Log::error("AudioHandler::setMusic | Failed filling music buffers. ALError: " + std::to_string(error));
 		}
     }
 
 	alSourceQueueBuffers(this->musicSourceId, NUM_BUFFERS, this->alBuffers);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		Log::error("AudioHandler::setMusic | Failed filling queueing music buffers. ALError: " + std::to_string(error));
+	}
 }
 
 void AudioHandler::playMusic()
