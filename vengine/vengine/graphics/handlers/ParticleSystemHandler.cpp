@@ -291,7 +291,6 @@ void ParticleSystemHandler::cleanup()
 	this->shaderInput.cleanup();
 
 	this->computePipeline.cleanup();
-	//this->computeShaderInput.cleanup();
 
 	this->particleEmitterInfos.clear();
 }

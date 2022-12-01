@@ -54,10 +54,6 @@ void Buffer::update(void* copyData, const uint32_t& currentFrame)
         this->getBufferSize(),
         copyData
     );
-
-    /*this->map(data, currentFrame);
-    memcpy(data, copyData, this->getBufferSize());
-    this->unmap(currentFrame);*/
 }
 
 void Buffer::cleanup()

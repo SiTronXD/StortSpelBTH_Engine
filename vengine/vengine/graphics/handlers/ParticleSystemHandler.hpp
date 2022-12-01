@@ -18,8 +18,6 @@ private:
 	std::vector<ParticleEmitterInfo> particleEmitterInfos;
 
 	// Compute
-	//StorageBufferID particleInfoWriteSBO;
-	//ShaderInput computeShaderInput;
 	Pipeline computePipeline;
 	CommandBufferArray computeCommandBuffers;
 
