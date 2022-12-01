@@ -27,7 +27,7 @@ void main()
 	vec4 finalCol = texCol * fragTintCol;
 
 	// Discard almost completely transparent pixels
-	if(finalCol.a <= 0.1f)
+	if(finalCol.a <= 0.001f)
 	{
 		discard;
 	}
