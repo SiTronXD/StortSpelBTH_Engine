@@ -21,10 +21,7 @@
     <ClCompile Include="src\TestDemoScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\NetworkTestScene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\TheServerGame.cpp">
+    <ClCompile Include="src\network\TheServerGame.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\LevelEditorTestScene.cpp">
@@ -33,7 +30,13 @@
     <ClCompile Include="src\NewTestScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\LobbyScene.cpp">
+    <ClCompile Include="src\network\LobbyScene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\network\NetworkHandlerTest.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\NetworkTestScene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -41,10 +44,7 @@
     <ClInclude Include="src\TestDemoScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NetworkTestScene.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\TheServerGame.h">
+    <ClInclude Include="src\network\TheServerGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\LevelEditorTestScene.h">
@@ -53,7 +53,13 @@
     <ClInclude Include="src\NewTestScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\LobbyScene.h">
+    <ClInclude Include="src\network\LobbyScene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\network\NetworkHandlerTest.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\NetworkTestScene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

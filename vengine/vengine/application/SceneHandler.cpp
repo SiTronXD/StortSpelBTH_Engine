@@ -5,6 +5,7 @@
 #include "../graphics/VulkanRenderer.hpp"
 #include "../graphics/UIRenderer.hpp"
 #include "../lua/ScriptHandler.h"
+#include "../network/ServerEngine/NetworkScene.h"
 
 void SceneHandler::initSubsystems()
 {
@@ -48,6 +49,40 @@ void SceneHandler::updatePreScene()
 				if (aniSlot.timer >= meshData.animations[aniSlot.animationIndex].endTime)
 				{
 					aniSlot.timer -= meshData.animations[aniSlot.animationIndex].endTime;
+					aniSlot.finishedCycle = true;
+				}
+
+				if (aniSlot.nAnimationIndex != ~0u)
+				{
+					const Animation& nAnimation = meshData.animations[aniSlot.nAnimationIndex];
+					// Still in transition
+					if (aniSlot.alpha < 1.f)
+					{
+						aniSlot.nTimer += Time::getDT() * 24.f * aniSlot.nTimeScale;
+						if (aniSlot.nTimer >= nAnimation.endTime)
+						{
+							aniSlot.nTimer -= nAnimation.endTime;
+						}
+
+						// Clamping alpha makes sure mesh doesn't "blink" when transitionTime == 0.f
+						// glm::mix is defined beyond [0, 1] causing incorret results when alpha > 1.f || alpha < 0.f
+						aniSlot.alpha += (1.f / aniSlot.transitionTime) * Time::getDT();
+						if (aniSlot.alpha > 1.f)
+						{
+							aniSlot.alpha = 1.f;
+						}
+					}
+					else // Switch and reset 
+					{
+						aniSlot.alpha = 0.f;
+
+						aniSlot.animationIndex = aniSlot.nAnimationIndex;
+						aniSlot.timer = aniSlot.nTimer;
+						aniSlot.timeScale = aniSlot.nTimeScale;
+
+						aniSlot.nAnimationIndex = ~0u;
+						aniSlot.nTimer = 0.f;
+					}
 				}
 			}
 
@@ -91,6 +126,11 @@ void SceneHandler::updateToNextScene()
 	// Make sure a scene can be switched to
 	if (this->nextScene != nullptr)
 	{
+        NetworkScene* nScene = dynamic_cast<NetworkScene*>(scene);
+        if (nScene != nullptr)
+        {
+            ((NetworkScene*)nextScene)->setServer((nScene)->getServer());
+        }
 		// Delete old scene
 		delete this->scene;
 		this->scene = nullptr;

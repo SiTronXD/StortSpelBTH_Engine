@@ -51,8 +51,9 @@ public:
         const float& timer,
         glm::mat4& outputMatrix);
 
-    void getBoneTransforms(
-        AnimationComponent& animationComponentOutput);
+    void getBoneTransforms(AnimationComponent& animationComponentOutput);
+    void getLocalBoneTransform(const AnimationSlot& aniSlot, const BonePoses& curAnimPose,
+        const BonePoses& nextAnimPose, glm::mat4& outputMatrix);
 
     inline const VertexBufferArray& getVertexBufferArray() const;
     inline const vk::Buffer& getIndexBuffer() const;
@@ -64,6 +65,9 @@ public:
     void mapAnimations(const std::vector<std::string>& names);
     uint32_t getAnimationIndex(const std::string& name) const;
     uint32_t getAnimationSlotIndex(const std::string& slotName) const;
+    const std::string& getAnimationName(uint32_t index) const;
+    float getAnimationEndTime(const std::string& aniName) const;
+    float getAnimationEndTime(uint32_t index) const;
 
     void safeCleanup();
     void cleanup();

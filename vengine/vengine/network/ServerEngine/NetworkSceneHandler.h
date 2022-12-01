@@ -10,6 +10,7 @@ class NetworkSceneHandler : public SceneHandler
 	friend class Server;
   private:
 	std::vector<sf::Packet>* serverToClientPacketTcp;
+	std::vector<sf::Packet>* serverToClientPacketUdp;
 	sf::Packet callsFromClient;
 
   public:
@@ -17,7 +18,8 @@ class NetworkSceneHandler : public SceneHandler
 	std::function<void()> clientStopFunc;
 	NetworkSceneHandler();
 	void update(float dt);
-	void givePacketInfo(std::vector<sf::Packet>& serverToClient);
+	void givePacketInfo(std::vector<sf::Packet>& serverToClientTCP);
+	void givePacketInfoUdp(std::vector<sf::Packet>& serverToClientUdp);
 	void updateToNextScene();
 	void setScene(Scene* scene, std::string path = "");
 

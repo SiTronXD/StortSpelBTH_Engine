@@ -2,18 +2,18 @@
 
 #include "vengine.h"
 
-class NetworkTestScene : public Scene
+class LobbyScene : public Scene
 {
 private:
-	int stone;
+	int floor;
 	int Player;
-	//other players are in networkHandler
 public:
-	NetworkTestScene();
-	virtual ~NetworkTestScene();
+	LobbyScene();
+	virtual ~LobbyScene();
 
 	// Inherited via Scene
 	virtual void init() override;
+	virtual void start() override;
 	virtual void update() override;
 };
 
