@@ -83,15 +83,7 @@ bool AudioSource::getLooping() const
 
 void AudioSource::play()
 {
-	ALenum error;
-	alGetError();
-
 	alSourcePlay(this->sourceId);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		Log::error("AudioSource: Failed playing! OpenAL error: " + std::to_string(error));
-		return;
-	}
 }
 
 void AudioSource::stop()
