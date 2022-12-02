@@ -312,13 +312,6 @@ void ScriptHandler::update()
 	{
 		lua_pop(L, lua_gettop(L));
 	}
-
-#ifdef _CONSOLE
-	if (Input::isKeyPressed(Keys::R) && Input::isKeyDown(Keys::CTRL))
-	{
-		this->sceneHandler->reloadScene();
-	}
-#endif
 }
 
 void ScriptHandler::cleanup()

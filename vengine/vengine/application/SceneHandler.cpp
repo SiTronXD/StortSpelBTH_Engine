@@ -181,15 +181,6 @@ void SceneHandler::setScene(Scene* scene, std::string path)
 	}
 }
 
-void SceneHandler::reloadScene()
-{
-	// Clear registry
-	this->scene->getSceneReg().clear();
-
-	// Init
-	this->initSubsystems();
-}
-
 void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)
 {
 	this->networkHandler = networkHandler;

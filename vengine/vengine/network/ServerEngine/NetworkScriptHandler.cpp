@@ -118,10 +118,5 @@ void NetworkScriptHandler::update(float dt)
 	{
 		lua_pop(L, lua_gettop(L));
 	}
-
-	if (Input::isKeyPressed(Keys::R) && Input::isKeyDown(Keys::CTRL))
-	{
-		this->sceneHandler->reloadScene();
-	}
 }
 

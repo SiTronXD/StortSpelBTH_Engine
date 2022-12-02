@@ -38,7 +38,6 @@ public:
 	void prepareForRendering();
 
 	void setScene(Scene* scene, std::string path = "");
-	void reloadScene();
 
 	void setNetworkHandler(NetworkHandler* networkHandler);
 	inline NetworkHandler* getNetworkHandler() { return this->networkHandler; }
