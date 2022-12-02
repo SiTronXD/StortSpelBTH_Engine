@@ -12,6 +12,7 @@ public:
 	static glm::vec3 rotateVectorByQuaternion(const glm::quat& quaternion, const glm::vec3& vector);
     static glm::vec3 extractTranslation(const glm::mat4& mat);
 
+    static glm::mat4 rotateTowards(const glm::vec3& dir);
     static glm::mat4 rotateTowards(const glm::vec3& dir, const glm::vec3& up);
     static glm::mat4 rotateEuler(const glm::vec3& angles);
 	static glm::vec3 rotateVector(const glm::vec3& angles, const glm::vec3 vector);
@@ -40,6 +41,34 @@ inline glm::vec3 SMath::extractTranslation(
         mat[3][0],
         mat[3][1],
         mat[3][2]
+    );
+}
+
+inline glm::mat4 SMath::rotateTowards(
+    const glm::vec3& dir)
+{
+    // Forward
+    glm::vec3 forwardVec = dir;
+    forwardVec = glm::normalize(forwardVec);
+
+    // World up
+    glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+    if (glm::abs(glm::dot(worldUp, forwardVec)) >= 0.95f)
+        worldUp = glm::vec3(1.0f, 0.0f, 0.0f);
+
+    // Right
+    glm::vec3 rightVec = glm::cross(forwardVec, worldUp);
+    rightVec = glm::normalize(rightVec);
+
+    // Up
+    glm::vec3 upVec = glm::cross(rightVec, forwardVec);
+    upVec = glm::normalize(upVec);
+
+    return glm::mat4(
+        glm::vec4(rightVec, 0.0f),
+        glm::vec4(upVec, 0.0f),
+        glm::vec4(forwardVec, 0.0f),
+        glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)
     );
 }
 
