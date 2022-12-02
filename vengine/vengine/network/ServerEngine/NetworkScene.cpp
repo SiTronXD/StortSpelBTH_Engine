@@ -101,7 +101,7 @@ int NetworkScene::getNearestPlayer(const int& ent)
 {
 	int returnIndex = -1;
 	float nearestLenght = glm::length(this->getComponent<Transform>(ent).position - this->getComponent<Transform>(players[0]).position);
-	for (int i = 1; i < this->players.size(); i++)
+	for (int i = 0; i < this->players.size(); i++)
 	{
 		float nnl = glm::length(this->getComponent<Transform>(ent).position - this->getComponent<Transform>(players[i]).position);
 
