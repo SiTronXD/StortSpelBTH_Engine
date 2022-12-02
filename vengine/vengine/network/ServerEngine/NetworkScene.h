@@ -33,6 +33,7 @@ public:
 
 	/////////////custom function for server only/////////////
 	int createPlayer();
+	std::vector<int>* getPlayers();
 	int getPlayer(const int& whatPlayer);
 	virtual int getNearestPlayer(const int& ent);
 	bool isAPlayer(const int& entity);

@@ -92,13 +92,19 @@ int NetworkScene::getPlayer(const int& whatPlayer)
 	return this->players[whatPlayer];
 }
 
+std::vector<int>* NetworkScene::getPlayers()
+{
+	return &this->players;
+}
+
 int NetworkScene::getNearestPlayer(const int& ent)
 {
-	int returnIndex = 0;
+	int returnIndex = -1;
 	float nearestLenght = glm::length(this->getComponent<Transform>(ent).position - this->getComponent<Transform>(players[0]).position);
-	for (int i = 1; i < this->players.size(); i++)
+	for (int i = 0; i < this->players.size(); i++)
 	{
 		float nnl = glm::length(this->getComponent<Transform>(ent).position - this->getComponent<Transform>(players[i]).position);
+
 		if (nnl < nearestLenght)
 		{
 			nearestLenght = nnl;
