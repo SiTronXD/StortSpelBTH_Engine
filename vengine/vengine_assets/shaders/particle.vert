@@ -14,11 +14,10 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 struct ParticleInfoData
 {
     mat4 transform;
-    vec4 life;  // vec4(currentLifeTime, maxLifeTime, 0.0f, 0.0f)
+    vec4 life;  // vec4(currentLifeTime, 0.0f, 0.0f, 0.0f)
     vec2 startSize;
     vec2 endSize;
-    vec4 startColor;
-    vec4 endColor;
+    vec4 currentColor;
     vec4 currentVelocity;
     vec4 acceleration;
     uvec4 indices; // vec4(randomState, emitterIndex, 0, 0)
@@ -79,10 +78,5 @@ void main()
     fragUV = vec2(position.x, -position.y) * 0.5f + vec2(0.5f);
 
     // Tint color
-    fragTintCol = 
-        mix(
-            particle.startColor,
-            particle.endColor,
-            clamp(particle.life.x / particle.life.y, 0.0f, 1.0f)
-        );
+    fragTintCol = particle.currentColor;
 }

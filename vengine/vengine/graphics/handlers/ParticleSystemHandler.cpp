@@ -84,10 +84,6 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				particle.startSize = particleSystemComp.startSize;
 				particle.endSize = particleSystemComp.endSize;
 
-				// Color
-				particle.startColor = particleSystemComp.startColor;
-				particle.endColor = particleSystemComp.endColor;
-
 				// Acceleration
 				particle.acceleration = glm::vec4(particleSystemComp.acceleration, 0.0f);
 
@@ -250,6 +246,10 @@ void ParticleSystemHandler::update(
 						)
 					)
 				);
+
+			// Start/end colors
+			emitterInfo.startColor = particleSystemComp.startColor;
+			emitterInfo.endColor = particleSystemComp.endColor;
 
 			// Max life time
 			emitterInfo.settings.z = particleSystemComp.maxlifeTime;

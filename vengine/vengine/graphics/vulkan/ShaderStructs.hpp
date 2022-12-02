@@ -51,8 +51,7 @@ struct ParticleInfo
     glm::vec4 life = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f); // vec4(currentLifeTime, 0.0f, 0.0f, 0.0f)
     glm::vec2 startSize = glm::vec2(1.0f);
     glm::vec2 endSize = glm::vec2(1.0f);
-    glm::vec4 startColor = glm::vec4(1.0f);
-    glm::vec4 endColor = glm::vec4(1.0f);
+    glm::vec4 currentColor = glm::vec4(1.0f);
     glm::vec4 currentVelocity = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
     glm::vec4 acceleration = glm::vec4(0.0f, -1.0f, 0.0f, 0.0f);
     glm::uvec4 indices = glm::uvec4(0u);    // vec4(randomState, emitterIndex, 0, 0)
@@ -69,6 +68,8 @@ struct ParticleEmitterInfo
     glm::vec3 coneNormal;
     uint32_t shouldRespawn;
     glm::vec4 settings = glm::vec4(0.0f); // vec4(spawnRate, velocityStrength, maxLifeTime, 0.0f)
+    glm::vec4 startColor = glm::vec4(1.0f);
+    glm::vec4 endColor = glm::vec4(1.0f);
 };
 
 // Shadow map data

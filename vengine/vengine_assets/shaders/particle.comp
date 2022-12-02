@@ -19,8 +19,7 @@ struct ParticleInfoData
     vec4 life;  // vec4(currentLifeTime, 0.0f, 0.0f, 0.0f)
     vec2 startSize;
     vec2 endSize;
-    vec4 startColor;
-    vec4 endColor;
+    vec4 currentColor;
     vec4 currentVelocity;
     vec4 acceleration;
     uvec4 indices; // vec4(randomState, emitterIndex, 0, 0)
@@ -40,6 +39,8 @@ struct ParticleEmitterInfoData
     vec3 coneNormal;
     uint shouldRespawn;
     vec4 settings; // vec4(spawnRate, velocityStrength, maxLifeTime, 0.0f)
+    vec4 startColor;
+    vec4 endColor;
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 2) buffer ParticleEmitterInfosBuffer
 {
@@ -183,11 +184,13 @@ void main()
         particle.life.x += deltaTime;
     }
 
+    float lifeAlpha = clamp(particle.life.x / maxLifeTime, 0.0f, 1.0f);
+
     // Scale
     vec2 currentScale = mix(
         particle.startSize, 
         particle.endSize,
-        clamp(particle.life.x / maxLifeTime, 0.0f, 1.0f)
+        lifeAlpha
     );
 
     // Don't render the particle if it's about to spawn soon
@@ -195,6 +198,13 @@ void main()
     {
         currentScale = vec2(0.0f);
     }
+
+    // Color
+    particle.currentColor = mix(
+        emitter.startColor, 
+        emitter.endColor, 
+        lifeAlpha
+    );
 
     // Update direction towards camera
     vec3 forward = normalize(cameraBuffer.worldPos.xyz - position);
