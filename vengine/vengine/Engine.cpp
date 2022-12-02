@@ -45,7 +45,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     loadConfIntoMemory(); // load config data into memory
 
     //Filter Log Output 
-    Log::addFilter("bt");
+    //Log::addFilter("bt");
 
     // Window
     Window window;
@@ -122,7 +122,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         this->audioHandler.update();
 		this->networkHandler->update();
 
-#if defined(_CONSOLE) // Debug/Release, but not distribution        
+#if defined(_CONSOLE) || defined(_STATISTICS) // Debug/Release, but not distribution        
         static bool debugInfo = true;
 
         ImGui::PushStyleVar(ImGuiStyleVar_Alpha, 0.5f);

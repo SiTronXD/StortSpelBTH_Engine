@@ -8,7 +8,12 @@
 
 #include "vengine.h"
 #include "vengine/test/TestScene2.hpp"
+
+#ifdef WIN32 
 #include "src/LevelEditorTestScene.h"
+#endif
+
+
 #include "src/TestDemoScene.h"
 #include "src/NewTestScene.h"
 #include "src/network/LobbyScene.h"
@@ -24,7 +29,7 @@ int main(int argc, char* argv[])
 
     {
         Engine engine;
-        engine.setCustomNetworkHandler(new NetworkHandlerTest());
+        //engine.setCustomNetworkHandler(new NetworkHandlerTest());
         // engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
         //engine.run("Demo Application", "", new LevelEditorTestScene());
        engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());

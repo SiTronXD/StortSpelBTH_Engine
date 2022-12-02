@@ -92,6 +92,16 @@ public:
         }
 
     }
+	void resetEntityLastReturn()
+	{
+		for(auto& elr: this->entityEventLastReturn)
+		{
+			for(auto& ev: elr.second)
+			{
+				ev.second = false;
+			}
+		}
+	}
 
 	Scene* currentScene = nullptr; //TODO make const...
 

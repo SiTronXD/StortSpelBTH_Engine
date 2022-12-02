@@ -74,7 +74,7 @@ void Server::ConnectUsers()
 
 			// Send to all other players to new client, also get own ID
 			sf::Packet justJoinedInfo;
-			justJoinedInfo << (int)NetworkEvent::JUSTJOINED << tempClient->id << clients.size();
+			justJoinedInfo << (int)NetworkEvent::JUSTJOINED << tempClient->id << (int)clients.size() -1 ;
 
 			for (int i = 0; i < clients.size() - 1; i++)
 			{
