@@ -295,7 +295,7 @@ void Server::cleanSendPackages()
 
 void Server::seeIfUsersExist()
 {
-	static const float MaxTimeUntilDisconnect = 10.f;
+	static const float MaxTimeUntilDisconnect = 15.f;
 
 	for (int i = 0; i < clients.size(); i++)
 	{
