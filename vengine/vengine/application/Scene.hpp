@@ -39,6 +39,15 @@ struct BloomSettings
 	uint32_t numBloomMipLevels = 7;
 };
 
+enum class SceneType
+{
+	NormalScene,
+	NetworkScene,
+	GameModeScene,
+	GameScene,
+	UNKNOWN,
+};
+
 class Scene
 {
 private:
@@ -64,6 +73,7 @@ protected:
 	SceneHandler* getSceneHandler();
 	AIHandler* getAIHandler();
 	AudioHandler* getAudioHandler();
+    SceneType sceneType;
 
 	template <typename T>
 	T getConfigValue(std::string_view name)
@@ -141,6 +151,7 @@ public:
 
 	void setSceneHandler(SceneHandler& sceneHandler);
     NetworkHandler* getNetworkHandler();
+    const SceneType &getSceneType() const;
 };
 
 template <typename T, typename... Args>
