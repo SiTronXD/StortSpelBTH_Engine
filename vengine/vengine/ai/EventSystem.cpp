@@ -123,7 +123,13 @@ void EventSystem::update()
 					agent.fsm->setCurrentNode(currNeighbor.second);
 					agent.currentNode = currNeighbor.second;
 
-                    Log::write(agent.currentNode->status, BT_FILTER);					
+                    Log::write(agent.currentNode->status, BT_FILTER);
+                     
+                    // Set all transition for this entity to false 
+                    for(auto& transition : this->entityEventLastReturn[entityID])
+                    {
+                        transition.second = false;
+                    }
 
 					this->entityEventLastReturn[entityID][eventTransition] = true;
 				}                
