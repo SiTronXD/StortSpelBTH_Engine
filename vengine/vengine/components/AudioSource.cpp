@@ -3,25 +3,44 @@
 #include "al.h"
 
 AudioSource::AudioSource(uint32_t bufferId)
-		:sourceId(sourceId), bufferId(bufferId), playingb4Inactive(false)
+		:sourceId(sourceId), playingb4Inactive(false)
 {
+	ALenum error = 0;
+
+	alGetError(); // Clear error queue
 	alGenSources(1, &this->sourceId);
-	if (alGetError() != AL_NO_ERROR)
+	if ((error = alGetError()) != AL_NO_ERROR)
     {
-        Log::warning("AudioSource: Failed generating alAudioSource!\n");
+        Log::error("AudioSource: Failed generating alAudioSource! OpenAL error: " + std::to_string(error));
         return;
     }
 
-	alSourcei(this->sourceId, AL_BUFFER, bufferId);
-	if (alGetError() != AL_NO_ERROR)
-    {
-        Log::warning("AudioSource: Failed attaching ALBufferId!\n");
-        return;
-    }
+	alGetError(); // Clear error queue
+	alSourcei(this->sourceId, AL_BUFFER, (int)bufferId);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		Log::error("AudioSource: Failed attaching ALBufferId! OpenAL error: " + std::to_string(error));
+		return;
+	}
+}
+
+AudioSource::AudioSource()
+	:playingb4Inactive(false)
+{
+	ALenum error = 0;
+
+	alGetError(); // Clear error queue
+	alGenSources(1, &this->sourceId);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		Log::error("AudioSource: Failed generating alAudioSource! OpenAL error: " + std::to_string(error));
+		return;
+	}
 }
 
 AudioSource::~AudioSource()
 {
+	alSourcei(this->sourceId, AL_BUFFER, NULL);
 	alDeleteSources(1, &this->sourceId);
 }
 
@@ -39,7 +58,15 @@ float AudioSource::getVolume() const
 
 void AudioSource::setBuffer(uint32_t bufferId)
 {
-	alSourcei(this->sourceId, AL_BUFFER, bufferId);
+	alSourcei(this->sourceId, AL_BUFFER, NULL);
+	alSourcei(this->sourceId, AL_BUFFER, (int)bufferId);
+}
+
+int AudioSource::getBuffer() const
+{
+	int bufferId = -1;
+	alGetSourcei(this->sourceId, AL_BUFFER, &bufferId);
+	return bufferId;
 }
 
 void AudioSource::setLooping(bool loop)

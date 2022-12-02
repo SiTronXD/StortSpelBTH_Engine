@@ -22,6 +22,7 @@ void Device::createDevice(
 
     int32_t graphicsQueueIndex = outputQueueFamilies.getGraphicsIndex();
     int32_t presentQueueIndex = outputQueueFamilies.getPresentIndex();
+    int32_t computeQueueIndex = outputQueueFamilies.getComputeIndex();
 
     // Using a vector to store all the queueCreateInfo structs for each QueueFamily...
     std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
@@ -31,17 +32,25 @@ void Device::createDevice(
     std::set<int32_t> queueFamilyIndices
     {
         graphicsQueueIndex,
-        presentQueueIndex    // This could be the same Queue Family as the GraphicsQueue Family! thus, we use a set!
+        presentQueueIndex,  // This could be the same queue family as the graphics queue family. Thus, we use a set.
+        computeQueueIndex   // This could be the same queue family as the graphics queue family. Thus, we use a set.
     };
 
-    float priority = 1.F;
-    // Queues the Logical device needs to create, and info to do so; Priority 1 is highest, 0 is lowest...
-    // - Note; if the graphicsFamily and presentationFamily is the same, this loop will only do 1 iteration, else 2...
-    for (std::size_t i = 0; i < queueFamilyIndices.size(); i++)
+    // Let the user know the number of unique queue families
+    if (queueFamilyIndices.size() != 1)
     {
+        Log::error(
+            "The number of unique vulkan queue families (" + 
+            std::to_string(queueFamilyIndices.size()) + 
+            ") was not 1. Please consult a rendering engineer for advice...");
+    }
 
+    // Create one vk::DeviceQueueCreateInfo per unique queue index
+    float priority = 1.F;
+    for (auto& queueIndex : queueFamilyIndices)
+    {
         vk::DeviceQueueCreateInfo queueCreateInfo{};
-        queueCreateInfo.setQueueFamilyIndex(graphicsQueueIndex);         // The index of the family to create Graphics queue from
+        queueCreateInfo.setQueueFamilyIndex(queueIndex);
         queueCreateInfo.setQueueCount(uint32_t(1));
 
         // We can create Multiple Queues, and thus this is how we decide what Queue to prioritize...        
@@ -60,17 +69,15 @@ void Device::createDevice(
     deviceCreateInfo.setEnabledExtensionCount(static_cast<uint32_t>(deviceExtensions.size()));           // We dont have any logical Device Extensions (not the same as instance extensions...)
     deviceCreateInfo.setPpEnabledExtensionNames(deviceExtensions.data());// since we dont have any... use nullptr! (List of Enabled Logical device extensions
 
-    //Physical Device features the logical Device will be using...
+    // Physical device features the logical device will be using...
     vk::PhysicalDeviceFeatures2 deviceFeatures{};
     deviceFeatures.features.setSamplerAnisotropy(VK_TRUE);             // Enables the Anisotropy Feature, now a Sampler made for this Device can use Anisotropy!                 
 #if defined(_CONSOLE) // Debug/Release, but not distribution
     deviceFeatures.features.setFillModeNonSolid(VK_TRUE);
 #endif
 
-    // Get extension Features    
+    // Get extension features    
     vk::PhysicalDeviceSynchronization2Features physicalDeviceSyncFeatures{};
-    vk::PhysicalDeviceDynamicRenderingFeatures physicalDeviceDynamicRenderingFeatures{ VK_TRUE };
-    physicalDeviceSyncFeatures.setPNext(&physicalDeviceDynamicRenderingFeatures);
     deviceFeatures.setPNext(&physicalDeviceSyncFeatures);
     physicalDeviceSyncFeatures.setSynchronization2(VK_TRUE);
 
@@ -87,18 +94,23 @@ void Device::createDevice(
         this->device
     );
 
-    // Queues are Created at the same time as the device...
-    // So we want handle to queues:
+    // Get graphics queue handle
     vk::DeviceQueueInfo2 graphicsQueueInfo;
     graphicsQueueInfo.setQueueFamilyIndex(static_cast<uint32_t>(graphicsQueueIndex));
     graphicsQueueInfo.setQueueIndex(uint32_t(0));
     outputQueueFamilies.setGraphicsQueue(this->device.getQueue2(graphicsQueueInfo));
 
-    // Add another handle to let the Logical Device handle PresentationQueue... (??)
+    // Get presentation queue handle
     vk::DeviceQueueInfo2 presentationQueueInfo;
     presentationQueueInfo.setQueueFamilyIndex(static_cast<uint32_t>(presentQueueIndex));
-    presentationQueueInfo.setQueueIndex(uint32_t(0));        // Will be positioned at the Queue index 0 for This particular family... (??)
+    presentationQueueInfo.setQueueIndex(uint32_t(0));
     outputQueueFamilies.setPresentQueue(this->device.getQueue2(presentationQueueInfo));
+
+    // Get compute queue handle
+    vk::DeviceQueueInfo2 computeQueueInfo;
+    computeQueueInfo.setQueueFamilyIndex(static_cast<uint32_t>(computeQueueIndex));
+    computeQueueInfo.setQueueIndex(uint32_t(0));
+    outputQueueFamilies.setComputeQueue(this->device.getQueue2(computeQueueInfo));
 }
 
 void Device::destroyBuffer(vk::Buffer& buffer)

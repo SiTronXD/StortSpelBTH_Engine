@@ -137,7 +137,7 @@ void Texture::create(
         {
         .bufferSize = imageSize,
         .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,
-        .bufferProperties =
+        .bufferAllocationFlags =
             VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
             VMA_ALLOCATION_CREATE_MAPPED_BIT,
         .buffer = &imageStagingBuffer,
@@ -491,9 +491,9 @@ void Texture::transitionImageLayout(
     imageMemoryBarrier.setOldLayout(oldLayout); // Layout to transition from
     imageMemoryBarrier.setNewLayout(newLayout); // Layout to transition from
     imageMemoryBarrier.setSrcQueueFamilyIndex(
-        VK_QUEUE_FAMILY_IGNORED); // Queue Family to transition from
+        VK_QUEUE_FAMILY_IGNORED); // Queue Family to transition from (used for queue family ownership transfer)
     imageMemoryBarrier.setDstQueueFamilyIndex(
-        VK_QUEUE_FAMILY_IGNORED); // Queue Family to transition to
+        VK_QUEUE_FAMILY_IGNORED); // Queue Family to transition to  (used for queue family ownership transfer)
     imageMemoryBarrier.setImage(image);
 
     imageMemoryBarrier.subresourceRange.setAspectMask(

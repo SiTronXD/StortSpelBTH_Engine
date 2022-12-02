@@ -101,6 +101,9 @@ public:
         const Entity& pointLightEntity);
     void renderSpotlight(
         const Entity& spotlightEntity);
+    void renderParticleSystemCone(
+        const Entity& particleSystemEntity,
+        const glm::vec3& color = glm::vec3(0.0f, 1.0f, 0.0f));
     void renderSphere(
         const glm::vec3& position,
         const float& radius,

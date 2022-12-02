@@ -96,10 +96,11 @@
     <ClCompile Include="vengine\shared_memory\Comlib.cpp" />
     <ClCompile Include="vengine\shared_memory\Memory.cpp" />
     <ClCompile Include="vengine\shared_memory\Mutex.cpp" />
-    <ClCompile Include="vengine\graphics\LightHandler.cpp" />
+    <ClCompile Include="vengine\graphics\handlers\LightHandler.cpp" />
     <ClCompile Include="vengine\dev\Random.cpp" />
-    <ClCompile Include="vengine\graphics\PostProcessHandler.cpp" />
+    <ClCompile Include="vengine\graphics\handlers\PostProcessHandler.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\SubmitArray.cpp" />
+    <ClCompile Include="vengine\graphics\handlers\ParticleSystemHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -195,14 +196,17 @@
     <ClInclude Include="vengine\dev\Random.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\RenderPass.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\FramebufferArray.hpp" />
-    <ClInclude Include="vengine\graphics\LightHandler.hpp" />
+    <ClInclude Include="vengine\graphics\handlers\LightHandler.hpp" />
     <ClInclude Include="vengine\shared_memory\Comlib.h" />
     <ClInclude Include="vengine\shared_memory\Memory.h" />
     <ClInclude Include="vengine\shared_memory\Mutex.h" />
     <ClInclude Include="vengine\shared_memory\MayaStructures.h" />
-    <ClInclude Include="vengine\graphics\PostProcessHandler.hpp" />
+    <ClInclude Include="vengine\graphics\handlers\PostProcessHandler.hpp" />
     <ClInclude Include="vengine\graphics\vulkan\SubmitArray.hpp" />
     <ClInclude Include="vengine\components\NoShadowCasting.hpp" />
+    <ClInclude Include="vengine\components\MultipleAudioSource.h" />
+    <ClInclude Include="vengine\components\ParticleSystem.hpp" />
+    <ClInclude Include="vengine\graphics\handlers\ParticleSystemHandler.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">
@@ -407,5 +411,8 @@
     <CustomBuild Include="vengine_assets\shaders\bloomDownsample.frag" />
     <CustomBuild Include="vengine_assets\shaders\bloomUpsample.frag" />
     <CustomBuild Include="vengine_assets\shaders\fullscreenQuad.vert" />
+    <CustomBuild Include="vengine_assets\shaders\particle.vert" />
+    <CustomBuild Include="vengine_assets\shaders\particle.frag" />
+    <CustomBuild Include="vengine_assets\shaders\particle.comp" />
   </ItemGroup>
 </Project>

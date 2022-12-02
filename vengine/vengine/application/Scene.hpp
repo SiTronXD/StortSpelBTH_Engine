@@ -12,6 +12,7 @@
 #include "Window.hpp"
 #include "../systems/System.hpp"
 #include "../audio/AudioHandler.h"
+#include "../components/MultipleAudioSource.h"
 
 #include <entt.hpp>
 #include <vector>
@@ -36,6 +37,15 @@ struct BloomSettings
 {
 	float bloomBufferLerpAlpha = 0.04f;
 	uint32_t numBloomMipLevels = 7;
+};
+
+enum class SceneType
+{
+	NormalScene,
+	NetworkScene,
+	GameModeScene,
+	GameScene,
+	UNKNOWN,
 };
 
 class Scene
@@ -63,6 +73,7 @@ protected:
 	SceneHandler* getSceneHandler();
 	AIHandler* getAIHandler();
 	AudioHandler* getAudioHandler();
+    SceneType sceneType;
 
 	template <typename T>
 	T getConfigValue(std::string_view name)
@@ -140,6 +151,7 @@ public:
 
 	void setSceneHandler(SceneHandler& sceneHandler);
     NetworkHandler* getNetworkHandler();
+    const SceneType &getSceneType() const;
 };
 
 template <typename T, typename... Args>

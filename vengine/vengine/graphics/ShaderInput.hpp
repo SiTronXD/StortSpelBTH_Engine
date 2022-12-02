@@ -72,6 +72,8 @@ private:
 	PhysicalDevice* physicalDevice;
 	Device* device;
     VmaAllocator* vma;
+	vk::Queue* transferQueue;
+	vk::CommandPool* transferCommandPool;
     ResourceManager* resourceManager;
 
 	uint32_t currentFrame;
@@ -122,6 +124,9 @@ public:
 	ShaderInput();
 	~ShaderInput();
 
+	void initForGpuOnlyResources(
+		vk::Queue& transferQueue,
+		vk::CommandPool& transferCommandPool);
 	void beginForInput(
 		PhysicalDevice& physicalDevice,
 		Device& device, 
@@ -139,7 +144,9 @@ public:
     StorageBufferID addStorageBuffer(
 		const size_t& contentsSize,
 		const vk::ShaderStageFlagBits& shaderStage,
-		const DescriptorFrequency& descriptorFrequency);
+		const DescriptorFrequency& descriptorFrequency,
+		const bool& gpuOnly = false,
+		void* initialData = nullptr);
 	void addCombinedImageSampler(
 		Texture& texture,
 		const vk::ShaderStageFlagBits& shaderStage,

@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "PipelineLayout.hpp"
-
 #include "../ShaderInput.hpp"
 
 PipelineLayout::PipelineLayout()
@@ -40,7 +39,7 @@ void PipelineLayout::createPipelineLayout(
     }
 
     this->pipelineLayout = this->device->getVkDevice().createPipelineLayout(pipelineLayoutCreateInfo);
-    VulkanDbg::registerVkObjectDbgInfo("VkPipelineLayout GraphicsPipelineLayout", vk::ObjectType::ePipelineLayout, reinterpret_cast<uint64_t>(vk::PipelineLayout::CType(this->pipelineLayout)));
+    VulkanDbg::registerVkObjectDbgInfo("VkPipelineLayout", vk::ObjectType::ePipelineLayout, reinterpret_cast<uint64_t>(vk::PipelineLayout::CType(this->pipelineLayout)));
 }
 
 void PipelineLayout::cleanup()

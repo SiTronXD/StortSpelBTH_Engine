@@ -28,6 +28,11 @@ NetworkHandler* Scene::getNetworkHandler()
 	return this->sceneHandler->getNetworkHandler();
 }
 
+const SceneType& Scene::getSceneType() const
+{
+    return this->sceneType;
+}
+
 ScriptHandler* Scene::getScriptHandler()
 {
 	return this->sceneHandler->getScriptHandler();
@@ -73,6 +78,7 @@ Scene::Scene()
 	: sceneHandler(nullptr), mainCamera(-1)
 {
 	this->reg.clear();
+    this->sceneType = SceneType::NormalScene;
 }
 
 Scene::~Scene()

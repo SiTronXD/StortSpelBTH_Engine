@@ -10,6 +10,7 @@ private:
 	Entity testEntity2;
 	Entity multiAnimation;
 	Entity directionalLightEntity;
+	std::vector<Entity> particleSystemEntities;
 	uint32_t uiTextureIndex0;
 	uint32_t uiTextureIndex1;
 	uint32_t fontTextureIndex;
@@ -22,6 +23,9 @@ private:
 	Entity aniIDs[4];
 	bool aniActive[4];
 
+	Entity multiAudio;
+	uint32_t audioBuffer1;
+	uint32_t audioBuffer2;
 	Entity audioSource1;
 	Entity audioSource2;
 	float volume1;

@@ -2,7 +2,9 @@
 #include "NetworkScene.h"
 #include "Server.h"
 
-NetworkScene::NetworkScene() : serverToClientTCP(nullptr), serverToClientUDP(nullptr), server(nullptr) {}
+NetworkScene::NetworkScene() : serverToClientTCP(nullptr), serverToClientUDP(nullptr), server(nullptr) {
+    this->sceneType = SceneType::NetworkScene;
+}
 
 NetworkScene::~NetworkScene() {}
 

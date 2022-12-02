@@ -112,6 +112,13 @@ QueueFamilyIndices PhysicalDevice::getQueueFamilies(
             indices.presentationFamily = queueFamilyIndex;
         }
 
+        // Check for compute queue index
+        if (queueFamily.queueFamilyProperties.queueCount > 0 &&
+            (queueFamily.queueFamilyProperties.queueFlags & vk::QueueFlagBits::eCompute))
+        {
+            indices.computeFamily = queueFamilyIndex;
+        }
+
         // Check if graphics queue and presentation queue have been found
         if (indices.isValid()) 
         {

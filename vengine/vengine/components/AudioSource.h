@@ -7,12 +7,13 @@ struct AudioSource
 	bool playingb4Inactive; // No touchy
 
 	uint32_t sourceId;
-	uint32_t bufferId;
 
 	AudioSource(uint32_t bufferId);
+	AudioSource();
 	~AudioSource();
 
 	void setBuffer(uint32_t bufferId);
+	int getBuffer() const;
 
 	void setLooping(bool loop);
 	bool getLooping() const;
