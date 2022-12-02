@@ -80,9 +80,6 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				// Current life timer
 				particle.life.x = particleSystemComp.maxlifeTime;
 
-				// Max life timer
-				particle.life.y = particleSystemComp.maxlifeTime;
-
 				// Size
 				particle.startSize = particleSystemComp.startSize;
 				particle.endSize = particleSystemComp.endSize;
@@ -254,11 +251,18 @@ void ParticleSystemHandler::update(
 					)
 				);
 
+			// Max life time
+			emitterInfo.settings.z = particleSystemComp.maxlifeTime;
+
 			// Respawning
 			emitterInfo.shouldRespawn = particleSystemComp.spawn ? 1u : 0u;
 			if (particleSystemComp.respawnSetting == RespawnSetting::EXPLOSION)
 			{
-				particleSystemComp.spawn = false;
+				if (particleSystemComp.spawn)
+				{
+					particleSystemComp.spawn = false;
+					emitterInfo.settings.z = 0.0f; // Kill all particles this frame
+				}
 			}
 			else
 			{

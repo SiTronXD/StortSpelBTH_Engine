@@ -16,7 +16,7 @@ layout(set = FREQ_PER_FRAME, binding = 0) uniform CameraBuffer
 struct ParticleInfoData
 {
     mat4 transform;
-    vec4 life;  // vec4(currentLifeTime, maxLifeTime, 0.0f, 0.0f)
+    vec4 life;  // vec4(currentLifeTime, 0.0f, 0.0f, 0.0f)
     vec2 startSize;
     vec2 endSize;
     vec4 startColor;
@@ -39,7 +39,7 @@ struct ParticleEmitterInfoData
     float tanTheta;
     vec3 coneNormal;
     uint shouldRespawn;
-    vec4 settings; // vec4(spawnRate, velocityStrength, 0.0f, 0.0f)
+    vec4 settings; // vec4(spawnRate, velocityStrength, maxLifeTime, 0.0f)
 };
 layout(std140, set = FREQ_PER_FRAME, binding = 2) buffer ParticleEmitterInfosBuffer
 {
@@ -144,6 +144,7 @@ void main()
     float deltaTime = globalParticleBuffer.deltaTime;
     uint randomState = particle.indices.x;
     float spawnRate = emitter.settings.x;
+    float maxLifeTime = emitter.settings.z;
 
     // Update velocity and position
     particle.currentVelocity.xyz += particle.acceleration.xyz * deltaTime;
@@ -155,7 +156,7 @@ void main()
     // 3: [max life timer, infinity] - Dead and will be sent to interval #1
 
     // Reset life
-    if(particle.life.x >= particle.life.y && emitter.shouldRespawn > 0)
+    if(particle.life.x >= maxLifeTime && emitter.shouldRespawn > 0)
     {
         particle.life.x = -0.001f - spawnRate * randomFloat(randomState);
     }
@@ -175,7 +176,7 @@ void main()
         // These particles have been sent to the shadow realm... :skull:
         else if(particle.life.x < 0.0f && -spawnRate > particle.life.x)
         {
-            particle.life.x = particle.life.y;
+            particle.life.x = maxLifeTime;
         }
         
         // Continue timer
@@ -186,7 +187,7 @@ void main()
     vec2 currentScale = mix(
         particle.startSize, 
         particle.endSize,
-        clamp(particle.life.x / particle.life.y, 0.0f, 1.0f)
+        clamp(particle.life.x / maxLifeTime, 0.0f, 1.0f)
     );
 
     // Don't render the particle if it's about to spawn soon
