@@ -14,6 +14,7 @@ class NetworkHandlerTest : public NetworkHandler
 {
 private:
 public:
+    NetworkHandlerTest() {};
 	virtual void handleTCPEventClient(sf::Packet& tcpPacket, int event) override;
 	virtual void handleUDPEventClient(sf::Packet& udpPacket, int event) override;
 	virtual void handleTCPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event) override;
