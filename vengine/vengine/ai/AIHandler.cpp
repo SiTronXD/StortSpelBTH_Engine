@@ -127,6 +127,10 @@ void AIHandler::createAIEntity(uint32_t entityID, FSM* fsm)
 void AIHandler::clean()
 {
 
+    this->eventSystem.clean();
+    this->FSMimguiLambdas.clear();
+    this->FSMsEntities.clear();
+
     for (auto p : this->FSMs)
     {
         if(p.second != nullptr)
@@ -134,6 +138,8 @@ void AIHandler::clean()
             p.second->clean();
         }
     }
+    this->FSMs.clear();
+}
 }
 void AIHandler::addImguiToFSM(const std::string& name, std::function<void(FSM* fsm, uint32_t)> imguiLambda)
 {
