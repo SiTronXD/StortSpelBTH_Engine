@@ -16,8 +16,6 @@ private:
     void updateEntityFSMs();
 
   public: 
-public: 
-  public: 
     AIHandler() = default;
 	std::unordered_map<std::string, FSM*> FSMs;
 	std::unordered_map<FSM*, std::function<void(FSM* fsm, uint32_t)>> FSMimguiLambdas;
@@ -28,13 +26,7 @@ public:
     void addImguiToFSM(const std::string& name, std::function<void(FSM* fsm, uint32_t)> imguiLambda);
 
     // Init all FSM and BT related things
-    void init(SceneHandler *sh)
-    {
-        this->sh = sh; 
-		this->eventSystem.setSceneHandler(this->sh);
-        this->eventSystem.clean();
-        this->currentScene = this->sh->getScene();
-        this->switchedScene = true;
+    void init(SceneHandler* sh);
 
     void clean();
 

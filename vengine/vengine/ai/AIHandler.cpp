@@ -140,6 +140,15 @@ void AIHandler::clean()
     }
     this->FSMs.clear();
 }
+void AIHandler::init(SceneHandler* sh)
+{
+    this->sh = sh;
+    this->eventSystem.setSceneHandler(this->sh);
+    
+    this->clean();
+
+    this->currentScene = this->sh->getScene();
+    this->switchedScene = true;
 }
 void AIHandler::addImguiToFSM(const std::string& name, std::function<void(FSM* fsm, uint32_t)> imguiLambda)
 {
