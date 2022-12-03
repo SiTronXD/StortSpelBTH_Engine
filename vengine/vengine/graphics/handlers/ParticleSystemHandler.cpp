@@ -182,6 +182,7 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 
 	// No need to keep the initial information
 	this->initialParticleInfos.clear();
+	this->initialParticleInfos.shrink_to_fit();
 }
 
 void ParticleSystemHandler::update(
