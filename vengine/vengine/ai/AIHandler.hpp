@@ -23,6 +23,8 @@ private:
 
     inline float getDeltaTime(){return this->dt;}
 
+    template<class FSM_SUBCLASS>
+    void addFSM(const std::string& name);
     void addImguiToFSM(const std::string& name, std::function<void(FSM* fsm, uint32_t)> imguiLambda);
 
     // Init all FSM and BT related things
@@ -42,18 +44,15 @@ private:
     void update(float dt);
 };
 
-            FSMimguiLambdas.clear();
-            FSMsEntities.clear();
-            currentScene = this->sh->getScene();
-        }
+template<class FSM_SUBCLASS>
+void AIHandler::addFSM(const std::string& name)
+{
 
-        eventSystem.update();
-        if(!disableAI)
-        {
-            updateEntityFSMs();
-        }
-        drawImgui();
-        switchedScene = false; 
+    auto foundFSM = this->FSMs.find(name);
+    if (foundFSM == this->FSMs.end())
+    {
+        FSM* fsm = new FSM_SUBCLASS;
+        fsm->init(this->sh, &this->eventSystem, name);
+        this->FSMs.insert({fsm->getName(), fsm});
     }
-
-};
+}
