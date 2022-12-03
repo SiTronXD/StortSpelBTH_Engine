@@ -66,7 +66,7 @@ void AIHandler::drawImgui(){
                 {
                     if (ImGui::BeginTabItem("Data"))
                     {                
-                        selected_entity_func(selected_fsm,selected_entity);                    
+                        selected_entity_func(selected_fsm,selected_entity);
                         ImGui::EndTabItem();
                     }
 
@@ -83,4 +83,65 @@ void AIHandler::drawImgui(){
     }
 
     ImGui::End();
+}
+void AIHandler::update(float dt)
+{
+    this->dt = dt;
+    if (currentScene != this->sh->getScene())
+    {
+        FSMimguiLambdas.clear();
+        FSMsEntities.clear();
+        currentScene = this->sh->getScene();
+    }
+
+    eventSystem.update();
+    if (!disableAI)
+    {
+        updateEntityFSMs();
+    }
+    drawImgui();
+    switchedScene = false;
+}
+void AIHandler::resetEventSystemLastReturn()
+{
+    this->eventSystem.resetEntityLastReturn();
+}
+void AIHandler::createAIEntity(uint32_t entityID, const std::string& fsmName)
+{
+    createAIEntity(entityID, this->FSMs[fsmName]);
+}
+void AIHandler::createAIEntity(uint32_t entityID, FSM* fsm)
+{
+    // Register entityID to a specific FSM (MovementFSM in this test)
+    this->sh->getScene()->setComponent<FSMAgentComponent>(entityID, fsm);
+
+    // Add Entity to IMGUI lambdas vector
+    this->FSMsEntities[fsm].push_back(entityID);
+
+    // Add required FSM and BT Components to entityID
+    fsm->registerEntity(entityID);
+
+    // Register this entity to all entity evenets of the FSM
+    this->eventSystem.registerEntityToEvent(entityID, fsm);
+}
+void AIHandler::clean()
+{
+
+    for (auto p : this->FSMs)
+    {
+        if(p.second != nullptr)
+        {
+            p.second->clean();
+        }
+    }
+}
+void AIHandler::addImguiToFSM(const std::string& name, std::function<void(FSM* fsm, uint32_t)> imguiLambda)
+{
+    this->FSMimguiLambdas[this->FSMs[name]] = imguiLambda;
+}
+void AIHandler::updateEntityFSMs()
+{
+    auto& reg = this->sh->getScene()->getSceneReg();
+
+    reg.view<FSMAgentComponent>(entt::exclude<Inactive>).each([&](const auto& entity, FSMAgentComponent& t) { t.execute(static_cast<int>(entity)); });
 }
