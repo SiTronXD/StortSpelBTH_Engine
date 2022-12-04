@@ -6,10 +6,11 @@
 
 
 AudioHandler::AudioHandler()
-	:sceneHandler(nullptr), musicSourceId(), alBuffers{}, alSoundFormat(0)
+	:sceneHandler(nullptr), musicSourceId(), alBuffers{}, 
+	alSoundFormat(0), sourceUsers{}, sourceBorrowed{}
 {
 	this->audioSamples = new char[BUFFER_SIZE];
-	this->state = State::NotPlaying;
+	this->musicState = State::NotPlaying;
 
 	ALCdevice* device = alcOpenDevice(NULL);
     if (!device)
@@ -22,10 +23,25 @@ AudioHandler::AudioHandler()
 		Log::error("Failed to create OpenAL Context");
 	}
     alcMakeContextCurrent(context);
-	alGetError(); // Clears error code
+	alGetError(); // Clear error code
+
+	ALenum error = AL_NO_ERROR;
 
 	alGenSources(1, &this->musicSourceId);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		Log::error("Failed generating music source. OpenAL error: " + std::to_string(error));
+	}
 	alSourcei(this->musicSourceId, AL_SOURCE_RELATIVE, AL_FALSE);
+
+	this->numActiveSources = 0u;
+	alGenSources(MAX_SOURCES, this->sources);
+	if ((error = alGetError()) != AL_NO_ERROR)
+	{
+		Log::error("Failed generating audio sources. OpenAL error: " + std::to_string(error));
+	}
+
+	this->reset();
 }
 
 AudioHandler::~AudioHandler()
@@ -37,6 +53,7 @@ AudioHandler::~AudioHandler()
 	}
 
 	alDeleteSources(1, &this->musicSourceId);
+	alDeleteSources(MAX_SOURCES, this->sources);
 	alDeleteBuffers(NUM_BUFFERS, this->alBuffers);
 
     ALCcontext* context = alcGetCurrentContext();
@@ -54,27 +71,25 @@ void AudioHandler::setSceneHandler(SceneHandler* sceneHandler)
 void AudioHandler::update()
 {
 	Scene* scene = this->sceneHandler->getScene();
-
-	const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>(entt::exclude<Inactive>);
-	for (const entt::entity& entity : sourceView)
+	ALint state = AL_STOPPED;
+	for (uint32_t i = 0; i < this->numActiveSources; i++)
 	{
-		const uint32_t id = sourceView.get<AudioSource>(entity).sourceId;
-		const glm::vec3& pos = sourceView.get<Transform>(entity).position;
-		alSource3f(id, AL_POSITION, pos.x, pos.y, pos.z);
-	}
-
-	const auto& multiSourceView = scene->getSceneReg().view<MultipleAudioSources, Transform>(entt::exclude<Inactive>);
-	for (const entt::entity& entity : multiSourceView)
-	{
-		const MultipleAudioSources& multiaudio = multiSourceView.get<MultipleAudioSources>(entity);
-		const glm::vec3& pos = multiSourceView.get<Transform>(entity).position;
-		for (int i = 0; i < NUM_MAX_MULTI_AUDIOSOURCE; i++)
+		alGetSourcei(this->sources[i], AL_SOURCE_STATE, &state);
+		if (state == AL_PLAYING)
 		{
-			const uint32_t id = multiaudio.audioSource[i].sourceId;
-			alSource3f(id, AL_POSITION, pos.x, pos.y, pos.z);
+			const glm::vec3& pos = scene->getComponent<Transform>(this->sourceUsers[i]).position;
+			alSource3f(this->sources[i], AL_POSITION, pos.x, pos.y, pos.z);
+		}
+		else if (!this->sourceBorrowed[i])
+		{
+			alSourcei(this->sources[i], AL_BUFFER, NULL);
+
+			this->numActiveSources--;
+			std::swap(this->sources[i], this->sources[this->numActiveSources]);
+			std::swap(this->sourceUsers[i], this->sourceUsers[this->numActiveSources]);
+			std::swap(this->sourceBorrowed[i], this->sourceBorrowed[this->numActiveSources]);
 		}
 	}
-
 
 	const Entity camID = scene->getMainCameraID();
 	if (scene->isActive(camID))
@@ -89,7 +104,7 @@ void AudioHandler::update()
 		alListener3f(AL_POSITION, camTra.position.x, camTra.position.y, camTra.position.z);
 	}
 
-	if (this->state == State::Playing)
+	if (this->musicState == State::Playing)
 	{
 		this->updateMusic();
 	}
@@ -190,19 +205,19 @@ void AudioHandler::setMusic(const std::string& filePath)
 void AudioHandler::playMusic()
 {
 	alSourcePlay(this->musicSourceId);
-	this->state = State::Playing;
+	this->musicState = State::Playing;
 }
 
 void AudioHandler::stopMusic()
 {
 	alSourceStop(this->musicSourceId);
-	this->state = State::NotPlaying;
+	this->musicState = State::NotPlaying;
 }
 
 void AudioHandler::pauseMusic()
 {
 	alSourcePause(this->musicSourceId);
-	this->state = State::NotPlaying;
+	this->musicState = State::NotPlaying;
 }
 
 void AudioHandler::setMusicVolume(float volume)
@@ -217,11 +232,102 @@ float AudioHandler::getMusicVolume() const
 	return volume;
 }
 
-void AudioHandler::cleanUp()
+bool AudioHandler::requestAudioSource(Entity entity, uint32_t amount)
 {
-	const auto& sourceView = this->sceneHandler->getScene()->getSceneReg().view<AudioSource>();
-	sourceView.each([&](AudioSource& source)
+	if (this->numActiveSources >= MAX_SOURCES)
 	{
-		alDeleteSources(1, &source.sourceId);
-	});
+#ifdef _CONSOLE
+		Log::error("AudioHandler::requestAudioSource | No avaliable sources!");
+#endif
+		return false;
+	}
+
+	Scene* scene = this->sceneHandler->getScene();
+
+	scene->setComponent<AudioSource>(entity, this->sources[this->numActiveSources]);
+	this->sourceUsers[this->numActiveSources] = entity;
+	this->sourceBorrowed[this->numActiveSources] = true;
+
+	this->numActiveSources++;
+	return true;
+}
+
+void AudioHandler::releaseAudioSource(Entity entity)
+{
+	Scene* scene = this->sceneHandler->getScene();
+	if (scene->hasComponents<AudioSource>(entity))
+	{
+		AudioSource& source =scene->getComponent<AudioSource>(entity);
+		source.stop();
+		source.setBuffer(0u);
+
+		for (uint32_t i = 0; i < this->numActiveSources; i++)
+		{
+			if (entity == this->sourceUsers[i])
+			{
+				this->numActiveSources--;
+				std::swap(this->sources[i], this->sources[this->numActiveSources]);
+				std::swap(this->sourceUsers[i], this->sourceUsers[this->numActiveSources]);
+				std::swap(this->sourceBorrowed[i], this->sourceBorrowed[this->numActiveSources]);
+				scene->removeComponent<AudioSource>(entity);
+
+				return;
+			}
+		}
+	}
+#ifdef _CONSOLE
+	else
+	{
+		Log::warning("AudioHandler::releaseAudioSource | Entity doesn't have an AudioSource");
+	}
+#endif
+}
+
+AudioSourceID AudioHandler::playSound(Entity entity, AudioBufferID bufferID, float volume)
+{
+	if (this->numActiveSources >= MAX_SOURCES)
+	{
+#ifdef _CONSOLE
+		Log::warning("AudioHandler::playSound | No avaliable sources!");
+#endif
+		return ~0u;
+	}
+
+	const AudioSourceID curSourceId = this->sources[this->numActiveSources];
+	const glm::vec3& pos = this->sceneHandler->getScene()->getComponent<Transform>(entity).position;
+
+	// Save user and reset borrowed
+	this->sourceUsers[this->numActiveSources] = entity;
+	this->sourceBorrowed[this->numActiveSources] = false;
+	this->numActiveSources++;
+
+	// Set/reset parameters 
+	alSource3f(curSourceId, AL_POSITION, pos.x, pos.y, pos.z);
+	alSourcef(curSourceId, AL_GAIN, volume);
+	alSourcef(curSourceId, AL_PITCH, 1.f);
+	alSourcei(curSourceId, AL_BUFFER, bufferID);
+	alSourcePlay(curSourceId);
+
+	return curSourceId;
+}
+
+void AudioHandler::setSourceVolume(AudioSourceID sourceId, float volume)
+{
+	alSourcef(sourceId, AL_GAIN, volume);
+}
+void AudioHandler::setSourcePitch(AudioSourceID sourceId, float pitch)
+{
+	alSourcef(sourceId, AL_PITCH, pitch);
+}
+
+void AudioHandler::reset()
+{
+	for (uint32_t i = 0; i < MAX_SOURCES; i++)
+	{
+		alSourceStop(this->sources[i]);
+		alSourcei(this->sources[i], AL_BUFFER, NULL);
+		
+		this->sourceBorrowed[i] = false;
+		this->sourceUsers[i] = -1;
+	}
 }

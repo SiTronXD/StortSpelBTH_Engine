@@ -1,19 +1,33 @@
 #pragma once
 
-typedef unsigned int uint32_t;
+typedef unsigned int AudioSourceID;
+typedef unsigned int AudioBufferID;
+
+/* 
+* AudioSource is attachted to an entity if the function:
+* AudioHandler::requestAudioSource() 
+* succeeds. 
+* 
+* An instance of AudioSource is made for more permanent usage.
+* For example, a walking sound or looping a sound
+*/
 
 struct AudioSource
 {
-	bool playingb4Inactive; // No touchy
+	AudioSourceID sourceId;
 
-	uint32_t sourceId;
-
-	AudioSource(uint32_t bufferId);
-	AudioSource();
+	AudioSource(AudioSourceID sourceId = ~0u);
 	~AudioSource();
 
-	void setBuffer(uint32_t bufferId);
-	int getBuffer() const;
+	void play();
+	void stop();
+	void pause();
+	
+	void setBuffer(AudioBufferID bufferId);
+	AudioBufferID getBuffer() const;
+
+	bool isValid() const;
+	bool isPlaying() const;
 
 	void setLooping(bool loop);
 	bool getLooping() const;
@@ -21,9 +35,6 @@ struct AudioSource
 	void setVolume(float volume);
 	float getVolume() const;
 
-	void play();
-	void stop();
-	void pause();
-
-	bool isPlaying() const;
+	void setPitch(float pitch);
+	float getPitch() const;
 };

@@ -294,51 +294,32 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
 }
-#include "../deps/OpenAL/include/OpenAL/al.h"
 
 void TestDemoScene::start()
 {
-#if AUDIO
 	audioBuffer1 = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
 	audioBuffer2 = this->getResourceManager()->addSound("assets/sounds/OufSound.ogg");
-
-	/*multiAudio = this->createEntity();
-	setComponent<MultipleAudioSources>(multiAudio);
-	MultipleAudioSources& multiSourceComp = getComponent<MultipleAudioSources>(multiAudio);
-
-	this->getComponent<Transform>(multiAudio).position.x = -30.f;
-	multiSourceComp.audioSource[0].setBuffer(audioBuffer1);
-	multiSourceComp.audioSource[0].setLooping(true);
-	multiSourceComp.audioSource[0].setVolume(1.f);
-	multiSourceComp.audioSource[0].play();*/
-
-	/*MultipleAudioSources* asd = new MultipleAudioSources[20];
-	float qwe = -500.f;
-	for (int j = 0; j < 20; j++)
-	{
-		qwe += 50.f;
-
-
-		for (int i = 0; i < 5; i++)
-		{
-			asd[j].audioSource[i].setBuffer(audioBuffer2);
-			asd[j].audioSource[i].setLooping(true);
-			asd[j].audioSource[i].play();
-			alSource3f(asd[j].audioSource[i].sourceId, AL_POSITION, qwe, i * 50.f, 0.f);
-		}
-	}*/
-
+	
 	audioSource1 = this->createEntity();
-	this->setComponent<AudioSource>(audioSource1, audioBuffer1);
-	this->setComponent<MeshComponent>(audioSource1, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
-	this->getComponent<Transform>(audioSource1).position.x = 30.f;
-	volume1 = this->getComponent<AudioSource>(audioSource1).getVolume();
+	Entity entts[16];
+	for (int i = 0; i < 16; i++)
+	{
+		entts[i] = createEntity();
+		this->getAudioHandler()->releaseAudioSource(entts[i]);
+	}
 
-	audioSource2 = this->createEntity();
-	this->setComponent<AudioSource>(audioSource2);
-	this->setComponent<MeshComponent>(audioSource2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
-	this->getComponent<Transform>(audioSource2).position.x = -30.f;
-	volume2 = this->getComponent<AudioSource>(audioSource2).getVolume();
+	for (int i = 0; i < 8; i++)
+	{
+		this->getAudioHandler()->requestAudioSource(entts[i], audioBuffer1);
+	}
+
+	for (int i = 0; i < 16; i++)
+	{
+		this->getAudioHandler()->playSound(entts[i], audioBuffer1);
+	}
+	
+
+
 
 	this->getAudioHandler()->setMasterVolume(0.5f);
 	master = this->getAudioHandler()->getMasterVolume();
@@ -346,12 +327,6 @@ void TestDemoScene::start()
 	this->getAudioHandler()->playMusic();
 
 	this->getAudioHandler()->setMusicVolume(music = 0.01f);
-
-	//this->setComponent<AudioSource>(aniIDs[0], audioId);
-	//this->getComponent<AudioSource>(aniIDs[0]).setVolume(0.2f);
-	//this->getComponent<AudioSource>(aniIDs[0]).play();
-	//this->getComponent<AudioSource>(aniIDs[0]).setLooping(true);
-#endif
 }
 
 void TestDemoScene::update()
@@ -626,7 +601,7 @@ void TestDemoScene::update()
 
 
 	this->timer += Time::getDT();
-#if AUDIO
+#if 0
 	if (ImGui::Begin("Sound"))
 	{
 		ImGui::PushItemWidth(-120.f);
