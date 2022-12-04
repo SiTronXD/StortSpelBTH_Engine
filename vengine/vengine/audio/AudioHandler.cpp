@@ -70,6 +70,12 @@ void AudioHandler::setSceneHandler(SceneHandler* sceneHandler)
 
 void AudioHandler::update()
 {
+	// TODO: Check if noticable performance diff between for() loop and sourceView.each() loop
+	// for()-loop has to do reg.get<>() instead of view.get<>()
+	// soureView.each()-loop will have to for-loop all sourceIds when a source is finished playing
+
+	// TODO: Make AudioSource.sourceId an array 
+
 	Scene* scene = this->sceneHandler->getScene();
 	ALint state = AL_STOPPED;
 	for (uint32_t i = 0; i < this->numActiveSources; i++)
@@ -88,8 +94,19 @@ void AudioHandler::update()
 			std::swap(this->sources[i], this->sources[this->numActiveSources]);
 			std::swap(this->sourceUsers[i], this->sourceUsers[this->numActiveSources]);
 			std::swap(this->sourceBorrowed[i], this->sourceBorrowed[this->numActiveSources]);
+
+			// i-- so element[numActiveSources] is also checked
+			i--;
 		}
 	}
+
+	/*const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>(entt::exclude<Inactive>);
+	for (const entt::entity& entity : sourceView)
+	{
+		const uint32_t id = sourceView.get<AudioSource>(entity).sourceId;
+		const glm::vec3& pos = sourceView.get<Transform>(entity).position;
+		alSource3f(id, AL_POSITION, pos.x, pos.y, pos.z);
+	}*/
 
 	const Entity camID = scene->getMainCameraID();
 	if (scene->isActive(camID))
