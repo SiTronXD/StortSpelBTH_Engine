@@ -111,7 +111,7 @@ void LightHandler::initForScene(
     const bool& oldHasAnimations,
     const bool& hasAnimations)
 {
-    // Try to cleanup before creating new objects
+    // Try to cleanup before creating new(__FILE__, __LINE__) objects
     this->shadowMapShaderInput.cleanup();
     this->shadowMapPipeline.cleanup();
     if (oldHasAnimations) // (hasAnimations from previous scene)
@@ -186,7 +186,7 @@ void LightHandler::initForScene(
                     Log::error("Mesh ID " + std::to_string(meshComponent.meshID) + " does not have any bones for skeletal animations. Please remove the animation component from this entity.");
                 }
 
-                // Add new storage buffer for animations
+                // Add new(__FILE__, __LINE__) storage buffer for animations
                 this->animShadowMapShaderInput.addStorageBuffer(
                     numAnimationBones * sizeof(glm::mat4),
                     vk::ShaderStageFlagBits::eVertex,

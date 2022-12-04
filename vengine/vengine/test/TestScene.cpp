@@ -60,7 +60,7 @@ void TestScene::update()
 {
 	if (Input::isMouseButtonPressed(Mouse::RIGHT))
 	{
-		this->switchScene(new TestScene2());
+		this->switchScene(new(__FILE__, __LINE__) TestScene2());
 	}
 
 	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);

@@ -175,7 +175,7 @@ void Pipeline::createPipeline(
     // -- INPUT ASSEMBLY --
     vk::PipelineInputAssemblyStateCreateInfo inputAssemblyStateCreateInfo;
     inputAssemblyStateCreateInfo.setTopology(topology);        // Primitive type to assemble primitives from ;
-    inputAssemblyStateCreateInfo.setPrimitiveRestartEnable(VK_FALSE);                     // Allow overrideing tof "strip" topology to start new primitives
+    inputAssemblyStateCreateInfo.setPrimitiveRestartEnable(VK_FALSE);                     // Allow overrideing tof "strip" topology to start new(__FILE__, __LINE__) primitives
 
     // -- VIEWPORT & SCISSOR ---
     // Only count is necessary, since viewport and scissor are dynamic
@@ -270,7 +270,7 @@ void Pipeline::createPipeline(
     vk::PipelineDepthStencilStateCreateInfo depthStencilCreateInfo{};
     depthStencilCreateInfo.setDepthTestEnable(depthTestingEnabled ? VK_TRUE : VK_FALSE);              // Enable Depth Testing; Check the Depth to determine if it should write to the fragment
     depthStencilCreateInfo.setDepthWriteEnable(VK_TRUE);              // enable writing to Depth Buffer; To make sure it replaces old values
-    depthStencilCreateInfo.setDepthCompareOp(vk::CompareOp::eLess);   // Describes that we want to replace the old values IF new values are smaller/lesser.
+    depthStencilCreateInfo.setDepthCompareOp(vk::CompareOp::eLess);   // Describes that we want to replace the old values IF new(__FILE__, __LINE__) values are smaller/lesser.
     depthStencilCreateInfo.setDepthBoundsTestEnable(VK_FALSE);             // In case we want to use as Min and a Max Depth; if depth Values exist between two bounds... 
     depthStencilCreateInfo.setStencilTestEnable(VK_FALSE);             // Whether to enable the Stencil Test; we dont use it so we let it be disabled
     

@@ -387,7 +387,7 @@ void VulkanRenderer::renderDefaultMeshes(
                 Material& material = 
                     this->getAppropriateMaterial(meshComponent, submeshes, i);
 
-                // Create new material if found material is new
+                // Create new(__FILE__, __LINE__) material if found material is new(__FILE__, __LINE__)
 #if defined(_DEBUG) || defined(DEBUG)
                 if (material.descriptorIndex >= ~0u)
                 {

@@ -100,7 +100,7 @@ void NetworkHandler::createServer(NetworkScene* serverGame)
 
 	this->shutDownServer = false;
 	this->createdServer = false;
-	serverThread = new std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), this, serverGame);
+	serverThread = new(__FILE__, __LINE__) std::thread(serverMain, std::ref(this->shutDownServer), std::ref(this->createdServer), this, serverGame);
 
 	Timer timer;
 	float timeSinceStartCreatingServer = 0;
@@ -137,7 +137,7 @@ Client* NetworkHandler::createClient(const std::string& name)
 	if (client == nullptr)
 	{
 		this->playerName = name;
-		client = new Client(name);
+		client = new(__FILE__, __LINE__) Client(name);
 	}
 	return client;
 }

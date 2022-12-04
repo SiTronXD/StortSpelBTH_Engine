@@ -1,4 +1,5 @@
-#pragma once
+#pragma once 
+ #include "op_overload.hpp"
 #include "BehaviorTree.hpp"
 #include "EventSystem.hpp"
 #include "../dev/Log.hpp"
@@ -50,7 +51,7 @@ private:
 private: 
     void insertNode(const std::string& name)
     {
-        fsm_nodes.insert({name, new FSM_Node(name, trees[name])});
+        fsm_nodes.insert({name, new(__FILE__, __LINE__) FSM_Node(name, trees[name])});
     }
 	   
 protected:

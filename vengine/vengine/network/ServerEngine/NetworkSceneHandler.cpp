@@ -30,7 +30,7 @@ void NetworkSceneHandler::setScene(Scene* scene, std::string path) {
 	((NetworkScene*)scene)->givePacketInfo(serverToClientPacketTcp);
     ((NetworkScene*)scene)->givePacketInfoUdp(serverToClientPacketUdp);
 
-	//give new scene players
+	//give new(__FILE__, __LINE__) scene players
 	if (this->getScene() != nullptr)
 	{
 		for (int i = 0; i < ((NetworkScene*)this->getScene())->getPlayerSize(); i++)

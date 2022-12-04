@@ -112,7 +112,7 @@ uint32_t ResourceManager::addMesh(std::string meshPath, MeshData meshData)
 	auto map_iterator = this->meshPaths.find(meshPath);
 	if (this->meshPaths.end() == map_iterator)
 	{
-        //No mesh exists, create new
+        //No mesh exists, create new(__FILE__, __LINE__)
 		this->meshPaths.insert({meshPath, this->meshes.size()});
 
 		// NOTE: meshes.size as key only works if we never remove resources the map...
@@ -124,7 +124,7 @@ uint32_t ResourceManager::addMesh(std::string meshPath, MeshData meshData)
 		uint32_t meshID = map_iterator->second;
         auto mesh_iterator = this->meshes.find(meshID);
         mesh_iterator->second.safeCleanup();
-        //deallocate memory, remove reference and create new mesh
+        //deallocate memory, remove reference and create new(__FILE__, __LINE__) mesh
 		meshes.erase(meshID);
 		meshes.insert({meshID, meshLoader.createMesh(meshData)});
     }
@@ -346,7 +346,7 @@ uint32_t ResourceManager::addSound(std::string&& soundPath)
 
     // Allocate memory for samples
     const uint32_t sampleCount = (uint32_t)reader.getSampleCount();
-    short* samples = new short[sampleCount]{};
+    short* samples = new(__FILE__, __LINE__) short[sampleCount]{};
     reader.read(samples, sampleCount);
     
     // Generate buffer

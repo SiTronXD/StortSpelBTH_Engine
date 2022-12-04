@@ -161,7 +161,7 @@ void UIRenderer::setBitmapFont(
                     }
                 }
 
-                // Apply new size
+                // Apply new(__FILE__, __LINE__) size
                 charX = minX;
                 charY = minY;
                 charWidth = maxX - minX;

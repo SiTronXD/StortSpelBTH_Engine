@@ -72,7 +72,7 @@ void Server::ConnectUsers()
 			sf::Packet playerJoinedPacket;
 			playerJoinedPacket << (int)NetworkEvent::CLIENTJOINED << tempClient->name << tempClient->id;
 
-			// Send to all other players to new client, also get own ID
+			// Send to all other players to new(__FILE__, __LINE__) client, also get own ID
 			sf::Packet justJoinedInfo;
 			justJoinedInfo << (int)NetworkEvent::JUSTJOINED << tempClient->id << (int)clients.size() -1 ;
 
@@ -83,13 +83,13 @@ void Server::ConnectUsers()
 			}
 			tempClient->clientTcpSocket.send(justJoinedInfo);
 		}
-		// Create a new client that is ready
-		tempClient = new ClientInfo("");
+		// Create a new(__FILE__, __LINE__) client that is ready
+		tempClient = new(__FILE__, __LINE__) ClientInfo("");
 	}
 }
 
 Server::Server(NetworkHandler* networkHandler, NetworkScene* serverGame)
-	: status(ServerStatus::WAITING), networkHandler(networkHandler), tempClient(new ClientInfo("")), id(0)
+	: status(ServerStatus::WAITING), networkHandler(networkHandler), tempClient(new(__FILE__, __LINE__) ClientInfo("")), id(0)
 {
 	this->tempClient->clientTcpSocket.setBlocking(false);
 	this->udpSocket.setBlocking(false);
@@ -108,7 +108,7 @@ Server::Server(NetworkHandler* networkHandler, NetworkScene* serverGame)
 	// Create scene
 	if (serverGame == nullptr)
 	{
-		sceneHandler.setScene(new DefaultServerGame());
+		sceneHandler.setScene(new(__FILE__, __LINE__) DefaultServerGame());
 	}
 	else
 	{
@@ -287,7 +287,7 @@ void Server::cleanSendPackages()
 	{
 		serverToClientPacketTcp[i].clear();
 		serverToClientPacketUdp[i].clear();
-		//give udp packet new id after its clear
+		//give udp packet new(__FILE__, __LINE__) id after its clear
         serverToClientPacketUdp[i] << sendUdpPacketID;
 	}
     ++sendUdpPacketID;
@@ -376,7 +376,7 @@ void Server::getDataFromUsers()
                         clientToServerPacketUdp[i].clear();
                         break;
                     }
-                    //else new id packet
+                    //else new(__FILE__, __LINE__) id packet
                     clients[i]->recvUdpPacketID = udpIdPacket;
 
                     handlePacketFromUser(i, false);

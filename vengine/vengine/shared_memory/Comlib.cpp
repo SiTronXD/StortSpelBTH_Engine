@@ -4,9 +4,9 @@
 Comlib::Comlib(LPCWSTR bufferName, size_t bufferSize, ProcessType type)
 {
     this->type = type;
-    sharedMemory = new Memory(bufferName, bufferSize);
+    sharedMemory = new(__FILE__, __LINE__) Memory(bufferName, bufferSize);
     messageData = sharedMemory->GetMemoryBuffer();
-    mutex = new Mutex(L"MutexMap");
+    mutex = new(__FILE__, __LINE__) Mutex(L"MutexMap");
 
     head = sharedMemory->GetControlBuffer();
     tail = head + 1;
@@ -63,7 +63,7 @@ bool Comlib::Recieve(char*& message, MessageHeader*& secHeader)
             }
             else
             {
-                message = new char[msgLength];
+                message = new(__FILE__, __LINE__) char[msgLength];
                 //message ID != 0 means there's a message to read
                 //copy data from messageData (at tail position plus size of the header previously read) to message variable
 				memcpy(message, &messageData[*tail + sizeof(MessageHeader)], msgLength);

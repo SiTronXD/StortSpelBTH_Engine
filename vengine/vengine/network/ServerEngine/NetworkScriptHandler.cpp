@@ -23,8 +23,8 @@ void NetworkScriptHandler::updateScripts(float dt)
 		}
 		else
 		{
-			lua_getfield(L, -1, "update");  // Get new update function
-			lua_setfield(L, -3, "update");  // Set instance update function to the new one
+			lua_getfield(L, -1, "update");  // Get new(__FILE__, __LINE__) update function
+			lua_setfield(L, -3, "update");  // Set instance update function to the new(__FILE__, __LINE__) one
 			lua_pop(L, 1);
 		}
 
@@ -79,7 +79,7 @@ void NetworkScriptHandler::updateSystems(std::vector<LuaSystem>& vec, float dt)
 		}
 		lua_rawgeti(L, LUA_REGISTRYINDEX, (*it).luaRef);
 
-		lua_getfield(L, -2, "update");  // Get new update
+		lua_getfield(L, -2, "update");  // Get new(__FILE__, __LINE__) update
 		if (!lua_isnil(L, -1))          // Found update
 		{
 			lua_pushvalue(L, -2);

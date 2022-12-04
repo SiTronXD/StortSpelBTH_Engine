@@ -66,7 +66,7 @@ void Input::setKey(const Keys& keyCode, const bool& value)
 	{
 		Input::keyDown[keyCode] = value;
 	}
-	// Insert new element
+	// Insert new(__FILE__, __LINE__) element
 	else
 	{
 		// Current

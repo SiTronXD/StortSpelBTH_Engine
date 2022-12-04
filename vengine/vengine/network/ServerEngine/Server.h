@@ -1,4 +1,5 @@
-#pragma once
+#pragma once 
+ #include "op_overload.hpp"
 #include <SFML/Network.hpp>
 #include <vector>
 #include <thread>
@@ -64,7 +65,7 @@ private:
 	ServerStatus status;
 	float        currentTimeToSend;
 	float        timeToSend;
-	int			 id; // Current ID for new users
+	int			 id; // Current ID for new(__FILE__, __LINE__) users
 
 	std::vector<ClientInfo*> clients;
 	ClientInfo*				 tempClient;

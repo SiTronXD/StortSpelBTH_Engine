@@ -1,4 +1,5 @@
-#pragma once
+#pragma once 
+ #include "op_overload.hpp"
 
 #include "../components/AudioSource.h"
 #include "../components/Camera.hpp"
@@ -157,7 +158,7 @@ public:
 template <typename T, typename... Args>
 inline void Scene::createSystem(Args... args)
 {
-	this->systems.emplace_back(new T(args...));
+	this->systems.emplace_back(new(__FILE__, __LINE__) T(args...));
 }
 
 template <typename... Args>

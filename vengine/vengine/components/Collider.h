@@ -1,4 +1,5 @@
-#pragma once
+#pragma once 
+ #include "op_overload.hpp"
 
 #include <glm/glm.hpp>
 
@@ -9,7 +10,7 @@ struct Collider
 	bool isTrigger = false;
 	glm::vec3 offset = glm::vec3(0.0f);
 
-	// NOTE: Can't be changed after creation, create new collider component instead
+	// NOTE: Can't be changed after creation, create new(__FILE__, __LINE__) collider component instead
 	ColType type;
 	// Type specific 
 	float radius; // Sphere and Capsule

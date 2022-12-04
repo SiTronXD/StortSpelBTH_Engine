@@ -469,10 +469,10 @@ void VulkanRenderer::draw(Scene* scene)
     else
     {
         Log::error("No main camera exists!");
-        camera = new Camera((float)this->swapchain.getWidth() / (float)this->swapchain.getHeight());
+        camera = new(__FILE__, __LINE__) Camera((float)this->swapchain.getWidth() / (float)this->swapchain.getHeight());
         camera->view = cameraDataUBO.view;
 
-        cameraTransform = new Transform();
+        cameraTransform = new(__FILE__, __LINE__) Transform();
 
         deleteCamera = true;
     }
@@ -692,7 +692,7 @@ void VulkanRenderer::initForScene(Scene* scene)
 
     bool oldHasAnimations = this->hasAnimations;
 
-    // Try to cleanup before creating new objects
+    // Try to cleanup before creating new(__FILE__, __LINE__) objects
     this->shaderInput.cleanup();
     this->pipeline.cleanup();
     if (oldHasAnimations) // (hasAnimations from previous scene)
@@ -826,7 +826,7 @@ void VulkanRenderer::initForScene(Scene* scene)
                     Log::error("Mesh ID " + std::to_string(meshComponent.meshID) + " does not have any bones for skeletal animations. Please remove the animation component from this entity.");
                 }
 
-			    // Add new storage buffer for animations
+			    // Add new(__FILE__, __LINE__) storage buffer for animations
 			    StorageBufferID newStorageBufferID =
 			        this->animShaderInput.addStorageBuffer(
 			            numAnimationBones * sizeof(glm::mat4),
@@ -1079,7 +1079,7 @@ void VulkanRenderer::windowResize(Camera* camera)
         this->hdrRenderTextureDescriptorIndex
     );
 
-    // Take new aspect ratio into account for the camera
+    // Take new(__FILE__, __LINE__) aspect ratio into account for the camera
     camera->calculateProjectionMatrix(
         (float) this->swapchain.getWidth() / swapchain.getHeight()
     );

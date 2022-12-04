@@ -169,7 +169,7 @@ void Window::setFullscreen(bool fullscreen)
         this->height = dm.h;
     }
 
-    // Apply new size
+    // Apply new(__FILE__, __LINE__) size
     SDL_SetWindowSize(
         this->windowHandle, 
         this->width, 

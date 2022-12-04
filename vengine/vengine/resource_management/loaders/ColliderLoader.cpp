@@ -69,7 +69,7 @@ Collider ColliderLoader::makeCollisionShape(const ColType& type, const aiMesh* m
     //	btVector3 a = aiVectorToBtVector((mesh->mVertices[0] - mesh->mVertices[1]), a);
     //	btVector3 b = aiVectorToBtVector((mesh->mVertices[0] - mesh->mVertices[2]), b);
     //	btVector3 normal = btCross(a, b);
-    //	//return new btStaticPlaneShape(normal, btDot(-normal, a));
+    //	//return new(__FILE__, __LINE__) btStaticPlaneShape(normal, btDot(-normal, a));
     //}
     else if (type == ColType::BOX)
     {

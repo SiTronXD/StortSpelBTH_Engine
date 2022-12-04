@@ -507,7 +507,7 @@ void Texture::transitionImageLayout(
     imageMemoryBarrier.subresourceRange.setLayerCount(
         uint32_t(1)); // Number of layers to alter starting from baseArrayLayer
 
-    // If transitioning from 'new image' to 'image ready' to 'recieve data'
+    // If transitioning from 'new(__FILE__, __LINE__) image' to 'image ready' to 'recieve data'
     if (oldLayout == vk::ImageLayout::eUndefined &&
         newLayout == vk::ImageLayout::eTransferDstOptimal) 
     {

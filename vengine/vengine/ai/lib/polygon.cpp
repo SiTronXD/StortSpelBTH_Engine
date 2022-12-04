@@ -36,7 +36,7 @@ namespace NavMesh {
 		return *this;
 	}
 
-	// TODO: Add fast path for when the new point is already provided
+	// TODO: Add fast path for when the new(__FILE__, __LINE__) point is already provided
 	// in the correct order. Between last and the first.
 	// Make |points| private.
 	void Polygon::AddPoint(const Point& a)
@@ -62,7 +62,7 @@ namespace NavMesh {
 
 		// Remove points, which will be inside the convex hull.
 		// Find tangents from the newly added point and make them
-		// two new sides, removing all points inside.
+		// two new(__FILE__, __LINE__) sides, removing all points inside.
 
 		auto ids = GetTangentIds(a);
 		int i1 = ids.first;

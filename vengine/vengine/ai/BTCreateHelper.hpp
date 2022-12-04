@@ -1,4 +1,5 @@
 #pragma once 
+ #include "op_overload.hpp" 
 #include "BehaviorTreeNodes.hpp"
 
 class BTCreateHelper
@@ -14,7 +15,7 @@ public:
         T* registerDecorator(Args...args)
         {
             nrOfDecorators++; 
-            registredDecorators.push_back(new T(args...));
+            registredDecorators.push_back(new(__FILE__, __LINE__) T(args...));
             return (T*)registredDecorators.back(); //TODO can I return a casted pointer, or will it be local to this scope?
         }
 
@@ -46,7 +47,7 @@ public:
         T* registerCompositor(Args...args)
         {
             nrOfCompositors++; 
-            registredCompositors.push_back(new T(args...));
+            registredCompositors.push_back(new(__FILE__, __LINE__) T(args...));
             return (T*)registredCompositors.back(); //TODO can I return a casted pointer, or will it be local to this scope?
         }
         std::vector<Compositor*>& getCompositors(){return this->registredCompositors;}
@@ -71,7 +72,7 @@ public:
         T* registerLeaf(Args...args)
         {
             nrOfLeafs++; 
-            registredLeafs.push_back(new T(args...));
+            registredLeafs.push_back(new(__FILE__, __LINE__) T(args...));
             return (T*)registredLeafs.back(); //TODO can I return a casted pointer, or will it be local to this scope?
         }
         std::vector<Leaf*>& getLeafs(){return this->registredLeafs;}

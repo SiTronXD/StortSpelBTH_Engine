@@ -1,4 +1,5 @@
-#pragma once
+#pragma once 
+ #include "op_overload.hpp"
 #include "../../vengine/resource_management/ResourceManager.hpp"
 #include "../application/Time.hpp"
 #include "../components/MeshComponent.hpp"
@@ -48,7 +49,7 @@ public:
     virtual void onDisconnect(int index);
 
     // SERVER
-    void createServer(NetworkScene* serverGame = nullptr); // Create new server on a new thread
+    void createServer(NetworkScene* serverGame = nullptr); // Create new(__FILE__, __LINE__) server on a new(__FILE__, __LINE__) thread
     void deleteServer();
 
     // CLIENT

@@ -38,7 +38,7 @@ int PhysicsEngineLua::lua_raycast(lua_State* L)
     return 0;
 }
 
-// TODO: Fix actual collider argument after adding new components
+// TODO: Fix actual collider argument after adding new(__FILE__, __LINE__) components
 int PhysicsEngineLua::lua_testContact(lua_State* L)
 {
 	PhysicsEngine* physicsEngine = (PhysicsEngine*)lua_touserdata(L, lua_upvalueindex(1));

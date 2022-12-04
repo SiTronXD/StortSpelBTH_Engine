@@ -34,7 +34,7 @@ void Log::error(const std::string& errorMessage, const std::string& filter)
 		std::cout << "[Log Error]: " << errorMessage << std::endl;
 	
 		// Convert const char* to LPCWSTR
-		wchar_t* wString = new wchar_t[4096];
+		wchar_t* wString = new(__FILE__, __LINE__) wchar_t[4096];
 		MultiByteToWideChar(CP_ACP, 0, errorMessage.c_str(), -1, wString, 4096);
 
 		// Simple message box

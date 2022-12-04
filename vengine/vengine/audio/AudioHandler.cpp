@@ -8,7 +8,7 @@
 AudioHandler::AudioHandler()
 	:sceneHandler(nullptr), musicSourceId(), alBuffers{}, alSoundFormat(0)
 {
-	this->audioSamples = new char[BUFFER_SIZE];
+	this->audioSamples = new(__FILE__, __LINE__) char[BUFFER_SIZE];
 	this->state = State::NotPlaying;
 
 	ALCdevice* device = alcOpenDevice(NULL);
@@ -161,7 +161,7 @@ void AudioHandler::setMusic(const std::string& filePath)
 
 	alGenBuffers(NUM_BUFFERS, this->alBuffers);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error("AudioHandler::setMusic | Failed generating new buffers. OpenAL error: " + std::to_string(error)); return; }
+		{ Log::error("AudioHandler::setMusic | Failed generating new(__FILE__, __LINE__) buffers. OpenAL error: " + std::to_string(error)); return; }
 
 
 	this->alSoundFormat = this->mrStreamer.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;

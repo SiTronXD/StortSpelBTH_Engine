@@ -102,13 +102,13 @@ vk::Extent2D Swapchain::chooseBestImageResolution(
         int width = 0, height = 0;
         this->window->getSize(width, height);
 
-        // Create a new extent using the current window size
+        // Create a new(__FILE__, __LINE__) extent using the current window size
         vk::Extent2D newExtent = {};
         newExtent.height = static_cast<uint32_t>(height);     // glfw uses int, but VkExtent2D uses uint32_t...
         newExtent.width = static_cast<uint32_t>(width);
 
         // Make sure that height/width fetched from the glfw_window is within the max/min height/width of our surface
-        // - Do this by clamping the new height and width
+        // - Do this by clamping the new(__FILE__, __LINE__) height and width
         newExtent.width = std::clamp(newExtent.width,
             surfaceCapabilities.surfaceCapabilities.minImageExtent.width,
             surfaceCapabilities.surfaceCapabilities.maxImageExtent.width);
@@ -249,8 +249,8 @@ void Swapchain::createSwapchain(
         }
 
 
-        /*! If we want to create a new SwapChain, this would be needed when for example resizing the window.
-         *  with the oldSwapchain we can pass the old swapChains responsibility to the new SwapChain...
+        /*! If we want to create a new(__FILE__, __LINE__) SwapChain, this would be needed when for example resizing the window.
+         *  with the oldSwapchain we can pass the old swapChains responsibility to the new(__FILE__, __LINE__) SwapChain...
          * */
          // IF old swapChain been destroyed and this one replaces it, then link old one to quickly hand over responsibilities...
         swapChainCreateInfo.setOldSwapchain(oldSwapchain); // VK_NULL_HANDLE on initialization, previous all other times...

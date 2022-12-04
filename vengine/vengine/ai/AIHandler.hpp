@@ -1,4 +1,5 @@
-#pragma once
+#pragma once 
+ #include "op_overload.hpp"
 #include "FSM.hpp"
 #include "../application/SceneHandler.hpp"
 #include "../components/FSMAgentComponent.hpp"
@@ -51,7 +52,7 @@ void AIHandler::addFSM(const std::string& name)
     auto foundFSM = this->FSMs.find(name);
     if (foundFSM == this->FSMs.end())
     {
-        FSM* fsm = new FSM_SUBCLASS;
+        FSM* fsm = new(__FILE__, __LINE__) FSM_SUBCLASS;
         fsm->init(this->sh, &this->eventSystem, name);
         this->FSMs.insert({fsm->getName(), fsm});
     }

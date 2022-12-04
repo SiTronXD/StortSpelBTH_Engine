@@ -376,7 +376,7 @@ void ShaderInput::updateDescriptorSets()
             writeDescriptorSets[j].setDescriptorCount(uint32_t(1));                                // Amount of Descriptors to update
         }
 
-        // Update the descriptor sets with new buffer/binding info
+        // Update the descriptor sets with new(__FILE__, __LINE__) buffer/binding info
         this->device->getVkDevice().updateDescriptorSets(
             writeDescriptorSets,
             nullptr
@@ -419,7 +419,7 @@ void ShaderInput::updateDescriptorSets()
             VulkanDbg::registerVkObjectDbgInfo("PerMeshDescriptorSet[" + std::to_string(i) + "]", vk::ObjectType::eDescriptorSet, reinterpret_cast<uint64_t>(vk::DescriptorSet::CType(this->perMeshDescriptorSets[i][j])));
         }
 
-        // Update the descriptor sets with new buffer/binding info
+        // Update the descriptor sets with new(__FILE__, __LINE__) buffer/binding info
         this->device->getVkDevice().updateDescriptorSets(
             writeDescriptorSets,
             nullptr
@@ -480,7 +480,7 @@ UniformBufferID ShaderInput::addUniformBuffer(
         this->createResourceID(descriptorFrequency);
 
     // Create uniform buffer
-    UniformBuffer* uniformBuffer = new UniformBuffer();
+    UniformBuffer* uniformBuffer = new(__FILE__, __LINE__) UniformBuffer();
     uniformBuffer->createUniformBuffer(
         *this->device,
         *this->vma,
@@ -513,7 +513,7 @@ StorageBufferID ShaderInput::addStorageBuffer(
         this->createResourceID(descriptorFrequency);
 
     // Create storage buffer
-    StorageBuffer* storageBuffer = new StorageBuffer();
+    StorageBuffer* storageBuffer = new(__FILE__, __LINE__) StorageBuffer();
     storageBuffer->createStorageBuffer(
         *this->device,
         *this->vma,
