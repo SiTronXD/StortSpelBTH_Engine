@@ -69,7 +69,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     ImGuiIO&  io = ImGui::GetIO();
 
     // No custom network handler was set
-    if (this->networkHandler == nullptr) { this->networkHandler = new NetworkHandler(); }
+    if (this->networkHandler == nullptr) { this->networkHandler = new(__FILE__, __LINE__) NetworkHandler(); }
 
     //  Set references to other systems
     this->sceneHandler.setNetworkHandler(networkHandler);
@@ -96,7 +96,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->audioHandler.setSceneHandler(&sceneHandler);
 
     // Initialize the start scene
-    if (startScene == nullptr) { startScene = new Scene(); }
+    if (startScene == nullptr) { startScene = new(__FILE__, __LINE__) Scene(); }
     this->sceneHandler.setScene(startScene, startScenePath);
     this->sceneHandler.updateToNextScene();
 

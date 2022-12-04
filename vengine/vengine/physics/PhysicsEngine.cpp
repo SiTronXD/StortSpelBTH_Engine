@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <string>
-
+ #include "op_overload.hpp"
 void PhysicsEngine::updateColliders()
 {
 	Scene* scene = this->sceneHandler->getScene();
@@ -95,7 +95,7 @@ void PhysicsEngine::updateRigidbodies()
 btCollisionShape* PhysicsEngine::createShape(Collider& col)
 {
 	// Loop: Find suitable collision shape
-	// Else: Create new shape
+	// Else: Create new(__FILE__, __LINE__) shape
 	ColShapeInfo shapeInfo;
 	switch (col.type)
 	{
@@ -280,10 +280,10 @@ void PhysicsEngine::cleanup()
 PhysicsEngine::PhysicsEngine()
 	:sceneHandler(nullptr), colShapes(), timer(0.f), renderDebug(false)
 {
-	this->collconfig = new btDefaultCollisionConfiguration();
-	this->collDispCallbacks = new CollisionDispatcher(this->collconfig);
+	this->collconfig = new(__FILE__, __LINE__) btDefaultCollisionConfiguration();
+	this->collDispCallbacks = new(__FILE__, __LINE__) CollisionDispatcher(this->collconfig);
 	this->collDisp = this->collDispCallbacks;
-	this->bpInterface = new btDbvtBroadphase();
+	this->bpInterface = new(__FILE__, __LINE__) btDbvtBroadphase();
 	this->solver = new btSequentialImpulseConstraintSolver();
 	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
 	this->dynWorld->setGravity(btVector3(0, -10, 0));
@@ -303,10 +303,10 @@ void PhysicsEngine::setSceneHandler(SceneHandler* sceneHandler)
 void PhysicsEngine::init()
 {
 	cleanup();
-	this->collconfig = new btDefaultCollisionConfiguration();
-	this->collDispCallbacks = new CollisionDispatcher(this->collconfig);
+	this->collconfig = new(__FILE__, __LINE__) btDefaultCollisionConfiguration();
+	this->collDispCallbacks = new(__FILE__, __LINE__) CollisionDispatcher(this->collconfig);
 	this->collDisp = this->collDispCallbacks;
-	this->bpInterface = new btDbvtBroadphase();
+	this->bpInterface = new(__FILE__, __LINE__) btDbvtBroadphase();
 	this->solver = new btSequentialImpulseConstraintSolver();
 	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
 	this->dynWorld->setGravity(btVector3(0, -10, 0));
