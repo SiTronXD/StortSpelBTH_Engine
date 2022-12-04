@@ -573,12 +573,16 @@ RayPayload PhysicsEngine::raycast(Ray ray, float maxDist)
 
 	// Hit and entity valid (could be removed before)
 	RayPayload payload{};
-	if (closestResults.hasHit() && this->sceneHandler->getScene()->entityValid(closestResults.m_collisionObject->getUserIndex()))
+	Scene* scene = this->sceneHandler->getScene();
+	if (closestResults.hasHit() && scene->entityValid(closestResults.m_collisionObject->getUserIndex()))
 	{
-		payload.hit = true;
-		payload.entity = closestResults.m_collisionObject->getUserIndex();
-		payload.hitPoint = BulletH::glmvec(closestResults.m_hitPointWorld);
-		payload.hitNormal = BulletH::glmvec(closestResults.m_hitNormalWorld);
+		if (scene->hasComponents<Collider>(closestResults.m_collisionObject->getUserIndex()))
+		{
+			payload.hit = true;
+			payload.entity = closestResults.m_collisionObject->getUserIndex();
+			payload.hitPoint = BulletH::glmvec(closestResults.m_hitPointWorld);
+			payload.hitNormal = BulletH::glmvec(closestResults.m_hitNormalWorld);
+		}
 	}
 	return payload;
 }
