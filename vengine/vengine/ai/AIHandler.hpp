@@ -17,6 +17,7 @@ private:
 
   public: 
     AIHandler() = default;
+    ~AIHandler(){this->clean();}
 	std::unordered_map<std::string, FSM*> FSMs;
 	std::unordered_map<FSM*, std::function<void(FSM* fsm, uint32_t)>> FSMimguiLambdas;
     std::unordered_map<FSM*, std::vector<uint32_t>> FSMsEntities;

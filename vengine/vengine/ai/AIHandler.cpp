@@ -136,6 +136,7 @@ void AIHandler::clean()
         if(p.second != nullptr)
         {
             p.second->clean();
+            delete p.second;
         }
     }
     this->FSMs.clear();
