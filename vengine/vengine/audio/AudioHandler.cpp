@@ -70,12 +70,6 @@ void AudioHandler::setSceneHandler(SceneHandler* sceneHandler)
 
 void AudioHandler::update()
 {
-	// TODO: Check if noticable performance diff between for() loop and sourceView.each() loop
-	// for()-loop has to do reg.get<>() instead of view.get<>()
-	// soureView.each()-loop will have to for-loop all sourceIds when a source is finished playing
-
-	// TODO: Make AudioSource.sourceId an array 
-
 	Scene* scene = this->sceneHandler->getScene();
 	ALint state = AL_STOPPED;
 	for (uint32_t i = 0; i < this->numActiveSources; i++)
@@ -99,14 +93,6 @@ void AudioHandler::update()
 			i--;
 		}
 	}
-
-	/*const auto& sourceView = scene->getSceneReg().view<AudioSource, Transform>(entt::exclude<Inactive>);
-	for (const entt::entity& entity : sourceView)
-	{
-		const uint32_t id = sourceView.get<AudioSource>(entity).sourceId;
-		const glm::vec3& pos = sourceView.get<Transform>(entity).position;
-		alSource3f(id, AL_POSITION, pos.x, pos.y, pos.z);
-	}*/
 
 	const Entity camID = scene->getMainCameraID();
 	if (scene->isActive(camID))
@@ -249,7 +235,7 @@ float AudioHandler::getMusicVolume() const
 	return volume;
 }
 
-bool AudioHandler::requestAudioSource(Entity entity, uint32_t amount)
+bool AudioHandler::requestAudioSource(Entity entity, AudioBufferID bufferID)
 {
 	if (this->numActiveSources >= MAX_SOURCES)
 	{
@@ -262,6 +248,7 @@ bool AudioHandler::requestAudioSource(Entity entity, uint32_t amount)
 	Scene* scene = this->sceneHandler->getScene();
 
 	scene->setComponent<AudioSource>(entity, this->sources[this->numActiveSources]);
+	alSourcei(this->sources[this->numActiveSources], AL_BUFFER, bufferID);
 	this->sourceUsers[this->numActiveSources] = entity;
 	this->sourceBorrowed[this->numActiveSources] = true;
 
@@ -300,7 +287,7 @@ void AudioHandler::releaseAudioSource(Entity entity)
 #endif
 }
 
-AudioSourceID AudioHandler::playSound(Entity entity, AudioBufferID bufferID, float volume)
+AudioSourceID AudioHandler::playSound(Entity entity, AudioBufferID bufferID, float volume, float pitch)
 {
 	if (this->numActiveSources >= MAX_SOURCES)
 	{
@@ -318,10 +305,10 @@ AudioSourceID AudioHandler::playSound(Entity entity, AudioBufferID bufferID, flo
 	this->sourceBorrowed[this->numActiveSources] = false;
 	this->numActiveSources++;
 
-	// Set/reset parameters 
+	// Set parameters 
 	alSource3f(curSourceId, AL_POSITION, pos.x, pos.y, pos.z);
 	alSourcef(curSourceId, AL_GAIN, volume);
-	alSourcef(curSourceId, AL_PITCH, 1.f);
+	alSourcef(curSourceId, AL_PITCH, pitch);
 	alSourcei(curSourceId, AL_BUFFER, bufferID);
 	alSourcePlay(curSourceId);
 
@@ -337,11 +324,19 @@ void AudioHandler::setSourcePitch(AudioSourceID sourceId, float pitch)
 	alSourcef(sourceId, AL_PITCH, pitch);
 }
 
+uint32_t AudioHandler::getNumActiveSources() const
+{
+	return this->numActiveSources;
+}
+
 void AudioHandler::reset()
 {
 	for (uint32_t i = 0; i < MAX_SOURCES; i++)
 	{
 		alSourceStop(this->sources[i]);
+		alSource3f(this->sources[i], AL_POSITION, 0.f, 0.f, 0.f);
+		alSourcef(this->sources[i], AL_GAIN, 1.f);
+		alSourcef(this->sources[i], AL_PITCH, 1.f);
 		alSourcei(this->sources[i], AL_BUFFER, NULL);
 		
 		this->sourceBorrowed[i] = false;

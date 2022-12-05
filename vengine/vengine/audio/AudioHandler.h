@@ -58,9 +58,10 @@ public:
 	void releaseAudioSource(Entity entity);
 
 	// Playing a sound once (ex, swarm attack)
-	AudioSourceID playSound(Entity entity, AudioBufferID bufferID, float volume = 1.f);
+	AudioSourceID playSound(Entity entity, AudioBufferID bufferID, float volume = 1.f, float pitch = 1.f);
 	void setSourceVolume(AudioSourceID sourceId, float volume);
 	void setSourcePitch(AudioSourceID sourceId, float pitch);
+	uint32_t getNumActiveSources() const;
 
 	// Other
 	void update();

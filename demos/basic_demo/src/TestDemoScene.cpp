@@ -299,23 +299,15 @@ void TestDemoScene::start()
 {
 	audioBuffer1 = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
 	audioBuffer2 = this->getResourceManager()->addSound("assets/sounds/OufSound.ogg");
-	
-	audioSource1 = this->createEntity();
-	Entity entts[16];
+
+	multiAudio = createEntity();
+	this->getAudioHandler()->requestAudioSource(multiAudio, audioBuffer1);
+	getComponent<AudioSource>(multiAudio).play();
 	for (int i = 0; i < 16; i++)
 	{
-		entts[i] = createEntity();
-		this->getAudioHandler()->releaseAudioSource(entts[i]);
-	}
-
-	for (int i = 0; i < 8; i++)
-	{
-		this->getAudioHandler()->requestAudioSource(entts[i], audioBuffer1);
-	}
-
-	for (int i = 0; i < 16; i++)
-	{
-		this->getAudioHandler()->playSound(entts[i], audioBuffer1);
+		audioSources[i] = createEntity();
+		getComponent<Transform>(audioSources[i]).position.x = i * 50.f;
+		//this->getAudioHandler()->playSound(audioSources[i], audioBuffer1);
 	}
 	
 
@@ -601,64 +593,47 @@ void TestDemoScene::update()
 
 
 	this->timer += Time::getDT();
-#if 0
+#if 1
 	if (ImGui::Begin("Sound"))
 	{
+		if (Input::isKeyDown(Keys::B))
+			this->getAudioHandler()->releaseAudioSource(multiAudio);
+
+		static int current = 0;
+		static int bufferid = audioBuffer1;
+		static float volume = 1.f;
+		static float pitch = 1.f;
+		AudioHandler* hAudio = getAudioHandler();
+
 		ImGui::PushItemWidth(-120.f);
-
-		if (this->hasComponents<AudioSource>(this->audioSource1))
+		ImGui::Text("Entities:");
+		if (ImGui::BeginCombo("##Entities", ("Entity: " + std::to_string(audioSources[current])).c_str()))
 		{
-			AudioSource& source = this->getComponent<AudioSource>(this->audioSource1);
-			static bool loop = false;
-
-			if (ImGui::Button("Play 1"))
+			for (int i = 0; i < 16; i++)
 			{
-				source.play();
+				if (ImGui::Selectable(("Entity: " + std::to_string(audioSources[i])).c_str()))
+				{
+					current = i;
+				}
 			}
-			ImGui::SameLine();
-			if (ImGui::Checkbox("Loop", &loop))
-			{
-				source.setLooping(loop);
-			}
-			if (ImGui::DragFloat("Source 1 volume", &volume1, 0.01f, 0.f, 1.f))
-			{
-				source.setVolume(volume1);
-			}
-			if (ImGui::Button("Switch buffer 1"))
-			{
-				source.setBuffer(source.getBuffer() == audioBuffer1 ? audioBuffer2 : audioBuffer1);
-			}
-			ImGui::Text("Buffer: %u", source.getBuffer());
-			glm::vec3 pos1 = getComponent<Transform>(audioSource1).position;
-			ImGui::Text("Pos: (%.1f, %.1f, %.1f)", pos1.x, pos1.y, pos1.z);
+			ImGui::EndCombo();
 		}
+		ImGui::Text("Num Active: %u", hAudio->getNumActiveSources());
 		ImGui::Separator();
-		if (this->hasComponents<AudioSource>(this->audioSource2))
-		{
-			AudioSource& source = this->getComponent<AudioSource>(this->audioSource2);
-			static bool loop = false;
 
-			if (ImGui::Button("Play 2"))
-			{
-				source.play();
-			}
-			ImGui::SameLine();
-			if (ImGui::Checkbox("Loop 2", &loop))
-			{
-				source.setLooping(loop);
-			}
-			if (ImGui::DragFloat("Source 2 volume", &volume2, 0.01f, 0.f, 1.f))
-			{
-				source.setVolume(volume2);
-			}
-			if (ImGui::Button("Switch buffer 2"))
-			{
-				source.setBuffer(source.getBuffer() == audioBuffer1 ? audioBuffer2 : audioBuffer1);
-			}
-			ImGui::Text("Buffer: %u", source.getBuffer());
-			glm::vec3 pos1 = getComponent<Transform>(audioSource2).position;
-			ImGui::Text("Pos: (%.1f, %.1f, %.1f)", pos1.x, pos1.y, pos1.z);
+		ImGui::RadioButton("Test Audio", &bufferid, audioBuffer1);
+		ImGui::RadioButton("Ouf Sound", &bufferid, audioBuffer2);
+
+		ImGui::DragFloat("Volume", &volume, 0.01f, 0.f, 6.f);
+		ImGui::DragFloat("Pitch", &pitch, 0.01f, 0.f, 6.f);
+		if (ImGui::Button("Play"))
+		{
+			hAudio->playSound(audioSources[current], bufferid, volume, pitch);
 		}
+		glm::vec3 pos1 = getComponent<Transform>(audioSources[current]).position;
+		ImGui::Text("Pos: (%.1f, %.1f, %.1f)", pos1.x, pos1.y, pos1.z);
+
+		
 		ImGui::Separator();
 		
 		if (ImGui::DragFloat("Music volume", &music, 0.01f, 0.f, 1.f))
