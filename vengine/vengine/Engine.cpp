@@ -150,7 +150,6 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     this->networkHandler->deleteServer();
     this->scriptHandler.cleanup();
     this->aiHandler.clean();
-    this->audioHandler.cleanUp();
     this->resourceManager.cleanUp();
 
     renderer.cleanup();

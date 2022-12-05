@@ -96,6 +96,7 @@ Server::Server(NetworkHandler* networkHandler, NetworkScene* serverGame)
 	this->listener.setBlocking(false);
 
 	// Give info to all 
+	this->sceneHandler.setSendNowFunction(std::bind(&Server::sendDataToAllUsers, this));
 	this->sceneHandler.setScriptHandler(&this->scriptHandler);
 	this->sceneHandler.givePacketInfo(this->serverToClientPacketTcp);
     this->sceneHandler.givePacketInfoUdp(this->serverToClientPacketUdp);

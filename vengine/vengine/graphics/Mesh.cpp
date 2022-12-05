@@ -422,9 +422,30 @@ uint32_t Mesh::getAnimationSlotIndex(const std::string& slotName) const
 
 const std::string& Mesh::getAnimationName(uint32_t index) const
 {
-    auto it = this->aniNames.begin();
+#ifdef _CONSOLE
+    if (index >= this->aniNames.size() || index < 0)
+    {
+        Log::error("Mesh::getAnimationName | Index \"" + std::to_string(index) + " is invalid\"");
+    }
+#endif
+
+    for (const auto& name : aniNames)
+    {
+        if (name.second == index)
+        {
+            return name.first;
+        }
+    }
+
+#ifdef _CONSOLE
+    Log::error("Mesh::getAnimationName | Failed to find name with index \"" + std::to_string(index) + "\"");
+#endif
+    return this->aniNames.begin()->first;
+
+    // First solution does not work, I guess it happens since maps doesn't always line up in the order that is expected
+    /*auto it = this->aniNames.begin();
     std::advance(it, index);
-    return it->first;
+    return it->first;*/
 }
 
 float Mesh::getAnimationEndTime(const std::string& aniName) const
