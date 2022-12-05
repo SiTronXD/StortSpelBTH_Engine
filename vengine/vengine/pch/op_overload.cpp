@@ -2,6 +2,8 @@
 
 static std::map<intptr_t,allocInfo>* allocIdentifications= new std::map<intptr_t,allocInfo>();
 
+std::vector<void* >* allShit = new std::vector<void*>();
+
 void* registerAlloc(std::size_t size, char const* sourceFile, uint32_t lineNr)
 {
 
