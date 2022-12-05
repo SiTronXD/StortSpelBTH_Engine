@@ -36,6 +36,7 @@ layout(push_constant) uniform PushConstantData
     vec4 tintColor;     // vec4(tintColor.rgb, tintColorAlpha)
     vec4 emissionColor; // vec4(emission.rgb, emissionIntensity)
     vec4 settings;      // vec4(receiveShadows, 0, 0, 0)
+    vec4 tiling;        // vec4(offsetX, offsetY, scaleX, scaleY)
 } pushConstantData;
 
 // Vertex shader outputs
@@ -46,6 +47,7 @@ layout(location = 3) out vec2 fragTex;
 layout(location = 4) out vec4 fragCamWorldPos;
 layout(location = 5) out vec4 fragTintCol;
 layout(location = 6) out vec4 fragEmissionCol;
+layout(location = 7) out vec4 fragTiling;
 
 void main()
 {
@@ -79,4 +81,5 @@ void main()
     fragCamWorldPos = vec4(cameraBuffer.worldPos.xyz, pushConstantData.settings.x);
     fragTintCol = pushConstantData.tintColor;
     fragEmissionCol = pushConstantData.emissionColor;
+    fragTiling = pushConstantData.tiling;
 }

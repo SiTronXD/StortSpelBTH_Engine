@@ -15,6 +15,7 @@ struct PushConstantData
     glm::vec4 tintColor = glm::vec4(0.0f);      // vec4(RGB, lerp alpha)
     glm::vec4 emissionColor = glm::vec4(0.0f);  // vec4(RGB, intensity)
     glm::vec4 settings = glm::vec4(0.0f);       // vec4(receiveShadows, 0, 0, 0)
+    glm::vec4 tiling = glm::vec4(0.0f, 0.0f, 1.0f, 1.0f); // vec4(offsetX, offsetY, scaleX, scaleY)
 };
 
 struct BloomPushConstantData

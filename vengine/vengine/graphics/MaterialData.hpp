@@ -10,6 +10,9 @@ struct Material
 	glm::vec3 emissionColor = glm::vec3(0.0f);
 	glm::vec4 tintColor = glm::vec4(0.0f);
 
+	glm::vec2 tilingOffset = glm::vec2(0.0f);
+	glm::vec2 tilingScale = glm::vec2(1.0f);
+
 	float emissionIntensity = 1.0f;
 
 	// Vulkan

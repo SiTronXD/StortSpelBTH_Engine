@@ -13,6 +13,7 @@ layout(location = 3) in vec2 fragTex;
 layout(location = 4) in vec4 fragCamWorldPos;	// vec4(fragCamWorldPos, receiveShadows)
 layout(location = 5) in vec4 fragTintCol;		// vec4(fragTintCol, fragTintColAlpha)
 layout(location = 6) in vec4 fragEmissionCol;	// vec4(fragEmissionCol, intensity)
+layout(location = 7) in vec4 fragTiling;
 
 // Uniform buffer for light indices
 // Ambient: [0, ambientLightsEndIndex)
@@ -233,10 +234,12 @@ void main()
 {
 	vec3 normal = normalize(fragNor);
 
-	vec3 diffuseTextureCol = mix(texture(diffuseTextureSampler, fragTex).rgb, fragTintCol.rgb, fragTintCol.a);
+	vec2 finalFragTex = fragTiling.xy + fragTex * fragTiling.zw;
+
+	vec3 diffuseTextureCol = mix(texture(diffuseTextureSampler, finalFragTex).rgb, fragTintCol.rgb, fragTintCol.a);
 	diffuseTextureCol = invGammaCorrection(diffuseTextureCol);
-	vec4 specularTextureCol = texture(specularTextureSampler, fragTex);
-	vec3 glowMapTextureCol = texture(glowMapTextureSampler, fragTex).rgb;
+	vec4 specularTextureCol = texture(specularTextureSampler, finalFragTex);
+	vec3 glowMapTextureCol = texture(glowMapTextureSampler, finalFragTex).rgb;
 	
 	// Color from lights
 	vec3 finalColor = vec3(0.0f);

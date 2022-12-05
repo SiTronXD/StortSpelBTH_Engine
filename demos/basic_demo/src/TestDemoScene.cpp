@@ -126,6 +126,11 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(floor, 0);
 	this->setComponent<Collider>(floor, Collider::createBox(glm::vec3(100.0f, 1.0f, 100.0f)));
 
+	// Floor material
+	Material& floorMat = 
+		this->getResourceManager()->getMaterial(this->getComponent<MeshComponent>(this->floor), 0);
+	floorMat.tilingScale = glm::vec2(2.0f, 1.0f);
+
 	// Create multiple test rigidbodies
 	for (int x = 0; x < 5; x++)
 	{
@@ -323,6 +328,11 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	// Floor material
+	Material& floorMat =
+		this->getResourceManager()->getMaterial(this->getComponent<MeshComponent>(this->floor), 0);
+	floorMat.tilingOffset.y += Time::getDT() * 0.2f;
+
 	// Particle system
 	ImGui::Begin("Particle System");
 	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)
