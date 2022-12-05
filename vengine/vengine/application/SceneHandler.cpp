@@ -28,8 +28,11 @@ void SceneHandler::initSubsystems()
 		this->vulkanRenderer->initForScene(this->scene);
 	}
 
-	// Reset all audio sources
-	this->audioHandler->reset();
+	if (this->audioHandler)
+	{
+		// Reset all audio sources
+		this->audioHandler->reset();
+	}
 
 	// Reset delta time counter
 	Time::reset();
