@@ -294,51 +294,24 @@ void TestDemoScene::init()
 	this->setComponent<MeshComponent>(this->testEntity2);
 	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
 }
-#include "../deps/OpenAL/include/OpenAL/al.h"
 
 void TestDemoScene::start()
 {
-#if AUDIO
 	audioBuffer1 = this->getResourceManager()->addSound("assets/sounds/test-audio.wav");
 	audioBuffer2 = this->getResourceManager()->addSound("assets/sounds/OufSound.ogg");
 
-	/*multiAudio = this->createEntity();
-	setComponent<MultipleAudioSources>(multiAudio);
-	MultipleAudioSources& multiSourceComp = getComponent<MultipleAudioSources>(multiAudio);
-
-	this->getComponent<Transform>(multiAudio).position.x = -30.f;
-	multiSourceComp.audioSource[0].setBuffer(audioBuffer1);
-	multiSourceComp.audioSource[0].setLooping(true);
-	multiSourceComp.audioSource[0].setVolume(1.f);
-	multiSourceComp.audioSource[0].play();*/
-
-	/*MultipleAudioSources* asd = new MultipleAudioSources[20];
-	float qwe = -500.f;
-	for (int j = 0; j < 20; j++)
+	multiAudio = createEntity();
+	this->getAudioHandler()->requestAudioSource(multiAudio, audioBuffer1);
+	getComponent<AudioSource>(multiAudio).play();
+	for (int i = 0; i < 16; i++)
 	{
-		qwe += 50.f;
+		audioSources[i] = createEntity();
+		getComponent<Transform>(audioSources[i]).position.x = i * 50.f;
+		//this->getAudioHandler()->playSound(audioSources[i], audioBuffer1);
+	}
+	
 
 
-		for (int i = 0; i < 5; i++)
-		{
-			asd[j].audioSource[i].setBuffer(audioBuffer2);
-			asd[j].audioSource[i].setLooping(true);
-			asd[j].audioSource[i].play();
-			alSource3f(asd[j].audioSource[i].sourceId, AL_POSITION, qwe, i * 50.f, 0.f);
-		}
-	}*/
-
-	audioSource1 = this->createEntity();
-	this->setComponent<AudioSource>(audioSource1, audioBuffer1);
-	this->setComponent<MeshComponent>(audioSource1, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
-	this->getComponent<Transform>(audioSource1).position.x = 30.f;
-	volume1 = this->getComponent<AudioSource>(audioSource1).getVolume();
-
-	audioSource2 = this->createEntity();
-	this->setComponent<AudioSource>(audioSource2);
-	this->setComponent<MeshComponent>(audioSource2, (int)this->getResourceManager()->addMesh("assets/models/fine_ghost.obj"));
-	this->getComponent<Transform>(audioSource2).position.x = -30.f;
-	volume2 = this->getComponent<AudioSource>(audioSource2).getVolume();
 
 	this->getAudioHandler()->setMasterVolume(0.5f);
 	master = this->getAudioHandler()->getMasterVolume();
@@ -346,12 +319,6 @@ void TestDemoScene::start()
 	this->getAudioHandler()->playMusic();
 
 	this->getAudioHandler()->setMusicVolume(music = 0.01f);
-
-	//this->setComponent<AudioSource>(aniIDs[0], audioId);
-	//this->getComponent<AudioSource>(aniIDs[0]).setVolume(0.2f);
-	//this->getComponent<AudioSource>(aniIDs[0]).play();
-	//this->getComponent<AudioSource>(aniIDs[0]).setLooping(true);
-#endif
 }
 
 void TestDemoScene::update()
@@ -626,64 +593,47 @@ void TestDemoScene::update()
 
 
 	this->timer += Time::getDT();
-#if AUDIO
+#if 1
 	if (ImGui::Begin("Sound"))
 	{
+		if (Input::isKeyDown(Keys::B))
+			this->getAudioHandler()->releaseAudioSource(multiAudio);
+
+		static int current = 0;
+		static int bufferid = audioBuffer1;
+		static float volume = 1.f;
+		static float pitch = 1.f;
+		AudioHandler* hAudio = getAudioHandler();
+
 		ImGui::PushItemWidth(-120.f);
-
-		if (this->hasComponents<AudioSource>(this->audioSource1))
+		ImGui::Text("Entities:");
+		if (ImGui::BeginCombo("##Entities", ("Entity: " + std::to_string(audioSources[current])).c_str()))
 		{
-			AudioSource& source = this->getComponent<AudioSource>(this->audioSource1);
-			static bool loop = false;
-
-			if (ImGui::Button("Play 1"))
+			for (int i = 0; i < 16; i++)
 			{
-				source.play();
+				if (ImGui::Selectable(("Entity: " + std::to_string(audioSources[i])).c_str()))
+				{
+					current = i;
+				}
 			}
-			ImGui::SameLine();
-			if (ImGui::Checkbox("Loop", &loop))
-			{
-				source.setLooping(loop);
-			}
-			if (ImGui::DragFloat("Source 1 volume", &volume1, 0.01f, 0.f, 1.f))
-			{
-				source.setVolume(volume1);
-			}
-			if (ImGui::Button("Switch buffer 1"))
-			{
-				source.setBuffer(source.getBuffer() == audioBuffer1 ? audioBuffer2 : audioBuffer1);
-			}
-			ImGui::Text("Buffer: %u", source.getBuffer());
-			glm::vec3 pos1 = getComponent<Transform>(audioSource1).position;
-			ImGui::Text("Pos: (%.1f, %.1f, %.1f)", pos1.x, pos1.y, pos1.z);
+			ImGui::EndCombo();
 		}
+		ImGui::Text("Num Active: %u", hAudio->getNumActiveSources());
 		ImGui::Separator();
-		if (this->hasComponents<AudioSource>(this->audioSource2))
-		{
-			AudioSource& source = this->getComponent<AudioSource>(this->audioSource2);
-			static bool loop = false;
 
-			if (ImGui::Button("Play 2"))
-			{
-				source.play();
-			}
-			ImGui::SameLine();
-			if (ImGui::Checkbox("Loop 2", &loop))
-			{
-				source.setLooping(loop);
-			}
-			if (ImGui::DragFloat("Source 2 volume", &volume2, 0.01f, 0.f, 1.f))
-			{
-				source.setVolume(volume2);
-			}
-			if (ImGui::Button("Switch buffer 2"))
-			{
-				source.setBuffer(source.getBuffer() == audioBuffer1 ? audioBuffer2 : audioBuffer1);
-			}
-			ImGui::Text("Buffer: %u", source.getBuffer());
-			glm::vec3 pos1 = getComponent<Transform>(audioSource2).position;
-			ImGui::Text("Pos: (%.1f, %.1f, %.1f)", pos1.x, pos1.y, pos1.z);
+		ImGui::RadioButton("Test Audio", &bufferid, audioBuffer1);
+		ImGui::RadioButton("Ouf Sound", &bufferid, audioBuffer2);
+
+		ImGui::DragFloat("Volume", &volume, 0.01f, 0.f, 6.f);
+		ImGui::DragFloat("Pitch", &pitch, 0.01f, 0.f, 6.f);
+		if (ImGui::Button("Play"))
+		{
+			hAudio->playSound(audioSources[current], bufferid, volume, pitch);
 		}
+		glm::vec3 pos1 = getComponent<Transform>(audioSources[current]).position;
+		ImGui::Text("Pos: (%.1f, %.1f, %.1f)", pos1.x, pos1.y, pos1.z);
+
+		
 		ImGui::Separator();
 		
 		if (ImGui::DragFloat("Music volume", &music, 0.01f, 0.f, 1.f))

@@ -2,46 +2,19 @@
 #include "AudioSource.h"
 #include "al.h"
 
-AudioSource::AudioSource(uint32_t bufferId)
-		:sourceId(sourceId), playingb4Inactive(false)
+AudioSource::AudioSource(AudioSourceID sourceId)
+	:sourceId(sourceId)
 {
-	ALenum error = 0;
 
-	alGetError(); // Clear error queue
-	alGenSources(1, &this->sourceId);
-	if ((error = alGetError()) != AL_NO_ERROR)
-    {
-        Log::error("AudioSource: Failed generating alAudioSource! OpenAL error: " + std::to_string(error));
-        return;
-    }
-
-	alGetError(); // Clear error queue
-	alSourcei(this->sourceId, AL_BUFFER, (int)bufferId);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		Log::error("AudioSource: Failed attaching ALBufferId! OpenAL error: " + std::to_string(error));
-		return;
-	}
-}
-
-AudioSource::AudioSource()
-	:playingb4Inactive(false)
-{
-	ALenum error = 0;
-
-	alGetError(); // Clear error queue
-	alGenSources(1, &this->sourceId);
-	if ((error = alGetError()) != AL_NO_ERROR)
-	{
-		Log::error("AudioSource: Failed generating alAudioSource! OpenAL error: " + std::to_string(error));
-		return;
-	}
 }
 
 AudioSource::~AudioSource()
 {
-	alSourcei(this->sourceId, AL_BUFFER, NULL);
-	alDeleteSources(1, &this->sourceId);
+}
+
+bool AudioSource::isValid() const
+{
+	return this->sourceId != ~0u;
 }
 
 void AudioSource::setVolume(float volume)
@@ -56,17 +29,28 @@ float AudioSource::getVolume() const
 	return volume;
 }
 
-void AudioSource::setBuffer(uint32_t bufferId)
+void AudioSource::setPitch(float pitch)
 {
-	alSourcei(this->sourceId, AL_BUFFER, NULL);
+	alSourcef(this->sourceId, AL_PITCH, pitch);
+}
+
+float AudioSource::getPitch() const
+{
+	float pitch = 0.f;
+	alGetSourcef(this->sourceId, AL_PITCH, &pitch);
+	return pitch;
+}
+
+void AudioSource::setBuffer(AudioBufferID bufferId)
+{
 	alSourcei(this->sourceId, AL_BUFFER, (int)bufferId);
 }
 
-int AudioSource::getBuffer() const
+AudioBufferID AudioSource::getBuffer() const
 {
-	int bufferId = -1;
+	ALint bufferId = 0;
 	alGetSourcei(this->sourceId, AL_BUFFER, &bufferId);
-	return bufferId;
+	return (AudioBufferID)bufferId;
 }
 
 void AudioSource::setLooping(bool loop)
