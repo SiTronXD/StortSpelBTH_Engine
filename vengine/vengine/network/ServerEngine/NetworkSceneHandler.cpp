@@ -20,6 +20,10 @@ void NetworkSceneHandler::givePacketInfoUdp(std::vector<sf::Packet>& serverToCli
     this->serverToClientPacketUdp = &serverToClientUdp;
 }
 
+void NetworkSceneHandler::sendPacketNow() {
+    sendPacketNowFunction();
+}
+
 void NetworkSceneHandler::updateToNextScene() 
 {
 	SceneHandler::updateToNextScene();
