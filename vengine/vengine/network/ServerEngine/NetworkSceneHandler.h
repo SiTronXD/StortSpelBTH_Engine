@@ -12,9 +12,9 @@ class NetworkSceneHandler : public SceneHandler
 	std::vector<sf::Packet>* serverToClientPacketTcp;
 	std::vector<sf::Packet>* serverToClientPacketUdp;
 	sf::Packet callsFromClient;
+    std::function<void()> sendPacketNowFunction;
 
   public:
-	std::function<void()> sendPacketNowFunction;
 	NetworkSceneHandler();
 	void update(float dt);
 	void givePacketInfo(std::vector<sf::Packet>& serverToClientTCP);
