@@ -424,6 +424,13 @@ void VulkanRenderer::draw(Scene* scene)
         sceneBloomSettings.numBloomMipLevels
     );
 
+    // Apply fog settings from the scene
+    const FogSettings& fogSettings =
+        scene->getFogSettings();
+
+    this->pushConstantData.settings.y = fogSettings.fogStartDist;
+    this->pushConstantData.settings.z = std::max(fogSettings.fogAbsorption, 0.0f);
+
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped;
     const char* const draw_frame = "Draw Frame";

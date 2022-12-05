@@ -9,7 +9,7 @@
 layout(location = 0) in vec3 fragWorldPos;
 layout(location = 1) in vec3 fragViewPos;
 layout(location = 2) in vec3 fragNor;
-layout(location = 3) in vec2 fragTex;
+layout(location = 3) in vec4 fragTex;			// vec4(fragTex, fogStartDist, fogAbsorption)
 layout(location = 4) in vec4 fragCamWorldPos;	// vec4(fragCamWorldPos, receiveShadows)
 layout(location = 5) in vec4 fragTintCol;		// vec4(fragTintCol, fragTintColAlpha)
 layout(location = 6) in vec4 fragEmissionCol;	// vec4(fragEmissionCol, intensity)
@@ -230,11 +230,23 @@ vec3 invGammaCorrection(in vec3 x)
 	return pow(clamp(x, 0.0f, 1.0f), vec3(GAMMA));
 }
 
+float getOldFogDistAlpha()
+{
+	const float MIN_DIST = 0.995f;
+	const float MAX_DIST = 1.0f;
+	float distAlpha = clamp(
+		(gl_FragCoord.z - MIN_DIST) / (MAX_DIST - MIN_DIST), 
+		0.0f, 
+		1.0f
+	);
+	return pow(distAlpha, 5.0f);
+}
+
 void main() 
 {
 	vec3 normal = normalize(fragNor);
 
-	vec2 finalFragTex = fragTiling.xy + fragTex * fragTiling.zw;
+	vec2 finalFragTex = fragTiling.xy + fragTex.xy * fragTiling.zw;
 
 	vec3 diffuseTextureCol = mix(texture(diffuseTextureSampler, finalFragTex).rgb, fragTintCol.rgb, fragTintCol.a);
 	diffuseTextureCol = invGammaCorrection(diffuseTextureCol);
@@ -336,15 +348,16 @@ void main()
 			);
 	}
 
-	// Temporary fog
-	const float MIN_DIST = 0.995f;
-	const float MAX_DIST = 1.0f;
-	float distAlpha = clamp(
-		(gl_FragCoord.z - MIN_DIST) / (MAX_DIST - MIN_DIST), 
-		0.0f, 
-		1.0f
-	);
-	distAlpha = pow(distAlpha, 5.0f);
+	// Fog
+	float startingDist = fragTex.z;
+	float absorption = fragTex.w * 0.001f;
+	float fogX = dot(fragWorldPos - fragCamWorldPos.xyz, fragWorldPos - fragCamWorldPos.xyz) - startingDist;
+	float distAlpha = 
+		clamp(
+			1.0f - exp(-fogX * absorption), 
+			0.0f, 
+			1.0f
+		);
 
 	// Emission
 	// 0.5 / 255 = 0.00196078431372549019607843137255

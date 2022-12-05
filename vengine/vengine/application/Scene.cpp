@@ -18,6 +18,16 @@ void Scene::setBloomNumMipLevels(const uint32_t& numBloomMipLevels)
 	this->bloomSettings.numBloomMipLevels = numBloomMipLevels;
 }
 
+void Scene::setFogStartDistance(const float& fogStartDist)
+{
+	this->fogSettings.fogStartDist = fogStartDist;
+}
+
+void Scene::setFogAbsorption(const float& fogAbsorption)
+{
+	this->fogSettings.fogAbsorption = fogAbsorption;
+}
+
 void Scene::switchScene(Scene* scene, std::string path)
 {
 	this->sceneHandler->setScene(scene, path);
