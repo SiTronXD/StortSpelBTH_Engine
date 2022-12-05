@@ -39,6 +39,7 @@ public:
 
     void setMeshes(const std::string& meshName, const int meshID);
     ServerStatus& getStatus() { return this->serverStatus; }
+    void setStatus(const ServerStatus& status);
 
     // Virtual functions (customization)
     virtual void handleTCPEventClient(sf::Packet& tcpPacket, int event);

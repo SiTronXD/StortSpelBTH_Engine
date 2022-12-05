@@ -68,6 +68,10 @@ void NetworkHandler::setMeshes(const std::string& meshName, const int meshID)
 	this->networkHandlerMeshes.insert(std::pair<std::string, int>(meshName, meshID));
 }
 
+void NetworkHandler::setStatus(const ServerStatus& status) {
+    this->serverStatus = status;
+}
+
 void NetworkHandler::handleTCPEventClient(sf::Packet& tcpPacket, int event)
 {
 }
