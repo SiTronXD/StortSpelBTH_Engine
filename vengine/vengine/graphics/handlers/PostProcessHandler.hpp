@@ -84,12 +84,12 @@ public:
 	void setDesiredNumMipLevels(const uint32_t& numMipLevels);
 
 	inline Texture& getHdrRenderTexture() { return this->hdrRenderTexture; }
+	inline Texture& getDepthTexture() { return this->depthTexture; }
 	inline CommandBuffer& getDownsampleCommandBuffer(const uint32_t& currentFrame, const uint32_t& mipLevel) { return this->downCommandBuffers[currentFrame][mipLevel]; }
 	inline CommandBuffer& getUpsampleCommandBuffer(const uint32_t& currentFrame, const uint32_t& mipLevel) { return this->upCommandBuffers[currentFrame][mipLevel]; }
 	inline ShaderInput& getDownsampleShaderInput() { return this->downShaderInput; }
 	inline ShaderInput& getUpsampleShaderInput() { return this->upShaderInput; }
 	inline BloomPushConstantData& getBloomPushData() { return this->bloomData; }
-	inline const Texture& getDepthTexture() const { return this->depthTexture; }
 	inline const RenderPass& getDownsampleRenderPass() const { return this->downRenderPass; }
 	inline const RenderPass& getUpsampleRenderPass() const { return this->upRenderPass; }
 	inline const Pipeline& getDownsamplePipeline() const { return this->downPipeline; }

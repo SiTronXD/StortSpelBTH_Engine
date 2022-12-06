@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "ParticleSystemHandler.hpp"
+#include "PostProcessHandler.hpp"
 #include "../vulkan/Device.hpp"
 #include "../vulkan/RenderPass.hpp"
 #include "../vulkan/CommandBufferArray.hpp"
@@ -14,6 +15,7 @@ ParticleSystemHandler::ParticleSystemHandler()
 	resourceManager(nullptr),
 	renderPass(nullptr),
 	computeCommandPool(nullptr),
+	depthTexture(nullptr),
 	framesInFlight(0),
 	numParticles(0),
 	cameraUBO(~0u),
@@ -31,6 +33,7 @@ void ParticleSystemHandler::init(
 	ResourceManager& resourceManager,
 	RenderPass& renderPass,
 	vk::CommandPool& computeCommandPool,
+	Texture& depthTexture,
 	const uint32_t& framesInFlight)
 {
 	this->physicalDevice = &physicalDevice;
@@ -41,6 +44,7 @@ void ParticleSystemHandler::init(
 	this->resourceManager = &resourceManager;
 	this->renderPass = &renderPass;
 	this->computeCommandPool = &computeCommandPool;
+	this->depthTexture = &depthTexture;
 	this->framesInFlight = framesInFlight;
 
 	// Command buffers
@@ -153,7 +157,8 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 			DescriptorFrequency::PER_FRAME
 		);
 	FrequencyInputLayout inputLayout{};
-	inputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler);
+	inputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler); // Particle texture
+	//inputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler); // Depth texture
 	this->shaderInput.makeFrequencyInputLayout(inputLayout);
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
@@ -174,7 +179,10 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 
 		// Add frequency input
 		uint32_t frequencyInputIndex = this->shaderInput.addFrequencyInput(
-			{ FrequencyInputBindings{ &texture } }
+			{ 
+				FrequencyInputBindings{ &texture }/*, 
+				FrequencyInputBindings{ this->depthTexture }*/
+			}
 		);
 
 		// Insert index

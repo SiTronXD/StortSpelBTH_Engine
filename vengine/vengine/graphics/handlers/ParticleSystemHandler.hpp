@@ -36,10 +36,12 @@ private:
 	VmaAllocator* vma;
 	vk::Queue* transferQueue;
 	vk::CommandPool* transferCommandPool;
-	ResourceManager* resourceManager;
 	RenderPass* renderPass;
+	ResourceManager* resourceManager;
 	vk::CommandPool* computeCommandPool;
 	uint32_t framesInFlight;
+
+	Texture* depthTexture;
 
 	uint32_t numParticles;
 
@@ -55,6 +57,7 @@ public:
 		ResourceManager& resourceManager,
 		RenderPass& renderPass,
 		vk::CommandPool& computeCommandPool,
+		Texture& depthTexture,
 		const uint32_t& framesInFlight);
 	void initForScene(Scene* scene);
 	void update(

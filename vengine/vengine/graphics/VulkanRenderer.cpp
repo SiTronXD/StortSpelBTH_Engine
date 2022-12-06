@@ -248,6 +248,7 @@ int VulkanRenderer::init(
         *this->resourceManager,
         this->renderPassBase,
         this->computeCommandPool,
+        this->postProcessHandler.getDepthTexture(),
         MAX_FRAMES_IN_FLIGHT
     );
 
