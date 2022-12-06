@@ -323,6 +323,16 @@ void TestDemoScene::start()
 
 void TestDemoScene::update()
 {
+	// Fog
+	float startDist = this->getFogSettings().fogStartDist;
+	float absorption = this->getFogSettings().fogAbsorption;
+	ImGui::Begin("Fog");
+	ImGui::SliderFloat("Start distance: ", &startDist, -100.0f, 100.0f);
+	ImGui::SliderFloat("Absorption: ", &absorption, 0.0f, 1.0f);
+	ImGui::End();
+	this->setFogStartDistance(startDist);
+	this->setFogAbsorption(absorption);
+
 	// Particle system
 	ImGui::Begin("Particle System");
 	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)

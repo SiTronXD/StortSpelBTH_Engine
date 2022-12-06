@@ -39,6 +39,12 @@ struct BloomSettings
 	uint32_t numBloomMipLevels = 7;
 };
 
+struct FogSettings
+{
+	float fogStartDist = 0.0f;
+	float fogAbsorption = 0.012f;
+};
+
 enum class SceneType
 {
 	NormalScene,
@@ -55,6 +61,7 @@ private:
 	entt::registry reg;
 	Entity mainCamera;
 	BloomSettings bloomSettings{};
+	FogSettings fogSettings{};
 
 protected:
 	std::vector<System*> systems;
@@ -62,6 +69,9 @@ protected:
 
 	void setBloomBufferLerpAlpha(const float& alpha);
 	void setBloomNumMipLevels(const uint32_t& numBloomMipLevels);
+
+	void setFogStartDistance(const float& fogStartDist);
+	void setFogAbsorption(const float& fogAbsorption);
 
 protected:
 	void switchScene(Scene* scene, std::string path = "");
@@ -148,6 +158,7 @@ public:
 	inline entt::registry& getSceneReg() { return this->reg; }
 	inline std::vector<LuaSystem>& getLuaSystems() { return this->luaSystems; }
 	inline const BloomSettings& getBloomSettings() const { return this->bloomSettings; }
+	inline const FogSettings& getFogSettings() const { return this->fogSettings; }
 
 	void setSceneHandler(SceneHandler& sceneHandler);
     NetworkHandler* getNetworkHandler();

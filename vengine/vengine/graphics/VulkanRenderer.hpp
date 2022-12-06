@@ -150,6 +150,15 @@ private:
 
     // ------- Render functions within render passes -------
 
+    void renderSubmeshes(
+        const Transform& transform,
+        MeshComponent& meshComponent,
+        const Mesh& mesh,
+        const Material& firstSubmeshMaterial,
+        const std::vector<SubmeshData>& submeshes,
+        ShaderInput& shaderInput,
+        CommandBuffer& outputCommandBuffer);
+
     // Compute pass for particles
     void computeParticles();
 
