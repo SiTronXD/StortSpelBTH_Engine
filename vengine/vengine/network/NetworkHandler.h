@@ -34,6 +34,7 @@ protected:
 public:
     NetworkHandler();
     virtual ~NetworkHandler();
+    virtual void cleanUp();
     void setSceneHandler(SceneHandler* sceneHandler);
 	void setResourceManager(ResourceManager* resourceManager);
 

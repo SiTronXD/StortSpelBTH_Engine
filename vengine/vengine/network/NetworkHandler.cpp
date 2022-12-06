@@ -51,7 +51,10 @@ NetworkHandler::~NetworkHandler()
 		delete client;
 		client = nullptr;
 	}
+    cleanUp();
 }
+
+void NetworkHandler::cleanUp() {}
 
 void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 {
