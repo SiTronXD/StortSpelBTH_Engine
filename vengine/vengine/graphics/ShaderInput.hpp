@@ -60,6 +60,7 @@ struct FrequencyInputBindings
 {
 	Texture* texture = nullptr;
 	vk::ImageView* imageView = nullptr;
+	vk::ImageLayout imageLayout = vk::ImageLayout::eShaderReadOnlyOptimal;
 };
 
 class ShaderInput

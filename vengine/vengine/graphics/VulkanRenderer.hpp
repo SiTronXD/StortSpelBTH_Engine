@@ -76,6 +76,7 @@ class VulkanRenderer
     CommandBuffer* currentComputeCommandBuffer;
     CommandBuffer* currentShadowMapCommandBuffer;
     CommandBuffer* currentCommandBuffer;
+    CommandBuffer* currentParticleCommandBuffer;
     CommandBuffer* currentSwapchainCommandBuffer;
 
     // Default pipeline
@@ -115,6 +116,7 @@ class VulkanRenderer
     std::vector<vk::Semaphore> computeFinished;
     std::vector<vk::Semaphore> shadowMapRenderFinished;
     std::vector<vk::Semaphore> sceneRenderFinished;
+    std::vector<vk::Semaphore> particleRenderFinished;
     std::vector<std::vector<vk::Semaphore>> downsampleFinished;
     std::vector<std::vector<vk::Semaphore>> upsampleFinished;
     std::vector<vk::Semaphore> swapchainRenderFinished;
@@ -176,12 +178,16 @@ private:
         LightHandler& lightHandler);
     void endShadowMapRenderPass();
 
-    // Render pass for screen rendering
+    // Render pass for scene rendering
     void beginRenderPass();
     void renderDefaultMeshes(Scene* scene);
     void renderSkeletalAnimations(Scene* scene);
-    void renderParticles(Scene* scene);
     void endRenderPass();
+
+    // Renderp pass for particle rendering
+    void beginParticleRenderPass();
+    void renderParticles(Scene* scene);
+    void endParticleRenderPass();
 
     // Render pass for bloom downsampling
     void beginBloomDownUpsampleRenderPass(

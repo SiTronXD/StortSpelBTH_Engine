@@ -77,7 +77,7 @@ void Texture::createAsDepthTexture(
             this->image,
             this->format,
             vk::ImageAspectFlagBits::eDepth,
-            vk::ImageViewType::e2DArray,
+            arrayLayers <= 1 ? vk::ImageViewType::e2D : vk::ImageViewType::e2DArray,
             arrayLayers,
             0,
             true

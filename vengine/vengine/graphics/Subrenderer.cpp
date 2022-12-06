@@ -526,6 +526,46 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
     );
 }
 
+void VulkanRenderer::beginParticleRenderPass()
+{
+    const Texture& hdrRenderTexture =
+        this->postProcessHandler.getHdrRenderTexture();
+    const vk::Extent2D extent(hdrRenderTexture.getWidth(), hdrRenderTexture.getHeight());
+
+    // Information about how to begin a render pass
+    vk::RenderPassBeginInfo renderPassBeginInfo{};
+    renderPassBeginInfo.setRenderPass(this->particleHandler.getParticleRenderPass().getVkRenderPass());                      // Render pass to begin
+    renderPassBeginInfo.renderArea.setOffset(vk::Offset2D(0, 0));                 // Start of render pass (in pixels...)
+    renderPassBeginInfo.renderArea.setExtent(extent);      // Size of region to run render pass on (starting at offset)
+    renderPassBeginInfo.setClearValueCount(uint32_t(0));
+    renderPassBeginInfo.setFramebuffer(this->particleHandler.getRenderNoDepthVkFramebuffer());
+
+    // Begin Render Pass!    
+    // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
+    vk::SubpassBeginInfoKHR subpassBeginInfo;
+    subpassBeginInfo.setContents(vk::SubpassContents::eInline);
+    this->currentParticleCommandBuffer->beginRenderPass2(
+        renderPassBeginInfo,
+        subpassBeginInfo
+    );
+
+    // Viewport
+    vk::Viewport viewport{};
+    viewport.x = 0.0f;
+    viewport.y = (float)extent.height;
+    viewport.width = (float)extent.width;
+    viewport.height = -((float)extent.height);
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    this->currentParticleCommandBuffer->setViewport(viewport);
+
+    // Scissor
+    vk::Rect2D scissor{};
+    scissor.offset = vk::Offset2D{ 0, 0 };
+    scissor.extent = extent;
+    this->currentParticleCommandBuffer->setScissor(scissor);
+}
+
 void VulkanRenderer::renderParticles(Scene* scene)
 {
     const Pipeline& particlePipeline = 
@@ -534,12 +574,12 @@ void VulkanRenderer::renderParticles(Scene* scene)
         this->particleHandler.getShaderInput();
 
     // Bind pipeline to be used in render pass
-    this->currentCommandBuffer->bindPipeline(
+    this->currentParticleCommandBuffer->bindPipeline(
         particlePipeline
     );
 
     // Update for descriptors
-    this->currentCommandBuffer->bindShaderInputFrequency(
+    this->currentParticleCommandBuffer->bindShaderInputFrequency(
         particleShaderInput, DescriptorFrequency::PER_FRAME
     );
 
@@ -550,7 +590,7 @@ void VulkanRenderer::renderParticles(Scene* scene)
             const ParticleSystem& particleComponent)
         {
             // Update for descriptors
-            this->currentCommandBuffer->bindShaderInputFrequency(
+            this->currentParticleCommandBuffer->bindShaderInputFrequency(
                 particleShaderInput,
                 DescriptorFrequency::PER_MESH
             );
@@ -559,13 +599,13 @@ void VulkanRenderer::renderParticles(Scene* scene)
             particleShaderInput.setFrequencyInput(
                 this->particleHandler.getFrequencyInputIndex(particleComponent.textureIndex)
             );
-            this->currentCommandBuffer->bindShaderInputFrequency(
+            this->currentParticleCommandBuffer->bindShaderInputFrequency(
                 particleShaderInput,
                 DescriptorFrequency::PER_DRAW_CALL
             );
 
             // Draw
-            this->currentCommandBuffer->draw(
+            this->currentParticleCommandBuffer->draw(
                 6,
                 particleComponent.numParticles,
                 0,
@@ -573,6 +613,13 @@ void VulkanRenderer::renderParticles(Scene* scene)
             );
         }
     );
+}
+
+void VulkanRenderer::endParticleRenderPass()
+{
+    // End render pass
+    vk::SubpassEndInfo subpassEndInfo;
+    this->currentParticleCommandBuffer->endRenderPass2(subpassEndInfo);
 }
 
 void VulkanRenderer::renderUI()
@@ -700,7 +747,7 @@ void VulkanRenderer::renderDebugElements()
 
 void VulkanRenderer::endRenderPass()
 {
-    // End Render Pass!
+    // End render pass
     vk::SubpassEndInfo subpassEndInfo;
     this->currentCommandBuffer->endRenderPass2(subpassEndInfo);
 }

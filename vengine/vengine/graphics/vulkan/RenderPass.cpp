@@ -67,18 +67,18 @@ void RenderPass::createRenderPassBase(
     colorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
     colorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
     colorAttachment.setInitialLayout(vk::ImageLayout::eUndefined);            // We dont care what the image layout is when we start. But we do care about what layout it is when it enter the first SubPass! (not handled here)
-    colorAttachment.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // Should be the same value as it was after the subpass finishes
+    colorAttachment.setFinalLayout(vk::ImageLayout::eColorAttachmentOptimal); // Should be the same value as it was after the subpass finishes
 
     // Depth attachment
     vk::AttachmentDescription2 depthAttachment{};
     depthAttachment.setFormat(depthBufferFormat);
     depthAttachment.setSamples(vk::SampleCountFlagBits::e1);
-    depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);                         // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
-    depthAttachment.setStoreOp(vk::AttachmentStoreOp::eDontCare);                    // Whenever it's used, we dont care what happens with the data... (we dont present it or anything)
-    depthAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);               // Even though the Stencil i present, we dont plan to use it. so we dont care    
-    depthAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);             // Even though the Stencil i present, we dont plan to use it. so we dont care
-    depthAttachment.setInitialLayout(vk::ImageLayout::eUndefined);                   // We don't care how the image layout is initially, so let it be undefined
-    depthAttachment.setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal); // Final layout should be Optimal for Depth Stencil attachment!
+    depthAttachment.setLoadOp(vk::AttachmentLoadOp::eClear);                        // Clear Buffer Whenever we try to load data into (i.e. clear before use it!)
+    depthAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);
+    depthAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);              // Even though the Stencil is present, we dont plan to use it. so we dont care    
+    depthAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);            // Even though the Stencil is present, we dont plan to use it. so we dont care
+    depthAttachment.setInitialLayout(vk::ImageLayout::eUndefined);                  // We don't care how the image layout is initially, so let it be undefined
+    depthAttachment.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);        // Final layout for depth stencil attachment!
 
     // Color attachment reference
     vk::AttachmentReference2 colorAttachmentReference{};
@@ -107,6 +107,15 @@ void RenderPass::createRenderPassBase(
     subpassDependencies[0].setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
     subpassDependencies[0].setDependencyFlags(vk::DependencyFlagBits::eByRegion);
 
+    // Dependency from subpass 0 to 1
+    /*subpassDependencies[0].setSrcSubpass(0);
+    subpassDependencies[0].setDstSubpass(0);
+    subpassDependencies[0].setSrcStageMask(vk::PipelineStageFlagBits::eEarlyFragmentTests | vk::PipelineStageFlagBits::eLateFragmentTests);
+    subpassDependencies[0].setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader);
+    subpassDependencies[0].setSrcAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+    subpassDependencies[0].setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
+    subpassDependencies[0].setDependencyFlags(vk::DependencyFlagBits::eByRegion);*/
+
     // Vector with the attachments
     std::array<vk::AttachmentDescription2, 2> attachments
     {
@@ -126,7 +135,70 @@ void RenderPass::createRenderPassBase(
     this->renderPass = 
         this->device->getVkDevice().createRenderPass2(renderPassCreateInfo);
 
-    VulkanDbg::registerVkObjectDbgInfo("The RenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
+    VulkanDbg::registerVkObjectDbgInfo("BaseRenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
+}
+
+void RenderPass::createRenderPassParticle(
+    Device& device,
+    const vk::Format& colorBufferFormat)
+{
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
+    this->device = &device;
+
+    // Color attachment
+    vk::AttachmentDescription2 colorAttachment{};
+    colorAttachment.setFormat(colorBufferFormat);
+    colorAttachment.setSamples(vk::SampleCountFlagBits::e1);
+    colorAttachment.setLoadOp(vk::AttachmentLoadOp::eLoad);        // When we start the renderpass, first thing to do is to clear since there is no values in it yet
+    colorAttachment.setStoreOp(vk::AttachmentStoreOp::eStore);      // How to store it after the RenderPass
+    colorAttachment.setStencilLoadOp(vk::AttachmentLoadOp::eDontCare);
+    colorAttachment.setStencilStoreOp(vk::AttachmentStoreOp::eDontCare);
+    colorAttachment.setInitialLayout(vk::ImageLayout::eColorAttachmentOptimal);            // We dont care what the image layout is when we start. But we do care about what layout it is when it enter the first SubPass! (not handled here)
+    colorAttachment.setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal); // Should be the same value as it was after the subpass finishes
+
+    // Color attachment reference
+    vk::AttachmentReference2 colorAttachmentReference{};
+    colorAttachmentReference.setAttachment(uint32_t(0));                          // Match the number/ID of the Attachment to the index of the FrameBuffer!
+    colorAttachmentReference.setLayout(vk::ImageLayout::eColorAttachmentOptimal); // The Layout the Subpass must be in! 
+
+    // Array of our subpasses
+    std::array<vk::SubpassDescription2, 1> subPasses{};
+    subPasses[0].setPipelineBindPoint(vk::PipelineBindPoint::eGraphics);
+    subPasses[0].setColorAttachmentCount(uint32_t(1));
+    subPasses[0].setPColorAttachments(&colorAttachmentReference);
+
+    // Override the first implicit subpass
+    std::array<vk::SubpassDependency2, 1> subpassDependencies{};
+    subpassDependencies[0].setSrcSubpass(VK_SUBPASS_EXTERNAL);
+    subpassDependencies[0].setDstSubpass(0);
+    subpassDependencies[0].setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+    subpassDependencies[0].setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput);
+    subpassDependencies[0].setSrcAccessMask(vk::AccessFlagBits::eNone);
+    subpassDependencies[0].setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+    subpassDependencies[0].setDependencyFlags(vk::DependencyFlagBits::eByRegion);
+
+    // Vector with the attachments
+    std::array<vk::AttachmentDescription2, 1> attachments
+    {
+        colorAttachment
+    };
+
+    // Create info for render pass
+    vk::RenderPassCreateInfo2 renderPassCreateInfo;
+    renderPassCreateInfo.setAttachmentCount(static_cast<uint32_t>(attachments.size()));
+    renderPassCreateInfo.setPAttachments(attachments.data());
+    renderPassCreateInfo.setSubpassCount(static_cast<uint32_t>(subPasses.size()));
+    renderPassCreateInfo.setPSubpasses(subPasses.data());
+    renderPassCreateInfo.setDependencyCount(static_cast<uint32_t> (subpassDependencies.size()));
+    renderPassCreateInfo.setPDependencies(subpassDependencies.data());
+
+    this->renderPass =
+        this->device->getVkDevice().createRenderPass2(renderPassCreateInfo);
+
+    VulkanDbg::registerVkObjectDbgInfo("ParticleRenderPass", vk::ObjectType::eRenderPass, reinterpret_cast<uint64_t>(vk::RenderPass::CType(this->renderPass)));
 }
 
 void RenderPass::createRenderPassBloomDownsample(

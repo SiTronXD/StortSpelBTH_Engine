@@ -3,7 +3,7 @@
 #define FREQ_PER_DRAW 2
 
 layout(set = FREQ_PER_DRAW, binding = 0) uniform sampler2D textureSampler;
-//layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D depthTextureSampler;
+layout(set = FREQ_PER_DRAW, binding = 1) uniform sampler2D depthTextureSampler;
 
 // Input data from vertex shader
 layout(location = 0) in vec2 fragUV;
@@ -35,5 +35,5 @@ void main()
 
 	outColor = finalCol;
 
-	//outColor = texture(depthTextureSampler, fragUV);
+	outColor = texture(depthTextureSampler, fragUV);
 }

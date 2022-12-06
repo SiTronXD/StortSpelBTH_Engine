@@ -758,7 +758,7 @@ uint32_t ShaderInput::addFrequencyInput(
     for (size_t i = 0; i < writeDescriptorSets.size(); ++i)
     {
         // Texture image info
-        descriptorImageInfos[i].setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);     // The Image Layout when it is in use
+        descriptorImageInfos[i].setImageLayout(bindings[i].imageLayout);     // The Image Layout when it is in use
         descriptorImageInfos[i].setImageView(
             bindings[i].imageView == nullptr ? 
             bindings[i].texture->getImageView() :
@@ -814,7 +814,7 @@ void ShaderInput::updateFrequencyInput(
     for (size_t i = 0; i < writeDescriptorSets.size(); ++i)
     {
         // Texture image info
-        descriptorImageInfos[i].setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);     // The Image Layout when it is in use
+        descriptorImageInfos[i].setImageLayout(bindings[i].imageLayout);     // The Image Layout when it is in use
         descriptorImageInfos[i].setImageView(
             bindings[i].imageView == nullptr ?
             bindings[i].texture->getImageView() :

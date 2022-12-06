@@ -6,6 +6,17 @@
 #include "../vulkan/CommandBufferArray.hpp"
 #include "../../resource_management/ResourceManager.hpp"
 
+void ParticleSystemHandler::cleanupForScene()
+{
+	this->pipeline.cleanup();
+	this->shaderInput.cleanup();
+
+	this->computePipeline.cleanup();
+
+	this->particleEmitterInfos.clear();
+	this->textureToFrequencyInput.clear();
+}
+
 ParticleSystemHandler::ParticleSystemHandler()
 	: physicalDevice(nullptr),
 	device(nullptr),
@@ -13,7 +24,6 @@ ParticleSystemHandler::ParticleSystemHandler()
 	transferQueue(nullptr),
 	transferCommandPool(nullptr),
 	resourceManager(nullptr),
-	renderPass(nullptr),
 	computeCommandPool(nullptr),
 	depthTexture(nullptr),
 	framesInFlight(0),
@@ -29,10 +39,10 @@ void ParticleSystemHandler::init(
 	Device& device, 
 	VmaAllocator& vma,
 	vk::Queue& transferQueue,
-	vk::CommandPool& transferCommandPool,
+	vk::CommandPool& commandPool,
 	ResourceManager& resourceManager,
-	RenderPass& renderPass,
 	vk::CommandPool& computeCommandPool,
+	Texture& hdrRenderTexture,
 	Texture& depthTexture,
 	const uint32_t& framesInFlight)
 {
@@ -40,9 +50,8 @@ void ParticleSystemHandler::init(
 	this->device = &device;
 	this->vma = &vma;
 	this->transferQueue = &transferQueue;
-	this->transferCommandPool = &transferCommandPool;
+	this->transferCommandPool = &commandPool;
 	this->resourceManager = &resourceManager;
-	this->renderPass = &renderPass;
 	this->computeCommandPool = &computeCommandPool;
 	this->depthTexture = &depthTexture;
 	this->framesInFlight = framesInFlight;
@@ -53,11 +62,34 @@ void ParticleSystemHandler::init(
 		computeCommandPool,
 		framesInFlight
 	);
+	this->particleCommandBuffers.createCommandBuffers(
+		device,
+		commandPool,
+		framesInFlight
+	);
+
+	// Particle render pass
+	this->particleRenderPass.createRenderPassParticle(
+		*this->device,
+		PostProcessHandler::HDR_FORMAT
+	);
+
+	// Framebuffer for rendering without depth buffer
+	this->renderNoDepthFramebuffer.create(
+		*this->device,
+		this->particleRenderPass,
+		vk::Extent2D(hdrRenderTexture.getWidth(), hdrRenderTexture.getHeight()),
+		{
+			{
+				hdrRenderTexture.getImageView()
+			}
+		}
+	);
 }
 
 void ParticleSystemHandler::initForScene(Scene* scene)
 {
-	this->cleanup();
+	this->cleanupForScene();
 
 	// Initial particle infos
 	std::vector<uint32_t> particleTextureIndices;
@@ -158,17 +190,17 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 		);
 	FrequencyInputLayout inputLayout{};
 	inputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler); // Particle texture
-	//inputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler); // Depth texture
+	inputLayout.addBinding(vk::DescriptorType::eCombinedImageSampler); // Depth texture
 	this->shaderInput.makeFrequencyInputLayout(inputLayout);
 	this->shaderInput.endForInput();
 	this->pipeline.createPipeline(
 		*this->device,
 		this->shaderInput,
-		*this->renderPass,
+		this->particleRenderPass,
 		VertexStreams{},
 		"particle.vert.spv",
 		"particle.frag.spv",
-		true,
+		false,
 		false
 	);
 
@@ -182,8 +214,8 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 		// Add frequency input
 		uint32_t frequencyInputIndex = this->shaderInput.addFrequencyInput(
 			{ 
-				FrequencyInputBindings{ &texture }/*, 
-				FrequencyInputBindings{ this->depthTexture }*/
+				FrequencyInputBindings{ &texture }, 
+				FrequencyInputBindings{ this->depthTexture }
 			}
 		);
 
@@ -315,11 +347,8 @@ void ParticleSystemHandler::update(
 
 void ParticleSystemHandler::cleanup()
 {
-	this->pipeline.cleanup();
-	this->shaderInput.cleanup();
+	this->cleanupForScene();
 
-	this->computePipeline.cleanup();
-
-	this->particleEmitterInfos.clear();
-	this->textureToFrequencyInput.clear();
+	this->particleRenderPass.cleanup();
+	this->renderNoDepthFramebuffer.cleanup();
 }

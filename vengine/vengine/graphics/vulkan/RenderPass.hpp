@@ -20,6 +20,9 @@ public:
 		Device& device, 
 		const vk::Format& colorBufferFormat,
 		const vk::Format& depthBufferFormat);
+	void createRenderPassParticle(
+		Device& device,
+		const vk::Format& colorBufferFormat);
 	void createRenderPassBloomDownsample(Device& device);
 	void createRenderPassBloomUpsample(Device& device);
 	void createRenderPassSwapchain(Device& device, Swapchain& swapchain);

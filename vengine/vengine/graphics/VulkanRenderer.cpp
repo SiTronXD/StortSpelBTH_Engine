@@ -246,8 +246,8 @@ int VulkanRenderer::init(
         this->queueFamilies.getGraphicsQueue(),
         this->commandPool,
         *this->resourceManager,
-        this->renderPassBase,
         this->computeCommandPool,
+        this->postProcessHandler.getHdrRenderTexture(),
         this->postProcessHandler.getDepthTexture(),
         MAX_FRAMES_IN_FLIGHT
     );
@@ -364,6 +364,7 @@ void VulkanRenderer::cleanup()
         this->upsampleFinished[i].clear();
 
         this->getVkDevice().destroySemaphore(this->sceneRenderFinished[i]);
+        this->getVkDevice().destroySemaphore(this->particleRenderFinished[i]);
         this->getVkDevice().destroySemaphore(this->shadowMapRenderFinished[i]);
         this->getVkDevice().destroySemaphore(this->computeFinished[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
@@ -573,7 +574,7 @@ void VulkanRenderer::draw(Scene* scene)
             this->shadowMapRenderFinished[this->currentFrame]
         );
 
-        // Render to screen
+        // Render scene to HDR texture
         std::array<vk::SemaphoreSubmitInfo, 4> renderToScreenWaitSemaphores;
         renderToScreenWaitSemaphores[0].setSemaphore(this->shadowMapRenderFinished[this->currentFrame]);
         renderToScreenWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
@@ -586,9 +587,20 @@ void VulkanRenderer::draw(Scene* scene)
             this->sceneRenderFinished[this->currentFrame]
         );
 
+        // Render particles to HDR texture
+        std::array<vk::SemaphoreSubmitInfo, 4> renderParticlesWaitSemaphores;
+        renderParticlesWaitSemaphores[0].setSemaphore(this->sceneRenderFinished[this->currentFrame]);
+        renderParticlesWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
+        this->graphicsSubmitArray.setSubmitInfo(
+            *this->currentParticleCommandBuffer,
+            renderParticlesWaitSemaphores,
+            1,
+            this->particleRenderFinished[this->currentFrame]
+        );
+
         // Bloom downsampling
         std::array<std::array<vk::SemaphoreSubmitInfo, 4>, PostProcessHandler::MAX_NUM_MIP_LEVELS> bloomDownsampleWaitSemaphores;
-        bloomDownsampleWaitSemaphores[1][0].setSemaphore(this->sceneRenderFinished[this->currentFrame]);
+        bloomDownsampleWaitSemaphores[1][0].setSemaphore(this->particleRenderFinished[this->currentFrame]);
         bloomDownsampleWaitSemaphores[1][0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
         for (uint32_t i = 1; i < this->postProcessHandler.getNumMipLevelsInUse(); ++i)
         {
@@ -1130,6 +1142,7 @@ void VulkanRenderer::createSynchronisation()
     this->imageAvailable.resize(MAX_FRAMES_IN_FLIGHT);
     this->computeFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->shadowMapRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
+    this->particleRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->sceneRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->swapchainRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -1169,6 +1182,9 @@ void VulkanRenderer::createSynchronisation()
         this->sceneRenderFinished[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore sceneRenderFinished[" + std::to_string(i) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->sceneRenderFinished[i])));
         
+        this->particleRenderFinished[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
+        VulkanDbg::registerVkObjectDbgInfo("Semaphore particleRenderFinished[" + std::to_string(i) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->particleRenderFinished[i])));
+
         for (size_t j = 0; j < this->downsampleFinished[i].size(); ++j)
         {
             this->downsampleFinished[i][j] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
@@ -1192,12 +1208,12 @@ void VulkanRenderer::createSynchronisation()
     // Particles
     this->computeSubmitArray.setMaxNumSubmits(1);
 
-    // Shadow map + scene + 
+    // Shadow map + scene + particles + 
     // num bloom downsamples +
     // num bloom upsamples +
     // HDR to swapchain
     this->graphicsSubmitArray.setMaxNumSubmits(
-        2 + 
+        3 + 
         (PostProcessHandler::MAX_NUM_MIP_LEVELS - 1) +
         (PostProcessHandler::MAX_NUM_MIP_LEVELS - 2) +
         1
@@ -1252,6 +1268,8 @@ void VulkanRenderer::recordCommandBuffers(
         .getShadowMapCommandBuffer(this->currentFrame);
     this->currentCommandBuffer =
         &this->commandBuffers[this->currentFrame];
+    this->currentParticleCommandBuffer =
+        &this->particleHandler.getParticleCommandBuffer(this->currentFrame);
     this->currentSwapchainCommandBuffer =
         &this->swapchainCommandBuffers[this->currentFrame];
 
@@ -1362,14 +1380,23 @@ void VulkanRenderer::recordCommandBuffers(
     // Begin regular command buffer
     this->currentCommandBuffer->beginOneTimeSubmit();
 
-    // Render to HDR texture
+    // Render scene to HDR texture
     this->beginRenderPass();
         this->renderDefaultMeshes(scene);
         this->renderSkeletalAnimations(scene);
-        this->renderParticles(scene);
     this->endRenderPass();
 
     this->currentCommandBuffer->end();
+
+
+    this->currentParticleCommandBuffer->beginOneTimeSubmit();
+
+    // Render particles to HDR texture
+    this->beginParticleRenderPass();
+        this->renderParticles(scene);
+    this->endParticleRenderPass();
+
+    this->currentParticleCommandBuffer->end();
 
 
     // Downsample HDR texture

@@ -105,6 +105,7 @@ public:
 
 	void cleanup();
 
+	inline const vk::Image& getImage() const { return this->image; }
 	inline vk::ImageView& getMipImageView(const uint32_t& index) { return this->mipImageViews[index]; }
 	inline const vk::ImageView& getImageView() const { return this->entireImageView; }
 	inline const vk::ImageView& getLayerImageView(const uint32_t& index) const { return this->layerImageViews[index]; }

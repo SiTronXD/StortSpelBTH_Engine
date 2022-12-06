@@ -68,7 +68,10 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		*this->device,
 		*this->vma,
 		windowExtent.width,
-		windowExtent.height
+		windowExtent.height,
+		1,
+		0,
+		(vk::ImageUsageFlagBits)(uint32_t(vk::ImageUsageFlagBits::eSampled) | uint32_t(vk::ImageUsageFlagBits::eInputAttachment))
 	);
 
 	// Downsampling image views and extents
