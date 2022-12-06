@@ -364,6 +364,7 @@ SET ERRORLEVEL = 0</Command>
     <ClInclude Include="vengine\components\Spotlight.hpp" />
     <ClInclude Include="vengine\components\UIArea.hpp" />
     <ClInclude Include="vengine\dev\Random.hpp" />
+    <ClInclude Include="vengine\physics\ContactCallbackPair.h" />
     <ClInclude Include="vengine\windows\StatisticsCollector.hpp" />
     <ClInclude Include="vengine\graphics\StringAlignment.h" />
     <ClInclude Include="vengine\pch\pch.h" />
@@ -498,6 +499,7 @@ SET ERRORLEVEL = 0</Command>
     <ClCompile Include="vengine\graphics\vulkan\SubmitArray.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\FramebufferArray.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\RenderPass.cpp" />
+    <ClCompile Include="vengine\physics\ContactCallbackPair.cpp" />
     <ClCompile Include="vengine\windows\StatisticsCollector.cpp" />
     <ClCompile Include="vengine\pch\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
