@@ -349,9 +349,10 @@ void main()
 	}
 
 	// Fog
-	float startingDist = fragTex.z;
+	vec3 fragToCam = fragWorldPos - fragCamWorldPos.xyz;
+	float startingDist = fragTex.z * fragTex.z * sign(fragTex.z);
 	float absorption = fragTex.w * 0.001f;
-	float fogX = dot(fragWorldPos - fragCamWorldPos.xyz, fragWorldPos - fragCamWorldPos.xyz) - startingDist;
+	float fogX = dot(fragToCam, fragToCam) - startingDist;
 	float distAlpha = 
 		clamp(
 			1.0f - exp(-fogX * absorption), 

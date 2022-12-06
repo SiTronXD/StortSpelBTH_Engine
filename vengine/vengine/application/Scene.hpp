@@ -42,7 +42,7 @@ struct BloomSettings
 struct FogSettings
 {
 	float fogStartDist = 0.0f;
-	float fogAbsorption = 0.020f;
+	float fogAbsorption = 0.012f;
 };
 
 enum class SceneType
