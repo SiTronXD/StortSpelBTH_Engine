@@ -167,7 +167,9 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 		*this->renderPass,
 		VertexStreams{},
 		"particle.vert.spv",
-		"particle.frag.spv"
+		"particle.frag.spv",
+		true,
+		false
 	);
 
 	// Add all textures for possible use as the texture index

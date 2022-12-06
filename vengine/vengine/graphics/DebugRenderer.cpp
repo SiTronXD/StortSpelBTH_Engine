@@ -130,6 +130,7 @@ void DebugRenderer::initForScene()
         "dbg.frag.spv",
         false,
         false,
+        false,
         true,
         vk::PrimitiveTopology::eLineList
     );

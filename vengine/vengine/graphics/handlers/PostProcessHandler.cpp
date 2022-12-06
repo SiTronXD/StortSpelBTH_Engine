@@ -234,6 +234,7 @@ void PostProcessHandler::init(
 		"bloomUpsample.frag.spv",
 		false,
 		false,
+		false,
 		true,
 		vk::PrimitiveTopology::eTriangleList,
 		BlendOption::ADD

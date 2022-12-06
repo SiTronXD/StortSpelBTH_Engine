@@ -54,6 +54,7 @@ public:
 		const std::string& vertexShaderName,
 		const std::string& fragmentShaderName = "shader.frag.spv",
 		const bool& depthTestingEnabled = true,
+		const bool& depthWritesEnabled = true,
 		const bool& wireframe = false,
 		const bool& backfaceCulling = true,
 		const vk::PrimitiveTopology& topology = 
