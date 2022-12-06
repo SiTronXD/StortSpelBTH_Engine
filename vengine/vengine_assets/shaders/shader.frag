@@ -358,6 +358,9 @@ void main()
 			0.0f, 
 			1.0f
 		);
+		
+	// Composite fog
+	finalColor = mix(finalColor, vec3(0.8f), distAlpha);
 
 	// Emission
 	// 0.5 / 255 = 0.00196078431372549019607843137255
@@ -374,9 +377,7 @@ void main()
 			vec3(0.02f)
 		) * (glowMapTextureCol * GLOW_MAP_SCALE) * fragEmissionCol.w;
 
-	// Composite fog
-	outColor = vec4(mix(finalColor, vec3(0.8f), distAlpha), 1.0f);
-	//outColor = vec4(finalColor, 1.0f); // (No fog)
+	outColor = vec4(finalColor, 1.0f);
 
 	// Debug cascades
 	if(shadowMapInfoBuffer.cascadeSettings.y > 0u)
