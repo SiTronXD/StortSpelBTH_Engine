@@ -56,8 +56,10 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 	this->cleanup();
 
 	// Initial particle infos
-	this->initialParticleInfos.reserve(1024 * 1024);
+	std::vector<uint32_t> particleTextureIndices;
+	this->initialParticleInfos.reserve(1024);
 	this->particleEmitterInfos.reserve(16);
+	particleTextureIndices.reserve(16);
 	uint32_t particleIndex = 0;
 
 	auto particleSystemView =
@@ -100,6 +102,7 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 
 			// Add particle system emitter info
 			this->particleEmitterInfos.push_back(ParticleEmitterInfo());
+			particleTextureIndices.push_back(particleSystemComp.textureIndex);
 		}
 	);
 	this->numParticles = particleIndex;
@@ -163,13 +166,23 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 	);
 
 	// Add all textures for possible use as the texture index
-	size_t numTextures = this->resourceManager->getNumTextures();
-	for (size_t i = 0; i < numTextures; ++i)
+	for (size_t i = 0; i < particleTextureIndices.size(); ++i)
 	{
-		Texture& texture = this->resourceManager->getTexture(i);
+		const uint32_t& textureIndex = particleTextureIndices[i];
 
-		this->shaderInput.addFrequencyInput(
+		Texture& texture = this->resourceManager->getTexture(textureIndex);
+
+		// Add frequency input
+		uint32_t frequencyInputIndex = this->shaderInput.addFrequencyInput(
 			{ FrequencyInputBindings{ &texture } }
+		);
+
+		// Insert index
+		this->textureToFrequencyInput.insert(
+			{
+				textureIndex,
+				frequencyInputIndex
+			}
 		);
 	}
 
@@ -298,4 +311,5 @@ void ParticleSystemHandler::cleanup()
 	this->computePipeline.cleanup();
 
 	this->particleEmitterInfos.clear();
+	this->textureToFrequencyInput.clear();
 }

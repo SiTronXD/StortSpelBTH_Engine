@@ -17,6 +17,8 @@ private:
 	std::vector<ParticleInfo> initialParticleInfos;
 	std::vector<ParticleEmitterInfo> particleEmitterInfos;
 
+	std::unordered_map<uint32_t, uint32_t> textureToFrequencyInput;
+
 	// Compute
 	Pipeline computePipeline;
 	CommandBufferArray computeCommandBuffers;
@@ -66,4 +68,5 @@ public:
 	inline const Pipeline& getComputePipeline() const { return this->computePipeline; }
 	inline CommandBuffer& getComputeCommandBuffer(const uint32_t& index) { return this->computeCommandBuffers[index]; }
 	inline const uint32_t& getNumParticles() const { return this->numParticles; }
+	inline const uint32_t& getFrequencyInputIndex(const uint32_t& textureIndex) { return this->textureToFrequencyInput[textureIndex]; }
 };

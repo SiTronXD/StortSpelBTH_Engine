@@ -557,9 +557,7 @@ void VulkanRenderer::renderParticles(Scene* scene)
 
             // Update for descriptors
             particleShaderInput.setFrequencyInput(
-                this->resourceManager->getTexture(
-                    particleComponent.textureIndex
-                ).getDescriptorIndex()
+                this->particleHandler.getFrequencyInputIndex(particleComponent.textureIndex)
             );
             this->currentCommandBuffer->bindShaderInputFrequency(
                 particleShaderInput,
