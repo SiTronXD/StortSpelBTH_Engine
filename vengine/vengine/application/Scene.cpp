@@ -20,7 +20,7 @@ void Scene::setBloomNumMipLevels(const uint32_t& numBloomMipLevels)
 
 void Scene::switchScene(Scene* scene, std::string path)
 {
-    allShit->push_back(scene);
+    //allShit->push_back(scene);
 	this->sceneHandler->setScene(scene, path);
 }
 
