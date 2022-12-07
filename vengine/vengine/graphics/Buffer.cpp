@@ -46,8 +46,6 @@ void Buffer::update(void* copyData, const uint32_t& currentFrame)
     ZoneScoped; //:NOLINT
 #endif
 
-    void* data = nullptr;
-
     this->cpuUpdateBuffer(
         *this->vma, 
         this->bufferMemories[currentFrame],

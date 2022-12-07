@@ -31,7 +31,7 @@ static bool isValidationLayersEnabled()
     // Use this flag to manually disable validation error messages
     // #define NO_VALIDATION
 
-#if (defined(_DEBUG) || defined(DEBUG)) && !defined(NO_VALIDATION)
+#if (defined(_CONSOLE)) && !defined(NO_VALIDATION)
     return true;
 #else
     return false;
