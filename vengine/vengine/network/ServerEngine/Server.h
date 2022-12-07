@@ -89,13 +89,15 @@ public:
 	// Helper functions
 	void sendToAllClientsTCP(sf::Packet packet);
 	void sendToAllClientsUDP(sf::Packet packet);
-	void sendToAllOtherClientsTCP(sf::Packet packet, int clientID);
-	void sendToAllOtherClientsUDP(sf::Packet packet, int clientID);
-	void sendToClientTCP(sf::Packet packet, int clientID);
-	void sendToClientUDP(sf::Packet packet, int clientID);
+	void sendToAllOtherClientsTCP(sf::Packet packet, int clientIndex);
+	void sendToAllOtherClientsUDP(sf::Packet packet, int clientIndex);
+	void sendToClientTCP(sf::Packet packet, int clientIndex);
+	void sendToClientUDP(sf::Packet packet, int clientIndex);
 
 	template<typename T>
 	T* getScene();
+
+	inline const int getClientID(int clientIndex) { return this->clients[clientIndex]->id; };
 
 	inline int getClientCount() { return (int)this->clients.size(); }
 };
