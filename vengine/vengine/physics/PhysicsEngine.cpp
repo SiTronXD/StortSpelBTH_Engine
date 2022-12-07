@@ -8,6 +8,7 @@
 #include "BulletCollision/NarrowPhaseCollision/btRaycastCallback.h"
 #include "BulletHelper.hpp"
 #include "ContactCallback.h"
+#include "ContactCallbackPair.h"
 #include "CollisionDispatcher.h"
 
 #include <iostream>
@@ -236,6 +237,7 @@ void PhysicsEngine::cleanup()
 	this->renderDebug = false;
 
 	delete this->testObject;
+	delete this->testObject2;
 
 	// Remove the rigidbodies from the dynamics world and delete them
 	for (int i = this->dynWorld->getNumCollisionObjects() - 1; i >= 0; i--)
@@ -288,6 +290,7 @@ PhysicsEngine::PhysicsEngine()
 	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
 	this->dynWorld->setGravity(btVector3(0, -10, 0));
 	this->testObject = new btCollisionObject();
+	this->testObject2 = new btCollisionObject();
 }
 
 PhysicsEngine::~PhysicsEngine()
@@ -311,6 +314,7 @@ void PhysicsEngine::init()
 	this->dynWorld = new btDiscreteDynamicsWorld(this->collDisp, this->bpInterface, this->solver, this->collconfig);
 	this->dynWorld->setGravity(btVector3(0, -10, 0));
 	this->testObject = new btCollisionObject();
+	this->testObject2 = new btCollisionObject();
 }
 
 void PhysicsEngine::update(float dt)
@@ -601,4 +605,25 @@ std::vector<Entity> PhysicsEngine::testContact(Collider& col, glm::vec3 position
 	closestResults.scene = this->sceneHandler->getScene();
 	this->dynWorld->contactTest(this->testObject, closestResults);
 	return closestResults.entitiesHit;
+}
+bool PhysicsEngine::testContactPair(Collider& col0, glm::vec3 pos0, glm::vec3 rot0,
+									Collider& col1, glm::vec3 pos1, glm::vec3 rot1)
+{
+	btCollisionShape* shape0 = this->createShape(col0);
+	this->testObject->setCollisionShape(shape0);
+	btTransform transform0;
+	transform0.setOrigin(BulletH::bulletVec(pos0 + col0.offset));
+	transform0.setRotation(BulletH::bulletQuat(rot0));
+	this->testObject->setWorldTransform(transform0);
+
+	btCollisionShape* shape1 = this->createShape(col1);
+	this->testObject2->setCollisionShape(shape1);
+	btTransform transform1;
+	transform1.setOrigin(BulletH::bulletVec(pos1 + col1.offset));
+	transform1.setRotation(BulletH::bulletQuat(rot1));
+	this->testObject2->setWorldTransform(transform1);
+
+	ContactCallbackPair closestResults;
+	this->dynWorld->contactPairTest(this->testObject, this->testObject2, closestResults);
+	return closestResults.hit;
 }

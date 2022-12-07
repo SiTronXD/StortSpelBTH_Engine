@@ -1,6 +1,113 @@
 #include "pch.h"
 #include "VulkanRenderer.hpp"
 
+void VulkanRenderer::renderSubmeshes(
+    const Transform& transform,
+    MeshComponent& meshComponent,
+    const Mesh& mesh,
+    const Material& firstSubmeshMaterial,
+    const std::vector<SubmeshData>& submeshes,
+    ShaderInput& shaderInput,
+    CommandBuffer& outputCommandBuffer)
+{
+    // "Push" Constants to given Shader Stage Directly (using no Buffer...)
+    this->pushConstantData.modelMatrix = transform.getMatrix();
+    this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
+    this->pushConstantData.emissionColor =
+        glm::vec4(
+            firstSubmeshMaterial.emissionColor,
+            firstSubmeshMaterial.emissionIntensity
+        );
+    this->pushConstantData.settings.x = meshComponent.receiveShadows ? 1.0f : 0.0f;
+    this->pushConstantData.tiling = glm::vec4(
+        firstSubmeshMaterial.tilingOffset,
+        firstSubmeshMaterial.tilingScale
+    );
+    outputCommandBuffer.pushConstant(
+        shaderInput,
+        (void*)&this->pushConstantData
+    );
+
+    // Bind vertex buffer
+    outputCommandBuffer.bindVertexBuffers2(
+        mesh.getVertexBufferArray(),
+        this->currentFrame
+    );
+
+    // Bind index buffer
+    outputCommandBuffer.bindIndexBuffer(
+        mesh.getIndexBuffer()
+    );
+
+    // Update for descriptors
+    outputCommandBuffer.bindShaderInputFrequency(
+        shaderInput,
+        DescriptorFrequency::PER_MESH
+    );
+
+    // Go through each submesh
+    for (size_t i = 0; i < submeshes.size(); ++i)
+    {
+        const SubmeshData& currentSubmesh = submeshes[i];
+
+        // Create new material if found material is new
+#if defined(_DEBUG) || defined(DEBUG)
+        Material& material =
+            this->getAppropriateMaterial(meshComponent, submeshes, i);
+
+        if (material.descriptorIndex >= ~0u)
+        {
+            this->device.waitIdle();
+
+            FrequencyInputBindings diffuseTextureInputBinding{};
+            FrequencyInputBindings specularTextureInputBinding{};
+            FrequencyInputBindings glowMapTextureInputBinding{};
+            diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
+            specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
+            glowMapTextureInputBinding.texture = &this->resourceManager->getTexture(material.glowMapTextureIndex);
+
+            // Add descriptor set
+            material.descriptorIndex =
+                this->shaderInput.addFrequencyInput(
+                    {
+                        diffuseTextureInputBinding,
+                        specularTextureInputBinding,
+                        glowMapTextureInputBinding
+                    }
+            );
+
+            if (this->hasAnimations)
+            {
+                // Add one descriptor in animShaderInput for 
+                // each added descriptor in shaderInput
+                this->animShaderInput.addFrequencyInput(
+                    {
+                        diffuseTextureInputBinding,
+                        specularTextureInputBinding,
+                        glowMapTextureInputBinding
+                    }
+                );
+            }
+        }
+#endif
+
+        // Update for descriptors
+        shaderInput.setFrequencyInput(
+            this->getAppropriateMaterial(meshComponent, submeshes, i)
+            .descriptorIndex
+        );
+        this->currentCommandBuffer->bindShaderInputFrequency(
+            shaderInput,
+            DescriptorFrequency::PER_DRAW_CALL
+        );
+
+        // Draw
+        this->currentCommandBuffer->drawIndexed(
+            currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
+        );
+    }
+}
+
 void VulkanRenderer::computeParticles()
 {
     // Bind compute pipeline
@@ -350,95 +457,16 @@ void VulkanRenderer::renderDefaultMeshes(
             const Material& firstSubmeshMaterial =
                 this->getAppropriateMaterial(meshComponent, submeshes, 0);
 
-            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-            this->pushConstantData.modelMatrix = transform.getMatrix();
-            this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
-            this->pushConstantData.emissionColor = 
-                glm::vec4(
-                    firstSubmeshMaterial.emissionColor, 
-                    firstSubmeshMaterial.emissionIntensity
-                );
-            this->pushConstantData.settings.x = meshComponent.receiveShadows ? 1.0f : 0.0f;
-            this->currentCommandBuffer->pushConstant(
+            // Render submeshes
+            this->renderSubmeshes(
+                transform,
+                meshComponent,
+                currentMesh,
+                firstSubmeshMaterial,
+                submeshes,
                 this->shaderInput,
-                (void*)&this->pushConstantData
+                *this->currentCommandBuffer
             );
-
-            // Bind vertex buffer
-            this->currentCommandBuffer->bindVertexBuffers2(
-                currentMesh.getVertexBufferArray(),
-                this->currentFrame
-            );
-
-            // Bind index buffer
-            this->currentCommandBuffer->bindIndexBuffer(
-                currentMesh.getIndexBuffer()
-            );
-
-            // Update for descriptors
-            this->currentCommandBuffer->bindShaderInputFrequency(
-                this->shaderInput,
-                DescriptorFrequency::PER_MESH
-            );
-
-            for (size_t i = 0; i < submeshes.size(); ++i)
-            {
-                const SubmeshData& currentSubmesh = submeshes[i];
-                Material& material = 
-                    this->getAppropriateMaterial(meshComponent, submeshes, i);
-
-                // Create new(__FILE__, __LINE__) material if found material is new(__FILE__, __LINE__)
-#if defined(_DEBUG) || defined(DEBUG)
-                if (material.descriptorIndex >= ~0u)
-                {
-                    this->device.waitIdle();
-
-                    FrequencyInputBindings diffuseTextureInputBinding{};
-                    FrequencyInputBindings specularTextureInputBinding{};
-                    FrequencyInputBindings glowMapTextureInputBinding{};
-                    diffuseTextureInputBinding.texture = &this->resourceManager->getTexture(material.diffuseTextureIndex);
-                    specularTextureInputBinding.texture = &this->resourceManager->getTexture(material.specularTextureIndex);
-                    glowMapTextureInputBinding.texture = &this->resourceManager->getTexture(material.glowMapTextureIndex);
-
-                    // Add descriptor set
-                    material.descriptorIndex =
-                        this->shaderInput.addFrequencyInput(
-                            {
-                                diffuseTextureInputBinding,
-                                specularTextureInputBinding,
-                                glowMapTextureInputBinding
-                            }
-                    );
-
-                    if (this->hasAnimations)
-                    {
-                        // Add one descriptor in animShaderInput for 
-                        // each added descriptor in shaderInput
-                        this->animShaderInput.addFrequencyInput(
-                            {
-                                diffuseTextureInputBinding, 
-                                specularTextureInputBinding,
-                                glowMapTextureInputBinding
-                            }
-                        );
-                    }
-                }
-#endif
-
-                // Update for descriptors
-                this->shaderInput.setFrequencyInput(
-                    material.descriptorIndex
-                );
-                this->currentCommandBuffer->bindShaderInputFrequency(
-                    this->shaderInput,
-                    DescriptorFrequency::PER_DRAW_CALL
-                );
-
-                // Draw
-                this->currentCommandBuffer->drawIndexed(
-                    currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
-                );
-            }
         }
     );
 }
@@ -463,7 +491,7 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
     auto animView = scene->getSceneReg().view<Transform, MeshComponent, AnimationComponent>(entt::exclude<Inactive>);
     animView.each(
         [&](const Transform& transform,
-            const MeshComponent& meshComponent,
+            MeshComponent& meshComponent,
             const AnimationComponent& animationComponent)
         {
             Mesh& currentMesh =
@@ -484,56 +512,16 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
                 animationComponent.boneTransformsID
             );
 
-            // "Push" Constants to given Shader Stage Directly (using no Buffer...)
-            this->pushConstantData.modelMatrix = transform.getMatrix();
-            this->pushConstantData.tintColor = firstSubmeshMaterial.tintColor;
-            this->pushConstantData.emissionColor =
-                glm::vec4(
-                    firstSubmeshMaterial.emissionColor,
-                    firstSubmeshMaterial.emissionIntensity
-                );
-            this->pushConstantData.settings.x = meshComponent.receiveShadows ? 1.0f : 0.0f;
-            this->currentCommandBuffer->pushConstant(
+            // Render submeshes
+            this->renderSubmeshes(
+                transform,
+                meshComponent,
+                currentMesh,
+                firstSubmeshMaterial,
+                submeshes,
                 this->animShaderInput,
-                (void*)&this->pushConstantData
+                *this->currentCommandBuffer
             );
-
-            // Bind vertex buffer
-            this->currentCommandBuffer->bindVertexBuffers2(
-                currentMesh.getVertexBufferArray(),
-                this->currentFrame
-            );
-
-            // Bind index buffer
-            this->currentCommandBuffer->bindIndexBuffer(
-                currentMesh.getIndexBuffer()
-            );
-
-            // Update for descriptors
-            this->currentCommandBuffer->bindShaderInputFrequency(
-                this->animShaderInput,
-                DescriptorFrequency::PER_MESH
-            );
-
-            for (size_t i = 0; i < submeshes.size(); ++i)
-            {
-                const SubmeshData& currentSubmesh = submeshes[i];
-
-                // Update for descriptors
-                this->animShaderInput.setFrequencyInput(
-                    this->getAppropriateMaterial(meshComponent, submeshes, i)
-                    .descriptorIndex
-                );
-                this->currentCommandBuffer->bindShaderInputFrequency(
-                    this->animShaderInput,
-                    DescriptorFrequency::PER_DRAW_CALL
-                );
-
-                // Draw
-                this->currentCommandBuffer->drawIndexed(
-                    currentSubmesh.numIndicies, 1, currentSubmesh.startIndex
-                );
-            }
         }
     );
 }

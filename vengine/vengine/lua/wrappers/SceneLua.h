@@ -59,6 +59,8 @@ private:
 	static int lua_setAnimationTimeScale(lua_State* L);
 	static int lua_getAnimationStatus(lua_State* L);
 
-   public:
+public:
+	virtual ~SceneLua() {};
+
 	static void lua_openscene(lua_State* L, SceneHandler* sceneHandler);
 };

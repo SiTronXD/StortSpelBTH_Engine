@@ -101,6 +101,7 @@
     <ClCompile Include="vengine\graphics\handlers\PostProcessHandler.cpp" />
     <ClCompile Include="vengine\graphics\vulkan\SubmitArray.cpp" />
     <ClCompile Include="vengine\graphics\handlers\ParticleSystemHandler.cpp" />
+    <ClCompile Include="vengine\physics\ContactCallbackPair.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="vengine\lua\wrappers\InputLua.cpp" />
@@ -207,6 +208,7 @@
     <ClInclude Include="vengine\components\MultipleAudioSource.h" />
     <ClInclude Include="vengine\components\ParticleSystem.hpp" />
     <ClInclude Include="vengine\graphics\handlers\ParticleSystemHandler.hpp" />
+    <ClInclude Include="vengine\physics\ContactCallbackPair.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="imgui\backends\imgui_impl_vulkan.cpp">

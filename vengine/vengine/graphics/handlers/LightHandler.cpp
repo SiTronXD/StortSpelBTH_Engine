@@ -7,6 +7,21 @@ const uint32_t LightHandler::MAX_NUM_LIGHTS   = 16;
 const uint32_t LightHandler::SHADOW_MAP_SIZE  = 1024 * 3;
 const uint32_t LightHandler::NUM_CASCADES     = 3;
 
+void LightHandler::addLightToList(LightBufferData& lightData)
+{
+#ifdef _CONSOLE
+    if (this->numLights >= LightHandler::MAX_NUM_LIGHTS - 1)
+    {
+        Log::warning("The number of lights is larger than the maximum allowed number. Truncates number of lights to " +
+            std::to_string(MAX_NUM_LIGHTS));
+        return;
+    }
+#endif
+
+    // Set light data and increment number of lights
+    this->lightBuffer[this->numLights++] = lightData;
+}
+
 void LightHandler::setLightFrustum(
     const float& cascadeSize,
     glm::mat4& outputLightVP)
@@ -32,6 +47,7 @@ LightHandler::LightHandler()
     framesInFlight(0),
     lightViewMat(1.0f)
 { 
+    this->lightBuffer.resize(LightHandler::MAX_NUM_LIGHTS);
     this->cascadeSizes.resize(LightHandler::NUM_CASCADES);
 
     this->shadowMapData.cascadeSettings.x = 
@@ -219,7 +235,7 @@ void LightHandler::updateLightBuffers(
     const Camera& camData,
     const uint32_t& currentFrame)
 {
-    this->lightBuffer.clear();
+    this->numLights = 0;
 
     // Info about all lights in the shader
     AllLightsInfo lightsInfo{};
@@ -234,8 +250,8 @@ void LightHandler::updateLightBuffers(
             lightData.color = glm::vec4(ambientLightComp.color, 1.0f);
 
             // Add to list
-            this->lightBuffer.push_back(lightData);
-
+            this->addLightToList(lightData);
+            
             // Increment end index
             lightsInfo.ambientLightsEndIndex++;
         }
@@ -255,7 +271,7 @@ void LightHandler::updateLightBuffers(
                 glm::vec4(directionalLightComp.color, 1.0f);
 
             // Add to list
-            this->lightBuffer.push_back(lightData);
+            this->addLightToList(lightData);
 
             // Increment end index
             lightsInfo.directionalLightsEndIndex++;
@@ -278,7 +294,7 @@ void LightHandler::updateLightBuffers(
             lightData.color = glm::vec4(pointLightComp.color, 1.0f);
 
             // Add to list
-            this->lightBuffer.push_back(lightData);
+            this->addLightToList(lightData);
 
             // Increment end index
             lightsInfo.pointLightsEndIndex++;
@@ -308,7 +324,7 @@ void LightHandler::updateLightBuffers(
             lightData.color = glm::vec4(spotlightComp.color, 1.0f);
 
             // Add to list
-            this->lightBuffer.push_back(lightData);
+            this->addLightToList(lightData);
 
             // Increment end index
             lightsInfo.spotlightsEndIndex++;
@@ -316,12 +332,12 @@ void LightHandler::updateLightBuffers(
     );
 
     // Update storage buffer containing lights
-    if (this->lightBuffer.size() > 0)
+    if (this->numLights > 0)
     {
-        shaderInput.updateStorageBuffer(lightBufferSB, (void*)this->lightBuffer.data());
+        shaderInput.updateStorageBuffer(lightBufferSB, this->lightBuffer.data());
         if (hasAnimations)
         {
-            animShaderInput.updateStorageBuffer(animLightBufferSB, (void*)this->lightBuffer.data());
+            animShaderInput.updateStorageBuffer(animLightBufferSB, this->lightBuffer.data());
         }
     }
 
@@ -338,15 +354,6 @@ void LightHandler::updateLightBuffers(
     lightsInfo.spotlightsEndIndex = std::min(
         lightsInfo.spotlightsEndIndex,
         LightHandler::MAX_NUM_LIGHTS);
-
-#ifdef _CONSOLE
-    if (this->lightBuffer.size() > LightHandler::MAX_NUM_LIGHTS)
-    {
-        Log::warning("The number of lights is larger than the maximum allowed number. Truncates " +
-            std::to_string(this->lightBuffer.size()) + " lights to " +
-            std::to_string(MAX_NUM_LIGHTS));
-    }
-#endif
 
     // Update all lights info buffer
     shaderInput.updateUniformBuffer(

@@ -27,8 +27,6 @@ void Server::ConnectUsers()
 	// If we got a connection
 	if (listener.accept(tempClient->clientTcpSocket) == sf::Socket::Done)
 	{
-		//id++;
-
 		tempClient->sender = tempClient->clientTcpSocket.getRemoteAddress();  // May be wrong address here 2?
 		tempClient->id = id++;
 
@@ -153,11 +151,6 @@ Server::~Server()
 
 void Server::start()
 {
-	/*clientToServerPacketTcp.resize(clients.size());
-	serverToClientPacketTcp.resize(clients.size());
-	clientToServerPacketUdp.resize(clients.size());
-	serverToClientPacketUdp.resize(clients.size());*/
-
 	for (int i = 0; i < this->clients.size(); i++)
 	{
 		sceneHandler.getScene()->createPlayer();
@@ -327,7 +320,6 @@ void Server::sendDataToAllUsers()
 
 void Server::getDataFromUsers()
 {
-
 	int timesTryingToRecv = 0;
 	// See if we recv something from
 	for (int i = 0; i < clientToServerPacketTcp.size(); i++)

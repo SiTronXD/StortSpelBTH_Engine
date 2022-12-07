@@ -185,6 +185,12 @@ void SceneHandler::setScene(Scene* scene, std::string path)
 		this->nextScene->setSceneHandler(*this);
 		this->nextLuaScript = path;
 	}
+	// Gameplay programmer tried to switch scene multiple times during 1 frame.
+	else
+	{
+		// Deallocate unused scene
+		delete scene;
+	}
 }
 
 void SceneHandler::setNetworkHandler(NetworkHandler* networkHandler)

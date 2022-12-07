@@ -51,7 +51,10 @@ NetworkHandler::~NetworkHandler()
 		delete client;
 		client = nullptr;
 	}
+    cleanUp();
 }
+
+void NetworkHandler::cleanUp() {}
 
 void NetworkHandler::setSceneHandler(SceneHandler* sceneHandler)
 {
@@ -80,11 +83,11 @@ void NetworkHandler::handleUDPEventClient(sf::Packet& udpPacket, int event)
 {
 }
 
-void NetworkHandler::handleTCPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event)
+void NetworkHandler::handleTCPEventServer(Server* server, int clientIndex, sf::Packet& tcpPacket, int event)
 {
 }
 
-void NetworkHandler::handleUDPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event)
+void NetworkHandler::handleUDPEventServer(Server* server, int clientIndex, sf::Packet& tcpPacket, int event)
 {
 }
 
@@ -235,14 +238,11 @@ void NetworkHandler::update()
 				{
 					if (otherPlayersServerId[i] == h1)
 					{
-						if (otherPlayers.size() < i)
-						{
-							return;
-						}
 						sceneHandler->getScene()->removeEntity(otherPlayers[i].first);
 						this->onDisconnect(i);
 						this->otherPlayers.erase(otherPlayers.begin() + i);
 						this->otherPlayersServerId.erase(otherPlayersServerId.begin() + i);
+						break;
 					}
 				}
 			}

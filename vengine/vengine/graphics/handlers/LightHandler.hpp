@@ -53,6 +53,7 @@ private:
 	ResourceManager* resourceManager;
 
 	uint32_t framesInFlight;
+	uint32_t numLights;
 
 	glm::mat4 lightViewMat;
 	glm::vec3 lightDir;
@@ -61,6 +62,8 @@ private:
 	std::vector<float> cascadeSizes;
 	float cascadeDepthScale;
 
+	void addLightToList(
+		LightBufferData& lightData);
 	void setLightFrustum(
 		const float& cascadeSize,
 		glm::mat4& outputLightVP);

@@ -37,6 +37,7 @@ private:
     std::string name; 
 public:
 	Event(const std::string& name) : name(name){};
+	virtual ~Event() {};
     inline std::string& getName(){return name;};
 };
 class GlobalEvent : public Event
