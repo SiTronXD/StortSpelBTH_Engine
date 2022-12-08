@@ -58,7 +58,9 @@ int UIRendererLua::lua_renderTexture(lua_State* L)
 
 	if (lua_isvector(L, 1) && lua_isvector(L, 2))
 	{
-		uiRenderer->renderTexture(glm::vec2(lua_tovector(L, 1)), lua_tovector(L, 2));
+		glm::vec3 col = lua_isvector(L, 3) ? lua_tovector(L, 3) : glm::vec3(1.0f);
+		float alpha = lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 1.0f;
+		uiRenderer->renderTexture(glm::vec2(lua_tovector(L, 1)), lua_tovector(L, 2), glm::uvec4(0, 0, 1, 1), glm::vec4(col, alpha));
 	}
 	return 0;
 }
@@ -69,7 +71,9 @@ int UIRendererLua::lua_renderTexture3D(lua_State* L)
 
 	if (lua_isvector(L, 1) && lua_isvector(L, 2))
 	{
-		uiRenderer->renderTexture(lua_tovector(L, 1), lua_tovector(L, 2));
+		glm::vec3 col = lua_isvector(L, 3) ? lua_tovector(L, 3) : glm::vec3(1.0f);
+		float alpha = lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 1.0f;
+		uiRenderer->renderTexture(lua_tovector(L, 1), lua_tovector(L, 2), glm::uvec4(0, 0, 1, 1), glm::vec4(col, alpha));
 	}
 	return 0;
 }
@@ -82,8 +86,10 @@ int UIRendererLua::lua_renderString(lua_State* L)
 	{
 		float charMargin = lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0.0f;
 		StringAlignment alignment = lua_isnumber(L, 5) ? (StringAlignment)lua_tointeger(L, 5) : StringAlignment::CENTER;
+		glm::vec3 col = lua_isvector(L, 6) ? lua_tovector(L, 6) : glm::vec3(1.0f);
+		float alpha = lua_isnumber(L, 7) ? lua_tonumber(L, 7) : 1.0f;
 
-		uiRenderer->renderString(lua_tostring(L, 1), glm::vec2(lua_tovector(L, 2)), lua_tovector(L, 3), charMargin, alignment);
+		uiRenderer->renderString(lua_tostring(L, 1), glm::vec2(lua_tovector(L, 2)), lua_tovector(L, 3), charMargin, alignment, glm::vec4(col, alpha));
 	}
 	return 0;
 }
@@ -96,8 +102,10 @@ int UIRendererLua::lua_renderString3D(lua_State* L)
 	{
 		float charMargin = lua_isnumber(L, 4) ? lua_tonumber(L, 4) : 0.0f;
 		StringAlignment alignment = lua_isnumber(L, 5) ? (StringAlignment)lua_tointeger(L, 5) : StringAlignment::CENTER;
+		glm::vec3 col = lua_isvector(L, 6) ? lua_tovector(L, 6) : glm::vec3(1.0f);
+		float alpha = lua_isnumber(L, 7) ? lua_tonumber(L, 7) : 1.0f;
 
-		uiRenderer->renderString(lua_tostring(L, 1), lua_tovector(L, 2), lua_tovector(L, 3), charMargin, alignment);
+		uiRenderer->renderString(lua_tostring(L, 1), lua_tovector(L, 2), lua_tovector(L, 3), charMargin, alignment, glm::vec4(col, alpha));
 	}
 	return 0;
 }

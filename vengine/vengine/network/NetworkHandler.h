@@ -45,8 +45,8 @@ public:
     // Virtual functions (customization)
     virtual void handleTCPEventClient(sf::Packet& tcpPacket, int event);
     virtual void handleUDPEventClient(sf::Packet& udpPacket, int event);
-    virtual void handleTCPEventServer(Server* server, int clientID, sf::Packet& tcpPacket, int event);
-    virtual void handleUDPEventServer(Server* server, int clientID, sf::Packet& udpPacket, int event);
+    virtual void handleTCPEventServer(Server* server, int clientIndex, sf::Packet& tcpPacket, int event);
+    virtual void handleUDPEventServer(Server* server, int clientIndex, sf::Packet& udpPacket, int event);
     virtual void onDisconnect(int index);
 
     // SERVER

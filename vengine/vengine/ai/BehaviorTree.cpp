@@ -6,7 +6,6 @@
 #include <iostream>
 
 SceneHandler* BehaviorTree::sceneHandler = nullptr;
-PathFindingManager BehaviorTree::pathFindingManager;
 
 void BehaviorTree::draw()
 {

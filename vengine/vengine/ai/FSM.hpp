@@ -308,6 +308,7 @@ public:
 			FSM::sceneHandler = sceneHandler;
 		}
 	};
+    virtual ~FSM() {};
 	
 
 	

@@ -731,7 +731,7 @@ uiRenderer.setBitmapFont(table : char_table, string : path, vector : tile_size)
 #### renderTexture
 Renders the active texture to the screen. [setTexture](#setTexture) should be called before. Takes a 2D position and dimension as the argument. 
 ~~~ Lua
-uiRenderer.renderTexture(vector : position, vector : dimension)
+uiRenderer.renderTexture(vector : position, vector : dimension, vector : color, float : alpha) -- Color and alpha optional
 
 --Example use
 uiRenderer.setTexture("test.png")
@@ -741,7 +741,7 @@ uiRenderer.renderTexture(vector(0, 0), vector(100, 100)) -- 100x100 image in the
 #### renderTexture3D
 Renders the active texture and translate the 3D position to the screen. [setTexture](#setTexture) should be called before. Takes a 3D position and dimension as the argument.
 ~~~ Lua
-uiRenderer.renderTexture3D(vector : position, vector : dimension)
+uiRenderer.renderTexture3D(vector : position, vector : dimension, vector : color, float : alpha) -- Color and alpha optional
 
 --Example use
 uiRenderer.setTexture("test.png")
@@ -753,7 +753,7 @@ Renders text with the active font to the screen. [setBitmapFont](#setBitmapFont)
 ~~~ Lua
 uiRenderer.renderString(string text, vector : position, vector : char_dimension)
 uiRenderer.renderString(string text, vector : position, vector : char_dimension,
-float char_margin, int : alignment) -- Optional (StringAlignment useful here)
+float char_margin, int : alignment, vector : color, float : alpha) -- Optional (StringAlignment useful here)
 
 --Example use
 uiRenderer.setBitmapFont("test_font.png")
@@ -766,7 +766,7 @@ Renders text with the active font and translate the 3D position to the screen. [
 ~~~ Lua
 uiRenderer.renderString3D(string text, vector : position, vector : char_dimension)
 uiRenderer.renderString3D(string text, vector : position, vector : char_dimension,
-float char_margin, int : alignment) -- Optional (StringAlignment useful here)
+float char_margin, int : alignment, vector : color, float : alpha) -- Optional (StringAlignment useful here)
 
 --Example use
 uiRenderer.setBitmapFont("test_font.png")
