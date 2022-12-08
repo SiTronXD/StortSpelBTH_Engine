@@ -125,10 +125,10 @@ inline glm::vec3 SMath::rotateVector(const glm::vec3& angles, glm::vec3 vector) 
     return vector;
 }
 
-// [0, 1)
+// [0, 1]
 inline float SMath::randomFloat()
 {
-    return (rand() % 10000) / 10000.0f;
+    return float(rand()) / float((RAND_MAX));
 }
 
 inline void SMath::normalizeScale(glm::mat4& matrix)
