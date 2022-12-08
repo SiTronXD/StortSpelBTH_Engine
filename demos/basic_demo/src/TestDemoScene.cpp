@@ -73,7 +73,7 @@ void TestDemoScene::init()
 	this->particleSystemEntities.push_back(this->createEntity());
 	this->setComponent<ParticleSystem>(this->particleSystemEntities[0]);
 	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[0]);
-	partSys.maxlifeTime = 1.0f;
+	partSys.maxlifeTime = 4.0f;
 	partSys.numParticles = 512;
 	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
 	partSys.startSize = glm::vec2(0.5f);
@@ -82,6 +82,7 @@ void TestDemoScene::init()
 	partSys.endColor = glm::vec4(0.2f, 0.2f, 0.2f, 0.0f);
 	partSys.velocityStrength = 17.0f;
 	partSys.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
+	//partSys.initialSimulation = true;
 
 	partSys.coneSpawnVolume.diskRadius = 0.0f;
 	partSys.coneSpawnVolume.coneAngle = 30.0f;
@@ -334,22 +335,14 @@ void TestDemoScene::update()
 	this->setFogAbsorption(absorption);
 
 	// Particle system
-	ImGui::Begin("Particle System");
 	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)
 	{
-		Transform& partSysTran = this->getComponent<Transform>(this->particleSystemEntities[i]);
-		ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[i]);
-		ImGui::SliderFloat3(("Entity position " + std::to_string(i) + ": ").c_str(), &partSysTran.position[0], -5.0f, 5.0f);
-		ImGui::SliderFloat3(("Entity rotation " + std::to_string(i) + ": ").c_str(), &partSysTran.rotation[0], -180.0f, 180.0f);
-		ImGui::SliderFloat3(("Cone pos " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.localPosition[0], -5.0f, 5.0f);
-		ImGui::SliderFloat3(("Cone dir " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.localDirection[0], -1.0f, 1.0f);
-		ImGui::SliderFloat(("Disk radius " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.diskRadius, 0.0f, 10.0f);
-		ImGui::SliderFloat(("Cone angle " + std::to_string(i) + ": ").c_str(), &partSys.coneSpawnVolume.coneAngle, 0.0f, 180.0f);
-		ImGui::SliderFloat(("Velocity strength: " + std::to_string(i) + ": ").c_str(), &partSys.velocityStrength, 0.0f, 20.0f);
-		ImGui::SliderFloat(("Spawn rate: " + std::to_string(i) + ": ").c_str(), &partSys.spawnRate, 0.0f, 1.0f);
-		ImGui::Checkbox(("Spawn: " + std::to_string(i) + ": ").c_str(), &partSys.spawn);
+		this->getDebugRenderer()->renderParticleSystemProperties(
+			this,
+			this->particleSystemEntities[i],
+			std::to_string(i)
+		);
 	}
-	ImGui::End();
 
 	// Make ghosts follow skeletal animation
 	this->getComponent<Transform>(this->testEntity).setMatrix(
@@ -586,14 +579,6 @@ void TestDemoScene::update()
 	);
 
 	// Debug rendering
-
-	// Particle system
-	for (size_t i = 0; i < this->particleSystemEntities.size(); ++i)
-	{
-		Scene::getDebugRenderer()->renderParticleSystemCone(
-			this->particleSystemEntities[i]
-		);
-	}
 
 	// Skeleton
 	Scene::getDebugRenderer()->renderSkeleton(

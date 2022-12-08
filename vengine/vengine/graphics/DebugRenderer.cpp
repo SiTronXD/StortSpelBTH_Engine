@@ -549,3 +549,34 @@ void DebugRenderer::renderSkeleton(
 
 #endif
 }
+
+void DebugRenderer::renderParticleSystemProperties(
+    Scene* scene,
+    const Entity& particleSystemEntity,
+    const std::string& name)
+{
+#ifdef _CONSOLE
+    ImGui::Begin("Particle System");
+    {
+        Transform& partSysTran = scene->getComponent<Transform>(particleSystemEntity);
+        ParticleSystem& partSys = scene->getComponent<ParticleSystem>(particleSystemEntity);
+        ImGui::SliderFloat3((name + " entity position : ").c_str(), &partSysTran.position[0], -100.0f, 100.0f);
+        ImGui::SliderFloat3((name + " entity rotation: ").c_str(), &partSysTran.rotation[0], -180.0f, 180.0f);
+        ImGui::SliderFloat4((name + " start color: ").c_str(), &partSys.startColor[0], 0.0f, 1.0f);
+        ImGui::SliderFloat4((name + " end color: ").c_str(), &partSys.endColor[0], 0.0f, 1.0f);
+        ImGui::SliderFloat3((name + " cone pos: ").c_str(), &partSys.coneSpawnVolume.localPosition[0], -5.0f, 5.0f);
+        ImGui::SliderFloat3((name + " cone dir: ").c_str(), &partSys.coneSpawnVolume.localDirection[0], -1.0f, 1.0f);
+        ImGui::SliderFloat((name + " disk radius: ").c_str(), &partSys.coneSpawnVolume.diskRadius, 0.0f, 10.0f);
+        ImGui::SliderFloat((name + " cone angle: ").c_str(), &partSys.coneSpawnVolume.coneAngle, 0.0f, 180.0f);
+        ImGui::SliderFloat((name + " velocity strength: ").c_str(), &partSys.velocityStrength, 0.0f, 20.0f);
+        ImGui::SliderFloat((name + " spawn rate: ").c_str(), &partSys.spawnRate, 0.0f, 1.0f);
+        ImGui::Checkbox((name + " spawn: ").c_str(), &partSys.spawn);
+
+        static bool renderPS = true;
+        ImGui::Checkbox((name + " render cone: ").c_str(), &renderPS);
+        if (renderPS)
+            this->renderParticleSystemCone(particleSystemEntity);
+    }
+    ImGui::End();
+#endif
+}

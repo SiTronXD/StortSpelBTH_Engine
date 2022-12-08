@@ -122,6 +122,10 @@ public:
     void renderSkeleton(
         const Entity& entity,
         const glm::vec3& color);
+    void renderParticleSystemProperties(
+        Scene* scene, 
+        const Entity& particleSystemEntity,
+        const std::string& name);
 
     inline const std::vector<DebugMeshDrawCallData>& getMeshDrawCallData() const { return this->meshDrawData; }
     inline ShaderInput& getLineShaderInput() { return this->lineShaderInput; }
