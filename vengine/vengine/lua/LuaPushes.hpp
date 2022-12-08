@@ -493,6 +493,13 @@ namespace UIAreaLua
 		lua_pushboolean(L, area.isClicking());
 		return 1;
 	}
+
+	static int lua_isHolding(lua_State* L)
+	{
+		UIArea area = lua_touiarea(L, 1);
+		lua_pushboolean(L, area.isHolding());
+		return 1;
+	}
 }
 
 static void lua_pushuiarea(lua_State* L, const UIArea& area)
@@ -511,6 +518,7 @@ static void lua_pushuiarea(lua_State* L, const UIArea& area)
 	luaL_Reg methods[] = {
 		{ "isHovering", UIAreaLua::lua_isHovering },
 		{ "isClicking", UIAreaLua::lua_isClicking },
+		{ "isHolding", UIAreaLua::lua_isHolding },
 		{ NULL , NULL }
 	};
 

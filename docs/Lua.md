@@ -416,6 +416,7 @@ local UIArea = {
 -- Member functions
 area:isHovering() -- Currently hovered over by mouse
 area:isClicking() -- Currently clicked via clickbutton value
+area:isHolding() -- Currently holding via clickbutton value
 
 --Example of use
 local area = scene.getComponent(e, CompType.UIArea)
