@@ -381,6 +381,11 @@ const std::string& NetworkHandler::getClientName()
 	return this->playerName;
 }
 
+int NetworkHandler::getServerID()
+{
+    return this->ID;
+}
+
 const bool NetworkHandler::isConnected()
 {
 	if (this->client != nullptr)

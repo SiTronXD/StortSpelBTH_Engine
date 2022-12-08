@@ -62,6 +62,7 @@ public:
     const bool hasServer();
     const bool isConnected();
 	const std::string &getClientName();
+    int getServerID();
 
     // USER
     void update();
