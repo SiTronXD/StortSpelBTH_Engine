@@ -44,5 +44,6 @@ public:
 	Cone coneSpawnVolume;
 	RespawnSetting respawnSetting = RespawnSetting::CONTINUOUS;
 	bool spawn = true;
+	bool initialSimulation = false;
 	float spawnRate = 0.0f;
 };

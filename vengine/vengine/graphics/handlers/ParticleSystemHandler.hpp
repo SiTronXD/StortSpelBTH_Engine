@@ -9,6 +9,8 @@ class RenderPass;
 class CommandBufferArray;
 class Scene;
 
+struct ParticleSystem;
+
 class ParticleSystemHandler
 {
 private:
@@ -40,6 +42,13 @@ private:
 	uint32_t framesInFlight;
 
 	uint32_t numParticles;
+
+	void initialParticleSimulation(
+		const ParticleEmitterInfo& emitter,
+		ParticleInfo& particle);
+	void updateEmitterInfo(
+		Transform& transformComp,
+		ParticleSystem& particleSystemComp);
 
 public:
 	ParticleSystemHandler();

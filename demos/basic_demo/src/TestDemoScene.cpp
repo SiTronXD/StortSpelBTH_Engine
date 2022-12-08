@@ -73,7 +73,7 @@ void TestDemoScene::init()
 	this->particleSystemEntities.push_back(this->createEntity());
 	this->setComponent<ParticleSystem>(this->particleSystemEntities[0]);
 	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[0]);
-	partSys.maxlifeTime = 1.0f;
+	partSys.maxlifeTime = 4.0f;
 	partSys.numParticles = 512;
 	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
 	partSys.startSize = glm::vec2(0.5f);
@@ -82,6 +82,7 @@ void TestDemoScene::init()
 	partSys.endColor = glm::vec4(0.2f, 0.2f, 0.2f, 0.0f);
 	partSys.velocityStrength = 17.0f;
 	partSys.acceleration = glm::vec3(0.0f, -13.0f, 0.0f);
+	//partSys.initialSimulation = true;
 
 	partSys.coneSpawnVolume.diskRadius = 0.0f;
 	partSys.coneSpawnVolume.coneAngle = 30.0f;

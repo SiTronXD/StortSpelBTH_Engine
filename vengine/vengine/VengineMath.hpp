@@ -15,7 +15,12 @@ public:
     static glm::mat4 rotateTowards(const glm::vec3& dir);
     static glm::mat4 rotateTowards(const glm::vec3& dir, const glm::vec3& up);
     static glm::mat4 rotateEuler(const glm::vec3& angles);
-	static glm::vec3 rotateVector(const glm::vec3& angles, const glm::vec3 vector);
+	
+    static glm::mat2 rotate2D(const float& angle);
+    
+    static glm::vec3 rotateVector(const glm::vec3& angles, const glm::vec3 vector);
+
+    static float randomFloat();
 
     static void normalizeScale(glm::mat4& matrix);
 };
@@ -104,12 +109,26 @@ inline glm::mat4 SMath::rotateEuler(const glm::vec3& angles)
         glm::rotate(glm::mat4(1.0f), glm::radians(angles.x), glm::vec3(1.0f, 0.0f, 0.0f));
 }
 
+inline glm::mat2 SMath::rotate2D(const float& angle)
+{
+    return glm::mat2(
+        std::cos(angle), std::sin(angle),
+        -std::sin(angle), std::cos(angle)
+    );
+}
+
 inline glm::vec3 SMath::rotateVector(const glm::vec3& angles, glm::vec3 vector) {
 	vector = glm::mat3(cos(glm::radians(angles.z)), -sin(glm::radians(angles.z)), 0.f, sin(glm::radians(angles.z)), cos(glm::radians(angles.z)), 0.f, 0.f, 0.f, 1.f) * vector;
 	vector = glm::mat3(1.f, 0.f, 0.f, 0.f, cos(glm::radians(angles.x)), -sin(glm::radians(angles.x)), 0.f, sin(glm::radians(angles.x)), cos(glm::radians(angles.x))) * vector;
 	vector = glm::mat3(cos(glm::radians(angles.y)), 0.f, sin(glm::radians(angles.y)), 0.f, 1.f, 0.f, -sin(glm::radians(angles.y)), 0.f, cos(glm::radians(angles.y))) * vector;
 
     return vector;
+}
+
+// [0, 1)
+inline float SMath::randomFloat()
+{
+    return (rand() % 10000) / 10000.0f;
 }
 
 inline void SMath::normalizeScale(glm::mat4& matrix)
