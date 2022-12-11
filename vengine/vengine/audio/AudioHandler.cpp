@@ -140,6 +140,13 @@ void AudioHandler::updateMusic()
             this->mrStreamer.seek(0ull);
         }
     }
+
+	ALint alMusicState = AL_STOPPED;
+	alGetSourcei(this->musicSourceId, AL_SOURCE_STATE, &alMusicState);
+	if (alMusicState == AL_STOPPED)
+	{
+		alSourcePlay(this->musicSourceId);
+	}
 }
 
 void AudioHandler::setMasterVolume(float volume)
@@ -331,6 +338,7 @@ uint32_t AudioHandler::getNumActiveSources() const
 
 void AudioHandler::reset()
 {
+	this->numActiveSources = 0u;
 	for (uint32_t i = 0; i < MAX_SOURCES; i++)
 	{
 		alSourceStop(this->sources[i]);
