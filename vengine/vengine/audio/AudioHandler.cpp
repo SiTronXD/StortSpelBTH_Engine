@@ -12,15 +12,16 @@ AudioHandler::AudioHandler()
 	this->audioSamples = new char[BUFFER_SIZE];
 	this->musicState = State::NotPlaying;
 
+#ifdef _CONSOLE
 	ALCdevice* device = alcOpenDevice(NULL);
     if (!device)
     {
-		Log::error("Failed to create OpenAL Device");
+		Log::error(__FUNCTION__ " | Failed to create OpenAL Device");
     }
     ALCcontext* context = alcCreateContext(device, nullptr);
 	if (!context)
 	{
-		Log::error("Failed to create OpenAL Context");
+		Log::error(__FUNCTION__ " | Failed to create OpenAL Context");
 	}
     alcMakeContextCurrent(context);
 	alGetError(); // Clear error code
@@ -30,7 +31,7 @@ AudioHandler::AudioHandler()
 	alGenSources(1, &this->musicSourceId);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		Log::error("Failed generating music source. OpenAL error: " + std::to_string(error));
+		Log::error(__FUNCTION__ " | Failed generating music source. OpenAL error: " + std::to_string(error));
 	}
 	alSourcei(this->musicSourceId, AL_SOURCE_RELATIVE, AL_FALSE);
 
@@ -38,8 +39,19 @@ AudioHandler::AudioHandler()
 	alGenSources(MAX_SOURCES, this->sources);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		Log::error("Failed generating audio sources. OpenAL error: " + std::to_string(error));
+		Log::error(__FUNCTION__ " | Failed generating audio sources. OpenAL error: " + std::to_string(error));
 	}
+#else
+	ALCdevice* device = alcOpenDevice(NULL);
+	ALCcontext* context = alcCreateContext(device, nullptr);
+	alcMakeContextCurrent(context);
+
+	alGenSources(1, &this->musicSourceId);
+	alSourcei(this->musicSourceId, AL_SOURCE_RELATIVE, AL_FALSE);
+
+	this->numActiveSources = 0u;
+	alGenSources(MAX_SOURCES, this->sources);
+#endif
 
 	this->reset();
 }
@@ -71,6 +83,8 @@ void AudioHandler::setSceneHandler(SceneHandler* sceneHandler)
 void AudioHandler::update()
 {
 	Scene* scene = this->sceneHandler->getScene();
+
+	// Check source status and update accordingly
 	ALint state = AL_STOPPED;
 	for (uint32_t i = 0; i < this->numActiveSources; i++)
 	{
@@ -89,11 +103,12 @@ void AudioHandler::update()
 			std::swap(this->sourceUsers[i], this->sourceUsers[this->numActiveSources]);
 			std::swap(this->sourceBorrowed[i], this->sourceBorrowed[this->numActiveSources]);
 
-			// i-- so element[numActiveSources] is also checked
+			// i-- so the (old) last source is also updated
 			i--;
 		}
 	}
 
+	// Position and orient the AL listener with the camera
 	const Entity camID = scene->getMainCameraID();
 	if (scene->isActive(camID))
 	{
@@ -126,7 +141,7 @@ void AudioHandler::updateMusic()
     ALuint oldBuffer;
 	size_t actualRead = 0;
 
-    // while to to fix all processed buffers
+	// Requeue all proccessed buffers and restart music if necessary
     while (buffersProcessed--)
     {
         alSourceUnqueueBuffers(this->musicSourceId, 1, &oldBuffer);
@@ -141,6 +156,7 @@ void AudioHandler::updateMusic()
         }
     }
 
+	// Resume music if all buffers were processed
 	ALint alMusicState = AL_STOPPED;
 	alGetSourcei(this->musicSourceId, AL_SOURCE_STATE, &alMusicState);
 	if (alMusicState == AL_STOPPED)
@@ -163,53 +179,70 @@ float AudioHandler::getMasterVolume() const
 
 void AudioHandler::setMusic(const std::string& filePath)
 {
+#ifdef _CONSOLE
 	ALenum error = 0;
 	alGetError(); // Clears error code
+#endif // _CONSOLE
 
 	if (!this->mrStreamer.openFromFile(filePath))
 	{
-		Log::warning("Failed loading music file");
+#ifdef _CONSOLE
+		Log::warning(__FUNCTION__ " | Failed loading music file");
+#endif
 		return;
 	}
 
+#ifdef _CONSOLE
 	alSourceStop(this->musicSourceId);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error("AudioHandler::setMusic | Failed stopping music. OpenAL error: " + std::to_string(error)); return; }
+		{ Log::error(__FUNCTION__ " | Failed stopping music. OpenAL error: " + std::to_string(error)); return; }
 
 	alSourcei(this->musicSourceId, AL_BUFFER, NULL);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error("AudioHandler::setMusic | Failed deattching buffers. OpenAL error: " + std::to_string(error)); return; }
+		{ Log::error(__FUNCTION__ " | Failed deattching buffers. OpenAL error: " + std::to_string(error)); return; }
 
 	alDeleteBuffers(NUM_BUFFERS, this->alBuffers);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error("AudioHandler::setMusic | Failed deleting old buffers. OpenAL error: " + std::to_string(error)); return; }
+		{ Log::error(__FUNCTION__ " | Failed deleting old buffers. OpenAL error: " + std::to_string(error)); return; }
 
 	alGenBuffers(NUM_BUFFERS, this->alBuffers);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error("AudioHandler::setMusic | Failed generating new buffers. OpenAL error: " + std::to_string(error)); return; }
-
+		{ Log::error(__FUNCTION__ " | Failed generating new buffers. OpenAL error: " + std::to_string(error)); return; }
+#else
+	alSourceStop(this->musicSourceId);
+	alSourcei(this->musicSourceId, AL_BUFFER, NULL);
+	alDeleteBuffers(NUM_BUFFERS, this->alBuffers);
+	alGenBuffers(NUM_BUFFERS, this->alBuffers);
+#endif
 
 	this->alSoundFormat = this->mrStreamer.getChannelCount() == 1 ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
 	memset(this->audioSamples, 0, BUFFER_SIZE);
 
+#ifdef _CONSOLE
 	alGetError(); // Clear error queue (just in case)
+#endif
+
 	size_t numSamplesRead = 0;
 	for (int i = 0; i < NUM_BUFFERS; i++)
     {
         numSamplesRead = this->mrStreamer.read((short*)this->audioSamples, NUM_SAMPLES_PER_READ);
 
 	    alBufferData(this->alBuffers[i], this->alSoundFormat, this->audioSamples, numSamplesRead * sizeof(short), this->mrStreamer.getSampleRate());
+#ifdef _CONSOLE
         if ((error = alGetError()) != AL_NO_ERROR)
 		{
-			Log::error("AudioHandler::setMusic | Failed filling music buffers. ALError: " + std::to_string(error));
+			Log::error(__FUNCTION__ " | Failed filling music buffers. ALError: " + std::to_string(error));
 		}
+#endif
     }
 
 	alSourceQueueBuffers(this->musicSourceId, NUM_BUFFERS, this->alBuffers);
+#ifdef _CONSOLE
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		Log::error("AudioHandler::setMusic | Failed filling queueing music buffers. ALError: " + std::to_string(error));
+		Log::error(__FUNCTION__ " | Failed filling queueing music buffers. ALError: " + std::to_string(error));
 	}
+#endif // _CONSOLE
 }
 
 void AudioHandler::playMusic()
@@ -247,7 +280,7 @@ bool AudioHandler::requestAudioSource(Entity entity, AudioBufferID bufferID)
 	if (this->numActiveSources >= MAX_SOURCES)
 	{
 #ifdef _CONSOLE
-		Log::error("AudioHandler::requestAudioSource | No avaliable sources!");
+		Log::error(__FUNCTION__ " | No avaliable sources!");
 #endif
 		return false;
 	}
@@ -289,7 +322,7 @@ void AudioHandler::releaseAudioSource(Entity entity)
 #ifdef _CONSOLE
 	else
 	{
-		Log::warning("AudioHandler::releaseAudioSource | Entity doesn't have an AudioSource");
+		Log::warning(__FUNCTION__ " | Entity doesn't have an AudioSource");
 	}
 #endif
 }
@@ -299,7 +332,7 @@ AudioSourceID AudioHandler::playSound(Entity entity, AudioBufferID bufferID, flo
 	if (this->numActiveSources >= MAX_SOURCES)
 	{
 #ifdef _CONSOLE
-		Log::warning("AudioHandler::playSound | No avaliable sources!");
+		Log::warning(__FUNCTION__ " | No avaliable sources!");
 #endif
 		return ~0u;
 	}
