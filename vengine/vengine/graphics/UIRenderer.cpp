@@ -259,6 +259,34 @@ void UIRenderer::renderTexture(
     this->renderTexture(screenPos, size, textureCoords, multiplyColor);
 }
 
+void UIRenderer::renderTexture(
+    const glm::vec3& worldPosition,
+    const glm::vec2& dimension,
+    glm::vec4& resultingRect,
+    const glm::uvec4 textureCoords,
+    const glm::vec4 multiplyColor)
+{
+    Scene* scene = this->sceneHandler->getScene();
+    if (!scene->entityValid(scene->getMainCameraID())) { return; }
+
+    Camera* cam = scene->getMainCamera();
+    Transform& camTransform = scene->getComponent<Transform>(scene->getMainCameraID());
+    cam->updateMatrices(camTransform);
+
+    glm::vec4 pos = cam->viewAndProj * glm::vec4(worldPosition, 1.0f);
+    if (pos.z > pos.w || pos.z < 0) { return; }
+
+    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    glm::vec2 size = 5.0f * dimension / glm::dot(worldPosition - camTransform.position, camTransform.forward());
+
+    resultingRect.x = screenPos.x;
+    resultingRect.y = screenPos.y;
+    resultingRect.z = size.x;
+    resultingRect.w = size.y;
+
+    this->renderTexture(screenPos, size, textureCoords, multiplyColor);
+}
+
 void UIRenderer::renderString(
     const std::string& text,
     const glm::vec2& position,

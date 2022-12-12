@@ -106,6 +106,13 @@ public:
         const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1),
         const glm::vec4 multiplyColor = glm::vec4(1.0f)
     );
+    void renderTexture(
+        const glm::vec3& worldPosition,
+        const glm::vec2& dimension,
+        glm::vec4& resultingRect, // Get resulting 2D rect
+        const glm::uvec4 textureCoords = glm::uvec4(0, 0, 1, 1),
+        const glm::vec4 multiplyColor = glm::vec4(1.0f)
+    );
     void renderString(
         const std::string& text,
         const glm::vec2& position,
