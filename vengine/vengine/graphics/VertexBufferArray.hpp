@@ -88,9 +88,9 @@ void VertexBufferArray::addVertexBuffer(
         .bufferSize = bufferSize,
         .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,       // This buffers vertex data will be transfered somewhere else!
         .bufferAllocationFlags = 
-        VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | 
-        VMA_ALLOCATION_CREATE_MAPPED_BIT |
-        VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT, // Dedicated memory can be completely freed, and therefore saves cpu RAM afterwards.
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | 
+            VMA_ALLOCATION_CREATE_MAPPED_BIT |
+            VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT, // Dedicated memory can be completely freed, and therefore saves cpu RAM afterwards.
         .buffer = &stagingBuffer,
         .bufferMemory = &stagingBufferMemory,
         .allocationInfo = &allocInfoStaging,
@@ -114,7 +114,7 @@ void VertexBufferArray::addVertexBuffer(
         .bufferSize = bufferSize,
         .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        // Destination Buffer to be transfered to
                             | vk::BufferUsageFlagBits::eVertexBuffer,    // This is a Vertex Buffer
-        .bufferAllocationFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,
+        .bufferAllocationFlags = 0,
         .buffer = &this->vertexBuffers[this->vertexBuffers.size() - 1],
         .bufferMemory = &this->vertexBufferMemories[this->vertexBufferMemories.size() - 1],
         .allocationInfo = &allocInfo_deviceOnly,
