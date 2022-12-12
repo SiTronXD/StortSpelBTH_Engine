@@ -232,7 +232,7 @@ uint32_t ResourceManager::addTexture(
     if (!this->textureLoader.doesTextureExist(texturePath))
     {
         Log::warning("Could not find texture: " + texturePath);
-        return this->texturePaths["vengine_assets/textures/missing_texture.png"];
+        return this->texturePaths["vengine_assets/textures/missing_texture.jpg"];
     }
 
     uint32_t textureSamplerIndex = 
