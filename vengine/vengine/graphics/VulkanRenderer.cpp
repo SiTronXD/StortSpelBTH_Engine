@@ -108,6 +108,7 @@ int VulkanRenderer::init(
         vmaAllocatorCreateInfo.physicalDevice = this->physicalDevice.getVkPhysicalDevice();
         vmaAllocatorCreateInfo.device = this->getVkDevice();
         vmaAllocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+        vmaAllocatorCreateInfo.preferredLargeHeapBlockSize = 16 * 1024 * 1024;
         if(vmaCreateAllocator(&vmaAllocatorCreateInfo, &this->vma) != VK_SUCCESS)
         {
             Log::error("Could not create the VMA (vulkan memory allocator)!");
