@@ -14,11 +14,17 @@ void SceneHandler::initSubsystems()
 		this->physicsEngine->init();
 	}
 	
+	if (this->audioHandler)
+	{
+		// Reset all audio sources
+		this->audioHandler->reset();
+	}
+
 	// Init scene
 	this->scene->init();
 	if (this->luaScript.size() != 0)
 	{
-	this->scriptHandler->runScript(this->luaScript);
+		this->scriptHandler->runScript(this->luaScript);
 	}
 	this->scene->start();
 
@@ -26,12 +32,6 @@ void SceneHandler::initSubsystems()
 	if (vulkanRenderer != nullptr)
 	{
 		this->vulkanRenderer->initForScene(this->scene);
-	}
-
-	if (this->audioHandler)
-	{
-		// Reset all audio sources
-		this->audioHandler->reset();
 	}
 
 	// Reset delta time counter
@@ -184,6 +184,12 @@ void SceneHandler::setScene(Scene* scene, std::string path)
 		this->nextScene = scene;
 		this->nextScene->setSceneHandler(*this);
 		this->nextLuaScript = path;
+	}
+	// Gameplay programmer tried to switch scene multiple times during 1 frame.
+	else
+	{
+		// Deallocate unused scene
+		delete scene;
 	}
 }
 

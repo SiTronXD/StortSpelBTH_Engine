@@ -99,6 +99,8 @@ void UIRenderer::initForScene()
         VertexStreams{},
         "ui.vert.spv",
         "ui.frag.spv",
+        false,
+        false,
         false
     );
 }

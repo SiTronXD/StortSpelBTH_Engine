@@ -4,6 +4,135 @@
 #include "../vulkan/RenderPass.hpp"
 #include "../vulkan/CommandBufferArray.hpp"
 #include "../../resource_management/ResourceManager.hpp"
+#include "../VengineMath.hpp"
+
+void ParticleSystemHandler::initialParticleSimulation(
+	const ParticleEmitterInfo& emitter,
+	ParticleInfo& particle)
+{
+	const float& velocityStrength = emitter.settings.y;
+
+	// Rotation matrix for the cone
+	glm::mat3 coneRotMat = glm::mat3(
+		emitter.coneNormal,
+		glm::cross(emitter.coneNormal, emitter.coneDir),
+		emitter.coneDir
+	);
+
+	// Velocity
+	float randomRadiusScale = SMath::randomFloat();
+	float randomAngle = SMath::randomFloat() * SMath::PI * 2.0f;
+	glm::mat2 randomRotMat = SMath::rotate2D(randomAngle);
+	glm::vec3 velOffset = glm::vec3(glm::vec2(0.0f, 1.0f) * randomRotMat, 0.0f);
+	glm::vec3 newVelocity =
+		normalize(
+			glm::vec3(0.0f, 0.0f, 1.0f) +
+			velOffset * emitter.tanTheta * randomRadiusScale
+		);
+	particle.currentVelocity = 
+		glm::vec4(glm::vec3(coneRotMat * newVelocity * velocityStrength), 0.0f);
+
+	// Position
+	glm::vec3 randomDiskOffset =
+		glm::vec3(0.0f, 1.0f, 0.0f) *
+		emitter.coneDiskRadius * randomRadiusScale;
+	randomDiskOffset = glm::vec3(glm::vec2(randomDiskOffset) * randomRotMat, randomDiskOffset.z);
+	glm::vec3 position = emitter.conePos + coneRotMat * randomDiskOffset;
+
+	// Euler step method
+	const float timeStep = 1.0f / 100.0f;
+	for (float t = 0.0f; t <= particle.life.x; t += timeStep)
+	{
+		particle.currentVelocity += particle.acceleration * timeStep;
+		position += glm::vec3(particle.currentVelocity * timeStep);
+	}
+
+	// Apply position in transformation matrix
+	particle.transformMatrix = glm::mat4(
+		glm::vec4(1.0f, 0.0f, 0.0f, 0.0f),
+		glm::vec4(0.0f, 1.0f, 0.0f, 0.0f),
+		glm::vec4(0.0f, 0.0f, 1.0f, 0.0f),
+		glm::vec4(position, 1.0f)
+	);
+}
+
+void ParticleSystemHandler::updateEmitterInfo(
+	Transform& transformComp,
+	ParticleSystem& particleSystemComp)
+{
+	ParticleEmitterInfo& emitterInfo =
+		this->particleEmitterInfos[particleSystemComp.particleSystemIndex];
+
+	// Update transform to be safe
+	transformComp.updateMatrix();
+	const glm::mat3& rotMat =
+		transformComp.getRotationMatrix();
+
+	// Cone position
+	emitterInfo.conePos =
+		transformComp.position +
+		rotMat *
+		particleSystemComp.coneSpawnVolume.localPosition;
+
+	// Cone disk radius
+	emitterInfo.coneDiskRadius =
+		particleSystemComp.coneSpawnVolume.diskRadius;
+
+	// Cone direction
+	emitterInfo.coneDir =
+		glm::normalize(
+			rotMat *
+			particleSystemComp.coneSpawnVolume.localDirection
+		);
+
+	// Cone normal
+	glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
+	if (glm::abs(glm::dot(worldUp, emitterInfo.coneDir)) >= 0.95f)
+		worldUp = glm::vec3(1.0f, 0.0f, 0.0f);
+	emitterInfo.coneNormal =
+		glm::normalize(
+			glm::cross(worldUp, emitterInfo.coneDir)
+		);
+
+	// Tan theta
+	emitterInfo.tanTheta =
+		std::tan(
+			glm::radians(
+				std::clamp(
+					particleSystemComp.coneSpawnVolume.coneAngle * 0.5f,
+					0.0f,
+					89.0f
+				)
+			)
+		);
+
+	// Start/end colors
+	emitterInfo.startColor = particleSystemComp.startColor;
+	emitterInfo.endColor = particleSystemComp.endColor;
+
+	// Max life time
+	emitterInfo.settings.z = particleSystemComp.maxlifeTime;
+
+	// Respawning
+	emitterInfo.shouldRespawn = particleSystemComp.spawn ? 1u : 0u;
+	if (particleSystemComp.respawnSetting == RespawnSetting::EXPLOSION)
+	{
+		if (particleSystemComp.spawn)
+		{
+			particleSystemComp.spawn = false;
+			emitterInfo.settings.z = 0.0f; // Kill all particles this frame
+		}
+	}
+	else
+	{
+		particleSystemComp.spawnRate = (particleSystemComp.spawn ? 1.0f : 0.0f);
+	}
+	emitterInfo.settings.x =
+		std::clamp(particleSystemComp.spawnRate, 0.0f, 1.0f) * particleSystemComp.maxlifeTime;
+
+	// Velocity strength
+	emitterInfo.settings.y = particleSystemComp.velocityStrength;
+}
 
 ParticleSystemHandler::ParticleSystemHandler()
 	: physicalDevice(nullptr),
@@ -61,14 +190,23 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 	uint32_t particleIndex = 0;
 
 	auto particleSystemView =
-		scene->getSceneReg().view<ParticleSystem>();
+		scene->getSceneReg().view<Transform, ParticleSystem>();
 	particleSystemView.each(
-		[&](ParticleSystem& particleSystemComp)
+		[&](Transform& transformComp, ParticleSystem& particleSystemComp)
 		{
 			uint32_t particleSystemIndex = uint32_t(this->particleEmitterInfos.size());
 
+			// Set particle system index
+			particleSystemComp.particleSystemIndex = particleSystemIndex;
+
 			// Set base instance offset
 			particleSystemComp.baseInstanceOffset = particleIndex;
+
+			// Add particle system emitter info
+			this->particleEmitterInfos.push_back(ParticleEmitterInfo());
+			this->updateEmitterInfo(transformComp, particleSystemComp);
+			ParticleEmitterInfo& emitter = 
+				this->particleEmitterInfos[this->particleEmitterInfos.size() - 1];
 
 			for (size_t i = 0; i < particleSystemComp.numParticles; ++i)
 			{
@@ -76,9 +214,6 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				this->initialParticleInfos.push_back(ParticleInfo());
 				ParticleInfo& particle =
 					this->initialParticleInfos[this->initialParticleInfos.size() - 1];
-
-				// Current life timer
-				particle.life.x = particleSystemComp.maxlifeTime;
 
 				// Size
 				particle.startSize = particleSystemComp.startSize;
@@ -91,15 +226,23 @@ void ParticleSystemHandler::initForScene(Scene* scene)
 				particle.indices.x = particleIndex; // Random state
 				particle.indices.y = particleSystemIndex; // Particle system index
 
-				// Set particle system index
-				particleSystemComp.particleSystemIndex = particleSystemIndex;
+				// Current life timer
+				if (particleSystemComp.initialSimulation)
+				{
+					particle.life.x =
+						particleSystemComp.maxlifeTime *
+						(SMath::randomFloat() * 2.0f - 1.0f);
+					this->initialParticleSimulation(emitter, particle);
+				}
+				else
+				{
+					// Let the compute shader handle life time reset
+					particle.life.x = particleSystemComp.maxlifeTime;
+				}
 
 				// Next particle index
 				particleIndex++;
 			}
-
-			// Add particle system emitter info
-			this->particleEmitterInfos.push_back(ParticleEmitterInfo());
 		}
 	);
 	this->numParticles = particleIndex;
@@ -203,77 +346,7 @@ void ParticleSystemHandler::update(
 		[&](Transform& transformComp,
 			ParticleSystem& particleSystemComp)
 		{
-			ParticleEmitterInfo& emitterInfo =
-				this->particleEmitterInfos[particleSystemComp.particleSystemIndex];
-
-			transformComp.updateMatrix();
-			const glm::mat3& rotMat =
-				transformComp.getRotationMatrix();
-
-			// Cone position
-			emitterInfo.conePos =
-				transformComp.position +
-				rotMat *
-				particleSystemComp.coneSpawnVolume.localPosition;
-
-			// Cone disk radius
-			emitterInfo.coneDiskRadius =
-				particleSystemComp.coneSpawnVolume.diskRadius;
-
-			// Cone direction
-			emitterInfo.coneDir =
-				glm::normalize(
-					rotMat * 
-					particleSystemComp.coneSpawnVolume.localDirection
-				);
-
-			// Cone normal
-			glm::vec3 worldUp = glm::vec3(0.0f, 1.0f, 0.0f);
-			if (glm::abs(glm::dot(worldUp, emitterInfo.coneDir)) >= 0.95f)
-				worldUp = glm::vec3(1.0f, 0.0f, 0.0f);
-			emitterInfo.coneNormal =
-				glm::normalize(
-					glm::cross(worldUp, emitterInfo.coneDir)
-				);
-
-			// Tan theta
-			emitterInfo.tanTheta =
-				std::tan(
-					glm::radians(
-						std::clamp(
-							particleSystemComp.coneSpawnVolume.coneAngle * 0.5f,
-							0.0f, 
-							89.0f
-						)
-					)
-				);
-
-			// Start/end colors
-			emitterInfo.startColor = particleSystemComp.startColor;
-			emitterInfo.endColor = particleSystemComp.endColor;
-
-			// Max life time
-			emitterInfo.settings.z = particleSystemComp.maxlifeTime;
-
-			// Respawning
-			emitterInfo.shouldRespawn = particleSystemComp.spawn ? 1u : 0u;
-			if (particleSystemComp.respawnSetting == RespawnSetting::EXPLOSION)
-			{
-				if (particleSystemComp.spawn)
-				{
-					particleSystemComp.spawn = false;
-					emitterInfo.settings.z = 0.0f; // Kill all particles this frame
-				}
-			}
-			else
-			{
-				particleSystemComp.spawnRate = (particleSystemComp.spawn ? 1.0f : 0.0f);
-			}
-			emitterInfo.settings.x =
-				std::clamp(particleSystemComp.spawnRate, 0.0f, 1.0f) * particleSystemComp.maxlifeTime;
-
-			// Velocity strength
-			emitterInfo.settings.y = particleSystemComp.velocityStrength;
+			this->updateEmitterInfo(transformComp, particleSystemComp);
 		}
 	);
 	this->shaderInput.updateStorageBuffer(

@@ -65,6 +65,7 @@ private:
 	btAlignedObjectArray<ColShapeInfo> colShapes;
 	std::vector<int> removeIndicies;
 	btCollisionObject* testObject;
+	btCollisionObject* testObject2;
 
 	void updateColliders();
 	void updateRigidbodies();
@@ -92,4 +93,6 @@ public:
 	// Test contact of a collider within the scene. Get the resulting entities hit
 	// NOTE: The collider argument doesn't need to be attached to an entity for the function to work
 	std::vector<Entity> testContact(Collider& col, glm::vec3 position, glm::vec3 rotation = glm::vec3(0.0f));
+	bool testContactPair(Collider& col0, glm::vec3 pos0, glm::vec3 rot0,
+						 Collider& col1, glm::vec3 pos1, glm::vec3 rot1);
 };

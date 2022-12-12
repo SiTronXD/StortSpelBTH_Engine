@@ -139,7 +139,8 @@ void Texture::create(
         .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc,
         .bufferAllocationFlags =
             VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT |
-            VMA_ALLOCATION_CREATE_MAPPED_BIT,
+            VMA_ALLOCATION_CREATE_MAPPED_BIT |
+            VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT, // Dedicated memory can be completely freed, and therefore saves cpu RAM afterwards.
         .buffer = &imageStagingBuffer,
         .bufferMemory = &imageStagingBufferMemory,
         .allocationInfo = &allocInfo,

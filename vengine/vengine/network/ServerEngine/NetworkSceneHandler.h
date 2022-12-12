@@ -12,14 +12,14 @@ class NetworkSceneHandler : public SceneHandler
 	std::vector<sf::Packet>* serverToClientPacketTcp;
 	std::vector<sf::Packet>* serverToClientPacketUdp;
 	sf::Packet callsFromClient;
+    std::function<void()> sendPacketNowFunction;
 
   public:
-	std::function<void()> clientGetFunc;
-	std::function<void()> clientStopFunc;
 	NetworkSceneHandler();
 	void update(float dt);
 	void givePacketInfo(std::vector<sf::Packet>& serverToClientTCP);
 	void givePacketInfoUdp(std::vector<sf::Packet>& serverToClientUdp);
+    void sendPacketNow();
 	void updateToNextScene();
 	void setScene(Scene* scene, std::string path = "");
 
@@ -27,8 +27,7 @@ class NetworkSceneHandler : public SceneHandler
 
 	NetworkScene* getScene() const;
 
-	void setGetClientFunction(std::function<void()> f) { this->clientGetFunc = f; };
-	void setStopClientFunction(std::function<void()> f) { this->clientStopFunc = f;  };
+	void setSendNowFunction(std::function<void()> f) { this->sendPacketNowFunction = f; };
 
 	//normal update doesn't work in network, remove it from networkSceneHandler
 	template <typename T = bool>

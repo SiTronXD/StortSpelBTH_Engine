@@ -561,6 +561,17 @@ int SceneLua::lua_getAnimationStatus(lua_State* L)
 	return 1;
 }
 
+int SceneLua::lua_playSound(lua_State* L)
+{
+	SceneHandler* sceneHandler = (SceneHandler*)lua_touserdata(L, lua_upvalueindex(1));
+	Scene* scene = sceneHandler->getScene();
+
+	if (!lua_isnumber(L, 1) || !scene->entityValid(scene->getMainCameraID())) { return 0; }
+	sceneHandler->getAudioHandler()->playSound(scene->getMainCameraID(), (int)lua_tonumber(L, 1));
+
+	return 0;
+}
+
 void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 {
 	lua_newtable(L);
@@ -590,6 +601,7 @@ void SceneLua::lua_openscene(lua_State* L, SceneHandler* sceneHandler)
 		{ "syncedBlendToAnimation", lua_syncedBlendToAnimation },
 		{ "setAnimationTimeScale", lua_setAnimationTimeScale },
 		{ "getAnimationStatus", lua_getAnimationStatus },
+		{ "playSound", lua_playSound },
 		{ NULL , NULL }
 	};
 

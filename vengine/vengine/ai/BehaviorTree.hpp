@@ -85,7 +85,6 @@ protected:
     BTCreateHelper&  c = create; //Shorthand for Creates
     
 public:     
-    static PathFindingManager pathFindingManager;
     virtual ~BehaviorTree(){
         std::stack<Node*> stack;
 

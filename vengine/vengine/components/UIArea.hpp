@@ -16,4 +16,9 @@ struct UIArea // 2D only
 	{
 		return this->isHovering() && Input::isMouseButtonPressed(clickButton);
 	}
+
+	const bool isHolding() const
+	{
+		return this->isHovering() && Input::isMouseButtonDown(clickButton);
+	}
 };

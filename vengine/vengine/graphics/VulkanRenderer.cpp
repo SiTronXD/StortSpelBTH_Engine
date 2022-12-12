@@ -108,6 +108,7 @@ int VulkanRenderer::init(
         vmaAllocatorCreateInfo.physicalDevice = this->physicalDevice.getVkPhysicalDevice();
         vmaAllocatorCreateInfo.device = this->getVkDevice();
         vmaAllocatorCreateInfo.vulkanApiVersion = VK_API_VERSION_1_3;
+        vmaAllocatorCreateInfo.preferredLargeHeapBlockSize = 16 * 1024 * 1024;
         if(vmaCreateAllocator(&vmaAllocatorCreateInfo, &this->vma) != VK_SUCCESS)
         {
             Log::error("Could not create the VMA (vulkan memory allocator)!");
@@ -423,6 +424,13 @@ void VulkanRenderer::draw(Scene* scene)
     this->postProcessHandler.setDesiredNumMipLevels(
         sceneBloomSettings.numBloomMipLevels
     );
+
+    // Apply fog settings from the scene
+    const FogSettings& fogSettings =
+        scene->getFogSettings();
+
+    this->pushConstantData.settings.y = fogSettings.fogStartDist;
+    this->pushConstantData.settings.z = std::max(fogSettings.fogAbsorption, 0.0f);
 
 #ifndef VENGINE_NO_PROFILING
     ZoneScoped;

@@ -121,7 +121,7 @@ int ResourceManagerLua::lua_createAnimtionSlot(lua_State* L)
 	return 1;
 }
 
-int ResourceManagerLua::lua_addAudio(lua_State* L)
+int ResourceManagerLua::lua_addSound(lua_State* L)
 {
 	ResourceManager* resourceManager = (ResourceManager*)lua_touserdata(L, lua_upvalueindex(1));
 
@@ -141,6 +141,7 @@ void ResourceManagerLua::lua_openresources(lua_State* L, ResourceManager* resour
 	luaL_Reg methods[] = {
 		{ "addMesh", lua_addMesh },
 		{ "addTexture", lua_addTexture },
+		{ "addSound", lua_addSound },
 		{ "addAnimations", lua_addAnimations },
 		{ "mapAnimations", lua_mapAnimations },
 		{ "createAnimationSlot", lua_createAnimtionSlot},

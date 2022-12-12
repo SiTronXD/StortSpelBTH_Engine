@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Mesh.hpp"
+#include "MeshDataModifier.hpp"
 #include "Utilities.hpp"
 #include "tracy/Tracy.hpp"
 #include "glm/gtx/quaternion.hpp"
@@ -133,12 +134,16 @@ void Mesh::getLocalBoneTransform(
 
 Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
     : submeshData(meshData.submeshes), 
-    meshData(meshData),
     device(*importStructs.device),
     vma(*importStructs.vma)
 {  
     this->createVertexBuffers(meshData, importStructs);
     this->createIndexBuffer( meshData, importStructs);
+
+    // Copy only what's necessary
+    this->meshData.submeshes = meshData.submeshes;
+    this->meshData.bones = meshData.bones;
+    this->meshData.animations = meshData.animations;
 }
 
 Mesh::Mesh(Mesh&& ref)
@@ -217,8 +222,10 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
         {
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
-            .bufferAllocationFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+            .bufferAllocationFlags = 
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | 
+                VMA_ALLOCATION_CREATE_MAPPED_BIT |
+                VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT, // Dedicated memory can be completely freed, and therefore saves cpu RAM afterwards.
             .buffer         = &stagingBuffer, 
             .bufferMemory   = &stagingBufferMemory,
             .allocationInfo = &allocInfoStaging,
@@ -234,13 +241,13 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     
     VmaAllocationInfo allocInfo_device;
 
-    // Create Buffers for INDEX data on GPU access only area
+    // Create Buffers for index data on GPU access only area
     Buffer::createBuffer(
         {
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferDst        // Destination Buffer to be transfered to
                                 | vk::BufferUsageFlagBits::eIndexBuffer,     // This is a Index Buffer, will be used as a Index Buffer
-            .bufferAllocationFlags = VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT,  // Buffer will be local to the device
+            .bufferAllocationFlags = 0,
             .buffer         = &this->indexBuffer, 
             .bufferMemory   = &this->indexBufferMemory,
             .allocationInfo = &allocInfo_device,

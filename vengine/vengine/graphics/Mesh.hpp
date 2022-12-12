@@ -16,7 +16,7 @@ class Mesh
 {
 private: 
     std::vector<SubmeshData> submeshData;
-    MeshData meshData;
+    MeshData meshData{};
     Device&         device; 
     VmaAllocator&   vma;
 

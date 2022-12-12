@@ -60,7 +60,7 @@ int InputLua::lua_isMouseButtonReleased(lua_State* L)
 
 int InputLua::lua_getMousePosition(lua_State* L)
 {
-	glm::vec2 pos{ (float)Input::getMouseX(), (float)Input::getMouseY() };
+	glm::vec2 pos = Input::getMouseUITranslated();
 	lua_pushvector(L, { pos.x, pos.y, 0.0f });
 	return 1;
 }
