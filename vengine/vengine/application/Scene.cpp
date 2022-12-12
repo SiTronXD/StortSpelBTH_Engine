@@ -211,21 +211,37 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 #endif
 }
 
-void Scene::setAnimationTimeScale(Entity entity, float timeScale, const std::string& slotName)
+void Scene::setAnimationTimeScale(Entity entity, float timeScale, const std::string& slotName, bool includeNextAnimation)
 {
 	if (this->hasComponents<AnimationComponent>(entity))
 	{
 		if (slotName == "")
 		{
 			AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
-			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			if (includeNextAnimation)
 			{
-				aniComp.aniSlots[i].timeScale = timeScale;
+				for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+				{
+					aniComp.aniSlots[i].timeScale = timeScale;
+					aniComp.aniSlots[i].nTimeScale = timeScale;
+				}
+			}
+			else
+			{
+				for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+				{
+					aniComp.aniSlots[i].timeScale = timeScale;
+				}
 			}
 		}
 		else
 		{
-			this->getAnimationSlot(entity, slotName).timeScale = timeScale;
+			AnimationSlot& slot = this->getAnimationSlot(entity, slotName);
+			slot.timeScale = timeScale;
+			if (includeNextAnimation)
+			{
+				slot.nTimeScale = timeScale;
+			}
 		}
 	}
 #ifdef _CONSOLE
@@ -286,23 +302,46 @@ void Scene::syncedBlendToAnimation(Entity entity, const std::string& referenceSl
 		if (slotToSync == "")
 		{
 			AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
-			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+			if (refSlot.nAnimationIndex == ~0u)
 			{
-				aniComp.aniSlots[i].nTimer = refSlot.timer;
-				aniComp.aniSlots[i].nTimeScale = refSlot.timeScale;
-				aniComp.aniSlots[i].nAnimationIndex = refSlot.animationIndex;
-				aniComp.aniSlots[i].transitionTime = transitionTime;
-				aniComp.aniSlots[i].finishedCycle = false;
+				for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+				{
+					aniComp.aniSlots[i].nTimer = refSlot.timer;
+					aniComp.aniSlots[i].nTimeScale = refSlot.timeScale;
+					aniComp.aniSlots[i].nAnimationIndex = refSlot.animationIndex;
+					aniComp.aniSlots[i].transitionTime = transitionTime;
+					aniComp.aniSlots[i].finishedCycle = false;
+				}
+			}
+			else
+			{
+				for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+				{
+					aniComp.aniSlots[i].nTimer = refSlot.nTimer;
+					aniComp.aniSlots[i].nTimeScale = refSlot.nTimeScale;
+					aniComp.aniSlots[i].nAnimationIndex = refSlot.nAnimationIndex;
+					aniComp.aniSlots[i].transitionTime = transitionTime;
+					aniComp.aniSlots[i].finishedCycle = false;
+				}
 			}
 		}
 		else
 		{
 			AnimationSlot& syncSlot = this->getAnimationSlot(entity, slotToSync);
-			syncSlot.nTimer = refSlot.timer;
-			syncSlot.nTimeScale = refSlot.timeScale;
-			syncSlot.nAnimationIndex = refSlot.animationIndex;
 			syncSlot.finishedCycle = refSlot.finishedCycle;
 			syncSlot.transitionTime = transitionTime;
+			if (refSlot.nAnimationIndex == ~0u)
+			{
+				syncSlot.nTimer = refSlot.timer;
+				syncSlot.nTimeScale = refSlot.timeScale;
+				syncSlot.nAnimationIndex = refSlot.animationIndex;
+			}
+			else
+			{
+				syncSlot.nTimer = refSlot.nTimer;
+				syncSlot.nTimeScale = refSlot.nTimeScale;
+				syncSlot.nAnimationIndex = refSlot.nAnimationIndex;
+			}
 		}
 	}
 #ifdef _CONSOLE

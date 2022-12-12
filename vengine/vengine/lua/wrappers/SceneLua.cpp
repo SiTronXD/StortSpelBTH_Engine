@@ -547,7 +547,7 @@ int SceneLua::lua_setAnimationSlot(lua_State* L)
 int SceneLua::lua_setAnimationTimeScale(lua_State* L)
 {
 	Scene* scene = ((SceneHandler*)lua_touserdata(L, lua_upvalueindex(1)))->getScene();
-	scene->setAnimationTimeScale((Entity)lua_tointeger(L, 1), (float)lua_tonumber(L, 2), lua_tostring(L, 3));
+	scene->setAnimationTimeScale((Entity)lua_tointeger(L, 1), (float)lua_tonumber(L, 2), lua_tostring(L, 3), lua_isboolean(L, 4) ? (bool)lua_toboolean(L, 4) : false);
 
 	return 0;
 }
