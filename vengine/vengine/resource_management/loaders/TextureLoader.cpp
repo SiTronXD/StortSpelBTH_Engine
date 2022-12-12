@@ -84,7 +84,7 @@ void TextureLoader::assimpTextureImport(
             // Extract the name from texture path, and add custom folder path
             this->processTextureName(diffuseNames[i], texturesFolderPath);
             if (emissiveNames[i].empty())
-                emissiveNames[i] = "vengine_assets/textures/Black.png";
+                emissiveNames[i] = "vengine_assets/textures/Black.jpg";
             else
                 this->processTextureName(emissiveNames[i], texturesFolderPath);
 
@@ -94,7 +94,7 @@ void TextureLoader::assimpTextureImport(
             uint32_t addedMaterialIndex =
                 this->resourceMan->addMaterial(
                     this->resourceMan->addTexture(diffuseNames[i].c_str()),
-                    this->resourceMan->addTexture("vengine_assets/textures/NoSpecular.png"),
+                    this->resourceMan->addTexture("vengine_assets/textures/NoSpecular.jpg"),
                     this->resourceMan->addTexture(emissiveNames[i].c_str())
                 );
 
