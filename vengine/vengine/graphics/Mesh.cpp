@@ -222,8 +222,10 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
         {
             .bufferSize     = bufferSize, 
             .bufferUsageFlags = vk::BufferUsageFlagBits::eTransferSrc, 
-            .bufferAllocationFlags = VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT
-                                | VMA_ALLOCATION_CREATE_MAPPED_BIT,
+            .bufferAllocationFlags = 
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT | 
+                VMA_ALLOCATION_CREATE_MAPPED_BIT |
+                VMA_ALLOCATION_CREATE_DEDICATED_MEMORY_BIT, // Dedicated memory can be completely freed, and therefore saves cpu RAM afterwards.
             .buffer         = &stagingBuffer, 
             .bufferMemory   = &stagingBufferMemory,
             .allocationInfo = &allocInfoStaging,
@@ -239,7 +241,7 @@ void Mesh::createIndexBuffer(MeshData& meshData, VulkanImportStructs& importStru
     
     VmaAllocationInfo allocInfo_device;
 
-    // Create Buffers for INDEX data on GPU access only area
+    // Create Buffers for index data on GPU access only area
     Buffer::createBuffer(
         {
             .bufferSize     = bufferSize, 
