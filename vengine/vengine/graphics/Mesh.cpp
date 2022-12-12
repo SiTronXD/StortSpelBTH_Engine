@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "Mesh.hpp"
+#include "MeshDataModifier.hpp"
 #include "Utilities.hpp"
 #include "tracy/Tracy.hpp"
 #include "glm/gtx/quaternion.hpp"
@@ -139,6 +140,9 @@ Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
 {  
     this->createVertexBuffers(meshData, importStructs);
     this->createIndexBuffer( meshData, importStructs);
+
+    // Save a few MB of RAM
+    MeshDataModifier::clearVertexStreams(this->meshData);
 }
 
 Mesh::Mesh(Mesh&& ref)

@@ -50,3 +50,19 @@ void MeshDataModifier::smoothNormals(MeshData& meshData)
 			glm::normalize(meshData.vertexStreams.normals[i]);
 	}
 }
+
+void MeshDataModifier::clearVertexStreams(MeshData& meshData)
+{
+	meshData.vertexStreams.positions.clear();
+	meshData.vertexStreams.positions.shrink_to_fit();
+	meshData.vertexStreams.normals.clear();
+	meshData.vertexStreams.normals.shrink_to_fit();
+	meshData.vertexStreams.colors.clear();
+	meshData.vertexStreams.colors.shrink_to_fit();
+	meshData.vertexStreams.texCoords.clear();
+	meshData.vertexStreams.texCoords.shrink_to_fit();
+	meshData.vertexStreams.boneWeights.clear();
+	meshData.vertexStreams.boneWeights.shrink_to_fit();
+	meshData.vertexStreams.boneIndices.clear();
+	meshData.vertexStreams.boneIndices.shrink_to_fit();
+}
