@@ -134,15 +134,16 @@ void Mesh::getLocalBoneTransform(
 
 Mesh::Mesh(MeshData&& meshData, VulkanImportStructs& importStructs)
     : submeshData(meshData.submeshes), 
-    meshData(meshData),
     device(*importStructs.device),
     vma(*importStructs.vma)
 {  
     this->createVertexBuffers(meshData, importStructs);
     this->createIndexBuffer( meshData, importStructs);
 
-    // Save a few MB of RAM
-    MeshDataModifier::clearVertexStreams(this->meshData);
+    // Copy only what's necessary
+    this->meshData.submeshes = meshData.submeshes;
+    this->meshData.bones = meshData.bones;
+    this->meshData.animations = meshData.animations;
 }
 
 Mesh::Mesh(Mesh&& ref)
