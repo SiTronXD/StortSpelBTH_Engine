@@ -173,9 +173,12 @@ int VulkanRenderer::init(
         this->initResourceManager();
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
+        TextureSettings missingTextureSettings{};
+        missingTextureSettings.samplerSettings.filterMode = vk::Filter::eNearest;
         uint32_t missingTextureIndex = 
             this->resourceManager->addTexture(
-                DEF<std::string>(P_TEXTURES) + "missing_texture.jpg"
+                DEF<std::string>(P_TEXTURES) + "missing_texture.jpg",
+                missingTextureSettings
             );
         uint32_t blackTextureIndex =
             this->resourceManager->addTexture(
