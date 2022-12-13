@@ -221,34 +221,33 @@ void Scene::setAnimation(Entity entity, const std::string& animationName, const 
 #endif
 }
 
-void Scene::setAnimationTimeScale(Entity entity, float timeScale, const std::string& slotName, bool includeNextAnimation)
+void Scene::setAnimationTimeScale(Entity entity, float timeScale, const std::string& slotName)
 {
 	if (this->hasComponents<AnimationComponent>(entity))
 	{
 		if (slotName == "")
 		{
 			AnimationComponent& aniComp = this->getComponent<AnimationComponent>(entity);
-			if (includeNextAnimation)
+			for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
 			{
-				for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+				if (aniComp.aniSlots[i].nAnimationIndex == ~0u)
 				{
 					aniComp.aniSlots[i].timeScale = timeScale;
-					aniComp.aniSlots[i].nTimeScale = timeScale;
 				}
-			}
-			else
-			{
-				for (int i = 0; i < NUM_MAX_ANIMATION_SLOTS; i++)
+				else
 				{
-					aniComp.aniSlots[i].timeScale = timeScale;
+					aniComp.aniSlots[i].nTimeScale = timeScale;
 				}
 			}
 		}
 		else
 		{
 			AnimationSlot& slot = this->getAnimationSlot(entity, slotName);
-			slot.timeScale = timeScale;
-			if (includeNextAnimation)
+			if (slot.nAnimationIndex == ~0u)
+			{
+				slot.timeScale = timeScale;
+			}
+			else
 			{
 				slot.nTimeScale = timeScale;
 			}
