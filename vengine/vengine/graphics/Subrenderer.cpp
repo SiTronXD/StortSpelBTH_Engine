@@ -133,8 +133,7 @@ void VulkanRenderer::computeParticles()
 }
 
 void VulkanRenderer::beginShadowMapRenderPass(
-    LightHandler& lightHandler,
-    const uint32_t& shadowMapArraySlice)
+    LightHandler& lightHandler)
 {
     const std::array<vk::ClearValue, 1> clearValues =
     {
@@ -156,7 +155,7 @@ void VulkanRenderer::beginShadowMapRenderPass(
     renderPassBeginInfo.renderArea.setExtent(shadowMapExtent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
-    renderPassBeginInfo.setFramebuffer(lightHandler.getShadowMapFramebuffer(shadowMapArraySlice));
+    renderPassBeginInfo.setFramebuffer(lightHandler.getShadowMapFramebuffer());
 
     // Begin Render Pass!    
     // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -182,9 +181,6 @@ void VulkanRenderer::beginShadowMapRenderPass(
     scissor.offset = vk::Offset2D{ 0, 0 };
     scissor.extent = shadowMapExtent;
     this->currentShadowMapCommandBuffer->setScissor(scissor);
-
-    // Update camera
-    lightHandler.updateCamera(shadowMapArraySlice);
 }
 
 void VulkanRenderer::renderShadowMapDefaultMeshes(
@@ -246,7 +242,7 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(
                 // Draw
                 this->currentShadowMapCommandBuffer->drawIndexed(
                     currentSubmesh.numIndicies, 
-                    1, 
+                    LightHandler::NUM_CASCADES, // One instance per layer
                     currentSubmesh.startIndex
                 );
             }
@@ -341,7 +337,7 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(
                 // Draw
                 this->currentShadowMapCommandBuffer->drawIndexed(
                     currentSubmesh.numIndicies, 
-                    1, 
+                    LightHandler::NUM_CASCADES, // One instance per layer
                     currentSubmesh.startIndex
                 );
             }

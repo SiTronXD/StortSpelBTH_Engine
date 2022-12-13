@@ -29,8 +29,8 @@ private:
 	std::vector<LightBufferData> lightBuffer;
 
 	ShadowMapData shadowMapData{};
-
 	ShadowPushConstantData shadowPushConstantData{};
+	ShadowMapCameraBufferData shadowMapCameraBufferData{};
 
 	Texture shadowMapTexture;
 	RenderPass shadowMapRenderPass;
@@ -40,10 +40,12 @@ private:
 
 	// Default meshes
 	ShaderInput shadowMapShaderInput;
+	UniformBufferID shadowMapVpUbo;
 	Pipeline shadowMapPipeline;
 
 	// Skeletal animations
 	ShaderInput animShadowMapShaderInput;
+	UniformBufferID animShadowMapVpUbo;
 	Pipeline animShadowMapPipeline;
 
 	PhysicalDevice* physicalDevice;
@@ -99,8 +101,6 @@ public:
 		const Camera& camData,
 		const uint32_t& currentFrame);
 
-	void updateCamera(
-		const uint32_t& arraySliceCameraIndex);
 	void updateDefaultShadowPushConstant(
 		CommandBuffer& currentShadowMapCommandBuffer,
 		const glm::mat4& modelMatrix);
@@ -113,7 +113,7 @@ public:
 	inline const ShadowMapData& getShadowMapData() const { return this->shadowMapData; }
 	inline const RenderPass& getShadowMapRenderPass() const { return this->shadowMapRenderPass; }
 	inline const vk::Extent2D& getShadowMapExtent() const { return this->shadowMapExtent; }
-	inline const vk::Framebuffer& getShadowMapFramebuffer(const uint32_t& index) const { return this->shadowMapFramebuffer[index]; }
+	inline const vk::Framebuffer& getShadowMapFramebuffer() const { return this->shadowMapFramebuffer[0]; }
 	inline const Pipeline& getShadowMapPipeline() const { return this->shadowMapPipeline; }
 	inline const Pipeline& getAnimShadowMapPipeline() const { return this->animShadowMapPipeline; }
 	inline ShaderInput& getShadowMapShaderInput() { return this->shadowMapShaderInput; }

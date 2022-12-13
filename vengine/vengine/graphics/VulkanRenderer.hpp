@@ -166,8 +166,7 @@ private:
     std::vector<vk::DeviceSize> bindVertexBufferOffsets;
     std::vector<vk::Buffer> bindVertexBuffers;
     void beginShadowMapRenderPass(
-        LightHandler& lightHandler,
-        const uint32_t& shadowMapArraySlice);
+        LightHandler& lightHandler);
     void renderShadowMapDefaultMeshes(
         Scene* scene,
         LightHandler& lightHandler);

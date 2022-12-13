@@ -18,9 +18,11 @@ using VmaAllocationCreateFlags = VkFlags;
 const int MAX_OBJECTS = 250; /// Maximum number of objects to allocate memory for
 
 /// Defines all the Device Extensions to be used
-constexpr std::array<const char *, 2> deviceExtensions = {
+constexpr std::array<const char *, 3> deviceExtensions = 
+{
         VK_KHR_SWAPCHAIN_EXTENSION_NAME,
-        VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,  
+        VK_EXT_CALIBRATED_TIMESTAMPS_EXTENSION_NAME,
+        VK_EXT_SHADER_VIEWPORT_INDEX_LAYER_EXTENSION_NAME,
 
         //"VK_KHR_portability_subset"                   /// Used for profiling VP_LUNARG_desktop_portability_2021
         //VK_KHR_DYNAMIC_RENDERING_EXTENSION_NAME,      /// Deprecated, this extension is now part of vk_1.3
