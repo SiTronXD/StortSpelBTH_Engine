@@ -36,6 +36,7 @@ layout(push_constant) uniform PushConstantData
 
 void main()
 {
+    // Position
     mat4 animTransform = mat4(0.0f);
     if(weights.x > 0.0f)
         animTransform += bones.transforms[boneIndices.x].boneTransform * weights.x;
@@ -52,5 +53,6 @@ void main()
         animTransform * 
         vec4(pos, 1.0);
         
+    // Shadow map cascade layer
     gl_Layer = gl_InstanceIndex;
 }

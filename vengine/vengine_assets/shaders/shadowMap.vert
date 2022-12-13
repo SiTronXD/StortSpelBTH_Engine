@@ -24,10 +24,12 @@ layout(push_constant) uniform PushConstantData
 
 void main()
 {
+    // Position
     gl_Position = 
         shadowMapVpBuffer.viewProjection[gl_InstanceIndex] *
         pushConstantData.model * 
         vec4(pos, 1.0);
 
+    // Shadow map cascade layer
     gl_Layer = gl_InstanceIndex;
 }
