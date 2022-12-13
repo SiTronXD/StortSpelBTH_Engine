@@ -562,7 +562,7 @@ void VulkanRenderer::draw(Scene* scene)
             );
         if (computeQueueResult != vk::Result::eSuccess)
         {
-            Log::error("Failed to submit compute commands.");
+            Log::error("Failed to submit compute commands. Error: " + std::to_string(uint32_t(computeQueueResult)));
         }
 
         // ---------- Graphics submit ----------
@@ -651,7 +651,7 @@ void VulkanRenderer::draw(Scene* scene)
             );
         if (graphicsQueueResult != vk::Result::eSuccess)
         {
-            Log::error("Failed to submit graphics commands.");
+            Log::error("Failed to submit graphics commands. Error: " + std::to_string(uint32_t(graphicsQueueResult)));
         }
     }
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
