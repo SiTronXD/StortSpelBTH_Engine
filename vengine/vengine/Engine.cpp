@@ -130,8 +130,8 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
         ImGui::Begin("Debug info",&debugInfo,ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoResize );
             ImGui::Text("FPS: avg. %.3f ms/f (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
 #if defined(_WIN32)
-            ImGui::Text("RAM: %.3f MiB", this->statsCollector.getRamUsage());
-            ImGui::Text("VRAM: %.3f MiB", this->statsCollector.getVramUsage());
+            ImGui::Text("RAM: %.3f MB", this->statsCollector.getRamUsage());
+            ImGui::Text("VRAM: %.3f MB", this->statsCollector.getVramUsage());
 #endif
         ImGui::End();
         ImGui::PopStyleVar();
