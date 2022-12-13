@@ -75,7 +75,7 @@ void TestDemoScene::init()
 	ParticleSystem& partSys = this->getComponent<ParticleSystem>(this->particleSystemEntities[0]);
 	partSys.maxlifeTime = 4.0f;
 	partSys.numParticles = 512;
-	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
+	partSys.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.jpg");
 	partSys.startSize = glm::vec2(0.5f);
 	partSys.endSize = glm::vec2(0.0f);
 	partSys.startColor = glm::vec4(0.0f, 1.0f, 0.0f, 1.0f);
@@ -94,7 +94,7 @@ void TestDemoScene::init()
 	ParticleSystem& partSys1 = this->getComponent<ParticleSystem>(this->particleSystemEntities[1]);
 	partSys1.maxlifeTime = 3.0f;
 	partSys1.numParticles = 512;
-	partSys1.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.png");
+	partSys1.textureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/me.jpg");
 	partSys1.startSize = glm::vec2(1.0f);
 	partSys1.endSize = glm::vec2(0.1f);
 	partSys1.startColor = glm::vec4(1.0f);
@@ -234,7 +234,7 @@ void TestDemoScene::init()
 		{
 			this->getResourceManager()->getMaterial(meshComp, 0).glowMapTextureIndex = 
 				this->getResourceManager()->addTexture(
-					"vengine_assets/textures/White.png"
+					"vengine_assets/textures/White.jpg"
 				);
 		}
 	}
@@ -504,7 +504,7 @@ void TestDemoScene::update()
 			).getSubmesh(0).materialIndex
 		);
 
-		mat.specularTextureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/FullSpecular.png");
+		mat.specularTextureIndex = this->getResourceManager()->addTexture("vengine_assets/textures/FullSpecular.jpg");
 		mat.descriptorIndex = ~0u;
 	}
 
