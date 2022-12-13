@@ -276,7 +276,7 @@ void UIRenderer::renderTexture(
     glm::vec4 pos = cam->viewAndProj * glm::vec4(worldPosition, 1.0f);
     if (pos.z > pos.w || pos.z < 0) { return; }
 
-    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * ResTranslator::getInternalDimensions() / 2.0f;
     glm::vec2 size = 5.0f * dimension / glm::dot(worldPosition - camTransform.position, camTransform.forward());
 
     resultingRect.x = screenPos.x;
