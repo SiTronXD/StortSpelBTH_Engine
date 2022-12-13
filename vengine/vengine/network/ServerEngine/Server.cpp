@@ -259,6 +259,7 @@ void Server::handleDisconnects(int clientID)
 	delete clients[clientID];
 
 	this->sceneHandler.getScene()->onDisconnect(clientID);
+    this->sceneHandler.getScene()->removePlayer(clientID);
 	this->clients.erase(clients.begin() + clientID);
 	this->clientToServerPacketTcp.erase(clientToServerPacketTcp.begin() + clientID);
 	this->serverToClientPacketTcp.erase(serverToClientPacketTcp.begin() + clientID);
