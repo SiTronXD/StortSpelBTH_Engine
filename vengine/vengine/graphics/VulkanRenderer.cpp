@@ -1348,17 +1348,12 @@ void VulkanRenderer::recordCommandBuffers(
     // Begin shadow map command buffer
     this->currentShadowMapCommandBuffer->beginOneTimeSubmit();
             
-    // Render shadow map
-    for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
-    {
-        this->beginShadowMapRenderPass(
-            this->lightHandler,
-            i
-        );
+    // Render shadow map cascades
+    this->beginShadowMapRenderPass(this->lightHandler);
         this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
         this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
-        this->endShadowMapRenderPass();
-    }
+    this->endShadowMapRenderPass();
+    
     this->currentShadowMapCommandBuffer->end();
 
 

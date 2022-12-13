@@ -3,12 +3,6 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/fwd.hpp"
 
-struct ShadowPushConstantData
-{
-    glm::mat4 viewProjectionMatrix = glm::mat4(1.0f);
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
-};
-
 struct PushConstantData
 {
     glm::mat4 modelMatrix = glm::mat4(1.0f);
@@ -73,8 +67,20 @@ struct ParticleEmitterInfo
     glm::vec4 endColor = glm::vec4(1.0f);
 };
 
-// Shadow map data
 #define MAX_NUM_CASCADES 4
+
+struct ShadowPushConstantData
+{
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
+};
+
+// View/projection matrices for shadow map rendering
+struct ShadowMapCameraBufferData
+{
+    glm::mat4 viewProjection[MAX_NUM_CASCADES] = { glm::mat4(1.0f) };
+};
+
+// Shadow map data
 struct ShadowMapData
 {
     glm::mat4 viewProjection[MAX_NUM_CASCADES] = { glm::mat4(1.0f) };
