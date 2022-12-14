@@ -53,7 +53,7 @@ void MeshLoader::loadAnimations(const std::vector<std::string>& paths, const std
     for (const std::string& path : paths)
     {
         scene = this->importer.ReadFile(path.c_str(), 
-            aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices);
+            aiProcess_Triangulate | aiProcess_FlipUVs); // aiProcess_JoinIdenticalVertices degrades performance quite a bit.
         
         if (!scene) 
         { 
