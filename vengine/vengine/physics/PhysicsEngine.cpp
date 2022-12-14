@@ -25,7 +25,7 @@ void PhysicsEngine::updateColliders()
 		{
 			this->createCollider((int)entity, col);
 		}
-		// Change values base on component
+		// Change values based on component
 		else
 		{
 			btCollisionObject* object = this->dynWorld->getCollisionObjectArray()[col.ColID];
@@ -52,7 +52,7 @@ void PhysicsEngine::updateRigidbodies()
 	auto func = [&](const auto& entity, Rigidbody& rb, Collider& col)
 	{
 		// Not assigned rigidbody, create in physics engine
-		if (!rb.assigned)
+		if (!rb.assigned || col.ColID < 0)
 		{
 			this->createRigidbody((int)entity, rb, col);
 		}
@@ -330,7 +330,6 @@ void PhysicsEngine::update(float dt)
 	this->dynWorld->updateAabbs();
 	this->dynWorld->computeOverlappingPairs();
 
-	Log::write("Num: " + std::to_string(this->dynWorld->getNumCollisionObjects()));
 	for (int i = this->dynWorld->getNumCollisionObjects() - 1; i > -1; i--)
 	{
 		btCollisionObject* object = this->dynWorld->getCollisionObjectArray()[i];
@@ -381,6 +380,12 @@ void PhysicsEngine::update(float dt)
 			// Update positions
 			else if (body)
 			{
+				// New collider
+				if (col->ColID != i)
+				{
+					this->removeIndicies.push_back(i);
+					continue;
+				}
 				btTransform transform;
 				if (body->getMotionState())
 				{
