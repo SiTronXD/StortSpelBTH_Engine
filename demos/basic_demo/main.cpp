@@ -15,6 +15,7 @@
 
 
 #include "src/TestDemoScene.h"
+#include "src/SceneTest.h"
 #include "src/NewTestScene.h"
 #include "src/network/LobbyScene.h"
 #include "src/network/NetworkHandlerTest.h"
@@ -30,9 +31,10 @@ int main(int argc, char* argv[])
     {
         Engine engine;
         //engine.setCustomNetworkHandler(new NetworkHandlerTest());
-        // engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
+        //engine.run("Demo Application", "assets/scripts/scene.lua", new TestScene2());
         //engine.run("Demo Application", "", new LevelEditorTestScene());
-       engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());
+        //engine.run("Demo Application", "assets/scripts/scene.lua", new TestDemoScene());
+        engine.run("Demo Application", "", new SceneTest());
     }
 
 	return EXIT_SUCCESS;

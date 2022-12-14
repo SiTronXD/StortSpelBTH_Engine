@@ -36,7 +36,7 @@
     <ClCompile Include="src\network\NetworkHandlerTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\NetworkTestScene.cpp">
+    <ClCompile Include="src\SceneTest.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -59,7 +59,7 @@
     <ClInclude Include="src\network\NetworkHandlerTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\NetworkTestScene.h">
+    <ClInclude Include="src\SceneTest.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

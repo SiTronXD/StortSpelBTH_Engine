@@ -264,6 +264,7 @@ SET ERRORLEVEL = 0</Command>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="src\SceneTest.cpp" />
     <ClCompile Include="src\network\NetworkHandlerTest.cpp" />
     <ClCompile Include="src\network\LobbyScene.cpp" />
     <ClCompile Include="src\LevelEditorTestScene.cpp" />
@@ -272,6 +273,7 @@ SET ERRORLEVEL = 0</Command>
     <ClCompile Include="src\network\TheServerGame.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\SceneTest.h" />
     <ClInclude Include="src\network\NetworkHandlerTest.h" />
     <ClInclude Include="src\network\LobbyScene.h" />
     <ClInclude Include="src\LevelEditorTestScene.h" />

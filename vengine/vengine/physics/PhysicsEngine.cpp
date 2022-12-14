@@ -330,6 +330,7 @@ void PhysicsEngine::update(float dt)
 	this->dynWorld->updateAabbs();
 	this->dynWorld->computeOverlappingPairs();
 
+	Log::write("Num: " + std::to_string(this->dynWorld->getNumCollisionObjects()));
 	for (int i = this->dynWorld->getNumCollisionObjects() - 1; i > -1; i--)
 	{
 		btCollisionObject* object = this->dynWorld->getCollisionObjectArray()[i];
