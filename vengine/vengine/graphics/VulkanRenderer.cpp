@@ -173,9 +173,12 @@ int VulkanRenderer::init(
         this->initResourceManager();
 
         // Setup Fallback Texture: Let first Texture be default if no other texture is found.
+        TextureSettings missingTextureSettings{};
+        missingTextureSettings.samplerSettings.filterMode = vk::Filter::eNearest;
         uint32_t missingTextureIndex = 
             this->resourceManager->addTexture(
-                DEF<std::string>(P_TEXTURES) + "missing_texture.jpg"
+                DEF<std::string>(P_TEXTURES) + "missing_texture.jpg",
+                missingTextureSettings
             );
         uint32_t blackTextureIndex =
             this->resourceManager->addTexture(
@@ -559,7 +562,7 @@ void VulkanRenderer::draw(Scene* scene)
             );
         if (computeQueueResult != vk::Result::eSuccess)
         {
-            Log::error("Failed to submit compute commands.");
+            Log::error("Failed to submit compute commands. Error: " + std::to_string(uint32_t(computeQueueResult)));
         }
 
         // ---------- Graphics submit ----------
@@ -648,7 +651,7 @@ void VulkanRenderer::draw(Scene* scene)
             );
         if (graphicsQueueResult != vk::Result::eSuccess)
         {
-            Log::error("Failed to submit graphics commands.");
+            Log::error("Failed to submit graphics commands. Error: " + std::to_string(uint32_t(graphicsQueueResult)));
         }
     }
     if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
@@ -1345,17 +1348,12 @@ void VulkanRenderer::recordCommandBuffers(
     // Begin shadow map command buffer
     this->currentShadowMapCommandBuffer->beginOneTimeSubmit();
             
-    // Render shadow map
-    for (uint32_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
-    {
-        this->beginShadowMapRenderPass(
-            this->lightHandler,
-            i
-        );
+    // Render shadow map cascades
+    this->beginShadowMapRenderPass(this->lightHandler);
         this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
         this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
-        this->endShadowMapRenderPass();
-    }
+    this->endShadowMapRenderPass();
+    
     this->currentShadowMapCommandBuffer->end();
 
 

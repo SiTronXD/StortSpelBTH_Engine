@@ -41,6 +41,8 @@ public:
 
 #if defined(_WIN32)
 #if defined  (_STATISTICS) || defined(_CONSOLE)
+	float avgFPS = 0.0f;
+	uint32_t elapsedFrames = 0u;
 	StatisticsCollector statsCollector;
 #endif
 #endif

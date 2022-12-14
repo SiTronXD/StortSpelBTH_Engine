@@ -99,19 +99,16 @@ void LightHandler::init(
     );
 
     // Framebuffer
-    std::vector<std::vector<vk::ImageView>> shadowMapImageViews(LightHandler::NUM_CASCADES);
-    for (size_t i = 0; i < LightHandler::NUM_CASCADES; ++i)
-    {
-        shadowMapImageViews[i] =
-        {
-            this->shadowMapTexture.getLayerImageView(uint32_t(i))
-        };
-    }
     this->shadowMapFramebuffer.create(
         *this->device,
         this->shadowMapRenderPass,
         this->shadowMapExtent,
-        shadowMapImageViews
+        {
+            {
+                this->shadowMapTexture.getImageView()
+            }
+        },
+        LightHandler::NUM_CASCADES
     );
 
     // Command buffer array
@@ -151,6 +148,11 @@ void LightHandler::initForScene(
         sizeof(ShadowPushConstantData),
         vk::ShaderStageFlagBits::eVertex
     );
+    this->shadowMapVpUbo = this->shadowMapShaderInput.addUniformBuffer(
+        sizeof(ShadowMapCameraBufferData),
+        vk::ShaderStageFlagBits::eVertex,
+        DescriptorFrequency::PER_FRAME
+    );
     this->shadowMapShaderInput.endForInput();
     this->shadowMapPipeline.createPipeline(
         *this->device,
@@ -179,6 +181,11 @@ void LightHandler::initForScene(
         this->animShadowMapShaderInput.addPushConstant(
             sizeof(ShadowPushConstantData),
             vk::ShaderStageFlagBits::eVertex
+        );
+        this->animShadowMapVpUbo = this->animShadowMapShaderInput.addUniformBuffer(
+            sizeof(ShadowMapCameraBufferData),
+            vk::ShaderStageFlagBits::eVertex,
+            DescriptorFrequency::PER_FRAME
         );
         this->animShadowMapShaderInput.setNumShaderStorageBuffers(1);
 
@@ -412,10 +419,16 @@ void LightHandler::updateLightBuffers(
             this->cascadeSizes[i],
             this->shadowMapData.viewProjection[i]
         );
+        this->shadowMapCameraBufferData.viewProjection[i] =
+            this->shadowMapData.viewProjection[i];
     }
 
     // Shadow map shader input
     this->shadowMapShaderInput.setCurrentFrame(currentFrame);
+    this->shadowMapShaderInput.updateUniformBuffer(
+        this->shadowMapVpUbo,
+        (void*) &this->shadowMapCameraBufferData
+    );
 
     // Anim shadow map shader input
     if (hasAnimations)
@@ -423,15 +436,11 @@ void LightHandler::updateLightBuffers(
         this->animShadowMapShaderInput.setCurrentFrame(
             currentFrame
         );
+        this->animShadowMapShaderInput.updateUniformBuffer(
+            this->animShadowMapVpUbo,
+            (void*) &this->shadowMapCameraBufferData
+        );
     }
-}
-
-void LightHandler::updateCamera(
-    const uint32_t& arraySliceCameraIndex)
-{
-    // Update projection matrix
-    this->shadowPushConstantData.viewProjectionMatrix =
-        this->shadowMapData.viewProjection[arraySliceCameraIndex];
 }
 
 void LightHandler::updateDefaultShadowPushConstant(

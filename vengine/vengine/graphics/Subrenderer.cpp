@@ -1,14 +1,43 @@
 #include "pch.h"
 #include "VulkanRenderer.hpp"
 
+void VulkanRenderer::renderShadowMapSubmeshes(
+    const Mesh& mesh,
+    const std::vector<SubmeshData>& submeshes,
+    ShaderInput& shaderInput)
+{
+    // Bind index buffer
+    this->currentShadowMapCommandBuffer->bindIndexBuffer(
+        mesh.getIndexBuffer()
+    );
+
+    // Update for descriptors
+    this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
+        shaderInput,
+        DescriptorFrequency::PER_MESH
+    );
+
+    // Loop through each submesh
+    for (size_t i = 0; i < submeshes.size(); ++i)
+    {
+        const SubmeshData& currentSubmesh = submeshes[i];
+
+        // Draw
+        this->currentShadowMapCommandBuffer->drawIndexed(
+            currentSubmesh.numIndicies,
+            LightHandler::NUM_CASCADES, // One instance per layer
+            currentSubmesh.startIndex
+        );
+    }
+}
+
 void VulkanRenderer::renderSubmeshes(
     const Transform& transform,
     MeshComponent& meshComponent,
     const Mesh& mesh,
     const Material& firstSubmeshMaterial,
     const std::vector<SubmeshData>& submeshes,
-    ShaderInput& shaderInput,
-    CommandBuffer& outputCommandBuffer)
+    ShaderInput& shaderInput)
 {
     // "Push" Constants to given Shader Stage Directly (using no Buffer...)
     this->pushConstantData.modelMatrix = transform.getMatrix();
@@ -23,24 +52,24 @@ void VulkanRenderer::renderSubmeshes(
         firstSubmeshMaterial.tilingOffset,
         firstSubmeshMaterial.tilingScale
     );
-    outputCommandBuffer.pushConstant(
+    this->currentCommandBuffer->pushConstant(
         shaderInput,
         (void*)&this->pushConstantData
     );
 
     // Bind vertex buffer
-    outputCommandBuffer.bindVertexBuffers2(
+    this->currentCommandBuffer->bindVertexBuffers2(
         mesh.getVertexBufferArray(),
         this->currentFrame
     );
 
     // Bind index buffer
-    outputCommandBuffer.bindIndexBuffer(
+    this->currentCommandBuffer->bindIndexBuffer(
         mesh.getIndexBuffer()
     );
 
     // Update for descriptors
-    outputCommandBuffer.bindShaderInputFrequency(
+    this->currentCommandBuffer->bindShaderInputFrequency(
         shaderInput,
         DescriptorFrequency::PER_MESH
     );
@@ -133,8 +162,7 @@ void VulkanRenderer::computeParticles()
 }
 
 void VulkanRenderer::beginShadowMapRenderPass(
-    LightHandler& lightHandler,
-    const uint32_t& shadowMapArraySlice)
+    LightHandler& lightHandler)
 {
     const std::array<vk::ClearValue, 1> clearValues =
     {
@@ -156,7 +184,7 @@ void VulkanRenderer::beginShadowMapRenderPass(
     renderPassBeginInfo.renderArea.setExtent(shadowMapExtent);      // Size of region to run render pass on (starting at offset)
     renderPassBeginInfo.setPClearValues(clearValues.data());
     renderPassBeginInfo.setClearValueCount(static_cast<uint32_t>(clearValues.size()));
-    renderPassBeginInfo.setFramebuffer(lightHandler.getShadowMapFramebuffer(shadowMapArraySlice));
+    renderPassBeginInfo.setFramebuffer(lightHandler.getShadowMapFramebuffer());
 
     // Begin Render Pass!    
     // vk::SubpassContents::eInline; all the render commands themselves will be primary render commands (i.e. will not use secondary commands buffers)
@@ -182,9 +210,6 @@ void VulkanRenderer::beginShadowMapRenderPass(
     scissor.offset = vk::Offset2D{ 0, 0 };
     scissor.extent = shadowMapExtent;
     this->currentShadowMapCommandBuffer->setScissor(scissor);
-
-    // Update camera
-    lightHandler.updateCamera(shadowMapArraySlice);
 }
 
 void VulkanRenderer::renderShadowMapDefaultMeshes(
@@ -228,28 +253,13 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(
                     .getVertexBuffers()[0]
             );
             
-            // Bind index buffer
-            this->currentShadowMapCommandBuffer->bindIndexBuffer(
-                currentMesh.getIndexBuffer()
+
+            // Render submeshes into shadow maps
+            this->renderShadowMapSubmeshes(
+                currentMesh,
+                submeshes,
+                shadowMapShaderInput
             );
-
-            // Update for descriptors
-            this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
-                shadowMapShaderInput,
-                DescriptorFrequency::PER_MESH
-            );
-
-            for (size_t i = 0; i < submeshes.size(); ++i)
-            {
-                const SubmeshData& currentSubmesh = submeshes[i];
-
-                // Draw
-                this->currentShadowMapCommandBuffer->drawIndexed(
-                    currentSubmesh.numIndicies, 
-                    1, 
-                    currentSubmesh.startIndex
-                );
-            }
         }
     );
 }
@@ -323,28 +333,12 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(
                 this->bindVertexBuffers
             );
 
-            // Bind index buffer
-            this->currentShadowMapCommandBuffer->bindIndexBuffer(
-                currentMesh.getIndexBuffer()
+            // Render submeshes into shadow maps
+            this->renderShadowMapSubmeshes(
+                currentMesh,
+                submeshes,
+                animShadowMapShaderInput
             );
-
-            // Update for descriptors
-            this->currentShadowMapCommandBuffer->bindShaderInputFrequency(
-                lightHandler.getAnimShadowMapShaderInput(),
-                DescriptorFrequency::PER_MESH
-            );
-
-            for (size_t i = 0; i < submeshes.size(); ++i)
-            {
-                const SubmeshData& currentSubmesh = submeshes[i];
-
-                // Draw
-                this->currentShadowMapCommandBuffer->drawIndexed(
-                    currentSubmesh.numIndicies, 
-                    1, 
-                    currentSubmesh.startIndex
-                );
-            }
         }
     );
 }
@@ -464,8 +458,7 @@ void VulkanRenderer::renderDefaultMeshes(
                 currentMesh,
                 firstSubmeshMaterial,
                 submeshes,
-                this->shaderInput,
-                *this->currentCommandBuffer
+                this->shaderInput
             );
         }
     );
@@ -519,8 +512,7 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
                 currentMesh,
                 firstSubmeshMaterial,
                 submeshes,
-                this->animShaderInput,
-                *this->currentCommandBuffer
+                this->animShaderInput
             );
         }
     );
