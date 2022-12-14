@@ -88,23 +88,25 @@ void AudioHandler::update()
 	ALint state = AL_STOPPED;
 	for (uint32_t i = 0; i < this->numActiveSources; i++)
 	{
-		alGetSourcei(this->sources[i], AL_SOURCE_STATE, &state);
-		if (state == AL_PLAYING)
+		if (scene->entityValid(this->sourceUsers[i]))
 		{
-			const glm::vec3& pos = scene->getComponent<Transform>(this->sourceUsers[i]).position;
-			alSource3f(this->sources[i], AL_POSITION, pos.x, pos.y, pos.z);
+			alGetSourcei(this->sources[i], AL_SOURCE_STATE, &state);
+			if (state == AL_PLAYING)
+			{
+				const glm::vec3& pos = scene->getComponent<Transform>(this->sourceUsers[i]).position;
+				alSource3f(this->sources[i], AL_POSITION, pos.x, pos.y, pos.z);
+			}
+			else if (!this->sourceBorrowed[i])
+			{
+				this->removeUsedSource(i);
+
+				// Make sure the last source is also updated
+				i--; 
+			}
 		}
-		else if (!this->sourceBorrowed[i])
+		else
 		{
-			alSourcei(this->sources[i], AL_BUFFER, NULL);
-
-			this->numActiveSources--;
-			std::swap(this->sources[i], this->sources[this->numActiveSources]);
-			std::swap(this->sourceUsers[i], this->sourceUsers[this->numActiveSources]);
-			std::swap(this->sourceBorrowed[i], this->sourceBorrowed[this->numActiveSources]);
-
-			// i-- so the (old) last source is also updated
-			i--;
+			this->removeUsedSource(i);
 		}
 	}
 
@@ -126,6 +128,16 @@ void AudioHandler::update()
 	{
 		this->updateMusic();
 	}
+}
+
+void AudioHandler::removeUsedSource(uint32_t index)
+{
+	alSourcei(this->sources[index], AL_BUFFER, NULL);
+
+	this->numActiveSources--;
+	std::swap(this->sources[index], this->sources[this->numActiveSources]);
+	std::swap(this->sourceUsers[index], this->sourceUsers[this->numActiveSources]);
+	std::swap(this->sourceBorrowed[index], this->sourceBorrowed[this->numActiveSources]);
 }
 
 void AudioHandler::updateMusic()

@@ -34,6 +34,7 @@ private:
 	Entity sourceUsers[MAX_SOURCES];
 	AudioSourceID sources[MAX_SOURCES];
 	uint32_t numActiveSources;
+	void removeUsedSource(uint32_t index);
 
 	void updateMusic();
 
