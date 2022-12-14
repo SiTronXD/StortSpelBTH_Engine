@@ -9,6 +9,9 @@ std::chrono::system_clock::time_point Time::lastTime = std::chrono::system_clock
 std::chrono::system_clock::time_point Time::currentTime = std::chrono::system_clock::time_point();
 std::chrono::duration<float> Time::elapsedSeconds = std::chrono::duration<float>();
 
+std::chrono::system_clock::time_point Time::debugTimerStamp = std::chrono::system_clock::time_point();
+std::chrono::duration<float> Time::debugTimerElapsedTime = std::chrono::duration<float>();
+
 void Time::reset()
 {
 	lastTime = std::chrono::system_clock::now();
@@ -31,4 +34,18 @@ void Time::updateDeltaTime()
 
 	// Update if a second has passed
 	oneSecondPassed = beforeTime != (unsigned int) timeSinceStart;
+}
+
+void Time::startDebugTimer()
+{
+	debugTimerStamp = std::chrono::system_clock::now();
+}
+
+float Time::endDebugTimer(const std::string& timerName)
+{
+	debugTimerElapsedTime = std::chrono::system_clock::now() - debugTimerStamp;
+	float elapsedTimeMs = debugTimerElapsedTime.count() * 1000.0f;
+	Log::write(timerName + ": " + std::to_string(elapsedTimeMs) + " ms");
+	
+	return elapsedTimeMs;
 }
