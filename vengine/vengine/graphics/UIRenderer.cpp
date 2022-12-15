@@ -221,7 +221,7 @@ void UIRenderer::renderTexture(
     }
 
     glm::vec2 extent = dimension / 2.0f;
-    glm::vec2 resTranslatorExtent = glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    glm::vec2 resTranslatorExtent = ResTranslator::getInternalDimensions() * 0.5f;
     if (position.x - extent.x <= resTranslatorExtent.x && position.x + extent.x >= -resTranslatorExtent.x &&
         position.y - extent.y <= resTranslatorExtent.y && position.y + extent.y >= -resTranslatorExtent.y) // Within UI window
     {
@@ -253,7 +253,7 @@ void UIRenderer::renderTexture(
     glm::vec4 pos = cam->viewAndProj * glm::vec4(worldPosition, 1.0f);
     if (pos.z > pos.w || pos.z < 0) { return; }
 
-    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * ResTranslator::getInternalDimensions() / 2.0f;
     glm::vec2 size = 5.0f * dimension / glm::dot(worldPosition - camTransform.position, camTransform.forward());
 
     this->renderTexture(screenPos, size, textureCoords, multiplyColor);
@@ -373,7 +373,7 @@ void UIRenderer::renderString(
     glm::vec4 pos = cam->viewAndProj * glm::vec4(worldPosition, 1.0f);
     if (pos.z > pos.w || pos.z < 0) { return; }
 
-    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * glm::vec2(ResTranslator::INTERNAL_WIDTH >> 1, ResTranslator::INTERNAL_HEIGHT >> 1);
+    glm::vec2 screenPos = (glm::vec2(pos) / pos.w) * ResTranslator::getInternalDimensions() / 2.0f;
     float dot = 5.0f / glm::dot(worldPosition - camTransform.position, camTransform.forward());
     glm::vec2 size = charDimension * dot;
     float margin = charMargin * dot;
