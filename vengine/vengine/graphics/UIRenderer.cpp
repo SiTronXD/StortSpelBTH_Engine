@@ -222,8 +222,8 @@ void UIRenderer::renderTexture(
 
     glm::vec2 extent = dimension / 2.0f;
     glm::vec2 resTranslatorExtent = ResTranslator::getInternalDimensions() * 0.5f;
-    if (position.x - extent.x <= resTranslatorExtent.x && position.x + extent.x >= -resTranslatorExtent.x &&
-        position.y - extent.y <= resTranslatorExtent.y && position.y + extent.y >= -resTranslatorExtent.y) // Within UI window
+    if (position.x - std::abs(extent.x) <= resTranslatorExtent.x && position.x + std::abs(extent.x) >= -resTranslatorExtent.x &&
+        position.y - std::abs(extent.y) <= resTranslatorExtent.y && position.y + std::abs(extent.y) >= -resTranslatorExtent.y) // Within UI window
     {
         // Set element data
         this->uiElementData[this->currentElementIndex].transform =
