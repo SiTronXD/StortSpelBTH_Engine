@@ -246,7 +246,7 @@ void TestDemoScene::init()
 	MeshComponent& swarmMesh = this->getComponent<MeshComponent>(swarmEntity);
 	swarmMesh.meshID = Scene::getResourceManager()->addMesh(
 		"assets/models/Swarm_Model.fbx",
-		"assets/textures/swarmTextures");
+		"assets/textures/");
 
 	/*uint32_t meshId = Scene::getResourceManager()->addAnimations(
 		{"assets/models/stickFirst.fbx", "assets/models/stickSecond.fbx", "assets/models/stickThird.fbx"});
@@ -281,19 +281,6 @@ void TestDemoScene::init()
 		this->fontTextureIndex,
 		glm::vec2(16, 16)
 	);
-
-	/*memcpy(meshComp.filePath, "sponza.obj",sizeof(meshComp.filePath));
-
-	// // Create entity2 (already has transform)
-	this->testEntity2 = this->createEntity();
-	// Transform component
-	Transform& transform2 = this->getComponent<Transform>(this->testEntity2);
-	transform2.position = glm::vec3(0.f, 0.f, 20.f);
-	transform2.rotation = glm::vec3(-90.0f, 40.0f, 0.0f);
-	transform2.scale = glm::vec3(10.0f, 10.0f, 10.0f);
-	// Mesh component
-	this->setComponent<MeshComponent>(this->testEntity2);
-	MeshComponent& meshComp2 = this->getComponent<MeshComponent>(this->testEntity2);*/
 }
 
 void TestDemoScene::start()
