@@ -61,6 +61,7 @@ private:
 	uint32_t desiredNumMipLevels;
 	uint32_t numMipLevelsInUse;
 
+	uint32_t getMaxAllocatedMips(const vk::Extent2D& renderExtents);
 	void updateNumMipLevelsInUse();
 	void create(const vk::Extent2D& windowExtent);
 

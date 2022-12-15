@@ -6,6 +6,24 @@
 #include "../vulkan/CommandBufferArray.hpp"
 #include "../Texture.hpp"
 
+uint32_t PostProcessHandler::getMaxAllocatedMips(
+	const vk::Extent2D& renderExtents)
+{
+	uint32_t maxAllocated =
+		uint32_t(
+			std::floor(
+				std::log2(
+					std::max(
+						renderExtents.width,
+						renderExtents.height
+					)
+				)
+			) + 1
+		);
+
+	return std::min(maxAllocated, MAX_NUM_MIP_LEVELS);
+}
+
 void PostProcessHandler::updateNumMipLevelsInUse()
 {
 	float i = std::max((float) this->mipExtents[0].height, 1.0f);
@@ -36,12 +54,14 @@ void PostProcessHandler::updateNumMipLevelsInUse()
 	this->numMipLevelsInUse = std::clamp(
 		this->desiredNumMipLevels + extraMipLevels,
 		PostProcessHandler::MIN_NUM_MIP_LEVELS,
-		PostProcessHandler::MAX_NUM_MIP_LEVELS
+		this->getMaxAllocatedMips(this->mipExtents[0])
 	);
 }
 
 void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 {
+	uint32_t maxMips = this->getMaxAllocatedMips(windowExtent);
+
 	// Clamp to border sampler
 	TextureSettings textureSettings{};
 	textureSettings.samplerSettings.addressMode =
@@ -57,7 +77,7 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 		PostProcessHandler::HDR_FORMAT,
 		windowExtent.width,
 		windowExtent.height,
-		MAX_NUM_MIP_LEVELS,
+		maxMips,
 		this->resourceManager->addSampler(textureSettings),
 		vk::ImageUsageFlagBits::eSampled
 	);
@@ -74,9 +94,9 @@ void PostProcessHandler::create(const vk::Extent2D& windowExtent)
 	// Downsampling image views and extents
 	uint32_t currentWidth = windowExtent.width;
 	uint32_t currentHeight = windowExtent.height;
-	this->mipExtents.resize(MAX_NUM_MIP_LEVELS);
-	std::vector<std::vector<vk::ImageView>> framebufferImageViews(MAX_NUM_MIP_LEVELS);
-	for (uint32_t i = 0; i < MAX_NUM_MIP_LEVELS; ++i)
+	this->mipExtents.resize(maxMips);
+	std::vector<std::vector<vk::ImageView>> framebufferImageViews(maxMips);
+	for (uint32_t i = 0; i < maxMips; ++i)
 	{
 		framebufferImageViews[i] = { this->hdrRenderTexture.getMipImageView(i) };
 
@@ -264,7 +284,8 @@ void PostProcessHandler::recreate(const vk::Extent2D& windowExtent)
 	this->create(windowExtent);
 
 	// Update descriptor sets
-	for (uint32_t i = 0; i < this->mipDescriptorIndices.size(); ++i)
+	uint32_t numDescInd = this->getMaxAllocatedMips(windowExtent);
+	for (uint32_t i = 0; i < numDescInd; ++i)
 	{
 		FrequencyInputBindings inputBinding{};
 		inputBinding.texture = &this->hdrRenderTexture;
