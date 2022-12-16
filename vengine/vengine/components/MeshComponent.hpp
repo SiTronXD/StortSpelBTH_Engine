@@ -2,7 +2,7 @@
 
 #include "../graphics/MaterialData.hpp"
 
-#define MAX_NUM_MESH_MATERIALS 16
+#define MAX_NUM_MESH_MATERIALS 8
 struct MeshComponent
 {
 	int meshID;
