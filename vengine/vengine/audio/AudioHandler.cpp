@@ -349,6 +349,11 @@ AudioSourceID AudioHandler::playSound(Entity entity, AudioBufferID bufferID, flo
 		return ~0u;
 	}
 
+	if (!this->sceneHandler->getScene()->entityValid(entity))
+	{
+		return ~0u;
+	}
+
 	const AudioSourceID curSourceId = this->sources[this->numActiveSources];
 	const glm::vec3& pos = this->sceneHandler->getScene()->getComponent<Transform>(entity).position;
 
