@@ -1071,8 +1071,6 @@ void VulkanRenderer::windowResize(Camera* camera)
         imguiFramebufferAttachments
     );
 
-    ImGui_ImplVulkan_SetMinImageCount(this->swapchain.getNumMinimumImages());
-
     // Recalculate HDR render texture and depth buffer
     this->postProcessHandler.recreate(this->swapchain.getVkExtent());
 
@@ -1526,8 +1524,8 @@ void VulkanRenderer::initImgui()
     imguiInitInfo.PipelineCache = VK_NULL_HANDLE;
     imguiInitInfo.DescriptorPool = this->descriptorPoolImgui;
     imguiInitInfo.Subpass = 0; 
-    imguiInitInfo.MinImageCount = this->swapchain.getNumMinimumImages();
-    imguiInitInfo.ImageCount = this->swapchain.getNumImages();
+    imguiInitInfo.MinImageCount = MAX_FRAMES_IN_FLIGHT;
+    imguiInitInfo.ImageCount = MAX_FRAMES_IN_FLIGHT; // Imgui seems to use the name "ImageCount" when the parameter is instead used as "frames in flight"...
     imguiInitInfo.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
     imguiInitInfo.Allocator = nullptr;
     imguiInitInfo.CheckVkResultFn = checkVkResult;
