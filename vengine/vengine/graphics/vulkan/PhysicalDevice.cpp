@@ -10,9 +10,6 @@ bool PhysicalDevice::checkPhysicalDeviceSuitability(
     ZoneScoped; //:NOLINT
 #endif
     
-    // Information about the device itself (Id, name, type, vendor, etc...)
-    vk::PhysicalDeviceProperties deviceProperties = physDevice.getProperties(); //TODO: Unused, use or remove
-
     ///Check if the Device has the required Features... 
     bool deviceHasSupportedFeatures = false;
     vk::PhysicalDeviceFeatures deviceFeatures = physDevice.getFeatures();
@@ -157,16 +154,41 @@ void PhysicalDevice::pickPhysicalDevice(
         Log::error("Can't find GPUs that support Vulkan instances...");
     }
 
-    // Loop through all possible devices and pick the first suitable device!    
+    // Loop through all possible devices and pick the first suitable device!
+    bool foundPhysicalDevice = false;
     for (auto& physDevice : allPhysicalDevices)
     {
         if (this->checkPhysicalDeviceSuitability(
-            physDevice, 
+            physDevice,
             surface))
         {
             this->physicalDevice = physDevice;
+            foundPhysicalDevice = true;
             break;
         }
     }
+
+    // Could not find a proper physical device
+    if (!foundPhysicalDevice)
+    {
+        Log::error("Could not find a properly supported GPU. Make sure the latest drivers are installed.");
+
+        return;
+    }
+    // Physical device found
+    else
+    {
+        vk::PhysicalDeviceProperties deviceProperties = this->physicalDevice.getProperties();
+
+        std::string gpuName = deviceProperties.deviceName;
+        std::string gpuApiVersion =
+            std::to_string(VK_API_VERSION_MAJOR(deviceProperties.apiVersion)) + "." +
+            std::to_string(VK_API_VERSION_MINOR(deviceProperties.apiVersion)) + "." + 
+            std::to_string(VK_API_VERSION_PATCH(deviceProperties.apiVersion));
+
+        Log::write("GPU name: " + gpuName);
+        Log::write("GPU API version: " + gpuApiVersion);
+    }
+
     outputQueueFamilies = this->getQueueFamilies(this->physicalDevice, surface);
 }

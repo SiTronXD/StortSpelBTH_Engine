@@ -488,7 +488,7 @@ void Texture::transitionImageLayout(
         );
 
     // MemoryBarrier allows us to transition between two layouts!
-    vk::ImageMemoryBarrier2 imageMemoryBarrier;
+    vk::ImageMemoryBarrier2 imageMemoryBarrier{};
     imageMemoryBarrier.setOldLayout(oldLayout); // Layout to transition from
     imageMemoryBarrier.setNewLayout(newLayout); // Layout to transition from
     imageMemoryBarrier.setSrcQueueFamilyIndex(
