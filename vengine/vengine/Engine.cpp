@@ -45,7 +45,7 @@ void Engine::run(std::string appName, std::string startScenePath, Scene* startSc
     loadConfIntoMemory(); // load config data into memory
 
     //Filter Log Output 
-    //Log::addFilter("bt");
+    Log::addFilter("bt");
 
     // Window
     Window window;
