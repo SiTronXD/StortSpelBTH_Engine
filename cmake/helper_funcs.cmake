@@ -70,7 +70,7 @@ function(copy_assets_structure)
 
     #Copy necessary files 
     configure_file(${VENGINE_ASSETS_DIR}/config.cfg ${VENGINE_AS_LIB_ASSETS}/config.cfg COPYONLY )
-    configure_file(${VENGINE_ASSETS_DIR}/textures/missing_texture.png ${VENGINE_AS_LIB_TEXTURES}/missing_texture.png COPYONLY )
+    configure_file(${VENGINE_ASSETS_DIR}/textures/missing_texture.jpg ${VENGINE_AS_LIB_TEXTURES}/missing_texture.jpg COPYONLY )
     
     file(GLOB files_in_shader_dir CONFIGURE_DEPENDS
         ${VENGINE_ASSETS_DIR}/shaders/*
