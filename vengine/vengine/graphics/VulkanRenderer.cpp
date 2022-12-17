@@ -459,7 +459,7 @@ void VulkanRenderer::draw(Scene* scene)
             std::numeric_limits<uint64_t>::max());
         if(result != vk::Result::eSuccess) 
         {
-            Log::error("Failed to wait for all fences!");
+            Log::error("Failed to wait for all fences. Error: " + std::to_string(uint32_t(result)));
         }
     }
 
@@ -512,7 +512,7 @@ void VulkanRenderer::draw(Scene* scene)
         }
         else if(result != vk::Result::eSuccess && result != vk::Result::eSuboptimalKHR) 
         {
-            Log::error("Failed to AcquireNextImage!");
+            Log::error("Failed to AcquireNextImage. Error: " + std::to_string(uint32_t(result)));
         }
 
         // Close the Fence behind us if work is being submitted...
@@ -521,7 +521,7 @@ void VulkanRenderer::draw(Scene* scene)
             &this->drawFences[this->currentFrame]);
         if(result != vk::Result::eSuccess) 
         {
-            Log::error("Failed to reset fences!");
+            Log::error("Failed to reset fences. Error: " + std::to_string(uint32_t(result)));
         }
     }
     
@@ -684,7 +684,7 @@ void VulkanRenderer::draw(Scene* scene)
         }
         else if(resultvk != vk::Result::eSuccess) 
         {
-            Log::error("Failed to present Image!");
+            Log::error("Failed to present image. Error: " + std::to_string(uint32_t(resultvk)));
         }
     }
 
@@ -1022,7 +1022,7 @@ void VulkanRenderer::setupDebugMessenger()
             this->dynamicDispatch);
     if (result != vk::Result::eSuccess) 
     {
-        Log::error("Failed to create Debug Messenger!");
+        Log::error("Failed to create debug messenger. Error: " + std::to_string(uint32_t(result)));
     }
 }
 
@@ -1573,7 +1573,7 @@ void VulkanRenderer::initImgui()
         );
     if(result != vk::Result::eSuccess)
     {
-        Log::error("Failed to submit imgui fonts to graphics queue...");
+        Log::error("Failed to submit imgui fonts to graphics queue. Error: " + std::to_string(uint32_t(result)));
     }
 
     this->device.waitIdle();
