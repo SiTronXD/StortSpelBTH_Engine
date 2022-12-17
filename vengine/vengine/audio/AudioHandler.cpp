@@ -16,12 +16,12 @@ AudioHandler::AudioHandler()
 	ALCdevice* device = alcOpenDevice(NULL);
     if (!device)
     {
-		Log::error(__FUNCTION__ " | Failed to create OpenAL Device");
+		Log::error( std::string(__func__) + " | Failed to create OpenAL Device");
     }
     ALCcontext* context = alcCreateContext(device, nullptr);
 	if (!context)
 	{
-		Log::error(__FUNCTION__ " | Failed to create OpenAL Context");
+		Log::error(std::string(__func__) + " | Failed to create OpenAL Context");
 	}
     alcMakeContextCurrent(context);
 	alGetError(); // Clear error code
@@ -31,7 +31,7 @@ AudioHandler::AudioHandler()
 	alGenSources(1, &this->musicSourceId);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		Log::error(__FUNCTION__ " | Failed generating music source. OpenAL error: " + std::to_string(error));
+		Log::error(std::string(__func__) + " | Failed generating music source. OpenAL error: " + std::to_string(error));
 	}
 	alSourcei(this->musicSourceId, AL_SOURCE_RELATIVE, AL_FALSE);
 
@@ -39,7 +39,7 @@ AudioHandler::AudioHandler()
 	alGenSources(MAX_SOURCES, this->sources);
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		Log::error(__FUNCTION__ " | Failed generating audio sources. OpenAL error: " + std::to_string(error));
+		Log::error(std::string(__func__) + " | Failed generating audio sources. OpenAL error: " + std::to_string(error));
 	}
 #else
 	ALCdevice* device = alcOpenDevice(NULL);
@@ -199,7 +199,7 @@ void AudioHandler::setMusic(const std::string& filePath)
 	if (!this->mrStreamer.openFromFile(filePath))
 	{
 #ifdef _CONSOLE
-		Log::warning(__FUNCTION__ " | Failed loading music file");
+		Log::warning(std::string(__func__) + " | Failed loading music file");
 #endif
 		return;
 	}
@@ -207,19 +207,19 @@ void AudioHandler::setMusic(const std::string& filePath)
 #ifdef _CONSOLE
 	alSourceStop(this->musicSourceId);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error(__FUNCTION__ " | Failed stopping music. OpenAL error: " + std::to_string(error)); return; }
+		{ Log::error(std::string(__func__) + " | Failed stopping music. OpenAL error: " + std::to_string(error)); return; }
 
 	alSourcei(this->musicSourceId, AL_BUFFER, NULL);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error(__FUNCTION__ " | Failed deattching buffers. OpenAL error: " + std::to_string(error)); return; }
+		{ Log::error(std::string(__func__) + " | Failed deattching buffers. OpenAL error: " + std::to_string(error)); return; }
 
 	alDeleteBuffers(NUM_BUFFERS, this->alBuffers);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error(__FUNCTION__ " | Failed deleting old buffers. OpenAL error: " + std::to_string(error)); return; }
+		{ Log::error(std::string(__func__) + " | Failed deleting old buffers. OpenAL error: " + std::to_string(error)); return; }
 
 	alGenBuffers(NUM_BUFFERS, this->alBuffers);
 	if ((error = alGetError()) != AL_NO_ERROR) 
-		{ Log::error(__FUNCTION__ " | Failed generating new buffers. OpenAL error: " + std::to_string(error)); return; }
+		{ Log::error(std::string(__func__) + " | Failed generating new buffers. OpenAL error: " + std::to_string(error)); return; }
 #else
 	alSourceStop(this->musicSourceId);
 	alSourcei(this->musicSourceId, AL_BUFFER, NULL);
@@ -243,7 +243,7 @@ void AudioHandler::setMusic(const std::string& filePath)
 #ifdef _CONSOLE
         if ((error = alGetError()) != AL_NO_ERROR)
 		{
-			Log::error(__FUNCTION__ " | Failed filling music buffers. ALError: " + std::to_string(error));
+			Log::error(std::string(__func__) + " | Failed filling music buffers. ALError: " + std::to_string(error));
 		}
 #endif
     }
@@ -252,7 +252,7 @@ void AudioHandler::setMusic(const std::string& filePath)
 #ifdef _CONSOLE
 	if ((error = alGetError()) != AL_NO_ERROR)
 	{
-		Log::error(__FUNCTION__ " | Failed filling queueing music buffers. ALError: " + std::to_string(error));
+		Log::error(std::string(__func__) + " | Failed filling queueing music buffers. ALError: " + std::to_string(error));
 	}
 #endif // _CONSOLE
 }
@@ -292,7 +292,7 @@ bool AudioHandler::requestAudioSource(Entity entity, AudioBufferID bufferID)
 	if (this->numActiveSources >= MAX_SOURCES)
 	{
 #ifdef _CONSOLE
-		Log::error(__FUNCTION__ " | No avaliable sources!");
+		Log::error(std::string(__func__) + " | No avaliable sources!");
 #endif
 		return false;
 	}
@@ -334,7 +334,7 @@ void AudioHandler::releaseAudioSource(Entity entity)
 #ifdef _CONSOLE
 	else
 	{
-		Log::warning(__FUNCTION__ " | Entity doesn't have an AudioSource");
+		Log::warning(std::string(__func__) + " | Entity doesn't have an AudioSource");
 	}
 #endif
 }
@@ -344,7 +344,7 @@ AudioSourceID AudioHandler::playSound(Entity entity, AudioBufferID bufferID, flo
 	if (this->numActiveSources >= MAX_SOURCES)
 	{
 #ifdef _CONSOLE
-		Log::warning(__FUNCTION__ " | No avaliable sources!");
+		Log::warning(std::string(__func__) + " | No avaliable sources!");
 #endif
 		return ~0u;
 	}
