@@ -165,9 +165,6 @@ int VulkanRenderer::init(
 
         this->createSynchronisation();        
 
-#ifndef VENGINE_NO_PROFILING
-        this->initTracy();
-#endif
         this->initImgui();
 
         this->initResourceManager();
@@ -254,6 +251,11 @@ int VulkanRenderer::init(
         this->computeCommandPool,
         MAX_FRAMES_IN_FLIGHT
     );
+
+    // Init tracy
+#ifndef VENGINE_NO_PROFILING
+    this->initTracy();
+#endif
 
     // Render-to-Swapchain shader input and pipeline
     this->swapchainShaderInput.beginForInput(
@@ -344,9 +346,18 @@ void VulkanRenderer::cleanup()
 #ifndef VENGINE_NO_PROFILING
     CustomFree(this->tracyImage);
 
-    for(auto &tracy_context : this->tracyContext)
+    for(uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        TracyVkDestroy(tracy_context);
+        TracyVkDestroy(this->tracyContextComputeParticles[i]);
+        TracyVkDestroy(this->tracyContextRenderShadowMap[i]);
+        TracyVkDestroy(this->tracyContextRenderScene[i]);
+        TracyVkDestroy(this->tracyContextRenderToSwapchain[i]);
+
+        for (uint32_t j = 0; j < PostProcessHandler::MAX_NUM_MIP_LEVELS; ++j)
+        {
+            TracyVkDestroy(this->tracyContextDownsample[i][j]);
+            TracyVkDestroy(this->tracyContextUpsample[i][j]);
+        }
     }
 #endif
 
@@ -1378,7 +1389,27 @@ void VulkanRenderer::recordCommandBuffers(
 #endif 
 
         this->currentComputeCommandBuffer->beginOneTimeSubmit();
-        this->computeParticles();
+
+        {
+            // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkZone(
+                this->tracyContextComputeParticles[this->currentFrame],
+                this->currentComputeCommandBuffer->getVkCommandBuffer(),
+                "GPU Compute Particles"
+            );
+#endif 
+            this->computeParticles();
+        }
+
+        // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+        TracyVkCollect(
+            this->tracyContextComputeParticles[this->currentFrame],
+            this->currentComputeCommandBuffer->getVkCommandBuffer()
+        );
+#endif 
+
         this->currentComputeCommandBuffer->end();
     }
 
@@ -1390,11 +1421,30 @@ void VulkanRenderer::recordCommandBuffers(
 
         this->currentShadowMapCommandBuffer->beginOneTimeSubmit();
 
-        // Render shadow map cascades
-        this->beginShadowMapRenderPass(this->lightHandler);
-        this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
-        this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
-        this->endShadowMapRenderPass();
+        {
+            // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkZone(
+                this->tracyContextRenderShadowMap[this->currentFrame],
+                this->currentShadowMapCommandBuffer->getVkCommandBuffer(),
+                "GPU Render Shadow Map"
+            );
+#endif 
+
+            // Render shadow map cascades
+            this->beginShadowMapRenderPass(this->lightHandler);
+            this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
+            this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
+            this->endShadowMapRenderPass();
+        }
+
+        // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+        TracyVkCollect(
+            this->tracyContextRenderShadowMap[this->currentFrame],
+            this->currentShadowMapCommandBuffer->getVkCommandBuffer(),
+        );
+#endif 
 
         this->currentShadowMapCommandBuffer->end();
     }
@@ -1404,15 +1454,33 @@ void VulkanRenderer::recordCommandBuffers(
 #ifndef VENGINE_NO_PROFILING
         ZoneNamedN(record_zone3, "Render Scene", true); //:NOLINT   
 #endif 
-
         this->currentCommandBuffer->beginOneTimeSubmit();
 
-        // Render to HDR texture
-        this->beginRenderPass();
-        this->renderDefaultMeshes(scene);
-        this->renderSkeletalAnimations(scene);
-        this->renderParticles(scene);
-        this->endRenderPass();
+        {
+            // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkZone(
+                this->tracyContextRenderScene[this->currentFrame],
+                this->currentCommandBuffer->getVkCommandBuffer(),
+                "GPU Render Scene"
+            );
+#endif 
+
+            // Render to HDR texture
+            this->beginRenderPass();
+            this->renderDefaultMeshes(scene);
+            this->renderSkeletalAnimations(scene);
+            this->renderParticles(scene);
+            this->endRenderPass();
+        }
+
+        // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+        TracyVkCollect(
+            this->tracyContextRenderScene[this->currentFrame],
+            this->currentCommandBuffer->getVkCommandBuffer()
+        );
+#endif 
 
         this->currentCommandBuffer->end();
     }
@@ -1433,19 +1501,38 @@ void VulkanRenderer::recordCommandBuffers(
 
             downsampleCommandBuffer.beginOneTimeSubmit();
 
-            this->beginBloomDownUpsampleRenderPass(
-                this->postProcessHandler.getDownsampleRenderPass(),
-                downsampleCommandBuffer,
-                i,
-                false
+            {
+                // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+                TracyVkZone(
+                    this->tracyContextDownsample[this->currentFrame][i],
+                    downsampleCommandBuffer.getVkCommandBuffer(),
+                    "GPU Downsample"
+                );
+#endif 
+
+                this->beginBloomDownUpsampleRenderPass(
+                    this->postProcessHandler.getDownsampleRenderPass(),
+                    downsampleCommandBuffer,
+                    i,
+                    false
+                );
+                this->renderBloomDownUpsample(
+                    downsampleCommandBuffer,
+                    this->postProcessHandler.getDownsampleShaderInput(),
+                    this->postProcessHandler.getDownsamplePipeline(),
+                    i - 1
+                );
+                this->endBloomDownUpsampleRenderPass(downsampleCommandBuffer);
+            }
+
+            // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkCollect(
+                this->tracyContextDownsample[this->currentFrame][i],
+                downsampleCommandBuffer.getVkCommandBuffer()
             );
-            this->renderBloomDownUpsample(
-                downsampleCommandBuffer,
-                this->postProcessHandler.getDownsampleShaderInput(),
-                this->postProcessHandler.getDownsamplePipeline(),
-                i - 1
-            );
-            this->endBloomDownUpsampleRenderPass(downsampleCommandBuffer);
+#endif
 
             downsampleCommandBuffer.end();
         }
@@ -1467,19 +1554,38 @@ void VulkanRenderer::recordCommandBuffers(
 
             upsampleCommandBuffer.beginOneTimeSubmit();
 
-            this->beginBloomDownUpsampleRenderPass(
-                this->postProcessHandler.getUpsampleRenderPass(),
-                upsampleCommandBuffer,
-                i,
-                true
+            {
+                // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+                TracyVkZone(
+                    this->tracyContextUpsample[this->currentFrame][i],
+                    upsampleCommandBuffer.getVkCommandBuffer(),
+                    "GPU Upsample"
+                );
+#endif 
+
+                this->beginBloomDownUpsampleRenderPass(
+                    this->postProcessHandler.getUpsampleRenderPass(),
+                    upsampleCommandBuffer,
+                    i,
+                    true
+                );
+                this->renderBloomDownUpsample(
+                    upsampleCommandBuffer,
+                    this->postProcessHandler.getUpsampleShaderInput(),
+                    this->postProcessHandler.getUpsamplePipeline(),
+                    i + 1
+                );
+                this->endBloomDownUpsampleRenderPass(upsampleCommandBuffer);
+            }
+
+            // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkCollect(
+                this->tracyContextUpsample[this->currentFrame][i],
+                upsampleCommandBuffer.getVkCommandBuffer()
             );
-            this->renderBloomDownUpsample(
-                upsampleCommandBuffer,
-                this->postProcessHandler.getUpsampleShaderInput(),
-                this->postProcessHandler.getUpsamplePipeline(),
-                i + 1
-            );
-            this->endBloomDownUpsampleRenderPass(upsampleCommandBuffer);
+#endif
 
             upsampleCommandBuffer.end();
         }
@@ -1493,23 +1599,36 @@ void VulkanRenderer::recordCommandBuffers(
 
         this->currentSwapchainCommandBuffer->beginOneTimeSubmit();
 
-        // Render to HDR texture to swapchain image, and UI/debug
-        this->beginSwapchainRenderPass(imageIndex);
-        this->renderToSwapchainImage();
-        this->renderUI();
-        this->renderDebugElements();
-        this->endSwapchainRenderPass();
-    }
-
-    // Imgui to backbuffer
-    {
+        {
+            // Record GPU timing
 #ifndef VENGINE_NO_PROFILING
-        ZoneNamedN(record_zone7, "Imgui To Backbuffer", true); //:NOLINT   
-#endif
+            TracyVkZone(
+                this->tracyContextRenderToSwapchain[this->currentFrame],
+                this->currentSwapchainCommandBuffer->getVkCommandBuffer(),
+                "GPU Render To Swapchain"
+            );
+#endif 
 
-        this->beginRenderpassImgui(imageIndex);
-        this->renderImgui();
-        this->endRenderpassImgui();
+            // Render to HDR texture to swapchain image, and UI/debug
+            this->beginSwapchainRenderPass(imageIndex);
+            this->renderToSwapchainImage();
+            this->renderUI();
+            this->renderDebugElements();
+            this->endSwapchainRenderPass();
+
+            // Imgui to backbuffer
+            this->beginRenderpassImgui(imageIndex);
+            this->renderImgui();
+            this->endRenderpassImgui();
+        }
+
+        // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+        TracyVkCollect(
+            this->tracyContextRenderToSwapchain[this->currentFrame],
+            this->currentSwapchainCommandBuffer->getVkCommandBuffer(),
+        );
+#endif 
 
         this->currentSwapchainCommandBuffer->end();
     }
@@ -1518,34 +1637,100 @@ void VulkanRenderer::recordCommandBuffers(
 #ifndef VENGINE_NO_PROFILING 
 void VulkanRenderer::initTracy()
 {
-    #ifndef VENGINE_NO_PROFILING
-    // Tracy stuff
-    //allocateTracyImageMemory();
-    vk::DynamicLoader dl; 
-    auto pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT = dl.getProcAddress<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
-
-    auto pfnvkGetCalibratedTimestampsEXT = dl.getProcAddress<PFN_vkGetCalibratedTimestampsEXT>("vkGetCalibratedTimestampsEXT");
-
     // Create Tracy Vulkan Context
-    this->tracyContext.resize(this->commandBuffers.getNumCommandBuffers());
-    for(size_t i = 0 ; i < this->commandBuffers.getNumCommandBuffers(); i++){
-        
-        this->tracyContext[i] = TracyVkContextCalibrated(
-            this->physicalDevice.getVkPhysicalDevice(),
-            this->getVkDevice(),             
-            this->queueFamilies.getGraphicsQueue(),
-            this->commandBuffers[i].getVkCommandBuffer(),
-            pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
-            pfnvkGetCalibratedTimestampsEXT
+    this->tracyContextComputeParticles.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextRenderShadowMap.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextRenderScene.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextRenderToSwapchain.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextDownsample.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextUpsample.resize(MAX_FRAMES_IN_FLIGHT);
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        // Compute particles
+        this->createTracyContext(
+            this->queueFamilies.getComputeQueue(),
+            this->particleHandler.getComputeCommandBuffer(i),
+            "TracyContextComputeParticles_" + std::to_string(i),
+            this->tracyContextComputeParticles[i]
         );
-        
-        std::string name = "TracyVkContext_" + std::to_string(i);
-        TracyVkContextName(this->tracyContext[i], name.c_str(), name.size());
+
+        // Render shadow map
+        this->createTracyContext(
+            this->queueFamilies.getGraphicsQueue(),
+            this->lightHandler.getShadowMapCommandBuffer(i),
+            "TracyContextRenderShadowMap_" + std::to_string(i),
+            this->tracyContextRenderShadowMap[i]
+        );
+
+        // Render scene
+        this->createTracyContext(
+            this->queueFamilies.getGraphicsQueue(),
+            this->commandBuffers[i],
+            "TracyContextRenderScene_" + std::to_string(i),
+            this->tracyContextRenderScene[i]
+        );
+
+        // Render to swapchain
+        this->createTracyContext(
+            this->queueFamilies.getGraphicsQueue(),
+            this->swapchainCommandBuffers[i],
+            "TracyContextRenderToSwapchain_" + std::to_string(i),
+            this->tracyContextRenderToSwapchain[i]
+        );
+
+        for (uint32_t j = 0; j < PostProcessHandler::MAX_NUM_MIP_LEVELS; ++j)
+        {
+            this->tracyContextDownsample[i].resize(PostProcessHandler::MAX_NUM_MIP_LEVELS);
+            this->tracyContextUpsample[i].resize(PostProcessHandler::MAX_NUM_MIP_LEVELS);
+
+            // Downsample
+            this->createTracyContext(
+                this->queueFamilies.getGraphicsQueue(),
+                this->postProcessHandler.getDownsampleCommandBuffer(i, j),
+                "TracyContextDownsample_" + std::to_string(i) + "_" + std::to_string(j),
+                this->tracyContextDownsample[i][j]
+            );
+
+            // Upsample
+            this->createTracyContext(
+                this->queueFamilies.getGraphicsQueue(),
+                this->postProcessHandler.getUpsampleCommandBuffer(i, j),
+                "TracyContextUpsample_" + std::to_string(i) + "_" + std::to_string(j),
+                this->tracyContextUpsample[i][j]
+            );
+        }
     }
     TracyHelper::setVulkanRenderReference(this);
     TracyHelper::registerTracyParameterFunctions();
-    
-    #endif 
+}
+
+void VulkanRenderer::createTracyContext(
+    vk::Queue& contextQueue,
+    CommandBuffer& contextCommandBuffer,
+    const std::string& contextName,
+    TracyVkCtx& outputContext)
+{
+    // Get vulkan function pointers
+    vk::DynamicLoader dl;
+    auto pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT = dl.getProcAddress<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
+    auto pfnvkGetCalibratedTimestampsEXT = dl.getProcAddress<PFN_vkGetCalibratedTimestampsEXT>("vkGetCalibratedTimestampsEXT");
+
+    // Context
+    outputContext = TracyVkContextCalibrated(
+        this->physicalDevice.getVkPhysicalDevice(),
+        this->getVkDevice(),
+        contextQueue,
+        contextCommandBuffer.getVkCommandBuffer(),
+        pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
+        pfnvkGetCalibratedTimestampsEXT
+    );
+
+    // Context name
+    TracyVkContextName(
+        outputContext,
+        contextName.c_str(),
+        contextName.size()
+    );
 }
 #endif
 
