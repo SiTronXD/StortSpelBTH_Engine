@@ -84,6 +84,9 @@ void AIHandler::drawImgui(){
 
     ImGui::End();
 }
+
+
+#include "../performance_checker.hpp"
 void AIHandler::update(float dt)
 {
     this->dt = dt;
@@ -94,11 +97,17 @@ void AIHandler::update(float dt)
         currentScene = this->sh->getScene();
     }
 
+    perfChecker.start(TIME_ID::AI_HANDLER_UPDATE);
+    perfChecker.start(TIME_ID::EVENT_UPDATE);
     eventSystem.update();
+    perfChecker.stop(TIME_ID::EVENT_UPDATE);
     if (!disableAI)
     {
+        perfChecker.start(TIME_ID::FSM_UPDATE);
         updateEntityFSMs();
+        perfChecker.stop(TIME_ID::FSM_UPDATE);
     }
+    perfChecker.stop(TIME_ID::AI_HANDLER_UPDATE);
     drawImgui();
     switchedScene = false;
 }

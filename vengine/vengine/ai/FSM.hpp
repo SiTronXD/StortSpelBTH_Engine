@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 
-
+#include "../performance_checker.hpp"
 class FSM_Node
 {
 private:
@@ -23,7 +23,9 @@ public:
 public:
 	void execute(uint32_t entityID) 
     {
+        perfChecker.start(TIME_ID::BT_EXECUTE);        
         if(bt){bt->execute(entityID);}else{Log::error("Failed: BT is a nullptr!");} 
+        perfChecker.stop(TIME_ID::BT_EXECUTE);
     }
 
 	void addNeighbor(EntityEvent* event, FSM_Node* node)
