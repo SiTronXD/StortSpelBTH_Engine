@@ -418,6 +418,12 @@ void VulkanRenderer::cleanup()
 
 void VulkanRenderer::draw(Scene* scene)
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped;
+    const char* const draw_frame = "Draw Frame";
+    FrameMarkStart(draw_frame);
+#endif
+
     // Apply bloom settings from the scene
     const BloomSettings& sceneBloomSettings = 
         scene->getBloomSettings();
@@ -435,17 +441,12 @@ void VulkanRenderer::draw(Scene* scene)
     this->pushConstantData.settings.y = fogSettings.fogStartDist;
     this->pushConstantData.settings.z = std::max(fogSettings.fogAbsorption, 0.0f);
 
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped;
-    const char* const draw_frame = "Draw Frame";
-    FrameMarkStart(draw_frame);        
-#endif    
+    ImGui::Render();
+
     {
         #ifndef VENGINE_NO_PROFILING
         ZoneNamedN(draw_zone1, "Wait for fences", true); //:NOLINT   
         #endif 
-
-        ImGui::Render();
         
         // TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
         // Wait for The Fence to be signaled from last Draw for this currrent Frame; 
@@ -539,8 +540,12 @@ void VulkanRenderer::draw(Scene* scene)
         delete cameraTransform;
     }
     
-    // Submit to queues
+    // Submit to both compute and graphics queues
     {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(draw_zone5, "Queue Submits", true); //:NOLINT   
+#endif 
+
         // Reset submit arrays
         this->computeSubmitArray.reset();
         this->graphicsSubmitArray.reset();
@@ -654,10 +659,17 @@ void VulkanRenderer::draw(Scene* scene)
             Log::error("Failed to submit graphics commands. Error: " + std::to_string(uint32_t(graphicsQueueResult)));
         }
     }
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+
+    // Imgui update/render platform windows
     {
-        ImGui::UpdatePlatformWindows();        
-        ImGui::RenderPlatformWindowsDefault();
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(draw_zone6, "ImGui Update/Render Platform Windows", true); //:NOLINT   
+#endif 
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
     }
 
     // Submit to presentation queue
@@ -1099,7 +1111,21 @@ VulkanRenderer::VulkanRenderer()
     uiRenderer(nullptr), 
     debugRenderer(nullptr),
     window(nullptr),
-    hasAnimations(false)
+    hasAnimations(false),
+    currentCommandBuffer(nullptr),
+    currentComputeCommandBuffer(nullptr),
+    currentShadowMapCommandBuffer(nullptr),
+    currentSwapchainCommandBuffer(nullptr),
+    allLightsInfoUB(~0u),
+    animAllLightsInfoUB(~0u),
+    lightBufferSB(~0u),
+    animLightBufferSB(~0u),
+    shadowMapDataUB(~0u),
+    animShadowMapDataUB(~0u),
+    viewProjectionUB(~0u),
+    animViewProjectionUB(~0u),
+    bloomSettingsUB(~0u),
+    hdrRenderTextureDescriptorIndex(~0u)
 {
     loadConfIntoMemory();
 }
@@ -1245,202 +1271,248 @@ void VulkanRenderer::recordCommandBuffers(
     ZoneTransient(recordRenderPassCommands_zone1,  true); //:NOLINT   
 #endif
 
-    this->currentComputeCommandBuffer =
-        &this->particleHandler
-            .getComputeCommandBuffer(this->currentFrame);
-    this->currentShadowMapCommandBuffer =
-        &this->lightHandler
-        .getShadowMapCommandBuffer(this->currentFrame);
-    this->currentCommandBuffer =
-        &this->commandBuffers[this->currentFrame];
-    this->currentSwapchainCommandBuffer =
-        &this->swapchainCommandBuffers[this->currentFrame];
+    // Update handlers, which in turn updates their buffers
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone0, "Handler Updates", true); //:NOLINT   
+#endif 
+
+        this->currentComputeCommandBuffer =
+            &this->particleHandler
+                .getComputeCommandBuffer(this->currentFrame);
+        this->currentShadowMapCommandBuffer =
+            &this->lightHandler
+            .getShadowMapCommandBuffer(this->currentFrame);
+        this->currentCommandBuffer =
+            &this->commandBuffers[this->currentFrame];
+        this->currentSwapchainCommandBuffer =
+            &this->swapchainCommandBuffers[this->currentFrame];
 
     
-    // Set current frame
-    this->shaderInput.setCurrentFrame(this->currentFrame);
-    if (hasAnimations)
-    {
-        this->animShaderInput.setCurrentFrame(this->currentFrame);
-    }
-    this->uiRenderer->getShaderInput().setCurrentFrame(
-        this->currentFrame
-    );
-    this->debugRenderer->getLineShaderInput().setCurrentFrame(
-        this->currentFrame
-    );
-    this->debugRenderer->getMeshShaderInput().setCurrentFrame(
-        this->currentFrame
-    );
-    this->swapchainShaderInput.setCurrentFrame(this->currentFrame);
+        // Set current frame
+        this->shaderInput.setCurrentFrame(this->currentFrame);
+        if (hasAnimations)
+        {
+            this->animShaderInput.setCurrentFrame(this->currentFrame);
+        }
+        this->uiRenderer->getShaderInput().setCurrentFrame(
+            this->currentFrame
+        );
+        this->debugRenderer->getLineShaderInput().setCurrentFrame(
+            this->currentFrame
+        );
+        this->debugRenderer->getMeshShaderInput().setCurrentFrame(
+            this->currentFrame
+        );
+        this->swapchainShaderInput.setCurrentFrame(this->currentFrame);
 
-    // Update light buffers
-    this->lightHandler.updateLightBuffers(
-        scene,
-        this->shaderInput,
-        this->animShaderInput,
-        this->allLightsInfoUB,
-        this->animAllLightsInfoUB,
-        this->lightBufferSB,
-        this->animLightBufferSB,
-        this->hasAnimations,
-        glm::vec3(this->cameraDataUBO.worldPosition),
-        *camera,
-        this->currentFrame
-    );
+        // Update light buffers
+        this->lightHandler.updateLightBuffers(
+            scene,
+            this->shaderInput,
+            this->animShaderInput,
+            this->allLightsInfoUB,
+            this->animAllLightsInfoUB,
+            this->lightBufferSB,
+            this->animLightBufferSB,
+            this->hasAnimations,
+            glm::vec3(this->cameraDataUBO.worldPosition),
+            *camera,
+            this->currentFrame
+        );
 
-    // Update particles info
-    this->particleHandler.update(
-        scene,
-        this->cameraDataUBO,
-        this->currentFrame
-    );
+        // Update particles info
+        this->particleHandler.update(
+            scene,
+            this->cameraDataUBO,
+            this->currentFrame
+        );
 
-    // Default shader input
-    this->shaderInput.updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->cameraDataUBO
-    );
-    this->shaderInput.updateUniformBuffer(
-        this->shadowMapDataUB,
-        (void*) &this->lightHandler.getShadowMapData()
-    );
-
-    // Animation shader input
-    if (this->hasAnimations)
-	{
-		this->animShaderInput.updateUniformBuffer(
-			this->viewProjectionUB, 
+        // Default shader input
+        this->shaderInput.updateUniformBuffer(
+            this->viewProjectionUB,
             (void*)&this->cameraDataUBO
-		);
-        this->animShaderInput.updateUniformBuffer(
-            this->animShadowMapDataUB,
+        );
+        this->shaderInput.updateUniformBuffer(
+            this->shadowMapDataUB,
             (void*) &this->lightHandler.getShadowMapData()
         );
-	}
 
-    // UI shader input
-    this->uiRenderer->prepareForGPU();
+        // Animation shader input
+        if (this->hasAnimations)
+	    {
+		    this->animShaderInput.updateUniformBuffer(
+			    this->viewProjectionUB, 
+                (void*)&this->cameraDataUBO
+		    );
+            this->animShaderInput.updateUniformBuffer(
+                this->animShadowMapDataUB,
+                (void*) &this->lightHandler.getShadowMapData()
+            );
+	    }
 
-    // Debug renderer shader input
-    this->debugRenderer->prepareGPU(this->currentFrame);
-    this->debugRenderer->getLineShaderInput().updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->cameraDataUBO
-    );
-    this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->cameraDataUBO
-    );
+        // UI shader input
+        this->uiRenderer->prepareForGPU();
 
-    this->swapchainShaderInput.updateUniformBuffer(
-        this->bloomSettingsUB,
-        (void*) &this->bloomSettingsData
-    );
+        // Debug renderer shader input
+        this->debugRenderer->prepareGPU(this->currentFrame);
+        this->debugRenderer->getLineShaderInput().updateUniformBuffer(
+            this->viewProjectionUB,
+            (void*)&this->cameraDataUBO
+        );
+        this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
+            this->viewProjectionUB,
+            (void*)&this->cameraDataUBO
+        );
+
+        this->swapchainShaderInput.updateUniformBuffer(
+            this->bloomSettingsUB,
+            (void*) &this->bloomSettingsData
+        );
+    }
 
     // Particle compute
-    this->currentComputeCommandBuffer->beginOneTimeSubmit();
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone1, "Particle Compute Dispatch", true); //:NOLINT   
+#endif 
+
+        this->currentComputeCommandBuffer->beginOneTimeSubmit();
         this->computeParticles();
-    this->currentComputeCommandBuffer->end();
+        this->currentComputeCommandBuffer->end();
+    }
 
     // Begin shadow map command buffer
-    this->currentShadowMapCommandBuffer->beginOneTimeSubmit();
-            
-    // Render shadow map cascades
-    this->beginShadowMapRenderPass(this->lightHandler);
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone2, "Render Shadow Map", true); //:NOLINT   
+#endif 
+
+        this->currentShadowMapCommandBuffer->beginOneTimeSubmit();
+
+        // Render shadow map cascades
+        this->beginShadowMapRenderPass(this->lightHandler);
         this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
         this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
-    this->endShadowMapRenderPass();
-    
-    this->currentShadowMapCommandBuffer->end();
+        this->endShadowMapRenderPass();
 
+        this->currentShadowMapCommandBuffer->end();
+    }
 
     // Begin regular command buffer
-    this->currentCommandBuffer->beginOneTimeSubmit();
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone3, "Render Scene", true); //:NOLINT   
+#endif 
 
-    // Render to HDR texture
-    this->beginRenderPass();
+        this->currentCommandBuffer->beginOneTimeSubmit();
+
+        // Render to HDR texture
+        this->beginRenderPass();
         this->renderDefaultMeshes(scene);
         this->renderSkeletalAnimations(scene);
         this->renderParticles(scene);
-    this->endRenderPass();
+        this->endRenderPass();
 
-    this->currentCommandBuffer->end();
-
+        this->currentCommandBuffer->end();
+    }
 
     // Downsample HDR texture
-    for (uint32_t i = 1; i < this->postProcessHandler.getNumMipLevelsInUse(); ++i)
     {
-        CommandBuffer& downsampleCommandBuffer =
-            this->postProcessHandler.getDownsampleCommandBuffer(
-                this->currentFrame,
-                i
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone4, "Downsample HDR Texture", true); //:NOLINT   
+#endif
+
+        for (uint32_t i = 1; i < this->postProcessHandler.getNumMipLevelsInUse(); ++i)
+        {
+            CommandBuffer& downsampleCommandBuffer =
+                this->postProcessHandler.getDownsampleCommandBuffer(
+                    this->currentFrame,
+                    i
+                );
+
+            downsampleCommandBuffer.beginOneTimeSubmit();
+
+            this->beginBloomDownUpsampleRenderPass(
+                this->postProcessHandler.getDownsampleRenderPass(),
+                downsampleCommandBuffer,
+                i,
+                false
             );
-
-        downsampleCommandBuffer.beginOneTimeSubmit();
-
-        this->beginBloomDownUpsampleRenderPass(
-            this->postProcessHandler.getDownsampleRenderPass(), 
-            downsampleCommandBuffer, 
-            i,
-            false
-        );
             this->renderBloomDownUpsample(
-                downsampleCommandBuffer, 
+                downsampleCommandBuffer,
                 this->postProcessHandler.getDownsampleShaderInput(),
                 this->postProcessHandler.getDownsamplePipeline(),
                 i - 1
             );
-        this->endBloomDownUpsampleRenderPass(downsampleCommandBuffer);
+            this->endBloomDownUpsampleRenderPass(downsampleCommandBuffer);
 
-        downsampleCommandBuffer.end();
+            downsampleCommandBuffer.end();
+        }
     }
 
     // Upsample HDR texture
-    for (uint32_t i = this->postProcessHandler.getNumMipLevelsInUse() - 2; i >= 1; --i)
     {
-        CommandBuffer& upsampleCommandBuffer =
-            this->postProcessHandler.getUpsampleCommandBuffer(
-                this->currentFrame,
-                i
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone5, "Upsample HDR Texture", true); //:NOLINT   
+#endif
+
+        for (uint32_t i = this->postProcessHandler.getNumMipLevelsInUse() - 2; i >= 1; --i)
+        {
+            CommandBuffer& upsampleCommandBuffer =
+                this->postProcessHandler.getUpsampleCommandBuffer(
+                    this->currentFrame,
+                    i
+                );
+
+            upsampleCommandBuffer.beginOneTimeSubmit();
+
+            this->beginBloomDownUpsampleRenderPass(
+                this->postProcessHandler.getUpsampleRenderPass(),
+                upsampleCommandBuffer,
+                i,
+                true
             );
+            this->renderBloomDownUpsample(
+                upsampleCommandBuffer,
+                this->postProcessHandler.getUpsampleShaderInput(),
+                this->postProcessHandler.getUpsamplePipeline(),
+                i + 1
+            );
+            this->endBloomDownUpsampleRenderPass(upsampleCommandBuffer);
 
-        upsampleCommandBuffer.beginOneTimeSubmit();
-
-        this->beginBloomDownUpsampleRenderPass(
-            this->postProcessHandler.getUpsampleRenderPass(),
-            upsampleCommandBuffer,
-            i,
-            true
-        );
-        this->renderBloomDownUpsample(
-            upsampleCommandBuffer,
-            this->postProcessHandler.getUpsampleShaderInput(),
-            this->postProcessHandler.getUpsamplePipeline(),
-            i + 1
-        );
-        this->endBloomDownUpsampleRenderPass(upsampleCommandBuffer);
-
-        upsampleCommandBuffer.end();
+            upsampleCommandBuffer.end();
+        }
     }
 
+    // HDR to backbuffer
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone6, "HDR To Backbuffer", true); //:NOLINT   
+#endif
 
-    // Begin swapchain command buffer
-    this->currentSwapchainCommandBuffer->beginOneTimeSubmit();
+        this->currentSwapchainCommandBuffer->beginOneTimeSubmit();
 
-    // Render to HDR texture to swapchain image, and UI/debug
-    this->beginSwapchainRenderPass(imageIndex);
+        // Render to HDR texture to swapchain image, and UI/debug
+        this->beginSwapchainRenderPass(imageIndex);
         this->renderToSwapchainImage();
         this->renderUI();
         this->renderDebugElements();
-    this->endSwapchainRenderPass();
+        this->endSwapchainRenderPass();
+    }
 
-    // Imgui
-    this->beginRenderpassImgui(imageIndex);
+    // Imgui to backbuffer
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone7, "Imgui To Backbuffer", true); //:NOLINT   
+#endif
+
+        this->beginRenderpassImgui(imageIndex);
         this->renderImgui();
-    this->endRenderpassImgui();
+        this->endRenderpassImgui();
 
-    this->currentSwapchainCommandBuffer->end();
+        this->currentSwapchainCommandBuffer->end();
+    }
 }
 
 #ifndef VENGINE_NO_PROFILING 
