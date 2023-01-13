@@ -33,7 +33,15 @@ using stbi_uc = unsigned char;
 class VulkanRenderer 
 {
 #ifndef VENGINE_NO_PROFILING
-    std::vector<TracyVkCtx> tracyContext;
+    // context[frameInFlight]
+    std::vector<TracyVkCtx> tracyContextComputeParticles;
+    std::vector<TracyVkCtx> tracyContextRenderShadowMap;
+    std::vector<TracyVkCtx> tracyContextRenderScene;
+    std::vector<TracyVkCtx> tracyContextRenderToSwapchain;
+
+    // context[frameInFlight][mipLevel]
+    std::vector<std::vector<TracyVkCtx>> tracyContextDownsample;
+    std::vector<std::vector<TracyVkCtx>> tracyContextUpsample;
 #endif
 
     const int MAX_FRAMES_IN_FLIGHT = 3;
@@ -133,6 +141,11 @@ class VulkanRenderer
     // Tracy
 #ifndef VENGINE_NO_PROFILING    
     void initTracy();
+    void createTracyContext(
+        vk::Queue& contextQueue,
+        CommandBuffer& contextCommandBuffer,
+        const std::string& contextName,
+        TracyVkCtx& outputContext);
 #endif
 
 private:

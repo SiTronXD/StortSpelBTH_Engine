@@ -165,9 +165,6 @@ int VulkanRenderer::init(
 
         this->createSynchronisation();        
 
-#ifndef VENGINE_NO_PROFILING
-        this->initTracy();
-#endif
         this->initImgui();
 
         this->initResourceManager();
@@ -254,6 +251,11 @@ int VulkanRenderer::init(
         this->computeCommandPool,
         MAX_FRAMES_IN_FLIGHT
     );
+
+    // Init tracy
+#ifndef VENGINE_NO_PROFILING
+    this->initTracy();
+#endif
 
     // Render-to-Swapchain shader input and pipeline
     this->swapchainShaderInput.beginForInput(
@@ -344,9 +346,18 @@ void VulkanRenderer::cleanup()
 #ifndef VENGINE_NO_PROFILING
     CustomFree(this->tracyImage);
 
-    for(auto &tracy_context : this->tracyContext)
+    for(uint32_t i = 0; i < MAX_FRAMES_IN_FLIGHT; ++i)
     {
-        TracyVkDestroy(tracy_context);
+        TracyVkDestroy(this->tracyContextComputeParticles[i]);
+        TracyVkDestroy(this->tracyContextRenderShadowMap[i]);
+        TracyVkDestroy(this->tracyContextRenderScene[i]);
+        TracyVkDestroy(this->tracyContextRenderToSwapchain[i]);
+
+        for (uint32_t j = 0; j < PostProcessHandler::MAX_NUM_MIP_LEVELS; ++j)
+        {
+            TracyVkDestroy(this->tracyContextDownsample[i][j]);
+            TracyVkDestroy(this->tracyContextUpsample[i][j]);
+        }
     }
 #endif
 
@@ -418,6 +429,12 @@ void VulkanRenderer::cleanup()
 
 void VulkanRenderer::draw(Scene* scene)
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped;
+    const char* const draw_frame = "Draw Frame";
+    FrameMarkStart(draw_frame);
+#endif
+
     // Apply bloom settings from the scene
     const BloomSettings& sceneBloomSettings = 
         scene->getBloomSettings();
@@ -435,17 +452,12 @@ void VulkanRenderer::draw(Scene* scene)
     this->pushConstantData.settings.y = fogSettings.fogStartDist;
     this->pushConstantData.settings.z = std::max(fogSettings.fogAbsorption, 0.0f);
 
-#ifndef VENGINE_NO_PROFILING
-    ZoneScoped;
-    const char* const draw_frame = "Draw Frame";
-    FrameMarkStart(draw_frame);        
-#endif    
+    ImGui::Render();
+
     {
         #ifndef VENGINE_NO_PROFILING
         ZoneNamedN(draw_zone1, "Wait for fences", true); //:NOLINT   
         #endif 
-
-        ImGui::Render();
         
         // TODO: PROFILING; Check if its faster to have wait for fences after acquire image or not...
         // Wait for The Fence to be signaled from last Draw for this currrent Frame; 
@@ -539,8 +551,12 @@ void VulkanRenderer::draw(Scene* scene)
         delete cameraTransform;
     }
     
-    // Submit to queues
+    // Submit to both compute and graphics queues
     {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(draw_zone5, "Queue Submits", true); //:NOLINT   
+#endif 
+
         // Reset submit arrays
         this->computeSubmitArray.reset();
         this->graphicsSubmitArray.reset();
@@ -654,10 +670,17 @@ void VulkanRenderer::draw(Scene* scene)
             Log::error("Failed to submit graphics commands. Error: " + std::to_string(uint32_t(graphicsQueueResult)));
         }
     }
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+
+    // Imgui update/render platform windows
     {
-        ImGui::UpdatePlatformWindows();        
-        ImGui::RenderPlatformWindowsDefault();
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(draw_zone6, "ImGui Update/Render Platform Windows", true); //:NOLINT   
+#endif 
+        if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
     }
 
     // Submit to presentation queue
@@ -1099,7 +1122,21 @@ VulkanRenderer::VulkanRenderer()
     uiRenderer(nullptr), 
     debugRenderer(nullptr),
     window(nullptr),
-    hasAnimations(false)
+    hasAnimations(false),
+    currentCommandBuffer(nullptr),
+    currentComputeCommandBuffer(nullptr),
+    currentShadowMapCommandBuffer(nullptr),
+    currentSwapchainCommandBuffer(nullptr),
+    allLightsInfoUB(~0u),
+    animAllLightsInfoUB(~0u),
+    lightBufferSB(~0u),
+    animLightBufferSB(~0u),
+    shadowMapDataUB(~0u),
+    animShadowMapDataUB(~0u),
+    viewProjectionUB(~0u),
+    animViewProjectionUB(~0u),
+    bloomSettingsUB(~0u),
+    hdrRenderTextureDescriptorIndex(~0u)
 {
     loadConfIntoMemory();
 }
@@ -1245,235 +1282,455 @@ void VulkanRenderer::recordCommandBuffers(
     ZoneTransient(recordRenderPassCommands_zone1,  true); //:NOLINT   
 #endif
 
-    this->currentComputeCommandBuffer =
-        &this->particleHandler
-            .getComputeCommandBuffer(this->currentFrame);
-    this->currentShadowMapCommandBuffer =
-        &this->lightHandler
-        .getShadowMapCommandBuffer(this->currentFrame);
-    this->currentCommandBuffer =
-        &this->commandBuffers[this->currentFrame];
-    this->currentSwapchainCommandBuffer =
-        &this->swapchainCommandBuffers[this->currentFrame];
+    // Update handlers, which in turn updates their buffers
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone0, "Handler Updates", true); //:NOLINT   
+#endif 
+
+        this->currentComputeCommandBuffer =
+            &this->particleHandler
+                .getComputeCommandBuffer(this->currentFrame);
+        this->currentShadowMapCommandBuffer =
+            &this->lightHandler
+            .getShadowMapCommandBuffer(this->currentFrame);
+        this->currentCommandBuffer =
+            &this->commandBuffers[this->currentFrame];
+        this->currentSwapchainCommandBuffer =
+            &this->swapchainCommandBuffers[this->currentFrame];
 
     
-    // Set current frame
-    this->shaderInput.setCurrentFrame(this->currentFrame);
-    if (hasAnimations)
-    {
-        this->animShaderInput.setCurrentFrame(this->currentFrame);
-    }
-    this->uiRenderer->getShaderInput().setCurrentFrame(
-        this->currentFrame
-    );
-    this->debugRenderer->getLineShaderInput().setCurrentFrame(
-        this->currentFrame
-    );
-    this->debugRenderer->getMeshShaderInput().setCurrentFrame(
-        this->currentFrame
-    );
-    this->swapchainShaderInput.setCurrentFrame(this->currentFrame);
+        // Set current frame
+        this->shaderInput.setCurrentFrame(this->currentFrame);
+        if (hasAnimations)
+        {
+            this->animShaderInput.setCurrentFrame(this->currentFrame);
+        }
+        this->uiRenderer->getShaderInput().setCurrentFrame(
+            this->currentFrame
+        );
+        this->debugRenderer->getLineShaderInput().setCurrentFrame(
+            this->currentFrame
+        );
+        this->debugRenderer->getMeshShaderInput().setCurrentFrame(
+            this->currentFrame
+        );
+        this->swapchainShaderInput.setCurrentFrame(this->currentFrame);
 
-    // Update light buffers
-    this->lightHandler.updateLightBuffers(
-        scene,
-        this->shaderInput,
-        this->animShaderInput,
-        this->allLightsInfoUB,
-        this->animAllLightsInfoUB,
-        this->lightBufferSB,
-        this->animLightBufferSB,
-        this->hasAnimations,
-        glm::vec3(this->cameraDataUBO.worldPosition),
-        *camera,
-        this->currentFrame
-    );
+        // Update light buffers
+        this->lightHandler.updateLightBuffers(
+            scene,
+            this->shaderInput,
+            this->animShaderInput,
+            this->allLightsInfoUB,
+            this->animAllLightsInfoUB,
+            this->lightBufferSB,
+            this->animLightBufferSB,
+            this->hasAnimations,
+            glm::vec3(this->cameraDataUBO.worldPosition),
+            *camera,
+            this->currentFrame
+        );
 
-    // Update particles info
-    this->particleHandler.update(
-        scene,
-        this->cameraDataUBO,
-        this->currentFrame
-    );
+        // Update particles info
+        this->particleHandler.update(
+            scene,
+            this->cameraDataUBO,
+            this->currentFrame
+        );
 
-    // Default shader input
-    this->shaderInput.updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->cameraDataUBO
-    );
-    this->shaderInput.updateUniformBuffer(
-        this->shadowMapDataUB,
-        (void*) &this->lightHandler.getShadowMapData()
-    );
-
-    // Animation shader input
-    if (this->hasAnimations)
-	{
-		this->animShaderInput.updateUniformBuffer(
-			this->viewProjectionUB, 
+        // Default shader input
+        this->shaderInput.updateUniformBuffer(
+            this->viewProjectionUB,
             (void*)&this->cameraDataUBO
-		);
-        this->animShaderInput.updateUniformBuffer(
-            this->animShadowMapDataUB,
+        );
+        this->shaderInput.updateUniformBuffer(
+            this->shadowMapDataUB,
             (void*) &this->lightHandler.getShadowMapData()
         );
-	}
 
-    // UI shader input
-    this->uiRenderer->prepareForGPU();
+        // Animation shader input
+        if (this->hasAnimations)
+	    {
+		    this->animShaderInput.updateUniformBuffer(
+			    this->viewProjectionUB, 
+                (void*)&this->cameraDataUBO
+		    );
+            this->animShaderInput.updateUniformBuffer(
+                this->animShadowMapDataUB,
+                (void*) &this->lightHandler.getShadowMapData()
+            );
+	    }
 
-    // Debug renderer shader input
-    this->debugRenderer->prepareGPU(this->currentFrame);
-    this->debugRenderer->getLineShaderInput().updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->cameraDataUBO
-    );
-    this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
-        this->viewProjectionUB,
-        (void*)&this->cameraDataUBO
-    );
+        // UI shader input
+        this->uiRenderer->prepareForGPU();
 
-    this->swapchainShaderInput.updateUniformBuffer(
-        this->bloomSettingsUB,
-        (void*) &this->bloomSettingsData
-    );
+        // Debug renderer shader input
+        this->debugRenderer->prepareGPU(this->currentFrame);
+        this->debugRenderer->getLineShaderInput().updateUniformBuffer(
+            this->viewProjectionUB,
+            (void*)&this->cameraDataUBO
+        );
+        this->debugRenderer->getMeshShaderInput().updateUniformBuffer(
+            this->viewProjectionUB,
+            (void*)&this->cameraDataUBO
+        );
+
+        this->swapchainShaderInput.updateUniformBuffer(
+            this->bloomSettingsUB,
+            (void*) &this->bloomSettingsData
+        );
+    }
 
     // Particle compute
-    this->currentComputeCommandBuffer->beginOneTimeSubmit();
-        this->computeParticles();
-    this->currentComputeCommandBuffer->end();
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone1, "Particle Compute Dispatch", true); //:NOLINT   
+#endif 
+
+        this->currentComputeCommandBuffer->beginOneTimeSubmit();
+
+        {
+            // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkZone(
+                this->tracyContextComputeParticles[this->currentFrame],
+                this->currentComputeCommandBuffer->getVkCommandBuffer(),
+                "GPU Compute Particles"
+            );
+#endif 
+            this->computeParticles();
+        }
+
+        // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+        TracyVkCollect(
+            this->tracyContextComputeParticles[this->currentFrame],
+            this->currentComputeCommandBuffer->getVkCommandBuffer()
+        );
+#endif 
+
+        this->currentComputeCommandBuffer->end();
+    }
 
     // Begin shadow map command buffer
-    this->currentShadowMapCommandBuffer->beginOneTimeSubmit();
-            
-    // Render shadow map cascades
-    this->beginShadowMapRenderPass(this->lightHandler);
-        this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
-        this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
-    this->endShadowMapRenderPass();
-    
-    this->currentShadowMapCommandBuffer->end();
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone2, "Render Shadow Map", true); //:NOLINT   
+#endif 
 
+        this->currentShadowMapCommandBuffer->beginOneTimeSubmit();
+
+        {
+            // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkZone(
+                this->tracyContextRenderShadowMap[this->currentFrame],
+                this->currentShadowMapCommandBuffer->getVkCommandBuffer(),
+                "GPU Render Shadow Map"
+            );
+#endif 
+
+            // Render shadow map cascades
+            this->beginShadowMapRenderPass(this->lightHandler);
+            this->renderShadowMapDefaultMeshes(scene, this->lightHandler);
+            this->renderShadowMapSkeletalAnimations(scene, this->lightHandler);
+            this->endShadowMapRenderPass();
+        }
+
+        // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+        TracyVkCollect(
+            this->tracyContextRenderShadowMap[this->currentFrame],
+            this->currentShadowMapCommandBuffer->getVkCommandBuffer(),
+        );
+#endif 
+
+        this->currentShadowMapCommandBuffer->end();
+    }
 
     // Begin regular command buffer
-    this->currentCommandBuffer->beginOneTimeSubmit();
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone3, "Render Scene", true); //:NOLINT   
+#endif 
+        this->currentCommandBuffer->beginOneTimeSubmit();
 
-    // Render to HDR texture
-    this->beginRenderPass();
-        this->renderDefaultMeshes(scene);
-        this->renderSkeletalAnimations(scene);
-        this->renderParticles(scene);
-    this->endRenderPass();
+        {
+            // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkZone(
+                this->tracyContextRenderScene[this->currentFrame],
+                this->currentCommandBuffer->getVkCommandBuffer(),
+                "GPU Render Scene"
+            );
+#endif 
 
-    this->currentCommandBuffer->end();
+            // Render to HDR texture
+            this->beginRenderPass();
+            this->renderDefaultMeshes(scene);
+            this->renderSkeletalAnimations(scene);
+            this->renderParticles(scene);
+            this->endRenderPass();
+        }
 
+        // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+        TracyVkCollect(
+            this->tracyContextRenderScene[this->currentFrame],
+            this->currentCommandBuffer->getVkCommandBuffer()
+        );
+#endif 
+
+        this->currentCommandBuffer->end();
+    }
 
     // Downsample HDR texture
-    for (uint32_t i = 1; i < this->postProcessHandler.getNumMipLevelsInUse(); ++i)
     {
-        CommandBuffer& downsampleCommandBuffer =
-            this->postProcessHandler.getDownsampleCommandBuffer(
-                this->currentFrame,
-                i
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone4, "Downsample HDR Texture", true); //:NOLINT   
+#endif
+
+        for (uint32_t i = 1; i < this->postProcessHandler.getNumMipLevelsInUse(); ++i)
+        {
+            CommandBuffer& downsampleCommandBuffer =
+                this->postProcessHandler.getDownsampleCommandBuffer(
+                    this->currentFrame,
+                    i
+                );
+
+            downsampleCommandBuffer.beginOneTimeSubmit();
+
+            {
+                // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+                TracyVkZone(
+                    this->tracyContextDownsample[this->currentFrame][i],
+                    downsampleCommandBuffer.getVkCommandBuffer(),
+                    "GPU Downsample"
+                );
+#endif 
+
+                this->beginBloomDownUpsampleRenderPass(
+                    this->postProcessHandler.getDownsampleRenderPass(),
+                    downsampleCommandBuffer,
+                    i,
+                    false
+                );
+                this->renderBloomDownUpsample(
+                    downsampleCommandBuffer,
+                    this->postProcessHandler.getDownsampleShaderInput(),
+                    this->postProcessHandler.getDownsamplePipeline(),
+                    i - 1
+                );
+                this->endBloomDownUpsampleRenderPass(downsampleCommandBuffer);
+            }
+
+            // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkCollect(
+                this->tracyContextDownsample[this->currentFrame][i],
+                downsampleCommandBuffer.getVkCommandBuffer()
             );
+#endif
 
-        downsampleCommandBuffer.beginOneTimeSubmit();
-
-        this->beginBloomDownUpsampleRenderPass(
-            this->postProcessHandler.getDownsampleRenderPass(), 
-            downsampleCommandBuffer, 
-            i,
-            false
-        );
-            this->renderBloomDownUpsample(
-                downsampleCommandBuffer, 
-                this->postProcessHandler.getDownsampleShaderInput(),
-                this->postProcessHandler.getDownsamplePipeline(),
-                i - 1
-            );
-        this->endBloomDownUpsampleRenderPass(downsampleCommandBuffer);
-
-        downsampleCommandBuffer.end();
+            downsampleCommandBuffer.end();
+        }
     }
 
     // Upsample HDR texture
-    for (uint32_t i = this->postProcessHandler.getNumMipLevelsInUse() - 2; i >= 1; --i)
     {
-        CommandBuffer& upsampleCommandBuffer =
-            this->postProcessHandler.getUpsampleCommandBuffer(
-                this->currentFrame,
-                i
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone5, "Upsample HDR Texture", true); //:NOLINT   
+#endif
+
+        for (uint32_t i = this->postProcessHandler.getNumMipLevelsInUse() - 2; i >= 1; --i)
+        {
+            CommandBuffer& upsampleCommandBuffer =
+                this->postProcessHandler.getUpsampleCommandBuffer(
+                    this->currentFrame,
+                    i
+                );
+
+            upsampleCommandBuffer.beginOneTimeSubmit();
+
+            {
+                // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+                TracyVkZone(
+                    this->tracyContextUpsample[this->currentFrame][i],
+                    upsampleCommandBuffer.getVkCommandBuffer(),
+                    "GPU Upsample"
+                );
+#endif 
+
+                this->beginBloomDownUpsampleRenderPass(
+                    this->postProcessHandler.getUpsampleRenderPass(),
+                    upsampleCommandBuffer,
+                    i,
+                    true
+                );
+                this->renderBloomDownUpsample(
+                    upsampleCommandBuffer,
+                    this->postProcessHandler.getUpsampleShaderInput(),
+                    this->postProcessHandler.getUpsamplePipeline(),
+                    i + 1
+                );
+                this->endBloomDownUpsampleRenderPass(upsampleCommandBuffer);
+            }
+
+            // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkCollect(
+                this->tracyContextUpsample[this->currentFrame][i],
+                upsampleCommandBuffer.getVkCommandBuffer()
             );
+#endif
 
-        upsampleCommandBuffer.beginOneTimeSubmit();
-
-        this->beginBloomDownUpsampleRenderPass(
-            this->postProcessHandler.getUpsampleRenderPass(),
-            upsampleCommandBuffer,
-            i,
-            true
-        );
-        this->renderBloomDownUpsample(
-            upsampleCommandBuffer,
-            this->postProcessHandler.getUpsampleShaderInput(),
-            this->postProcessHandler.getUpsamplePipeline(),
-            i + 1
-        );
-        this->endBloomDownUpsampleRenderPass(upsampleCommandBuffer);
-
-        upsampleCommandBuffer.end();
+            upsampleCommandBuffer.end();
+        }
     }
 
+    // HDR to backbuffer
+    {
+#ifndef VENGINE_NO_PROFILING
+        ZoneNamedN(record_zone6, "HDR To Backbuffer", true); //:NOLINT   
+#endif
 
-    // Begin swapchain command buffer
-    this->currentSwapchainCommandBuffer->beginOneTimeSubmit();
+        this->currentSwapchainCommandBuffer->beginOneTimeSubmit();
 
-    // Render to HDR texture to swapchain image, and UI/debug
-    this->beginSwapchainRenderPass(imageIndex);
-        this->renderToSwapchainImage();
-        this->renderUI();
-        this->renderDebugElements();
-    this->endSwapchainRenderPass();
+        {
+            // Record GPU timing
+#ifndef VENGINE_NO_PROFILING
+            TracyVkZone(
+                this->tracyContextRenderToSwapchain[this->currentFrame],
+                this->currentSwapchainCommandBuffer->getVkCommandBuffer(),
+                "GPU Render To Swapchain"
+            );
+#endif 
 
-    // Imgui
-    this->beginRenderpassImgui(imageIndex);
-        this->renderImgui();
-    this->endRenderpassImgui();
+            // Render to HDR texture to swapchain image, and UI/debug
+            this->beginSwapchainRenderPass(imageIndex);
+            this->renderToSwapchainImage();
+            this->renderUI();
+            this->renderDebugElements();
+            this->endSwapchainRenderPass();
 
-    this->currentSwapchainCommandBuffer->end();
+            // Imgui to backbuffer
+            this->beginRenderpassImgui(imageIndex);
+            this->renderImgui();
+            this->endRenderpassImgui();
+        }
+
+        // Collect gpu timing
+#ifndef VENGINE_NO_PROFILING
+        TracyVkCollect(
+            this->tracyContextRenderToSwapchain[this->currentFrame],
+            this->currentSwapchainCommandBuffer->getVkCommandBuffer(),
+        );
+#endif 
+
+        this->currentSwapchainCommandBuffer->end();
+    }
 }
 
 #ifndef VENGINE_NO_PROFILING 
 void VulkanRenderer::initTracy()
 {
-    #ifndef VENGINE_NO_PROFILING
-    // Tracy stuff
-    //allocateTracyImageMemory();
-    vk::DynamicLoader dl; 
-    auto pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT = dl.getProcAddress<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
-
-    auto pfnvkGetCalibratedTimestampsEXT = dl.getProcAddress<PFN_vkGetCalibratedTimestampsEXT>("vkGetCalibratedTimestampsEXT");
-
     // Create Tracy Vulkan Context
-    this->tracyContext.resize(this->commandBuffers.getNumCommandBuffers());
-    for(size_t i = 0 ; i < this->commandBuffers.getNumCommandBuffers(); i++){
-        
-        this->tracyContext[i] = TracyVkContextCalibrated(
-            this->physicalDevice.getVkPhysicalDevice(),
-            this->getVkDevice(),             
-            this->queueFamilies.getGraphicsQueue(),
-            this->commandBuffers[i].getVkCommandBuffer(),
-            pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
-            pfnvkGetCalibratedTimestampsEXT
+    this->tracyContextComputeParticles.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextRenderShadowMap.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextRenderScene.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextRenderToSwapchain.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextDownsample.resize(MAX_FRAMES_IN_FLIGHT);
+    this->tracyContextUpsample.resize(MAX_FRAMES_IN_FLIGHT);
+    for(size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        // Compute particles
+        this->createTracyContext(
+            this->queueFamilies.getComputeQueue(),
+            this->particleHandler.getComputeCommandBuffer(i),
+            "TracyContextComputeParticles_" + std::to_string(i),
+            this->tracyContextComputeParticles[i]
         );
-        
-        std::string name = "TracyVkContext_" + std::to_string(i);
-        TracyVkContextName(this->tracyContext[i], name.c_str(), name.size());
+
+        // Render shadow map
+        this->createTracyContext(
+            this->queueFamilies.getGraphicsQueue(),
+            this->lightHandler.getShadowMapCommandBuffer(i),
+            "TracyContextRenderShadowMap_" + std::to_string(i),
+            this->tracyContextRenderShadowMap[i]
+        );
+
+        // Render scene
+        this->createTracyContext(
+            this->queueFamilies.getGraphicsQueue(),
+            this->commandBuffers[i],
+            "TracyContextRenderScene_" + std::to_string(i),
+            this->tracyContextRenderScene[i]
+        );
+
+        // Render to swapchain
+        this->createTracyContext(
+            this->queueFamilies.getGraphicsQueue(),
+            this->swapchainCommandBuffers[i],
+            "TracyContextRenderToSwapchain_" + std::to_string(i),
+            this->tracyContextRenderToSwapchain[i]
+        );
+
+        for (uint32_t j = 0; j < PostProcessHandler::MAX_NUM_MIP_LEVELS; ++j)
+        {
+            this->tracyContextDownsample[i].resize(PostProcessHandler::MAX_NUM_MIP_LEVELS);
+            this->tracyContextUpsample[i].resize(PostProcessHandler::MAX_NUM_MIP_LEVELS);
+
+            // Downsample
+            this->createTracyContext(
+                this->queueFamilies.getGraphicsQueue(),
+                this->postProcessHandler.getDownsampleCommandBuffer(i, j),
+                "TracyContextDownsample_" + std::to_string(i) + "_" + std::to_string(j),
+                this->tracyContextDownsample[i][j]
+            );
+
+            // Upsample
+            this->createTracyContext(
+                this->queueFamilies.getGraphicsQueue(),
+                this->postProcessHandler.getUpsampleCommandBuffer(i, j),
+                "TracyContextUpsample_" + std::to_string(i) + "_" + std::to_string(j),
+                this->tracyContextUpsample[i][j]
+            );
+        }
     }
     TracyHelper::setVulkanRenderReference(this);
     TracyHelper::registerTracyParameterFunctions();
-    
-    #endif 
+}
+
+void VulkanRenderer::createTracyContext(
+    vk::Queue& contextQueue,
+    CommandBuffer& contextCommandBuffer,
+    const std::string& contextName,
+    TracyVkCtx& outputContext)
+{
+    // Get vulkan function pointers
+    vk::DynamicLoader dl;
+    auto pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT = dl.getProcAddress<PFN_vkGetPhysicalDeviceCalibrateableTimeDomainsEXT>("vkGetPhysicalDeviceCalibrateableTimeDomainsEXT");
+    auto pfnvkGetCalibratedTimestampsEXT = dl.getProcAddress<PFN_vkGetCalibratedTimestampsEXT>("vkGetCalibratedTimestampsEXT");
+
+    // Context
+    outputContext = TracyVkContextCalibrated(
+        this->physicalDevice.getVkPhysicalDevice(),
+        this->getVkDevice(),
+        contextQueue,
+        contextCommandBuffer.getVkCommandBuffer(),
+        pfnvkGetPhysicalDeviceCalibrateableTimeDomainsEXT,
+        pfnvkGetCalibratedTimestampsEXT
+    );
+
+    // Context name
+    TracyVkContextName(
+        outputContext,
+        contextName.c_str(),
+        contextName.size()
+    );
 }
 #endif
 

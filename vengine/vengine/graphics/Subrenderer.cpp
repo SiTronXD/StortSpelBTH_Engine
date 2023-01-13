@@ -216,6 +216,10 @@ void VulkanRenderer::renderShadowMapDefaultMeshes(
     Scene* scene,
     LightHandler& lightHandler)
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     ShaderInput& shadowMapShaderInput =
         lightHandler.getShadowMapShaderInput();
 
@@ -268,6 +272,10 @@ void VulkanRenderer::renderShadowMapSkeletalAnimations(
     Scene* scene,
     LightHandler& lightHandler)
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     ShaderInput& animShadowMapShaderInput =
         lightHandler.getAnimShadowMapShaderInput();
 
@@ -427,6 +435,10 @@ void VulkanRenderer::beginRenderPass()
 void VulkanRenderer::renderDefaultMeshes(
     Scene* scene)
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     // Bind Pipeline to be used in render pass
     this->currentCommandBuffer->bindPipeline(
         this->pipeline
@@ -466,6 +478,10 @@ void VulkanRenderer::renderDefaultMeshes(
 
 void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     if (this->hasAnimations)
     {
         // Bind pipeline to be used in render pass
@@ -520,6 +536,10 @@ void VulkanRenderer::renderSkeletalAnimations(Scene* scene)
 
 void VulkanRenderer::renderParticles(Scene* scene)
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     const Pipeline& particlePipeline = 
         this->particleHandler.getPipeline();
     ShaderInput& particleShaderInput =
@@ -571,6 +591,10 @@ void VulkanRenderer::renderParticles(Scene* scene)
 
 void VulkanRenderer::renderUI()
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     // UI pipeline
     this->currentSwapchainCommandBuffer->bindPipeline(
         this->uiRenderer->getPipeline()
@@ -619,6 +643,10 @@ void VulkanRenderer::renderUI()
 
 void VulkanRenderer::renderDebugElements()
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     // ---------- Lines ----------
 
     // Pipeline
@@ -875,6 +903,10 @@ void VulkanRenderer::beginSwapchainRenderPass(
 
 void VulkanRenderer::renderToSwapchainImage()
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     // Bind Pipeline to be used in render pass
     this->currentSwapchainCommandBuffer->bindPipeline(
         this->swapchainPipeline
@@ -943,6 +975,10 @@ void VulkanRenderer::beginRenderpassImgui(
 
 void VulkanRenderer::renderImgui()
 {
+#ifndef VENGINE_NO_PROFILING
+    ZoneScoped; //:NOLINT
+#endif
+
     ImGui_ImplVulkan_RenderDrawData(
         ImGui::GetDrawData(),
         this->currentSwapchainCommandBuffer->getVkCommandBuffer()
