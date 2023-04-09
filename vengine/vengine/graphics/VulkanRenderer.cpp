@@ -380,6 +380,7 @@ void VulkanRenderer::cleanup()
         this->getVkDevice().destroySemaphore(this->sceneRenderFinished[i]);
         this->getVkDevice().destroySemaphore(this->shadowMapRenderFinished[i]);
         this->getVkDevice().destroySemaphore(this->computeFinished[i]);
+        this->getVkDevice().destroySemaphore(this->computeStart[i]);
         this->getVkDevice().destroySemaphore(this->imageAvailable[i]);
         this->getVkDevice().destroyFence(this->drawFences[i]);
     }
@@ -562,11 +563,14 @@ void VulkanRenderer::draw(Scene* scene)
         this->graphicsSubmitArray.reset();
 
         // ---------- Compute submit ----------
+        uint32_t lastFrameIndex = (this->currentFrame + MAX_FRAMES_IN_FLIGHT - 1) % MAX_FRAMES_IN_FLIGHT;
         std::array<vk::SemaphoreSubmitInfo, 4> computeWaitSemaphores;
+        computeWaitSemaphores[0].setSemaphore(this->computeStart[lastFrameIndex]);
+        computeWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eComputeShader);
         this->computeSubmitArray.setSubmitInfo(
             *this->currentComputeCommandBuffer,
             computeWaitSemaphores,
-            0,
+            1,
             this->computeFinished[this->currentFrame]
         );
 
@@ -598,11 +602,14 @@ void VulkanRenderer::draw(Scene* scene)
         renderToScreenWaitSemaphores[0].setStageMask(vk::PipelineStageFlagBits2::eFragmentShader);
         renderToScreenWaitSemaphores[1].setSemaphore(this->computeFinished[this->currentFrame]);
         renderToScreenWaitSemaphores[1].setStageMask(vk::PipelineStageFlagBits2::eVertexShader);
+        std::array<vk::Semaphore, 2> renderToScreenSignalSemaphores;
+        renderToScreenSignalSemaphores[0] = this->sceneRenderFinished[this->currentFrame];
+        renderToScreenSignalSemaphores[1] = this->computeStart[this->currentFrame];
         this->graphicsSubmitArray.setSubmitInfo(
             *this->currentCommandBuffer,
             renderToScreenWaitSemaphores,
             2,
-            this->sceneRenderFinished[this->currentFrame]
+            renderToScreenSignalSemaphores
         );
 
         // Bloom downsampling
@@ -1166,6 +1173,7 @@ void VulkanRenderer::createSynchronisation()
 #endif
     // One semaphore/fence per frame in flight
     this->imageAvailable.resize(MAX_FRAMES_IN_FLIGHT);
+    this->computeStart.resize(MAX_FRAMES_IN_FLIGHT);
     this->computeFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->shadowMapRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
     this->sceneRenderFinished.resize(MAX_FRAMES_IN_FLIGHT);
@@ -1198,6 +1206,9 @@ void VulkanRenderer::createSynchronisation()
         this->imageAvailable[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore imageAvailable["+std::to_string(i)+"]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->imageAvailable[i])));
 
+        this->computeStart[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
+        VulkanDbg::registerVkObjectDbgInfo("Semaphore computeStart[" + std::to_string(i) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->computeStart[i])));
+
         this->computeFinished[i] = this->getVkDevice().createSemaphore(semaphoreCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Semaphore computeFinished[" + std::to_string(i) + "]", vk::ObjectType::eSemaphore, reinterpret_cast<uint64_t>(vk::Semaphore::CType(this->computeFinished[i])));
 
@@ -1226,6 +1237,23 @@ void VulkanRenderer::createSynchronisation()
         this->drawFences[i] = this->getVkDevice().createFence(fenceCreateInfo);
         VulkanDbg::registerVkObjectDbgInfo("Fence drawFences["+std::to_string(i)+"]", vk::ObjectType::eFence, reinterpret_cast<uint64_t>(vk::Fence::CType(this->drawFences[i])));
     }
+
+    // Signal last frame computeStart for particles to start
+    uint32_t lastFrameIndex = (this->currentFrame + MAX_FRAMES_IN_FLIGHT - 1) % MAX_FRAMES_IN_FLIGHT;
+    vk::SubmitInfo signalSubmitInfo;
+    signalSubmitInfo.setSignalSemaphoreCount(1);
+    signalSubmitInfo.setSignalSemaphores(this->computeStart[lastFrameIndex]);
+    vk::Result signalQueueResult =
+        this->queueFamilies.getComputeQueue().submit(
+            1,
+            &signalSubmitInfo,
+            VK_NULL_HANDLE
+        );
+    if (signalQueueResult != vk::Result::eSuccess)
+    {
+        Log::error("Failed to signal initial semaphore for compute to start.");
+    }
+    this->device.waitIdle();
 
     // Particles
     this->computeSubmitArray.setMaxNumSubmits(1);

@@ -10,7 +10,7 @@ class SubmitArray
 private:
 	std::vector<vk::CommandBufferSubmitInfo> commandBufferInfos;
 	std::vector<std::array<vk::SemaphoreSubmitInfo, 4>> waitSemaphores;
-	std::vector<vk::SemaphoreSubmitInfo> signalSemaphores;
+	std::vector<std::array<vk::SemaphoreSubmitInfo, 2>> signalSemaphores;
 	std::vector<vk::SubmitInfo2> submitInfos;
 
 	uint32_t maxNumSubmits;
@@ -24,6 +24,11 @@ public:
 		std::array<vk::SemaphoreSubmitInfo, 4>& waitSemaphores,
 		const uint32_t& numWaitSemaphores,
 		vk::Semaphore& signalSemaphore);
+	void setSubmitInfo(
+		CommandBuffer& commandBuffer,
+		std::array<vk::SemaphoreSubmitInfo, 4>& waitSemaphores,
+		const uint32_t& numWaitSemaphores,
+		std::array<vk::Semaphore, 2>& signalSemaphores);
 
 	inline const uint32_t& getNumSubmits() const { return this->currentSubmitIndex; }
 	inline const std::vector<vk::SubmitInfo2>& getSubmitInfos() const { return this->submitInfos; }

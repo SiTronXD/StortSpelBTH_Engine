@@ -36,9 +36,38 @@ void SubmitArray::setSubmitInfo(
     submitInfo.setPWaitSemaphoreInfos(this->waitSemaphores[this->currentSubmitIndex].data());       // Pointer to the semaphore to wait on.
     
     // Signal semaphores
-    this->signalSemaphores[this->currentSubmitIndex].setSemaphore(signalSemaphore);
+    this->signalSemaphores[this->currentSubmitIndex][0].setSemaphore(signalSemaphore);
     submitInfo.setSignalSemaphoreInfoCount(uint32_t(1));
-    submitInfo.setPSignalSemaphoreInfos(&this->signalSemaphores[this->currentSubmitIndex]);   // Semaphore that will be signaled when CommandBuffer is finished
+    submitInfo.setPSignalSemaphoreInfos(this->signalSemaphores[this->currentSubmitIndex].data());   // Semaphore that will be signaled when CommandBuffer is finished
+
+    // Next submit index
+    this->currentSubmitIndex++;
+}
+
+void SubmitArray::setSubmitInfo(
+    CommandBuffer& commandBuffer, 
+    std::array<vk::SemaphoreSubmitInfo, 4>& waitSemaphores, 
+    const uint32_t& numWaitSemaphores, 
+    std::array<vk::Semaphore, 2>& signalSemaphores)
+{
+    // New submit info
+    vk::SubmitInfo2& submitInfo = this->submitInfos[this->currentSubmitIndex];
+
+    // Command buffer
+    this->commandBufferInfos[this->currentSubmitIndex].setCommandBuffer(commandBuffer.getVkCommandBuffer());
+    submitInfo.setCommandBufferInfoCount(uint32_t(1));
+    submitInfo.setPCommandBufferInfos(&this->commandBufferInfos[this->currentSubmitIndex]); // Pointer to the command buffer to execute
+
+    // Wait semaphores
+    this->waitSemaphores[this->currentSubmitIndex] = waitSemaphores;
+    submitInfo.setWaitSemaphoreInfoCount(numWaitSemaphores);
+    submitInfo.setPWaitSemaphoreInfos(this->waitSemaphores[this->currentSubmitIndex].data());       // Pointer to the semaphore to wait on.
+
+    // Signal semaphores
+    this->signalSemaphores[this->currentSubmitIndex][0].setSemaphore(signalSemaphores[0]);
+    this->signalSemaphores[this->currentSubmitIndex][1].setSemaphore(signalSemaphores[1]);
+    submitInfo.setSignalSemaphoreInfoCount(uint32_t(2));
+    submitInfo.setPSignalSemaphoreInfos(this->signalSemaphores[this->currentSubmitIndex].data());   // Semaphore that will be signaled when CommandBuffer is finished
 
     // Next submit index
     this->currentSubmitIndex++;

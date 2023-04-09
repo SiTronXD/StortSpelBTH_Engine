@@ -120,6 +120,7 @@ class VulkanRenderer
 
     // Synchronisation 
     std::vector<vk::Semaphore> imageAvailable;
+    std::vector<vk::Semaphore> computeStart;
     std::vector<vk::Semaphore> computeFinished;
     std::vector<vk::Semaphore> shadowMapRenderFinished;
     std::vector<vk::Semaphore> sceneRenderFinished;
