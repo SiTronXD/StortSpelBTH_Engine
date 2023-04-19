@@ -6,13 +6,16 @@
 #include <iostream>
 #include <fstream>
 #include <cassert>
+#include <vector>
 
 enum class TIME_ID {
     ROOT,               // Not really used, but expresses everything
     AI_HANDLER_UPDATE,
     FSM_UPDATE,
     EVENT_UPDATE,
-    BT_EXECUTE
+    EVENT_CHECK,
+    BT_EXECUTE,
+    BT_TASKS
 };
 static std::unordered_map<TIME_ID, std::string> TIME_ID_STR
 {
@@ -20,7 +23,25 @@ static std::unordered_map<TIME_ID, std::string> TIME_ID_STR
     {TIME_ID::AI_HANDLER_UPDATE, "AI_HANDLER_UPDATE"},
     {TIME_ID::FSM_UPDATE, "FSM_UPDATE"},
     {TIME_ID::EVENT_UPDATE, "EVENT_UPDATE"},
-    {TIME_ID::BT_EXECUTE, "BT_EXECUTE"}
+    {TIME_ID::EVENT_CHECK, "EVENT_CHECK"},
+    {TIME_ID::BT_EXECUTE, "BT_EXECUTE"},
+    {TIME_ID::BT_TASKS, "BT_TASKS"}
+};
+
+struct TimeData 
+{
+    TimeData(std::chrono::duration<double, std::milli> totalTime, uint32_t nrOfAi, uint32_t totalTimePerTest_ms, uint32_t iterationCount, uint32_t nrOfFrames)
+    : totalTime(totalTime)
+    , nrOfAi(nrOfAi)
+    , totalTimePerTest_ms(totalTimePerTest_ms)
+    , iterationCount(iterationCount)
+    , numberOfFrames(nrOfFrames)
+    {}
+    std::chrono::duration<double, std::milli> totalTime;
+    uint32_t nrOfAi;
+    uint32_t totalTimePerTest_ms;
+    uint32_t iterationCount;
+    uint32_t numberOfFrames;
 };
 
 struct TimeStruct
@@ -32,6 +53,9 @@ struct TimeStruct
     // Keep two coutners to make sure stop/start does not happens before their counterpart has happened
     uint32_t iterationCount_start = 0;
     uint32_t iterationCount_stop  = 0;
+    uint32_t currentIterations  = 0;
+
+    std::vector<TimeData> previousRecords;
 
     void calcTotalTime()
     {
@@ -41,6 +65,7 @@ struct TimeStruct
     {
         currentStart = std::chrono::high_resolution_clock::now();
         iterationCount_start++;
+        currentIterations++;
     }
     void stop()
     {
@@ -54,17 +79,31 @@ struct TimeStruct
         if(iterationCount_start == iterationCount_stop) {return true;}
         return false;        
     }
+
+    uint32_t nrOfAi = 0;
+    // inline const static uint32_t totalTimePerTest_ms = 30*1000;
+    inline const static uint32_t totalTimePerTest_ms = 6*1000;
+
 };
 
 class PerfChecker 
 {
     public: 
-    int nr = 21;
 
     std::unordered_map<TIME_ID, TimeStruct> times;
     std::unordered_map<TIME_ID, std::string> extra_headers;
     std::unordered_map<TIME_ID, std::string> extra_contents;
     std::unordered_map<TIME_ID, TIME_ID> parent_func;
+
+    void startNextRun(uint32_t nrOfEntities, uint32_t nrOfFrames)
+    {
+        for(auto& time : times)
+        {
+            time.second.previousRecords.emplace_back(time.second.totalTime, nrOfEntities, time.second.totalTimePerTest_ms, time.second.currentIterations, nrOfFrames);
+            time.second.totalTime = std::chrono::seconds(0);
+            time.second.currentIterations = 0;
+        }
+    }
 
     void addParentFunc(TIME_ID func, TIME_ID parent)
     {
@@ -88,20 +127,39 @@ class PerfChecker
 
             if(output.is_open())
             {
-                std::string csv_header = 
-                    "Name,ParentFunc,TotalTime[ms],Iterations";// + (!extra_headers[time.first].empty() ? "," + extra_headers[time.first] : "");
-                output << csv_header << std::endl;  
+                
+                // Output functions relations
+                output << "Name,ParentFunc" << std::endl;
+                for(auto& time : times)
+                {
+                     
+                    output << TIME_ID_STR[time.first] << "," 
+                        << TIME_ID_STR[parent_func[time.first]]
+                        << "\n";
 
+                }
+                
+                // Output recorded times
                 for(auto& time : times)
                 {
                     if(time.second.isValid())
-                    {                        
-                        output << TIME_ID_STR[time.first] << "," 
-                            << TIME_ID_STR[parent_func[time.first]]  << ","
-                            << time.second.totalTime.count() << "," 
-                            << time.second.iterationCount_start
+                    {
+                        output << "\n";
+                        output << "Nr of AI,Name,TimeSpent[ms],TotalRunTime[ms],Iterations,frames" << std::endl;
+                        for(auto& record : time.second.previousRecords)
+                        {
+                            output 
+                            << record.nrOfAi << ","
+                            << TIME_ID_STR[time.first] << "," 
+                            << record.totalTime.count() << "," 
+                            << TimeStruct::totalTimePerTest_ms << ","
+                            << record.iterationCount << ","
+                            << record.numberOfFrames 
                             //<< (!extra_contents[time.first].empty() ? "," + extra_contents[time.first] : "") 
                             << "\n";
+                        }
+                        
+                        
                     }
                     else 
                     {

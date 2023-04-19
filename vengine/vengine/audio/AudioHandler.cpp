@@ -344,7 +344,7 @@ AudioSourceID AudioHandler::playSound(Entity entity, AudioBufferID bufferID, flo
 	if (this->numActiveSources >= MAX_SOURCES)
 	{
 #ifdef _CONSOLE
-		Log::warning(std::string(__func__) + " | No avaliable sources!");
+		// Log::warning(std::string(__func__) + " | No avaliable sources!");
 #endif
 		return ~0u;
 	}

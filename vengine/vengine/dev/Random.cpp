@@ -3,20 +3,22 @@
 
 void VRandom::srand(const uint32_t& seed)
 {
-    VRandom::seed = seed;
+    // VRandom::seed = seed;
 }
 
 uint32_t VRandom::rand()
 {
     // Wang hash
-    uint32_t newSeed = uint32_t(this->seed ^ uint32_t(61)) ^ uint32_t(this->seed >> uint32_t(16));
-    newSeed *= 9u;
-    newSeed = newSeed ^ (newSeed >> 4);
-    newSeed *= uint32_t(0x27d4eb2d);
-    newSeed = newSeed ^ (newSeed >> 15);
+    // uint32_t newSeed = uint32_t(this->seed ^ uint32_t(61)) ^ uint32_t(this->seed >> uint32_t(16));
+    // newSeed *= 9u;
+    // newSeed = newSeed ^ (newSeed >> 4);
+    // newSeed *= uint32_t(0x27d4eb2d);
+    // newSeed = newSeed ^ (newSeed >> 15);
 
-    // Next seed
-    this->seed++;
+    // // Next seed
+    // this->seed++;
+    
 
-    return newSeed;
+    // return newSeed;
+    return std::rand();
 }
